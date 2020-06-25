@@ -1,5 +1,6 @@
 import json
 import requests
+import csv
 from datetime import datetime
 from bs4 import BeautifulSoup
 
@@ -8,9 +9,11 @@ class Trader:
     def __init__(self):
         self.url = 'https://coinmarketcap.com/currencies/bitcoin/historical-data/'
         self.jsonFile = 'btc.json'
+        self.csvFile = 'btc.csv'
+        self.data = []
 
         if not self.updated_data():
-            self.data = self.get_data()
+            self.data = self.get_data_from_url()
             with open(self.jsonFile, 'w', encoding='utf-8') as f:
                 json.dump(self.data, f, ensure_ascii=False, indent=4)
         else:
@@ -30,7 +33,22 @@ class Trader:
         except FileNotFoundError:
             return False
 
-    def get_data(self):
+    def get_data_from_csv(self):
+        with open(self.csvFile) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            values = []
+            for row in csv_reader:
+                values.append({'date': datetime.strptime(row[0], '%m/%d/%y').date(),
+                               'open': float(row[1]),
+                               'high': float(row[2]),
+                               'low': float(row[3]),
+                               'close': float(row[4]),
+                               'volume': float(row[5]),
+                               'marketCap': float(row[6]),
+                               })
+            return values
+
+    def get_data_from_url(self):
         """
         Scrapes latest BTC values from CoinMarketCap and returns them in a list of dictionaries.
         :return: list of dictionaries
@@ -42,13 +60,13 @@ class Trader:
 
         for row in rows:
             cols = row.find_all('td')
-            values.append({'date': cols[0].text,
-                           'open': cols[1].text,
-                           'high': cols[2].text,
-                           'low': cols[3].text,
-                           'close': cols[4].text,
-                           'volume': cols[5].text,
-                           'marketCap': cols[6].text,
+            values.append({'date': datetime.strptime(cols[0].text, '%b %d, %Y').date(),
+                           'open': float(cols[1].text),
+                           'high': float(cols[2].text),
+                           'low': float(cols[3].text),
+                           'close': float(cols[4].text),
+                           'volume': float(cols[5].text),
+                           'marketCap': float(cols[6].text),
                            })
         return values
 
@@ -61,7 +79,7 @@ class Trader:
         :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: SMA
         """
-        data = self.data[shift:days+shift]
+        data = self.data[shift:days + shift]
         sma = sum([float(day[parameter].replace(',', '')) for day in data]) / days
         if round_value:
             return round(sma, 2)
@@ -91,6 +109,3 @@ class Trader:
 
     def __repr__(self):
         return 'Trader()'
-
-
-
