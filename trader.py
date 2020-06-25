@@ -18,6 +18,10 @@ class Trader:
                 self.data = json.load(f)
 
     def updated_data(self):
+        """
+        Checks if data in JSON file (if exists) is updated or not.
+        :return: boolean of whether file is recent or not
+        """
         today = datetime.today().date()
         try:
             with open(self.jsonFile, 'r', encoding='utf-8') as f:
@@ -27,6 +31,10 @@ class Trader:
             return False
 
     def get_data(self):
+        """
+        Scrapes latest BTC values from CoinMarketCap and returns them in a list of dictionaries.
+        :return: list of dictionaries
+        """
         response = requests.get(self.url)
         soup = BeautifulSoup(response.text, 'html.parser')
         rows = soup.find_all('tr', attrs={'class': 'cmc-table-row'})
@@ -44,19 +52,39 @@ class Trader:
                            })
         return values
 
-    def get_sma(self, days, value):
+    def get_sma(self, days, parameter, shift=0, round_value=True):
         """
         Returns the simple moving average with data provided.
+        :param boolean round_value: Boolean that specifies whether return value should be rounded
         :param int days: Number of days for average
-        :param str value: Parameter to get the average of (e.g. open, close, high or low values)
+        :param int shift: Days shifted from today
+        :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
+        :return: SMA
         """
-        data = self.data[:days]
-        return sum([float(day[value].replace(',', '')) for day in data]) / days
+        data = self.data[shift:days+shift]
+        sma = sum([float(day[parameter].replace(',', '')) for day in data]) / days
+        if round_value:
+            return round(sma, 2)
+        return sma
 
-    def get_ema(self, days, value, initial_value=None):
-        if not initial_value:
-            initial_value = self.get_sma(days, value)
-        multiplier = 2 / (days + 1)
+    def get_ema(self, sma_days, ema_days, parameter, round_value=True):
+        """
+        Returns the exponential moving average with data provided.
+        :param round_value: Boolean that specifies whether return value should be rounded
+        :param int sma_days: SMA days to get first EMA
+        :param int ema_days: Days to iterate EMA for
+        :param str parameter: Parameter to get the average of (e.g. open, close, high, or low values)
+        :return: EMA
+        """
+        ema = self.get_sma(sma_days, parameter, shift=ema_days, round_value=False)
+        for day in range(ema_days):
+            multiplier = 2 / (sma_days + day + 1)
+            current_index = ema_days - day - 1
+            value = float(self.data[current_index][parameter].replace(',', ''))
+            ema = value * multiplier + ema * (1 - multiplier)
+        if round_value:
+            return round(ema, 2)
+        return ema
 
     def __str__(self):
         return f'Trader()'
