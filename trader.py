@@ -14,6 +14,7 @@ class Trader:
         self.databaseConnection = sqlite3.connect(self.databaseFile)
         self.databaseCursor = self.databaseConnection.cursor()
         self.data = []
+        self.ema_data = {}
 
         self.create_table()
         if not self.updated_data():
@@ -153,22 +154,25 @@ class Trader:
             return round(sma, 2)
         return sma
 
-    def get_ema(self, ema_days, parameter, sma_days=5, round_value=True):
+    def get_ema(self, period, parameter, sma_days=5, round_value=True):
         """
         Returns the exponential moving average with data provided.
         :param round_value: Boolean that specifies whether return value should be rounded
         :param int sma_days: SMA days to get first EMA
-        :param int ema_days: Days to iterate EMA for
+        :param int period: Days to iterate EMA over (or the period)
         :param str parameter: Parameter to get the average of (e.g. open, close, high, or low values)
         :return: EMA
         """
         shift = len(self.data) - sma_days
         ema = self.get_sma(sma_days, parameter, shift=shift, round_value=False)
+        values = [(round(ema, 2), str(self.data[shift]['date']))]
         for day in range(len(self.data) - sma_days):
-            multiplier = 2 / (ema_days + 1)
+            multiplier = 2 / (period + 1)
             current_index = len(self.data) - sma_days - day - 1
             current_price = self.data[current_index][parameter]
             ema = current_price * multiplier + ema * (1 - multiplier)
+            values.append((round(ema, 2), str(self.data[current_index]['date'])))
+        self.ema_data[period] = {parameter: values}
         if round_value:
             return round(ema, 2)
         return ema
