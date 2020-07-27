@@ -1,109 +1,152 @@
 import sqlite3
-import requests
+import os
 import csv
-from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
+import time
+from datetime import datetime, timedelta, timezone
+from binance.client import Client
 
 
 class Trader:
-    def __init__(self):
-        self.url = 'https://coinmarketcap.com/currencies/bitcoin/historical-data/'
-        self.jsonFile = 'btc.json'
-        self.csvFile = 'btc.csv'
+    def __init__(self, startingBalance=1000):
         self.databaseFile = 'btc.db'
-        self.databaseConnection = sqlite3.connect(self.databaseFile)
-        self.databaseCursor = self.databaseConnection.cursor()
+        self.apiKey = os.environ.get('binance_api')
+        self.apiSecret = os.environ.get('binance_secret')
+        self.binanceClient = Client(self.apiKey, self.apiSecret)
+        self.databaseConnection, self.databaseCursor = self.get_database_connectors()
         self.data = []
         self.ema_data = {}
+        self.startingBalance = startingBalance
+        self.balance = self.startingBalance
+        self.btc = 0
+        self.btcOwed = 0
+        self.btcOwedPrice = 0
+        self.transactionFee = 0.001
+        self.buyLongPrice = None
+        self.sellShortPrice = None
+        self.simulatedTradesConducted = 0
 
         self.create_table()
-        if not self.updated_data():
-            self.update_data()
+        self.get_data_from_database()
+        if not self.updated_database():
+            print("Updating data...")
+            self.update_database()
         else:
-            self.data = self.get_data_from_database()
+            print("Database is up-to-date.")
+
+    def get_database_connectors(self):
+        connection = sqlite3.connect(self.databaseFile)
+        cursor = connection.cursor()
+        return connection, cursor
 
     def get_data_from_database(self):
         """
-        Loads data from database and returns it as a list of dictionaries
-        :return: List of dictionaries
+        Loads data from database and adds it to run-time data.
         """
-        self.databaseCursor.execute('SELECT * FROM BTC ORDER BY trade_date DESC')
+        print("Retrieving data from database...")
+        self.databaseCursor.execute('SELECT "trade_date", "open_price",'
+                                    '"high_price", "low_price", "close_price"'
+                                    'FROM BTC ORDER BY trade_date DESC')
         rows = self.databaseCursor.fetchall()
-        values = []
 
         for row in rows:
-            values.append({'date': datetime.strptime(row[0], '%Y-%m-%d').date(),
-                           'open': float(row[1]),
-                           'high': float(row[2]),
-                           'low': float(row[3]),
-                           'close': float(row[4]),
-                           'volume': int(row[5]),
-                           'marketCap': int(row[6]),
-                           })
-        return values
+            self.data.append({'date': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc),
+                              'open': float(row[1]),
+                              'high': float(row[2]),
+                              'low': float(row[3]),
+                              'close': float(row[4]),
+                              })
 
-    def get_data_from_csv(self):
+    def get_data_from_csv(self, file):
         """
-        Retrieves information from CSV, parses it, and returns it as a list of dictionaries
+        Retrieves information from CSV, parses it, and adds it to run-time data.
         :return: List of dictionaries
         """
-        with open(self.csvFile) as csv_file:
+        with open(file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             next(csv_reader)  # skip over the header row
-            values = []
             for row in csv_reader:
-                values.append({'date': datetime.strptime(row[0], '%m/%d/%y').date(),
-                               'open': float(row[1]),
-                               'high': float(row[2]),
-                               'low': float(row[3]),
-                               'close': float(row[4]),
-                               'volume': int(row[5]),
-                               'marketCap': int(row[6]),
-                               })
-            return values
-
-    def get_data_from_url(self):
-        """
-        Scrapes latest BTC values from CoinMarketCap and returns them in a list of dictionaries.
-        :return: List of dictionaries
-        """
-        response = requests.get(self.url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        rows = soup.find_all('tr', attrs={'class': 'cmc-table-row'})
-        values = []
-
-        for row in rows:
-            cols = row.find_all('td')
-            values.append({'date': datetime.strptime(cols[0].text, '%b %d, %Y').date(),
-                           'open': float(cols[1].text.replace(',', '')),
-                           'high': float(cols[2].text.replace(',', '')),
-                           'low': float(cols[3].text.replace(',', '')),
-                           'close': float(cols[4].text.replace(',', '')),
-                           'volume': int(cols[5].text.replace(',', '')),
-                           'marketCap': int(cols[6].text.replace(',', '')),
-                           })
-        return values
+                self.data.append({'date': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S'),
+                                  'close': float(row[1].replace(',', '')),
+                                  'open': float(row[2].replace(',', '')),
+                                  'high': float(row[3].replace(',', '')),
+                                  'low': float(row[4].replace(',', '')),
+                                  })
 
     def updated_data(self):
         """
-        Checks if data is already updated with yesterday's latest values
-        :return: A boolean whether data is updated or not
+        Checks whether data is fully updated or not.
+        :return: A boolean whether data is updated or not with Binance values.
+        """
+        latestDate = self.data[0]['date']
+        return latestDate + timedelta(hours=1) >= datetime.now(timezone.utc)
+
+    def insert_data(self, newData):
+        """
+        Inserts data from newData to run-time data.
+        :param newData: List with new data values.
+        """
+        for data in newData:
+            parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
+            dataList = [parsedDate] + data[1:]
+            self.data.insert(0, {'date': dataList[0],
+                                 'open': float(dataList[1]),
+                                 'high': float(data[2]),
+                                 'low': float(dataList[3]),
+                                 'close': float(dataList[4]),
+                                 })
+
+    def update_data(self):
+        """
+        Updates run-time data with Binance API values.
+        """
+        latestDate = self.data[0]['date']
+        timestamp = int(latestDate.timestamp()) * 1000
+        print(f"Previous data found up to UTC {latestDate}.")
+        if not self.updated_data():
+            newData = self.binanceClient.get_historical_klines('BTCUSDT', '1h', timestamp, limit=1000)
+            self.insert_data(newData)
+            print("Data has been updated successfully.")
+        else:
+            print("Data is up-to-date.")
+
+    def updated_database(self):
+        """
+        Checks if data is updated or not with database by 1 hour UTC time.
+        :return: A boolean whether data is updated or not.
         """
         self.databaseCursor.execute('SELECT trade_date FROM BTC ORDER BY trade_date DESC LIMIT 1')
         result = self.databaseCursor.fetchone()
         if result is None:
+            print("No data found.")
             return False
-        date = datetime.strptime(result[0], '%Y-%m-%d').date()
-        yesterday = datetime.today().date() - timedelta(days=1)
-        return yesterday == date
+        latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        return latestDate + timedelta(hours=1) >= datetime.now(timezone.utc)
 
-    def update_data(self):
+    def update_database(self):
         """
-        Updates database by retrieving information from CSV and URL
+        Updates database by retrieving information from Binance API
         """
-        self.data += self.get_data_from_csv()
-        self.data += self.get_data_from_url()
-        self.dump_to_table()
+        self.databaseCursor.execute('SELECT trade_date FROM BTC ORDER BY trade_date DESC LIMIT 1')
+        result = self.databaseCursor.fetchone()
+        if result is None:
+            timestamp = self.binanceClient._get_earliest_valid_timestamp('BTCUSDT', '5m')
+            print("Downloading all available historical data. This may take a while...")
+        else:
+            latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            timestamp = int(latestDate.timestamp()) * 1000
+            print(f"Previous data found up to UTC {latestDate} found.")
+
+        if not self.updated_database():
+            newData = self.binanceClient.get_historical_klines('BTCUSDT', '1h', timestamp, limit=1000)
+            print("Successfully downloaded all new data.")
+            self.insert_data(newData)
+            print("Storing updated data to database...")
+            if self.dump_to_table():
+                print("Successfully stored all new data to database.")
+            else:
+                print("Insertion to database failed. Will retry next run.")
+        else:
+            print("Database is up-to-date.")
 
     def create_table(self):
         """
@@ -113,62 +156,86 @@ class Trader:
         CREATE TABLE IF NOT EXISTS BTC(
             trade_date TEXT PRIMARY KEY,
             open_price TEXT NOT NULL,
-            close_price TEXT NOT NULL,
             high_price TEXT NOT NULL,
             low_price TEXT NOT NULL,
-            volume TEXT NOT NULL,
-            market_cap TEXT NOT NULL
+            close_price TEXT NOT NULL
         );''')
 
     def dump_to_table(self):
         """
-        Dumps information from CSV and URL to database.
+        Dumps date and price information to database.
+        :return: A boolean whether data entry was successful or not.
         """
+        success = True
         for data in self.data:
             try:
-                self.databaseCursor.execute("INSERT INTO BTC VALUES (?, ?, ?, ?, ?, ?, ?);",
-                                            (data['date'],
+                self.databaseCursor.execute("INSERT INTO BTC(trade_date, open_price, high_price, low_price, "
+                                            "close_price) VALUES (?, ?, ?, ?, ?);",
+                                            (data['date'].strftime('%Y-%m-%d %H:%M:%S'),
                                              data['open'],
                                              data['high'],
                                              data['low'],
                                              data['close'],
-                                             data['volume'],
-                                             data['marketCap']
                                              ))
                 self.databaseConnection.commit()
             except sqlite3.IntegrityError:
                 pass
+            except sqlite3.OperationalError:
+                print("Data insertion was unsuccessful.")
+                success = False
+                break
+        return success
 
-    def get_sma(self, days, parameter, shift=0, round_value=True):
+    def get_sma(self, prices, parameter, shift=0, round_value=True):
         """
-        Returns the simple moving average with data provided.
+        Returns the simple moving average with run-time data and prices provided.
         :param boolean round_value: Boolean that specifies whether return value should be rounded
-        :param int days: Number of days for average
-        :param int shift: Days shifted from today
+        :param int prices: Number of values for average
+        :param int shift: Prices shifted from current price
         :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: SMA
         """
-        data = self.data[shift:days + shift]
-        sma = sum([day[parameter] for day in data]) / days
+        data = self.data[shift:prices + shift]
+        sma = sum([day[parameter] for day in data]) / prices
         if round_value:
             return round(sma, 2)
         return sma
 
-    def get_ema(self, period, parameter, sma_days=5, round_value=True):
+    def get_wma(self, prices, parameter):
+        """
+        Returns the weighted moving average with run-time data and prices provided.
+        :param int prices: Number of prices to loop over for average
+        :param parameter: Parameter to get the average of (e.g. open, close, high or low values)
+        :return: WMA
+        """
+        if prices == 0:
+            print("Prices cannot be 0.")
+            return
+        if prices == 1:
+            return self.get_current_price()
+        total = self.get_current_price() * prices
+        index = 0
+        divisor = prices * (prices + 1) / 2
+        for x in range(prices - 1, 0, -1):
+            total += x * self.data[index][parameter]
+            index += 1
+        return total / divisor
+
+    def get_ema(self, period, parameter, sma_prices=5, round_value=True):
         """
         Returns the exponential moving average with data provided.
         :param round_value: Boolean that specifies whether return value should be rounded
-        :param int sma_days: SMA days to get first EMA
+        :param int sma_prices: SMA prices to get first EMA over
         :param int period: Days to iterate EMA over (or the period)
         :param str parameter: Parameter to get the average of (e.g. open, close, high, or low values)
         :return: EMA
         """
-        shift = len(self.data) - sma_days
-        ema = self.get_sma(sma_days, parameter, shift=shift, round_value=False)
+        shift = len(self.data) - sma_prices
+        ema = self.get_sma(sma_prices, parameter, shift=shift, round_value=False)
         values = [(round(ema, 2), str(self.data[shift]['date']))]
-        for day in range(len(self.data) - sma_days):
+        for day in range(len(self.data) - sma_prices):
             multiplier = 2 / (period + 1)
-            current_index = len(self.data) - sma_days - day - 1
+            current_index = len(self.data) - sma_prices - day - 1
             current_price = self.data[current_index][parameter]
             ema = current_price * multiplier + ema * (1 - multiplier)
             values.append((round(ema, 2), str(self.data[current_index]['date'])))
@@ -176,6 +243,187 @@ class Trader:
         if round_value:
             return round(ema, 2)
         return ema
+
+    def get_current_price(self):
+        """
+        Returns the current market BTC price.
+        :return: BTC market price
+        """
+        return float(self.binanceClient.get_symbol_ticker(symbol="BTCUSDT")['price'])
+
+    def process_transaction(self):
+        pass
+
+    def print_basic_information(self):
+        """
+        Prints out basic information about trades.
+        :return:
+        """
+        print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        print(f'Current BTC price: ${self.get_current_price()}')
+        print(f'Balance: ${self.balance}')
+        if self.btc != 0:
+            print(f'BTC: {self.btc}')
+            print(f'Price we bought BTC long for: ${self.buyLongPrice}')
+        if self.btcOwed != 0:
+            print(f'BTC Owed: {self.btcOwed}')
+            print(f'BTC Owed Price: ${self.btcOwedPrice}')
+            print(f'Price we sold BTC short for: ${self.sellShortPrice}')
+        print()
+
+    def buy_long(self, usd=None):
+        """
+        Buys BTC at current market price with amount of USD specified. If not specified, assumes bot goes all in.
+        Function also takes into account Binance's 0.1% transaction fee.
+        """
+        if usd is None:
+            usd = self.balance
+
+        if usd <= 0:
+            print("You cannot buy with $0 or less.")
+            if self.balance <= 0:
+                print("Looks like you have run out of money.")
+            return
+        elif usd > self.balance:
+            print(f'You currently have ${self.balance}. You cannot invest ${usd}.')
+            return
+
+        transactionFee = usd * self.transactionFee
+        currentPrice = self.get_current_price()
+        btcBought = (usd - transactionFee) / currentPrice
+        self.buyLongPrice = currentPrice
+        self.btc += btcBought
+        self.balance -= usd
+
+    def sell_long(self, btc=None):
+        """
+        Sells specified amount of BTC at current market price. If not specified, assumes bot sells all BTC.
+        Function also takes into account Binance's 0.1% transaction fee.
+        """
+        if btc is None:
+            btc = self.btc
+
+        if btc <= 0:
+            print("You cannot sell 0 or negative BTC.")
+            if self.btc <= 0:
+                print("Looks like you do not have any BTC.")
+            return
+        elif btc > self.btc:
+            print(f'You currently have {self.btc} BTC. You cannot sell {btc} BTC.')
+            return
+
+        currentPrice = self.get_current_price()
+        earned = btc * currentPrice * (1 - self.transactionFee)
+        self.btc -= btc
+        self.balance += earned
+
+        if self.btc == 0:
+            self.buyLongPrice = 0
+
+    def buy_short(self, btc=None):
+        """
+        Buys borrowed BTC at current market price and returns to market.
+        Function also takes into account Binance's 0.1% transaction fee.
+        If BTC amount is not specified, bot will assume to buy all owed back
+        BTC.
+        """
+        if btc is None:
+            btc = self.btcOwed
+
+        if btc <= 0:
+            print("You cannot buy 0 or less BTC.")
+            return
+
+        currentPrice = self.get_current_price()
+        lost = currentPrice * btc * (1 + self.transactionFee)
+        self.btcOwed -= btc
+        self.balance -= lost
+
+    def sell_short(self, btc=None):
+        """
+        Borrows BTC and sells them at current market price.
+        Function also takes into account Binance's 0.1% transaction fee.
+        If no BTC is provided in function, bot will assume we borrow as much as
+        bot can buy with current balance and market value.
+        """
+        currentPrice = self.get_current_price()
+
+        if btc is None:
+            transactionFee = self.balance * self.transactionFee
+            btc = (self.balance - transactionFee) / currentPrice
+
+        if btc <= 0:
+            print("You cannot borrow 0 or less BTC.")
+            return
+
+        earned = currentPrice * btc * (1 - self.transactionFee)
+        self.btcOwed += btc
+        self.btcOwedPrice = currentPrice
+        self.balance += earned
+        self.sellShortPrice = currentPrice
+
+    def simulate(self, parameter="high", tradeType="SMA", initialBound=11, finalBound=19, comparison='>', loss=0.02):
+        """
+        Starts a live simulation with given parameters.
+        :param parameter: Type of parameter to use for averages. e.g close, open, high, low.
+        :param tradeType: Type of trade. e.g. SMA, WMA, EMA.
+        :param initialBound: Initial bound. e.g SMA(9) > SMA(11), initial bound would be 9.
+        :param finalBound: Final bound. e.g SMA(9) > SMA(11), final bound would be 11.
+        :param comparison: Comparison for trade type. SMA(1) > SMA(2) would be >.
+        :param loss: Loss percentage at which we sell long or buy short.
+        """
+        startingBalance = self.balance
+        while True:
+            try:
+                self.print_basic_information()
+                if not self.updated_data():
+                    self.update_data()
+                if tradeType.upper() == "SMA":
+                    if comparison == '>':
+                        print(f'Parameter: {parameter}')
+                        print(f'SMA({initialBound})= {self.get_sma(initialBound, parameter)}')
+                        print(f'SMA({finalBound})= {self.get_sma(finalBound, parameter)}')
+                        if self.buyLongPrice is None:
+                            if self.get_sma(initialBound, parameter) > self.get_sma(finalBound, parameter):
+                                print(f"SMA({initialBound}) > SMA({finalBound}). Going all in to buy long.")
+                                self.buy_long()
+                                self.simulatedTradesConducted += 1
+                                if self.sellShortPrice is not None:
+                                    self.buy_short()
+                                    self.simulatedTradesConducted += 1
+                        else:
+                            if self.get_current_price() < self.buyLongPrice * (1 - loss):
+                                print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
+                                self.sell_long()
+                                self.simulatedTradesConducted += 1
+                            elif self.get_sma(initialBound, parameter) == self.get_sma(finalBound, parameter):
+                                print("Cross detected. Selling long and selling short.")
+                                self.sell_long()
+                                self.sell_short()
+                                self.simulatedTradesConducted += 2
+
+                        if self.sellShortPrice is not None:
+                            if self.get_current_price() > self.sellShortPrice * (1 + loss):
+                                print(f'Loss is greater than {loss * 100}% in short trade. Returning all borrowed BTC.')
+                                self.buy_short()
+                                self.simulatedTradesConducted += 1
+
+                print("Type CTRL-C to cancel the program at any time.")
+                time.sleep(1)
+            except KeyboardInterrupt:
+                print("\nExiting simulation.")
+                print("\nResults:")
+                print(f'Starting balance: ${startingBalance}')
+                print(f'Ending balance: ${self.balance}')
+                if self.balance > startingBalance:
+                    profit = self.balance - startingBalance
+                    print(f"Profit: ${profit}")
+                elif self.balance < startingBalance:
+                    loss = startingBalance - self.balance
+                    print(f'Loss: ${loss}')
+                else:
+                    print("No profit or loss occurred.")
+                break
 
     def __str__(self):
         return f'Trader()'
