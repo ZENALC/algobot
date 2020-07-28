@@ -186,6 +186,27 @@ class Trader:
                 break
         return success
 
+    def get_current_data(self):
+        """
+        Retrieves current market dictionary with open, high, low, close prices.
+        :return: A dictionary with current open, high, low, and close prices.
+        """
+        current = datetime.now(tz=timezone.utc)
+        currentHourDate = datetime(current.year, current.month, current.day, current.hour, tzinfo=timezone.utc)
+        nextHourDate = currentHourDate + timedelta(hours=1)
+        currentHourTimestamp = int(currentHourDate.timestamp() * 1000)
+        nextHourTimestamp = int(nextHourDate.timestamp() * 1000)
+        currentData = self.binanceClient.get_klines(symbol='BTCUSDT',
+                                                    interval='1h',
+                                                    startTime=currentHourTimestamp,
+                                                    endTime=nextHourTimestamp,
+                                                    limit=1)[0]
+        currentDataDictionary = {'open': float(currentData[1]),
+                                 'high': float(currentData[2]),
+                                 'low': float(currentData[3]),
+                                 'close': float(currentData[4])}
+        return currentDataDictionary
+
     def get_sma(self, prices, parameter, shift=0, round_value=True):
         """
         Returns the simple moving average with run-time data and prices provided.
@@ -195,6 +216,7 @@ class Trader:
         :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: SMA
         """
+        currentData = self.get_current_data()[parameter]
         data = self.data[shift:prices + shift]
         sma = sum([day[parameter] for day in data]) / prices
         if round_value:
