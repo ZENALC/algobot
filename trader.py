@@ -233,9 +233,11 @@ class Trader:
             return round(sma, 2)
         return sma
 
-    def get_wma(self, prices, parameter):
+    def get_wma(self, prices, parameter, round_value=True, current=True):
         """
         Returns the weighted moving average with run-time data and prices provided.
+        :param current: Boolean that takes into account whether we use current price bar or not.
+        :param boolean round_value: Boolean that specifies whether return value should be rounded
         :param int prices: Number of prices to loop over for average
         :param parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: WMA
@@ -243,20 +245,28 @@ class Trader:
         if prices == 0:
             print("Prices cannot be 0.")
             return
-        if prices == 1:
-            return self.get_current_data()[parameter]
-        total = self.get_current_data()[parameter] * prices
+
+        if current:
+            total = self.get_current_data()[parameter] * prices
+        else:
+            total = self.data[0][parameter] * prices
+
         index = 0
         divisor = prices * (prices + 1) / 2
         for x in range(prices - 1, 0, -1):
             total += x * self.data[index][parameter]
             index += 1
-        return total / divisor
 
-    def get_ema(self, period, parameter, sma_prices=5, round_value=True):
+        wma = total / divisor
+        if round_value:
+            return round(wma, 2)
+        return wma
+
+    def get_ema(self, period, parameter, sma_prices=5, round_value=True, current=True):
         """
         Returns the exponential moving average with data provided.
         :param round_value: Boolean that specifies whether return value should be rounded
+        :param current: Boolean that takes into account whether we use current price bar or not.
         :param int sma_prices: SMA prices to get first EMA over
         :param int period: Days to iterate EMA over (or the period)
         :param str parameter: Parameter to get the average of (e.g. open, close, high, or low values)
@@ -271,9 +281,13 @@ class Trader:
             current_price = self.data[current_index][parameter]
             ema = current_price * multiplier + ema * (1 - multiplier)
             values.append((round(ema, 2), str(self.data[current_index]['date'])))
-        ema = self.get_current_data()[parameter] * multiplier + ema * (1 - multiplier)
-        values.append((round(ema, 2), str(self.get_current_data()['date'])))
+
+        if current:
+            ema = self.get_current_data()[parameter] * multiplier + ema * (1 - multiplier)
+            values.append((round(ema, 2), str(self.get_current_data()['date'])))
+
         self.ema_data[period] = {parameter: values}
+
         if round_value:
             return round(ema, 2)
         return ema
