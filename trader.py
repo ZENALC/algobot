@@ -465,6 +465,12 @@ class Trader:
                 time.sleep(1)
             except KeyboardInterrupt:
                 print("\nExiting simulation.")
+                if self.btc > 0:
+                    print("Selling all BTC...")
+                    self.sell_long()
+                if self.btcOwed > 0:
+                    print("Returning all borrowed BTC...")
+                    self.buy_short()
                 print("\nResults:")
                 print(f'Starting balance: ${startingBalance}')
                 print(f'Ending balance: ${self.balance}')
