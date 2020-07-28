@@ -424,41 +424,40 @@ class Trader:
         :param comparison: Comparison for trade type. SMA(1) > SMA(2) would be >.
         :param loss: Loss percentage at which we sell long or buy short.
         """
+        parameter = parameter.lower()
+        tradeType = tradeType.upper()
         startingBalance = self.balance
         while True:
             try:
                 self.print_basic_information()
                 if not self.updated_data():
                     self.update_data()
-                if tradeType.upper() == "SMA":
-                    if comparison == '>':
-                        print(f'Parameter: {parameter}')
-                        print(f'SMA({initialBound})= {self.get_sma(initialBound, parameter)}')
-                        print(f'SMA({finalBound})= {self.get_sma(finalBound, parameter)}')
-                        if self.buyLongPrice is None:
-                            if self.get_sma(initialBound, parameter) > self.get_sma(finalBound, parameter):
-                                print(f"SMA({initialBound}) > SMA({finalBound}). Going all in to buy long.")
-                                self.buy_long()
-                                self.simulatedTradesConducted += 1
-                                if self.sellShortPrice is not None:
-                                    self.buy_short()
-                                    self.simulatedTradesConducted += 1
-                        else:
-                            if self.get_current_price() < self.buyLongPrice * (1 - loss):
-                                print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
-                                self.sell_long()
-                                self.simulatedTradesConducted += 1
-                            elif self.get_sma(initialBound, parameter) == self.get_sma(finalBound, parameter):
-                                print("Cross detected. Selling long and selling short.")
-                                self.sell_long()
-                                self.sell_short()
-                                self.simulatedTradesConducted += 2
-
-                        if self.sellShortPrice is not None:
-                            if self.get_current_price() > self.sellShortPrice * (1 + loss):
-                                print(f'Loss is greater than {loss * 100}% in short trade. Returning all borrowed BTC.')
+                self.print_trade_type(tradeType, initialBound, finalBound, parameter)
+                if comparison == '>':
+                    if self.buyLongPrice is None:
+                        if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
+                            print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). Going all in to buy long.")
+                            self.buy_long()
+                            self.simulatedTradesConducted += 1
+                            if self.sellShortPrice is not None:
                                 self.buy_short()
                                 self.simulatedTradesConducted += 1
+                    else:
+                        if self.get_current_price() < self.buyLongPrice * (1 - loss):
+                            print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
+                            self.sell_long()
+                            self.simulatedTradesConducted += 1
+                        elif self.check_cross(tradeType, initialBound, finalBound, parameter):
+                            print("Cross detected. Selling long and selling short.")
+                            self.sell_long()
+                            self.sell_short()
+                            self.simulatedTradesConducted += 2
+
+                    if self.sellShortPrice is not None:
+                        if self.get_current_price() > self.sellShortPrice * (1 + loss):
+                            print(f'Loss is greater than {loss * 100}% in short trade. Returning all borrowed BTC.')
+                            self.buy_short()
+                            self.simulatedTradesConducted += 1
 
                 print("Type CTRL-C to cancel the program at any time.")
                 time.sleep(1)
@@ -476,6 +475,50 @@ class Trader:
                 else:
                     print("No profit or loss occurred.")
                 break
+
+    def print_trade_type(self, tradeType, initialBound, finalBound, parameter):
+        print(f'Parameter: {parameter}')
+        if tradeType == 'SMA':
+            print(f'{tradeType}({initialBound})= {self.get_sma(initialBound, parameter)}')
+            print(f'{tradeType}({finalBound})= {self.get_sma(finalBound, parameter)}')
+        elif tradeType == 'WMA':
+            print(f'{tradeType}({initialBound})= {self.get_wma(initialBound, parameter)}')
+            print(f'{tradeType}({finalBound})= {self.get_wma(finalBound, parameter)}')
+        elif tradeType == 'EMA':
+            print(f'{tradeType}({initialBound})= {self.get_ema(initialBound, parameter)}')
+            print(f'{tradeType}({finalBound})= {self.get_ema(finalBound, parameter)}')
+        else:
+            print(f'Unknown trade type {tradeType}.')
+
+    def validate_trade(self, tradeType, initialBound, finalBound, parameter, comparison):
+        if tradeType == 'SMA':
+            if comparison == '>':
+                return self.get_sma(initialBound, parameter) > self.get_sma(finalBound, parameter)
+            else:
+                return self.get_sma(initialBound, parameter) < self.get_sma(finalBound, parameter)
+        elif tradeType == 'WMA':
+            if comparison == '>':
+                return self.get_wma(initialBound, parameter) > self.get_wma(finalBound, parameter)
+            else:
+                return self.get_wma(initialBound, parameter) < self.get_wma(finalBound, parameter)
+        elif tradeType == 'EMA':
+            if comparison == '>':
+                return self.get_ema(initialBound, parameter) > self.get_ema(finalBound, parameter)
+            else:
+                return self.get_ema(initialBound, parameter) < self.get_ema(finalBound, parameter)
+        else:
+            print(f'Unknown trading type {tradeType}.')
+            return False
+
+    def check_cross(self, tradeType, initialBound, finalBound, parameter):
+        if tradeType == 'SMA':
+            return self.get_sma(initialBound, parameter) == self.get_sma(finalBound, parameter)
+        elif tradeType == 'EMA':
+            return self.get_ema(initialBound, parameter) == self.get_ema(finalBound, parameter)
+        elif tradeType == 'WMA':
+            return self.get_wma(initialBound, parameter) == self.get_wma(finalBound, parameter)
+        else:
+            return False
 
     def __str__(self):
         return f'Trader()'
