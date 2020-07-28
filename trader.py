@@ -240,8 +240,8 @@ class Trader:
             print("Prices cannot be 0.")
             return
         if prices == 1:
-            return self.get_current_price()
-        total = self.get_current_price() * prices
+            return self.get_current_data()[parameter]
+        total = self.get_current_data()[parameter] * prices
         index = 0
         divisor = prices * (prices + 1) / 2
         for x in range(prices - 1, 0, -1):
@@ -261,12 +261,14 @@ class Trader:
         shift = len(self.data) - sma_prices
         ema = self.get_sma(sma_prices, parameter, shift=shift, round_value=False)
         values = [(round(ema, 2), str(self.data[shift]['date']))]
+        multiplier = 2 / (period + 1)
         for day in range(len(self.data) - sma_prices):
-            multiplier = 2 / (period + 1)
             current_index = len(self.data) - sma_prices - day - 1
             current_price = self.data[current_index][parameter]
             ema = current_price * multiplier + ema * (1 - multiplier)
             values.append((round(ema, 2), str(self.data[current_index]['date'])))
+        ema = self.get_current_data()[parameter] * multiplier + ema * (1 - multiplier)
+        values.append((round(ema, 2), str(self.get_current_data()['date'])))
         self.ema_data[period] = {parameter: values}
         if round_value:
             return round(ema, 2)
