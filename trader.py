@@ -272,6 +272,10 @@ class Trader:
         :param str parameter: Parameter to get the average of (e.g. open, close, high, or low values)
         :return: EMA
         """
+        if period > len(self.data):
+            print("Invalid prices entered.")
+            return
+
         shift = len(self.data) - sma_prices
         ema = self.get_sma(sma_prices, parameter, shift=shift, round_value=False)
         values = [(round(ema, 2), str(self.data[shift]['date']))]
