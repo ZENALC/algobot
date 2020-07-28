@@ -200,8 +200,9 @@ class Trader:
                                                     interval='1h',
                                                     startTime=currentHourTimestamp,
                                                     endTime=nextHourTimestamp,
-                                                    limit=1)[0]
-        currentDataDictionary = {'open': float(currentData[1]),
+                                                    )[0]
+        currentDataDictionary = {'date': nextHourDate,
+                                 'open': float(currentData[1]),
                                  'high': float(currentData[2]),
                                  'low': float(currentData[3]),
                                  'close': float(currentData[4])}
@@ -216,8 +217,13 @@ class Trader:
         :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: SMA
         """
-        currentData = self.get_current_data()[parameter]
-        data = self.data[shift:prices + shift]
+        if prices == 0:
+            print("Prices cannot be 0.")
+            return
+        elif prices == 1:
+            return self.get_current_data()[parameter]
+        currentData = self.get_current_data()
+        data = [currentData] + self.data[shift:prices + shift - 1]
         sma = sum([day[parameter] for day in data]) / prices
         if round_value:
             return round(sma, 2)
