@@ -208,22 +208,26 @@ class Trader:
                                  'close': float(currentData[4])}
         return currentDataDictionary
 
-    def get_sma(self, prices, parameter, shift=0, round_value=True):
+    def get_sma(self, prices, parameter, shift=0, round_value=True, current=False):
         """
         Returns the simple moving average with run-time data and prices provided.
+        :param current: Boolean that takes into account whether we use current price bar or not.
         :param boolean round_value: Boolean that specifies whether return value should be rounded
         :param int prices: Number of values for average
         :param int shift: Prices shifted from current price
         :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: SMA
         """
+        data = self.data[shift:prices + shift]
+        if current:
+            data = [self.get_current_data()] + data[:len(data) - 1]
+
         if prices == 0:
             print("Prices cannot be 0.")
             return
         elif prices == 1:
-            return self.get_current_data()[parameter]
-        currentData = self.get_current_data()
-        data = [currentData] + self.data[shift:prices + shift - 1]
+            return data[0][parameter]
+
         sma = sum([day[parameter] for day in data]) / prices
         if round_value:
             return round(sma, 2)
