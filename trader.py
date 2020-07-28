@@ -426,6 +426,8 @@ class Trader:
         """
         parameter = parameter.lower()
         tradeType = tradeType.upper()
+        self.sellShortPrice = None
+        self.buyLongPrice = None
         startingBalance = self.balance
         while True:
             try:
