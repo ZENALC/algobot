@@ -504,9 +504,17 @@ class Trader:
         if self.btc > 0:
             print("Selling all BTC...")
             self.sell_long()
+            self.simulatedTrades.append({
+                'date': datetime.utcnow(),
+                'action': f'Sold long as simulation ended.'
+            })
         if self.btcOwed > 0:
             print("Returning all borrowed BTC...")
             self.buy_short()
+            self.simulatedTrades.append({
+                'date': datetime.utcnow(),
+                'action': f'Bought short as simulation ended.'
+            })
         print("\nResults:")
         print(f'Starting balance: ${startingBalance}')
         print(f'Ending balance: ${self.balance}')
@@ -534,14 +542,14 @@ class Trader:
     def print_trade_type(self, tradeType, initialBound, finalBound, parameter):
         print(f'Parameter: {parameter}')
         if tradeType == 'SMA':
-            print(f'{tradeType}({initialBound})= {self.get_sma(initialBound, parameter)}')
-            print(f'{tradeType}({finalBound})= {self.get_sma(finalBound, parameter)}')
+            print(f'{tradeType}({initialBound}) = {self.get_sma(initialBound, parameter)}')
+            print(f'{tradeType}({finalBound}) = {self.get_sma(finalBound, parameter)}')
         elif tradeType == 'WMA':
-            print(f'{tradeType}({initialBound})= {self.get_wma(initialBound, parameter)}')
-            print(f'{tradeType}({finalBound})= {self.get_wma(finalBound, parameter)}')
+            print(f'{tradeType}({initialBound}) = {self.get_wma(initialBound, parameter)}')
+            print(f'{tradeType}({finalBound}) = {self.get_wma(finalBound, parameter)}')
         elif tradeType == 'EMA':
-            print(f'{tradeType}({initialBound})= {self.get_ema(initialBound, parameter)}')
-            print(f'{tradeType}({finalBound})= {self.get_ema(finalBound, parameter)}')
+            print(f'{tradeType}({initialBound}) = {self.get_ema(initialBound, parameter)}')
+            print(f'{tradeType}({finalBound}) = {self.get_ema(finalBound, parameter)}')
         else:
             print(f'Unknown trade type {tradeType}.')
 
@@ -566,6 +574,14 @@ class Trader:
             return False
 
     def check_cross(self, tradeType, initialBound, finalBound, parameter):
+        """
+        Checks if there is a cross.
+        :param tradeType: Algorithm used type. e.g. SMA, WMA, or EMA
+        :param initialBound: First bound for algorithm.
+        :param finalBound: Final bound for algorithm.
+        :param parameter: Type of parameter used. eg. high, close, low, open
+        :return: A boolean whether there is a cross or not.
+        """
         if tradeType == 'SMA':
             return self.get_sma(initialBound, parameter) == self.get_sma(finalBound, parameter)
         elif tradeType == 'EMA':
