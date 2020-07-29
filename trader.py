@@ -24,6 +24,7 @@ class Trader:
         self.buyLongPrice = None
         self.sellShortPrice = None
         self.simulatedTradesConducted = 0
+        self.simulatedTrades = []
 
         self.create_table()
         self.get_data_from_database()
@@ -272,8 +273,8 @@ class Trader:
         :param str parameter: Parameter to get the average of (e.g. open, close, high, or low values)
         :return: EMA
         """
-        if period > len(self.data):
-            print("Invalid prices entered.")
+        if period > len(self.data) or period < 0:
+            print("Invalid price entered.")
             return
 
         shift = len(self.data) - sma_prices
@@ -426,9 +427,9 @@ class Trader:
         """
         parameter = parameter.lower()
         tradeType = tradeType.upper()
+        self.simulatedTrades = []
         self.sellShortPrice = None
         self.buyLongPrice = None
-        self.simulatedTradesConducted = 0
         startingBalance = self.balance
         if comparison != '>':
             temp = initialBound
@@ -447,25 +448,49 @@ class Trader:
                     if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
                         print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). Going all in to buy long.")
                         self.buy_long()
+                        self.simulatedTrades.append({
+                            'date': datetime.utcnow(),
+                            'action': f'Bought long as {tradeType}({initialBound}) > {tradeType}({finalBound}).'
+                        })
                         self.simulatedTradesConducted += 1
                         if self.sellShortPrice is not None:
                             self.buy_short()
+                            self.simulatedTrades.append({
+                                'date': datetime.utcnow(),
+                                'action': f'Bought short as {tradeType}({initialBound}) > {tradeType}({finalBound}).'
+                            })
                             self.simulatedTradesConducted += 1
                 else:
                     if self.get_current_price() < self.buyLongPrice * (1 - loss):
                         print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
                         self.sell_long()
+                        self.simulatedTrades.append({
+                            'date': datetime.utcnow(),
+                            'action': f'Sold long because loss was greater than {loss * 100}%.'
+                        })
                         self.simulatedTradesConducted += 1
                     elif self.check_cross(tradeType, initialBound, finalBound, parameter):
                         print("Cross detected. Selling long and selling short.")
                         self.sell_long()
+                        self.simulatedTrades.append({
+                            'date': datetime.utcnow(),
+                            'action': f'Sold long because a cross was detected.'
+                        })
                         self.sell_short()
+                        self.simulatedTrades.append({
+                            'date': datetime.utcnow(),
+                            'action': f'Sold short because a cross was detected.'
+                        })
                         self.simulatedTradesConducted += 2
 
                 if self.sellShortPrice is not None:
                     if self.get_current_price() > self.sellShortPrice * (1 + loss):
                         print(f'Loss is greater than {loss * 100}% in short trade. Returning all borrowed BTC.')
                         self.buy_short()
+                        self.simulatedTrades.append({
+                            'date': datetime.utcnow(),
+                            'action': f'Bought short because loss was greater than {loss * 100}%.'
+                        })
                         self.simulatedTradesConducted += 1
 
                 print("Type CTRL-C to cancel the program at any time.")
@@ -485,7 +510,8 @@ class Trader:
         print("\nResults:")
         print(f'Starting balance: ${startingBalance}')
         print(f'Ending balance: ${self.balance}')
-        print(f'Trades conducted: {self.simulatedTradesConducted}')
+        print(f'Trades conducted: {len(self.simulatedTrades)}')
+        print(f'Lifetime trades conducted: {self.simulatedTradesConducted}')
         if self.balance > startingBalance:
             profit = self.balance - startingBalance
             print(f"Profit: ${profit}")
@@ -494,6 +520,16 @@ class Trader:
             print(f'Loss: ${loss}')
         else:
             print("No profit or loss occurred.")
+
+        if len(self.simulatedTrades) > 0:
+            print("You can view the trades from the simulation in more detail.")
+            print("Please type in bot.view_simulated_trades() to view them.")
+
+    def view_simulated_trades(self):
+        print(f'\nTotal trade(s) in previous simulation: {len(self.simulatedTrades)}')
+        for counter, trade in enumerate(self.simulatedTrades, 1):
+            print(f'\n{counter}. Date in UTC: {trade["date"]}')
+            print(f'Action taken: {trade["action"]}')
 
     def print_trade_type(self, tradeType, initialBound, finalBound, parameter):
         print(f'Parameter: {parameter}')
