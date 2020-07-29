@@ -428,61 +428,72 @@ class Trader:
         tradeType = tradeType.upper()
         self.sellShortPrice = None
         self.buyLongPrice = None
+        self.simulatedTradesConducted = 0
         startingBalance = self.balance
+        if comparison != '>':
+            temp = initialBound
+            initialBound = finalBound
+            finalBound = temp
+            comparison = '>'
+
         while True:
             try:
                 self.print_basic_information()
                 if not self.updated_data():
                     self.update_data()
-                self.print_trade_type(tradeType, initialBound, finalBound, parameter)
-                if comparison == '>':
-                    if self.buyLongPrice is None:
-                        if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
-                            print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). Going all in to buy long.")
-                            self.buy_long()
-                            self.simulatedTradesConducted += 1
-                            if self.sellShortPrice is not None:
-                                self.buy_short()
-                                self.simulatedTradesConducted += 1
-                    else:
-                        if self.get_current_price() < self.buyLongPrice * (1 - loss):
-                            print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
-                            self.sell_long()
-                            self.simulatedTradesConducted += 1
-                        elif self.check_cross(tradeType, initialBound, finalBound, parameter):
-                            print("Cross detected. Selling long and selling short.")
-                            self.sell_long()
-                            self.sell_short()
-                            self.simulatedTradesConducted += 2
 
-                    if self.sellShortPrice is not None:
-                        if self.get_current_price() > self.sellShortPrice * (1 + loss):
-                            print(f'Loss is greater than {loss * 100}% in short trade. Returning all borrowed BTC.')
+                self.print_trade_type(tradeType, initialBound, finalBound, parameter)
+                if self.buyLongPrice is None:
+                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
+                        print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). Going all in to buy long.")
+                        self.buy_long()
+                        self.simulatedTradesConducted += 1
+                        if self.sellShortPrice is not None:
                             self.buy_short()
                             self.simulatedTradesConducted += 1
+                else:
+                    if self.get_current_price() < self.buyLongPrice * (1 - loss):
+                        print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
+                        self.sell_long()
+                        self.simulatedTradesConducted += 1
+                    elif self.check_cross(tradeType, initialBound, finalBound, parameter):
+                        print("Cross detected. Selling long and selling short.")
+                        self.sell_long()
+                        self.sell_short()
+                        self.simulatedTradesConducted += 2
+
+                if self.sellShortPrice is not None:
+                    if self.get_current_price() > self.sellShortPrice * (1 + loss):
+                        print(f'Loss is greater than {loss * 100}% in short trade. Returning all borrowed BTC.')
+                        self.buy_short()
+                        self.simulatedTradesConducted += 1
 
                 print("Type CTRL-C to cancel the program at any time.")
                 time.sleep(1)
             except KeyboardInterrupt:
                 print("\nExiting simulation.")
-                if self.btc > 0:
-                    print("Selling all BTC...")
-                    self.sell_long()
-                if self.btcOwed > 0:
-                    print("Returning all borrowed BTC...")
-                    self.buy_short()
-                print("\nResults:")
-                print(f'Starting balance: ${startingBalance}')
-                print(f'Ending balance: ${self.balance}')
-                if self.balance > startingBalance:
-                    profit = self.balance - startingBalance
-                    print(f"Profit: ${profit}")
-                elif self.balance < startingBalance:
-                    loss = startingBalance - self.balance
-                    print(f'Loss: ${loss}')
-                else:
-                    print("No profit or loss occurred.")
+                self.print_simulation_result(startingBalance)
                 break
+
+    def print_simulation_result(self, startingBalance):
+        if self.btc > 0:
+            print("Selling all BTC...")
+            self.sell_long()
+        if self.btcOwed > 0:
+            print("Returning all borrowed BTC...")
+            self.buy_short()
+        print("\nResults:")
+        print(f'Starting balance: ${startingBalance}')
+        print(f'Ending balance: ${self.balance}')
+        print(f'Trades conducted: {self.simulatedTradesConducted}')
+        if self.balance > startingBalance:
+            profit = self.balance - startingBalance
+            print(f"Profit: ${profit}")
+        elif self.balance < startingBalance:
+            loss = startingBalance - self.balance
+            print(f'Loss: ${loss}')
+        else:
+            print("No profit or loss occurred.")
 
     def print_trade_type(self, tradeType, initialBound, finalBound, parameter):
         print(f'Parameter: {parameter}')
