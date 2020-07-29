@@ -415,7 +415,7 @@ class Trader:
         self.balance += earned
         self.sellShortPrice = currentPrice
 
-    def simulate(self, parameter="high", tradeType="SMA", initialBound=11, finalBound=19, comparison='>', loss=0.02):
+    def simulate(self, tradeType="SMA", parameter="high", initialBound=11, finalBound=19, comparison='>', loss=0.02):
         """
         Starts a live simulation with given parameters.
         :param parameter: Type of parameter to use for averages. e.g close, open, high, low.
