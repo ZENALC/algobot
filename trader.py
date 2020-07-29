@@ -522,7 +522,7 @@ class Trader:
             print("No profit or loss occurred.")
 
         if len(self.simulatedTrades) > 0:
-            print("You can view the trades from the simulation in more detail.")
+            print("\nYou can view the trades from the simulation in more detail.")
             print("Please type in bot.view_simulated_trades() to view them.")
 
     def view_simulated_trades(self):
