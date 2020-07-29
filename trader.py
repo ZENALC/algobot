@@ -4,6 +4,7 @@ import csv
 import time
 from datetime import datetime, timedelta, timezone
 from binance.client import Client
+from binance.websockets import BinanceSocketManager
 
 
 class Trader:
@@ -25,7 +26,12 @@ class Trader:
         self.sellShortPrice = None
         self.simulatedTradesConducted = 0
         self.simulatedTrades = []
+        self.btc_price = {'error': False}
+        self.simulationStartingBalance = None
+        self.startingTime = None
+        self.endingTime = None
 
+        # Create, initialize, store, and get values from database.
         self.create_table()
         self.get_data_from_database()
         if not self.updated_database():
@@ -33,6 +39,13 @@ class Trader:
             self.update_database()
         else:
             print("Database is up-to-date.")
+
+        # Initialize and start the WebSocket
+        print("Initializing web socket...")
+        bsm = BinanceSocketManager(self.binanceClient)
+        bsm.start_symbol_ticker_socket('BTCUSDT', self.btc_trade_history)
+        bsm.start()
+        print("Initialized web socket.")
 
     def get_database_connectors(self):
         connection = sqlite3.connect(self.databaseFile)
@@ -297,12 +310,21 @@ class Trader:
             return round(ema, 2)
         return ema
 
+    def btc_trade_history(self, msg):
+        """
+        Defines how to process incoming WebSocket messages
+        """
+        if msg['e'] != 'error':
+            self.btc_price['currentPrice'] = msg['c']
+        else:
+            self.btc_price['error'] = True
+
     def get_current_price(self):
         """
         Returns the current market BTC price.
         :return: BTC market price
         """
-        return float(self.binanceClient.get_symbol_ticker(symbol="BTCUSDT")['price'])
+        return float(self.btc_price['currentPrice'])
 
     def process_transaction(self):
         pass
@@ -310,11 +332,8 @@ class Trader:
     def print_basic_information(self):
         """
         Prints out basic information about trades.
-        :return:
         """
         print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-        print(f'Current BTC price: ${self.get_current_price()}')
-        print(f'Balance: ${self.balance}')
         if self.btc != 0:
             print(f'BTC: {self.btc}')
             print(f'Price we bought BTC long for: ${self.buyLongPrice}')
@@ -322,6 +341,8 @@ class Trader:
             print(f'BTC Owed: {self.btcOwed}')
             print(f'BTC Owed Price: ${self.btcOwedPrice}')
             print(f'Price we sold BTC short for: ${self.sellShortPrice}')
+        print(f'Current BTC price: ${self.get_current_price()}')
+        print(f'Balance: ${self.balance}')
         print()
 
     def buy_long(self, usd=None):
@@ -430,7 +451,8 @@ class Trader:
         self.simulatedTrades = []
         self.sellShortPrice = None
         self.buyLongPrice = None
-        startingBalance = self.balance
+        self.simulationStartingBalance = self.balance
+        self.startingTime = datetime.now()
         if comparison != '>':
             temp = initialBound
             initialBound = finalBound
@@ -497,10 +519,11 @@ class Trader:
                 time.sleep(1)
             except KeyboardInterrupt:
                 print("\nExiting simulation.")
-                self.print_simulation_result(startingBalance)
+                self.endingTime = datetime.now()
+                self.print_simulation_result()
                 break
 
-    def print_simulation_result(self, startingBalance):
+    def print_simulation_result(self):
         if self.btc > 0:
             print("Selling all BTC...")
             self.sell_long()
@@ -508,6 +531,7 @@ class Trader:
                 'date': datetime.utcnow(),
                 'action': f'Sold long as simulation ended.'
             })
+            self.simulatedTrades += 1
         if self.btcOwed > 0:
             print("Returning all borrowed BTC...")
             self.buy_short()
@@ -515,16 +539,20 @@ class Trader:
                 'date': datetime.utcnow(),
                 'action': f'Bought short as simulation ended.'
             })
+            self.simulatedTrades += 1
         print("\nResults:")
-        print(f'Starting balance: ${startingBalance}')
+        print(f'Starting time: {self.startingTime}')
+        print(f'End time: {self.endingTime}')
+        print(f'Elapsed time: {self.endingTime - self.startingTime}')
+        print(f'Starting balance: ${self.simulationStartingBalance}')
         print(f'Ending balance: ${self.balance}')
         print(f'Trades conducted: {len(self.simulatedTrades)}')
         print(f'Lifetime trades conducted: {self.simulatedTradesConducted}')
-        if self.balance > startingBalance:
-            profit = self.balance - startingBalance
+        if self.balance > self.simulationStartingBalance:
+            profit = self.balance - self.simulationStartingBalance
             print(f"Profit: ${profit}")
-        elif self.balance < startingBalance:
-            loss = startingBalance - self.balance
+        elif self.balance < self.simulationStartingBalance:
+            loss = self.simulationStartingBalance - self.balance
             print(f'Loss: ${loss}')
         else:
             print("No profit or loss occurred.")
