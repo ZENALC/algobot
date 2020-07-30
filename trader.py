@@ -30,6 +30,7 @@ class Trader:
         self.simulationStartingBalance = None
         self.startingTime = None
         self.endingTime = None
+        self.interval = self.binanceClient.KLINE_INTERVAL_1HOUR
 
         # Create, initialize, store, and get values from database.
         self.create_table()
@@ -42,10 +43,10 @@ class Trader:
 
         # Initialize and start the WebSocket
         print("Initializing web socket...")
-        bsm = BinanceSocketManager(self.binanceClient)
+        self.bsm = BinanceSocketManager(self.binanceClient)
         # bsm.start_symbol_ticker_socket('BTCUSDT', self.btc_trade_history)
-        bsm.start_kline_socket('BTCUSDT', self.btc_trade_history, '1h')
-        bsm.start()
+        self.conn = self.bsm.start_kline_socket('BTCUSDT', self.process_socket_message, self.interval)
+        self.bsm.start()
         print("Initialized web socket.")
 
     def get_database_connectors(self):
@@ -312,24 +313,32 @@ class Trader:
             return round(ema, 2)
         return ema
 
-    def btc_trade_history(self, msg):
+    def process_socket_message(self, msg):
         """
         Defines how to process incoming WebSocket messages
         """
         if msg['e'] != 'error':
-            self.btc_price['currentPrice'] = msg['k']['c']
-            self.btc_price['open'] = msg['k']['o']
-            self.btc_price['high'] = msg['k']['h']
-            self.btc_price['low'] = msg['k']['l']
+            self.btc_price['currentPrice'] = float(msg['k']['c'])
+            self.btc_price['open'] = float(msg['k']['o'])
+            self.btc_price['high'] = float(msg['k']['h'])
+            self.btc_price['low'] = float(msg['k']['l'])
+            if self.btc_price['error']:
+                print("Successfully reconnected.")
+                self.btc_price['error'] = False
         else:
             self.btc_price['error'] = True
+            print("Something went wrong. Attempting to restart...")
+            self.bsm.stop_socket(self.conn)
+            self.bsm.close()
+            self.conn = self.bsm.start_kline_socket('BTCUSDT', self.process_socket_message, self.interval)
+            self.bsm.start()
 
     def get_current_price(self):
         """
         Returns the current market BTC price.
         :return: BTC market price
         """
-        return float(self.btc_price['currentPrice'])
+        return self.btc_price['currentPrice']
 
     def process_transaction(self):
         pass
@@ -451,6 +460,7 @@ class Trader:
         :param comparison: Comparison for trade type. SMA(1) > SMA(2) would be >.
         :param loss: Loss percentage at which we sell long or buy short.
         """
+        print("Starting simulation...")
         parameter = parameter.lower()
         tradeType = tradeType.upper()
         self.simulatedTrades = []
@@ -458,6 +468,7 @@ class Trader:
         self.buyLongPrice = None
         self.simulationStartingBalance = self.balance
         self.startingTime = datetime.now()
+        fail = False
         if comparison != '>':
             temp = initialBound
             initialBound = finalBound
@@ -467,6 +478,11 @@ class Trader:
         while True:
             try:
                 self.print_basic_information()
+
+                if fail:
+                    print("Successfully reconnected.")
+                    fail = False
+
                 if not self.updated_data():
                     self.update_data()
 
@@ -521,14 +537,24 @@ class Trader:
                         self.simulatedTradesConducted += 1
 
                 print("Type CTRL-C to cancel the program at any time.")
-                time.sleep(1)
+                time.sleep(2)
             except KeyboardInterrupt:
                 print("\nExiting simulation.")
                 self.endingTime = datetime.now()
                 self.print_simulation_result()
                 break
+            except Exception as e:
+                if not fail:
+                    print(f'ERROR: {e}')
+                    print("Something went wrong. Trying again in 5 seconds.")
+                time.sleep(5)
+                print("Attempting to fix error...")
+                fail = True
 
     def print_simulation_result(self):
+        """
+        Prints end result of simulation.
+        """
         if self.btc > 0:
             print("Selling all BTC...")
             self.sell_long()
@@ -536,7 +562,7 @@ class Trader:
                 'date': datetime.utcnow(),
                 'action': f'Sold long as simulation ended.'
             })
-            self.simulatedTrades += 1
+            self.simulatedTradesConducted += 1
         if self.btcOwed > 0:
             print("Returning all borrowed BTC...")
             self.buy_short()
@@ -544,7 +570,7 @@ class Trader:
                 'date': datetime.utcnow(),
                 'action': f'Bought short as simulation ended.'
             })
-            self.simulatedTrades += 1
+            self.simulatedTradesConducted += 1
         print("\nResults:")
         print(f'Starting time: {self.startingTime}')
         print(f'End time: {self.endingTime}')
@@ -567,12 +593,22 @@ class Trader:
             print("Please type in bot.view_simulated_trades() to view them.")
 
     def view_simulated_trades(self):
+        """
+        Prints simulation result in more detail with each trade conducted.
+        """
         print(f'\nTotal trade(s) in previous simulation: {len(self.simulatedTrades)}')
         for counter, trade in enumerate(self.simulatedTrades, 1):
             print(f'\n{counter}. Date in UTC: {trade["date"]}')
             print(f'Action taken: {trade["action"]}')
 
     def print_trade_type(self, tradeType, initialBound, finalBound, parameter):
+        """
+        Prints out general information about current trade.
+        :param tradeType: Current trade type.
+        :param initialBound: Initial bound for trade algorithm.
+        :param finalBound: Final bound for trade algorithm.
+        :param parameter: Type of parameter used.
+        """
         print(f'Parameter: {parameter}')
         if tradeType == 'SMA':
             print(f'{tradeType}({initialBound}) = {self.get_sma(initialBound, parameter)}')
@@ -587,6 +623,16 @@ class Trader:
             print(f'Unknown trade type {tradeType}.')
 
     def validate_trade(self, tradeType, initialBound, finalBound, parameter, comparison):
+        """
+        Checks if bot should go ahead with trade. If trade-type with initial bound is logically compared with trade-type
+        with final bound, a boolean is returned whether it is true or false.
+        :param tradeType: Type of trade conducted.
+        :param initialBound: Initial bound for trade algorithm.
+        :param finalBound: Final bound for trade algorithm.
+        :param parameter: Parameter to use for trade algorithm.
+        :param comparison: Comparision whether trade type is greater than or less than.
+        :return: A boolean whether trade should be performed or not.
+        """
         if tradeType == 'SMA':
             if comparison == '>':
                 return self.get_sma(initialBound, parameter) > self.get_sma(finalBound, parameter)
@@ -625,7 +671,7 @@ class Trader:
             return False
 
     def __str__(self):
-        return f'Trader()'
+        return self.__repr__()
 
     def __repr__(self):
-        return 'Trader()'
+        return f'Trader(startingBalance={self.startingBalance})'
