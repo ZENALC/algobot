@@ -43,7 +43,8 @@ class Trader:
         # Initialize and start the WebSocket
         print("Initializing web socket...")
         bsm = BinanceSocketManager(self.binanceClient)
-        bsm.start_symbol_ticker_socket('BTCUSDT', self.btc_trade_history)
+        # bsm.start_symbol_ticker_socket('BTCUSDT', self.btc_trade_history)
+        bsm.start_kline_socket('BTCUSDT', self.btc_trade_history, '1h')
         bsm.start()
         print("Initialized web socket.")
 
@@ -205,22 +206,23 @@ class Trader:
         Retrieves current market dictionary with open, high, low, close prices.
         :return: A dictionary with current open, high, low, and close prices.
         """
-        current = datetime.now(tz=timezone.utc)
-        currentHourDate = datetime(current.year, current.month, current.day, current.hour, tzinfo=timezone.utc)
-        nextHourDate = currentHourDate + timedelta(hours=1)
-        currentHourTimestamp = int(currentHourDate.timestamp() * 1000)
-        nextHourTimestamp = int(nextHourDate.timestamp() * 1000)
-        currentData = self.binanceClient.get_klines(symbol='BTCUSDT',
-                                                    interval='1h',
-                                                    startTime=currentHourTimestamp,
-                                                    endTime=nextHourTimestamp,
-                                                    )[0]
-        currentDataDictionary = {'date': nextHourDate,
-                                 'open': float(currentData[1]),
-                                 'high': float(currentData[2]),
-                                 'low': float(currentData[3]),
-                                 'close': float(currentData[4])}
-        return currentDataDictionary
+        # current = datetime.now(tz=timezone.utc)
+        # currentHourDate = datetime(current.year, current.month, current.day, current.hour, tzinfo=timezone.utc)
+        # nextHourDate = currentHourDate + timedelta(hours=1)
+        # currentHourTimestamp = int(currentHourDate.timestamp() * 1000)
+        # nextHourTimestamp = int(nextHourDate.timestamp() * 1000)
+        # currentData = self.binanceClient.get_klines(symbol='BTCUSDT',
+        #                                             interval='1h',
+        #                                             startTime=currentHourTimestamp,
+        #                                             endTime=nextHourTimestamp,
+        #                                             )[0]
+        # currentDataDictionary = {'date': nextHourDate,
+        #                          'open': float(currentData[1]),
+        #                          'high': float(currentData[2]),
+        #                          'low': float(currentData[3]),
+        #                          'close': float(currentData[4])}
+        # return currentDataDictionary
+        return self.btc_price
 
     def get_sma(self, prices, parameter, shift=0, round_value=True, current=False):
         """
@@ -315,7 +317,10 @@ class Trader:
         Defines how to process incoming WebSocket messages
         """
         if msg['e'] != 'error':
-            self.btc_price['currentPrice'] = msg['c']
+            self.btc_price['currentPrice'] = msg['k']['c']
+            self.btc_price['open'] = msg['k']['o']
+            self.btc_price['high'] = msg['k']['h']
+            self.btc_price['low'] = msg['k']['l']
         else:
             self.btc_price['error'] = True
 
