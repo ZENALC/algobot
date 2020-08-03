@@ -3,6 +3,7 @@ import os
 import csv
 import time
 from datetime import datetime, timedelta, timezone
+from twilio import rest
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
 
@@ -13,6 +14,7 @@ class Trader:
         self.apiKey = os.environ.get('binance_api')
         self.apiSecret = os.environ.get('binance_secret')
         self.binanceClient = Client(self.apiKey, self.apiSecret)
+        self.twilioClient = rest.Client()
         self.databaseConnection, self.databaseCursor = self.get_database_connectors()
         self.data = []
         self.ema_data = {}
@@ -106,7 +108,7 @@ class Trader:
             dataList = [parsedDate] + data[1:]
             self.data.insert(0, {'date': dataList[0],
                                  'open': float(dataList[1]),
-                                 'high': float(data[2]),
+                                 'high': float(dataList[2]),
                                  'low': float(dataList[3]),
                                  'close': float(dataList[4]),
                                  })
@@ -163,6 +165,26 @@ class Trader:
                 print("Insertion to database failed. Will retry next run.")
         else:
             print("Database is up-to-date.")
+
+    def get_csv_data(self, interval):
+        availableKlines = ('12h', '15m', '1d', '1h',
+                           '1m', '1M', '1w', '2h', '30m',
+                           '3d', '3m', '4h', '5m', '6h', '8h')
+        if interval not in availableKlines:
+            print(f'Invalid interval. Available intervals are: \n{availableKlines}')
+            return
+        timestamp = self.binanceClient._get_earliest_valid_timestamp('BTCUSDT', interval)
+        print("Downloading all available historical data. This may take a while...")
+        newData = self.binanceClient.get_historical_klines('BTCUSDT', interval, timestamp, limit=1000)
+        print("Downloaded all data successfully.")
+        fileName = f'btc_data_{interval}.csv'
+        with open(fileName, 'w') as f:
+            f.write("Date, Open, High, Low, Close\n")
+            for data in newData:
+                parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
+                f.write(f'{parsedDate}, {data[1]}, {data[2]}, {data[3]}, {data[4]}\n')
+        path = os.path.join(os.getcwd(), fileName)
+        print(f'Data saved to {path}.')
 
     def create_table(self):
         """

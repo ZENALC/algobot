@@ -29,3 +29,5 @@ txaio==20.4.1
 tzlocal==2.1
 urllib3==1.25.9
 zope.interface==5.1.0
+
+twilio
