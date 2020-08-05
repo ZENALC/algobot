@@ -41,7 +41,7 @@ class Trader:
         # Create, initialize, store, and get values from database.
         self.create_table()
         self.get_data_from_database()
-        if not self.updated_database():
+        if not self.database_is_updated():
             print("Updating data...")
             self.update_database()
         else:
@@ -124,7 +124,7 @@ class Trader:
                 break
         return success
 
-    def updated_database(self):
+    def database_is_updated(self):
         """
         Checks if data is updated or not with database by 1 hour UTC time.
         :return: A boolean whether data is updated or not.
@@ -150,8 +150,8 @@ class Trader:
             timestamp = int(latestDate.timestamp()) * 1000
             print(f"Previous data found up to UTC {latestDate} found.")
 
-        if not self.updated_database():
-            newData = self.binanceClient.get_historical_klines('BTCUSDT', '1h', timestamp, limit=1000)
+        if not self.database_is_updated():
+            newData = self.binanceClient.get_historical_klines('BTCUSDT', self.interval, timestamp, limit=1000)
             print("Successfully downloaded all new data.")
             self.insert_data(newData)
             print("Storing updated data to database...")
@@ -194,7 +194,7 @@ class Trader:
             return
         return latestDate + timedelta(minutes=minutes) >= datetime.now(timezone.utc)
 
-    def updated_data(self):
+    def data_is_updated(self):
         """
         Checks whether data is fully updated or not.
         :return: A boolean whether data is updated or not with Binance values.
@@ -224,8 +224,8 @@ class Trader:
         latestDate = self.data[0]['date']
         timestamp = int(latestDate.timestamp()) * 1000
         print(f"Previous data found up to UTC {latestDate}.")
-        if not self.updated_data():
-            newData = self.binanceClient.get_historical_klines('BTCUSDT', '1h', timestamp, limit=1000)
+        if not self.data_is_updated():
+            newData = self.binanceClient.get_historical_klines('BTCUSDT', self.interval, timestamp, limit=1000)
             self.insert_data(newData)
             print("Data has been updated successfully.")
         else:
@@ -233,6 +233,11 @@ class Trader:
 
     @staticmethod
     def is_valid_interval(interval):
+        """
+        Returns whether interval provided is valid or not.
+        :param interval: Interval argument.
+        :return: A boolean whether the interval is valid or not.
+        """
         availableIntervals = ('12h', '15m', '1d', '1h',
                               '1m', '1M', '1w', '2h', '30m',
                               '3d', '3m', '4h', '5m', '6h', '8h')
@@ -243,6 +248,10 @@ class Trader:
             return False
 
     def get_csv_data(self, interval):
+        """
+        Creates a new CSV file with interval specified.
+        :param interval: Interval to get data for.
+        """
         if not self.is_valid_interval(interval):
             return
         timestamp = self.binanceClient._get_earliest_valid_timestamp('BTCUSDT', interval)
@@ -539,7 +548,7 @@ class Trader:
                     print("Successfully reconnected.")
                     fail = False
 
-                if not self.updated_data():
+                if not self.data_is_updated():
                     self.update_data()
 
                 self.print_trade_type(tradeType, initialBound, finalBound, parameter)
