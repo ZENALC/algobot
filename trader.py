@@ -68,13 +68,17 @@ class Trader:
         """
         Loads data from database and appends it to run-time data.
         """
-        print("Retrieving data from database...")
         self.databaseCursor.execute(f'''
                                     SELECT "trade_date", "open_price",
                                     "high_price", "low_price", "close_price"
                                     FROM {self.databaseTable} ORDER BY trade_date DESC
                                     ''')
         rows = self.databaseCursor.fetchall()
+
+        if len(rows) > 0:
+            print("Retrieving data from database...")
+        else:
+            print("No data found in database.")
 
         for row in rows:
             self.data.append({'date': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc),
@@ -144,7 +148,7 @@ class Trader:
         result = self.databaseCursor.fetchone()
         if result is None:
             timestamp = self.binanceClient._get_earliest_valid_timestamp('BTCUSDT', '5m')
-            print("Downloading all available historical data. This may take a while...")
+            print(f'Downloading all available historical data for {self.interval} intervals. This may take a while...')
         else:
             latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
             timestamp = int(latestDate.timestamp()) * 1000
@@ -153,6 +157,7 @@ class Trader:
         if not self.database_is_updated():
             newData = self.binanceClient.get_historical_klines('BTCUSDT', self.interval, timestamp, limit=1000)
             print("Successfully downloaded all new data.")
+            print("Inserting data to live program...")
             self.insert_data(newData)
             print("Storing updated data to database...")
             if self.dump_to_table():
@@ -370,7 +375,7 @@ class Trader:
 
         if current:
             ema = self.get_current_data()[parameter] * multiplier + ema * (1 - multiplier)
-            values.append((round(ema, 2), str(self.get_current_data()['date'])))
+            values.append((round(ema, 2), 'current'))
 
         self.ema_data[period] = {parameter: values}
 
