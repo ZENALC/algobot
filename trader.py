@@ -3,18 +3,23 @@ import os
 import csv
 import time
 from datetime import datetime, timedelta, timezone
-from twilio import rest
+# from twilio import rest
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
 
 
 class Trader:
-    def __init__(self, startingBalance=1000):
+    def __init__(self, startingBalance=1000, interval='1h'):
+        if not self.is_valid_interval(interval):
+            print("Invalid interval. Using default interval of 1h.")
+            interval = '1h'
+        self.interval = interval
         self.databaseFile = 'btc.db'
+        self.databaseTable = f'data_{self.interval}'
         self.apiKey = os.environ.get('binance_api')
         self.apiSecret = os.environ.get('binance_secret')
         self.binanceClient = Client(self.apiKey, self.apiSecret)
-        self.twilioClient = rest.Client()
+        # self.twilioClient = rest.Client()
         self.databaseConnection, self.databaseCursor = self.get_database_connectors()
         self.data = []
         self.ema_data = {}
@@ -32,7 +37,6 @@ class Trader:
         self.simulationStartingBalance = None
         self.startingTime = None
         self.endingTime = None
-        self.interval = self.binanceClient.KLINE_INTERVAL_1HOUR
 
         # Create, initialize, store, and get values from database.
         self.create_table()
@@ -52,18 +56,24 @@ class Trader:
         print("Initialized web socket.")
 
     def get_database_connectors(self):
+        """
+        Returns database connection and cursor.
+        :return: A tuple with connection and cursor.
+        """
         connection = sqlite3.connect(self.databaseFile)
         cursor = connection.cursor()
         return connection, cursor
 
     def get_data_from_database(self):
         """
-        Loads data from database and adds it to run-time data.
+        Loads data from database and appends it to run-time data.
         """
         print("Retrieving data from database...")
-        self.databaseCursor.execute('SELECT "trade_date", "open_price",'
-                                    '"high_price", "low_price", "close_price"'
-                                    'FROM BTC ORDER BY trade_date DESC')
+        self.databaseCursor.execute(f'''
+                                    SELECT "trade_date", "open_price",
+                                    "high_price", "low_price", "close_price"
+                                    FROM {self.databaseTable} ORDER BY trade_date DESC
+                                    ''')
         rows = self.databaseCursor.fetchall()
 
         for row in rows:
@@ -73,6 +83,84 @@ class Trader:
                               'low': float(row[3]),
                               'close': float(row[4]),
                               })
+
+    def create_table(self):
+        """
+        Creates a new table with interval if it does not exist
+        """
+        query = f'''
+            CREATE TABLE IF NOT EXISTS {self.databaseTable}(
+            trade_date TEXT PRIMARY KEY,
+            open_price TEXT NOT NULL,
+            high_price TEXT NOT NULL,
+            low_price TEXT NOT NULL,
+            close_price TEXT NOT NULL
+            );'''
+        self.databaseCursor.execute(query)
+
+    def dump_to_table(self):
+        """
+        Dumps date and price information to database.
+        :return: A boolean whether data entry was successful or not.
+        """
+        success = True
+        query = f'''INSERT INTO {self.databaseTable} (trade_date, open_price, high_price, low_price, close_price) 
+                    VALUES (?, ?, ?, ?, ?);'''
+        for data in self.data:
+            try:
+                self.databaseCursor.execute(query,
+                                            (data['date'].strftime('%Y-%m-%d %H:%M:%S'),
+                                             data['open'],
+                                             data['high'],
+                                             data['low'],
+                                             data['close'],
+                                             ))
+                self.databaseConnection.commit()
+            except sqlite3.IntegrityError:
+                pass
+            except sqlite3.OperationalError:
+                print("Data insertion was unsuccessful.")
+                success = False
+                break
+        return success
+
+    def updated_database(self):
+        """
+        Checks if data is updated or not with database by 1 hour UTC time.
+        :return: A boolean whether data is updated or not.
+        """
+        self.databaseCursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
+        result = self.databaseCursor.fetchone()
+        if result is None:
+            return False
+        latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        return self.is_latest_date(latestDate)
+
+    def update_database(self):
+        """
+        Updates database by retrieving information from Binance API
+        """
+        self.databaseCursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
+        result = self.databaseCursor.fetchone()
+        if result is None:
+            timestamp = self.binanceClient._get_earliest_valid_timestamp('BTCUSDT', '5m')
+            print("Downloading all available historical data. This may take a while...")
+        else:
+            latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            timestamp = int(latestDate.timestamp()) * 1000
+            print(f"Previous data found up to UTC {latestDate} found.")
+
+        if not self.updated_database():
+            newData = self.binanceClient.get_historical_klines('BTCUSDT', '1h', timestamp, limit=1000)
+            print("Successfully downloaded all new data.")
+            self.insert_data(newData)
+            print("Storing updated data to database...")
+            if self.dump_to_table():
+                print("Successfully stored all new data to database.")
+            else:
+                print("Insertion to database failed. Will retry next run.")
+        else:
+            print("Database is up-to-date.")
 
     def get_data_from_csv(self, file):
         """
@@ -90,13 +178,29 @@ class Trader:
                                   'low': float(row[4].replace(',', '')),
                                   })
 
+    def is_latest_date(self, latestDate):
+        measurement = int(self.interval[0:len(self.interval) - 1])
+        unit = self.interval[-1]
+        if unit == 'h':
+            minutes = measurement * 60
+        elif unit == 'm':
+            minutes = measurement
+        elif unit == 'd':
+            minutes = measurement * 24 * 60
+        elif unit == 'M':
+            minutes = measurement * 30 * 24 * 60
+        else:
+            print("Invalid interval.")
+            return
+        return latestDate + timedelta(minutes=minutes) >= datetime.now(timezone.utc)
+
     def updated_data(self):
         """
         Checks whether data is fully updated or not.
         :return: A boolean whether data is updated or not with Binance values.
         """
         latestDate = self.data[0]['date']
-        return latestDate + timedelta(hours=1) >= datetime.now(timezone.utc)
+        return self.is_latest_date(latestDate)
 
     def insert_data(self, newData):
         """
@@ -127,51 +231,19 @@ class Trader:
         else:
             print("Data is up-to-date.")
 
-    def updated_database(self):
-        """
-        Checks if data is updated or not with database by 1 hour UTC time.
-        :return: A boolean whether data is updated or not.
-        """
-        self.databaseCursor.execute('SELECT trade_date FROM BTC ORDER BY trade_date DESC LIMIT 1')
-        result = self.databaseCursor.fetchone()
-        if result is None:
-            print("No data found.")
+    @staticmethod
+    def is_valid_interval(interval):
+        availableIntervals = ('12h', '15m', '1d', '1h',
+                              '1m', '1M', '1w', '2h', '30m',
+                              '3d', '3m', '4h', '5m', '6h', '8h')
+        if interval in availableIntervals:
+            return True
+        else:
+            print(f'Invalid interval. Available intervals are: \n{availableIntervals}')
             return False
-        latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-        return latestDate + timedelta(hours=1) >= datetime.now(timezone.utc)
-
-    def update_database(self):
-        """
-        Updates database by retrieving information from Binance API
-        """
-        self.databaseCursor.execute('SELECT trade_date FROM BTC ORDER BY trade_date DESC LIMIT 1')
-        result = self.databaseCursor.fetchone()
-        if result is None:
-            timestamp = self.binanceClient._get_earliest_valid_timestamp('BTCUSDT', '5m')
-            print("Downloading all available historical data. This may take a while...")
-        else:
-            latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            timestamp = int(latestDate.timestamp()) * 1000
-            print(f"Previous data found up to UTC {latestDate} found.")
-
-        if not self.updated_database():
-            newData = self.binanceClient.get_historical_klines('BTCUSDT', '1h', timestamp, limit=1000)
-            print("Successfully downloaded all new data.")
-            self.insert_data(newData)
-            print("Storing updated data to database...")
-            if self.dump_to_table():
-                print("Successfully stored all new data to database.")
-            else:
-                print("Insertion to database failed. Will retry next run.")
-        else:
-            print("Database is up-to-date.")
 
     def get_csv_data(self, interval):
-        availableKlines = ('12h', '15m', '1d', '1h',
-                           '1m', '1M', '1w', '2h', '30m',
-                           '3d', '3m', '4h', '5m', '6h', '8h')
-        if interval not in availableKlines:
-            print(f'Invalid interval. Available intervals are: \n{availableKlines}')
+        if not self.is_valid_interval(interval):
             return
         timestamp = self.binanceClient._get_earliest_valid_timestamp('BTCUSDT', interval)
         print("Downloading all available historical data. This may take a while...")
@@ -185,44 +257,6 @@ class Trader:
                 f.write(f'{parsedDate}, {data[1]}, {data[2]}, {data[3]}, {data[4]}\n')
         path = os.path.join(os.getcwd(), fileName)
         print(f'Data saved to {path}.')
-
-    def create_table(self):
-        """
-        Creates a new table 'BTC' if it does not exist
-        """
-        self.databaseCursor.execute('''
-        CREATE TABLE IF NOT EXISTS BTC(
-            trade_date TEXT PRIMARY KEY,
-            open_price TEXT NOT NULL,
-            high_price TEXT NOT NULL,
-            low_price TEXT NOT NULL,
-            close_price TEXT NOT NULL
-        );''')
-
-    def dump_to_table(self):
-        """
-        Dumps date and price information to database.
-        :return: A boolean whether data entry was successful or not.
-        """
-        success = True
-        for data in self.data:
-            try:
-                self.databaseCursor.execute("INSERT INTO BTC(trade_date, open_price, high_price, low_price, "
-                                            "close_price) VALUES (?, ?, ?, ?, ?);",
-                                            (data['date'].strftime('%Y-%m-%d %H:%M:%S'),
-                                             data['open'],
-                                             data['high'],
-                                             data['low'],
-                                             data['close'],
-                                             ))
-                self.databaseConnection.commit()
-            except sqlite3.IntegrityError:
-                pass
-            except sqlite3.OperationalError:
-                print("Data insertion was unsuccessful.")
-                success = False
-                break
-        return success
 
     def get_current_data(self):
         """
