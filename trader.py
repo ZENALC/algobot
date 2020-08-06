@@ -3,6 +3,7 @@ import os
 import csv
 import time
 from datetime import datetime, timedelta, timezone
+from contextlib import closing
 # from twilio import rest
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
@@ -38,7 +39,7 @@ class Trader:
         # Create, initialize, store, and get values from database.
         self.databaseFile = 'btc.db'
         self.databaseTable = f'data_{self.interval}'
-        self.databaseConnection, self.databaseCursor = self.get_database_connectors()
+        # self.databaseConnection, self.databaseCursor = self.get_database_connectors()
         self.create_table()
         self.get_data_from_database()
         if not self.database_is_updated():
@@ -46,9 +47,6 @@ class Trader:
             self.update_database()
         else:
             print("Database is up-to-date.")
-
-        self.databaseCursor.close()
-        self.databaseConnection.close()
 
         # Initialize and start the WebSocket
         print("Initializing web socket...")
@@ -71,12 +69,13 @@ class Trader:
         """
         Loads data from database and appends it to run-time data.
         """
-        self.databaseCursor.execute(f'''
-                                    SELECT "trade_date", "open_price",
-                                    "high_price", "low_price", "close_price"
-                                    FROM {self.databaseTable} ORDER BY trade_date DESC
-                                    ''')
-        rows = self.databaseCursor.fetchall()
+        with closing(sqlite3.connect(self.databaseFile)) as connection:
+            with closing(connection.cursor()) as cursor:
+                rows = cursor.execute(f'''
+                        SELECT "trade_date", "open_price",
+                        "high_price", "low_price", "close_price"
+                        FROM {self.databaseTable} ORDER BY trade_date DESC
+                        ''').fetchall()
 
         if len(rows) > 0:
             print("Retrieving data from database...")
@@ -95,15 +94,17 @@ class Trader:
         """
         Creates a new table with interval if it does not exist
         """
-        query = f'''
-            CREATE TABLE IF NOT EXISTS {self.databaseTable}(
-            trade_date TEXT PRIMARY KEY,
-            open_price TEXT NOT NULL,
-            high_price TEXT NOT NULL,
-            low_price TEXT NOT NULL,
-            close_price TEXT NOT NULL
-            );'''
-        self.databaseCursor.execute(query)
+        with closing(sqlite3.connect(self.databaseFile)) as connection:
+            with closing(connection.cursor()) as cursor:
+                cursor.execute(f'''
+                                CREATE TABLE IF NOT EXISTS {self.databaseTable}(
+                                trade_date TEXT PRIMARY KEY,
+                                open_price TEXT NOT NULL,
+                                high_price TEXT NOT NULL,
+                                low_price TEXT NOT NULL,
+                                close_price TEXT NOT NULL
+                                );''')
+                connection.commit()
 
     def dump_to_table(self):
         """
@@ -113,22 +114,24 @@ class Trader:
         success = True
         query = f'''INSERT INTO {self.databaseTable} (trade_date, open_price, high_price, low_price, close_price) 
                     VALUES (?, ?, ?, ?, ?);'''
-        for data in self.data:
-            try:
-                self.databaseCursor.execute(query,
-                                            (data['date'].strftime('%Y-%m-%d %H:%M:%S'),
-                                             data['open'],
-                                             data['high'],
-                                             data['low'],
-                                             data['close'],
-                                             ))
-                self.databaseConnection.commit()
-            except sqlite3.IntegrityError:
-                pass
-            except sqlite3.OperationalError:
-                print("Data insertion was unsuccessful.")
-                success = False
-                break
+        with closing(sqlite3.connect(self.databaseFile)) as connection:
+            with closing(connection.cursor()) as cursor:
+                for data in self.data:
+                    try:
+                        cursor.execute(query,
+                                       (data['date'].strftime('%Y-%m-%d %H:%M:%S'),
+                                        data['open'],
+                                        data['high'],
+                                        data['low'],
+                                        data['close'],
+                                        ))
+                        connection.commit()
+                    except sqlite3.IntegrityError:
+                        pass
+                    except sqlite3.OperationalError:
+                        print("Data insertion was unsuccessful.")
+                        success = False
+                        break
         return success
 
     def database_is_updated(self):
@@ -136,8 +139,10 @@ class Trader:
         Checks if data is updated or not with database by 1 hour UTC time.
         :return: A boolean whether data is updated or not.
         """
-        self.databaseCursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
-        result = self.databaseCursor.fetchone()
+        with closing(sqlite3.connect(self.databaseFile)) as connection:
+            with closing(connection.cursor()) as cursor:
+                cursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
+                result = cursor.fetchone()
         if result is None:
             return False
         latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
@@ -147,8 +152,10 @@ class Trader:
         """
         Updates database by retrieving information from Binance API
         """
-        self.databaseCursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
-        result = self.databaseCursor.fetchone()
+        with closing(sqlite3.connect(self.databaseFile)) as connection:
+            with closing(connection.cursor()) as cursor:
+                cursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
+                result = cursor.fetchone()
         if result is None:
             timestamp = self.binanceClient._get_earliest_valid_timestamp('BTCUSDT', '5m')
             print(f'Downloading all available historical data for {self.interval} intervals. This may take a while...')
