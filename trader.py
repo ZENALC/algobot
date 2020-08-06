@@ -411,7 +411,7 @@ class Trader:
             self.bsm.stop_socket(self.conn)
             self.bsm.close()
             self.conn = self.bsm.start_kline_socket('BTCUSDT', self.process_socket_message, self.interval)
-            self.bsm.start()
+            # self.bsm.start()
 
     def get_current_price(self):
         """
@@ -422,22 +422,6 @@ class Trader:
 
     def process_transaction(self):
         pass
-
-    def print_basic_information(self):
-        """
-        Prints out basic information about trades.
-        """
-        print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-        if self.btc != 0:
-            print(f'BTC: {self.btc}')
-            print(f'Price we bought BTC long for: ${self.buyLongPrice}')
-        if self.btcOwed != 0:
-            print(f'BTC Owed: {self.btcOwed}')
-            print(f'BTC Owed Price: ${self.btcOwedPrice}')
-            print(f'Price we sold BTC short for: ${self.sellShortPrice}')
-        print(f'Current BTC price: ${self.get_current_price()}')
-        print(f'Balance: ${self.balance}')
-        print()
 
     def buy_long(self, usd=None):
         """
@@ -529,6 +513,9 @@ class Trader:
         self.btcOwedPrice = currentPrice
         self.balance += earned
         self.sellShortPrice = currentPrice
+
+    def past_data_simulation(self):
+        pass
 
     def simulate(self, tradeType="SMA", parameter="high", initialBound=11, finalBound=19, comparison='>', loss=0.02):
         """
@@ -630,6 +617,22 @@ class Trader:
                 time.sleep(5)
                 print("Attempting to fix error...")
                 fail = True
+
+    def print_basic_information(self):
+        """
+        Prints out basic information about trades.
+        """
+        print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        if self.btc != 0:
+            print(f'BTC: {self.btc}')
+            print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
+        if self.btcOwed != 0:
+            print(f'BTC Owed: {self.btcOwed}')
+            print(f'BTC Owed Price: ${self.btcOwedPrice}')
+            print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
+        print(f'Current BTC price: ${self.get_current_price()}')
+        print(f'Balance: ${self.balance}')
+        print()
 
     def print_simulation_result(self):
         """
