@@ -14,13 +14,10 @@ class Trader:
             print("Invalid interval. Using default interval of 1h.")
             interval = '1h'
         self.interval = interval
-        self.databaseFile = 'btc.db'
-        self.databaseTable = f'data_{self.interval}'
         self.apiKey = os.environ.get('binance_api')
         self.apiSecret = os.environ.get('binance_secret')
         self.binanceClient = Client(self.apiKey, self.apiSecret)
         # self.twilioClient = rest.Client()
-        self.databaseConnection, self.databaseCursor = self.get_database_connectors()
         self.data = []
         self.ema_data = {}
         self.startingBalance = startingBalance
@@ -29,16 +26,19 @@ class Trader:
         self.btcOwed = 0
         self.btcOwedPrice = 0
         self.transactionFee = 0.001
+        self.startingTime = None
+        self.endingTime = None
         self.buyLongPrice = None
         self.sellShortPrice = None
         self.simulatedTradesConducted = 0
         self.simulatedTrades = []
         self.btc_price = {'error': False}
         self.simulationStartingBalance = None
-        self.startingTime = None
-        self.endingTime = None
 
         # Create, initialize, store, and get values from database.
+        self.databaseFile = 'btc.db'
+        self.databaseTable = f'data_{self.interval}'
+        self.databaseConnection, self.databaseCursor = self.get_database_connectors()
         self.create_table()
         self.get_data_from_database()
         if not self.database_is_updated():
@@ -46,6 +46,9 @@ class Trader:
             self.update_database()
         else:
             print("Database is up-to-date.")
+
+        self.databaseCursor.close()
+        self.databaseConnection.close()
 
         # Initialize and start the WebSocket
         print("Initializing web socket...")
@@ -177,10 +180,10 @@ class Trader:
             next(csv_reader)  # skip over the header row
             for row in csv_reader:
                 self.data.append({'date': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S'),
-                                  'close': float(row[1].replace(',', '')),
-                                  'open': float(row[2].replace(',', '')),
-                                  'high': float(row[3].replace(',', '')),
-                                  'low': float(row[4].replace(',', '')),
+                                  'open': float(row[1]),
+                                  'high': float(row[2]),
+                                  'low': float(row[3]),
+                                  'close': float(row[4]),
                                   })
 
     def is_latest_date(self, latestDate):
