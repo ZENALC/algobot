@@ -171,7 +171,7 @@ class Trader:
         else:
             latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
             timestamp = int(latestDate.timestamp()) * 1000
-            print(f"Previous data up to UTC {latestDate} found.")
+            print(f"Previous data up to UTC {latestDate + timedelta(minutes=self.get_interval_minutes())} found.")
 
         if not self.database_is_updated():
             newData = self.binanceClient.get_historical_klines('BTCUSDT', self.interval, timestamp + 1, limit=1000)
@@ -241,7 +241,7 @@ class Trader:
         """
         latestDate = self.data[0]['date']
         timestamp = int(latestDate.timestamp()) * 1000
-        print(f"Previous data found up to UTC {latestDate}.")
+        print(f"Previous data found up to UTC {latestDate + timedelta(minutes=self.get_interval_minutes())}.")
         if not self.data_is_updated():
             newData = self.binanceClient.get_historical_klines('BTCUSDT', self.interval, timestamp, limit=1000)
             del newData[-1]  # removing current period data
@@ -296,65 +296,53 @@ class Trader:
         path = os.path.join(os.getcwd(), fileName)
         print(f'Data saved to {path}.')
 
-    def get_sma(self, prices, parameter, shift=0, round_value=True, current=True):
+    def valid_average_input(self, shift, prices, extraShift=0):
+        if shift < 0:
+            print("Shift cannot be less than 0.")
+            return False
+        elif prices <= 0:
+            print("Prices cannot be 0 or less than 0.")
+            return False
+        elif shift + extraShift + prices > len(self.data) + 1:
+            print("Shift + prices period cannot be more than data available.")
+            return False
+        return True
+
+    def get_sma(self, prices, parameter, shift=0, round_value=True):
         """
         Returns the simple moving average with run-time data and prices provided.
-        :param current: Boolean that takes into account whether we use current price bar or not.
         :param boolean round_value: Boolean that specifies whether return value should be rounded
         :param int prices: Number of values for average
         :param int shift: Prices shifted from current price
         :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: SMA
         """
-        if shift < 0:
-            print("Shift cannot be less than 0.")
-            return None
-        elif shift > 0 and current:
-            print("You cannot have a shift and use current values concurrently.")
-            return None
-        elif prices == 0:
-            print("Prices cannot be 0.")
+        if not self.valid_average_input(shift, prices):
             return None
 
-        data = self.data[shift:prices + shift]
-        if current:
-            data = [self.get_current_data()] + self.data[:prices - 1]
-
-        if not current and shift + prices > len(self.data) or current and prices > len(self.data) + 1:
-            print("Shift + prices period cannot be more than data available.")
-            return None
+        data = [self.get_current_data()] + self.data
+        data = data[shift: prices + shift]
 
         sma = sum([period[parameter] for period in data]) / prices
         if round_value:
             return round(sma, 2)
         return sma
 
-    def get_wma(self, prices, parameter, shift=0, round_value=True, current=True):
+    def get_wma(self, prices, parameter, shift=0, round_value=True):
         """
         Returns the weighted moving average with run-time data and prices provided.
-        :param shift: Prices shifted from previous interval period.
-        :param current: Boolean that takes into account whether we use current price bar or not.
+        :param shift: Prices shifted from current period.
         :param boolean round_value: Boolean that specifies whether return value should be rounded
         :param int prices: Number of prices to loop over for average
         :param parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: WMA
         """
-        if shift < 0:
-            print("Shift cannot be less than 0.")
-            return None
-        elif shift > 0 and current:
-            print("You cannot have a shift and use current values concurrently.")
-            return None
-        elif prices == 0:
-            print("Prices cannot be 0.")
+        if not self.valid_average_input(shift, prices):
             return None
 
-        if current:
-            total = self.get_current_data()[parameter] * prices
-            data = self.data[:prices - 1]
-        else:
-            total = self.data[shift][parameter] * prices
-            data = self.data[shift + 1: prices + shift]
+        data = [self.get_current_data()] + self.data
+        total = data[shift][parameter] * prices
+        data = data[shift + 1: prices + shift]
 
         index = 0
         divisor = prices * (prices + 1) / 2
@@ -367,35 +355,35 @@ class Trader:
             return round(wma, 2)
         return wma
 
-    def get_ema(self, period, parameter, sma_prices=5, round_value=True, current=True):
+    def get_ema(self, prices, parameter, shift=0, sma_prices=5, round_value=True):
         """
         Returns the exponential moving average with data provided.
+        :param shift: Prices shifted from current period.
         :param round_value: Boolean that specifies whether return value should be rounded
-        :param current: Boolean that takes into account whether we use current price bar or not.
         :param int sma_prices: SMA prices to get first EMA over
-        :param int period: Days to iterate EMA over (or the period)
+        :param int prices: Days to iterate EMA over (or the period)
         :param str parameter: Parameter to get the average of (e.g. open, close, high, or low values)
         :return: EMA
         """
-        if period > len(self.data) or period < 0:
-            print("Invalid price entered.")
-            return
+        if not self.valid_average_input(shift, prices, sma_prices):
+            return None
+        elif sma_prices <= 0:
+            print("Initial amount of SMA values for initial EMA must be greater than 0.")
+            return None
 
-        shift = len(self.data) - sma_prices
-        ema = self.get_sma(sma_prices, parameter, shift=shift, round_value=False)
-        values = [(round(ema, 2), str(self.data[shift]['date']))]
-        multiplier = 2 / (period + 1)
-        for day in range(len(self.data) - sma_prices):
-            current_index = len(self.data) - sma_prices - day - 1
-            current_price = self.data[current_index][parameter]
+        data = [self.get_current_data()] + self.data
+        sma_shift = len(data) - sma_prices
+        ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False)
+        values = [(round(ema, 2), str(data[sma_shift]['date']))]
+        multiplier = 2 / (prices + 1)
+
+        for day in range(len(data) - sma_prices - shift):
+            current_index = len(data) - sma_prices - day - 1
+            current_price = data[current_index][parameter]
             ema = current_price * multiplier + ema * (1 - multiplier)
-            values.append((round(ema, 2), str(self.data[current_index]['date'])))
+            values.append((round(ema, 2), str(data[current_index]['date'])))
 
-        if current:
-            ema = self.get_current_data()[parameter] * multiplier + ema * (1 - multiplier)
-            values.append((round(ema, 2), 'current'))
-
-        self.ema_data[period] = {parameter: values}
+        self.ema_data[prices] = {parameter: values}
 
         if round_value:
             return round(ema, 2)

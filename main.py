@@ -23,7 +23,7 @@ def user(bot):
                         print(f'The SMA of the last {prices} price(s) is ${sma}.')
                     else:
                         period = int(input("Type in your desired period>>"))
-                        ema = bot.get_ema(period=period, parameter=parameter)
+                        ema = bot.get_ema(prices=period, parameter=parameter)
                         print(f'The EMA with period {period} and parameter {parameter} is ${ema}.')
                     success = True
                 except ValueError:
