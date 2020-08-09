@@ -38,6 +38,8 @@ class Trader:
         self.sellShortPrice = None
         self.simulatedTrades = []
         self.simulationStartingBalance = None
+        self.longTrailingPrice = None
+        self.shortTrailingPrice = None
         # self.btc_price = {'error': False, 'current': None, 'open': None, 'high': None, 'low': None, 'date': None}
 
         # Create, initialize, store, and get values from database.
@@ -610,6 +612,7 @@ class Trader:
                             'action': f'Bought long as {tradeType}({initialBound}) > {tradeType}({finalBound}).'
                         })
                         if self.sellShortPrice is not None:
+                            print("Buying short.")
                             self.buy_short()
                             self.simulatedTrades.append({
                                 'date': datetime.utcnow(),
@@ -659,8 +662,10 @@ class Trader:
 
     def simulate_option_2(self, tradeType, initialBound, finalBound, parameter, comparison, loss):
         fail = False
-        upperTrailingPrice = self.get_current_price()
-        lowerTrailingPrice = upperTrailingPrice
+        self.longTrailingPrice = self.get_current_price()
+        self.shortTrailingPrice = self.longTrailingPrice
+        inLongPosition = False
+        inShortPosition = False
 
         if comparison == '>':
             reverseComparison = '<'
@@ -681,39 +686,46 @@ class Trader:
                 self.print_trade_type(tradeType, initialBound, finalBound, parameter)
 
                 currentPrice = self.get_current_price()
-                if currentPrice > upperTrailingPrice:
-                    upperTrailingPrice = currentPrice
-                elif currentPrice < lowerTrailingPrice:
-                    lowerTrailingPrice = currentPrice
+                if currentPrice > self.longTrailingPrice:
+                    self.longTrailingPrice = currentPrice
+                elif currentPrice < self.shortTrailingPrice:
+                    self.shortTrailingPrice = currentPrice
 
-                if self.buyLongPrice is None:
+                if self.buyLongPrice is None and not inShortPosition:
                     if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
                         print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). Going all in to buy long.")
                         self.buy_long()
+                        inLongPosition = True
                         self.simulatedTrades.append({
                             'date': datetime.utcnow(),
                             'action': f'Bought long as {tradeType}({initialBound}) > {tradeType}({finalBound}).'
                         })
 
-                    elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
-                        self.sell_short()
-                        self.simulatedTrades.append({
-                            'date': datetime.utcnow(),
-                            'action': f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})'
-                        })
                 else:
-                    if currentPrice < upperTrailingPrice * (1 - loss):
+                    if currentPrice < self.longTrailingPrice * (1 - loss):
                         print(f'Trailing loss is greater than {loss * 100}%. Selling all BTC.')
                         self.sell_long()
+                        inLongPosition = False
                         self.simulatedTrades.append({
                             'date': datetime.utcnow(),
                             'action': f'Sold long because trailing loss was greater than {loss * 100}%.'
                         })
 
-                if self.sellShortPrice is not None:
-                    if currentPrice > lowerTrailingPrice * (1 + loss):
+                if self.sellShortPrice is None and not inLongPosition:
+                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
+                        print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Going all in to sell short.')
+                        self.sell_short()
+                        inShortPosition = True
+                        self.simulatedTrades.append({
+                            'date': datetime.utcnow(),
+                            'action': f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})'
+                        })
+
+                else:
+                    if currentPrice > self.shortTrailingPrice * (1 + loss):
                         print(f'Trailing loss is greater than {loss * 100}%. Selling all BTC.')
                         self.buy_short()
+                        inShortPosition = False
                         self.simulatedTrades.append({
                             'date': datetime.utcnow(),
                             'action': f'Bought short because trailing loss was greater than {loss * 100}%.'
@@ -746,6 +758,9 @@ class Trader:
         self.simulatedTrades = []
         self.sellShortPrice = None
         self.buyLongPrice = None
+        self.shortTrailingPrice = None
+        self.longTrailingPrice = None
+        self.balance = 1000
         self.simulationStartingBalance = self.balance
         self.startingTime = datetime.now()
         if comparison != '>':
@@ -753,6 +768,8 @@ class Trader:
             initialBound = finalBound
             finalBound = temp
             comparison = '>'
+
+        self.easter_egg()
 
         simulationType = None
         while simulationType not in ('1', '2'):
@@ -780,6 +797,10 @@ class Trader:
             print(f'BTC Owed: {self.btcOwed}')
             print(f'BTC Owed Price: ${self.btcOwedPrice}')
             print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
+        if self.longTrailingPrice is not None:
+            print(f'Long trailing loss value: ${self.longTrailingPrice}')
+        if self.shortTrailingPrice is not None:
+            print(f'Short trailing loss value: ${self.shortTrailingPrice}')
         print(f'Current BTC price: ${currentPrice}')
         print(f'Balance: ${self.balance}')
         print(f'Debt: ${self.btcOwed * currentPrice}')
@@ -862,7 +883,7 @@ class Trader:
         :param initialBound: Initial bound for trade algorithm.
         :param finalBound: Final bound for trade algorithm.
         :param parameter: Parameter to use for trade algorithm.
-        :param comparison: Comparision whether trade type is greater than or less than.
+        :param comparison: Comparison whether trade type is greater than or less than.
         :return: A boolean whether trade should be performed or not.
         """
         if tradeType == 'SMA':
@@ -901,6 +922,25 @@ class Trader:
             return self.get_wma(initialBound, parameter) == self.get_wma(finalBound, parameter)
         else:
             return False
+
+    @staticmethod
+    def easter_egg():
+        sleepTime = 0.5
+        print("Oh holy father of CRYPTO, PLEASE BLESS THIS BOT WITH THY BLESSINGS.")
+        time.sleep(sleepTime)
+        print("BIG")
+        time.sleep(sleepTime)
+        print("BOOTY")
+        time.sleep(sleepTime)
+        print("BICHES")
+        time.sleep(sleepTime)
+        print("BIG")
+        time.sleep(sleepTime)
+        print("BIG")
+        time.sleep(sleepTime)
+        print("BOOTY")
+        time.sleep(sleepTime)
+        print("BITCHES\n")
 
     def __str__(self):
         return self.__repr__()
