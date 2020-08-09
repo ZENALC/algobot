@@ -686,9 +686,9 @@ class Trader:
                 self.print_trade_type(tradeType, initialBound, finalBound, parameter)
 
                 currentPrice = self.get_current_price()
-                if currentPrice > self.longTrailingPrice:
+                if currentPrice > self.longTrailingPrice or self.longTrailingPrice is None:
                     self.longTrailingPrice = currentPrice
-                elif currentPrice < self.shortTrailingPrice:
+                elif currentPrice < self.shortTrailingPrice or self.shortTrailingPrice is None:
                     self.shortTrailingPrice = currentPrice
 
                 if self.buyLongPrice is None and not inShortPosition:
@@ -706,6 +706,7 @@ class Trader:
                         print(f'Trailing loss is greater than {loss * 100}%. Selling all BTC.')
                         self.sell_long()
                         inLongPosition = False
+                        self.longTrailingPrice = None
                         self.simulatedTrades.append({
                             'date': datetime.utcnow(),
                             'action': f'Sold long because trailing loss was greater than {loss * 100}%.'
@@ -726,6 +727,7 @@ class Trader:
                         print(f'Trailing loss is greater than {loss * 100}%. Selling all BTC.')
                         self.buy_short()
                         inShortPosition = False
+                        self.shortTrailingPrice = None
                         self.simulatedTrades.append({
                             'date': datetime.utcnow(),
                             'action': f'Bought short because trailing loss was greater than {loss * 100}%.'
