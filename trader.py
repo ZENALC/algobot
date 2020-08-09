@@ -788,23 +788,33 @@ class Trader:
         """
         Prints out basic information about trades.
         """
+        profit = 0
         currentPrice = self.get_current_price()
         print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
         if self.btc > 0:
             print(f'BTC: {self.btc}')
             print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
+            profit += self.btc * currentPrice - self.btc * self.buyLongPrice
         if self.btcOwed > 0:
             print(f'BTC Owed: {self.btcOwed}')
             print(f'BTC Owed Price: ${self.btcOwedPrice}')
             print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
+            profit += self.btcOwed * self.sellShortPrice - self.btcOwed * currentPrice
         if self.longTrailingPrice is not None:
             print(f'Long trailing loss value: ${self.longTrailingPrice}')
         if self.shortTrailingPrice is not None:
             print(f'Short trailing loss value: ${self.shortTrailingPrice}')
         print(f'Current BTC price: ${currentPrice}')
-        print(f'Balance: ${self.balance}')
-        print(f'Debt: ${self.btcOwed * currentPrice}')
-        print(f'Liquid Cash: ${self.balance - self.btcOwed * currentPrice}')
+        print(f'Balance: ${round(self.balance, 2)}')
+        print(f'Debt: ${round(self.btcOwed * currentPrice, 2)}')
+        print(f'Liquid Cash: ${round(self.balance - self.btcOwed * currentPrice, 2)}')
+        profit = round(profit, 2)
+        if profit > 0:
+            print(f'Profit: ${profit}')
+        elif profit < 0:
+            print(f'Loss: ${profit}')
+        else:
+            print(f'No profit or loss currently.')
         print()
 
     def print_simulation_result(self):
