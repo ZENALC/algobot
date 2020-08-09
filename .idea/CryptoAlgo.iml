@@ -10,4 +10,7 @@
   <component name="PackageRequirementsSettings">
     <option name="versionSpecifier" value="Don't specify version" />
   </component>
+  <component name="TestRunnerService">
+    <option name="PROJECT_TEST_RUNNER" value="pytest" />
+  </component>
 </module>

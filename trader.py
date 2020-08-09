@@ -14,18 +14,23 @@ class Trader:
         if not self.is_valid_interval(interval):
             print("Invalid interval. Using default interval of 1h.")
             interval = '1h'
+
         self.interval = interval
+        self.intervalMeasurement = int(self.interval[0:len(self.interval) - 1])
+        self.intervalUnit = self.interval[-1]
+
         self.apiKey = os.environ.get('binance_api')
         self.apiSecret = os.environ.get('binance_secret')
         self.binanceClient = Client(self.apiKey, self.apiSecret)
         # self.twilioClient = rest.Client()
+
         self.data = []
         self.ema_data = {}
         self.startingBalance = startingBalance
         self.balance = self.startingBalance
         self.btc = 0
         self.btcOwed = 0
-        self.btcOwedPrice = 0
+        self.btcOwedPrice = None
         self.transactionFee = 0.001
         self.startingTime = None
         self.endingTime = None
@@ -33,8 +38,8 @@ class Trader:
         self.sellShortPrice = None
         self.simulatedTradesConducted = 0
         self.simulatedTrades = []
-        self.btc_price = {'error': False}
         self.simulationStartingBalance = None
+        # self.btc_price = {'error': False, 'current': None, 'open': None, 'high': None, 'low': None, 'date': None}
 
         # Create, initialize, store, and get values from database.
         self.databaseFile = 'btc.db'
@@ -49,12 +54,12 @@ class Trader:
             print("Database is up-to-date.")
 
         # Initialize and start the WebSocket
-        print("Initializing web socket...")
-        self.bsm = BinanceSocketManager(self.binanceClient)
-        # bsm.start_symbol_ticker_socket('BTCUSDT', self.btc_trade_history)
-        self.conn = self.bsm.start_kline_socket('BTCUSDT', self.process_socket_message, self.interval)
-        self.bsm.start()
-        print("Initialized web socket.")
+        # print("Initializing web socket...")
+        # self.bsm = BinanceSocketManager(self.binanceClient)
+        # # bsm.start_symbol_ticker_socket('BTCUSDT', self.btc_trade_history)
+        # self.bsm.start_kline_socket('BTCUSDT', self.process_socket_message, self.interval)
+        # self.bsm.start()
+        # print("Initialized web socket.")
 
     def get_database_connectors(self):
         """
@@ -134,15 +139,22 @@ class Trader:
                         break
         return success
 
-    def database_is_updated(self):
+    def get_latest_database_row(self):
         """
-        Checks if data is updated or not with database by 1 hour UTC time.
-        :return: A boolean whether data is updated or not.
+        Returns the latest row from database table.
+        :return: Row data or None depending on if value exists.
         """
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 cursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
-                result = cursor.fetchone()
+                return cursor.fetchone()
+
+    def database_is_updated(self):
+        """
+        Checks if data is updated or not with database by interval provided in accordance to UTC time.
+        :return: A boolean whether data is updated or not.
+        """
+        result = self.get_latest_database_row()
         if result is None:
             return False
         latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
@@ -152,20 +164,18 @@ class Trader:
         """
         Updates database by retrieving information from Binance API
         """
-        with closing(sqlite3.connect(self.databaseFile)) as connection:
-            with closing(connection.cursor()) as cursor:
-                cursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
-                result = cursor.fetchone()
+        result = self.get_latest_database_row()
         if result is None:
-            timestamp = self.binanceClient._get_earliest_valid_timestamp('BTCUSDT', '5m')
+            timestamp = self.binanceClient._get_earliest_valid_timestamp('BTCUSDT', self.interval)
             print(f'Downloading all available historical data for {self.interval} intervals. This may take a while...')
         else:
             latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
             timestamp = int(latestDate.timestamp()) * 1000
-            print(f"Previous data found up to UTC {latestDate} found.")
+            print(f"Previous data up to UTC {latestDate} found.")
 
         if not self.database_is_updated():
-            newData = self.binanceClient.get_historical_klines('BTCUSDT', self.interval, timestamp, limit=1000)
+            newData = self.binanceClient.get_historical_klines('BTCUSDT', self.interval, timestamp + 1, limit=1000)
+            del newData[-1]  # This is because we don't want current period data
             print("Successfully downloaded all new data.")
             print("Inserting data to live program...")
             self.insert_data(newData)
@@ -194,20 +204,13 @@ class Trader:
                                   })
 
     def is_latest_date(self, latestDate):
-        measurement = int(self.interval[0:len(self.interval) - 1])
-        unit = self.interval[-1]
-        if unit == 'h':
-            minutes = measurement * 60
-        elif unit == 'm':
-            minutes = measurement
-        elif unit == 'd':
-            minutes = measurement * 24 * 60
-        elif unit == 'M':
-            minutes = measurement * 30 * 24 * 60
-        else:
-            print("Invalid interval.")
-            return
-        return latestDate + timedelta(minutes=minutes) >= datetime.now(timezone.utc)
+        """
+        Checks whether the latest date available is the latest period available.
+        :param latestDate: Datetime object.
+        :return: True or false whether date is latest period or not.
+        """
+        minutes = self.get_interval_minutes()
+        return latestDate + timedelta(minutes=minutes) >= datetime.now(timezone.utc) - timedelta(minutes=minutes)
 
     def data_is_updated(self):
         """
@@ -241,10 +244,22 @@ class Trader:
         print(f"Previous data found up to UTC {latestDate}.")
         if not self.data_is_updated():
             newData = self.binanceClient.get_historical_klines('BTCUSDT', self.interval, timestamp, limit=1000)
+            del newData[-1]  # removing current period data
             self.insert_data(newData)
             print("Data has been updated successfully.")
         else:
             print("Data is up-to-date.")
+
+    def get_interval_minutes(self):
+        if self.intervalUnit == 'h':
+            return self.intervalMeasurement * 60
+        elif self.intervalUnit == 'm':
+            return self.intervalMeasurement
+        elif self.intervalUnit == 'd':
+            return self.intervalMeasurement * 24 * 60
+        else:
+            print("Invalid interval.")
+            return None
 
     @staticmethod
     def is_valid_interval(interval):
@@ -254,8 +269,7 @@ class Trader:
         :return: A boolean whether the interval is valid or not.
         """
         availableIntervals = ('12h', '15m', '1d', '1h',
-                              '1m', '1M', '1w', '2h', '30m',
-                              '3d', '3m', '4h', '5m', '6h', '8h')
+                              '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
         if interval in availableIntervals:
             return True
         else:
@@ -282,30 +296,7 @@ class Trader:
         path = os.path.join(os.getcwd(), fileName)
         print(f'Data saved to {path}.')
 
-    def get_current_data(self):
-        """
-        Retrieves current market dictionary with open, high, low, close prices.
-        :return: A dictionary with current open, high, low, and close prices.
-        """
-        # current = datetime.now(tz=timezone.utc)
-        # currentHourDate = datetime(current.year, current.month, current.day, current.hour, tzinfo=timezone.utc)
-        # nextHourDate = currentHourDate + timedelta(hours=1)
-        # currentHourTimestamp = int(currentHourDate.timestamp() * 1000)
-        # nextHourTimestamp = int(nextHourDate.timestamp() * 1000)
-        # currentData = self.binanceClient.get_klines(symbol='BTCUSDT',
-        #                                             interval='1h',
-        #                                             startTime=currentHourTimestamp,
-        #                                             endTime=nextHourTimestamp,
-        #                                             )[0]
-        # currentDataDictionary = {'date': nextHourDate,
-        #                          'open': float(currentData[1]),
-        #                          'high': float(currentData[2]),
-        #                          'low': float(currentData[3]),
-        #                          'close': float(currentData[4])}
-        # return currentDataDictionary
-        return self.btc_price
-
-    def get_sma(self, prices, parameter, shift=0, round_value=True, current=False):
+    def get_sma(self, prices, parameter, shift=0, round_value=True, current=True):
         """
         Returns the simple moving average with run-time data and prices provided.
         :param current: Boolean that takes into account whether we use current price bar or not.
@@ -315,33 +306,51 @@ class Trader:
         :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: SMA
         """
+        if shift < 0:
+            print("Shift cannot be less than 0.")
+            return None
+        elif shift > 0 and current:
+            print("You cannot have a shift and use current values concurrently.")
+            return None
+
         data = self.data[shift:prices + shift]
         if current:
-            data = [self.get_current_data()] + data[:len(data) - 1]
+            data = [self.get_current_data()] + self.data[:prices - 1]
+
+        if not current and shift + prices > len(self.data) or current and prices > len(self.data) + 1:
+            print("Shift + prices period cannot be more than data available.")
+            return None
 
         if prices == 0:
             print("Prices cannot be 0.")
-            return
+            return None
         elif prices == 1:
             return data[0][parameter]
 
-        sma = sum([day[parameter] for day in data]) / prices
+        sma = sum([period[parameter] for period in data]) / prices
         if round_value:
             return round(sma, 2)
         return sma
 
-    def get_wma(self, prices, parameter, round_value=True, current=True):
+    def get_wma(self, prices, parameter, shift=0, round_value=True, current=True):
         """
         Returns the weighted moving average with run-time data and prices provided.
+        :param shift: Prices shifted from current price
         :param current: Boolean that takes into account whether we use current price bar or not.
         :param boolean round_value: Boolean that specifies whether return value should be rounded
         :param int prices: Number of prices to loop over for average
         :param parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: WMA
         """
-        if prices == 0:
+        if shift < 0:
+            print("Shift cannot be less than 0.")
+            return None
+        elif shift > 0 and current:
+            print("You cannot have a shift and use current values concurrently.")
+            return None
+        elif prices == 0:
             print("Prices cannot be 0.")
-            return
+            return None
 
         if current:
             total = self.get_current_data()[parameter] * prices
@@ -398,27 +407,76 @@ class Trader:
         Defines how to process incoming WebSocket messages
         """
         if msg['e'] != 'error':
-            self.btc_price['currentPrice'] = float(msg['k']['c'])
+            self.btc_price['current'] = float(msg['k']['c'])
             self.btc_price['open'] = float(msg['k']['o'])
             self.btc_price['high'] = float(msg['k']['h'])
             self.btc_price['low'] = float(msg['k']['l'])
+            self.btc_price['date'] = datetime.now(tz=timezone.utc)
             if self.btc_price['error']:
                 print("Successfully reconnected.")
                 self.btc_price['error'] = False
         else:
             self.btc_price['error'] = True
             print("Something went wrong. Attempting to restart...")
-            self.bsm.stop_socket(self.conn)
+            # self.bsm.stop_socket(self.conn)
             self.bsm.close()
-            self.conn = self.bsm.start_kline_socket('BTCUSDT', self.process_socket_message, self.interval)
+            self.bsm.start_kline_socket('BTCUSDT', self.process_socket_message, self.interval)
             # self.bsm.start()
+
+    def get_current_data(self):
+        """
+        Retrieves current market dictionary with open, high, low, close prices.
+        :return: A dictionary with current open, high, low, and close prices.
+        """
+        try:
+            current = datetime.now(tz=timezone.utc)
+            if self.intervalUnit == 'h':
+                currentIntervalDate = datetime(current.year, current.month, current.day, current.hour,
+                                               tzinfo=timezone.utc)
+            elif self.intervalUnit == 'm':
+                currentIntervalDate = datetime(current.year, current.month, current.day, current.hour, current.minute,
+                                               tzinfo=timezone.utc)
+                remainder = currentIntervalDate.minute % self.intervalMeasurement
+                currentIntervalDate = currentIntervalDate - timedelta(minutes=remainder)
+            elif self.intervalUnit == 'd':
+                currentIntervalDate = datetime(current.year, current.month, current.day, tzinfo=timezone.utc)
+            else:
+                print("Unknown interval unit.")
+                return None
+
+            nextIntervalDate = currentIntervalDate + timedelta(minutes=self.get_interval_minutes())
+            currentHourTimestamp = int(currentIntervalDate.timestamp() * 1000)
+            nextHourTimestamp = int(nextIntervalDate.timestamp() * 1000) - 1
+            currentData = self.binanceClient.get_klines(symbol='BTCUSDT',
+                                                        interval=self.interval,
+                                                        startTime=currentHourTimestamp,
+                                                        endTime=nextHourTimestamp,
+                                                        )[0]
+            currentDataDictionary = {'date': currentIntervalDate,
+                                     'open': float(currentData[1]),
+                                     'high': float(currentData[2]),
+                                     'low': float(currentData[3]),
+                                     'close': float(currentData[4])}
+            return currentDataDictionary
+        except Exception as e:
+            print(e)
+            print("Attempting to fix...")
+            time.sleep(2)
+            self.get_current_data()
+        # return self.btc_price
 
     def get_current_price(self):
         """
         Returns the current market BTC price.
         :return: BTC market price
         """
-        return self.btc_price['currentPrice']
+        try:
+            return float(self.binanceClient.get_symbol_ticker(symbol="BTCUSDT")['price'])
+        except Exception as e:
+            print(e)
+            time.sleep(2)
+            self.get_current_price()
+        # return self.btc_price['current']
 
     def process_transaction(self):
         pass
@@ -514,8 +572,30 @@ class Trader:
         self.balance += earned
         self.sellShortPrice = currentPrice
 
-    def past_data_simulation(self):
-        pass
+    def past_data_simulate(self):
+        while True:
+            tradingType1 = None
+            tradingType2 = None
+            tradingTypes = ('WMA', 'EMA', 'SMA')
+            while tradingType1 not in tradingTypes:
+                tradingType1 = input(f'Type in your first trading type (e.g. {tradingTypes})>> ').upper()
+            while tradingType2 not in tradingTypes:
+                tradingType2 = input(f'Type in your second trading type (e.g. {tradingTypes})>> ').upper()
+
+            parameters = ('open', 'high', 'low', 'close')
+            parameter1 = None
+            parameter2 = None
+            while parameter1 not in parameters:
+                parameter1 = input(f"Type in your first parameter (e.g. {parameters})>> ").lower()
+            while parameter2 not in parameters:
+                parameter2 = input(f"Type in your second parameter (e.g. {parameters})>> ").lower()
+
+            print(f'Is this correct? Initial: {tradingType1} - {parameter1} | Final: {tradingType2} - {parameter2}')
+            success = input('Type in "y" or "n">> ').lower()
+            if success.startswith('y'):
+                break
+
+        print("Running simulation...")
 
     def simulate(self, tradeType="SMA", parameter="high", initialBound=11, finalBound=19, comparison='>', loss=0.02):
         """
@@ -604,7 +684,7 @@ class Trader:
                         self.simulatedTradesConducted += 1
 
                 print("Type CTRL-C to cancel the program at any time.")
-                time.sleep(2)
+                time.sleep(1)
             except KeyboardInterrupt:
                 print("\nExiting simulation.")
                 self.endingTime = datetime.now()

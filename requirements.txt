@@ -31,3 +31,4 @@ urllib3==1.25.9
 zope.interface==5.1.0
 
 twilio
+pytest
