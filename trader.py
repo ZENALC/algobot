@@ -312,6 +312,9 @@ class Trader:
         elif shift > 0 and current:
             print("You cannot have a shift and use current values concurrently.")
             return None
+        elif prices == 0:
+            print("Prices cannot be 0.")
+            return None
 
         data = self.data[shift:prices + shift]
         if current:
@@ -321,12 +324,6 @@ class Trader:
             print("Shift + prices period cannot be more than data available.")
             return None
 
-        if prices == 0:
-            print("Prices cannot be 0.")
-            return None
-        elif prices == 1:
-            return data[0][parameter]
-
         sma = sum([period[parameter] for period in data]) / prices
         if round_value:
             return round(sma, 2)
@@ -335,7 +332,7 @@ class Trader:
     def get_wma(self, prices, parameter, shift=0, round_value=True, current=True):
         """
         Returns the weighted moving average with run-time data and prices provided.
-        :param shift: Prices shifted from current price
+        :param shift: Prices shifted from previous interval period.
         :param current: Boolean that takes into account whether we use current price bar or not.
         :param boolean round_value: Boolean that specifies whether return value should be rounded
         :param int prices: Number of prices to loop over for average
@@ -354,13 +351,15 @@ class Trader:
 
         if current:
             total = self.get_current_data()[parameter] * prices
+            data = self.data[:prices - 1]
         else:
-            total = self.data[0][parameter] * prices
+            total = self.data[shift][parameter] * prices
+            data = self.data[shift + 1: prices + shift]
 
         index = 0
         divisor = prices * (prices + 1) / 2
         for x in range(prices - 1, 0, -1):
-            total += x * self.data[index][parameter]
+            total += x * data[index][parameter]
             index += 1
 
         wma = total / divisor
