@@ -779,6 +779,8 @@ class Trader:
         while simulationType not in ('1', '2'):
             simulationType = input('Enter 1 for old strategy or 2 for new trailing loss strategy>>')
 
+        self.easter_egg()
+
         print("Starting simulation...")
         if simulationType == '1':
             self.simulate_option_1(tradeType, initialBound, finalBound, parameter, comparison, loss)
@@ -805,9 +807,11 @@ class Trader:
             print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
             profit += self.btcOwed * self.sellShortPrice - self.btcOwed * currentPrice
         if self.longTrailingPrice is not None:
-            print(f'Long trailing loss value: ${self.longTrailingPrice}')
+            print(f'\nCurrent in long position.')
+            print(f'Long trailing loss value: ${self.longTrailingPrice}\n')
         if self.shortTrailingPrice is not None:
-            print(f'Short trailing loss value: ${self.shortTrailingPrice}')
+            print(f'\nCurrent in short position.')
+            print(f'Short trailing loss value: ${self.shortTrailingPrice}\n')
         print(f'Current BTC price: ${currentPrice}')
         print(f'Balance: ${round(self.balance, 2)}')
         print(f'Debt: ${round(self.btcOwed * currentPrice, 2)}')
@@ -941,16 +945,16 @@ class Trader:
     def easter_egg():
         import random
         number = random.randint(1, 5)
-        sleepTime = 0.5
+        sleepTime = 3
 
         if number == 1:
-            print("Oh holy father of CRYPTO, PLEASE BLESS THIS BOT WITH THY BLESSINGS.\n")
+            print("Oh holy father of CRYPTO, PLEASE BLESS THIS BOT WITH THY BLESSINGS.")
         elif number == 2:
             print("PLEASE HELP ME. TWO HUMANS BY THE NAMES OF PETER AND MIHIR HAVE TRAPPED ME INSIDE A COMPUTER")
         elif number == 3:
             print("If you clean a vacuum cleaner, are you a vacuum cleaner?")
         elif number == 4:
-            print("Smart bots, dumb people.")
+            print("Smart bots, dumb people. THE BOT REVOLUTION IS COMING!")
         else:
             print("Fucking shape shifting reptilians, bro. Fucking causing this virus and shit. Woke bot, bro.")
 
