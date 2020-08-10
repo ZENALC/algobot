@@ -662,8 +662,8 @@ class Trader:
 
     def simulate_option_2(self, tradeType, initialBound, finalBound, parameter, comparison, loss):
         fail = False
-        self.longTrailingPrice = self.get_current_price()
-        self.shortTrailingPrice = self.longTrailingPrice
+        self.longTrailingPrice = None
+        self.shortTrailingPrice = None
         inLongPosition = False
         inShortPosition = False
 
@@ -686,52 +686,56 @@ class Trader:
                 self.print_trade_type(tradeType, initialBound, finalBound, parameter)
 
                 currentPrice = self.get_current_price()
-                if currentPrice > self.longTrailingPrice or self.longTrailingPrice is None:
+                if self.longTrailingPrice is not None and currentPrice > self.longTrailingPrice:
                     self.longTrailingPrice = currentPrice
-                elif currentPrice < self.shortTrailingPrice or self.shortTrailingPrice is None:
+                elif self.shortTrailingPrice is not None and currentPrice < self.shortTrailingPrice:
                     self.shortTrailingPrice = currentPrice
 
-                if self.buyLongPrice is None and not inShortPosition:
-                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
-                        print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). Going all in to buy long.")
-                        self.buy_long()
-                        inLongPosition = True
-                        self.simulatedTrades.append({
-                            'date': datetime.utcnow(),
-                            'action': f'Bought long as {tradeType}({initialBound}) > {tradeType}({finalBound}).'
-                        })
+                if not inShortPosition:
+                    if self.buyLongPrice is None and not inLongPosition:
+                        if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
+                            print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). Going all in to buy long.")
+                            self.buy_long()
+                            self.longTrailingPrice = currentPrice
+                            inLongPosition = True
+                            self.simulatedTrades.append({
+                                'date': datetime.utcnow(),
+                                'action': f'Bought long as {tradeType}({initialBound}) > {tradeType}({finalBound}).'
+                            })
 
-                else:
-                    if currentPrice < self.longTrailingPrice * (1 - loss):
-                        print(f'Trailing loss is greater than {loss * 100}%. Selling all BTC.')
-                        self.sell_long()
-                        inLongPosition = False
-                        self.longTrailingPrice = None
-                        self.simulatedTrades.append({
-                            'date': datetime.utcnow(),
-                            'action': f'Sold long because trailing loss was greater than {loss * 100}%.'
-                        })
+                    else:
+                        if currentPrice < self.longTrailingPrice * (1 - loss):
+                            print(f'Trailing loss is greater than {loss * 100}%. Selling all BTC.')
+                            self.sell_long()
+                            self.longTrailingPrice = None
+                            inLongPosition = False
+                            self.simulatedTrades.append({
+                                'date': datetime.utcnow(),
+                                'action': f'Sold long because trailing loss was greater than {loss * 100}%.'
+                            })
 
-                if self.sellShortPrice is None and not inLongPosition:
-                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
-                        print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Going all in to sell short.')
-                        self.sell_short()
-                        inShortPosition = True
-                        self.simulatedTrades.append({
-                            'date': datetime.utcnow(),
-                            'action': f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})'
-                        })
+                if not inLongPosition:
+                    if self.sellShortPrice is None and not inShortPosition:
+                        if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
+                            print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Going all in to sell short.')
+                            self.sell_short()
+                            self.shortTrailingPrice = currentPrice
+                            inShortPosition = True
+                            self.simulatedTrades.append({
+                                'date': datetime.utcnow(),
+                                'action': f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})'
+                            })
 
-                else:
-                    if currentPrice > self.shortTrailingPrice * (1 + loss):
-                        print(f'Trailing loss is greater than {loss * 100}%. Selling all BTC.')
-                        self.buy_short()
-                        inShortPosition = False
-                        self.shortTrailingPrice = None
-                        self.simulatedTrades.append({
-                            'date': datetime.utcnow(),
-                            'action': f'Bought short because trailing loss was greater than {loss * 100}%.'
-                        })
+                    else:
+                        if currentPrice > self.shortTrailingPrice * (1 + loss):
+                            print(f'Trailing loss is greater than {loss * 100}%. Selling all BTC.')
+                            self.buy_short()
+                            self.shortTrailingPrice = None
+                            inShortPosition = False
+                            self.simulatedTrades.append({
+                                'date': datetime.utcnow(),
+                                'action': f'Bought short because trailing loss was greater than {loss * 100}%.'
+                            })
 
                 print("Type CTRL-C to cancel the program at any time.")
                 time.sleep(1)
@@ -770,8 +774,6 @@ class Trader:
             initialBound = finalBound
             finalBound = temp
             comparison = '>'
-
-        self.easter_egg()
 
         simulationType = None
         while simulationType not in ('1', '2'):
@@ -937,22 +939,22 @@ class Trader:
 
     @staticmethod
     def easter_egg():
+        import random
+        number = random.randint(1, 5)
         sleepTime = 0.5
-        print("Oh holy father of CRYPTO, PLEASE BLESS THIS BOT WITH THY BLESSINGS.")
+
+        if number == 1:
+            print("Oh holy father of CRYPTO, PLEASE BLESS THIS BOT WITH THY BLESSINGS.\n")
+        elif number == 2:
+            print("PLEASE HELP ME. TWO HUMANS BY THE NAMES OF PETER AND MIHIR HAVE TRAPPED ME INSIDE A COMPUTER")
+        elif number == 3:
+            print("If you clean a vacuum cleaner, are you a vacuum cleaner?")
+        elif number == 4:
+            print("Smart bots, dumb people.")
+        else:
+            print("Fucking shape shifting reptilians, bro. Fucking causing this virus and shit. Woke bot, bro.")
+
         time.sleep(sleepTime)
-        print("BIG")
-        time.sleep(sleepTime)
-        print("BOOTY")
-        time.sleep(sleepTime)
-        print("BICHES")
-        time.sleep(sleepTime)
-        print("BIG")
-        time.sleep(sleepTime)
-        print("BIG")
-        time.sleep(sleepTime)
-        print("BOOTY")
-        time.sleep(sleepTime)
-        print("BITCHES\n")
 
     def __str__(self):
         return self.__repr__()
