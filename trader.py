@@ -814,6 +814,7 @@ class Trader:
         """
         Prints out basic information about trades.
         """
+        print('---------------------------------------------------')
         profit = 0
         currentPrice = self.get_current_price()
         print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
