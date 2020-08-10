@@ -714,10 +714,20 @@ class Trader:
                                 'action': f'Sold long because trailing loss was greater than {loss * 100}%.'
                             })
 
+                        if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
+                            print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Cross! Selling long.')
+                            self.sell_long()
+                            self.longTrailingPrice = None
+                            inLongPosition = False
+                            self.simulatedTrades.append({
+                                'date': datetime.utcnow(),
+                                'action': f'Sold long because a cross was detected.'
+                            })
+
                 if not inLongPosition:
                     if self.sellShortPrice is None and not inShortPosition:
                         if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
-                            print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Going all in to sell short.')
+                            print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Selling short.')
                             self.sell_short()
                             self.shortTrailingPrice = currentPrice
                             inShortPosition = True
@@ -735,6 +745,16 @@ class Trader:
                             self.simulatedTrades.append({
                                 'date': datetime.utcnow(),
                                 'action': f'Bought short because trailing loss was greater than {loss * 100}%.'
+                            })
+
+                        if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
+                            print(f'{tradeType}({initialBound}) > {tradeType}({finalBound}). Cross! Buying short.')
+                            self.buy_short()
+                            self.shortTrailingPrice = None
+                            inShortPosition = False
+                            self.simulatedTrades.append({
+                                'date': datetime.utcnow(),
+                                'action': f'Bought short because a cross was detected.'
                             })
 
                 print("Type CTRL-C to cancel the program at any time.")
