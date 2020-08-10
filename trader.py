@@ -589,7 +589,7 @@ class Trader:
 
         print("Running simulation...")
 
-    def simulate_option_1(self, tradeType, initialBound, finalBound, parameter, comparison, loss):
+    def simulate_option_1(self, tradeType, initialBound, finalBound, parameter, loss, comparison):
         fail = False
         if comparison == '>':
             reverseComparison = '<'
@@ -632,17 +632,17 @@ class Trader:
                             'action': f'Sold long because loss was greater than {loss * 100}%.'
                         })
                     elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
-                        print("Cross detected. Selling long.")
+                        print(f'Cross detected - {tradeType}({initialBound}) < {tradeType}({finalBound}. Selling long.')
                         self.sell_long()
                         self.simulatedTrades.append({
                             'date': datetime.utcnow(),
-                            'action': f'Sold long because a cross was detected.'
+                            'action': f'Sold long because {tradeType}({initialBound}) < {tradeType}({finalBound}.'
                         })
                         if self.sellShortPrice is None:
                             self.sell_short()
                             self.simulatedTrades.append({
                                 'date': datetime.utcnow(),
-                                'action': f'Sold short because a cross was detected.'
+                                'action': f'Sold short because {tradeType}({initialBound}) < {tradeType}({finalBound}..'
                             })
 
                 if self.sellShortPrice is None:
@@ -673,13 +673,13 @@ class Trader:
                         self.buy_short()
                         self.simulatedTrades.append({
                             'date': datetime.utcnow(),
-                            'action': f'Bought short because a cross was detected.'
+                            'action': f'Bought short because {tradeType}({initialBound}) > {tradeType}({finalBound}.'
                         })
                         if self.buyLongPrice is None:
                             self.buy_long()
                             self.simulatedTrades.append({
                                 'date': datetime.utcnow(),
-                                'action': f'Buying long because a cross was detected.'
+                                'action': f'Bought long because {tradeType}({initialBound}) > {tradeType}({finalBound}.'
                             })
 
                 print("Type CTRL-C to cancel the program at any time.")
@@ -694,7 +694,7 @@ class Trader:
                 print("Attempting to fix error...")
                 fail = True
 
-    def simulate_option_2(self, tradeType, initialBound, finalBound, parameter, comparison, loss, trailingLoss):
+    def simulate_option_2(self, tradeType, initialBound, finalBound, parameter, loss, trailingLoss, comparison):
         fail = False
         self.longTrailingPrice = None
         self.shortTrailingPrice = None
@@ -844,7 +844,7 @@ class Trader:
                 print("Attempting to fix error...")
                 fail = True
 
-    def simulate(self, tradeType="SMA", parameter="high", initialBound=11, finalBound=19, comparison='>', loss=0.02):
+    def simulate(self, tradeType="WMA", parameter="high", initialBound=20, finalBound=24, loss=0.015, comparison='>'):
         """
         Starts a live simulation with given parameters.
         :param parameter: Type of parameter to use for averages. e.g close, open, high, low.
@@ -898,20 +898,27 @@ class Trader:
             print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
             profit += self.btc * currentPrice - self.btc * self.buyLongPrice
         if self.btcOwed > 0:
-            print(f'BTC Owed: {self.btcOwed}')
-            print(f'BTC Owed Price: ${self.btcOwedPrice}')
+            print(f'BTC owed: {self.btcOwed}')
+            print(f'BTC owed price: ${self.btcOwedPrice}')
             print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
             profit += self.btcOwed * self.sellShortPrice - self.btcOwed * currentPrice
         if self.longTrailingPrice is not None:
             print(f'\nCurrent in long position.')
-            print(f'Long trailing loss value: ${self.longTrailingPrice * (1 - loss)}\n')
+            print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
         if self.shortTrailingPrice is not None:
             print(f'\nCurrent in short position.')
-            print(f'Short trailing loss value: ${self.shortTrailingPrice * (1 + loss)}\n')
-        print(f'Current BTC price: ${currentPrice}')
+            print(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
+        if self.shortTrailingPrice is None and self.longTrailingPrice is None:
+            if self.buyLongPrice is not None:
+                print(f'Stop loss: {round(self.buyLongPrice * (1 - loss), 2)}')
+            elif self.sellShortPrice is not None:
+                print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
+
+        print(f'\nCurrent BTC price: ${currentPrice}')
         print(f'Balance: ${round(self.balance, 2)}')
         print(f'Debt: ${round(self.btcOwed * currentPrice, 2)}')
         print(f'Liquid Cash: ${round(self.balance - self.btcOwed * currentPrice, 2)}')
+        print(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
         profit = round(profit, 2)
         if profit > 0:
             print(f'Profit: ${profit}')
