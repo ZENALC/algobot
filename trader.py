@@ -598,7 +598,7 @@ class Trader:
 
         while True:
             try:
-                self.print_basic_information()
+                self.print_basic_information(loss)
 
                 if fail:
                     print("Successfully reconnected.")
@@ -708,7 +708,7 @@ class Trader:
 
         while True:
             try:
-                self.print_basic_information()
+                self.print_basic_information(loss)
 
                 if fail:
                     print("Successfully reconnected.")
@@ -751,7 +751,7 @@ class Trader:
                                     'action': f'Sold long because trailing loss was greater than {loss * 100}%.'
                                 })
 
-                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
+                            elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
                                 print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Cross! Selling long.')
                                 self.sell_long()
                                 self.longTrailingPrice = None
@@ -770,7 +770,7 @@ class Trader:
                                     'action': f'Sold long because loss was greater than {loss * 100}%.'
                                 })
 
-                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
+                            elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
                                 print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Cross! Selling long.')
                                 self.sell_long()
                                 inLongPosition = False
@@ -804,7 +804,7 @@ class Trader:
                                     'action': f'Bought short because trailing loss was greater than {loss * 100}%.'
                                 })
 
-                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
+                            elif self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
                                 print(f'{tradeType}({initialBound}) > {tradeType}({finalBound}). Cross! Buying short.')
                                 self.buy_short()
                                 self.shortTrailingPrice = None
@@ -823,7 +823,7 @@ class Trader:
                                     'action': f'Bought short because loss was greater than {loss * 100}%.'
                                 })
 
-                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
+                            elif self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
                                 print(f'{tradeType}({initialBound}) > {tradeType}({finalBound}). Cross! Buying short.')
                                 self.buy_short()
                                 inShortPosition = False
@@ -872,7 +872,7 @@ class Trader:
 
         simulationType = None
         while simulationType not in ('1', '2'):
-            simulationType = input('Enter 1 for old strategy or 2 for new trailing loss strategy>>')
+            simulationType = input('Enter 1 for stop loss or 2 for trailing loss strategy>>')
 
         self.easter_egg()
 
@@ -885,7 +885,7 @@ class Trader:
         self.endingTime = datetime.now()
         self.print_simulation_result()
 
-    def print_basic_information(self):
+    def print_basic_information(self, loss):
         """
         Prints out basic information about trades.
         """
@@ -904,10 +904,10 @@ class Trader:
             profit += self.btcOwed * self.sellShortPrice - self.btcOwed * currentPrice
         if self.longTrailingPrice is not None:
             print(f'\nCurrent in long position.')
-            print(f'Long trailing loss value: ${self.longTrailingPrice}\n')
+            print(f'Long trailing loss value: ${self.longTrailingPrice * (1 - loss)}\n')
         if self.shortTrailingPrice is not None:
             print(f'\nCurrent in short position.')
-            print(f'Short trailing loss value: ${self.shortTrailingPrice}\n')
+            print(f'Short trailing loss value: ${self.shortTrailingPrice * (1 + loss)}\n')
         print(f'Current BTC price: ${currentPrice}')
         print(f'Balance: ${round(self.balance, 2)}')
         print(f'Debt: ${round(self.btcOwed * currentPrice, 2)}')
@@ -1040,7 +1040,7 @@ class Trader:
     @staticmethod
     def easter_egg():
         import random
-        number = random.randint(1, 5)
+        number = random.randint(1, 10)
         sleepTime = 3
 
         if number == 1:
@@ -1051,6 +1051,16 @@ class Trader:
             print("If you clean a vacuum cleaner, are you a vacuum cleaner?")
         elif number == 4:
             print("Smart bots, dumb people. THE BOT REVOLUTION IS COMING!")
+        elif number == 5:
+            print("Contrary to popular belief, did you know the bot did not graduate from the school of tomorrow?")
+        elif number == 6:
+            print("If the bot does not work as expected, do not bash computer. Just blame Binance and call it a day.")
+        elif number == 7:
+            print("No matter what anyone says, 9 + 10 is 21.")
+        elif number == 8:
+            print("I'm not gay but $20 is $20.")
+        elif number == 9:
+            print("Test, Test, Test! We are so good at testing, that's why we have all these cases!")
         else:
             print("Fucking shape shifting reptilians, bro. Fucking causing this virus and shit. Woke bot, bro.")
 
