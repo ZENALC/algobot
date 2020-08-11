@@ -836,9 +836,9 @@ class Trader:
 
         print("Starting simulation...")
         if simulationType == '1':
-            self.simulate_option_2(tradeType, initialBound, finalBound, parameter, comparison, loss, trailingLoss=False)
+            self.simulate_option_2(tradeType, initialBound, finalBound, parameter, loss, False, comparison)
         elif simulationType == '2':
-            self.simulate_option_2(tradeType, initialBound, finalBound, parameter, comparison, loss, trailingLoss=True)
+            self.simulate_option_2(tradeType, initialBound, finalBound, parameter, loss, True, comparison)
         print("\nExiting simulation.")
         self.endingTime = datetime.now()
         self.print_simulation_result()
