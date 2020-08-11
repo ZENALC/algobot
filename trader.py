@@ -702,6 +702,9 @@ class Trader:
 
     def simulate_option_2(self, tradeType, initialBound, finalBound, parameter, loss, trailingLoss, comparison):
         fail = False
+        waitShort = False
+        waitLong = False
+        waitTime = 30
         self.longTrailingPrice = None
         self.shortTrailingPrice = None
         inLongPosition = False
@@ -717,7 +720,7 @@ class Trader:
                 self.print_basic_information(loss)
 
                 if fail:
-                    print("Successfully reconnected.")
+                    print("Successfully fixed error.")
                     fail = False
 
                 if not self.data_is_updated():
@@ -734,13 +737,19 @@ class Trader:
 
                 if not inShortPosition:
                     if self.buyLongPrice is None and not inLongPosition:
-                        if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
-                            print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). Going all in to buy long.")
-                            self.buy_long()
-                            if trailingLoss:
-                                self.longTrailingPrice = currentPrice
-                            inLongPosition = True
-                            self.add_trade(f'Bought long as {tradeType}({initialBound}) > {tradeType}({finalBound}).')
+                        if not waitLong:
+                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
+                                print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). Buying long.")
+                                self.buy_long()
+                                if trailingLoss:
+                                    self.longTrailingPrice = currentPrice
+                                inLongPosition = True
+                                self.add_trade(f'Bought long: {tradeType}({initialBound}) > {tradeType}({finalBound}).')
+                        else:  # Checks if there is a cross to sell short.
+                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
+                                print("Cross detected.")
+                                waitLong = False
+
                     else:
                         if trailingLoss:
                             lossPrice = self.longTrailingPrice
@@ -752,24 +761,31 @@ class Trader:
                             self.sell_long()
                             self.longTrailingPrice = None
                             inLongPosition = False
-                            self.add_trade(f'Sold long because loss was greater than {loss * 100}%.')
+                            waitLong = True
+                            self.add_trade(f'Sold long because loss was greater than {loss * 100}%. Waiting for cross.')
 
                         elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
                             print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Cross! Selling long.')
                             self.sell_long()
                             self.longTrailingPrice = None
                             inLongPosition = False
+                            waitLong = False
                             self.add_trade(f'Sold long because a cross was detected.')
 
                 if not inLongPosition:
                     if self.sellShortPrice is None and not inShortPosition:
-                        if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
-                            print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Selling short.')
-                            self.sell_short()
-                            if trailingLoss:
-                                self.shortTrailingPrice = currentPrice
-                            inShortPosition = True
-                            self.add_trade(f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
+                        if not waitShort:
+                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
+                                print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Selling short.')
+                                self.sell_short()
+                                if trailingLoss:
+                                    self.shortTrailingPrice = currentPrice
+                                inShortPosition = True
+                                self.add_trade(f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
+                        else:
+                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
+                                print("Cross detected!")
+                                waitShort = False
                     else:
                         if trailingLoss:
                             lossPrice = self.shortTrailingPrice
@@ -781,7 +797,8 @@ class Trader:
                             self.buy_short()
                             self.shortTrailingPrice = None
                             inShortPosition = False
-                            self.add_trade(f'Bought short because loss was greater than {loss * 100}%.')
+                            self.add_trade(f'Bought short because loss is greater than {loss * 100}%. Waiting for cross')
+                            waitShort = True
 
                         elif self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
                             print(f'{tradeType}({initialBound}) > {tradeType}({finalBound}). Cross! Buying short.')
@@ -789,6 +806,7 @@ class Trader:
                             self.shortTrailingPrice = None
                             inShortPosition = False
                             self.add_trade(f'Bought short because a cross was detected.')
+                            waitShort = False
 
                 print("Type CTRL-C to cancel the program at any time.")
                 time.sleep(1)
@@ -828,11 +846,11 @@ class Trader:
             finalBound = temp
             comparison = '>'
 
+        self.easter_egg()
+
         simulationType = None
         while simulationType not in ('1', '2'):
             simulationType = input('Enter 1 for stop loss or 2 for trailing loss strategy>>')
-
-        self.easter_egg()
 
         print("Starting simulation...")
         if simulationType == '1':
@@ -984,9 +1002,10 @@ class Trader:
             print(f'Unknown trading type {tradeType}.')
             return False
 
-    def check_cross(self, tradeType, initialBound, finalBound, parameter, comparison):
+    def check_cross(self, tradeType, initialBound, finalBound, parameter, comparison, previousCondition):
         """
         Checks if there is a cross.
+        :param previousCondition: Previous condition whether it was in a short or long position.
         :param comparison: Previous comparison.
         :param tradeType: Algorithm used type. e.g. SMA, WMA, or EMA
         :param initialBound: First bound for algorithm.
@@ -996,8 +1015,12 @@ class Trader:
         """
         if tradeType == 'SMA':
             if comparison == '>':
+                if previousCondition == 'long':
+                    return False
                 return self.get_sma(initialBound, parameter) > self.get_sma(finalBound, parameter)
             else:
+                if previousCondition == 'long':
+                    return False
                 return self.get_sma(initialBound, parameter) < self.get_sma(finalBound, parameter)
         elif tradeType == 'EMA':
             if comparison == '>':
@@ -1037,7 +1060,7 @@ class Trader:
         elif number == 9:
             print("Test, Test, Test! We are so good at testing, that's why we have all these cases!")
         else:
-            print("Fucking shape shifting reptilians, bro. Fucking causing this virus and shit. Woke bot, bro.")
+            print("Fucking shape shifting reptilians, bro. Fucking causing this virus and shit.")
 
         time.sleep(sleepTime)
 
