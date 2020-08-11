@@ -563,6 +563,12 @@ class Trader:
         self.balance += earned
         self.sellShortPrice = currentPrice
 
+    def add_to_simulate_trades(self, action):
+        self.simulatedTrades.append({
+            'date': datetime.utcnow(),
+            'action': action
+        })
+
     def past_data_simulate(self):
         self.balance = self.balance
         while True:
@@ -734,11 +740,7 @@ class Trader:
                             if trailingLoss:
                                 self.longTrailingPrice = currentPrice
                             inLongPosition = True
-                            self.simulatedTrades.append({
-                                'date': datetime.utcnow(),
-                                'action': f'Bought long as {tradeType}({initialBound}) > {tradeType}({finalBound}).'
-                            })
-
+                            self.add_to_simulate_trades(f'Bought long as {tradeType}({initialBound}) > {tradeType}({finalBound}).')
                     else:
                         if trailingLoss:
                             if currentPrice < self.longTrailingPrice * (1 - loss):
@@ -746,38 +748,26 @@ class Trader:
                                 self.sell_long()
                                 self.longTrailingPrice = None
                                 inLongPosition = False
-                                self.simulatedTrades.append({
-                                    'date': datetime.utcnow(),
-                                    'action': f'Sold long because trailing loss was greater than {loss * 100}%.'
-                                })
+                                self.add_to_simulate_trades(f'Sold long because trailing loss was greater than {loss * 100}%.')
 
                             elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
                                 print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Cross! Selling long.')
                                 self.sell_long()
                                 self.longTrailingPrice = None
                                 inLongPosition = False
-                                self.simulatedTrades.append({
-                                    'date': datetime.utcnow(),
-                                    'action': f'Sold long because a cross was detected.'
-                                })
+                                self.add_to_simulate_trades(f'Sold long because a cross was detected.')
                         else:
                             if currentPrice < self.buyLongPrice * (1 - loss):
                                 print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
                                 self.sell_long()
                                 inLongPosition = False
-                                self.simulatedTrades.append({
-                                    'date': datetime.utcnow(),
-                                    'action': f'Sold long because loss was greater than {loss * 100}%.'
-                                })
+                                self.add_to_simulate_trades(f'Sold long because loss was greater than {loss * 100}%.')
 
                             elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison):
                                 print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Cross! Selling long.')
                                 self.sell_long()
                                 inLongPosition = False
-                                self.simulatedTrades.append({
-                                    'date': datetime.utcnow(),
-                                    'action': f'Sold long because a cross was detected.'
-                                })
+                                self.add_to_simulate_trades(f'Sold long because a cross was detected.')
 
                 if not inLongPosition:
                     if self.sellShortPrice is None and not inShortPosition:
@@ -787,11 +777,7 @@ class Trader:
                             if trailingLoss:
                                 self.shortTrailingPrice = currentPrice
                             inShortPosition = True
-                            self.simulatedTrades.append({
-                                'date': datetime.utcnow(),
-                                'action': f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})'
-                            })
-
+                            self.add_to_simulate_trades(f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
                     else:
                         if trailingLoss:
                             if currentPrice > self.shortTrailingPrice * (1 + loss):
@@ -799,38 +785,26 @@ class Trader:
                                 self.buy_short()
                                 self.shortTrailingPrice = None
                                 inShortPosition = False
-                                self.simulatedTrades.append({
-                                    'date': datetime.utcnow(),
-                                    'action': f'Bought short because trailing loss was greater than {loss * 100}%.'
-                                })
+                                self.add_to_simulate_trades(f'Bought short because trailing loss was greater than {loss * 100}%.')
 
                             elif self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
                                 print(f'{tradeType}({initialBound}) > {tradeType}({finalBound}). Cross! Buying short.')
                                 self.buy_short()
                                 self.shortTrailingPrice = None
                                 inShortPosition = False
-                                self.simulatedTrades.append({
-                                    'date': datetime.utcnow(),
-                                    'action': f'Bought short because a cross was detected.'
-                                })
+                                self.add_to_simulate_trades(f'Bought short because a cross was detected.')
                         else:
                             if currentPrice > self.sellShortPrice * (1 + loss):
                                 print(f'Loss is greater than {loss * 100}%. Buying short.')
                                 self.buy_short()
                                 inShortPosition = False
-                                self.simulatedTrades.append({
-                                    'date': datetime.utcnow(),
-                                    'action': f'Bought short because loss was greater than {loss * 100}%.'
-                                })
+                                self.add_to_simulate_trades(f'Bought short because loss is greater than {loss * 100}%.')
 
                             elif self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison):
                                 print(f'{tradeType}({initialBound}) > {tradeType}({finalBound}). Cross! Buying short.')
                                 self.buy_short()
                                 inShortPosition = False
-                                self.simulatedTrades.append({
-                                    'date': datetime.utcnow(),
-                                    'action': f'Bought short because a cross was detected.'
-                                })
+                                self.add_to_simulate_trades(f'Bought short because a cross was detected.')
 
                 print("Type CTRL-C to cancel the program at any time.")
                 time.sleep(1)
@@ -1026,9 +1000,10 @@ class Trader:
             print(f'Unknown trading type {tradeType}.')
             return False
 
-    def check_cross(self, tradeType, initialBound, finalBound, parameter):
+    def check_cross(self, tradeType, initialBound, finalBound, parameter, comparison):
         """
         Checks if there is a cross.
+        :param comparison: Previous comparison.
         :param tradeType: Algorithm used type. e.g. SMA, WMA, or EMA
         :param initialBound: First bound for algorithm.
         :param finalBound: Final bound for algorithm.
@@ -1036,11 +1011,20 @@ class Trader:
         :return: A boolean whether there is a cross or not.
         """
         if tradeType == 'SMA':
-            return self.get_sma(initialBound, parameter) == self.get_sma(finalBound, parameter)
+            if comparison == '>':
+                return self.get_sma(initialBound, parameter) > self.get_sma(finalBound, parameter)
+            else:
+                return self.get_sma(initialBound, parameter) < self.get_sma(finalBound, parameter)
         elif tradeType == 'EMA':
-            return self.get_ema(initialBound, parameter) == self.get_ema(finalBound, parameter)
+            if comparison == '>':
+                return self.get_ema(initialBound, parameter) > self.get_ema(finalBound, parameter)
+            else:
+                return self.get_ema(initialBound, parameter) < self.get_ema(finalBound, parameter)
         elif tradeType == 'WMA':
-            return self.get_wma(initialBound, parameter) == self.get_wma(finalBound, parameter)
+            if comparison == '>':
+                return self.get_wma(initialBound, parameter) > self.get_wma(finalBound, parameter)
+            else:
+                return self.get_wma(initialBound, parameter) < self.get_wma(finalBound, parameter)
         else:
             return False
 
