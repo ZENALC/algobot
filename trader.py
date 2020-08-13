@@ -26,7 +26,9 @@ class Trader:
 
         if not self.is_valid_symbol(symbol):
             print('Invalid symbol. Using default symbol of BTCUSDT.')
-            self.symbol = 'BTCUSDT'
+            symbol = 'BTCUSDT'
+
+        self.symbol = symbol
 
         self.data = []
         self.ema_data = {}
@@ -57,6 +59,9 @@ class Trader:
             self.update_database()
         else:
             print("Database is up-to-date.")
+
+        self.logFile = None
+        self.log = None
 
         # Initialize and start the WebSocket
         # print("Initializing web socket...")
@@ -580,6 +585,23 @@ class Trader:
             'action': action
         })
 
+    def generate_log_file(self):
+        currentDirectory = os.getcwd()
+        folderName = 'Logs'
+
+        try:
+            os.mkdir(folderName)
+        except OSError:
+            pass
+
+        os.chdir(folderName)
+        with open(self.logFile, 'w') as f:
+            f.write(self.log)
+
+        print(f'Successfully generated log at {os.path.join(os.getcwd(), self.logFile)}')
+
+        os.chdir(currentDirectory)
+
     def past_data_simulate(self):
         self.balance = self.balance
         while True:
@@ -605,6 +627,10 @@ class Trader:
                 break
 
         print("Running simulation...")
+
+    def log_and_print(self, message):
+        self.log += f'\n{message}'
+        print(message)
 
     def validate_cross(self, waitTime, tradeType, initialBound, finalBound, parameter, comparison, safetyMargin):
         if waitTime > 0:
@@ -733,6 +759,11 @@ class Trader:
         inLongPosition = False
         inShortPosition = False
 
+        self.log += f'Simulation starting from {self.startingTime}.' \
+                    f'\nSafety timer: {timer}.' \
+                    f'\nSafety margin: {margin}' \
+                    f'\nTrailing Loss: {trailingLoss}'
+
         if comparison == '>':
             reverseComparison = '<'
         else:
@@ -745,7 +776,7 @@ class Trader:
                 self.print_basic_information(loss)
 
                 if fail:
-                    print("Successfully fixed error.")
+                    self.log_and_print("Successfully fixed error.")
                     fail = False
 
                 if not self.data_is_updated():
@@ -768,7 +799,8 @@ class Trader:
                                 if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
                                                            comparison, safetyMargin):
                                     continue
-                                print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). Buying long.")
+                                self.log_and_print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). "
+                                                   f"Buying long.")
                                 self.buy_long()
                                 if trailingLoss:
                                     self.longTrailingPrice = currentPrice
@@ -777,7 +809,7 @@ class Trader:
                         else:  # Checks if there is a cross to sell short.
                             if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
                                                    safetyMargin):
-                                print("Cross detected.")
+                                self.log_and_print("Cross detected.")
                                 waitLong = False
 
                     else:
@@ -787,7 +819,7 @@ class Trader:
                             lossPrice = self.buyLongPrice
 
                         if currentPrice < lossPrice * (1 - loss):
-                            print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
+                            self.log_and_print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
                             self.sell_long()
                             self.longTrailingPrice = None
                             inLongPosition = False
@@ -799,7 +831,8 @@ class Trader:
                             if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
                                                        reverseComparison, safetyMargin):
                                 continue
-                            print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Cross! Selling long.')
+                            self.log_and_print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). '
+                                               f'Cross! Selling long.')
                             self.sell_long()
                             self.longTrailingPrice = None
                             inLongPosition = False
@@ -814,7 +847,8 @@ class Trader:
                                 if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
                                                            reverseComparison, safetyMargin):
                                     continue
-                                print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). Selling short.')
+                                self.log_and_print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). '
+                                                   f'Selling short.')
                                 self.sell_short()
                                 if trailingLoss:
                                     self.shortTrailingPrice = currentPrice
@@ -823,7 +857,7 @@ class Trader:
                         else:
                             if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
                                                    safetyMargin):
-                                print("Cross detected!")
+                                self.log_and_print("Cross detected!")
                                 waitShort = False
                     else:
                         if trailingLoss:
@@ -832,7 +866,7 @@ class Trader:
                             lossPrice = self.sellShortPrice
 
                         if currentPrice > lossPrice * (1 + loss):
-                            print(f'Loss is greater than {loss * 100}%. Buying short.')
+                            self.log_and_print(f'Loss is greater than {loss * 100}%. Buying short.')
                             self.buy_short()
                             self.shortTrailingPrice = None
                             inShortPosition = False
@@ -845,7 +879,8 @@ class Trader:
                             if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
                                                        comparison, safetyMargin):
                                 continue
-                            print(f'{tradeType}({initialBound}) > {tradeType}({finalBound}). Cross! Buying short.')
+                            self.log_and_print(f'{tradeType}({initialBound}) > {tradeType}({finalBound}). Cross! '
+                                               f'Buying short.')
                             self.buy_short()
                             self.shortTrailingPrice = None
                             inShortPosition = False
@@ -858,10 +893,10 @@ class Trader:
                 return
             except Exception as e:
                 if not fail:
-                    print(f'ERROR: {e}')
-                    print("Something went wrong. Trying again in 5 seconds.")
+                    self.log_and_print(f'ERROR: {e}')
+                    self.log_and_print("Something went wrong. Trying again in 5 seconds.")
                 time.sleep(5)
-                print("Attempting to fix error...")
+                self.log_and_print("Attempting to fix error...")
                 fail = True
 
     def simulate(self, tradeType="WMA", parameter="high", initialBound=20, finalBound=24, loss=0.015, comparison='>'):
@@ -884,6 +919,9 @@ class Trader:
         self.balance = 1000
         self.simulationStartingBalance = self.balance
         self.startingTime = datetime.now()
+        self.logFile = f'{self.startingTime}.log'
+        self.log = ''
+
         if comparison != '>':
             temp = initialBound
             initialBound = finalBound
@@ -899,14 +937,14 @@ class Trader:
         safetyTimer = None
         while safetyTimer is None:
             try:
-                safetyTimer = int(input("Type in your safety timer (or 0 for no timer) >>"))
+                safetyTimer = int(input("Type in your safety timer (or 0 for no timer)>>"))
             except ValueError:
                 print("Please type in a valid number.")
 
         safetyMargin = None
         while safetyMargin is None:
             try:
-                safetyMargin = float(input("Type in your safety margin (for 2% type 0.02 or 0 for no margin) >> "))
+                safetyMargin = float(input("Type in your safety margin (for 2% type 0.02 or 0 for no margin)>>"))
             except ValueError:
                 print("Please type in a valid number.")
 
@@ -920,83 +958,84 @@ class Trader:
         print("\nExiting simulation.")
         self.endingTime = datetime.now()
         self.get_simulation_result()
+        self.generate_log_file()
 
     def print_basic_information(self, loss):
         """
         Prints out basic information about trades.
         """
-        print('---------------------------------------------------')
+        self.log_and_print('---------------------------------------------------')
         profit = 0
         currentPrice = self.get_current_price()
-        print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        self.log_and_print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
         if self.btc > 0:
-            print(f'BTC: {self.btc}')
-            print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
+            self.log_and_print(f'BTC: {self.btc}')
+            self.log_and_print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
             profit += self.btc * currentPrice - self.btc * self.buyLongPrice
         if self.btcOwed > 0:
-            print(f'BTC owed: {self.btcOwed}')
-            print(f'BTC owed price: ${self.btcOwedPrice}')
-            print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
+            self.log_and_print(f'BTC owed: {self.btcOwed}')
+            self.log_and_print(f'BTC owed price: ${self.btcOwedPrice}')
+            self.log_and_print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
             profit += self.btcOwed * self.sellShortPrice - self.btcOwed * currentPrice
         if self.longTrailingPrice is not None:
-            print(f'\nCurrent in long position.')
-            print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
+            self.log_and_print(f'\nCurrent in long position.')
+            self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
         if self.shortTrailingPrice is not None:
-            print(f'\nCurrent in short position.')
-            print(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
+            self.log_and_print(f'\nCurrent in short position.')
+            self.log_and_print(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
         if self.shortTrailingPrice is None and self.longTrailingPrice is None:
             if self.buyLongPrice is not None:
-                print(f'Stop loss: {round(self.buyLongPrice * (1 - loss), 2)}')
+                self.log_and_print(f'Stop loss: {round(self.buyLongPrice * (1 - loss), 2)}')
             elif self.sellShortPrice is not None:
-                print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
+                self.log_and_print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
 
-        print(f'\nCurrent BTC price: ${currentPrice}')
-        print(f'Balance: ${round(self.balance, 2)}')
-        print(f'Debt: ${round(self.btcOwed * currentPrice, 2)}')
-        print(f'Liquid Cash: ${round(self.balance - self.btcOwed * currentPrice, 2)}')
-        print(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
+        self.log_and_print(f'\nCurrent BTC price: ${currentPrice}')
+        self.log_and_print(f'Balance: ${round(self.balance, 2)}')
+        self.log_and_print(f'Debt: ${round(self.btcOwed * currentPrice, 2)}')
+        self.log_and_print(f'Liquid Cash: ${round(self.balance - self.btcOwed * currentPrice, 2)}')
+        self.log_and_print(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
         profit = round(profit, 2)
         if profit > 0:
-            print(f'Profit: ${profit}')
+            self.log_and_print(f'Profit: ${profit}')
         elif profit < 0:
-            print(f'Loss: ${profit}')
+            self.log_and_print(f'Loss: ${profit}')
         else:
-            print(f'No profit or loss currently.')
-        print()
+            self.log_and_print(f'No profit or loss currently.')
+        self.log_and_print('')
 
     def get_simulation_result(self):
         """
         Gets end result of simulation.
         """
         if self.btc > 0:
-            print("Selling all BTC...")
+            self.log_and_print("Selling all BTC...")
             self.sell_long()
             self.simulatedTrades.append({
                 'date': datetime.utcnow(),
                 'action': f'Sold long as simulation ended.'
             })
         if self.btcOwed > 0:
-            print("Returning all borrowed BTC...")
+            self.log_and_print("Returning all borrowed BTC...")
             self.buy_short()
             self.simulatedTrades.append({
                 'date': datetime.utcnow(),
                 'action': f'Bought short as simulation ended.'
             })
-        print("\nResults:")
-        print(f'Starting time: {self.startingTime}')
-        print(f'End time: {self.endingTime}')
-        print(f'Elapsed time: {self.endingTime - self.startingTime}')
-        print(f'Starting balance: ${self.simulationStartingBalance}')
-        print(f'Ending balance: ${round(self.balance, 2)}')
-        print(f'Trades conducted: {len(self.simulatedTrades)}')
+        self.log_and_print("\nResults:")
+        self.log_and_print(f'Starting time: {self.startingTime}')
+        self.log_and_print(f'End time: {self.endingTime}')
+        self.log_and_print(f'Elapsed time: {self.endingTime - self.startingTime}')
+        self.log_and_print(f'Starting balance: ${self.simulationStartingBalance}')
+        self.log_and_print(f'Ending balance: ${round(self.balance, 2)}')
+        self.log_and_print(f'Trades conducted: {len(self.simulatedTrades)}')
         if self.balance > self.simulationStartingBalance:
             profit = self.balance - self.simulationStartingBalance
-            print(f"Profit: ${round(profit, 2)}")
+            self.log_and_print(f"Profit: ${round(profit, 2)}")
         elif self.balance < self.simulationStartingBalance:
             loss = self.simulationStartingBalance - self.balance
-            print(f'Loss: ${round(loss, 2)}')
+            self.log_and_print(f'Loss: ${round(loss, 2)}')
         else:
-            print("No profit or loss occurred.")
+            self.log_and_print("No profit or loss occurred.")
 
         if len(self.simulatedTrades) > 0:
             print("\nYou can view the trades from the simulation in more detail.")
@@ -1019,18 +1058,18 @@ class Trader:
         :param finalBound: Final bound for trade algorithm.
         :param parameter: Type of parameter used.
         """
-        print(f'Parameter: {parameter}')
+        self.log_and_print(f'Parameter: {parameter}')
         if tradeType == 'SMA':
-            print(f'{tradeType}({initialBound}) = {self.get_sma(initialBound, parameter)}')
-            print(f'{tradeType}({finalBound}) = {self.get_sma(finalBound, parameter)}')
+            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_sma(initialBound, parameter)}')
+            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_sma(finalBound, parameter)}')
         elif tradeType == 'WMA':
-            print(f'{tradeType}({initialBound}) = {self.get_wma(initialBound, parameter)}')
-            print(f'{tradeType}({finalBound}) = {self.get_wma(finalBound, parameter)}')
+            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_wma(initialBound, parameter)}')
+            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_wma(finalBound, parameter)}')
         elif tradeType == 'EMA':
-            print(f'{tradeType}({initialBound}) = {self.get_ema(initialBound, parameter)}')
-            print(f'{tradeType}({finalBound}) = {self.get_ema(finalBound, parameter)}')
+            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_ema(initialBound, parameter)}')
+            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_ema(finalBound, parameter)}')
         else:
-            print(f'Unknown trade type {tradeType}.')
+            self.log_and_print(f'Unknown trade type {tradeType}.')
 
     def validate_trade(self, tradeType, initialBound, finalBound, parameter, comparison, safetyMargin=0):
         """
@@ -1104,7 +1143,7 @@ class Trader:
     def easter_egg():
         import random
         number = random.randint(1, 16)
-        sleepTime = 3
+        sleepTime = 0.25
 
         if number == 1:
             print('The two most important days in your life are the day you are born and the day you find out why.')
@@ -1114,7 +1153,6 @@ class Trader:
             print("A guy asks a woman to sleep with him for $100, and the woman starts thinking. Suddenly the guy says "
                   "I'll give you $20 for a night, and the girl gets mad and yells what type of girl do you think I am? "
                   "The guy then says that he thought they already established that, and that now they're negotiating.")
-            time.sleep(4)
         elif number == 4:
             print("We all do dumb things, that's what makes us human.")
         elif number == 5:
