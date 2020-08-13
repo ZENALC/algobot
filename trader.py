@@ -919,7 +919,7 @@ class Trader:
         self.balance = 1000
         self.simulationStartingBalance = self.balance
         self.startingTime = datetime.now()
-        self.logFile = f'{self.startingTime}.log'
+        self.logFile = f'{self.startingTime.strftime("%Y-%m-%d_%H:%M:%S")}.log'
         self.log = ''
 
         if comparison != '>':
