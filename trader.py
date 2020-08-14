@@ -976,7 +976,7 @@ class Trader:
             self.log_and_print(f'BTC owed: {self.btcOwed}')
             self.log_and_print(f'BTC owed price: ${self.btcOwedPrice}')
             self.log_and_print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
-            profit += self.btcOwed * self.sellShortPrice - self.btcOwed * currentPrice * (1 - self.transactionFee)
+            profit += self.btcOwed * self.sellShortPrice - self.btcOwed * currentPrice * (1 + self.transactionFee)
         if self.longTrailingPrice is not None:
             self.log_and_print(f'\nCurrent in long position.')
             self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
