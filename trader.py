@@ -971,12 +971,12 @@ class Trader:
         if self.btc > 0:
             self.log_and_print(f'BTC: {self.btc}')
             self.log_and_print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
-            profit += self.btc * currentPrice - self.btc * self.buyLongPrice
+            profit += self.btc * currentPrice * (1 - self.transactionFee) - self.btc * self.buyLongPrice
         if self.btcOwed > 0:
             self.log_and_print(f'BTC owed: {self.btcOwed}')
             self.log_and_print(f'BTC owed price: ${self.btcOwedPrice}')
             self.log_and_print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
-            profit += self.btcOwed * self.sellShortPrice - self.btcOwed * currentPrice
+            profit += self.btcOwed * self.sellShortPrice - self.btcOwed * currentPrice * (1 - self.transactionFee)
         if self.longTrailingPrice is not None:
             self.log_and_print(f'\nCurrent in long position.')
             self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
