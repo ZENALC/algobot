@@ -960,6 +960,13 @@ class Trader:
         self.get_simulation_result()
         self.generate_log_file()
 
+    def get_profit(self):
+        balance = self.balance
+        currentPrice = self.get_current_price()
+        balance += self.btc * currentPrice * (1 - self.transactionFee)
+        balance -= self.btcOwed * currentPrice * (1 + self.transactionFee)
+        return balance - self.simulationStartingBalance
+
     def print_basic_information(self, loss):
         """
         Prints out basic information about trades.
@@ -971,12 +978,10 @@ class Trader:
         if self.btc > 0:
             self.log_and_print(f'BTC: {self.btc}')
             self.log_and_print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
-            profit += self.btc * currentPrice * (1 - self.transactionFee) - self.btc * self.buyLongPrice
         if self.btcOwed > 0:
             self.log_and_print(f'BTC owed: {self.btcOwed}')
             self.log_and_print(f'BTC owed price: ${self.btcOwedPrice}')
             self.log_and_print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
-            profit += self.btcOwed * self.sellShortPrice - self.btcOwed * currentPrice * (1 + self.transactionFee)
         if self.longTrailingPrice is not None:
             self.log_and_print(f'\nCurrent in long position.')
             self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
@@ -994,11 +999,11 @@ class Trader:
         self.log_and_print(f'Debt: ${round(self.btcOwed * currentPrice, 2)}')
         self.log_and_print(f'Liquid Cash: ${round(self.balance - self.btcOwed * currentPrice, 2)}')
         self.log_and_print(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
-        profit = round(profit, 2)
+        profit = round(self.get_profit(), 2)
         if profit > 0:
             self.log_and_print(f'Profit: ${profit}')
         elif profit < 0:
-            self.log_and_print(f'Loss: ${profit}')
+            self.log_and_print(f'Loss: ${-profit}')
         else:
             self.log_and_print(f'No profit or loss currently.')
         self.log_and_print('')
