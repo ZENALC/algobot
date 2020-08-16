@@ -75,8 +75,8 @@ class Trader:
         Returns interval unit and measurement.
         :return: A tuple with interval unit and measurement respectively.
         """
-        unit = self.interval[-1]  # Gets the unit of the interval. eg. 12h = h
-        measurement = int(self.interval[0:len(self.interval) - 1])  # Gets the measurement, eg. 12h = 12
+        unit = self.interval[-1]  # Gets the unit of the interval. eg 12h = h
+        measurement = int(self.interval[0:len(self.interval) - 1])  # Gets the measurement, eg 12h = 12
         return unit, measurement
 
     def get_database_connectors(self):
@@ -149,10 +149,11 @@ class Trader:
                                         ))
                         connection.commit()
                     except sqlite3.IntegrityError:
-                        pass
+                        pass  # this just means the data already exists in the database, so ignore.
                     except sqlite3.OperationalError:
-                        print("Data insertion was unsuccessful.")
+                        print("Insertion to database failed. Will retry next run.")
                         return False
+        print("Successfully stored all new data to database.")
         return True
 
     def get_latest_database_row(self):
@@ -181,32 +182,37 @@ class Trader:
         Updates database by retrieving information from Binance API
         """
         result = self.get_latest_database_row()
-        if result is None:
+        if result is None:  # Then get the earliest timestamp possible
             timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
             print(f'Downloading all available historical data for {self.interval} intervals. This may take a while...')
         else:
             latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            timestamp = int(latestDate.timestamp()) * 1000
+            timestamp = int(latestDate.timestamp()) * 1000  # Converting timestamp to milliseconds
             print(f"Previous data up to UTC {latestDate + timedelta(minutes=self.get_interval_minutes())} found.")
 
         if not self.database_is_updated():
-            newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=1000)
-            del newData[-1]  # This is because we don't want current period data
+            newData = self.get_new_data(timestamp)
             print("Successfully downloaded all new data.")
             print("Inserting data to live program...")
             self.insert_data(newData)
             print("Storing updated data to database...")
-            if self.dump_to_table():
-                print("Successfully stored all new data to database.")
-            else:
-                print("Insertion to database failed. Will retry next run.")
+            self.dump_to_table()
         else:
             print("Database is up-to-date.")
+
+    def get_new_data(self, timestamp, limit=1000):
+        """
+        Returns new data from Binance API from timestamp specified.
+        :param timestamp: Initial timestamp.
+        :param limit: Limit per pull.
+        :return: A list of dictionaries.
+        """
+        newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
+        return newData[:-1]  # Up to -1, because we don't want current period data.
 
     def get_data_from_csv(self, file):
         """
         Retrieves information from CSV, parses it, and adds it to run-time data.
-        :return: List of dictionaries
         """
         with open(file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
@@ -243,12 +249,11 @@ class Trader:
         """
         for data in newData:
             parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
-            dataList = [parsedDate] + data[1:]
-            self.data.insert(0, {'date': dataList[0],
-                                 'open': float(dataList[1]),
-                                 'high': float(dataList[2]),
-                                 'low': float(dataList[3]),
-                                 'close': float(dataList[4]),
+            self.data.insert(0, {'date': parsedDate,
+                                 'open': float(data[1]),
+                                 'high': float(data[2]),
+                                 'low': float(data[3]),
+                                 'close': float(data[4]),
                                  })
 
     def update_data(self):
@@ -259,14 +264,17 @@ class Trader:
         timestamp = int(latestDate.timestamp()) * 1000
         print(f"Previous data found up to UTC {latestDate + timedelta(minutes=self.get_interval_minutes())}.")
         if not self.data_is_updated():
-            newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp, limit=1000)
-            del newData[-1]  # removing current period data
+            newData = self.get_new_data(timestamp)
             self.insert_data(newData)
             print("Data has been updated successfully.")
         else:
             print("Data is up-to-date.")
 
     def get_interval_minutes(self):
+        """
+        Returns interval minutes.
+        :return: An integer representing the minutes for an interval.
+        """
         if self.intervalUnit == 'h':
             return self.intervalMeasurement * 60
         elif self.intervalUnit == 'm':
@@ -278,6 +286,11 @@ class Trader:
             return None
 
     def is_valid_symbol(self, symbol):
+        """
+        Checks whether the symbol provided is valid or not for Binance.
+        :param symbol: Symbol to be checked.
+        :return: A boolean whether the symbol is valid or not.
+        """
         tickers = self.binanceClient.get_all_tickers()
         for ticker in tickers:
             if ticker['symbol'] == symbol:
@@ -312,7 +325,7 @@ class Trader:
         print("Downloaded all data successfully.")
         fileName = f'btc_data_{interval}.csv'
         with open(fileName, 'w') as f:
-            f.write("Date, Open, High, Low, Close\n")
+            f.write("Date_UTC, Open, High, Low, Close\n")
             for data in newData:
                 parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
                 f.write(f'{parsedDate}, {data[1]}, {data[2]}, {data[3]}, {data[4]}\n')
@@ -320,6 +333,13 @@ class Trader:
         print(f'Data saved to {path}.')
 
     def valid_average_input(self, shift, prices, extraShift=0):
+        """
+        Checks whether shift, prices, and (optional) extraShift are valid.
+        :param shift: Periods from current period.
+        :param prices: Amount of prices to iterate over.
+        :param extraShift: Extra shift for EMA.
+        :return: A boolean whether shift, prices, and extraShift are logical or not.
+        """
         if shift < 0:
             print("Shift cannot be less than 0.")
             return False
