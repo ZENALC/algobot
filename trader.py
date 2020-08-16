@@ -504,7 +504,7 @@ class Trader:
         try:
             return float(self.binanceClient.get_symbol_ticker(symbol=self.symbol)['price'])
         except Exception as e:
-            print(e)
+            print(f'Error: {e}. Retrying in 2 seconds...')
             time.sleep(2)
             self.get_current_price()
         # return self.btc_price['current']
