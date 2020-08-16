@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from contextlib import closing
 # from twilio import rest
 from binance.client import Client
-from binance.websockets import BinanceSocketManager
+# from binance.websockets import BinanceSocketManager
 
 
 class Trader:
@@ -363,8 +363,8 @@ class Trader:
         if not self.valid_average_input(shift, prices):
             return None
 
-        data = [self.get_current_data()] + self.data
-        data = data[shift: prices + shift]
+        data = [self.get_current_data()] + self.data  # Data is current data + all-time period data
+        data = data[shift: prices + shift]  # Data now starts from shift and goes up to prices + shift
 
         sma = sum([period[parameter] for period in data]) / prices
         if round_value:
@@ -384,15 +384,15 @@ class Trader:
             return None
 
         data = [self.get_current_data()] + self.data
-        total = data[shift][parameter] * prices
-        data = data[shift + 1: prices + shift]
+        total = data[shift][parameter] * prices  # Current total is first data period multiplied by prices.
+        data = data[shift + 1: prices + shift]  # Data now does not include the first shift period.
 
         index = 0
-        divisor = prices * (prices + 1) / 2
         for x in range(prices - 1, 0, -1):
             total += x * data[index][parameter]
             index += 1
 
+        divisor = prices * (prices + 1) / 2
         wma = total / divisor
         if round_value:
             return round(wma, 2)
@@ -436,22 +436,23 @@ class Trader:
         """
         Defines how to process incoming WebSocket messages
         """
-        if msg['e'] != 'error':
-            self.btc_price['current'] = float(msg['k']['c'])
-            self.btc_price['open'] = float(msg['k']['o'])
-            self.btc_price['high'] = float(msg['k']['h'])
-            self.btc_price['low'] = float(msg['k']['l'])
-            self.btc_price['date'] = datetime.now(tz=timezone.utc)
-            if self.btc_price['error']:
-                print("Successfully reconnected.")
-                self.btc_price['error'] = False
-        else:
-            self.btc_price['error'] = True
-            print("Something went wrong. Attempting to restart...")
-            # self.bsm.stop_socket(self.conn)
-            self.bsm.close()
-            self.bsm.start_kline_socket(self.symbol, self.process_socket_message, self.interval)
-            # self.bsm.start()
+        pass
+        # if msg['e'] != 'error':
+        #     self.btc_price['current'] = float(msg['k']['c'])
+        #     self.btc_price['open'] = float(msg['k']['o'])
+        #     self.btc_price['high'] = float(msg['k']['h'])
+        #     self.btc_price['low'] = float(msg['k']['l'])
+        #     self.btc_price['date'] = datetime.now(tz=timezone.utc)
+        #     if self.btc_price['error']:
+        #         print("Successfully reconnected.")
+        #         self.btc_price['error'] = False
+        # else:
+        #     self.btc_price['error'] = True
+        #     print("Something went wrong. Attempting to restart...")
+        #     self.bsm.stop_socket(self.conn)
+        #     self.bsm.close()
+        #     self.bsm.start_kline_socket(self.symbol, self.process_socket_message, self.interval)
+        #     self.bsm.start()
 
     def get_current_data(self):
         """
@@ -1197,7 +1198,7 @@ class Trader:
         elif number == 9:
             print('Insanity is doing the same shit over and over again. Expecting shit to change.')
         elif number == 10:
-            print("Rush B P90 no stop. Suka blyat pidaras tvoya mat.")
+            print("Rush B P90 no stop.")
         elif number == 11:
             print('Wakanda forever.')
         elif number == 12:
@@ -1205,7 +1206,7 @@ class Trader:
         elif number == 13:
             print('4 cases in New Zealand? Lock down everything again!')
         elif number == 14:
-            print('Plandemic pandemic.')
+            print('Fake pandemic.')
         elif number == 15:
             print('You think money is a powerful tool? Fuck that, fear will always fuck you up.')
         else:
