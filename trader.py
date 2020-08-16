@@ -16,8 +16,7 @@ class Trader:
             interval = '1h'
 
         self.interval = interval
-        self.intervalMeasurement = int(self.interval[0:len(self.interval) - 1])
-        self.intervalUnit = self.interval[-1]
+        self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
 
         self.apiKey = os.environ.get('binance_api')
         self.apiSecret = os.environ.get('binance_secret')
@@ -70,6 +69,15 @@ class Trader:
         # self.bsm.start_kline_socket(self.exchange, self.process_socket_message, self.interval)
         # self.bsm.start()
         # print("Initialized web socket.")
+
+    def get_interval_unit_and_measurement(self):
+        """
+        Returns interval unit and measurement.
+        :return: A tuple with interval unit and measurement respectively.
+        """
+        unit = self.interval[-1]  # Gets the unit of the interval. eg. 12h = h
+        measurement = int(self.interval[0:len(self.interval) - 1])  # Gets the measurement, eg. 12h = 12
+        return unit, measurement
 
     def get_database_connectors(self):
         """
@@ -126,7 +134,6 @@ class Trader:
         Dumps date and price information to database.
         :return: A boolean whether data entry was successful or not.
         """
-        success = True
         query = f'''INSERT INTO {self.databaseTable} (trade_date, open_price, high_price, low_price, close_price) 
                     VALUES (?, ?, ?, ?, ?);'''
         with closing(sqlite3.connect(self.databaseFile)) as connection:
@@ -145,9 +152,8 @@ class Trader:
                         pass
                     except sqlite3.OperationalError:
                         print("Data insertion was unsuccessful.")
-                        success = False
-                        break
-        return success
+                        return False
+        return True
 
     def get_latest_database_row(self):
         """
