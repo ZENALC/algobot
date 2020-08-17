@@ -41,7 +41,6 @@ class Trader:
         self.balance = self.startingBalance
         self.btc = 0
         self.btcOwed = 0
-        self.btcOwedPrice = None
         self.transactionFee = 0.001
         self.startingTime = None
         self.endingTime = None
@@ -609,7 +608,6 @@ class Trader:
 
         earned = currentPrice * btc * (1 - self.transactionFee)
         self.btcOwed += btc
-        self.btcOwedPrice = currentPrice
         self.balance += earned
         self.sellShortPrice = currentPrice
 
@@ -627,13 +625,13 @@ class Trader:
             os.mkdir(folderName)
         except OSError:
             pass
+        finally:
+            os.chdir(folderName)
 
-        os.chdir(folderName)
         with open(self.logFile, 'w') as f:
             f.write(self.log)
 
         print(f'Successfully generated log at {os.path.join(os.getcwd(), self.logFile)}')
-
         os.chdir(currentDirectory)
 
     def past_data_simulate(self):
@@ -668,10 +666,10 @@ class Trader:
 
     def validate_cross(self, waitTime, tradeType, initialBound, finalBound, parameter, comparison, safetyMargin):
         if waitTime > 0:
-            print(f'Cross detected. Waiting {waitTime} seconds to validate...')
-        time.sleep(waitTime)
+            self.log_and_print(f'Cross detected. Waiting {waitTime} seconds to validate...')
+            time.sleep(waitTime)
         if not self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison, safetyMargin):
-            print("Cheeky averages occurred. Fucking reptilians.")
+            self.log_and_print("Irregular averages occurred. Not taking any action.")
             return False
         return True
 
@@ -1006,7 +1004,6 @@ class Trader:
         Prints out basic information about trades.
         """
         self.log_and_print('---------------------------------------------------')
-        profit = 0
         currentPrice = self.get_current_price()
         self.log_and_print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
         if self.btc > 0:
@@ -1014,7 +1011,6 @@ class Trader:
             self.log_and_print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
         if self.btcOwed > 0:
             self.log_and_print(f'BTC owed: {self.btcOwed}')
-            self.log_and_print(f'BTC owed price: ${self.btcOwedPrice}')
             self.log_and_print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
         if self.longTrailingPrice is not None:
             self.log_and_print(f'\nCurrent in long position.')
