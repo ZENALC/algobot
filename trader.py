@@ -208,7 +208,7 @@ class Trader:
         :return: A list of dictionaries.
         """
         newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
-        return newData[:-1]  # Up to -1, because we don't want current period data.
+        return newData[:-1]  # Up to -1st index, because we don't want current period data.
 
     def get_data_from_csv(self, file):
         """
@@ -323,14 +323,27 @@ class Trader:
         print("Downloading all available historical data. This may take a while...")
         newData = self.binanceClient.get_historical_klines(self.symbol, interval, timestamp, limit=1000)
         print("Downloaded all data successfully.")
+
+        folderName = 'CSV'
         fileName = f'btc_data_{interval}.csv'
+        currentPath = os.getcwd()
+
+        try:
+            os.mkdir(folderName)
+        except OSError:
+            pass
+        finally:
+            os.chdir(folderName)
+
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close\n")
             for data in newData:
-                parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
+                parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc).strftime("%m/%d/%Y %I:%M %p")
                 f.write(f'{parsedDate}, {data[1]}, {data[2]}, {data[3]}, {data[4]}\n')
+
         path = os.path.join(os.getcwd(), fileName)
         print(f'Data saved to {path}.')
+        os.chdir(currentPath)
 
     def valid_average_input(self, shift, prices, extraShift=0):
         """
