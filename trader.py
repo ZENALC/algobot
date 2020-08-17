@@ -515,9 +515,6 @@ class Trader:
             self.get_current_price()
         # return self.btc_price['current']
 
-    def process_transaction(self):
-        pass
-
     def buy_long(self, usd=None):
         """
         Buys BTC at current market price with amount of USD specified. If not specified, assumes bot goes all in.
@@ -814,7 +811,7 @@ class Trader:
                             self.add_trade(f'Bought short because a cross was detected.')
                             waitShort = False
 
-                print("Type CTRL-C to cancel the program at any time.")
+                print("Type CTRL-C to cancel the simulation at any time.")
                 time.sleep(1)
             except KeyboardInterrupt:
                 return
@@ -885,6 +882,7 @@ class Trader:
         print("\nExiting simulation.")
         self.endingTime = datetime.now()
         self.get_simulation_result()
+        self.log_simulated_trades()
         self.generate_log_file()
 
     def get_profit(self):
@@ -905,22 +903,27 @@ class Trader:
         self.log_and_print('---------------------------------------------------')
         currentPrice = self.get_current_price()
         self.log_and_print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+
         if self.btc > 0:
             self.log_and_print(f'BTC: {self.btc}')
             self.log_and_print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
+
         if self.btcOwed > 0:
             self.log_and_print(f'BTC owed: {self.btcOwed}')
             self.log_and_print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
-        if self.longTrailingPrice is not None:
+
+        if self.buyLongPrice is not None:
             self.log_and_print(f'\nCurrent in long position.')
-            self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
-        if self.shortTrailingPrice is not None:
-            self.log_and_print(f'\nCurrent in short position.')
-            self.log_and_print(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
-        if self.shortTrailingPrice is None and self.longTrailingPrice is None:
-            if self.buyLongPrice is not None:
+            if self.longTrailingPrice is not None:
+                self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
+            else:
                 self.log_and_print(f'Stop loss: {round(self.buyLongPrice * (1 - loss), 2)}')
-            elif self.sellShortPrice is not None:
+
+        if self.sellShortPrice is not None:
+            self.log_and_print(f'\nCurrent in short position.')
+            if self.shortTrailingPrice is not None:
+                self.log_and_print(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
+            else:
                 self.log_and_print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
 
         self.log_and_print(f'\nCurrent BTC price: ${currentPrice}')
@@ -928,6 +931,7 @@ class Trader:
         self.log_and_print(f'Debt: ${round(self.btcOwed * currentPrice, 2)}')
         self.log_and_print(f'Liquid Cash: ${round(self.balance - self.btcOwed * currentPrice, 2)}')
         self.log_and_print(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
+
         profit = round(self.get_profit(), 2)
         if profit > 0:
             self.log_and_print(f'Profit: ${profit}')
@@ -956,8 +960,8 @@ class Trader:
                 'action': f'Bought short as simulation ended.'
             })
         self.log_and_print("\nResults:")
-        self.log_and_print(f'Starting time: {self.startingTime}')
-        self.log_and_print(f'End time: {self.endingTime}')
+        self.log_and_print(f'Starting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')
+        self.log_and_print(f'End time: {self.endingTime.strftime("%Y-%m-%d %H:%M:%S")}')
         self.log_and_print(f'Elapsed time: {self.endingTime - self.startingTime}')
         self.log_and_print(f'Starting balance: ${self.simulationStartingBalance}')
         self.log_and_print(f'Ending balance: ${round(self.balance, 2)}')
@@ -974,6 +978,12 @@ class Trader:
         if len(self.simulatedTrades) > 0:
             print("\nYou can view the trades from the simulation in more detail.")
             print("Please type in bot.view_simulated_trades() to view them.")
+
+    def log_simulated_trades(self):
+        self.log += f'\n\nTotal trade(s) in previous simulation: {len(self.simulatedTrades)}'
+        for counter, trade in enumerate(self.simulatedTrades, 1):
+            self.log += f'\n\n{counter}. Date in UTC: {trade["date"]}'
+            self.log += f'\nAction taken: {trade["action"]}'
 
     def view_simulated_trades(self):
         """
