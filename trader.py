@@ -31,6 +31,12 @@ class Trader:
 
         self.data = []
         self.ema_data = {}
+        try:
+            startingBalance = float(startingBalance)
+        except ValueError:
+            print("Invalid starting balance. Using default value of $1,000.")
+            startingBalance = 1000
+
         self.startingBalance = startingBalance
         self.balance = self.startingBalance
         self.btc = 0
@@ -473,41 +479,29 @@ class Trader:
         :return: A dictionary with current open, high, low, and close prices.
         """
         try:
-            current = datetime.now(tz=timezone.utc)
-            if self.intervalUnit == 'h':
-                currentIntervalDate = datetime(current.year, current.month, current.day, current.hour,
-                                               tzinfo=timezone.utc)
-            elif self.intervalUnit == 'm':
-                currentIntervalDate = datetime(current.year, current.month, current.day, current.hour, current.minute,
-                                               tzinfo=timezone.utc)
-                remainder = currentIntervalDate.minute % self.intervalMeasurement
-                currentIntervalDate = currentIntervalDate - timedelta(minutes=remainder)
-            elif self.intervalUnit == 'd':
-                currentIntervalDate = datetime(current.year, current.month, current.day, tzinfo=timezone.utc)
-            else:
-                print("Unknown interval unit.")
-                return None
+            if not self.data_is_updated():
+                self.update_data()
 
-            nextIntervalDate = currentIntervalDate + timedelta(minutes=self.get_interval_minutes())
-            currentHourTimestamp = int(currentIntervalDate.timestamp() * 1000)
-            nextHourTimestamp = int(nextIntervalDate.timestamp() * 1000) - 1
+            currentInterval = self.data[0]['date'] + timedelta(minutes=self.get_interval_minutes())
+            currentTimestamp = int(currentInterval.timestamp() * 1000)
+
+            nextInterval = currentInterval + timedelta(minutes=self.get_interval_minutes())
+            nextTimestamp = int(nextInterval.timestamp() * 1000) - 1
             currentData = self.binanceClient.get_klines(symbol=self.symbol,
                                                         interval=self.interval,
-                                                        startTime=currentHourTimestamp,
-                                                        endTime=nextHourTimestamp,
+                                                        startTime=currentTimestamp,
+                                                        endTime=nextTimestamp,
                                                         )[0]
-            currentDataDictionary = {'date': currentIntervalDate,
+            currentDataDictionary = {'date': currentInterval,
                                      'open': float(currentData[1]),
                                      'high': float(currentData[2]),
                                      'low': float(currentData[3]),
                                      'close': float(currentData[4])}
             return currentDataDictionary
         except Exception as e:
-            print(e)
-            print("Attempting to fix...")
+            print(f"Error: {e}. Retrying in 2 seconds...")
             time.sleep(2)
             self.get_current_data()
-        # return self.btc_price
 
     def get_current_price(self):
         """
