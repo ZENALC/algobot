@@ -814,7 +814,11 @@ class Trader:
                 print("Type CTRL-C to cancel the simulation at any time.")
                 time.sleep(1)
             except KeyboardInterrupt:
-                return
+                action = input("Do you want to end the program or override? Type 'o' to override or nothing to end>>")
+                if action.lower().startswith('o'):
+                    self.override()
+                else:
+                    return
             except Exception as e:
                 if not fail:
                     self.log_and_print(f'ERROR: {e}')
@@ -884,6 +888,9 @@ class Trader:
         self.get_simulation_result()
         self.log_simulated_trades()
         self.generate_log_file()
+
+    def override(self):
+        pass
 
     def get_profit(self):
         """
