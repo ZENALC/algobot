@@ -20,6 +20,10 @@ class Trader:
 
         self.apiKey = os.environ.get('binance_api')
         self.apiSecret = os.environ.get('binance_secret')
+
+        if not self.apiKey or not self.apiSecret:
+            print("No API key found.")
+
         self.binanceClient = Client(self.apiKey, self.apiSecret)
         # self.twilioClient = rest.Client()
 
@@ -74,6 +78,22 @@ class Trader:
         # self.bsm.start_kline_socket(self.exchange, self.process_socket_message, self.interval)
         # self.bsm.start()
         # print("Initialized web socket.")
+
+    def verify_integrity(self):
+        if len(self.data) < 1:
+            print("No data found.")
+            return False
+
+        previousData = self.data[0]
+        for data in self.data[1:]:
+            if data['date'] + timedelta(minutes=self.get_interval_minutes()) != previousData['date']:
+                print("Inaccurate data detected.")
+                print(previousData)
+                print(data)
+            previousData = data
+
+        print("Data has been verified to be correct.")
+        return True
 
     def get_interval_unit_and_measurement(self):
         """
@@ -675,6 +695,7 @@ class Trader:
         fail = False
         waitShort = False
         waitLong = False
+        inHumanControl = False
         waitTime = 0
         safetySleep = timer
         safetyMargin = margin
@@ -715,7 +736,7 @@ class Trader:
                     elif self.shortTrailingPrice is not None and currentPrice > self.shortTrailingPrice:
                         self.shortTrailingPrice = currentPrice
 
-                if not inShortPosition:
+                if not inShortPosition and not inHumanControl:
                     if self.buyLongPrice is None and not inLongPosition:
                         if not waitLong:  # Checking if we must wait to buy long or not.
                             if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
@@ -763,7 +784,7 @@ class Trader:
                             waitLong = False
                             self.add_trade(f'Sold long because a cross was detected.')
 
-                if not inLongPosition:
+                if not inLongPosition and not inHumanControl:
                     if self.sellShortPrice is None and not inShortPosition:
                         if not waitShort:
                             if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
@@ -811,13 +832,59 @@ class Trader:
                             self.add_trade(f'Bought short because a cross was detected.')
                             waitShort = False
 
-                print("Type CTRL-C to cancel the simulation at any time.")
+                print("Type CTRL-C to cancel or override the simulation at any time.")
                 time.sleep(1)
             except KeyboardInterrupt:
-                action = input("Do you want to end the program or override? Type 'o' to override or nothing to end>>")
+                action = None
+                print('\nDo you want to end simulation or override? If this was an accident, enter nothing.')
+                while action not in ('o', 's', ''):
+                    action = input("Type 'o' to override, 's' to stop, or nothing to continue>>").lower()
                 if action.lower().startswith('o'):
-                    self.override()
-                else:
+                    action = None
+                    if not inHumanControl:
+                        while action not in ('w', ''):
+                            action = input("Type 'w' to pause the bot or nothing to close and wait for next cross>>")
+                        if action == 'w':
+                            print("Pausing the bot.")
+                            inHumanControl = True
+                        if inShortPosition:
+                            self.buy_short()
+                            self.log_and_print('Bought short because of override.')
+                            self.add_trade('Bought short because of override.')
+                            inShortPosition = False
+                            waitShort = True
+                        elif inLongPosition:
+                            self.sell_long()
+                            self.log_and_print('Sold long because of override.')
+                            self.add_trade('Sold long because of override.')
+                            inLongPosition = False
+                            waitLong = True
+                        else:
+                            print("Was not in a long or short position. Resuming simulation.")
+                        time.sleep(2)
+                    else:
+                        while action not in ('long', 'short'):
+                            action = input("Type 'long' to go long or 'short' to go short>>").lower()
+                        if action == 'long':
+                            self.log_and_print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). "
+                                               f"Buying long.")
+                            self.buy_long()
+                            if trailingLoss:
+                                self.longTrailingPrice = self.get_current_price()
+                            inLongPosition = True
+                            self.add_trade(f'Bought long: {tradeType}({initialBound}) > {tradeType}({finalBound}).')
+                            inHumanControl = False
+                        elif action == 'short':
+                            self.log_and_print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). '
+                                               f'Selling short.')
+                            self.sell_short()
+                            if trailingLoss:
+                                self.shortTrailingPrice = self.get_current_price()
+                            inShortPosition = True
+                            self.add_trade(f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
+                            inHumanControl = False
+
+                elif action.lower().startswith('s'):
                     return
             except Exception as e:
                 if not fail:
@@ -889,9 +956,6 @@ class Trader:
         self.log_simulated_trades()
         self.generate_log_file()
 
-    def override(self):
-        pass
-
     def get_profit(self):
         """
         Returns profit or loss.
@@ -932,6 +996,9 @@ class Trader:
                 self.log_and_print(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
             else:
                 self.log_and_print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
+
+        if self.buyLongPrice is None and self.sellShortPrice is None:
+            self.log_and_print(f'\nCurrently not a in short or long position.')
 
         self.log_and_print(f'\nCurrent BTC price: ${currentPrice}')
         self.log_and_print(f'Balance: ${round(self.balance, 2)}')
