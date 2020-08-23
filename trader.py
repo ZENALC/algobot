@@ -1003,7 +1003,10 @@ class Trader:
                 self.log_and_print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
 
         if self.buyLongPrice is None and self.sellShortPrice is None:
-            self.log_and_print(f'\nCurrently not a in short or long position. Waiting for next cross.')
+            if not inHumanControl:
+                self.log_and_print(f'\nCurrently not a in short or long position. Waiting for next cross.')
+            else:
+                self.log_and_print(f'\nCurrently not a in short or long position. Waiting for human intervention.')
 
         self.log_and_print(f'\nCurrent BTC price: ${currentPrice}')
         self.log_and_print(f'Balance: ${round(self.balance, 2)}')
