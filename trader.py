@@ -718,7 +718,7 @@ class Trader:
             if len(self.simulatedTrades) > 0:
                 waitTime = safetySleep  # Once the first trade is conducted, then only do we wait to validate crosses.
             try:
-                self.print_basic_information(loss)
+                self.print_basic_information(loss, inHumanControl)
 
                 if fail:
                     self.log_and_print("Successfully fixed error.")
@@ -852,37 +852,37 @@ class Trader:
                             self.log_and_print('Bought short because of override.')
                             self.add_trade('Bought short because of override.')
                             inShortPosition = False
-                            waitShort = True
+                            if action == '':
+                                waitShort = True
                         elif inLongPosition:
                             self.sell_long()
                             self.log_and_print('Sold long because of override.')
                             self.add_trade('Sold long because of override.')
                             inLongPosition = False
-                            waitLong = True
+                            if action == '':
+                                waitLong = True
                         else:
                             print("Was not in a long or short position. Resuming simulation.")
                         time.sleep(2)
                     else:
-                        while action not in ('long', 'short'):
-                            action = input("Type 'long' to go long or 'short' to go short>>").lower()
+                        while action not in ('long', 'short', ''):
+                            print("Type 'long' to go long, 'short' to go short, or nothing to resume bot.")
+                            action = input('>>').lower()
                         if action == 'long':
-                            self.log_and_print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). "
-                                               f"Buying long.")
+                            self.log_and_print("Buying long because of override.")
                             self.buy_long()
                             if trailingLoss:
                                 self.longTrailingPrice = self.get_current_price()
                             inLongPosition = True
-                            self.add_trade(f'Bought long: {tradeType}({initialBound}) > {tradeType}({finalBound}).')
-                            inHumanControl = False
+                            self.add_trade(f'Bought long because of override.')
                         elif action == 'short':
-                            self.log_and_print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). '
-                                               f'Selling short.')
+                            self.log_and_print(f'Selling short because of override.')
                             self.sell_short()
                             if trailingLoss:
                                 self.shortTrailingPrice = self.get_current_price()
                             inShortPosition = True
-                            self.add_trade(f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
-                            inHumanControl = False
+                            self.add_trade(f'Sold short because of override.')
+                        inHumanControl = False
 
                 elif action.lower().startswith('s'):
                     return
@@ -967,13 +967,18 @@ class Trader:
         balance -= self.btcOwed * currentPrice * (1 + self.transactionFee)
         return balance - self.simulationStartingBalance
 
-    def print_basic_information(self, loss):
+    def print_basic_information(self, loss, inHumanControl):
         """
         Prints out basic information about trades.
         """
         self.log_and_print('---------------------------------------------------')
         currentPrice = self.get_current_price()
         self.log_and_print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+
+        if inHumanControl:
+            self.log_and_print(f'Currently in human control. BOT IS NOT WORKING AUTONOMOUSLY. OVERRIDE TO RESUME BOT.')
+        else:
+            self.log_and_print(f'Currently in autonomous mode.')
 
         if self.btc > 0:
             self.log_and_print(f'BTC: {self.btc}')
@@ -998,7 +1003,7 @@ class Trader:
                 self.log_and_print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
 
         if self.buyLongPrice is None and self.sellShortPrice is None:
-            self.log_and_print(f'\nCurrently not a in short or long position.')
+            self.log_and_print(f'\nCurrently not a in short or long position. Waiting for next cross.')
 
         self.log_and_print(f'\nCurrent BTC price: ${currentPrice}')
         self.log_and_print(f'Balance: ${round(self.balance, 2)}')
