@@ -771,15 +771,13 @@ class Trader:
                 self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
             else:
                 self.log_and_print(f'Stop loss: {round(self.buyLongPrice * (1 - loss), 2)}')
-
-        if self.sellShortPrice is not None:
-            self.log_and_print(f'\nCurrent in short position.')
+        elif self.sellShortPrice is not None:
+            self.log_and_print(f'\nCurrently in short position.')
             if self.shortTrailingPrice is not None:
                 self.log_and_print(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
             else:
                 self.log_and_print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
-
-        if self.buyLongPrice is None and self.sellShortPrice is None:
+        else:
             if not inHumanControl:
                 self.log_and_print(f'\nCurrently not a in short or long position. Waiting for next cross.')
             else:
@@ -793,16 +791,37 @@ class Trader:
         if profit > 0:
             self.log_and_print(f'Profit: ${profit}')
         elif profit < 0:
-            self.log_and_print(f'Loss: ${-profit}')
+            self.log_and_print(f'Loss: ${profit}')
         else:
             self.log_and_print(f'No profit or loss currently.')
         self.log_and_print('')
 
+    def print_trade_type(self, tradeType, initialBound, finalBound, parameter):
+        """
+        Prints out general information about current trade.
+        :param tradeType: Current trade type.
+        :param initialBound: Initial bound for trade algorithm.
+        :param finalBound: Final bound for trade algorithm.
+        :param parameter: Type of parameter used.
+        """
+        self.log_and_print(f'Parameter: {parameter}')
+        if tradeType == 'SMA':
+            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_sma(initialBound, parameter)}')
+            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_sma(finalBound, parameter)}')
+        elif tradeType == 'WMA':
+            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_wma(initialBound, parameter)}')
+            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_wma(finalBound, parameter)}')
+        elif tradeType == 'EMA':
+            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_ema(initialBound, parameter)}')
+            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_ema(finalBound, parameter)}')
+        else:
+            self.log_and_print(f'Unknown trade type {tradeType}.')
+
     def simulate_option_1(self, tradeType, initialBound, finalBound, parameter, loss, trailingLoss, comparison, timer,
                           margin):
         fail = False
-        waitShort = False
-        waitLong = False
+        waitForShort = False  # Boolean for whether we should wait to exit out of short position.
+        waitForLong = False  # Boolean for whether we should wait to exit out of long position.
         inHumanControl = False
         waitTime = 0
         safetySleep = timer
@@ -844,9 +863,9 @@ class Trader:
                     elif self.shortTrailingPrice is not None and currentPrice > self.shortTrailingPrice:
                         self.shortTrailingPrice = currentPrice
 
-                if not inShortPosition and not inHumanControl:
-                    if self.buyLongPrice is None and not inLongPosition:
-                        if not waitLong:  # Checking if we must wait to buy long or not.
+                if not inShortPosition and not inHumanControl:  # This is for long positions.
+                    if self.buyLongPrice is None and not inLongPosition:  # If we are not in a long position.
+                        if not waitForLong:  # Checking if we must wait to open long position.
                             if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
                                                    safetyMargin):
                                 if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
@@ -862,20 +881,20 @@ class Trader:
                             if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
                                                    safetyMargin):
                                 self.log_and_print("Cross detected.")
-                                waitLong = False
+                                waitForLong = False
 
                     else:
                         if trailingLoss:
-                            lossPrice = self.longTrailingPrice
+                            lossPrice = self.longTrailingPrice * (1 - loss)
                         else:
-                            lossPrice = self.buyLongPrice
+                            lossPrice = self.buyLongPrice * (1 - loss)
 
-                        if currentPrice < lossPrice * (1 - loss):
+                        if currentPrice < lossPrice:
                             self.log_and_print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
                             self.sell_long(f'Sold long because loss was greater than {loss * 100}%. Waiting for cross.')
                             self.longTrailingPrice = None
                             inLongPosition = False
-                            waitLong = True
+                            waitForLong = True
 
                         elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
                                                  safetyMargin):
@@ -887,11 +906,11 @@ class Trader:
                             self.sell_long(f'Sold long because a cross was detected.')
                             self.longTrailingPrice = None
                             inLongPosition = False
-                            waitLong = False
+                            waitForLong = False
 
-                if not inLongPosition and not inHumanControl:
-                    if self.sellShortPrice is None and not inShortPosition:
-                        if not waitShort:
+                if not inLongPosition and not inHumanControl:  # This is for short position.
+                    if self.sellShortPrice is None and not inShortPosition:  # This is if we are not in short position.
+                        if not waitForShort:  # This is to check if we must wait to enter short position.
                             if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
                                                    safetyMargin):
                                 if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
@@ -907,19 +926,19 @@ class Trader:
                             if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
                                                    safetyMargin):
                                 self.log_and_print("Cross detected!")
-                                waitShort = False
+                                waitForShort = False
                     else:
                         if trailingLoss:
-                            lossPrice = self.shortTrailingPrice
+                            lossPrice = self.shortTrailingPrice * (1 + loss)
                         else:
-                            lossPrice = self.sellShortPrice
+                            lossPrice = self.sellShortPrice * (1 + loss)
 
-                        if currentPrice > lossPrice * (1 + loss):
+                        if currentPrice > lossPrice:
                             self.log_and_print(f'Loss is greater than {loss * 100}%. Buying short.')
                             self.buy_short(f'Bought short because loss is greater than {loss * 100}%. Waiting for cross')
                             self.shortTrailingPrice = None
                             inShortPosition = False
-                            waitShort = True
+                            waitForShort = True
 
                         elif self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
                                                  safetyMargin):
@@ -931,7 +950,7 @@ class Trader:
                             self.buy_short(f'Bought short because a cross was detected.')
                             self.shortTrailingPrice = None
                             inShortPosition = False
-                            waitShort = False
+                            waitForShort = False
 
                 print("Type CTRL-C to cancel or override the simulation at any time.")
                 time.sleep(1)
@@ -949,19 +968,17 @@ class Trader:
                             print("Pausing the bot.")
                             inHumanControl = True
                         if inShortPosition:
-                            self.buy_short()
+                            self.buy_short('Bought short because of override.')
                             self.log_and_print('Bought short because of override.')
-                            self.add_simulated_trade('Bought short because of override.')
                             inShortPosition = False
                             if action == '':
-                                waitShort = True
+                                waitForShort = True
                         elif inLongPosition:
-                            self.sell_long()
+                            self.sell_long('Sold long because of override.')
                             self.log_and_print('Sold long because of override.')
-                            self.add_simulated_trade('Sold long because of override.')
                             inLongPosition = False
                             if action == '':
-                                waitLong = True
+                                waitForLong = True
                         else:
                             print("Was not in a long or short position. Resuming simulation.")
                         time.sleep(2)
@@ -971,18 +988,16 @@ class Trader:
                             action = input('>>').lower()
                         if action == 'long':
                             self.log_and_print("Buying long because of override.")
-                            self.buy_long()
+                            self.buy_long("Buying long because of override.")
                             if trailingLoss:
                                 self.longTrailingPrice = self.get_current_price()
                             inLongPosition = True
-                            self.add_simulated_trade(f'Bought long because of override.')
                         elif action == 'short':
                             self.log_and_print(f'Selling short because of override.')
-                            self.sell_short()
+                            self.sell_short(f'Sold short because of override.')
                             if trailingLoss:
                                 self.shortTrailingPrice = self.get_current_price()
                             inShortPosition = True
-                            self.add_simulated_trade(f'Sold short because of override.')
                         inHumanControl = False
 
                 elif action.lower().startswith('s'):
@@ -1026,9 +1041,9 @@ class Trader:
 
         self.easter_egg()
 
-        simulationType = None
-        while simulationType not in ('1', '2'):
-            simulationType = input('Enter 1 for stop loss or 2 for trailing loss strategy>>')
+        lossStrategy = None
+        while lossStrategy not in ('1', '2'):
+            lossStrategy = input('Enter 1 for stop loss or 2 for trailing loss strategy>>')
 
         safetyTimer = None
         while safetyTimer is None:
@@ -1045,10 +1060,10 @@ class Trader:
                 print("Please type in a valid number.")
 
         print("Starting simulation...")
-        if simulationType == '1':
+        if lossStrategy == '1':
             self.simulate_option_1(tradeType, initialBound, finalBound, parameter, loss, False, comparison, safetyTimer,
                                    safetyMargin)
-        elif simulationType == '2':
+        elif lossStrategy == '2':
             self.simulate_option_1(tradeType, initialBound, finalBound, parameter, loss, True, comparison, safetyTimer,
                                    safetyMargin)
         print("\nExiting simulation.")
@@ -1095,61 +1110,6 @@ class Trader:
         for counter, trade in enumerate(self.simulatedTrades, 1):
             print(f'\n{counter}. Date in UTC: {trade["date"]}')
             print(f'Action taken: {trade["action"]}')
-
-    def print_trade_type(self, tradeType, initialBound, finalBound, parameter):
-        """
-        Prints out general information about current trade.
-        :param tradeType: Current trade type.
-        :param initialBound: Initial bound for trade algorithm.
-        :param finalBound: Final bound for trade algorithm.
-        :param parameter: Type of parameter used.
-        """
-        self.log_and_print(f'Parameter: {parameter}')
-        if tradeType == 'SMA':
-            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_sma(initialBound, parameter)}')
-            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_sma(finalBound, parameter)}')
-        elif tradeType == 'WMA':
-            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_wma(initialBound, parameter)}')
-            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_wma(finalBound, parameter)}')
-        elif tradeType == 'EMA':
-            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_ema(initialBound, parameter)}')
-            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_ema(finalBound, parameter)}')
-        else:
-            self.log_and_print(f'Unknown trade type {tradeType}.')
-
-    def check_cross(self, tradeType, initialBound, finalBound, parameter, comparison, previousCondition):
-        pass
-        # """
-        # Checks if there is a cross.
-        # :param previousCondition: Previous condition whether it was in a short or long position.
-        # :param comparison: Previous comparison.
-        # :param tradeType: Algorithm used type. e.g. SMA, WMA, or EMA
-        # :param initialBound: First bound for algorithm.
-        # :param finalBound: Final bound for algorithm.
-        # :param parameter: Type of parameter used. eg. high, close, low, open
-        # :return: A boolean whether there is a cross or not.
-        # """
-        # if tradeType == 'SMA':
-        #     if comparison == '>':
-        #         if previousCondition == 'long':
-        #             return False
-        #         return self.get_sma(initialBound, parameter) > self.get_sma(finalBound, parameter)
-        #     else:
-        #         if previousCondition == 'long':
-        #             return False
-        #         return self.get_sma(initialBound, parameter) < self.get_sma(finalBound, parameter)
-        # elif tradeType == 'EMA':
-        #     if comparison == '>':
-        #         return self.get_ema(initialBound, parameter) > self.get_ema(finalBound, parameter)
-        #     else:
-        #         return self.get_ema(initialBound, parameter) < self.get_ema(finalBound, parameter)
-        # elif tradeType == 'WMA':
-        #     if comparison == '>':
-        #         return self.get_wma(initialBound, parameter) > self.get_wma(finalBound, parameter)
-        #     else:
-        #         return self.get_wma(initialBound, parameter) < self.get_wma(finalBound, parameter)
-        # else:
-        #     return False
 
     @staticmethod
     def easter_egg():
@@ -1219,6 +1179,40 @@ class Trader:
                 break
 
         print("Running simulation...")
+
+    def check_cross(self, tradeType, initialBound, finalBound, parameter, comparison, previousCondition):
+        pass
+        # """
+        # Checks if there is a cross.
+        # :param previousCondition: Previous condition whether it was in a short or long position.
+        # :param comparison: Previous comparison.
+        # :param tradeType: Algorithm used type. e.g. SMA, WMA, or EMA
+        # :param initialBound: First bound for algorithm.
+        # :param finalBound: Final bound for algorithm.
+        # :param parameter: Type of parameter used. eg. high, close, low, open
+        # :return: A boolean whether there is a cross or not.
+        # """
+        # if tradeType == 'SMA':
+        #     if comparison == '>':
+        #         if previousCondition == 'long':
+        #             return False
+        #         return self.get_sma(initialBound, parameter) > self.get_sma(finalBound, parameter)
+        #     else:
+        #         if previousCondition == 'long':
+        #             return False
+        #         return self.get_sma(initialBound, parameter) < self.get_sma(finalBound, parameter)
+        # elif tradeType == 'EMA':
+        #     if comparison == '>':
+        #         return self.get_ema(initialBound, parameter) > self.get_ema(finalBound, parameter)
+        #     else:
+        #         return self.get_ema(initialBound, parameter) < self.get_ema(finalBound, parameter)
+        # elif tradeType == 'WMA':
+        #     if comparison == '>':
+        #         return self.get_wma(initialBound, parameter) > self.get_wma(finalBound, parameter)
+        #     else:
+        #         return self.get_wma(initialBound, parameter) < self.get_wma(finalBound, parameter)
+        # else:
+        #     return False
 
     def __str__(self):
         return self.__repr__()
