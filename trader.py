@@ -558,6 +558,9 @@ class Trader:
         # return self.btc_price['current']
 
     def generate_log_file(self):
+        """
+        Generates a log file.
+        """
         currentDirectory = os.getcwd()
         folderName = 'Logs'
 
@@ -574,8 +577,28 @@ class Trader:
         print(f'Successfully generated log at {os.path.join(os.getcwd(), self.logFile)}')
         os.chdir(currentDirectory)
 
+    def log_simulated_trades(self):
+        self.log += f'\n\nTotal trade(s) in previous simulation: {len(self.simulatedTrades)}'
+        for counter, trade in enumerate(self.simulatedTrades, 1):
+            self.log += f'\n\n{counter}. Date in UTC: {trade["date"]}'
+            self.log += f'\nAction taken: {trade["action"]}'
+
+    def log_and_print(self, message):
+        """
+        Logs the message and prints it.
+        :param message: The message to be logged and printed.
+        """
+        self.log += f'\n{message}'
+        print(message)
+
     def process_transaction(self, action, message):
         self.add_trade(message)
+
+    def add_trade(self, message):
+        self.simulatedTrades.append({
+            'date': datetime.utcnow(),
+            'action': message
+        })
 
     def buy_long(self, usd=None):
         """
@@ -670,41 +693,46 @@ class Trader:
         self.balance += earned
         self.sellShortPrice = currentPrice
 
-    def add_trade(self, message):
-        self.simulatedTrades.append({
-            'date': datetime.utcnow(),
-            'action': message
-        })
+    def get_profit(self):
+        """
+        Returns profit or loss.
+        :return: A number representing profit if positive and loss if negative.
+        """
+        balance = self.balance
+        currentPrice = self.get_current_price()
+        balance += self.btc * currentPrice * (1 - self.transactionFee)
+        balance -= self.btcOwed * currentPrice * (1 + self.transactionFee)
+        return balance - self.simulationStartingBalance
 
-    def past_data_simulate(self):
-        self.balance = self.balance
-        while True:
-            tradingType1 = None
-            tradingType2 = None
-            tradingTypes = ('WMA', 'EMA', 'SMA')
-            while tradingType1 not in tradingTypes:
-                tradingType1 = input(f'Type in your first trading type (e.g. {tradingTypes})>> ').upper()
-            while tradingType2 not in tradingTypes:
-                tradingType2 = input(f'Type in your second trading type (e.g. {tradingTypes})>> ').upper()
+    def validate_trade(self, tradeType, initialBound, finalBound, parameter, comparison, safetyMargin=0):
+        """
+        Checks if bot should go ahead with trade. If trade-type with initial bound is logically compared with trade-type
+        with final bound, a boolean is returned whether it is true or false.
+        :param safetyMargin: Safety margin to check if cross has occurred.
+        :param tradeType: Type of trade conducted.
+        :param initialBound: Initial bound for trade algorithm.
+        :param finalBound: Final bound for trade algorithm.
+        :param parameter: Parameter to use for trade algorithm.
+        :param comparison: Comparison whether trade type is greater than or less than.
+        :return: A boolean whether trade should be performed or not.
+        """
+        if tradeType == 'SMA':
+            initialAverage = self.get_sma(initialBound, parameter)
+            finalAverage = self.get_sma(finalBound, parameter)
+        elif tradeType == 'WMA':
+            initialAverage = self.get_wma(initialBound, parameter)
+            finalAverage = self.get_wma(finalBound, parameter)
+        elif tradeType == 'EMA':
+            initialAverage = self.get_ema(initialBound, parameter)
+            finalAverage = self.get_ema(finalBound, parameter)
+        else:
+            print(f'Unknown trading type {tradeType}.')
+            return False
 
-            parameters = ('open', 'high', 'low', 'close')
-            parameter1 = None
-            parameter2 = None
-            while parameter1 not in parameters:
-                parameter1 = input(f"Type in your first parameter (e.g. {parameters})>> ").lower()
-            while parameter2 not in parameters:
-                parameter2 = input(f"Type in your second parameter (e.g. {parameters})>> ").lower()
-
-            print(f'Is this correct? Initial: {tradingType1} - {parameter1} | Final: {tradingType2} - {parameter2}')
-            success = input('Type in "y" or "n">> ').lower()
-            if success.startswith('y'):
-                break
-
-        print("Running simulation...")
-
-    def log_and_print(self, message):
-        self.log += f'\n{message}'
-        print(message)
+        if comparison == '>':
+            return initialAverage + initialAverage * safetyMargin > finalAverage
+        else:
+            return initialAverage + initialAverage * safetyMargin < finalAverage
 
     def validate_cross(self, waitTime, tradeType, initialBound, finalBound, parameter, comparison, safetyMargin):
         if waitTime > 0:
@@ -981,17 +1009,6 @@ class Trader:
         self.log_simulated_trades()
         self.generate_log_file()
 
-    def get_profit(self):
-        """
-        Returns profit or loss.
-        :return: A number representing profit if positive and loss if negative.
-        """
-        balance = self.balance
-        currentPrice = self.get_current_price()
-        balance += self.btc * currentPrice * (1 - self.transactionFee)
-        balance -= self.btcOwed * currentPrice * (1 + self.transactionFee)
-        return balance - self.simulationStartingBalance
-
     def print_basic_information(self, loss, inHumanControl):
         """
         Prints out basic information about trades.
@@ -1001,7 +1018,7 @@ class Trader:
         self.log_and_print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
         if inHumanControl:
-            self.log_and_print(f'Currently in human control. BOT IS NOT WORKING AUTONOMOUSLY. OVERRIDE TO RESUME BOT.')
+            self.log_and_print(f'Currently in human control. Bot is waiting for human input to continue.')
         else:
             self.log_and_print(f'Currently in autonomous mode.')
 
@@ -1014,7 +1031,7 @@ class Trader:
             self.log_and_print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
 
         if self.buyLongPrice is not None:
-            self.log_and_print(f'\nCurrent in long position.')
+            self.log_and_print(f'\nCurrently in long position.')
             if self.longTrailingPrice is not None:
                 self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
             else:
@@ -1035,8 +1052,6 @@ class Trader:
 
         self.log_and_print(f'\nCurrent BTC price: ${currentPrice}')
         self.log_and_print(f'Balance: ${round(self.balance, 2)}')
-        self.log_and_print(f'Debt: ${round(self.btcOwed * currentPrice, 2)}')
-        self.log_and_print(f'Liquid Cash: ${round(self.balance - self.btcOwed * currentPrice, 2)}')
         self.log_and_print(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
 
         profit = round(self.get_profit(), 2)
@@ -1086,12 +1101,6 @@ class Trader:
             print("\nYou can view the trades from the simulation in more detail.")
             print("Please type in bot.view_simulated_trades() to view them.")
 
-    def log_simulated_trades(self):
-        self.log += f'\n\nTotal trade(s) in previous simulation: {len(self.simulatedTrades)}'
-        for counter, trade in enumerate(self.simulatedTrades, 1):
-            self.log += f'\n\n{counter}. Date in UTC: {trade["date"]}'
-            self.log += f'\nAction taken: {trade["action"]}'
-
     def view_simulated_trades(self):
         """
         Prints simulation result in more detail with each trade conducted.
@@ -1121,40 +1130,6 @@ class Trader:
             self.log_and_print(f'{tradeType}({finalBound}) = {self.get_ema(finalBound, parameter)}')
         else:
             self.log_and_print(f'Unknown trade type {tradeType}.')
-
-    def validate_trade(self, tradeType, initialBound, finalBound, parameter, comparison, safetyMargin=0):
-        """
-        Checks if bot should go ahead with trade. If trade-type with initial bound is logically compared with trade-type
-        with final bound, a boolean is returned whether it is true or false.
-        :param safetyMargin: Safety margin to check if cross has occurred.
-        :param tradeType: Type of trade conducted.
-        :param initialBound: Initial bound for trade algorithm.
-        :param finalBound: Final bound for trade algorithm.
-        :param parameter: Parameter to use for trade algorithm.
-        :param comparison: Comparison whether trade type is greater than or less than.
-        :return: A boolean whether trade should be performed or not.
-        """
-        if tradeType == 'SMA':
-            sma = self.get_sma(initialBound, parameter)
-            if comparison == '>':
-                return sma + sma * safetyMargin > self.get_sma(finalBound, parameter)
-            else:
-                return sma + sma * safetyMargin < self.get_sma(finalBound, parameter)
-        elif tradeType == 'WMA':
-            wma = self.get_wma(initialBound, parameter)
-            if comparison == '>':
-                return wma + wma * safetyMargin > self.get_wma(finalBound, parameter)
-            else:
-                return wma + wma * safetyMargin < self.get_wma(finalBound, parameter)
-        elif tradeType == 'EMA':
-            ema = self.get_ema(initialBound, parameter)
-            if comparison == '>':
-                return ema + ema * safetyMargin > self.get_ema(finalBound, parameter)
-            else:
-                return ema + ema * safetyMargin < self.get_ema(finalBound, parameter)
-        else:
-            print(f'Unknown trading type {tradeType}.')
-            return False
 
     def check_cross(self, tradeType, initialBound, finalBound, parameter, comparison, previousCondition):
         pass
@@ -1232,6 +1207,32 @@ class Trader:
             print("Fucking shape shifting reptilians, bro. Fucking causing this virus and shit.")
 
         time.sleep(sleepTime)
+
+    def past_data_simulate(self):
+        self.balance = self.balance
+        while True:
+            tradingType1 = None
+            tradingType2 = None
+            tradingTypes = ('WMA', 'EMA', 'SMA')
+            while tradingType1 not in tradingTypes:
+                tradingType1 = input(f'Type in your first trading type (e.g. {tradingTypes})>> ').upper()
+            while tradingType2 not in tradingTypes:
+                tradingType2 = input(f'Type in your second trading type (e.g. {tradingTypes})>> ').upper()
+
+            parameters = ('open', 'high', 'low', 'close')
+            parameter1 = None
+            parameter2 = None
+            while parameter1 not in parameters:
+                parameter1 = input(f"Type in your first parameter (e.g. {parameters})>> ").lower()
+            while parameter2 not in parameters:
+                parameter2 = input(f"Type in your second parameter (e.g. {parameters})>> ").lower()
+
+            print(f'Is this correct? Initial: {tradingType1} - {parameter1} | Final: {tradingType2} - {parameter2}')
+            success = input('Type in "y" or "n">> ').lower()
+            if success.startswith('y'):
+                break
+
+        print("Running simulation...")
 
     def __str__(self):
         return self.__repr__()
