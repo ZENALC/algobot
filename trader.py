@@ -591,16 +591,13 @@ class Trader:
         self.log += f'\n{message}'
         print(message)
 
-    def process_transaction(self, action, message):
-        self.add_trade(message)
-
-    def add_trade(self, message):
+    def add_simulated_trade(self, message):
         self.simulatedTrades.append({
             'date': datetime.utcnow(),
             'action': message
         })
 
-    def buy_long(self, usd=None):
+    def buy_long(self, msg, usd=None):
         """
         Buys BTC at current market price with amount of USD specified. If not specified, assumes bot goes all in.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -623,8 +620,9 @@ class Trader:
         self.buyLongPrice = currentPrice
         self.btc += btcBought
         self.balance -= usd
+        self.add_simulated_trade(msg)
 
-    def sell_long(self, btc=None):
+    def sell_long(self, msg, btc=None):
         """
         Sells specified amount of BTC at current market price. If not specified, assumes bot sells all BTC.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -645,11 +643,12 @@ class Trader:
         earned = btc * currentPrice * (1 - self.transactionFee)
         self.btc -= btc
         self.balance += earned
+        self.add_simulated_trade(msg)
 
         if self.btc == 0:
             self.buyLongPrice = None
 
-    def buy_short(self, btc=None):
+    def buy_short(self, msg, btc=None):
         """
         Buys borrowed BTC at current market price and returns to market.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -667,11 +666,12 @@ class Trader:
         lost = currentPrice * btc * (1 + self.transactionFee)
         self.btcOwed -= btc
         self.balance -= lost
+        self.add_simulated_trade(msg)
 
         if self.btcOwed == 0:
             self.sellShortPrice = None
 
-    def sell_short(self, btc=None):
+    def sell_short(self, msg, btc=None):
         """
         Borrows BTC and sells them at current market price.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -692,6 +692,7 @@ class Trader:
         self.btcOwed += btc
         self.balance += earned
         self.sellShortPrice = currentPrice
+        self.add_simulated_trade(msg)
 
     def get_profit(self):
         """
@@ -742,6 +743,60 @@ class Trader:
             self.log_and_print("Irregular averages occurred. Not taking any action.")
             return False
         return True
+
+    def print_basic_information(self, loss, inHumanControl):
+        """
+        Prints out basic information about trades.
+        """
+        self.log_and_print('---------------------------------------------------')
+        currentPrice = self.get_current_price()
+        self.log_and_print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+
+        if inHumanControl:
+            self.log_and_print(f'Currently in human control. Bot is waiting for human input to continue.')
+        else:
+            self.log_and_print(f'Currently in autonomous mode.')
+
+        if self.btc > 0:
+            self.log_and_print(f'BTC: {self.btc}')
+            self.log_and_print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
+
+        if self.btcOwed > 0:
+            self.log_and_print(f'BTC owed: {self.btcOwed}')
+            self.log_and_print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
+
+        if self.buyLongPrice is not None:
+            self.log_and_print(f'\nCurrently in long position.')
+            if self.longTrailingPrice is not None:
+                self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
+            else:
+                self.log_and_print(f'Stop loss: {round(self.buyLongPrice * (1 - loss), 2)}')
+
+        if self.sellShortPrice is not None:
+            self.log_and_print(f'\nCurrent in short position.')
+            if self.shortTrailingPrice is not None:
+                self.log_and_print(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
+            else:
+                self.log_and_print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
+
+        if self.buyLongPrice is None and self.sellShortPrice is None:
+            if not inHumanControl:
+                self.log_and_print(f'\nCurrently not a in short or long position. Waiting for next cross.')
+            else:
+                self.log_and_print(f'\nCurrently not a in short or long position. Waiting for human intervention.')
+
+        self.log_and_print(f'\nCurrent BTC price: ${currentPrice}')
+        self.log_and_print(f'Balance: ${round(self.balance, 2)}')
+        self.log_and_print(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
+
+        profit = round(self.get_profit(), 2)
+        if profit > 0:
+            self.log_and_print(f'Profit: ${profit}')
+        elif profit < 0:
+            self.log_and_print(f'Loss: ${-profit}')
+        else:
+            self.log_and_print(f'No profit or loss currently.')
+        self.log_and_print('')
 
     def simulate_option_1(self, tradeType, initialBound, finalBound, parameter, loss, trailingLoss, comparison, timer,
                           margin):
@@ -799,11 +854,10 @@ class Trader:
                                     continue
                                 self.log_and_print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). "
                                                    f"Buying long.")
-                                self.buy_long()
+                                self.buy_long(f'Bought long: {tradeType}({initialBound}) > {tradeType}({finalBound}).')
                                 if trailingLoss:
                                     self.longTrailingPrice = currentPrice
                                 inLongPosition = True
-                                self.add_trade(f'Bought long: {tradeType}({initialBound}) > {tradeType}({finalBound}).')
                         else:  # Checks if there is a cross to sell short.
                             if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
                                                    safetyMargin):
@@ -818,11 +872,10 @@ class Trader:
 
                         if currentPrice < lossPrice * (1 - loss):
                             self.log_and_print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
-                            self.sell_long()
+                            self.sell_long(f'Sold long because loss was greater than {loss * 100}%. Waiting for cross.')
                             self.longTrailingPrice = None
                             inLongPosition = False
                             waitLong = True
-                            self.add_trade(f'Sold long because loss was greater than {loss * 100}%. Waiting for cross.')
 
                         elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
                                                  safetyMargin):
@@ -831,11 +884,10 @@ class Trader:
                                 continue
                             self.log_and_print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). '
                                                f'Cross! Selling long.')
-                            self.sell_long()
+                            self.sell_long(f'Sold long because a cross was detected.')
                             self.longTrailingPrice = None
                             inLongPosition = False
                             waitLong = False
-                            self.add_trade(f'Sold long because a cross was detected.')
 
                 if not inLongPosition and not inHumanControl:
                     if self.sellShortPrice is None and not inShortPosition:
@@ -847,11 +899,10 @@ class Trader:
                                     continue
                                 self.log_and_print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). '
                                                    f'Selling short.')
-                                self.sell_short()
+                                self.sell_short(f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
                                 if trailingLoss:
                                     self.shortTrailingPrice = currentPrice
                                 inShortPosition = True
-                                self.add_trade(f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
                         else:
                             if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
                                                    safetyMargin):
@@ -865,11 +916,9 @@ class Trader:
 
                         if currentPrice > lossPrice * (1 + loss):
                             self.log_and_print(f'Loss is greater than {loss * 100}%. Buying short.')
-                            self.buy_short()
+                            self.buy_short(f'Bought short because loss is greater than {loss * 100}%. Waiting for cross')
                             self.shortTrailingPrice = None
                             inShortPosition = False
-                            self.add_trade(
-                                f'Bought short because loss is greater than {loss * 100}%. Waiting for cross')
                             waitShort = True
 
                         elif self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
@@ -879,10 +928,9 @@ class Trader:
                                 continue
                             self.log_and_print(f'{tradeType}({initialBound}) > {tradeType}({finalBound}). Cross! '
                                                f'Buying short.')
-                            self.buy_short()
+                            self.buy_short(f'Bought short because a cross was detected.')
                             self.shortTrailingPrice = None
                             inShortPosition = False
-                            self.add_trade(f'Bought short because a cross was detected.')
                             waitShort = False
 
                 print("Type CTRL-C to cancel or override the simulation at any time.")
@@ -903,14 +951,14 @@ class Trader:
                         if inShortPosition:
                             self.buy_short()
                             self.log_and_print('Bought short because of override.')
-                            self.add_trade('Bought short because of override.')
+                            self.add_simulated_trade('Bought short because of override.')
                             inShortPosition = False
                             if action == '':
                                 waitShort = True
                         elif inLongPosition:
                             self.sell_long()
                             self.log_and_print('Sold long because of override.')
-                            self.add_trade('Sold long because of override.')
+                            self.add_simulated_trade('Sold long because of override.')
                             inLongPosition = False
                             if action == '':
                                 waitLong = True
@@ -927,14 +975,14 @@ class Trader:
                             if trailingLoss:
                                 self.longTrailingPrice = self.get_current_price()
                             inLongPosition = True
-                            self.add_trade(f'Bought long because of override.')
+                            self.add_simulated_trade(f'Bought long because of override.')
                         elif action == 'short':
                             self.log_and_print(f'Selling short because of override.')
                             self.sell_short()
                             if trailingLoss:
                                 self.shortTrailingPrice = self.get_current_price()
                             inShortPosition = True
-                            self.add_trade(f'Sold short because of override.')
+                            self.add_simulated_trade(f'Sold short because of override.')
                         inHumanControl = False
 
                 elif action.lower().startswith('s'):
@@ -1009,78 +1057,16 @@ class Trader:
         self.log_simulated_trades()
         self.generate_log_file()
 
-    def print_basic_information(self, loss, inHumanControl):
-        """
-        Prints out basic information about trades.
-        """
-        self.log_and_print('---------------------------------------------------')
-        currentPrice = self.get_current_price()
-        self.log_and_print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-
-        if inHumanControl:
-            self.log_and_print(f'Currently in human control. Bot is waiting for human input to continue.')
-        else:
-            self.log_and_print(f'Currently in autonomous mode.')
-
-        if self.btc > 0:
-            self.log_and_print(f'BTC: {self.btc}')
-            self.log_and_print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
-
-        if self.btcOwed > 0:
-            self.log_and_print(f'BTC owed: {self.btcOwed}')
-            self.log_and_print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
-
-        if self.buyLongPrice is not None:
-            self.log_and_print(f'\nCurrently in long position.')
-            if self.longTrailingPrice is not None:
-                self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
-            else:
-                self.log_and_print(f'Stop loss: {round(self.buyLongPrice * (1 - loss), 2)}')
-
-        if self.sellShortPrice is not None:
-            self.log_and_print(f'\nCurrent in short position.')
-            if self.shortTrailingPrice is not None:
-                self.log_and_print(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
-            else:
-                self.log_and_print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
-
-        if self.buyLongPrice is None and self.sellShortPrice is None:
-            if not inHumanControl:
-                self.log_and_print(f'\nCurrently not a in short or long position. Waiting for next cross.')
-            else:
-                self.log_and_print(f'\nCurrently not a in short or long position. Waiting for human intervention.')
-
-        self.log_and_print(f'\nCurrent BTC price: ${currentPrice}')
-        self.log_and_print(f'Balance: ${round(self.balance, 2)}')
-        self.log_and_print(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
-
-        profit = round(self.get_profit(), 2)
-        if profit > 0:
-            self.log_and_print(f'Profit: ${profit}')
-        elif profit < 0:
-            self.log_and_print(f'Loss: ${-profit}')
-        else:
-            self.log_and_print(f'No profit or loss currently.')
-        self.log_and_print('')
-
     def get_simulation_result(self):
         """
         Gets end result of simulation.
         """
         if self.btc > 0:
             self.log_and_print("Selling all BTC...")
-            self.sell_long()
-            self.simulatedTrades.append({
-                'date': datetime.utcnow(),
-                'action': f'Sold long as simulation ended.'
-            })
+            self.sell_long(f'Sold long as simulation ended.')
         if self.btcOwed > 0:
             self.log_and_print("Returning all borrowed BTC...")
-            self.buy_short()
-            self.simulatedTrades.append({
-                'date': datetime.utcnow(),
-                'action': f'Bought short as simulation ended.'
-            })
+            self.buy_short(f'Bought short as simulation ended.')
         self.log_and_print("\nResults:")
         self.log_and_print(f'Starting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')
         self.log_and_print(f'End time: {self.endingTime.strftime("%Y-%m-%d %H:%M:%S")}')
