@@ -20,9 +20,7 @@ class Trader:
 
         self.apiKey = os.environ.get('binance_api')
         self.apiSecret = os.environ.get('binance_secret')
-
-        if not self.apiKey or not self.apiSecret:
-            print("No API key found.")
+        self.verify_api_and_secret()
 
         self.binanceClient = Client(self.apiKey, self.apiSecret)
         # self.twilioClient = rest.Client()
@@ -36,7 +34,7 @@ class Trader:
         self.data = []
         self.ema_data = {}
         try:
-            startingBalance = float(startingBalance)
+            startingBalance = int(startingBalance)
         except ValueError:
             print("Invalid starting balance. Using default value of $1,000.")
             startingBalance = 1000
@@ -50,10 +48,14 @@ class Trader:
         self.endingTime = None
         self.buyLongPrice = None
         self.sellShortPrice = None
-        self.simulatedTrades = []
-        self.simulationStartingBalance = None
         self.longTrailingPrice = None
         self.shortTrailingPrice = None
+
+        self.simulatedTrades = []
+        self.simulationStartingBalance = None
+
+        self.trades = []
+
         # self.btc_price = {'error': False, 'current': None, 'open': None, 'high': None, 'low': None, 'date': None}
 
         # Create, initialize, store, and get values from database.
@@ -79,7 +81,25 @@ class Trader:
         # self.bsm.start()
         # print("Initialized web socket.")
 
+    def verify_api_and_secret(self):
+        """
+        Checks and prints if both API key and API secret are None values.
+        """
+        if self.apiKey is None:
+            print("No API key found.")
+        else:
+            print("API key found.")
+
+        if self.apiSecret is None:
+            print("No API secret found.")
+        else:
+            print("API secret found.")
+
     def verify_integrity(self):
+        """
+        Verifies integrity of data.
+        :return: A boolean whether the data is accurate or not.
+        """
         if len(self.data) < 1:
             print("No data found.")
             return False
@@ -88,8 +108,9 @@ class Trader:
         for data in self.data[1:]:
             if data['date'] + timedelta(minutes=self.get_interval_minutes()) != previousData['date']:
                 print("Inaccurate data detected.")
-                print(previousData)
-                print(data)
+                print(f'Previous data: {previousData}')
+                print(f'Next data: {data}')
+                return False
             previousData = data
 
         print("Data has been verified to be correct.")
@@ -129,6 +150,7 @@ class Trader:
             print("Retrieving data from database...")
         else:
             print("No data found in database.")
+            return
 
         for row in rows:
             self.data.append({'date': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc),
@@ -370,7 +392,7 @@ class Trader:
         print(f'Data saved to {path}.')
         os.chdir(currentPath)
 
-    def valid_average_input(self, shift, prices, extraShift=0):
+    def is_valid_average_input(self, shift, prices, extraShift=0):
         """
         Checks whether shift, prices, and (optional) extraShift are valid.
         :param shift: Periods from current period.
@@ -398,7 +420,7 @@ class Trader:
         :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: SMA
         """
-        if not self.valid_average_input(shift, prices):
+        if not self.is_valid_average_input(shift, prices):
             return None
 
         data = [self.get_current_data()] + self.data  # Data is current data + all-time period data
@@ -418,7 +440,7 @@ class Trader:
         :param parameter: Parameter to get the average of (e.g. open, close, high or low values)
         :return: WMA
         """
-        if not self.valid_average_input(shift, prices):
+        if not self.is_valid_average_input(shift, prices):
             return None
 
         data = [self.get_current_data()] + self.data
@@ -446,7 +468,7 @@ class Trader:
         :param str parameter: Parameter to get the average of (e.g. open, close, high, or low values)
         :return: EMA
         """
-        if not self.valid_average_input(shift, prices, sma_prices):
+        if not self.is_valid_average_input(shift, prices, sma_prices):
             return None
         elif sma_prices <= 0:
             print("Initial amount of SMA values for initial EMA must be greater than 0.")
@@ -534,6 +556,26 @@ class Trader:
             time.sleep(2)
             self.get_current_price()
         # return self.btc_price['current']
+
+    def generate_log_file(self):
+        currentDirectory = os.getcwd()
+        folderName = 'Logs'
+
+        try:
+            os.mkdir(folderName)
+        except OSError:
+            pass
+        finally:
+            os.chdir(folderName)
+
+        with open(self.logFile, 'w') as f:
+            f.write(self.log)
+
+        print(f'Successfully generated log at {os.path.join(os.getcwd(), self.logFile)}')
+        os.chdir(currentDirectory)
+
+    def process_transaction(self, action, message):
+        self.add_trade(message)
 
     def buy_long(self, usd=None):
         """
@@ -628,28 +670,11 @@ class Trader:
         self.balance += earned
         self.sellShortPrice = currentPrice
 
-    def add_trade(self, action):
+    def add_trade(self, message):
         self.simulatedTrades.append({
             'date': datetime.utcnow(),
-            'action': action
+            'action': message
         })
-
-    def generate_log_file(self):
-        currentDirectory = os.getcwd()
-        folderName = 'Logs'
-
-        try:
-            os.mkdir(folderName)
-        except OSError:
-            pass
-        finally:
-            os.chdir(folderName)
-
-        with open(self.logFile, 'w') as f:
-            f.write(self.log)
-
-        print(f'Successfully generated log at {os.path.join(os.getcwd(), self.logFile)}')
-        os.chdir(currentDirectory)
 
     def past_data_simulate(self):
         self.balance = self.balance
