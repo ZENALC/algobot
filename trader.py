@@ -18,12 +18,17 @@ class Trader:
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
 
-        self.apiKey = os.environ.get('binance_api')
-        self.apiSecret = os.environ.get('binance_secret')
-        self.verify_api_and_secret()
+        self.apiKey = os.environ.get('binance_test_api')  # Retrieving API key from environment variables
+        self.apiSecret = os.environ.get('binance_test_secret')  # Retrieving API secret from environment variables
+        self.verify_api_and_secret()  # Verifying API key and secret
 
-        self.binanceClient = Client(self.apiKey, self.apiSecret)
-        # self.twilioClient = rest.Client()
+        self.binanceClient = Client(self.apiKey, self.apiSecret)  # Initialize Binance client
+        # self.twilioClient = rest.Client()  # Initialize Twilio client for WhatsApp integration
+
+        self.binanceClient.API_URL = "https://testnet.binance.vision/api"
+        # print(self.binanceClient.get_account_status())
+        print(self.binanceClient.get_asset_balance(asset='BTC'))
+        print(self.binanceClient.get_account())
 
         if not self.is_valid_symbol(symbol):
             print('Invalid symbol. Using default symbol of BTCUSDT.')
@@ -34,13 +39,12 @@ class Trader:
         self.data = []
         self.ema_data = {}
         try:
-            startingBalance = int(startingBalance)
-        except ValueError:
+            startingBalance = float(startingBalance)
+        except (ValueError, ArithmeticError, ZeroDivisionError):
             print("Invalid starting balance. Using default value of $1,000.")
             startingBalance = 1000
 
-        self.startingBalance = startingBalance
-        self.balance = self.startingBalance
+        self.balance = startingBalance
         self.btc = 0
         self.btcOwed = 0
         self.transactionFee = 0.001
@@ -72,6 +76,17 @@ class Trader:
 
         self.logFile = None
         self.log = None
+
+        self.inHumanControl = False
+        self.waitForLong = False
+        self.waitForShort = False
+        self.inLongPosition = False
+        self.inShortPosition = False
+        self.trailingLoss = False
+        self.skipLongCross = False
+        self.skipShortCross = False
+        self.lossPrice = None
+        self.currentPrice = None
 
         # Initialize and start the WebSocket
         # print("Initializing web socket...")
@@ -615,12 +630,13 @@ class Trader:
             return
 
         transactionFee = usd * self.transactionFee
-        currentPrice = self.get_current_price()
-        btcBought = (usd - transactionFee) / currentPrice
-        self.buyLongPrice = currentPrice
+        self.currentPrice = self.get_current_price()
+        btcBought = (usd - transactionFee) / self.currentPrice
+        self.buyLongPrice = self.currentPrice
         self.btc += btcBought
         self.balance -= usd
         self.add_simulated_trade(msg)
+        self.log_and_print(msg)
 
     def sell_long(self, msg, btc=None):
         """
@@ -639,11 +655,12 @@ class Trader:
             print(f'You currently have {self.btc} BTC. You cannot sell {btc} BTC.')
             return
 
-        currentPrice = self.get_current_price()
-        earned = btc * currentPrice * (1 - self.transactionFee)
+        self.currentPrice = self.get_current_price()
+        earned = btc * self.currentPrice * (1 - self.transactionFee)
         self.btc -= btc
         self.balance += earned
         self.add_simulated_trade(msg)
+        self.log_and_print(msg)
 
         if self.btc == 0:
             self.buyLongPrice = None
@@ -662,11 +679,12 @@ class Trader:
             print("You cannot buy 0 or less BTC.")
             return
 
-        currentPrice = self.get_current_price()
-        lost = currentPrice * btc * (1 + self.transactionFee)
+        self.currentPrice = self.get_current_price()
+        lost = self.currentPrice * btc * (1 + self.transactionFee)
         self.btcOwed -= btc
         self.balance -= lost
         self.add_simulated_trade(msg)
+        self.log_and_print(msg)
 
         if self.btcOwed == 0:
             self.sellShortPrice = None
@@ -678,21 +696,22 @@ class Trader:
         If no BTC is provided in function, bot will assume we borrow as much as
         bot can buy with current balance and market value.
         """
-        currentPrice = self.get_current_price()
+        self.currentPrice = self.get_current_price()
 
         if btc is None:
             transactionFee = self.balance * self.transactionFee
-            btc = (self.balance - transactionFee) / currentPrice
+            btc = (self.balance - transactionFee) / self.currentPrice
 
         if btc <= 0:
             print("You cannot borrow 0 or less BTC.")
             return
 
-        earned = currentPrice * btc * (1 - self.transactionFee)
+        earned = self.currentPrice * btc * (1 - self.transactionFee)
         self.btcOwed += btc
         self.balance += earned
-        self.sellShortPrice = currentPrice
+        self.sellShortPrice = self.currentPrice
         self.add_simulated_trade(msg)
+        self.log_and_print(msg)
 
     def get_profit(self):
         """
@@ -700,9 +719,9 @@ class Trader:
         :return: A number representing profit if positive and loss if negative.
         """
         balance = self.balance
-        currentPrice = self.get_current_price()
-        balance += self.btc * currentPrice * (1 - self.transactionFee)
-        balance -= self.btcOwed * currentPrice * (1 + self.transactionFee)
+        self.currentPrice = self.get_current_price()
+        balance += self.btc * self.currentPrice * (1 - self.transactionFee)
+        balance -= self.btcOwed * self.currentPrice * (1 + self.transactionFee)
         return balance - self.simulationStartingBalance
 
     def validate_trade(self, tradeType, initialBound, finalBound, parameter, comparison, safetyMargin=0):
@@ -744,15 +763,15 @@ class Trader:
             return False
         return True
 
-    def print_basic_information(self, loss, inHumanControl):
+    def print_basic_information(self, loss):
         """
         Prints out basic information about trades.
         """
         self.log_and_print('---------------------------------------------------')
-        currentPrice = self.get_current_price()
+        self.currentPrice = self.get_current_price()
         self.log_and_print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
-        if inHumanControl:
+        if self.inHumanControl:
             self.log_and_print(f'Currently in human control. Bot is waiting for human input to continue.')
         else:
             self.log_and_print(f'Currently in autonomous mode.')
@@ -778,12 +797,12 @@ class Trader:
             else:
                 self.log_and_print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
         else:
-            if not inHumanControl:
+            if not self.inHumanControl:
                 self.log_and_print(f'\nCurrently not a in short or long position. Waiting for next cross.')
             else:
                 self.log_and_print(f'\nCurrently not a in short or long position. Waiting for human intervention.')
 
-        self.log_and_print(f'\nCurrent BTC price: ${currentPrice}')
+        self.log_and_print(f'\nCurrent BTC price: ${self.currentPrice}')
         self.log_and_print(f'Balance: ${round(self.balance, 2)}')
         self.log_and_print(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
 
@@ -791,7 +810,7 @@ class Trader:
         if profit > 0:
             self.log_and_print(f'Profit: ${profit}')
         elif profit < 0:
-            self.log_and_print(f'Loss: ${profit}')
+            self.log_and_print(f'Loss: ${-profit}')
         else:
             self.log_and_print(f'No profit or loss currently.')
         self.log_and_print('')
@@ -817,35 +836,167 @@ class Trader:
         else:
             self.log_and_print(f'Unknown trade type {tradeType}.')
 
-    def simulate_option_1(self, tradeType, initialBound, finalBound, parameter, loss, trailingLoss, comparison, timer,
-                          margin):
-        fail = False
-        waitForShort = False  # Boolean for whether we should wait to exit out of short position.
-        waitForLong = False  # Boolean for whether we should wait to exit out of long position.
-        inHumanControl = False
-        waitTime = 0
-        safetySleep = timer
-        safetyMargin = margin
-        self.longTrailingPrice = None
-        self.shortTrailingPrice = None
-        inLongPosition = False
-        inShortPosition = False
+    def override(self):
+        action = None
+        if not self.inHumanControl:
+            while action not in ('w', ''):
+                action = input("Type 'w' to pause the bot or nothing to close and wait for next cross>>")
+            if action == 'w':
+                print("Pausing the bot.")
+                self.inHumanControl = True
+            if self.inShortPosition:
+                self.buy_short('Bought short because of override.')
+                self.inShortPosition = False
+                if action == '':
+                    self.waitForShort = True
+            elif self.inLongPosition:
+                self.sell_long('Sold long because of override.')
+                self.inLongPosition = False
+                if action == '':
+                    self.waitForLong = True
+            else:
+                print("Was not in a long or short position. Resuming simulation.")
+            time.sleep(2)
+        else:
+            while action not in ('long', 'short', ''):
+                print("Type 'long' to go long, 'short' to go short, or nothing to resume bot.")
+                action = input('>>').lower()
+            if action == 'long':
+                self.buy_long("Buying long because of override.")
+                if self.trailingLoss:
+                    self.longTrailingPrice = self.get_current_price()
+                self.inLongPosition = True
+                self.waitForLong = True
+                self.skipLongCross = True
+            elif action == 'short':
+                self.sell_short(f'Sold short because of override.')
+                if self.trailingLoss:
+                    self.shortTrailingPrice = self.get_current_price()
+                self.inShortPosition = True
+                self.waitForShort = True
+                self.skipShortCross = True
+            self.inHumanControl = False
 
-        self.log += f'Simulation starting from {self.startingTime}.' \
-                    f'\nSafety timer: {timer}.' \
-                    f'\nSafety margin: {margin}' \
-                    f'\nTrailing Loss: {trailingLoss}'
-
+    def handle_long(self, tradeType, initialBound, finalBound, parameter, loss, comparison, safetyMargin, waitTime):
         if comparison == '>':
             reverseComparison = '<'
         else:
             reverseComparison = '>'
+        if not self.inShortPosition and not self.inHumanControl:  # This is for long positions.
+            if self.buyLongPrice is None and not self.inLongPosition:  # If we are not in a long position.
+                if not self.waitForLong:  # Checking if we must wait to open long position.
+                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
+                                           safetyMargin):
+                        if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
+                                                   comparison, safetyMargin):
+                            return
+                        self.buy_long(f'Bought long: {tradeType}({initialBound}) > {tradeType}({finalBound}).')
+                        if self.trailingLoss:
+                            self.longTrailingPrice = self.currentPrice
+                        self.inLongPosition = True
+                else:  # Checks if there is a cross to sell short.
+                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
+                                           safetyMargin):
+                        self.log_and_print("Cross detected.")
+                        self.waitForLong = False
+
+            else:  # If we are in a long position.
+                if self.trailingLoss:
+                    self.lossPrice = self.longTrailingPrice * (1 - loss)
+                else:
+                    self.lossPrice = self.buyLongPrice * (1 - loss)
+
+                if self.currentPrice < self.lossPrice:
+                    self.log_and_print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
+                    self.sell_long(f'Sold long because loss was greater than {loss * 100}%. Waiting for cross.')
+                    self.longTrailingPrice = None
+                    self.inLongPosition = False
+                    self.waitForLong = True
+                elif self.skipLongCross:
+                    return
+                elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison, safetyMargin):
+                    if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
+                                               reverseComparison, safetyMargin):
+                        return
+                    self.sell_long(f'Sold long because a cross was detected.')
+                    self.longTrailingPrice = None
+                    self.inLongPosition = False
+                    self.waitForLong = False
+                    self.skipShortCross = False
+
+    def handle_short(self, tradeType, initialBound, finalBound, parameter, loss, comparison, safetyMargin, waitTime):
+        if comparison == '>':
+            reverseComparison = '<'
+        else:
+            reverseComparison = '>'
+        if not self.inLongPosition and not self.inHumanControl:  # This is for short position.
+            if self.sellShortPrice is None and not self.inShortPosition:  # This is if we are not in short position.
+                if not self.waitForShort:  # This is to check if we must wait to enter short position.
+                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
+                                           safetyMargin):
+                        if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
+                                                   reverseComparison, safetyMargin):
+                            return
+                        self.sell_short(
+                            f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
+                        if self.trailingLoss:
+                            self.shortTrailingPrice = self.currentPrice
+                        self.inShortPosition = True
+                else:
+                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
+                                           safetyMargin):
+                        self.log_and_print("Cross detected!")
+                        self.waitForShort = False
+            else:
+                if self.trailingLoss:
+                    self.lossPrice = self.shortTrailingPrice * (1 + loss)
+                else:
+                    self.lossPrice = self.sellShortPrice * (1 + loss)
+
+                if self.currentPrice > self.lossPrice:
+                    self.buy_short(
+                        f'Bought short because loss is greater than {loss * 100}%. Waiting for cross')
+                    self.shortTrailingPrice = None
+                    self.inShortPosition = False
+                    self.waitForShort = True
+
+                elif not self.skipShortCross and self.validate_trade(tradeType, initialBound, finalBound, parameter,
+                                                                     comparison, safetyMargin):
+                    if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
+                                               comparison, safetyMargin):
+                        return
+                    self.buy_short(f'Bought short because a cross was detected.')
+                    self.shortTrailingPrice = None
+                    self.inShortPosition = False
+                    self.waitForShort = False
+                    self.skipLongCross = False
+
+    def simulate_option_1(self, tradeType, initialBound, finalBound, parameter, loss, comparison, timer, margin):
+        self.lossPrice = None
+        fail = False  # Boolean for whether there was an error that occurred.
+        self.skipLongCross = False
+        self.skipShortCross = False
+        self.waitForShort = False  # Boolean for whether we should wait to exit out of short position.
+        self.waitForLong = False  # Boolean for whether we should wait to exit out of long position.
+        self.inHumanControl = False  # Boolean for whether the bot is in human control.
+        waitTime = 0  # Integer that describes how much bot will sleep to recheck if there is a cross.
+        safetySleep = timer  # Safety sleep time that bot will sleep and then recheck if a cross exists.
+        safetyMargin = margin  # Safety margin percentage to check for if cross is within marginal bounds.
+        self.longTrailingPrice = None  # Variable that will keep track of long trailing price.
+        self.shortTrailingPrice = None  # Variable that will keep track of short trailing price.
+        self.inLongPosition = False  # Boolean that keeps track of whether we are in a long position.
+        self.inShortPosition = False  # Boolean that keeps track of whether we are in a short position.
+
+        self.log += f'Simulation starting from {self.startingTime}.' \
+                    f'\nSafety timer: {timer}.' \
+                    f'\nSafety margin: {margin}' \
+                    f'\nTrailing Loss: {self.trailingLoss}'
 
         while True:
             if len(self.simulatedTrades) > 0:
                 waitTime = safetySleep  # Once the first trade is conducted, then only do we wait to validate crosses.
             try:
-                self.print_basic_information(loss, inHumanControl)
+                self.print_basic_information(loss)
 
                 if fail:
                     self.log_and_print("Successfully fixed error.")
@@ -856,101 +1007,18 @@ class Trader:
 
                 self.print_trade_type(tradeType, initialBound, finalBound, parameter)
 
-                currentPrice = self.get_current_price()
-                if trailingLoss:
-                    if self.longTrailingPrice is not None and currentPrice < self.longTrailingPrice:
-                        self.longTrailingPrice = currentPrice
-                    elif self.shortTrailingPrice is not None and currentPrice > self.shortTrailingPrice:
-                        self.shortTrailingPrice = currentPrice
+                self.currentPrice = self.get_current_price()
+                if self.trailingLoss:
+                    if self.longTrailingPrice is not None and self.currentPrice < self.longTrailingPrice:
+                        self.longTrailingPrice = self.currentPrice
+                    elif self.shortTrailingPrice is not None and self.currentPrice > self.shortTrailingPrice:
+                        self.shortTrailingPrice = self.currentPrice
 
-                if not inShortPosition and not inHumanControl:  # This is for long positions.
-                    if self.buyLongPrice is None and not inLongPosition:  # If we are not in a long position.
-                        if not waitForLong:  # Checking if we must wait to open long position.
-                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
-                                                   safetyMargin):
-                                if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
-                                                           comparison, safetyMargin):
-                                    continue
-                                self.log_and_print(f"{tradeType}({initialBound}) > {tradeType}({finalBound}). "
-                                                   f"Buying long.")
-                                self.buy_long(f'Bought long: {tradeType}({initialBound}) > {tradeType}({finalBound}).')
-                                if trailingLoss:
-                                    self.longTrailingPrice = currentPrice
-                                inLongPosition = True
-                        else:  # Checks if there is a cross to sell short.
-                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
-                                                   safetyMargin):
-                                self.log_and_print("Cross detected.")
-                                waitForLong = False
+                self.handle_long(tradeType, initialBound, finalBound, parameter, loss, comparison, safetyMargin,
+                                 waitTime)
 
-                    else:
-                        if trailingLoss:
-                            lossPrice = self.longTrailingPrice * (1 - loss)
-                        else:
-                            lossPrice = self.buyLongPrice * (1 - loss)
-
-                        if currentPrice < lossPrice:
-                            self.log_and_print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
-                            self.sell_long(f'Sold long because loss was greater than {loss * 100}%. Waiting for cross.')
-                            self.longTrailingPrice = None
-                            inLongPosition = False
-                            waitForLong = True
-
-                        elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
-                                                 safetyMargin):
-                            if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
-                                                       reverseComparison, safetyMargin):
-                                continue
-                            self.log_and_print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). '
-                                               f'Cross! Selling long.')
-                            self.sell_long(f'Sold long because a cross was detected.')
-                            self.longTrailingPrice = None
-                            inLongPosition = False
-                            waitForLong = False
-
-                if not inLongPosition and not inHumanControl:  # This is for short position.
-                    if self.sellShortPrice is None and not inShortPosition:  # This is if we are not in short position.
-                        if not waitForShort:  # This is to check if we must wait to enter short position.
-                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
-                                                   safetyMargin):
-                                if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
-                                                           reverseComparison, safetyMargin):
-                                    continue
-                                self.log_and_print(f'{tradeType}({initialBound}) < {tradeType}({finalBound}). '
-                                                   f'Selling short.')
-                                self.sell_short(f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
-                                if trailingLoss:
-                                    self.shortTrailingPrice = currentPrice
-                                inShortPosition = True
-                        else:
-                            if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
-                                                   safetyMargin):
-                                self.log_and_print("Cross detected!")
-                                waitForShort = False
-                    else:
-                        if trailingLoss:
-                            lossPrice = self.shortTrailingPrice * (1 + loss)
-                        else:
-                            lossPrice = self.sellShortPrice * (1 + loss)
-
-                        if currentPrice > lossPrice:
-                            self.log_and_print(f'Loss is greater than {loss * 100}%. Buying short.')
-                            self.buy_short(f'Bought short because loss is greater than {loss * 100}%. Waiting for cross')
-                            self.shortTrailingPrice = None
-                            inShortPosition = False
-                            waitForShort = True
-
-                        elif self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
-                                                 safetyMargin):
-                            if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
-                                                       comparison, safetyMargin):
-                                continue
-                            self.log_and_print(f'{tradeType}({initialBound}) > {tradeType}({finalBound}). Cross! '
-                                               f'Buying short.')
-                            self.buy_short(f'Bought short because a cross was detected.')
-                            self.shortTrailingPrice = None
-                            inShortPosition = False
-                            waitForShort = False
+                self.handle_short(tradeType, initialBound, finalBound, parameter, loss, comparison, safetyMargin,
+                                  waitTime)
 
                 print("Type CTRL-C to cancel or override the simulation at any time.")
                 time.sleep(1)
@@ -960,46 +1028,7 @@ class Trader:
                 while action not in ('o', 's', ''):
                     action = input("Type 'o' to override, 's' to stop, or nothing to continue>>").lower()
                 if action.lower().startswith('o'):
-                    action = None
-                    if not inHumanControl:
-                        while action not in ('w', ''):
-                            action = input("Type 'w' to pause the bot or nothing to close and wait for next cross>>")
-                        if action == 'w':
-                            print("Pausing the bot.")
-                            inHumanControl = True
-                        if inShortPosition:
-                            self.buy_short('Bought short because of override.')
-                            self.log_and_print('Bought short because of override.')
-                            inShortPosition = False
-                            if action == '':
-                                waitForShort = True
-                        elif inLongPosition:
-                            self.sell_long('Sold long because of override.')
-                            self.log_and_print('Sold long because of override.')
-                            inLongPosition = False
-                            if action == '':
-                                waitForLong = True
-                        else:
-                            print("Was not in a long or short position. Resuming simulation.")
-                        time.sleep(2)
-                    else:
-                        while action not in ('long', 'short', ''):
-                            print("Type 'long' to go long, 'short' to go short, or nothing to resume bot.")
-                            action = input('>>').lower()
-                        if action == 'long':
-                            self.log_and_print("Buying long because of override.")
-                            self.buy_long("Buying long because of override.")
-                            if trailingLoss:
-                                self.longTrailingPrice = self.get_current_price()
-                            inLongPosition = True
-                        elif action == 'short':
-                            self.log_and_print(f'Selling short because of override.')
-                            self.sell_short(f'Sold short because of override.')
-                            if trailingLoss:
-                                self.shortTrailingPrice = self.get_current_price()
-                            inShortPosition = True
-                        inHumanControl = False
-
+                    self.override()
                 elif action.lower().startswith('s'):
                     return
             except Exception as e:
@@ -1061,11 +1090,12 @@ class Trader:
 
         print("Starting simulation...")
         if lossStrategy == '1':
-            self.simulate_option_1(tradeType, initialBound, finalBound, parameter, loss, False, comparison, safetyTimer,
-                                   safetyMargin)
+            self.trailingLoss = False
         elif lossStrategy == '2':
-            self.simulate_option_1(tradeType, initialBound, finalBound, parameter, loss, True, comparison, safetyTimer,
-                                   safetyMargin)
+            self.trailingLoss = True
+
+        self.simulate_option_1(tradeType, initialBound, finalBound, parameter, loss, comparison, safetyTimer,
+                               safetyMargin)
         print("\nExiting simulation.")
         self.endingTime = datetime.now()
         self.get_simulation_result()
@@ -1219,3 +1249,41 @@ class Trader:
 
     def __repr__(self):
         return f'Trader(startingBalance={self.startingBalance})'
+
+
+class RealTrader(Trader):
+    def __init__(self, interval='1h', symbol='BTCUDST'):
+        super().__init__(interval=interval, symbol=symbol)
+
+
+class SimulatedTrader(Trader):
+    def __init__(self, startingBalance=1000, interval='1h', symbol='BTCUSDT'):
+        super().__init__(startingBalance, interval, symbol)
+        try:
+            startingBalance = float(startingBalance)
+        except (ValueError, ArithmeticError, ZeroDivisionError):
+            print("Invalid starting balance. Using default value of $1,000.")
+            startingBalance = 1000
+
+        self.balance = startingBalance
+        self.btc = 0
+        self.btcOwed = 0
+
+
+class Simulation:
+    def __init__(self, timer, margin):
+        self.fail = False  # Boolean for whether there was an error that occurred.
+        self.waitForShort = False  # Boolean for whether we should wait to exit out of short position.
+        self.waitForLong = False  # Boolean for whether we should wait to exit out of long position.
+        self.inHumanControl = False  # Boolean for whether the bot is in human control.
+        self.waitTime = 0  # Integer that describes how much bot will sleep to recheck if there is a cross.
+        self.safetySleep = timer  # Safety sleep time that bot will sleep and then recheck if a cross exists.
+        self.safetyMargin = margin  # Safety margin percentage to check for if cross is within marginal bounds.
+        self.longTrailingPrice = None  # Variable that will keep track of long trailing price.
+        self.shortTrailingPrice = None  # Variable that will keep track of short trailing price.
+        self.inLongPosition = False  # Boolean that keeps track of whether we are in a long position.
+        self.inShortPosition = False  # Boolean that keeps track of whether we are in a short position.
+        self.trades = []
+
+    def run(self):
+        pass
