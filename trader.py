@@ -1,179 +1,45 @@
 import sqlite3
 import os
-import csv
 import time
+import logging
 from datetime import datetime, timedelta, timezone
 from contextlib import closing
-# from twilio import rest
 from binance.client import Client
-# from binance.websockets import BinanceSocketManager
 
 
-class Trader:
-    def __init__(self, startingBalance=1000, interval='1h', symbol='BTCUSDT'):
+class Data:
+    def __init__(self, interval='1h', symbol='BTCUSDT'):
+        """
+        Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
+        :param interval: Interval for which the data object will track prices.
+        :param symbol: Symbol for which the data object will track prices.
+        """
         if not self.is_valid_interval(interval):
-            print("Invalid interval. Using default interval of 1h.")
+            output_message("Invalid interval. Using default interval of 1h.", level=4)
             interval = '1h'
 
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
 
-        self.apiKey = os.environ.get('binance_test_api')  # Retrieving API key from environment variables
-        self.apiSecret = os.environ.get('binance_test_secret')  # Retrieving API secret from environment variables
-        self.verify_api_and_secret()  # Verifying API key and secret
-
-        self.binanceClient = Client(self.apiKey, self.apiSecret)  # Initialize Binance client
-        # self.twilioClient = rest.Client()  # Initialize Twilio client for WhatsApp integration
-
-        self.binanceClient.API_URL = "https://testnet.binance.vision/api"
-        # print(self.binanceClient.get_account_status())
-        print(self.binanceClient.get_asset_balance(asset='BTC'))
-        print(self.binanceClient.get_account())
-
         if not self.is_valid_symbol(symbol):
-            print('Invalid symbol. Using default symbol of BTCUSDT.')
+            output_message('Invalid symbol. Using default symbol of BTCUSDT.', level=4)
             symbol = 'BTCUSDT'
 
         self.symbol = symbol
-
         self.data = []
         self.ema_data = {}
-        try:
-            startingBalance = float(startingBalance)
-        except (ValueError, ArithmeticError, ZeroDivisionError):
-            print("Invalid starting balance. Using default value of $1,000.")
-            startingBalance = 1000
-
-        self.balance = startingBalance
-        self.btc = 0
-        self.btcOwed = 0
-        self.transactionFee = 0.001
-        self.startingTime = None
-        self.endingTime = None
-        self.buyLongPrice = None
-        self.sellShortPrice = None
-        self.longTrailingPrice = None
-        self.shortTrailingPrice = None
-
-        self.simulatedTrades = []
-        self.simulationStartingBalance = None
-
-        self.trades = []
-
-        # self.btc_price = {'error': False, 'current': None, 'open': None, 'high': None, 'low': None, 'date': None}
+        self.binanceClient = Client(None, None)  # Initialize Binance client
 
         # Create, initialize, store, and get values from database.
         self.databaseFile = 'btc.db'
         self.databaseTable = f'data_{self.interval}'
-        # self.databaseConnection, self.databaseCursor = self.get_database_connectors()
         self.create_table()
         self.get_data_from_database()
         if not self.database_is_updated():
-            print("Updating data...")
+            output_message("Updating data...")
             self.update_database()
         else:
-            print("Database is up-to-date.")
-
-        self.logFile = None
-        self.log = None
-
-        self.inHumanControl = False
-        self.waitForLong = False
-        self.waitForShort = False
-        self.inLongPosition = False
-        self.inShortPosition = False
-        self.trailingLoss = False
-        self.skipLongCross = False
-        self.skipShortCross = False
-        self.lossPrice = None
-        self.currentPrice = None
-
-        # Initialize and start the WebSocket
-        # print("Initializing web socket...")
-        # self.bsm = BinanceSocketManager(self.binanceClient)
-        # # bsm.start_symbol_ticker_socket(self.exchange, self.btc_trade_history)
-        # self.bsm.start_kline_socket(self.exchange, self.process_socket_message, self.interval)
-        # self.bsm.start()
-        # print("Initialized web socket.")
-
-    def verify_api_and_secret(self):
-        """
-        Checks and prints if both API key and API secret are None values.
-        """
-        if self.apiKey is None:
-            print("No API key found.")
-        else:
-            print("API key found.")
-
-        if self.apiSecret is None:
-            print("No API secret found.")
-        else:
-            print("API secret found.")
-
-    def verify_integrity(self):
-        """
-        Verifies integrity of data.
-        :return: A boolean whether the data is accurate or not.
-        """
-        if len(self.data) < 1:
-            print("No data found.")
-            return False
-
-        previousData = self.data[0]
-        for data in self.data[1:]:
-            if data['date'] + timedelta(minutes=self.get_interval_minutes()) != previousData['date']:
-                print("Inaccurate data detected.")
-                print(f'Previous data: {previousData}')
-                print(f'Next data: {data}')
-                return False
-            previousData = data
-
-        print("Data has been verified to be correct.")
-        return True
-
-    def get_interval_unit_and_measurement(self):
-        """
-        Returns interval unit and measurement.
-        :return: A tuple with interval unit and measurement respectively.
-        """
-        unit = self.interval[-1]  # Gets the unit of the interval. eg 12h = h
-        measurement = int(self.interval[0:len(self.interval) - 1])  # Gets the measurement, eg 12h = 12
-        return unit, measurement
-
-    def get_database_connectors(self):
-        """
-        Returns database connection and cursor.
-        :return: A tuple with connection and cursor.
-        """
-        connection = sqlite3.connect(self.databaseFile)
-        cursor = connection.cursor()
-        return connection, cursor
-
-    def get_data_from_database(self):
-        """
-        Loads data from database and appends it to run-time data.
-        """
-        with closing(sqlite3.connect(self.databaseFile)) as connection:
-            with closing(connection.cursor()) as cursor:
-                rows = cursor.execute(f'''
-                        SELECT "trade_date", "open_price",
-                        "high_price", "low_price", "close_price"
-                        FROM {self.databaseTable} ORDER BY trade_date DESC
-                        ''').fetchall()
-
-        if len(rows) > 0:
-            print("Retrieving data from database...")
-        else:
-            print("No data found in database.")
-            return
-
-        for row in rows:
-            self.data.append({'date': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc),
-                              'open': float(row[1]),
-                              'high': float(row[2]),
-                              'low': float(row[3]),
-                              'close': float(row[4]),
-                              })
+            output_message("Database is up-to-date.")
 
     def create_table(self):
         """
@@ -211,11 +77,11 @@ class Trader:
                                         ))
                         connection.commit()
                     except sqlite3.IntegrityError:
-                        pass  # this just means the data already exists in the database, so ignore.
+                        pass  # This just means the data already exists in the database, so ignore.
                     except sqlite3.OperationalError:
-                        print("Insertion to database failed. Will retry next run.")
+                        output_message("Insertion to database failed. Will retry next run.", 4)
                         return False
-        print("Successfully stored all new data to database.")
+        output_message("Successfully stored all new data to database.")
         return True
 
     def get_latest_database_row(self):
@@ -227,6 +93,31 @@ class Trader:
             with closing(connection.cursor()) as cursor:
                 cursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
                 return cursor.fetchone()
+            
+    def get_data_from_database(self):
+        """
+        Loads data from database and appends it to run-time data.
+        """
+        with closing(sqlite3.connect(self.databaseFile)) as connection:
+            with closing(connection.cursor()) as cursor:
+                rows = cursor.execute(f'''
+                        SELECT "trade_date", "open_price","high_price", "low_price", "close_price"
+                        FROM {self.databaseTable} ORDER BY trade_date DESC
+                        ''').fetchall()
+
+        if len(rows) > 0:
+            output_message("Retrieving data from database...")
+        else:
+            output_message("No data found in database.")
+            return
+
+        for row in rows:
+            self.data.append({'date': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc),
+                              'open': float(row[1]),
+                              'high': float(row[2]),
+                              'low': float(row[3]),
+                              'close': float(row[4]),
+                              })
 
     def database_is_updated(self):
         """
@@ -246,21 +137,22 @@ class Trader:
         result = self.get_latest_database_row()
         if result is None:  # Then get the earliest timestamp possible
             timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
-            print(f'Downloading all available historical data for {self.interval} intervals. This may take a while...')
+            output_message(f'Downloading all available historical data for {self.interval} intervals.')
         else:
             latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
             timestamp = int(latestDate.timestamp()) * 1000  # Converting timestamp to milliseconds
-            print(f"Previous data up to UTC {latestDate + timedelta(minutes=self.get_interval_minutes())} found.")
+            dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
+            output_message(f"Previous data up to UTC {dateWithIntervalAdded} found.")
 
         if not self.database_is_updated():
             newData = self.get_new_data(timestamp)
-            print("Successfully downloaded all new data.")
-            print("Inserting data to live program...")
+            output_message("Successfully downloaded all new data.")
+            output_message("Inserting data to live program...")
             self.insert_data(newData)
-            print("Storing updated data to database...")
+            output_message("Storing updated data to database...")
             self.dump_to_table()
         else:
-            print("Database is up-to-date.")
+            output_message("Database is up-to-date.")
 
     def get_new_data(self, timestamp, limit=1000):
         """
@@ -271,21 +163,6 @@ class Trader:
         """
         newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
         return newData[:-1]  # Up to -1st index, because we don't want current period data.
-
-    def get_data_from_csv(self, file):
-        """
-        Retrieves information from CSV, parses it, and adds it to run-time data.
-        """
-        with open(file) as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            next(csv_reader)  # skip over the header row
-            for row in csv_reader:
-                self.data.append({'date': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S'),
-                                  'open': float(row[1]),
-                                  'high': float(row[2]),
-                                  'low': float(row[3]),
-                                  'close': float(row[4]),
-                                  })
 
     def is_latest_date(self, latestDate):
         """
@@ -324,13 +201,65 @@ class Trader:
         """
         latestDate = self.data[0]['date']
         timestamp = int(latestDate.timestamp()) * 1000
-        print(f"Previous data found up to UTC {latestDate + timedelta(minutes=self.get_interval_minutes())}.")
+        dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
+        output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
         if not self.data_is_updated():
             newData = self.get_new_data(timestamp)
             self.insert_data(newData)
-            print("Data has been updated successfully.")
+            output_message("Data has been updated successfully.")
         else:
-            print("Data is up-to-date.")
+            output_message("Data is up-to-date.")
+
+    def get_current_data(self):
+        """
+        Retrieves current market dictionary with open, high, low, close prices.
+        :return: A dictionary with current open, high, low, and close prices.
+        """
+        try:
+            if not self.data_is_updated():
+                self.update_data()
+
+            currentInterval = self.data[0]['date'] + timedelta(minutes=self.get_interval_minutes())
+            currentTimestamp = int(currentInterval.timestamp() * 1000)
+
+            nextInterval = currentInterval + timedelta(minutes=self.get_interval_minutes())
+            nextTimestamp = int(nextInterval.timestamp() * 1000) - 1
+            currentData = self.binanceClient.get_klines(symbol=self.symbol,
+                                                        interval=self.interval,
+                                                        startTime=currentTimestamp,
+                                                        endTime=nextTimestamp,
+                                                        )[0]
+            currentDataDictionary = {'date': currentInterval,
+                                     'open': float(currentData[1]),
+                                     'high': float(currentData[2]),
+                                     'low': float(currentData[3]),
+                                     'close': float(currentData[4])}
+            return currentDataDictionary
+        except Exception as e:
+            output_message(f"Error: {e}. Retrying in 2 seconds...", 4)
+            time.sleep(2)
+            self.get_current_data()
+
+    def get_current_price(self):
+        """
+        Returns the current market BTC price.
+        :return: BTC market price
+        """
+        try:
+            return float(self.binanceClient.get_symbol_ticker(symbol=self.symbol)['price'])
+        except Exception as e:
+            output_message(f'Error: {e}. Retrying in 2 seconds...', 4)
+            time.sleep(2)
+            self.get_current_price()
+
+    def get_interval_unit_and_measurement(self):
+        """
+        Returns interval unit and measurement.
+        :return: A tuple with interval unit and measurement respectively.
+        """
+        unit = self.interval[-1]  # Gets the unit of the interval. eg 12h = h
+        measurement = int(self.interval[:-1])  # Gets the measurement, eg 12h = 12
+        return unit, measurement
 
     def get_interval_minutes(self):
         """
@@ -344,35 +273,8 @@ class Trader:
         elif self.intervalUnit == 'd':
             return self.intervalMeasurement * 24 * 60
         else:
-            print("Invalid interval.")
+            output_message("Invalid interval.", 4)
             return None
-
-    def is_valid_symbol(self, symbol):
-        """
-        Checks whether the symbol provided is valid or not for Binance.
-        :param symbol: Symbol to be checked.
-        :return: A boolean whether the symbol is valid or not.
-        """
-        tickers = self.binanceClient.get_all_tickers()
-        for ticker in tickers:
-            if ticker['symbol'] == symbol:
-                return True
-        return False
-
-    @staticmethod
-    def is_valid_interval(interval):
-        """
-        Returns whether interval provided is valid or not.
-        :param interval: Interval argument.
-        :return: A boolean whether the interval is valid or not.
-        """
-        availableIntervals = ('12h', '15m', '1d', '1h',
-                              '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
-        if interval in availableIntervals:
-            return True
-        else:
-            print(f'Invalid interval. Available intervals are: \n{availableIntervals}')
-            return False
 
     def get_csv_data(self, interval):
         """
@@ -382,9 +284,9 @@ class Trader:
         if not self.is_valid_interval(interval):
             return
         timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, interval)
-        print("Downloading all available historical data. This may take a while...")
+        output_message("Downloading all available historical data. This may take a while...")
         newData = self.binanceClient.get_historical_klines(self.symbol, interval, timestamp, limit=1000)
-        print("Downloaded all data successfully.")
+        output_message("Downloaded all data successfully.")
 
         folderName = 'CSV'
         fileName = f'btc_data_{interval}.csv'
@@ -404,8 +306,35 @@ class Trader:
                 f.write(f'{parsedDate}, {data[1]}, {data[2]}, {data[3]}, {data[4]}\n')
 
         path = os.path.join(os.getcwd(), fileName)
-        print(f'Data saved to {path}.')
+        output_message(f'Data saved to {path}.')
         os.chdir(currentPath)
+
+    @staticmethod
+    def is_valid_interval(interval):
+        """
+        Returns whether interval provided is valid or not.
+        :param interval: Interval argument.
+        :return: A boolean whether the interval is valid or not.
+        """
+        availableIntervals = ('12h', '15m', '1d', '1h',
+                              '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
+        if interval in availableIntervals:
+            return True
+        else:
+            output_message(f'Invalid interval. Available intervals are: \n{availableIntervals}')
+            return False
+
+    def is_valid_symbol(self, symbol):
+        """
+        Checks whether the symbol provided is valid or not for Binance.
+        :param symbol: Symbol to be checked.
+        :return: A boolean whether the symbol is valid or not.
+        """
+        tickers = self.binanceClient.get_all_tickers()
+        for ticker in tickers:
+            if ticker['symbol'] == symbol:
+                return True
+        return False
 
     def is_valid_average_input(self, shift, prices, extraShift=0):
         """
@@ -416,14 +345,35 @@ class Trader:
         :return: A boolean whether shift, prices, and extraShift are logical or not.
         """
         if shift < 0:
-            print("Shift cannot be less than 0.")
+            output_message("Shift cannot be less than 0.")
             return False
         elif prices <= 0:
-            print("Prices cannot be 0 or less than 0.")
+            output_message("Prices cannot be 0 or less than 0.")
             return False
         elif shift + extraShift + prices > len(self.data) + 1:
-            print("Shift + prices period cannot be more than data available.")
+            output_message("Shift + prices period cannot be more than data available.")
             return False
+        return True
+
+    def verify_integrity(self):
+        """
+        Verifies integrity of data by checking if there's any repeated data.
+        :return: A boolean whether the data contains no repeated data or not.
+        """
+        if len(self.data) < 1:
+            output_message("No data found.", 4)
+            return False
+
+        previousData = self.data[0]
+        for data in self.data[1:]:
+            if data['date'] == previousData['date']:
+                output_message("Repeated data detected.", 4)
+                output_message(f'Previous data: {previousData}', 4)
+                output_message(f'Next data: {data}', 4)
+                return False
+            previousData = data
+
+        output_message("Data has been verified to be correct.")
         return True
 
     def get_sma(self, prices, parameter, shift=0, round_value=True):
@@ -486,7 +436,7 @@ class Trader:
         if not self.is_valid_average_input(shift, prices, sma_prices):
             return None
         elif sma_prices <= 0:
-            print("Initial amount of SMA values for initial EMA must be greater than 0.")
+            output_message("Initial amount of SMA values for initial EMA must be greater than 0.")
             return None
 
         data = [self.get_current_data()] + self.data
@@ -507,107 +457,67 @@ class Trader:
             return round(ema, 2)
         return ema
 
-    def process_socket_message(self, msg):
-        """
-        Defines how to process incoming WebSocket messages
-        """
-        pass
-        # if msg['e'] != 'error':
-        #     self.btc_price['current'] = float(msg['k']['c'])
-        #     self.btc_price['open'] = float(msg['k']['o'])
-        #     self.btc_price['high'] = float(msg['k']['h'])
-        #     self.btc_price['low'] = float(msg['k']['l'])
-        #     self.btc_price['date'] = datetime.now(tz=timezone.utc)
-        #     if self.btc_price['error']:
-        #         print("Successfully reconnected.")
-        #         self.btc_price['error'] = False
-        # else:
-        #     self.btc_price['error'] = True
-        #     print("Something went wrong. Attempting to restart...")
-        #     self.bsm.stop_socket(self.conn)
-        #     self.bsm.close()
-        #     self.bsm.start_kline_socket(self.symbol, self.process_socket_message, self.interval)
-        #     self.bsm.start()
 
-    def get_current_data(self):
-        """
-        Retrieves current market dictionary with open, high, low, close prices.
-        :return: A dictionary with current open, high, low, and close prices.
-        """
-        try:
-            if not self.data_is_updated():
-                self.update_data()
+class SimulatedTrader:
+    def __init__(self, startingBalance=1000, interval='1h', symbol='BTCUSDT'):
+        self.dataView = Data(interval=interval, symbol=symbol)  # Retrieve data-view object
+        self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client
+        # self.twilioClient = rest.Client()  # Initialize Twilio client for WhatsApp integration
 
-            currentInterval = self.data[0]['date'] + timedelta(minutes=self.get_interval_minutes())
-            currentTimestamp = int(currentInterval.timestamp() * 1000)
+        try:  # Attempt to parse startingBalance
+            startingBalance = float(startingBalance)
+        except (ValueError, ArithmeticError, ZeroDivisionError):
+            print("Invalid starting balance. Using default value of $1,000.")
+            startingBalance = 1000
 
-            nextInterval = currentInterval + timedelta(minutes=self.get_interval_minutes())
-            nextTimestamp = int(nextInterval.timestamp() * 1000) - 1
-            currentData = self.binanceClient.get_klines(symbol=self.symbol,
-                                                        interval=self.interval,
-                                                        startTime=currentTimestamp,
-                                                        endTime=nextTimestamp,
-                                                        )[0]
-            currentDataDictionary = {'date': currentInterval,
-                                     'open': float(currentData[1]),
-                                     'high': float(currentData[2]),
-                                     'low': float(currentData[3]),
-                                     'close': float(currentData[4])}
-            return currentDataDictionary
-        except Exception as e:
-            print(f"Error: {e}. Retrying in 2 seconds...")
-            time.sleep(2)
-            self.get_current_data()
+        # Initialize initial values
+        self.balance = startingBalance  # USD Balance
+        self.btc = 0  # Amount of BTC we own
+        self.btcOwed = 0  # Amount of BTC we owe
+        self.transactionFee = 0.001  # Binance transaction fee
+        self.totalTrades = []  # Total amount of trades conducted
+        self.trades = []  # Amount of trades in previous run
 
-    def get_current_price(self):
-        """
-        Returns the current market BTC price.
-        :return: BTC market price
-        """
-        try:
-            return float(self.binanceClient.get_symbol_ticker(symbol=self.symbol)['price'])
-        except Exception as e:
-            print(f'Error: {e}. Retrying in 2 seconds...')
-            time.sleep(2)
-            self.get_current_price()
-        # return self.btc_price['current']
+        self.movingAverage = None  # Moving average used for technical analysis
+        self.parameter = None  # Parameter used for technical analysis
+        self.initialBound = None  # Initial bound for moving average
+        self.finalBound = None  # Final bound for moving average
+        self.lossPercentage = None  # Loss percentage for stop loss
 
-    def generate_log_file(self):
-        """
-        Generates a log file.
-        """
-        currentDirectory = os.getcwd()
-        folderName = 'Logs'
+        self.startingTime = None
+        self.endingTime = None
+        self.buyLongPrice = None
+        self.sellShortPrice = None
+        self.lossPrice = None
+        self.longTrailingPrice = None
+        self.shortTrailingPrice = None
+        self.startingBalance = None
+        self.currentPrice = None
 
-        try:
-            os.mkdir(folderName)
-        except OSError:
-            pass
-        finally:
-            os.chdir(folderName)
+        self.safetyMargin = None
+        self.safetyTimer = None
 
-        with open(self.logFile, 'w') as f:
-            f.write(self.log)
+        self.inHumanControl = False
+        self.waitForLong = False
+        self.waitForShort = False
+        self.inLongPosition = False
+        self.inShortPosition = False
+        self.trailingLoss = False
+        self.skipLongCross = False
+        self.skipShortCross = False
 
-        print(f'Successfully generated log at {os.path.join(os.getcwd(), self.logFile)}')
-        os.chdir(currentDirectory)
-
-    def log_simulated_trades(self):
-        self.log += f'\n\nTotal trade(s) in previous simulation: {len(self.simulatedTrades)}'
+    def log_trades(self):
+        logging.info(f'\n\nTotal trade(s) in previous simulation: {len(self.simulatedTrades)}')
         for counter, trade in enumerate(self.simulatedTrades, 1):
-            self.log += f'\n\n{counter}. Date in UTC: {trade["date"]}'
-            self.log += f'\nAction taken: {trade["action"]}'
+            logging.info(f'\n{counter}. Date in UTC: {trade["date"]}')
+            logging.info(f'\nAction taken: {trade["action"]}')
 
-    def log_and_print(self, message):
+    def add_trade(self, message):
         """
-        Logs the message and prints it.
-        :param message: The message to be logged and printed.
+        Adds a trade to list of trades
+        :param message: Message used for conducting trade.
         """
-        self.log += f'\n{message}'
-        print(message)
-
-    def add_simulated_trade(self, message):
-        self.simulatedTrades.append({
+        self.totalTrades.append({
             'date': datetime.utcnow(),
             'action': message
         })
@@ -621,22 +531,22 @@ class Trader:
             usd = self.balance
 
         if usd <= 0:
-            print("You cannot buy with $0 or less.")
+            output_message("You cannot buy with $0 or less.")
             if self.balance <= 0:
-                print("Looks like you have run out of money.")
+                output_message("Looks like you have run out of money.", 4)
             return
         elif usd > self.balance:
-            print(f'You currently have ${self.balance}. You cannot invest ${usd}.')
+            output_message(f'You currently have ${self.balance}. You cannot invest ${usd}.')
             return
 
         transactionFee = usd * self.transactionFee
-        self.currentPrice = self.get_current_price()
+        self.currentPrice = self.dataView.get_current_price()
         btcBought = (usd - transactionFee) / self.currentPrice
         self.buyLongPrice = self.currentPrice
         self.btc += btcBought
         self.balance -= usd
-        self.add_simulated_trade(msg)
-        self.log_and_print(msg)
+        self.add_trade(msg)
+        output_message(msg)
 
     def sell_long(self, msg, btc=None):
         """
@@ -647,20 +557,20 @@ class Trader:
             btc = self.btc
 
         if btc <= 0:
-            print("You cannot sell 0 or negative BTC.")
+            output_message("You cannot sell 0 or negative BTC.")
             if self.btc <= 0:
-                print("Looks like you do not have any BTC.")
+                output_message("Looks like you do not have any BTC.", 4)
             return
         elif btc > self.btc:
-            print(f'You currently have {self.btc} BTC. You cannot sell {btc} BTC.')
+            output_message(f'You currently have {self.btc} BTC. You cannot sell {btc} BTC.')
             return
 
-        self.currentPrice = self.get_current_price()
+        self.currentPrice = self.dataView.get_current_price()
         earned = btc * self.currentPrice * (1 - self.transactionFee)
         self.btc -= btc
         self.balance += earned
-        self.add_simulated_trade(msg)
-        self.log_and_print(msg)
+        self.add_trade(msg)
+        output_message(msg)
 
         if self.btc == 0:
             self.buyLongPrice = None
@@ -676,15 +586,15 @@ class Trader:
             btc = self.btcOwed
 
         if btc <= 0:
-            print("You cannot buy 0 or less BTC.")
+            output_message("You cannot buy 0 or less BTC.")
             return
 
-        self.currentPrice = self.get_current_price()
+        self.currentPrice = self.dataView.get_current_price()
         lost = self.currentPrice * btc * (1 + self.transactionFee)
         self.btcOwed -= btc
         self.balance -= lost
-        self.add_simulated_trade(msg)
-        self.log_and_print(msg)
+        self.add_trade(msg)
+        output_message(msg)
 
         if self.btcOwed == 0:
             self.sellShortPrice = None
@@ -696,22 +606,22 @@ class Trader:
         If no BTC is provided in function, bot will assume we borrow as much as
         bot can buy with current balance and market value.
         """
-        self.currentPrice = self.get_current_price()
+        self.currentPrice = self.dataView.get_current_price()
 
         if btc is None:
             transactionFee = self.balance * self.transactionFee
             btc = (self.balance - transactionFee) / self.currentPrice
 
         if btc <= 0:
-            print("You cannot borrow 0 or less BTC.")
+            output_message("You cannot borrow 0 or less BTC.")
             return
 
         earned = self.currentPrice * btc * (1 - self.transactionFee)
         self.btcOwed += btc
         self.balance += earned
         self.sellShortPrice = self.currentPrice
-        self.add_simulated_trade(msg)
-        self.log_and_print(msg)
+        self.add_trade(msg)
+        output_message(msg)
 
     def get_profit(self):
         """
@@ -719,259 +629,101 @@ class Trader:
         :return: A number representing profit if positive and loss if negative.
         """
         balance = self.balance
-        self.currentPrice = self.get_current_price()
+        self.currentPrice = self.dataView.get_current_price()
         balance += self.btc * self.currentPrice * (1 - self.transactionFee)
         balance -= self.btcOwed * self.currentPrice * (1 + self.transactionFee)
         return balance - self.simulationStartingBalance
 
-    def validate_trade(self, tradeType, initialBound, finalBound, parameter, comparison, safetyMargin=0):
+    def validate_margin_trade(self, tradeType, initialBound, finalBound, parameter, safetyMargin=0):
         """
-        Checks if bot should go ahead with trade. If trade-type with initial bound is logically compared with trade-type
-        with final bound, a boolean is returned whether it is true or false.
+        Checks if bot should go ahead with trade by checking if the average is really greater than the final average.
         :param safetyMargin: Safety margin to check if cross has occurred.
         :param tradeType: Type of trade conducted.
         :param initialBound: Initial bound for trade algorithm.
         :param finalBound: Final bound for trade algorithm.
         :param parameter: Parameter to use for trade algorithm.
-        :param comparison: Comparison whether trade type is greater than or less than.
         :return: A boolean whether trade should be performed or not.
         """
         if tradeType == 'SMA':
-            initialAverage = self.get_sma(initialBound, parameter)
-            finalAverage = self.get_sma(finalBound, parameter)
+            initialAverage = self.dataView.get_sma(initialBound, parameter)
+            finalAverage = self.dataView.get_sma(finalBound, parameter)
         elif tradeType == 'WMA':
-            initialAverage = self.get_wma(initialBound, parameter)
-            finalAverage = self.get_wma(finalBound, parameter)
+            initialAverage = self.dataView.get_wma(initialBound, parameter)
+            finalAverage = self.dataView.get_wma(finalBound, parameter)
         elif tradeType == 'EMA':
-            initialAverage = self.get_ema(initialBound, parameter)
-            finalAverage = self.get_ema(finalBound, parameter)
+            initialAverage = self.dataView.get_ema(initialBound, parameter)
+            finalAverage = self.dataView.get_ema(finalBound, parameter)
         else:
-            print(f'Unknown trading type {tradeType}.')
+            output_message(f'Unknown trading type {tradeType}.', 4)
             return False
 
-        if comparison == '>':
-            return initialAverage + initialAverage * safetyMargin > finalAverage
-        else:
-            return initialAverage + initialAverage * safetyMargin < finalAverage
+        return initialAverage + initialAverage * safetyMargin > finalAverage
 
-    def validate_cross(self, waitTime, tradeType, initialBound, finalBound, parameter, comparison, safetyMargin):
+    def validate_cross(self, waitTime, tradeType, initialBound, finalBound, parameter, safetyMargin):
         if waitTime > 0:
-            self.log_and_print(f'Cross detected. Waiting {waitTime} seconds to validate...')
+            output_message(f'Cross detected. Waiting {waitTime} seconds to validate...')
             time.sleep(waitTime)
-        if not self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison, safetyMargin):
-            self.log_and_print("Irregular averages occurred. Not taking any action.")
+        if not self.validate_margin_trade(tradeType, initialBound, finalBound, parameter, safetyMargin):
+            output_message("Irregular averages occurred. Not taking any action.")
             return False
         return True
 
-    def print_basic_information(self, loss):
+    def simulate(self, movingAverage="WMA", parameter="high", initialBound=20, finalBound=24, lossPercentage=0.015):
         """
-        Prints out basic information about trades.
+        Starts a live simulation with given parameters.
+        :param parameter: Type of parameter to use for averages. e.g close, open, high, low.
+        :param movingAverage: Type of trade. e.g. SMA, WMA, EMA.
+        :param initialBound: Initial bound. e.g SMA(9) > SMA(11), initial bound would be 9.
+        :param finalBound: Final bound. e.g SMA(9) > SMA(11), final bound would be 11.
+        :param loss: Loss percentage at which we sell long or buy short.
         """
-        self.log_and_print('---------------------------------------------------')
-        self.currentPrice = self.get_current_price()
-        self.log_and_print(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        self.parameter = parameter.lower()
+        self.movingAverage = movingAverage.upper()
+        self.initialBound = initialBound
+        self.finalBound = finalBound
+        self.lossPercentage = lossPercentage
+        self.trades = []
+        self.sellShortPrice = None
+        self.buyLongPrice = None
+        self.shortTrailingPrice = None
+        self.longTrailingPrice = None
+        self.balance = 1000
+        self.startingBalance = self.balance
+        self.startingTime = datetime.now()
 
-        if self.inHumanControl:
-            self.log_and_print(f'Currently in human control. Bot is waiting for human input to continue.')
-        else:
-            self.log_and_print(f'Currently in autonomous mode.')
+        easter_egg()
 
-        if self.btc > 0:
-            self.log_and_print(f'BTC: {self.btc}')
-            self.log_and_print(f'Price bot bought BTC long for: ${self.buyLongPrice}')
+        lossStrategy = None
+        while lossStrategy not in ('1', '2'):
+            lossStrategy = input('Enter 1 for stop loss or 2 for trailing loss strategy>>')
 
-        if self.btcOwed > 0:
-            self.log_and_print(f'BTC owed: {self.btcOwed}')
-            self.log_and_print(f'Price bot sold BTC short for: ${self.sellShortPrice}')
+        self.safetyTimer = None
+        while self.safetyTimer is None:
+            try:
+                self.safetyTimer = int(input("Type in your safety timer (or 0 for no timer)>>"))
+            except ValueError:
+                print("Please type in a valid number.")
 
-        if self.buyLongPrice is not None:
-            self.log_and_print(f'\nCurrently in long position.')
-            if self.longTrailingPrice is not None:
-                self.log_and_print(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
-            else:
-                self.log_and_print(f'Stop loss: {round(self.buyLongPrice * (1 - loss), 2)}')
-        elif self.sellShortPrice is not None:
-            self.log_and_print(f'\nCurrently in short position.')
-            if self.shortTrailingPrice is not None:
-                self.log_and_print(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
-            else:
-                self.log_and_print(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
-        else:
-            if not self.inHumanControl:
-                self.log_and_print(f'\nCurrently not a in short or long position. Waiting for next cross.')
-            else:
-                self.log_and_print(f'\nCurrently not a in short or long position. Waiting for human intervention.')
+        self.safetyMargin = None
+        while self.safetyMargin is None:
+            try:
+                self.safetyMargin = float(input("Type in your safety margin (for 2% type 0.02 or 0 for no margin)>>"))
+            except ValueError:
+                print("Please type in a valid number.")
 
-        self.log_and_print(f'\nCurrent BTC price: ${self.currentPrice}')
-        self.log_and_print(f'Balance: ${round(self.balance, 2)}')
-        self.log_and_print(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
+        print("Starting simulation...")
+        if lossStrategy == '1':
+            self.trailingLoss = False
+        elif lossStrategy == '2':
+            self.trailingLoss = True
 
-        profit = round(self.get_profit(), 2)
-        if profit > 0:
-            self.log_and_print(f'Profit: ${profit}')
-        elif profit < 0:
-            self.log_and_print(f'Loss: ${-profit}')
-        else:
-            self.log_and_print(f'No profit or loss currently.')
-        self.log_and_print('')
+        self.simulate_option_1()
+        print("\nExiting simulation.")
+        self.endingTime = datetime.now()
+        self.get_simulation_result()
+        self.log_trades()
 
-    def print_trade_type(self, tradeType, initialBound, finalBound, parameter):
-        """
-        Prints out general information about current trade.
-        :param tradeType: Current trade type.
-        :param initialBound: Initial bound for trade algorithm.
-        :param finalBound: Final bound for trade algorithm.
-        :param parameter: Type of parameter used.
-        """
-        self.log_and_print(f'Parameter: {parameter}')
-        if tradeType == 'SMA':
-            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_sma(initialBound, parameter)}')
-            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_sma(finalBound, parameter)}')
-        elif tradeType == 'WMA':
-            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_wma(initialBound, parameter)}')
-            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_wma(finalBound, parameter)}')
-        elif tradeType == 'EMA':
-            self.log_and_print(f'{tradeType}({initialBound}) = {self.get_ema(initialBound, parameter)}')
-            self.log_and_print(f'{tradeType}({finalBound}) = {self.get_ema(finalBound, parameter)}')
-        else:
-            self.log_and_print(f'Unknown trade type {tradeType}.')
-
-    def override(self):
-        action = None
-        if not self.inHumanControl:
-            while action not in ('w', ''):
-                action = input("Type 'w' to pause the bot or nothing to close and wait for next cross>>")
-            if action == 'w':
-                print("Pausing the bot.")
-                self.inHumanControl = True
-            if self.inShortPosition:
-                self.buy_short('Bought short because of override.')
-                self.inShortPosition = False
-                if action == '':
-                    self.waitForShort = True
-            elif self.inLongPosition:
-                self.sell_long('Sold long because of override.')
-                self.inLongPosition = False
-                if action == '':
-                    self.waitForLong = True
-            else:
-                print("Was not in a long or short position. Resuming simulation.")
-            time.sleep(2)
-        else:
-            while action not in ('long', 'short', ''):
-                print("Type 'long' to go long, 'short' to go short, or nothing to resume bot.")
-                action = input('>>').lower()
-            if action == 'long':
-                self.buy_long("Buying long because of override.")
-                if self.trailingLoss:
-                    self.longTrailingPrice = self.get_current_price()
-                self.inLongPosition = True
-                self.waitForLong = True
-                self.skipLongCross = True
-            elif action == 'short':
-                self.sell_short(f'Sold short because of override.')
-                if self.trailingLoss:
-                    self.shortTrailingPrice = self.get_current_price()
-                self.inShortPosition = True
-                self.waitForShort = True
-                self.skipShortCross = True
-            self.inHumanControl = False
-
-    def handle_long(self, tradeType, initialBound, finalBound, parameter, loss, comparison, safetyMargin, waitTime):
-        if comparison == '>':
-            reverseComparison = '<'
-        else:
-            reverseComparison = '>'
-        if not self.inShortPosition and not self.inHumanControl:  # This is for long positions.
-            if self.buyLongPrice is None and not self.inLongPosition:  # If we are not in a long position.
-                if not self.waitForLong:  # Checking if we must wait to open long position.
-                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
-                                           safetyMargin):
-                        if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
-                                                   comparison, safetyMargin):
-                            return
-                        self.buy_long(f'Bought long: {tradeType}({initialBound}) > {tradeType}({finalBound}).')
-                        if self.trailingLoss:
-                            self.longTrailingPrice = self.currentPrice
-                        self.inLongPosition = True
-                else:  # Checks if there is a cross to sell short.
-                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
-                                           safetyMargin):
-                        self.log_and_print("Cross detected.")
-                        self.waitForLong = False
-
-            else:  # If we are in a long position.
-                if self.trailingLoss:
-                    self.lossPrice = self.longTrailingPrice * (1 - loss)
-                else:
-                    self.lossPrice = self.buyLongPrice * (1 - loss)
-
-                if self.currentPrice < self.lossPrice:
-                    self.log_and_print(f'Loss is greater than {loss * 100}%. Selling all BTC.')
-                    self.sell_long(f'Sold long because loss was greater than {loss * 100}%. Waiting for cross.')
-                    self.longTrailingPrice = None
-                    self.inLongPosition = False
-                    self.waitForLong = True
-                elif self.skipLongCross:
-                    return
-                elif self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison, safetyMargin):
-                    if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
-                                               reverseComparison, safetyMargin):
-                        return
-                    self.sell_long(f'Sold long because a cross was detected.')
-                    self.longTrailingPrice = None
-                    self.inLongPosition = False
-                    self.waitForLong = False
-                    self.skipShortCross = False
-
-    def handle_short(self, tradeType, initialBound, finalBound, parameter, loss, comparison, safetyMargin, waitTime):
-        if comparison == '>':
-            reverseComparison = '<'
-        else:
-            reverseComparison = '>'
-        if not self.inLongPosition and not self.inHumanControl:  # This is for short position.
-            if self.sellShortPrice is None and not self.inShortPosition:  # This is if we are not in short position.
-                if not self.waitForShort:  # This is to check if we must wait to enter short position.
-                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
-                                           safetyMargin):
-                        if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
-                                                   reverseComparison, safetyMargin):
-                            return
-                        self.sell_short(
-                            f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
-                        if self.trailingLoss:
-                            self.shortTrailingPrice = self.currentPrice
-                        self.inShortPosition = True
-                else:
-                    if self.validate_trade(tradeType, initialBound, finalBound, parameter, comparison,
-                                           safetyMargin):
-                        self.log_and_print("Cross detected!")
-                        self.waitForShort = False
-            else:
-                if self.trailingLoss:
-                    self.lossPrice = self.shortTrailingPrice * (1 + loss)
-                else:
-                    self.lossPrice = self.sellShortPrice * (1 + loss)
-
-                if self.currentPrice > self.lossPrice:
-                    self.buy_short(
-                        f'Bought short because loss is greater than {loss * 100}%. Waiting for cross')
-                    self.shortTrailingPrice = None
-                    self.inShortPosition = False
-                    self.waitForShort = True
-
-                elif not self.skipShortCross and self.validate_trade(tradeType, initialBound, finalBound, parameter,
-                                                                     comparison, safetyMargin):
-                    if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
-                                               comparison, safetyMargin):
-                        return
-                    self.buy_short(f'Bought short because a cross was detected.')
-                    self.shortTrailingPrice = None
-                    self.inShortPosition = False
-                    self.waitForShort = False
-                    self.skipLongCross = False
-
-    def simulate_option_1(self, tradeType, initialBound, finalBound, parameter, loss, comparison, timer, margin):
+    def simulate_option_1(self):
         self.lossPrice = None
         fail = False  # Boolean for whether there was an error that occurred.
         self.skipLongCross = False
@@ -980,34 +732,29 @@ class Trader:
         self.waitForLong = False  # Boolean for whether we should wait to exit out of long position.
         self.inHumanControl = False  # Boolean for whether the bot is in human control.
         waitTime = 0  # Integer that describes how much bot will sleep to recheck if there is a cross.
-        safetySleep = timer  # Safety sleep time that bot will sleep and then recheck if a cross exists.
-        safetyMargin = margin  # Safety margin percentage to check for if cross is within marginal bounds.
+        safetySleep = self.safetyTimer  # Safety sleep time that bot will sleep and then recheck if a cross exists.
+        safetyMargin = self.safetyMargin  # Safety margin percentage to check for if cross is within marginal bounds.
         self.longTrailingPrice = None  # Variable that will keep track of long trailing price.
         self.shortTrailingPrice = None  # Variable that will keep track of short trailing price.
         self.inLongPosition = False  # Boolean that keeps track of whether we are in a long position.
         self.inShortPosition = False  # Boolean that keeps track of whether we are in a short position.
 
-        self.log += f'Simulation starting from {self.startingTime}.' \
-                    f'\nSafety timer: {timer}.' \
-                    f'\nSafety margin: {margin}' \
-                    f'\nTrailing Loss: {self.trailingLoss}'
-
         while True:
-            if len(self.simulatedTrades) > 0:
+            if len(self.trades) > 0:
                 waitTime = safetySleep  # Once the first trade is conducted, then only do we wait to validate crosses.
             try:
                 self.print_basic_information(loss)
 
                 if fail:
-                    self.log_and_print("Successfully fixed error.")
+                    output_message("Successfully fixed error.")
                     fail = False
 
-                if not self.data_is_updated():
-                    self.update_data()
+                if not self.dataView.data_is_updated():
+                    self.dataView.update_data()
 
                 self.print_trade_type(tradeType, initialBound, finalBound, parameter)
 
-                self.currentPrice = self.get_current_price()
+                self.currentPrice = self.dataView.get_current_price()
                 if self.trailingLoss:
                     if self.longTrailingPrice is not None and self.currentPrice < self.longTrailingPrice:
                         self.longTrailingPrice = self.currentPrice
@@ -1033,100 +780,245 @@ class Trader:
                     return
             except Exception as e:
                 if not fail:
-                    self.log_and_print(f'ERROR: {e}')
-                    self.log_and_print("Something went wrong. Trying again in 5 seconds.")
+                    output_message(f'ERROR: {e}')
+                    output_message("Something went wrong. Trying again in 5 seconds.")
                 time.sleep(5)
-                self.log_and_print("Attempting to fix error...")
+                output_message("Attempting to fix error...")
                 fail = True
 
-    def simulate(self, tradeType="WMA", parameter="high", initialBound=20, finalBound=24, loss=0.015, comparison='>'):
+    def print_basic_information(self, loss):
         """
-        Starts a live simulation with given parameters.
-        :param parameter: Type of parameter to use for averages. e.g close, open, high, low.
-        :param tradeType: Type of trade. e.g. SMA, WMA, EMA.
-        :param initialBound: Initial bound. e.g SMA(9) > SMA(11), initial bound would be 9.
-        :param finalBound: Final bound. e.g SMA(9) > SMA(11), final bound would be 11.
-        :param comparison: Comparison for trade type. SMA(1) > SMA(2) would be >.
-        :param loss: Loss percentage at which we sell long or buy short.
+        Prints out basic information about trades.
         """
-        parameter = parameter.lower()
-        tradeType = tradeType.upper()
-        self.simulatedTrades = []
-        self.sellShortPrice = None
-        self.buyLongPrice = None
-        self.shortTrailingPrice = None
-        self.longTrailingPrice = None
-        self.balance = 1000
-        self.simulationStartingBalance = self.balance
-        self.startingTime = datetime.now()
-        self.logFile = f'{self.startingTime.strftime("%Y-%m-%d_%H-%M-%S")}.log'
-        self.log = ''
+        output_message('---------------------------------------------------')
+        self.currentPrice = self.dataView.get_current_price()
+        output_message(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
-        if comparison != '>':
-            temp = initialBound
-            initialBound = finalBound
-            finalBound = temp
-            comparison = '>'
+        if self.inHumanControl:
+            output_message(f'Currently in human control. Bot is waiting for human input to continue.')
+        else:
+            output_message(f'Currently in autonomous mode.')
 
-        self.easter_egg()
+        if self.btc > 0:
+            output_message(f'BTC: {self.btc}')
+            output_message(f'Price bot bought BTC long for: ${self.buyLongPrice}')
 
-        lossStrategy = None
-        while lossStrategy not in ('1', '2'):
-            lossStrategy = input('Enter 1 for stop loss or 2 for trailing loss strategy>>')
+        if self.btcOwed > 0:
+            output_message(f'BTC owed: {self.btcOwed}')
+            output_message(f'Price bot sold BTC short for: ${self.sellShortPrice}')
 
-        safetyTimer = None
-        while safetyTimer is None:
-            try:
-                safetyTimer = int(input("Type in your safety timer (or 0 for no timer)>>"))
-            except ValueError:
-                print("Please type in a valid number.")
+        if self.buyLongPrice is not None:
+            output_message(f'\nCurrently in long position.')
+            if self.longTrailingPrice is not None:
+                output_message(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - loss), 2)}')
+            else:
+                output_message(f'Stop loss: {round(self.buyLongPrice * (1 - loss), 2)}')
+        elif self.sellShortPrice is not None:
+            output_message(f'\nCurrently in short position.')
+            if self.shortTrailingPrice is not None:
+                output_message(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + loss), 2)}')
+            else:
+                output_message(f'Stop loss: {round(self.sellShortPrice * (1 + loss), 2)}')
+        else:
+            if not self.inHumanControl:
+                output_message(f'\nCurrently not a in short or long position. Waiting for next cross.')
+            else:
+                output_message(f'\nCurrently not a in short or long position. Waiting for human intervention.')
 
-        safetyMargin = None
-        while safetyMargin is None:
-            try:
-                safetyMargin = float(input("Type in your safety margin (for 2% type 0.02 or 0 for no margin)>>"))
-            except ValueError:
-                print("Please type in a valid number.")
+        output_message(f'\nCurrent BTC price: ${self.currentPrice}')
+        output_message(f'Balance: ${round(self.balance, 2)}')
+        output_message(f'\nTrades conducted this simulation: {len(self.simulatedTrades)}')
 
-        print("Starting simulation...")
-        if lossStrategy == '1':
-            self.trailingLoss = False
-        elif lossStrategy == '2':
-            self.trailingLoss = True
+        profit = round(self.get_profit(), 2)
+        if profit > 0:
+            output_message(f'Profit: ${profit}')
+        elif profit < 0:
+            output_message(f'Loss: ${-profit}')
+        else:
+            output_message(f'No profit or loss currently.')
+        output_message('')
 
-        self.simulate_option_1(tradeType, initialBound, finalBound, parameter, loss, comparison, safetyTimer,
-                               safetyMargin)
-        print("\nExiting simulation.")
-        self.endingTime = datetime.now()
-        self.get_simulation_result()
-        self.log_simulated_trades()
-        self.generate_log_file()
+    def print_trade_type(self, tradeType, initialBound, finalBound, parameter):
+        """
+        Prints out general information about current trade.
+        :param tradeType: Current trade type.
+        :param initialBound: Initial bound for trade algorithm.
+        :param finalBound: Final bound for trade algorithm.
+        :param parameter: Type of parameter used.
+        """
+        output_message(f'Parameter: {parameter}')
+        if tradeType == 'SMA':
+            output_message(f'{tradeType}({initialBound}) = {self.dataView.get_sma(initialBound, parameter)}')
+            output_message(f'{tradeType}({finalBound}) = {self.get_sma(finalBound, parameter)}')
+        elif tradeType == 'WMA':
+            output_message(f'{tradeType}({initialBound}) = {self.dataView.get_wma(initialBound, parameter)}')
+            output_message(f'{tradeType}({finalBound}) = {self.dataView.get_wma(finalBound, parameter)}')
+        elif tradeType == 'EMA':
+            output_message(f'{tradeType}({initialBound}) = {self.dataView.get_ema(initialBound, parameter)}')
+            output_message(f'{tradeType}({finalBound}) = {self.dataView.get_ema(finalBound, parameter)}')
+        else:
+            output_message(f'Unknown trade type {tradeType}.')
+
+    def override(self):
+        action = None
+        if not self.inHumanControl:
+            while action not in ('w', ''):
+                action = input("Type 'w' to pause the bot or nothing to close and wait for next cross>>")
+            if action == 'w':
+                output_message("Pausing the bot.")
+                self.inHumanControl = True
+            if self.inShortPosition:
+                self.buy_short('Bought short because of override.')
+                self.inShortPosition = False
+                if action == '':
+                    self.waitForShort = True
+            elif self.inLongPosition:
+                self.sell_long('Sold long because of override.')
+                self.inLongPosition = False
+                if action == '':
+                    self.waitForLong = True
+            else:
+                output_message("Was not in a long or short position. Resuming simulation.")
+            time.sleep(2)
+        else:
+            while action not in ('long', 'short', ''):
+                output_message("Type 'long' to go long, 'short' to go short, or nothing to resume bot.")
+                action = input('>>').lower()
+            if action == 'long':
+                self.buy_long("Buying long because of override.")
+                if self.trailingLoss:
+                    self.longTrailingPrice = self.dataView.get_current_price()
+                self.inLongPosition = True
+                self.waitForLong = True
+                self.skipLongCross = True
+            elif action == 'short':
+                self.sell_short(f'Sold short because of override.')
+                if self.trailingLoss:
+                    self.shortTrailingPrice = self.dataView.get_current_price()
+                self.inShortPosition = True
+                self.waitForShort = True
+                self.skipShortCross = True
+            self.inHumanControl = False
+
+    def handle_long(self, tradeType, initialBound, finalBound, parameter, loss, comparison, safetyMargin, waitTime):
+        if comparison == '>':
+            reverseComparison = '<'
+        else:
+            reverseComparison = '>'
+        if not self.inShortPosition and not self.inHumanControl:  # This is for long positions.
+            if self.buyLongPrice is None and not self.inLongPosition:  # If we are not in a long position.
+                if not self.waitForLong:  # Checking if we must wait to open long position.
+                    if self.validate_margin_trade(tradeType, initialBound, finalBound, parameter, comparison,
+                                                  safetyMargin):
+                        if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
+                                                   comparison, safetyMargin):
+                            return
+                        self.buy_long(f'Bought long: {tradeType}({initialBound}) > {tradeType}({finalBound}).')
+                        if self.trailingLoss:
+                            self.longTrailingPrice = self.currentPrice
+                        self.inLongPosition = True
+                else:  # Checks if there is a cross to sell short.
+                    if self.validate_margin_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
+                                                  safetyMargin):
+                        output_message("Cross detected.")
+                        self.waitForLong = False
+
+            else:  # If we are in a long position.
+                if self.trailingLoss:
+                    self.lossPrice = self.longTrailingPrice * (1 - loss)
+                else:
+                    self.lossPrice = self.buyLongPrice * (1 - loss)
+
+                if self.currentPrice < self.lossPrice:
+                    output_message(f'Loss is greater than {loss * 100}%. Selling all BTC.')
+                    self.sell_long(f'Sold long because loss was greater than {loss * 100}%. Waiting for cross.')
+                    self.longTrailingPrice = None
+                    self.inLongPosition = False
+                    self.waitForLong = True
+                elif self.skipLongCross:
+                    return
+                elif self.validate_margin_trade(tradeType, initialBound, finalBound, parameter, reverseComparison, safetyMargin):
+                    if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
+                                               reverseComparison, safetyMargin):
+                        return
+                    self.sell_long(f'Sold long because a cross was detected.')
+                    self.longTrailingPrice = None
+                    self.inLongPosition = False
+                    self.waitForLong = False
+                    self.skipShortCross = False
+
+    def handle_short(self, tradeType, initialBound, finalBound, parameter, loss, comparison, safetyMargin, waitTime):
+        if comparison == '>':
+            reverseComparison = '<'
+        else:
+            reverseComparison = '>'
+        if not self.inLongPosition and not self.inHumanControl:  # This is for short position.
+            if self.sellShortPrice is None and not self.inShortPosition:  # This is if we are not in short position.
+                if not self.waitForShort:  # This is to check if we must wait to enter short position.
+                    if self.validate_margin_trade(tradeType, initialBound, finalBound, parameter, reverseComparison,
+                                                  safetyMargin):
+                        if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
+                                                   reverseComparison, safetyMargin):
+                            return
+                        self.sell_short(
+                            f'Sold short as {tradeType}({initialBound}) < {tradeType}({finalBound})')
+                        if self.trailingLoss:
+                            self.shortTrailingPrice = self.currentPrice
+                        self.inShortPosition = True
+                else:
+                    if self.validate_margin_trade(tradeType, initialBound, finalBound, parameter, comparison,
+                                                  safetyMargin):
+                        output_message("Cross detected!")
+                        self.waitForShort = False
+            else:
+                if self.trailingLoss:
+                    self.lossPrice = self.shortTrailingPrice * (1 + loss)
+                else:
+                    self.lossPrice = self.sellShortPrice * (1 + loss)
+
+                if self.currentPrice > self.lossPrice:
+                    self.buy_short(
+                        f'Bought short because loss is greater than {loss * 100}%. Waiting for cross')
+                    self.shortTrailingPrice = None
+                    self.inShortPosition = False
+                    self.waitForShort = True
+
+                elif not self.skipShortCross and self.validate_margin_trade(tradeType, initialBound, finalBound, parameter,
+                                                                            comparison, safetyMargin):
+                    if not self.validate_cross(waitTime, tradeType, initialBound, finalBound, parameter,
+                                               comparison, safetyMargin):
+                        return
+                    self.buy_short(f'Bought short because a cross was detected.')
+                    self.shortTrailingPrice = None
+                    self.inShortPosition = False
+                    self.waitForShort = False
+                    self.skipLongCross = False
 
     def get_simulation_result(self):
         """
         Gets end result of simulation.
         """
         if self.btc > 0:
-            self.log_and_print("Selling all BTC...")
+            output_message("Selling all BTC...")
             self.sell_long(f'Sold long as simulation ended.')
         if self.btcOwed > 0:
-            self.log_and_print("Returning all borrowed BTC...")
+            output_message("Returning all borrowed BTC...")
             self.buy_short(f'Bought short as simulation ended.')
-        self.log_and_print("\nResults:")
-        self.log_and_print(f'Starting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')
-        self.log_and_print(f'End time: {self.endingTime.strftime("%Y-%m-%d %H:%M:%S")}')
-        self.log_and_print(f'Elapsed time: {self.endingTime - self.startingTime}')
-        self.log_and_print(f'Starting balance: ${self.simulationStartingBalance}')
-        self.log_and_print(f'Ending balance: ${round(self.balance, 2)}')
-        self.log_and_print(f'Trades conducted: {len(self.simulatedTrades)}')
+        output_message("\nResults:")
+        output_message(f'Starting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')
+        output_message(f'End time: {self.endingTime.strftime("%Y-%m-%d %H:%M:%S")}')
+        output_message(f'Elapsed time: {self.endingTime - self.startingTime}')
+        output_message(f'Starting balance: ${self.simulationStartingBalance}')
+        output_message(f'Ending balance: ${round(self.balance, 2)}')
+        output_message(f'Trades conducted: {len(self.simulatedTrades)}')
         if self.balance > self.simulationStartingBalance:
             profit = self.balance - self.simulationStartingBalance
-            self.log_and_print(f"Profit: ${round(profit, 2)}")
+            output_message(f"Profit: ${round(profit, 2)}")
         elif self.balance < self.simulationStartingBalance:
             loss = self.simulationStartingBalance - self.balance
-            self.log_and_print(f'Loss: ${round(loss, 2)}')
+            output_message(f'Loss: ${round(loss, 2)}')
         else:
-            self.log_and_print("No profit or loss occurred.")
+            output_message("No profit or loss occurred.")
 
         if len(self.simulatedTrades) > 0:
             print("\nYou can view the trades from the simulation in more detail.")
@@ -1141,149 +1033,96 @@ class Trader:
             print(f'\n{counter}. Date in UTC: {trade["date"]}')
             print(f'Action taken: {trade["action"]}')
 
-    @staticmethod
-    def easter_egg():
-        import random
-        number = random.randint(1, 16)
-        sleepTime = 0.25
 
-        if number == 1:
-            print('The two most important days in your life are the day you are born and the day you find out why.')
-        elif number == 2:
-            print('Financial freedom by sacrificing relationships; is it ever worth it?')
-        elif number == 3:
-            print("A guy asks a woman to sleep with him for $100, and the woman starts thinking. Suddenly the guy says "
-                  "I'll give you $20 for a night, and the girl gets mad and yells what type of girl do you think I am? "
-                  "The guy then says that he thought they already established that, and that now they're negotiating.")
-        elif number == 4:
-            print("We all do dumb things, that's what makes us human.")
-        elif number == 5:
-            print("Friends are like coins. You rather have 4 quarters than a 100 pennies.")
-        elif number == 6:
-            print('Fuck Bill Gates')
-        elif number == 7:
-            print('What is privacy again?')
-        elif number == 8:
-            print("If the virus was real and super contagious, why didn't it spread during BLM protests?")
-        elif number == 9:
-            print('Insanity is doing the same shit over and over again. Expecting shit to change.')
-        elif number == 10:
-            print("Rush B P90 no stop.")
-        elif number == 11:
-            print('Wakanda forever.')
-        elif number == 12:
-            print('Read the manuals. Read the books.')
-        elif number == 13:
-            print('4 cases in New Zealand? Lock down everything again!')
-        elif number == 14:
-            print('Fake pandemic.')
-        elif number == 15:
-            print('You think money is a powerful tool? Fuck that, fear will always fuck you up.')
-        else:
-            print("Fucking shape shifting reptilians, bro. Fucking causing this virus and shit.")
-
-        time.sleep(sleepTime)
-
-    def past_data_simulate(self):
-        self.balance = self.balance
-        while True:
-            tradingType1 = None
-            tradingType2 = None
-            tradingTypes = ('WMA', 'EMA', 'SMA')
-            while tradingType1 not in tradingTypes:
-                tradingType1 = input(f'Type in your first trading type (e.g. {tradingTypes})>> ').upper()
-            while tradingType2 not in tradingTypes:
-                tradingType2 = input(f'Type in your second trading type (e.g. {tradingTypes})>> ').upper()
-
-            parameters = ('open', 'high', 'low', 'close')
-            parameter1 = None
-            parameter2 = None
-            while parameter1 not in parameters:
-                parameter1 = input(f"Type in your first parameter (e.g. {parameters})>> ").lower()
-            while parameter2 not in parameters:
-                parameter2 = input(f"Type in your second parameter (e.g. {parameters})>> ").lower()
-
-            print(f'Is this correct? Initial: {tradingType1} - {parameter1} | Final: {tradingType2} - {parameter2}')
-            success = input('Type in "y" or "n">> ').lower()
-            if success.startswith('y'):
-                break
-
-        print("Running simulation...")
-
-    def check_cross(self, tradeType, initialBound, finalBound, parameter, comparison, previousCondition):
-        pass
-        # """
-        # Checks if there is a cross.
-        # :param previousCondition: Previous condition whether it was in a short or long position.
-        # :param comparison: Previous comparison.
-        # :param tradeType: Algorithm used type. e.g. SMA, WMA, or EMA
-        # :param initialBound: First bound for algorithm.
-        # :param finalBound: Final bound for algorithm.
-        # :param parameter: Type of parameter used. eg. high, close, low, open
-        # :return: A boolean whether there is a cross or not.
-        # """
-        # if tradeType == 'SMA':
-        #     if comparison == '>':
-        #         if previousCondition == 'long':
-        #             return False
-        #         return self.get_sma(initialBound, parameter) > self.get_sma(finalBound, parameter)
-        #     else:
-        #         if previousCondition == 'long':
-        #             return False
-        #         return self.get_sma(initialBound, parameter) < self.get_sma(finalBound, parameter)
-        # elif tradeType == 'EMA':
-        #     if comparison == '>':
-        #         return self.get_ema(initialBound, parameter) > self.get_ema(finalBound, parameter)
-        #     else:
-        #         return self.get_ema(initialBound, parameter) < self.get_ema(finalBound, parameter)
-        # elif tradeType == 'WMA':
-        #     if comparison == '>':
-        #         return self.get_wma(initialBound, parameter) > self.get_wma(finalBound, parameter)
-        #     else:
-        #         return self.get_wma(initialBound, parameter) < self.get_wma(finalBound, parameter)
-        # else:
-        #     return False
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return f'Trader(startingBalance={self.startingBalance})'
-
-
-class RealTrader(Trader):
+class RealTrader(SimulatedTrader):
     def __init__(self, interval='1h', symbol='BTCUDST'):
-        super().__init__(interval=interval, symbol=symbol)
+        apiKey = os.environ.get('binance_api')  # Retrieving API key from environment variables
+        apiSecret = os.environ.get('binance_secret')  # Retrieving API secret from environment variables
+        super().__init__(interval=interval, symbol=symbol, apiKey=apiKey, apiSecret=apiSecret)
+        if not self.verify_api_and_secret():
+            return
+
+    def verify_api_and_secret(self):
+        """
+        Checks and prints if both API key and API secret are None values.
+        Returns a boolean whether the API key and secret are valid or not.
+        """
+        if self.apiKey is None:
+            output_message("No API key found.", 4)
+            return False
+        else:
+            output_message("API key found.")
+
+        if self.apiSecret is None:
+            output_message("No API secret found.", 4)
+            return False
+        else:
+            output_message("API secret found.")
+
+        return True
 
 
-class SimulatedTrader(Trader):
-    def __init__(self, startingBalance=1000, interval='1h', symbol='BTCUSDT'):
-        super().__init__(startingBalance, interval, symbol)
-        try:
-            startingBalance = float(startingBalance)
-        except (ValueError, ArithmeticError, ZeroDivisionError):
-            print("Invalid starting balance. Using default value of $1,000.")
-            startingBalance = 1000
+def easter_egg():
+    import random
+    number = random.randint(1, 16)
+    sleepTime = 0.25
 
-        self.balance = startingBalance
-        self.btc = 0
-        self.btcOwed = 0
+    if number == 1:
+        print('The two most important days in your life are the day you are born and the day you find out why.')
+    elif number == 2:
+        print('Financial freedom by sacrificing relationships; is it ever worth it?')
+    elif number == 3:
+        print("A guy asks a woman to sleep with him for $100, and the woman starts thinking. Suddenly the guy says "
+              "I'll give you $20 for a night, and the girl gets mad and yells what type of girl do you think I am? "
+              "The guy then says that he thought they already established that, and that now they're negotiating.")
+    elif number == 4:
+        print("We all do dumb things, that's what makes us human.")
+    elif number == 5:
+        print("Friends are like coins. You rather have 4 quarters than a 100 pennies.")
+    elif number == 6:
+        print('Fuck Bill Gates')
+    elif number == 7:
+        print('What is privacy again?')
+    elif number == 8:
+        print("If the virus was real and super contagious, why didn't it spread during BLM protests?")
+    elif number == 9:
+        print('Insanity is doing the same shit over and over again. Expecting shit to change.')
+    elif number == 10:
+        print("Rush B P90 no stop.")
+    elif number == 11:
+        print('Wakanda forever.')
+    elif number == 12:
+        print('Read the manuals. Read the books.')
+    elif number == 13:
+        print('4 cases in New Zealand? Lock down everything again!')
+    elif number == 14:
+        print('Fake pandemic.')
+    elif number == 15:
+        print('You think money is a powerful tool? Fuck that, fear will always fuck you up.')
+    else:
+        print("Fucking shape shifting reptilians, bro. Fucking causing this virus and shit.")
+
+    time.sleep(sleepTime)
 
 
-class Simulation:
-    def __init__(self, timer, margin):
-        self.fail = False  # Boolean for whether there was an error that occurred.
-        self.waitForShort = False  # Boolean for whether we should wait to exit out of short position.
-        self.waitForLong = False  # Boolean for whether we should wait to exit out of long position.
-        self.inHumanControl = False  # Boolean for whether the bot is in human control.
-        self.waitTime = 0  # Integer that describes how much bot will sleep to recheck if there is a cross.
-        self.safetySleep = timer  # Safety sleep time that bot will sleep and then recheck if a cross exists.
-        self.safetyMargin = margin  # Safety margin percentage to check for if cross is within marginal bounds.
-        self.longTrailingPrice = None  # Variable that will keep track of long trailing price.
-        self.shortTrailingPrice = None  # Variable that will keep track of short trailing price.
-        self.inLongPosition = False  # Boolean that keeps track of whether we are in a long position.
-        self.inShortPosition = False  # Boolean that keeps track of whether we are in a short position.
-        self.trades = []
+def output_message(message, level=2):
+    """Prints out and logs message"""
+    print(message)
+    if level == 2:
+        logging.info(message)
+    elif level == 3:
+        logging.debug(message)
+    elif level == 4:
+        logging.warning(message)
+    elif level == 5:
+        logging.critical(message)
 
-    def run(self):
-        pass
+
+def initialize_logger():
+    """Initializes logger"""
+    if not os.path.exists('Logs'):
+        os.mkdir('Logs')
+
+    logFileName = f'{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log'
+    logging.basicConfig(filename=f'Logs/{logFileName}', level=logging.INFO,
+                        format='%(asctime)s - %(levelname)s: %(message)s')
