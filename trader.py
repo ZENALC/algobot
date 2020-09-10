@@ -474,15 +474,19 @@ class SimulatedTrader:
         self.btc = 0  # Amount of BTC we own
         self.btcOwed = 0  # Amount of BTC we owe
         self.transactionFee = 0.001  # Binance transaction fee
-        self.totalTrades = []  # Total amount of trades conducted
+        self.totalTrades = []  # All trades conducted
         self.trades = []  # Amount of trades in previous run
 
-        self.movingAverage = None  # Moving average used for technical analysis
-        self.parameter = None  # Parameter used for technical analysis
-        self.initialBound = None  # Initial bound for moving average
-        self.finalBound = None  # Final bound for moving average
-        self.lossPercentage = None  # Loss percentage for stop loss
+        self.tradingOptions = []
 
+        self.tradingOption = {
+            'movingAverage': '',  # Moving average used for technical analysis
+            'parameter': '',  # Parameter used for technical analysis
+            'initialBound': -1,  # Initial bound for moving average
+            'finalBound': -1  # Final bound for moving average
+        }
+
+        self.lossPercentage = None  # Loss percentage for stop loss
         self.startingTime = None  # Starting time for previous bot run
         self.endingTime = None  # Ending time for previous bot run
         self.buyLongPrice = None  # Price we last bought BTC at in long position
@@ -506,8 +510,8 @@ class SimulatedTrader:
         self.skipShortCross = False  # Boolean that keeps track of whether we should skip validating for a short cross
 
     def log_trades(self):
-        logging.info(f'\n\nTotal trade(s) in previous simulation: {len(self.simulatedTrades)}')
-        for counter, trade in enumerate(self.simulatedTrades, 1):
+        logging.info(f'\n\nTotal trade(s) in previous simulation: {len(self.trades)}')
+        for counter, trade in enumerate(self.trades, 1):
             logging.info(f'\n{counter}. Date in UTC: {trade["date"]}')
             logging.info(f'\nAction taken: {trade["action"]}')
 
@@ -516,7 +520,7 @@ class SimulatedTrader:
         Adds a trade to list of trades
         :param message: Message used for conducting trade.
         """
-        self.totalTrades.append({
+        self.trades.append({
             'date': datetime.utcnow(),
             'action': message
         })
@@ -638,20 +642,23 @@ class SimulatedTrader:
         Checks if bot should go ahead with trade by checking if the average is really greater than the final average.
         :return: A boolean whether trade should be performed or not.
         """
-        if self.movingAverage == 'SMA':
-            initialAverage = self.dataView.get_sma(self.initialBound, self.parameter)
-            finalAverage = self.dataView.get_sma(self.finalBound, self.parameter)
-        elif self.movingAverage == 'WMA':
-            initialAverage = self.dataView.get_wma(self.initialBound, self.parameter)
-            finalAverage = self.dataView.get_wma(self.finalBound, self.parameter)
-        elif self.movingAverage == 'EMA':
-            initialAverage = self.dataView.get_ema(self.initialBound, self.parameter)
-            finalAverage = self.dataView.get_ema(self.finalBound, self.parameter)
-        else:
-            output_message(f'Unknown trading type {self.movingAverage}.', 4)
-            return False
+        for option in self.tradingOptions:
+            if option['movingAverage'] == 'SMA':
+                initialAverage = self.dataView.get_sma(option['initialBound'], option['parameter'])
+                finalAverage = self.dataView.get_sma(option['finalBound'], option['parameter'])
+            elif option['movingAverage'] == 'WMA':
+                initialAverage = self.dataView.get_wma(option['initialBound'], option['parameter'])
+                finalAverage = self.dataView.get_wma(option['finalBound'], option['parameter'])
+            elif option['movingAverage'] == 'EMA':
+                initialAverage = self.dataView.get_ema(option['initialBound'], option['parameter'])
+                finalAverage = self.dataView.get_ema(option['finalBound'], option['parameter'])
+            else:
+                output_message(f'Unknown trading type {self.movingAverage}.', 4)
+                return False
 
-        return initialAverage + initialAverage * self.safetyMargin > finalAverage
+            if not initialAverage + initialAverage * self.safetyMargin > finalAverage:
+                return False
+        return True
 
     def validate_cross(self):
         if self.safetyTimer > 0:
@@ -663,9 +670,10 @@ class SimulatedTrader:
         return True
 
     def simulate(self, movingAverage="WMA", parameter="high", initialBound=20, finalBound=24, lossPercentage=0.015,
-                 lossStrategy=None, safetyTimer=None, safetyMargin=None):
+                 lossStrategy=None, safetyTimer=None, safetyMargin=None, tradingOptions=None):
         """
         Starts a live simulation with given parameters.
+        :param tradingOptions: Argument for all trading options.
         :param safetyMargin: Margin percentage to validate cross
         :param safetyTimer: Amount of seconds to sleep to validate cross
         :param lossStrategy: Type of loss strategy to use
@@ -675,10 +683,15 @@ class SimulatedTrader:
         :param finalBound: Final bound. e.g SMA(9) > SMA(11), final bound would be 11.
         :param lossPercentage: Loss percentage at which we sell long or buy short.
         """
-        self.parameter = parameter.lower()
-        self.movingAverage = movingAverage.upper()
-        self.initialBound = initialBound
-        self.finalBound = finalBound
+        if tradingOptions is not None:
+            self.tradingOptions = tradingOptions
+        else:
+            self.tradingOption['movingAverage'] = movingAverage
+            self.tradingOption['parameter'] = parameter
+            self.tradingOption['initialBound'] = initialBound
+            self.tradingOption['finalBound'] = finalBound
+            self.tradingOptions = [self.tradingOption]
+
         self.lossPercentage = lossPercentage
         self.lossStrategy = lossStrategy
         self.safetyTimer = safetyTimer
@@ -723,7 +736,7 @@ class SimulatedTrader:
     def simulate_option_1(self):
         fail = False  # Boolean for whether there was an error that occurred.
         waitTime = self.safetyTimer  # Integer that describes how much bot will sleep to recheck if there is a cross.
-        self.safetyTimer = 0
+        self.safetyTimer = 0  # Initially the safetyTimer will be 0 until a first trade is made.
         self.skipLongCross = False  # Boolean that determines whether bot skips long cross or not
         self.skipShortCross = False  # Boolean that determines whether bot skips short cross or not
         self.waitForShort = False  # Boolean for whether we should wait to exit out of short position.
@@ -1010,11 +1023,11 @@ class SimulatedTrader:
 
 class RealTrader(SimulatedTrader):
     def __init__(self, interval='1h', symbol='BTCUDST'):
-        apiKey = os.environ.get('binance_api')  # Retrieving API key from environment variables
-        apiSecret = os.environ.get('binance_secret')  # Retrieving API secret from environment variables
+        self.apiKey = os.environ.get('binance_api')  # Retrieving API key from environment variables
+        self.apiSecret = os.environ.get('binance_secret')  # Retrieving API secret from environment variables
         super().__init__(interval=interval, symbol=symbol)
         # self.twilioClient = rest.Client()  # Initialize Twilio client for WhatsApp integration
-        self.binanceClient = Client(apiKey, apiSecret)
+        self.binanceClient = Client(self.apiKey, self.apiSecret)
         if not self.verify_api_and_secret():
             return
 
