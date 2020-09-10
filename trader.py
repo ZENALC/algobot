@@ -478,14 +478,6 @@ class SimulatedTrader:
         self.trades = []  # Amount of trades in previous run
 
         self.tradingOptions = []
-
-        self.tradingOption = {
-            'movingAverage': '',  # Moving average used for technical analysis
-            'parameter': '',  # Parameter used for technical analysis
-            'initialBound': -1,  # Initial bound for moving average
-            'finalBound': -1  # Final bound for moving average
-        }
-
         self.lossPercentage = None  # Loss percentage for stop loss
         self.startingTime = None  # Starting time for previous bot run
         self.endingTime = None  # Ending time for previous bot run
@@ -510,6 +502,9 @@ class SimulatedTrader:
         self.skipShortCross = False  # Boolean that keeps track of whether we should skip validating for a short cross
 
     def log_trades(self):
+        """
+        Logs trades.
+        """
         logging.info(f'\n\nTotal trade(s) in previous simulation: {len(self.trades)}')
         for counter, trade in enumerate(self.trades, 1):
             logging.info(f'\n{counter}. Date in UTC: {trade["date"]}')
@@ -637,23 +632,35 @@ class SimulatedTrader:
         balance -= self.btcOwed * self.currentPrice * (1 + self.transactionFee)
         return balance - self.startingBalance
 
+    def get_average(self, movingAverage, parameter, value):
+        """
+        Returns the moving average with parameter and value provided
+        :param movingAverage: Moving average to get the average from the data view.
+        :param parameter: Parameter for the data view to use in the moving average.
+        :param value: Value for the moving average to use in the moving average.
+        :return: A float value representing the moving average.
+        """
+        if movingAverage == 'SMA':
+            return self.dataView.get_sma(value, parameter)
+        elif movingAverage == 'WMA':
+            return self.dataView.get_wma(value, parameter)
+        elif movingAverage == 'EMA':
+            return self.dataView.get_ema(value, parameter)
+        else:
+            output_message(f'Unknown moving average {movingAverage}.')
+            return None
+
     def validate_margin_trade(self):
         """
         Checks if bot should go ahead with trade by checking if the average is really greater than the final average.
         :return: A boolean whether trade should be performed or not.
         """
         for option in self.tradingOptions:
-            if option['movingAverage'] == 'SMA':
-                initialAverage = self.dataView.get_sma(option['initialBound'], option['parameter'])
-                finalAverage = self.dataView.get_sma(option['finalBound'], option['parameter'])
-            elif option['movingAverage'] == 'WMA':
-                initialAverage = self.dataView.get_wma(option['initialBound'], option['parameter'])
-                finalAverage = self.dataView.get_wma(option['finalBound'], option['parameter'])
-            elif option['movingAverage'] == 'EMA':
-                initialAverage = self.dataView.get_ema(option['initialBound'], option['parameter'])
-                finalAverage = self.dataView.get_ema(option['finalBound'], option['parameter'])
-            else:
-                output_message(f'Unknown trading type {self.movingAverage}.', 4)
+            initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound)
+            finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound)
+
+            if initialAverage is None or finalAverage is None:
+                output_message(f'Unknown trading type {option["movingAverage"]}.', 4)
                 return False
 
             if not initialAverage + initialAverage * self.safetyMargin > finalAverage:
@@ -686,11 +693,8 @@ class SimulatedTrader:
         if tradingOptions is not None:
             self.tradingOptions = tradingOptions
         else:
-            self.tradingOption['movingAverage'] = movingAverage
-            self.tradingOption['parameter'] = parameter
-            self.tradingOption['initialBound'] = initialBound
-            self.tradingOption['finalBound'] = finalBound
-            self.tradingOptions = [self.tradingOption]
+            tradingOption = Option(movingAverage, parameter, initialBound, finalBound)
+            self.tradingOptions = [tradingOption]
 
         self.lossPercentage = lossPercentage
         self.lossStrategy = lossStrategy
@@ -765,9 +769,9 @@ class SimulatedTrader:
 
                 self.currentPrice = self.dataView.get_current_price()
                 if self.lossStrategy == 2:
-                    if self.longTrailingPrice is not None and self.currentPrice < self.longTrailingPrice:
+                    if self.longTrailingPrice is not None and self.currentPrice > self.longTrailingPrice:
                         self.longTrailingPrice = self.currentPrice
-                    elif self.shortTrailingPrice is not None and self.currentPrice > self.shortTrailingPrice:
+                    elif self.shortTrailingPrice is not None and self.currentPrice < self.shortTrailingPrice:
                         self.shortTrailingPrice = self.currentPrice
 
                 self.handle_long()
@@ -816,13 +820,15 @@ class SimulatedTrader:
         if self.buyLongPrice is not None:
             output_message(f'\nCurrently in long position.')
             if self.longTrailingPrice is not None:
-                output_message(f'Long trailing loss value: ${round(self.longTrailingPrice * (1 - self.lossPercentage), 2)}')
+                longTrailingLossValue = round(self.longTrailingPrice * (1 - self.lossPercentage), 2)
+                output_message(f'Long trailing loss value: ${longTrailingLossValue}')
             else:
                 output_message(f'Stop loss: {round(self.buyLongPrice * (1 - self.lossPercentage), 2)}')
         elif self.sellShortPrice is not None:
             output_message(f'\nCurrently in short position.')
             if self.shortTrailingPrice is not None:
-                output_message(f'Short trailing loss value: ${round(self.shortTrailingPrice * (1 + self.lossPercentage), 2)}')
+                shortTrailingLossValue = round(self.shortTrailingPrice * (1 + self.lossPercentage), 2)
+                output_message(f'Short trailing loss value: ${shortTrailingLossValue}')
             else:
                 output_message(f'Stop loss: {round(self.sellShortPrice * (1 + self.lossPercentage), 2)}')
         else:
@@ -846,22 +852,15 @@ class SimulatedTrader:
 
     def print_trade_type(self):
         """
-        Prints out general information about current trade.
+        Prints out general information about current trade options.
         """
-        output_message(f'Parameter: {self.parameter}')
-        initial = f'{self.movingAverage}({self.initialBound})'
-        final = f'{self.movingAverage}({self.finalBound})'
-        if self.movingAverage == 'SMA':
-            output_message(f'{initial} = {self.dataView.get_sma(self.initialBound, self.parameter)}')
-            output_message(f'{final} = {self.dataView.get_sma(self.finalBound, self.parameter)}')
-        elif self.movingAverage == 'WMA':
-            output_message(f'{initial} = {self.dataView.get_wma(self.initialBound, self.parameter)}')
-            output_message(f'{final} = {self.dataView.get_wma(self.finalBound, self.parameter)}')
-        elif self.movingAverage == 'EMA':
-            output_message(f'{initial} = {self.dataView.get_ema(self.initialBound, self.parameter)}')
-            output_message(f'{final} = {self.dataView.get_ema(self.finalBound, self.parameter)}')
-        else:
-            output_message(f'Unknown trade type {self.movingAverage}.')
+        for option in self.tradingOptions:
+            initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound)
+            finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound)
+
+            output_message(f'Parameter: {option.parameter}')
+            output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
+            output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
 
     def override(self):
         action = None
@@ -1049,6 +1048,44 @@ class RealTrader(SimulatedTrader):
             output_message("API secret found.")
 
         return True
+
+
+class Option:
+    """
+    Helper class object for trading objects
+    """
+    def __init__(self, movingAverage, parameter, initialBound, finalBound):
+        self.movingAverage = movingAverage
+        self.parameter = parameter
+        self.initialBound = initialBound
+        self.finalBound = finalBound
+
+    def set_moving_average(self, movingAverage):
+        self.movingAverage = movingAverage
+
+    def set_parameter(self, parameter):
+        self.parameter = parameter
+
+    def set_initial_bound(self, initialBound):
+        self.initialBound = initialBound
+
+    def set_final_bound(self, initialBound):
+        self.initialBound = initialBound
+
+    def get_moving_average(self):
+        return self.movingAverage
+
+    def get_parameter(self):
+        return self.parameter
+
+    def get_initial_bound(self):
+        return self.initialBound
+
+    def get_final_bound(self):
+        return self.finalBound
+
+    def __repr__(self):
+        return f'Option({self.movingAverage}, {self.parameter}, {self.initialBound}, {self.finalBound})'
 
 
 def easter_egg():
