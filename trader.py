@@ -1,10 +1,8 @@
 import sqlite3
-import os
-import time
-import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
 from contextlib import closing
 from binance.client import Client
+from helpers import *
 
 
 class Data:
@@ -804,10 +802,10 @@ class SimulatedTrader:
             logging.info(f'\nAction taken: {trade["action"]}')
 
     def simulate(self, movingAverage="WMA", parameter="high", initialBound=20, finalBound=24, lossPercentage=0.015,
-                 lossStrategy=None, safetyTimer=None, safetyMargin=None, tradingOptions=None):
+                 lossStrategy=None, safetyTimer=None, safetyMargin=None, options=None):
         """
         Starts a live simulation with given parameters.
-        :param tradingOptions: Argument for all trading options.
+        :param options: Argument for all trading options.
         :param safetyMargin: Margin percentage to validate cross
         :param safetyTimer: Amount of seconds to sleep to validate cross
         :param lossStrategy: Type of loss strategy to use
@@ -817,8 +815,8 @@ class SimulatedTrader:
         :param finalBound: Final bound. e.g SMA(9) > SMA(11), final bound would be 11.
         :param lossPercentage: Loss percentage at which we sell long or buy short.
         """
-        if tradingOptions is not None:
-            self.tradingOptions = tradingOptions
+        if options is not None:
+            self.tradingOptions = options
         else:
             tradingOption = Option(movingAverage, parameter, initialBound, finalBound)
             self.tradingOptions = [tradingOption]
@@ -856,10 +854,10 @@ class SimulatedTrader:
             except ValueError:
                 print("Please type in a valid number.")
 
-        print("Starting simulation...")
+        output_message("Starting simulation...")
 
         self.simulate_option_1()
-        print("\nExiting simulation.")
+        output_message("\nExiting simulation.")
         self.endingTime = datetime.now()
         self.get_simulation_result()
         self.log_trades()
@@ -868,8 +866,6 @@ class SimulatedTrader:
         fail = False  # Boolean for whether there was an error that occurred.
         waitTime = self.safetyTimer  # Integer that describes how much bot will sleep to recheck if there is a cross.
         self.safetyTimer = 0  # Initially the safetyTimer will be 0 until a first trade is made.
-        self.skipLongCross = False  # Boolean that determines whether bot skips long cross or not
-        self.skipShortCross = False  # Boolean that determines whether bot skips short cross or not
         self.waitToEnterShort = False  # Boolean for whether we should wait to exit out of short position.
         self.waitToEnterLong = False  # Boolean for whether we should wait to exit out of long position.
         self.inHumanControl = False  # Boolean for whether the bot is in human control.
@@ -1095,72 +1091,6 @@ class Option:
 
     def __repr__(self):
         return f'Option({self.movingAverage}, {self.parameter}, {self.initialBound}, {self.finalBound})'
-
-
-def easter_egg():
-    import random
-    number = random.randint(1, 16)
-    sleepTime = 0.25
-
-    if number == 1:
-        print('The two most important days in your life are the day you are born and the day you find out why.')
-    elif number == 2:
-        print('Financial freedom by sacrificing relationships; is it ever worth it?')
-    elif number == 3:
-        print("A guy asks a woman to sleep with him for $100, and the woman starts thinking. Suddenly the guy says "
-              "I'll give you $20 for a night, and the girl gets mad and yells what type of girl do you think I am? "
-              "The guy then says that he thought they already established that, and that now they're negotiating.")
-    elif number == 4:
-        print("We all do dumb things, that's what makes us human.")
-    elif number == 5:
-        print("Friends are like coins. You rather have 4 quarters than a 100 pennies.")
-    elif number == 6:
-        print('Fuck Bill Gates')
-    elif number == 7:
-        print('What is privacy again?')
-    elif number == 8:
-        print("If the virus was real and super contagious, why didn't it spread during BLM protests?")
-    elif number == 9:
-        print('Insanity is doing the same shit over and over again. Expecting shit to change.')
-    elif number == 10:
-        print("Rush B P90 no stop.")
-    elif number == 11:
-        print('Wakanda forever.')
-    elif number == 12:
-        print('Read the manuals. Read the books.')
-    elif number == 13:
-        print('4 cases in New Zealand? Lock down everything again!')
-    elif number == 14:
-        print('Fake pandemic.')
-    elif number == 15:
-        print('You think money is a powerful tool? Fuck that, fear will always fuck you up.')
-    else:
-        print("Fucking shape shifting reptilians, bro. Fucking causing this virus and shit.")
-
-    time.sleep(sleepTime)
-
-
-def output_message(message, level=2):
-    """Prints out and logs message"""
-    print(message)
-    if level == 2:
-        logging.info(message)
-    elif level == 3:
-        logging.debug(message)
-    elif level == 4:
-        logging.warning(message)
-    elif level == 5:
-        logging.critical(message)
-
-
-def initialize_logger():
-    """Initializes logger"""
-    if not os.path.exists('Logs'):
-        os.mkdir('Logs')
-
-    logFileName = f'{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log'
-    logging.basicConfig(filename=f'Logs/{logFileName}', level=logging.INFO,
-                        format='%(asctime)s - %(levelname)s: %(message)s')
 
 
 def main():
