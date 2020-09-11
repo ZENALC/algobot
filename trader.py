@@ -718,7 +718,7 @@ class SimulatedTrader:
         Prints out basic information about trades.
         """
         output_message('---------------------------------------------------')
-        output_message(f'\nCurrent time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        output_message(f'Current time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
         if self.inHumanControl:
             output_message(f'Currently in human control. Bot is waiting for human input to continue.')
@@ -947,8 +947,6 @@ class SimulatedTrader:
                     self.buy_long("Bought long because a cross was detected.")
                 else:
                     self.sell_short("Sold short because a cross was detected.")
-            else:
-                output_message('Waiting for a cross to take place.')
 
     def validate_trade(self):
         """
