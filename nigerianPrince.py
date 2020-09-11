@@ -10,25 +10,6 @@ app = QApplication(sys.argv)
 uiFile = 'nigerianPrince.ui'
 
 
-class CustomTrader(SimulatedTrader):
-    def __init__(self, gui, interval, symbol, startingBalance):
-        super().__init__(startingBalance=startingBalance, interval=interval, symbol=symbol)
-        self.dataView.output_message = self.output_message
-        self.gui = gui
-
-    def output_message(self, message, level=2):
-        """Prints out and logs message"""
-        self.gui.timestamp_message(message)
-        if level == 2:
-            logging.info(message)
-        elif level == 3:
-            logging.debug(message)
-        elif level == 4:
-            logging.warning(message)
-        elif level == 5:
-            logging.critical(message)
-
-
 class Interface(QMainWindow):
     def __init__(self, parent=None):
         super(Interface, self).__init__(parent)  # Initializing object
@@ -39,7 +20,7 @@ class Interface(QMainWindow):
         self.runSimulationButton.clicked.connect(self.run_simulation)
         self.endSimulationButton.clicked.connect(self.end_simulation)
 
-        self.simulationTrader = None
+        self.trader = None
 
         self.timestamp_message('Greetings.')
 
@@ -70,27 +51,29 @@ class Interface(QMainWindow):
         symbol = self.tickerComboBox.currentText()
         interval = self.convert_interval(self.intervalComboBox.currentText())
         startingBalance = self.simulationStartingBalanceSpinBox.value()
-        self.simulationTrader = CustomTrader(startingBalance=startingBalance,
-                                             symbol=symbol,
-                                             interval=interval,
-                                             gui=self)
+        self.trader = SimulatedTrader(startingBalance=startingBalance,
+                                      symbol=symbol,
+                                      interval=interval)
+
+    def reset_everything(self):
+        self.trader.lossPercentage = self.lossPercentageSpinBox.value()
+        self.trader.lossStrategy = self.get_loss_strategy()
+        self.trader.safetyTimer = self.sleepTimerSpinBox.value()
+        self.trader.safetyMargin = self.marginSpinBox.value()
+        self.trader.trades = []
+        self.trader.sellShortPrice = None
+        self.trader.buyLongPrice = None
+        self.trader.shortTrailingPrice = None
+        self.trader.longTrailingPrice = None
+        self.trader.startingBalance = self.balance
+        self.trader.startingTime = datetime.now()
 
     def run_simulation(self):
         self.timestamp_message('Starting simulation.')
         self.grey_out(True)
         self.create_simulation_trader()
 
-        lossStrategy = self.get_loss_strategy()
-        lossPercentage = self.lossPercentageSpinBox.value()
-        safetyTimer = self.sleepTimerSpinBox.value()
-        safetyMargin = self.marginSpinBox.value()
         options = self.get_trading_options()
-        self.simulationTrader.simulate(
-            lossStrategy=lossStrategy,
-            lossPercentage=lossPercentage,
-            options=options,
-            safetyTimer=safetyTimer,
-            safetyMargin=safetyMargin)
 
     def grey_out(self, boolean):
         boolean = not boolean
@@ -101,7 +84,7 @@ class Interface(QMainWindow):
         self.runSimulationButton.setEnabled(boolean)
 
     def destroy_simulation_trader(self):
-        self.simulationTrader = None
+        self.trader = None
 
     def end_simulation(self):
         self.destroy_simulation_trader()
@@ -110,19 +93,19 @@ class Interface(QMainWindow):
     @staticmethod
     def convert_interval(interval):
         intervals = {
-                    '12 Hours': '12h',
-                    '15 Minutes': '15m',
-                    '1 Day': '1d',
-                    '1 Hour': '1h',
-                    '1 Minute': '1m',
-                    '2 Hours': '2h',
-                    '30 Minutes': '30m',
-                    '3 Days': '3d',
-                    '3 Minutes': '3m',
-                    '4 Hours': '4h',
-                    '5 Minutes': '5m',
-                    '6 Hours': '6h',
-                    '8 Hours': '8h'
+            '12 Hours': '12h',
+            '15 Minutes': '15m',
+            '1 Day': '1d',
+            '1 Hour': '1h',
+            '1 Minute': '1m',
+            '2 Hours': '2h',
+            '30 Minutes': '30m',
+            '3 Days': '3d',
+            '3 Minutes': '3m',
+            '4 Hours': '4h',
+            '5 Minutes': '5m',
+            '6 Hours': '6h',
+            '8 Hours': '8h'
         }
         return intervals[interval]
 
@@ -141,6 +124,15 @@ class Interface(QMainWindow):
         else:
             self.doubleCrossGroupBox.setEnabled(False)
 
+    def update_statistics(self):
+        self.currentBalanceValue.setText(self.trader.currentBalance)
+        self.startingBalanceValue.setText(self.trader.startingBalance)
+        self.profitLossValue.setText(self.trader.get_profit())
+        self.currentPositionValue.setText(self.trader.get_position())
+        self.currentBtcValue.setText(self.btc)
+        self.btcOwedValue.setText(self.trader.btcOwed)
+        self.tradesMadeValue.setText(len(self.trader.trades))
+
 
 def main():
     initialize_logger()
@@ -151,4 +143,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

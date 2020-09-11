@@ -651,6 +651,14 @@ class SimulatedTrader:
         balance -= self.btcOwed * self.currentPrice * (1 + self.transactionFeePercentage)
         return balance - self.startingBalance
 
+    def get_position(self):
+        if self.inLongPosition:
+            return "Long"
+        elif self.inShortPosition:
+            return "Short"
+        else:
+            return None
+
     def get_average(self, movingAverage, parameter, value):
         """
         Returns the moving average with parameter and value provided

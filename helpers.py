@@ -53,5 +53,4 @@ def initialize_logger():
         os.mkdir('Logs')
 
     logFileName = f'{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log'
-    logging.basicConfig(filename=f'Logs/{logFileName}', level=logging.INFO,
-                        format='%(asctime)s - %(levelname)s: %(message)s')
+    logging.basicConfig(filename=f'Logs/{logFileName}', level=logging.INFO, format='%(message)s')

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1011</width>
-    <height>968</height>
+    <width>1347</width>
+    <height>1137</height>
    </rect>
   </property>
   <property name="font">
@@ -1020,14 +1020,14 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Trades:</string>
+            <string>Trades Made:</string>
            </property>
           </widget>
          </item>
          <item row="3" column="2">
-          <widget class="QLabel" name="tradesValue">
+          <widget class="QLabel" name="tradesMadeValue">
            <property name="text">
-            <string>$0</string>
+            <string>0</string>
            </property>
           </widget>
          </item>
@@ -1413,8 +1413,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1011</width>
-     <height>21</height>
+     <width>1347</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
