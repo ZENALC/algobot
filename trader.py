@@ -14,14 +14,14 @@ class Data:
         """
         self.binanceClient = Client(None, None)  # Initialize Binance client
         if not self.is_valid_interval(interval):
-            output_message("Invalid interval. Using default interval of 1h.", level=4)
+            self.output_message("Invalid interval. Using default interval of 1h.", level=4)
             interval = '1h'
 
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
 
         if not self.is_valid_symbol(symbol):
-            output_message('Invalid symbol. Using default symbol of BTCUSDT.', level=4)
+            self.output_message('Invalid symbol. Using default symbol of BTCUSDT.', level=4)
             symbol = 'BTCUSDT'
 
         self.symbol = symbol
@@ -34,11 +34,24 @@ class Data:
         self.create_table()
         self.get_data_from_database()
         if not self.database_is_updated():
-            output_message("Updating data...")
+            self.output_message("Updating data...")
             self.update_database()
         else:
-            output_message("Database is up-to-date.")
+            self.output_message("Database is up-to-date.")
 
+    @staticmethod
+    def output_message(message, level=2):
+        """Prints out and logs message"""
+        print(message)
+        if level == 2:
+            logging.info(message)
+        elif level == 3:
+            logging.debug(message)
+        elif level == 4:
+            logging.warning(message)
+        elif level == 5:
+            logging.critical(message)
+    
     def create_table(self):
         """
         Creates a new table with interval if it does not exist
@@ -77,9 +90,9 @@ class Data:
                     except sqlite3.IntegrityError:
                         pass  # This just means the data already exists in the database, so ignore.
                     except sqlite3.OperationalError:
-                        output_message("Insertion to database failed. Will retry next run.", 4)
+                        self.output_message("Insertion to database failed. Will retry next run.", 4)
                         return False
-        output_message("Successfully stored all new data to database.")
+        self.output_message("Successfully stored all new data to database.")
         return True
 
     def get_latest_database_row(self):
@@ -104,9 +117,9 @@ class Data:
                         ''').fetchall()
 
         if len(rows) > 0:
-            output_message("Retrieving data from database...")
+            self.output_message("Retrieving data from database...")
         else:
-            output_message("No data found in database.")
+            self.output_message("No data found in database.")
             return
 
         for row in rows:
@@ -135,22 +148,22 @@ class Data:
         result = self.get_latest_database_row()
         if result is None:  # Then get the earliest timestamp possible
             timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
-            output_message(f'Downloading all available historical data for {self.interval} intervals.')
+            self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
         else:
             latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
             timestamp = int(latestDate.timestamp()) * 1000  # Converting timestamp to milliseconds
             dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
-            output_message(f"Previous data up to UTC {dateWithIntervalAdded} found.")
+            self.output_message(f"Previous data up to UTC {dateWithIntervalAdded} found.")
 
         if not self.database_is_updated():
             newData = self.get_new_data(timestamp)
-            output_message("Successfully downloaded all new data.")
-            output_message("Inserting data to live program...")
+            self.output_message("Successfully downloaded all new data.")
+            self.output_message("Inserting data to live program...")
             self.insert_data(newData)
-            output_message("Storing updated data to database...")
+            self.output_message("Storing updated data to database...")
             self.dump_to_table()
         else:
-            output_message("Database is up-to-date.")
+            self.output_message("Database is up-to-date.")
 
     def get_new_data(self, timestamp, limit=1000):
         """
@@ -200,13 +213,13 @@ class Data:
         latestDate = self.data[0]['date']
         timestamp = int(latestDate.timestamp()) * 1000
         dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
-        output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
+        self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
         if not self.data_is_updated():
             newData = self.get_new_data(timestamp)
             self.insert_data(newData)
-            output_message("Data has been updated successfully.")
+            self.output_message("Data has been updated successfully.")
         else:
-            output_message("Data is up-to-date.")
+            self.output_message("Data is up-to-date.")
 
     def get_current_data(self):
         """
@@ -234,7 +247,7 @@ class Data:
                                      'close': float(currentData[4])}
             return currentDataDictionary
         except Exception as e:
-            output_message(f"Error: {e}. Retrying in 2 seconds...", 4)
+            self.output_message(f"Error: {e}. Retrying in 2 seconds...", 4)
             time.sleep(2)
             self.get_current_data()
 
@@ -246,7 +259,7 @@ class Data:
         try:
             return float(self.binanceClient.get_symbol_ticker(symbol=self.symbol)['price'])
         except Exception as e:
-            output_message(f'Error: {e}. Retrying in 2 seconds...', 4)
+            self.output_message(f'Error: {e}. Retrying in 2 seconds...', 4)
             time.sleep(2)
             self.get_current_price()
 
@@ -271,7 +284,7 @@ class Data:
         elif self.intervalUnit == 'd':
             return self.intervalMeasurement * 24 * 60
         else:
-            output_message("Invalid interval.", 4)
+            self.output_message("Invalid interval.", 4)
             return None
 
     def get_csv_data(self, interval):
@@ -282,9 +295,9 @@ class Data:
         if not self.is_valid_interval(interval):
             return
         timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, interval)
-        output_message("Downloading all available historical data. This may take a while...")
+        self.output_message("Downloading all available historical data. This may take a while...")
         newData = self.binanceClient.get_historical_klines(self.symbol, interval, timestamp, limit=1000)
-        output_message("Downloaded all data successfully.")
+        self.output_message("Downloaded all data successfully.")
 
         folderName = 'CSV'
         fileName = f'btc_data_{interval}.csv'
@@ -304,11 +317,10 @@ class Data:
                 f.write(f'{parsedDate}, {data[1]}, {data[2]}, {data[3]}, {data[4]}\n')
 
         path = os.path.join(os.getcwd(), fileName)
-        output_message(f'Data saved to {path}.')
+        self.output_message(f'Data saved to {path}.')
         os.chdir(currentPath)
 
-    @staticmethod
-    def is_valid_interval(interval):
+    def is_valid_interval(self, interval):
         """
         Returns whether interval provided is valid or not.
         :param interval: Interval argument.
@@ -319,7 +331,7 @@ class Data:
         if interval in availableIntervals:
             return True
         else:
-            output_message(f'Invalid interval. Available intervals are: \n{availableIntervals}')
+            self.output_message(f'Invalid interval. Available intervals are: \n{availableIntervals}')
             return False
 
     def is_valid_symbol(self, symbol):
@@ -343,13 +355,13 @@ class Data:
         :return: A boolean whether shift, prices, and extraShift are logical or not.
         """
         if shift < 0:
-            output_message("Shift cannot be less than 0.")
+            self.output_message("Shift cannot be less than 0.")
             return False
         elif prices <= 0:
-            output_message("Prices cannot be 0 or less than 0.")
+            self.output_message("Prices cannot be 0 or less than 0.")
             return False
         elif shift + extraShift + prices > len(self.data) + 1:
-            output_message("Shift + prices period cannot be more than data available.")
+            self.output_message("Shift + prices period cannot be more than data available.")
             return False
         return True
 
@@ -359,19 +371,19 @@ class Data:
         :return: A boolean whether the data contains no repeated data or not.
         """
         if len(self.data) < 1:
-            output_message("No data found.", 4)
+            self.output_message("No data found.", 4)
             return False
 
         previousData = self.data[0]
         for data in self.data[1:]:
             if data['date'] == previousData['date']:
-                output_message("Repeated data detected.", 4)
-                output_message(f'Previous data: {previousData}', 4)
-                output_message(f'Next data: {data}', 4)
+                self.output_message("Repeated data detected.", 4)
+                self.output_message(f'Previous data: {previousData}', 4)
+                self.output_message(f'Next data: {data}', 4)
                 return False
             previousData = data
 
-        output_message("Data has been verified to be correct.")
+        self.output_message("Data has been verified to be correct.")
         return True
 
     def get_sma(self, prices, parameter, shift=0, round_value=True):
@@ -434,7 +446,7 @@ class Data:
         if not self.is_valid_average_input(shift, prices, sma_prices):
             return None
         elif sma_prices <= 0:
-            output_message("Initial amount of SMA values for initial EMA must be greater than 0.")
+            self.output_message("Initial amount of SMA values for initial EMA must be greater than 0.")
             return None
 
         data = [self.get_current_data()] + self.data
@@ -498,6 +510,19 @@ class SimulatedTrader:
         self.inLongPosition = False  # Boolean that keeps track of whether bot is in a long position or not
         self.inShortPosition = False  # Boolean that keeps track of whether bot is in a short position or not
 
+    @staticmethod
+    def output_message(message, level=2):
+        """Prints out and logs message"""
+        print(message)
+        if level == 2:
+            logging.info(message)
+        elif level == 3:
+            logging.debug(message)
+        elif level == 4:
+            logging.warning(message)
+        elif level == 5:
+            logging.critical(message)
+
     def add_trade(self, message):
         """
         Adds a trade to list of trades
@@ -517,12 +542,12 @@ class SimulatedTrader:
             usd = self.balance
 
         if usd <= 0:
-            output_message("You cannot buy with $0 or less.")
+            self.output_message("You cannot buy with $0 or less.")
             if self.balance <= 0:
-                output_message("Looks like you have run out of money.", 4)
+                self.output_message("Looks like you have run out of money.", 4)
             return
         elif usd > self.balance:
-            output_message(f'You currently have ${self.balance}. You cannot invest ${usd}.')
+            self.output_message(f'You currently have ${self.balance}. You cannot invest ${usd}.')
             return
 
         transactionFee = usd * self.transactionFeePercentage
@@ -533,7 +558,7 @@ class SimulatedTrader:
         self.btc += (usd - transactionFee) / self.currentPrice
         self.balance -= usd
         self.add_trade(msg)
-        output_message(msg)
+        self.output_message(msg)
 
     def sell_long(self, msg, btc=None):
         """
@@ -544,12 +569,12 @@ class SimulatedTrader:
             btc = self.btc
 
         if btc <= 0:
-            output_message("You cannot sell 0 or negative BTC.")
+            self.output_message("You cannot sell 0 or negative BTC.")
             if self.btc <= 0:
-                output_message("Looks like you do not have any BTC.", 4)
+                self.output_message("Looks like you do not have any BTC.", 4)
             return
         elif btc > self.btc:
-            output_message(f'You currently have {self.btc} BTC. You cannot sell {btc} BTC.')
+            self.output_message(f'You currently have {self.btc} BTC. You cannot sell {btc} BTC.')
             return
 
         self.currentPrice = self.dataView.get_current_price()
@@ -558,7 +583,7 @@ class SimulatedTrader:
         self.btc -= btc
         self.balance += earned
         self.add_trade(msg)
-        output_message(msg)
+        self.output_message(msg)
 
         if self.btc == 0:
             self.buyLongPrice = None
@@ -575,7 +600,7 @@ class SimulatedTrader:
             btc = self.btcOwed
 
         if btc <= 0:
-            output_message("You cannot buy 0 or less BTC.")
+            self.output_message("You cannot buy 0 or less BTC.")
             return
 
         self.currentPrice = self.dataView.get_current_price()
@@ -584,7 +609,7 @@ class SimulatedTrader:
         loss = self.currentPrice * btc * (1 + self.transactionFeePercentage)
         self.balance -= loss
         self.add_trade(msg)
-        output_message(msg)
+        self.output_message(msg)
 
         if self.btcOwed == 0:
             self.sellShortPrice = None
@@ -604,7 +629,7 @@ class SimulatedTrader:
             btc = (self.balance - transactionFee) / self.currentPrice
 
         if btc <= 0:
-            output_message("You cannot borrow 0 or less BTC.")
+            self.output_message("You cannot borrow 0 or less BTC.")
             return
 
         self.btcOwed += btc
@@ -613,7 +638,7 @@ class SimulatedTrader:
         self.sellShortPrice = self.currentPrice
         self.shortTrailingPrice = self.currentPrice
         self.add_trade(msg)
-        output_message(msg)
+        self.output_message(msg)
 
     def get_profit(self):
         """
@@ -641,7 +666,7 @@ class SimulatedTrader:
         elif movingAverage == 'EMA':
             return self.dataView.get_ema(value, parameter)
         else:
-            output_message(f'Unknown moving average {movingAverage}.', 4)
+            self.output_message(f'Unknown moving average {movingAverage}.', 4)
             return None
 
     def get_stop_loss(self):
@@ -666,7 +691,7 @@ class SimulatedTrader:
         :return: A boolean whether there is a cross or not.
         """
         if len(self.tradingOptions) == 0:  # Checking whether options exist.
-            output_message("No trading options provided.")
+            self.output_message("No trading options provided.")
             return
 
         cross = True
@@ -707,90 +732,90 @@ class SimulatedTrader:
             initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound)
 
-            output_message(f'Parameter: {option.parameter}')
-            output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
-            output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
+            self.output_message(f'Parameter: {option.parameter}')
+            self.output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
+            self.output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
 
     def output_basic_information(self):
         """
         Prints out basic information about trades.
         """
-        output_message('---------------------------------------------------')
-        output_message(f'Current time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        self.output_message('---------------------------------------------------')
+        self.output_message(f'Current time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
         if self.inHumanControl:
-            output_message(f'Currently in human control. Bot is waiting for human input to continue.')
+            self.output_message(f'Currently in human control. Bot is waiting for human input to continue.')
         else:
-            output_message(f'Currently in autonomous mode.')
+            self.output_message(f'Currently in autonomous mode.')
 
         if self.btc > 0:
-            output_message(f'BTC: {self.btc}')
-            output_message(f'Price bot bought BTC long for: ${self.buyLongPrice}')
+            self.output_message(f'BTC: {self.btc}')
+            self.output_message(f'Price bot bought BTC long for: ${self.buyLongPrice}')
 
         if self.btcOwed > 0:
-            output_message(f'BTC owed: {self.btcOwed}')
-            output_message(f'Price bot sold BTC short for: ${self.sellShortPrice}')
+            self.output_message(f'BTC owed: {self.btcOwed}')
+            self.output_message(f'Price bot sold BTC short for: ${self.sellShortPrice}')
 
         if self.inLongPosition:
-            output_message(f'\nCurrently in long position.')
+            self.output_message(f'\nCurrently in long position.')
             if self.lossStrategy == 2:
                 longTrailingLossValue = round(self.longTrailingPrice * (1 - self.lossPercentage), 2)
-                output_message(f'Long trailing loss: ${longTrailingLossValue}')
+                self.output_message(f'Long trailing loss: ${longTrailingLossValue}')
             else:
-                output_message(f'Stop loss: {round(self.buyLongPrice * (1 - self.lossPercentage), 2)}')
+                self.output_message(f'Stop loss: {round(self.buyLongPrice * (1 - self.lossPercentage), 2)}')
         elif self.inShortPosition:
-            output_message(f'\nCurrently in short position.')
+            self.output_message(f'\nCurrently in short position.')
             if self.lossStrategy == 2:
                 shortTrailingLossValue = round(self.shortTrailingPrice * (1 + self.lossPercentage), 2)
-                output_message(f'Short trailing loss: ${shortTrailingLossValue}')
+                self.output_message(f'Short trailing loss: ${shortTrailingLossValue}')
             else:
-                output_message(f'Stop loss: {round(self.sellShortPrice * (1 + self.lossPercentage), 2)}')
+                self.output_message(f'Stop loss: {round(self.sellShortPrice * (1 + self.lossPercentage), 2)}')
         else:
             if not self.inHumanControl:
-                output_message(f'\nCurrently not a in short or long position. Waiting for next cross.')
+                self.output_message(f'\nCurrently not a in short or long position. Waiting for next cross.')
             else:
-                output_message(f'\nCurrently not a in short or long position. Waiting for human intervention.')
+                self.output_message(f'\nCurrently not a in short or long position. Waiting for human intervention.')
 
-        output_message(f'\nCurrent BTC price: ${self.dataView.get_current_price()}')
-        output_message(f'Balance: ${round(self.balance, 2)}')
-        output_message(f'\nTrades conducted this simulation: {len(self.trades)}')
+        self.output_message(f'\nCurrent BTC price: ${self.dataView.get_current_price()}')
+        self.output_message(f'Balance: ${round(self.balance, 2)}')
+        self.output_message(f'\nTrades conducted this simulation: {len(self.trades)}')
 
         profit = round(self.get_profit(), 2)
         if profit > 0:
-            output_message(f'Profit: ${profit}')
+            self.output_message(f'Profit: ${profit}')
         elif profit < 0:
-            output_message(f'Loss: ${-profit}')
+            self.output_message(f'Loss: ${-profit}')
         else:
-            output_message(f'No profit or loss currently.')
-        output_message('')
+            self.output_message(f'No profit or loss currently.')
+        self.output_message('')
 
     def get_simulation_result(self):
         """
         Gets end result of simulation.
         """
         if self.btc > 0:
-            output_message("Selling all BTC...")
+            self.output_message("Selling all BTC...")
             self.sell_long(f'Sold long as simulation ended.')
 
         if self.btcOwed > 0:
-            output_message("Returning all borrowed BTC...")
+            self.output_message("Returning all borrowed BTC...")
             self.buy_short(f'Bought short as simulation ended.')
 
-        output_message("\nResults:")
-        output_message(f'Starting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')
-        output_message(f'End time: {self.endingTime.strftime("%Y-%m-%d %H:%M:%S")}')
-        output_message(f'Elapsed time: {self.endingTime - self.startingTime}')
-        output_message(f'Starting balance: ${self.startingBalance}')
-        output_message(f'Ending balance: ${round(self.balance, 2)}')
-        output_message(f'Trades conducted: {len(self.trades)}')
+        self.output_message("\nResults:")
+        self.output_message(f'Starting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')
+        self.output_message(f'End time: {self.endingTime.strftime("%Y-%m-%d %H:%M:%S")}')
+        self.output_message(f'Elapsed time: {self.endingTime - self.startingTime}')
+        self.output_message(f'Starting balance: ${self.startingBalance}')
+        self.output_message(f'Ending balance: ${round(self.balance, 2)}')
+        self.output_message(f'Trades conducted: {len(self.trades)}')
         if self.balance > self.startingBalance:
             profit = self.balance - self.startingBalance
-            output_message(f"Profit: ${round(profit, 2)}")
+            self.output_message(f"Profit: ${round(profit, 2)}")
         elif self.balance < self.startingBalance:
             loss = self.startingBalance - self.balance
-            output_message(f'Loss: ${round(loss, 2)}')
+            self.output_message(f'Loss: ${round(loss, 2)}')
         else:
-            output_message("No profit or loss occurred.")
+            self.output_message("No profit or loss occurred.")
 
     def log_trades(self):
         """
@@ -854,10 +879,10 @@ class SimulatedTrader:
             except ValueError:
                 print("Please type in a valid number.")
 
-        output_message("Starting simulation...")
+        self.output_message("Starting simulation...")
 
         self.simulate_option_1()
-        output_message("\nExiting simulation.")
+        self.output_message("\nExiting simulation.")
         self.endingTime = datetime.now()
         self.get_simulation_result()
         self.log_trades()
@@ -882,7 +907,7 @@ class SimulatedTrader:
                 self.output_basic_information()
 
                 if fail:
-                    output_message("Successfully fixed error.")
+                    self.output_message("Successfully fixed error.")
                     fail = False
 
                 if not self.dataView.data_is_updated():
@@ -899,7 +924,7 @@ class SimulatedTrader:
                 if not self.inHumanControl:
                     self.main_logic()
 
-                print("Type CTRL-C to cancel or override the simulation at any time.")
+                # print("Type CTRL-C to cancel or override the simulation at any time.")
                 time.sleep(1)
             except KeyboardInterrupt:
                 action = None
@@ -912,10 +937,10 @@ class SimulatedTrader:
                     return
             except Exception as e:
                 if not fail:
-                    output_message(f'ERROR: {e}')
-                    output_message("Something went wrong. Trying again in 5 seconds.")
+                    self.output_message(f'ERROR: {e}')
+                    self.output_message("Something went wrong. Trying again in 5 seconds.")
                 time.sleep(5)
-                output_message("Attempting to fix error...")
+                self.output_message("Attempting to fix error...")
                 fail = True
 
     def main_logic(self):
@@ -978,10 +1003,10 @@ class SimulatedTrader:
         :return: Boolean whether cross is real or fake.
         """
         if self.safetyTimer > 0:
-            output_message(f'Cross detected. Waiting {self.safetyTimer} seconds to validate...')
+            self.output_message(f'Cross detected. Waiting {self.safetyTimer} seconds to validate...')
             time.sleep(self.safetyTimer)
         if not self.validate_trade():
-            output_message("Irregular averages occurred. Not taking any action.")
+            self.output_message("Irregular averages occurred. Not taking any action.")
             return False
         return True
 
@@ -991,7 +1016,7 @@ class SimulatedTrader:
             while action not in ('w', ''):
                 action = input("Type 'w' to pause the bot or nothing to close and wait for next cross>>")
             if action == 'w':
-                output_message("Pausing the bot.")
+                self.output_message("Pausing the bot.")
                 self.inHumanControl = True
             if self.inShortPosition:
                 self.buy_short('Bought short because of override.')
@@ -1002,10 +1027,10 @@ class SimulatedTrader:
                 if action == '':
                     self.waitToEnterLong = True
             else:
-                output_message("Was not in a long or short position. Resuming simulation.")
+                self.output_message("Was not in a long or short position. Resuming simulation.")
         else:
             while action not in ('long', 'short', ''):
-                output_message("Type 'long' to go long, 'short' to go short, or nothing to resume bot.")
+                self.output_message("Type 'long' to go long, 'short' to go short, or nothing to resume bot.")
                 action = input('>>').lower()
             if action == 'long':
                 self.buy_long("Buying long because of override.")
@@ -1032,16 +1057,16 @@ class RealTrader(SimulatedTrader):
         Returns a boolean whether the API key and secret are valid or not.
         """
         if self.apiKey is None:
-            output_message("No API key found.", 4)
+            self.output_message("No API key found.", 4)
             return False
         else:
-            output_message("API key found.")
+            self.output_message("API key found.")
 
         if self.apiSecret is None:
-            output_message("No API secret found.", 4)
+            self.output_message("No API secret found.", 4)
             return False
         else:
-            output_message("API secret found.")
+            self.output_message("API secret found.")
 
         return True
 

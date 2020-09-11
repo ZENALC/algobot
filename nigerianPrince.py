@@ -10,14 +10,23 @@ app = QApplication(sys.argv)
 uiFile = 'nigerianPrince.ui'
 
 
-def output_message():
-    pass
-
-
 class CustomTrader(SimulatedTrader):
     def __init__(self, gui, interval, symbol, startingBalance):
         super().__init__(startingBalance=startingBalance, interval=interval, symbol=symbol)
+        self.dataView.output_message = self.output_message
         self.gui = gui
+
+    def output_message(self, message, level=2):
+        """Prints out and logs message"""
+        self.gui.timestamp_message(message)
+        if level == 2:
+            logging.info(message)
+        elif level == 3:
+            logging.debug(message)
+        elif level == 4:
+            logging.warning(message)
+        elif level == 5:
+            logging.critical(message)
 
 
 class Interface(QMainWindow):
@@ -61,7 +70,10 @@ class Interface(QMainWindow):
         symbol = self.tickerComboBox.currentText()
         interval = self.convert_interval(self.intervalComboBox.currentText())
         startingBalance = self.simulationStartingBalanceSpinBox.value()
-        self.simulationTrader = SimulatedTrader(startingBalance=startingBalance, symbol=symbol, interval=interval)
+        self.simulationTrader = CustomTrader(startingBalance=startingBalance,
+                                             symbol=symbol,
+                                             interval=interval,
+                                             gui=self)
 
     def run_simulation(self):
         self.timestamp_message('Starting simulation.')

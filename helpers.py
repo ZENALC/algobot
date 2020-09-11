@@ -47,19 +47,6 @@ def easter_egg():
     time.sleep(sleepTime)
 
 
-def output_message(message, level=2):
-    """Prints out and logs message"""
-    print(message)
-    if level == 2:
-        logging.info(message)
-    elif level == 3:
-        logging.debug(message)
-    elif level == 4:
-        logging.warning(message)
-    elif level == 5:
-        logging.critical(message)
-
-
 def initialize_logger():
     """Initializes logger"""
     if not os.path.exists('Logs'):
