@@ -55,25 +55,54 @@ class Interface(QMainWindow):
                                       symbol=symbol,
                                       interval=interval)
 
-    def reset_everything(self):
-        self.trader.lossPercentage = self.lossPercentageSpinBox.value()
-        self.trader.lossStrategy = self.get_loss_strategy()
-        self.trader.safetyTimer = self.sleepTimerSpinBox.value()
-        self.trader.safetyMargin = self.marginSpinBox.value()
+    def reset_trader(self):
         self.trader.trades = []
         self.trader.sellShortPrice = None
         self.trader.buyLongPrice = None
         self.trader.shortTrailingPrice = None
         self.trader.longTrailingPrice = None
-        self.trader.startingBalance = self.balance
+        self.trader.startingBalance = self.trader.balance
         self.trader.startingTime = datetime.now()
+
+    def set_parameters(self):
+        self.trader.lossPercentage = self.lossPercentageSpinBox.value()
+        self.trader.lossStrategy = self.get_loss_strategy()
+        self.trader.safetyTimer = self.sleepTimerSpinBox.value()
+        self.trader.safetyMargin = self.marginSpinBox.value()
+
+    def output_trade_options(self):
+        for option in self.trader.tradingOptions:
+            initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
+            finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
+
+            self.timestamp_message(f'Parameter: {option.parameter}')
+            self.timestamp_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
+            self.timestamp_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
 
     def run_simulation(self):
         self.timestamp_message('Starting simulation.')
         self.grey_out(True)
         self.create_simulation_trader()
+        self.reset_trader()
+        self.set_parameters()
+        self.trader.tradingOptions = self.get_trading_options()
 
-        options = self.get_trading_options()
+        while True:
+            if not self.trader.dataView.data_is_updated():
+                self.timestamp_message("Updating data...")
+                self.trader.dataView.update_data()
+
+            self.output_trade_options()
+            self.update_statistics()
+
+            self.trader.currentPrice = self.trader.dataView.get_current_price()
+            if self.trader.longTrailingPrice is not None and self.trader.currentPrice > self.trader.longTrailingPrice:
+                self.trader.longTrailingPrice = self.trader.currentPrice
+            if self.trader.shortTrailingPrice is not None and self.trader.currentPrice < self.trader.shortTrailingPrice:
+                self.trader.shortTrailingPrice = self.trader.currentPrice
+
+            if not self.trader.inHumanControl:
+                self.trader.main_logic()
 
     def grey_out(self, boolean):
         boolean = not boolean
@@ -125,13 +154,13 @@ class Interface(QMainWindow):
             self.doubleCrossGroupBox.setEnabled(False)
 
     def update_statistics(self):
-        self.currentBalanceValue.setText(self.trader.currentBalance)
-        self.startingBalanceValue.setText(self.trader.startingBalance)
-        self.profitLossValue.setText(self.trader.get_profit())
-        self.currentPositionValue.setText(self.trader.get_position())
-        self.currentBtcValue.setText(self.btc)
-        self.btcOwedValue.setText(self.trader.btcOwed)
-        self.tradesMadeValue.setText(len(self.trader.trades))
+        self.currentBalanceValue.setText(str(self.trader.balance))
+        self.startingBalanceValue.setText(str(self.trader.startingBalance))
+        self.profitLossValue.setText(str(self.trader.get_profit()))
+        self.currentPositionValue.setText(str(self.trader.get_position()))
+        self.currentBtcValue.setText(str(self.trader.btc))
+        self.btcOwedValue.setText(str(self.trader.btcOwed))
+        self.tradesMadeValue.setText(str(len(self.trader.trades)))
 
 
 def main():

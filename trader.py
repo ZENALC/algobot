@@ -498,7 +498,7 @@ class SimulatedTrader:
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits
         self.longTrailingPrice = None  # Price BTC has to be above for long position
         self.shortTrailingPrice = None  # Price BTC has to be below for short position
-        self.startingBalance = None  # Balance we started bot run with
+        self.startingBalance = self.balance  # Balance we started bot run with
         self.currentPrice = None  # Current price of BTC
 
         self.safetyMargin = None  # Margin percentage bot will check to validate cross
