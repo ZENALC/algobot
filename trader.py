@@ -6,7 +6,7 @@ from helpers import *
 
 
 class Data:
-    def __init__(self, interval='1h', symbol='BTCUSDT'):
+    def __init__(self, interval='1h', symbol='BTCUSDT', loadData=True):
         """
         Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
         :param interval: Interval for which the data object will track prices.
@@ -28,16 +28,17 @@ class Data:
         self.data = []
         self.ema_data = {}
 
-        # Create, initialize, store, and get values from database.
-        self.databaseFile = 'btc.db'
-        self.databaseTable = f'data_{self.interval}'
-        self.create_table()
-        self.get_data_from_database()
-        if not self.database_is_updated():
-            self.output_message("Updating data...")
-            self.update_database()
-        else:
-            self.output_message("Database is up-to-date.")
+        if loadData:
+            # Create, initialize, store, and get values from database.
+            self.databaseFile = 'btc.db'
+            self.databaseTable = f'data_{self.interval}'
+            self.create_table()
+            self.get_data_from_database()
+            if not self.database_is_updated():
+                self.output_message("Updating data...")
+                self.update_database()
+            else:
+                self.output_message("Database is up-to-date.")
 
     @staticmethod
     def output_message(message, level=2):
