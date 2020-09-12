@@ -28,11 +28,12 @@ class Data:
         self.data = []
         self.ema_data = {}
 
+        self.databaseFile = 'btc.db'
+        self.databaseTable = f'data_{self.interval}'
+        self.create_table()
+
         if loadData:
             # Create, initialize, store, and get values from database.
-            self.databaseFile = 'btc.db'
-            self.databaseTable = f'data_{self.interval}'
-            self.create_table()
             self.get_data_from_database()
             if not self.database_is_updated():
                 self.output_message("Updating data...")
