@@ -1,10 +1,12 @@
 import sys
-from trader import SimulatedTrader, Option
+from trader import SimulatedTrader, Option, Data
 from helpers import *
 
 from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot
+
+from binance.client import Client
 
 app = QApplication(sys.argv)
 uiFile = 'nigerianPrince.ui'
@@ -39,7 +41,7 @@ class Interface(QMainWindow):
         self.threadPool = QThreadPool()
 
         self.doubleCrossCheckMark.toggled.connect(self.interact_double_cross)
-        self.generateCSVButton.clicked.connect(self.generate_csv)
+        self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
         self.runSimulationButton.clicked.connect(self.initiate_simulation_thread)
         self.endSimulationButton.clicked.connect(self.end_simulation)
 
@@ -117,12 +119,19 @@ class Interface(QMainWindow):
         self.set_parameters()
         self.trader.tradingOptions = self.get_trading_options()
         self.runningLive = True
-        self.trader.trades = [{'action': 5, 'date': "yes"}]
+        crossInform = False
 
         while self.runningLive:
             if not self.trader.dataView.data_is_updated():
                 self.timestamp_message("Updating data...")
                 self.trader.dataView.update_data()
+
+            if self.trader.get_position() is not None:
+                crossInform = False
+
+            if not crossInform and self.trader.get_position() is None:
+                crossInform = True
+                self.timestamp_message("Waiting for a cross.")
 
             self.update_info()
             self.update_trades_to_list_view()
@@ -172,8 +181,24 @@ class Interface(QMainWindow):
         }
         return intervals[interval]
 
+    def initiate_csv_generation(self):
+        thread = Worker(self.generate_csv)
+        self.threadPool.start(thread)
+
     def generate_csv(self):
-        pass
+        self.generateCSVButton.setEnabled(False)
+
+        symbol = self.csvGenerationTicker.currentText()
+        interval = self.convert_interval(self.csvGenerationDataInterval.currentText())
+        self.csvGenerationStatus.setText("Downloading data...")
+        savedPath = Data(loadData=False, interval=interval, symbol=symbol).get_csv_data(interval)
+
+        # messageBox = QMessageBox()
+        # messageBox.setText(f"Successfully saved CSV data to {savedPath}.")
+        # messageBox.setIcon(QMessageBox.Information)
+        # messageBox.exec_()
+        self.csvGenerationStatus.setText(f"Successfully saved CSV data to {savedPath}.")
+        self.generateCSVButton.setEnabled(True)
 
     def timestamp_message(self, msg):
         self.botOutput.appendPlainText(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {msg}')

@@ -288,6 +288,9 @@ class Data:
             self.output_message("Invalid interval.", 4)
             return None
 
+    def get_current_interval_csv_data(self):
+        pass
+
     def get_csv_data(self, interval):
         """
         Creates a new CSV file with interval specified.
@@ -301,7 +304,7 @@ class Data:
         self.output_message("Downloaded all data successfully.")
 
         folderName = 'CSV'
-        fileName = f'btc_data_{interval}.csv'
+        fileName = f'{self.symbol}_data_{interval}.csv'
         currentPath = os.getcwd()
 
         try:
@@ -320,6 +323,8 @@ class Data:
         path = os.path.join(os.getcwd(), fileName)
         self.output_message(f'Data saved to {path}.')
         os.chdir(currentPath)
+
+        return path
 
     def is_valid_interval(self, interval):
         """
