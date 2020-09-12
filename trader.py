@@ -475,8 +475,8 @@ class Data:
 
 
 class SimulatedTrader:
-    def __init__(self, startingBalance=1000, interval='1h', symbol='BTCUSDT'):
-        self.dataView = Data(interval=interval, symbol=symbol)  # Retrieve data-view object
+    def __init__(self, startingBalance=1000, interval='1h', symbol='BTCUSDT', loadData=True):
+        self.dataView = Data(interval=interval, symbol=symbol, loadData=loadData)  # Retrieve data-view object
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client
 
         try:  # Attempt to parse startingBalance
