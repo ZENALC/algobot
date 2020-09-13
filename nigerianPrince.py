@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot
 
 app = QApplication(sys.argv)
+app.setStyle('Fusion')
 uiFile = 'nigerianPrince.ui'
 
 

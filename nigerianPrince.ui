@@ -25,8 +25,8 @@
    <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
+   <layout class="QGridLayout" name="gridLayout_14">
+    <item row="0" column="0">
      <widget class="QGroupBox" name="leftGroupBox">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -851,7 +851,7 @@
       </layout>
      </widget>
     </item>
-    <item>
+    <item row="0" column="1">
      <layout class="QVBoxLayout" name="Center">
       <item>
        <widget class="QLabel" name="mainLabel">
@@ -897,7 +897,7 @@
       </item>
      </layout>
     </item>
-    <item>
+    <item row="0" column="2">
      <layout class="QVBoxLayout" name="Right">
       <item>
        <widget class="QGroupBox" name="tradesConductedGroupBox">
