@@ -50,11 +50,18 @@ class Interface(QMainWindow):
         self.pauseBotButton.clicked.connect(self.pause_bot)
         self.exitPositionButton.clicked.connect(self.exit_position)
 
+        self.movingAverageMiscellaneousParameter.changed.connect(self.get_moving_average_miscellaneous)
+        self.movingAverageMiscellaneousType.changed.connect(self.get_moving_average_miscellaneous)
+        self.movingAverageMiscellaneousValue.changed.connect(self.get_moving_average_miscellaneous)
+
         self.trader = None
         self.runningLive = False
         self.liveThread = None
 
         self.timestamp_message('Greetings.')
+
+    def get_moving_average_miscellaneous(self):
+        pass
 
     def enable_override(self):
         self.overrideGroupBox.setEnabled(True)
