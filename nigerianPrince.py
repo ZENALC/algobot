@@ -7,10 +7,36 @@ from helpers import *
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot
+from PyQt5.QtGui import QPalette, QColor
+
 
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
+
 uiFile = 'nigerianPrince.ui'
+
+
+def get_dark_palette():
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.WindowText, QColor(255, 255, 255))
+    palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ToolTipBase, QColor(0, 0, 0))
+    palette.setColor(QPalette.ToolTipText, QColor(255, 255, 255))
+    palette.setColor(QPalette.Text, QColor(255, 255, 255))
+    palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ButtonText, QColor(255, 255, 255))
+    palette.setColor(QPalette.BrightText, QColor(255, 0, 0))
+    palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
+    return palette
+
+
+def get_light_palette():
+    palette = QPalette()
+    return palette
 
 
 class Worker(QRunnable):
@@ -41,6 +67,9 @@ class Interface(QMainWindow):
         super(Interface, self).__init__(parent)  # Initializing object
         uic.loadUi(uiFile, self)  # Loading the UI
         self.threadPool = QThreadPool()
+
+        self.lightModeRadioButton.toggled.connect(lambda: app.setPalette(get_light_palette()))
+        self.darkModeRadioButton.toggled.connect(lambda: app.setPalette(get_dark_palette()))
 
         self.doubleCrossCheckMark.toggled.connect(self.interact_double_cross)
         self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
