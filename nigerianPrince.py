@@ -50,9 +50,9 @@ class Interface(QMainWindow):
         self.pauseBotButton.clicked.connect(self.pause_bot)
         self.exitPositionButton.clicked.connect(self.exit_position)
 
-        self.movingAverageMiscellaneousParameter.changed.connect(self.get_moving_average_miscellaneous)
-        self.movingAverageMiscellaneousType.changed.connect(self.get_moving_average_miscellaneous)
-        self.movingAverageMiscellaneousValue.changed.connect(self.get_moving_average_miscellaneous)
+        self.movingAverageMiscellaneousParameter.currentTextChanged.connect(self.initiate_misc_get_moving_average)
+        self.movingAverageMiscellaneousType.currentTextChanged.connect(self.initiate_misc_get_moving_average)
+        self.movingAverageMiscellaneousValue.valueChanged.connect(self.initiate_misc_get_moving_average)
 
         self.trader = None
         self.runningLive = False
@@ -60,8 +60,12 @@ class Interface(QMainWindow):
 
         self.timestamp_message('Greetings.')
 
+    def initiate_misc_get_moving_average(self):
+        thread = Worker(self.get_moving_average_miscellaneous)
+        self.threadPool.start(thread)
+
     def get_moving_average_miscellaneous(self):
-        pass
+        self.movingAverageMiscellaneousResult.setText("haha what did you expect?")
 
     def enable_override(self):
         self.overrideGroupBox.setEnabled(True)
