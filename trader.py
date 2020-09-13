@@ -44,7 +44,7 @@ class Data:
     @staticmethod
     def output_message(message, level=2):
         """Prints out and logs message"""
-        print(message)
+        # print(message)
         if level == 2:
             logging.info(message)
         elif level == 3:
@@ -520,7 +520,7 @@ class SimulatedTrader:
     @staticmethod
     def output_message(message, level=2):
         """Prints out and logs message"""
-        print(message)
+        # print(message)
         if level == 2:
             logging.info(message)
         elif level == 3:
@@ -545,6 +545,8 @@ class SimulatedTrader:
         Buys BTC at current market price with amount of USD specified. If not specified, assumes bot goes all in.
         Function also takes into account Binance's 0.1% transaction fee.
         """
+        self.currentPrice = self.dataView.get_current_price()
+
         if usd is None:
             usd = self.balance
 
@@ -559,7 +561,6 @@ class SimulatedTrader:
 
         transactionFee = usd * self.transactionFeePercentage
         self.inLongPosition = True
-        self.currentPrice = self.dataView.get_current_price()
         self.buyLongPrice = self.currentPrice
         self.longTrailingPrice = self.currentPrice
         self.btc += (usd - transactionFee) / self.currentPrice
@@ -694,11 +695,13 @@ class SimulatedTrader:
                 return self.shortTrailingPrice * (1 + self.lossPercentage)
             else:  # This means we use the basic stop loss.
                 return self.sellShortPrice * (1 + self.lossPercentage)
-        elif self.inLongPosition:  # If we in a long position
+        elif self.inLongPosition:  # If we are in a long position
             if self.lossStrategy == 2:  # This means we use trailing loss.
                 return self.longTrailingPrice * (1 - self.lossPercentage)
             else:  # This means we use the basic stop loss.
                 return self.buyLongPrice * (1 - self.lossPercentage)
+        else:
+            return None
 
     def check_cross(self):
         """
@@ -979,7 +982,7 @@ class SimulatedTrader:
 
         else:  # This means we are in neither position
             if self.check_cross():
-                if self.trend == 1:
+                if self.trend == 1:  # This checks if we are bullish or bearish
                     self.buy_long("Bought long because a cross was detected.")
                 else:
                     self.sell_short("Sold short because a cross was detected.")

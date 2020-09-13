@@ -1,4 +1,6 @@
 import sys
+import traceback
+
 from trader import SimulatedTrader, Option, Data
 from helpers import *
 
@@ -29,7 +31,8 @@ class Worker(QRunnable):
         try:
             self.fn(*self.args, **self.kwargs)
         except Exception as e:
-            print(e)
+            print(f'Error: {e}')
+            traceback.print_exc()
 
 
 class Interface(QMainWindow):
@@ -45,6 +48,7 @@ class Interface(QMainWindow):
         self.forceLongButton.clicked.connect(self.force_long)
         self.forceShortButton.clicked.connect(self.force_short)
         self.pauseBotButton.clicked.connect(self.pause_bot)
+        self.exitPositionButton.clicked.connect(self.exit_position)
 
         self.trader = None
         self.runningLive = False
@@ -54,23 +58,43 @@ class Interface(QMainWindow):
 
     def enable_override(self):
         self.overrideGroupBox.setEnabled(True)
+        self.forceLongButton.setEnabled(True)
+        self.forceShortButton.setEnabled(True)
 
     def disable_override(self):
         self.overrideGroupBox.setEnabled(False)
 
+    def exit_position(self):
+        if self.trader.get_position() == 'Long':
+            self.timestamp_message('Force exiting long.')
+            self.trader.sell_long('Force exiting long.')
+        elif self.trader.get_position() == 'Short':
+            self.timestamp_message('Force exiting short.')
+            self.trader.buy_short('Force exiting short.')
+
+        self.forceShortButton.setEnabled(True)
+        self.forceLongButton.setEnabled(True)
+        self.exitPositionButton.setEnabled(False)
+
     def force_long(self):
         self.timestamp_message('Forcing long.')
         if self.trader.get_position() == "Short":
-            self.trader.buy_short('Forcing long.')
+            self.trader.buy_short('Exiting short because long was forced.')
 
         self.trader.buy_long('Forcing long.')
+        self.forceShortButton.setEnabled(False)
+        self.forceLongButton.setEnabled(False)
+        self.exitPositionButton.setEnabled(True)
 
     def force_short(self):
         self.timestamp_message('Forcing short.')
         if self.trader.get_position() == "Long":
-            self.trader.buy_long('Forcing short.')
+            self.trader.sell_long('Exiting long because short was forced.')
 
-        self.trader.buy_short('Forcing short.')
+        self.trader.sell_short('Forcing short.')
+        self.forceShortButton.setEnabled(False)
+        self.forceLongButton.setEnabled(True)
+        self.exitPositionButton.setEnabled(True)
 
     def pause_bot(self):
         pass
@@ -102,16 +126,17 @@ class Interface(QMainWindow):
         symbol = self.tickerComboBox.currentText()
         interval = self.convert_interval(self.intervalComboBox.currentText())
         startingBalance = self.simulationStartingBalanceSpinBox.value()
+        self.timestamp_message("Retrieving data...")
         self.trader = SimulatedTrader(startingBalance=startingBalance,
                                       symbol=symbol,
-                                      interval=interval, loadData=False)
+                                      interval=interval, loadData=True)
 
-        self.trader.dataView.get_data_from_database()
-        if not self.trader.dataView.database_is_updated():
-            self.timestamp_message("Updating data...")
-            self.trader.dataView.update_database()
-        else:
-            self.timestamp_message("Data is up-to-date.")
+        # self.trader.dataView.get_data_from_database()
+        # if not self.trader.dataView.database_is_updated():
+        #     self.timestamp_message("Updating data...")
+        #     self.trader.dataView.update_database()
+        # else:
+        #     self.timestamp_message("Data is up-to-date.")
 
     def reset_trader(self):
         self.trader.trades = []
@@ -144,13 +169,14 @@ class Interface(QMainWindow):
     def run_simulation(self):
         self.timestamp_message('Starting simulation...')
         self.endSimulationButton.setEnabled(True)
-        self.grey_out(True)
-        self.enable_override()
+        self.grey_out_main_options(True)
         self.create_simulation_trader()
         self.reset_trader()
         self.set_parameters()
         self.trader.tradingOptions = self.get_trading_options()
         self.runningLive = True
+        self.enable_override()
+        self.tradesListWidget.clear()
         crossInform = False
 
         while self.runningLive:
@@ -177,7 +203,18 @@ class Interface(QMainWindow):
             if not self.trader.inHumanControl:
                 self.trader.main_logic()
 
-    def grey_out(self, boolean):
+            if self.trader.get_position() is None:
+                self.exitPositionButton.setEnabled(False)
+
+            if self.trader.get_position() == 'Long':
+                self.forceLongButton.setEnabled(False)
+                self.forceShortButton.setEnabled(True)
+
+            if self.trader.get_position() == "Short":
+                self.forceLongButton.setEnabled(True)
+                self.forceShortButton.setEnabled(False)
+
+    def grey_out_main_options(self, boolean):
         boolean = not boolean
         self.mainOptionsGroupBox.setEnabled(boolean)
         self.averageOptionsGroupBox.setEnabled(boolean)
@@ -193,7 +230,7 @@ class Interface(QMainWindow):
         self.disable_override()
         self.endSimulationButton.setEnabled(False)
         self.runningLive = False
-        self.grey_out(False)
+        self.grey_out_main_options(False)
 
     @staticmethod
     def convert_interval(interval):
@@ -255,13 +292,30 @@ class Interface(QMainWindow):
             self.doubleCrossGroupBox.setEnabled(False)
 
     def update_info(self):
-        self.currentBalanceValue.setText(str(round(self.trader.balance, 2)))
-        self.startingBalanceValue.setText(str(self.trader.startingBalance))
-        self.profitLossValue.setText(str(round(self.trader.get_profit(), 2)))
+        self.currentBalanceValue.setText(f'${round(self.trader.balance, 2)}')
+        self.startingBalanceValue.setText(f'${self.trader.startingBalance}')
+
+        if self.trader.get_profit() < 0:
+            self.profitLossLabel.setText("Loss")
+            self.profitLossValue.setText(f'${-round(self.trader.get_profit(), 2)}')
+        else:
+            self.profitLossLabel.setText("Gain")
+            self.profitLossValue.setText(f'${round(self.trader.get_profit(), 2)}')
         self.currentPositionValue.setText(str(self.trader.get_position()))
         self.currentBtcValue.setText(str(self.trader.btc))
         self.btcOwedValue.setText(str(self.trader.btcOwed))
         self.tradesMadeValue.setText(str(len(self.trader.trades)))
+        self.currentTickerLabel.setText(str(self.trader.dataView.symbol))
+        self.currentTickerValue.setText(f'${self.trader.dataView.get_current_price()}')
+
+        if self.trader.get_stop_loss() is not None:
+            if self.trader.lossStrategy == 1:
+                self.lossPointLabel.setText('Stop loss')
+            else:
+                self.lossPointLabel.setText('Trailing loss')
+            self.lossPointValue.setText(f'${round(self.trader.get_stop_loss(), 2)}')
+        else:
+            self.lossPointValue.setText('None')
 
         if len(self.trader.tradingOptions) > 0:
             option = self.trader.tradingOptions[0]
@@ -269,9 +323,9 @@ class Interface(QMainWindow):
             finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
 
             self.baseInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})')
-            self.baseInitialMovingAverageValue.setText(str(initialAverage))
+            self.baseInitialMovingAverageValue.setText(f'${initialAverage}')
             self.baseFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})')
-            self.baseFinalMovingAverageValue.setText(str(finalAverage))
+            self.baseFinalMovingAverageValue.setText(f'${finalAverage}')
 
         if len(self.trader.tradingOptions) > 1:
             option = self.trader.tradingOptions[1]
@@ -281,11 +335,9 @@ class Interface(QMainWindow):
             print('', end='')  # This is so PyCharm stops nagging us about duplicate code.
 
             self.nextInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})')
-            self.nextInitialMovingAverageValue.setText(str(initialAverage))
+            self.nextInitialMovingAverageValue.setText(f'${initialAverage}')
             self.nextFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})')
-            self.nextFinalMovingAverageValue.setText(str(finalAverage))
-
-            self.lossPointValue.setText(str(self.trader.get_stop_loss()))
+            self.nextFinalMovingAverageValue.setText(f'${finalAverage}')
 
 
 def main():
