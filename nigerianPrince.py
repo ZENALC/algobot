@@ -384,7 +384,7 @@ class Interface(QMainWindow):
 def main():
     initialize_logger()
     interface = Interface()
-    interface.show()
+    interface.showMaximized()
     app.exec_()
 
 
