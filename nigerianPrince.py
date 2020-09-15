@@ -9,7 +9,7 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot
 from PyQt5.QtGui import QPalette, QColor, QIcon
-from pyqtgraph import PlotWidget, plot
+from pyqtgraph import PlotWidget, plot, DateAxisItem, mkPen
 
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
@@ -53,6 +53,8 @@ class Interface(QMainWindow):
         self.threadPool = QThreadPool()
         self.setup_graph()
 
+        self.plots = []
+
         self.configuration.lightModeRadioButton.toggled.connect(lambda: self.set_light_mode())
         self.configuration.darkModeRadioButton.toggled.connect(lambda: self.set_dark_mode())
         self.configuration.bloombergModeRadioButton.toggled.connect(lambda: self.set_bloomberg_mode())
@@ -91,15 +93,21 @@ class Interface(QMainWindow):
         app.setPalette(get_bloomberg_palette())
         self.graphWidget.setBackground('k')
 
+    def plot_graph(self, x, y, plotName, color):
+        pen = mkPen(color=color)
+        return self.graphWidget.plot(x, y, name=plotName, pen=pen)
+
     def setup_graph(self):
+        self.graphWidget.setAxisItems({'bottom': DateAxisItem()})
         self.graphWidget.setBackground('w')
         self.graphWidget.setTitle("Graph data.")
         self.graphWidget.setLabel('left', 'Price')
-        self.graphWidget.setLabel('bottom', 'Date')
-        self.graphWidget.setLimits(xMin=0, xMax=50, yMin=0, yMax=30000)
-
-    def plot(self, date, value):
-        self.graphWidget.plot(date, value)
+        self.graphWidget.setLabel('bottom', 'Datetime in UTC')
+        currentDate = datetime.utcnow().timestamp()
+        nextDate = currentDate + 3600000
+        self.graphWidget.setLimits(xMin=currentDate, xMax=nextDate, yMin=9000, yMax=15000)
+        self.graphWidget.addLegend()
+        self.graphWidget.plotItem.setMouseEnabled(y=False)
 
     def set_advanced_logging(self, boolean):
         if self.advancedLogging:
@@ -220,6 +228,7 @@ class Interface(QMainWindow):
 
     def run_simulation(self):
         self.timestamp_message('Starting simulation...')
+        self.graphWidget.clear()
         self.endSimulationButton.setEnabled(True)
         self.grey_out_main_options(True)
         self.create_simulation_trader()
@@ -229,7 +238,31 @@ class Interface(QMainWindow):
         self.runningLive = True
         self.enable_override()
         self.tradesListWidget.clear()
+
+        colors = ['b', 'g', 'r', 'c', 'm',]
         crossInform = False
+
+        self.plots = []
+        currentDate = datetime.utcnow().timestamp()
+
+        for option in self.trader.tradingOptions:
+            initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
+            finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
+            initialName = f'{option.movingAverage}({option.initialBound}) - {option.parameter}'
+            finalName = f'{option.movingAverage}({option.finalBound}) - {option.parameter}'
+            initialDict = {
+                'plot': self.plot_graph((currentDate, ), (initialAverage, ), color=colors.pop(), plotName=initialName),
+                'x': [currentDate, ],
+                'y': [initialAverage, ]
+            }
+            self.plots.append(initialDict)
+
+            finalDict = {
+                'plot': self.plot_graph((currentDate,), (finalAverage,), color=colors.pop(), plotName=finalName),
+                'x': [currentDate, ],
+                'y': [initialAverage, ]
+            }
+            self.plots.append(finalDict)
 
         while self.runningLive:
             if not self.trader.dataView.data_is_updated():
@@ -331,10 +364,20 @@ class Interface(QMainWindow):
         else:
             self.statistics.lossPointValue.setText('None')
 
+        currentUTC = datetime.utcnow().timestamp()
+
         if len(self.trader.tradingOptions) > 0:
             option = self.trader.tradingOptions[0]
             initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
+
+            self.plots[0]['x'].append(currentUTC)
+            self.plots[0]['y'].append(initialAverage)
+            self.plots[0]['plot'].setData(self.plots[0]['x'], self.plots[0]['y'])
+
+            self.plots[1]['x'].append(currentUTC)
+            self.plots[1]['y'].append(finalAverage)
+            self.plots[1]['plot'].setData(self.plots[1]['x'], self.plots[1]['y'])
 
             self.statistics.baseInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound}) '
                                                                   f'- {option.parameter.capitalize()}')
@@ -348,9 +391,18 @@ class Interface(QMainWindow):
             self.statistics.nextInitialMovingAverageValue.show()
             self.statistics.nextFinalMovingAverageLabel.show()
             self.statistics.nextFinalMovingAverageValue.show()
+
             option = self.trader.tradingOptions[1]
             initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
+
+            self.plots[2]['x'].append(currentUTC)
+            self.plots[2]['y'].append(initialAverage)
+            self.plots[2]['plot'].setData(self.plots[2]['x'], self.plots[2]['y'])
+
+            self.plots[3]['x'].append(currentUTC)
+            self.plots[3]['y'].append(finalAverage)
+            self.plots[3]['plot'].setData(self.plots[3]['x'], self.plots[3]['y'])
 
             self.statistics.nextInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})'
                                                                   f' - {option.parameter.capitalize()}')
