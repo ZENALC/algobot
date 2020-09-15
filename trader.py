@@ -811,6 +811,7 @@ class SimulatedTrader:
         """
         Gets end result of simulation.
         """
+        self.endingTime = datetime.now()
         if self.btc > 0:
             self.output_message("Selling all BTC...")
             self.sell_long(f'Sold long as simulation ended.')
@@ -901,7 +902,6 @@ class SimulatedTrader:
 
         self.simulate_option_1()
         self.output_message("\nExiting simulation.")
-        self.endingTime = datetime.now()
         self.get_simulation_result()
         self.log_trades()
 

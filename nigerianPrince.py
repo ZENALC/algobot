@@ -253,11 +253,13 @@ class Interface(QMainWindow):
         self.trader = None
 
     def end_simulation(self):
+        self.runningLive = False
         self.timestamp_message("Ending simulation...\n\n")
+        self.trader.get_simulation_result()
         self.trader.log_trades()
         self.disable_override()
+        self.update_trades_to_list_view()
         self.endSimulationButton.setEnabled(False)
-        self.runningLive = False
         self.grey_out_main_options(False)
 
     def timestamp_message(self, msg):
