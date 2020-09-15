@@ -8,7 +8,8 @@ from helpers import *
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot
-from PyQt5.QtGui import QPalette, QColor, QPixmap, QIcon
+from PyQt5.QtGui import QPalette, QColor, QIcon
+from pyqtgraph import PlotWidget, plot
 
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
@@ -50,6 +51,11 @@ class Interface(QMainWindow):
         self.otherCommands = OtherCommands()
         self.statistics = Statistics()
         self.threadPool = QThreadPool()
+        self.setup_graph()
+
+        self.configuration.lightModeRadioButton.toggled.connect(lambda: self.set_light_mode())
+        self.configuration.darkModeRadioButton.toggled.connect(lambda: self.set_dark_mode())
+        self.configuration.bloombergModeRadioButton.toggled.connect(lambda: self.set_bloomberg_mode())
 
         self.advancedLogging = True
 
@@ -72,6 +78,28 @@ class Interface(QMainWindow):
         self.liveThread = None
 
         self.timestamp_message('Greetings.')
+
+    def set_dark_mode(self):
+        app.setPalette(get_dark_palette())
+        self.graphWidget.setBackground('k')
+
+    def set_light_mode(self):
+        app.setPalette(get_light_palette())
+        self.graphWidget.setBackground('w')
+
+    def set_bloomberg_mode(self):
+        app.setPalette(get_bloomberg_palette())
+        self.graphWidget.setBackground('k')
+
+    def setup_graph(self):
+        self.graphWidget.setBackground('w')
+        self.graphWidget.setTitle("Graph data.")
+        self.graphWidget.setLabel('left', 'Price')
+        self.graphWidget.setLabel('bottom', 'Date')
+        self.graphWidget.setLimits(xMin=0, xMax=50, yMin=0, yMax=30000)
+
+    def plot(self, date, value):
+        self.graphWidget.plot(date, value)
 
     def set_advanced_logging(self, boolean):
         if self.advancedLogging:
@@ -342,10 +370,6 @@ class Configuration(QDialog):
     def __init__(self, parent=None):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
-
-        self.lightModeRadioButton.toggled.connect(lambda: app.setPalette(get_light_palette()))
-        self.darkModeRadioButton.toggled.connect(lambda: app.setPalette(get_dark_palette()))
-        self.bloombergModeRadioButton.toggled.connect(lambda: app.setPalette(get_bloomberg_palette()))
 
         self.doubleCrossCheckMark.toggled.connect(self.interact_double_cross)
 

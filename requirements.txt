@@ -33,3 +33,4 @@ zope.interface==5.1.0
 twilio
 pytest
 PyQt5
+pyqtgraph

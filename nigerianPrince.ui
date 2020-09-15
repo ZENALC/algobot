@@ -80,16 +80,32 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="graphsLabel">
-        <property name="text">
-         <string>Graphs</string>
+       <widget class="PlotWidget" name="graphWidget" native="true">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>350</height>
+         </size>
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QGraphicsView" name="graphicsView"/>
-      </item>
      </layout>
+    </item>
+    <item row="0" column="0">
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>5</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
     </item>
     <item row="0" column="2">
      <layout class="QVBoxLayout" name="Right">
@@ -455,22 +471,6 @@
       </item>
      </layout>
     </item>
-    <item row="0" column="0">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeType">
-       <enum>QSizePolicy::Fixed</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>5</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -496,12 +496,12 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="configurationAction">
    <property name="text">
-    <string>Configuration</string>
+    <string>Bot Settings</string>
    </property>
   </action>
   <action name="otherCommandsAction">
    <property name="text">
-    <string>Other</string>
+    <string>Misc Commands</string>
    </property>
   </action>
   <action name="statisticsAction">
@@ -510,6 +510,14 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PlotWidget</class>
+   <extends>QWidget</extends>
+   <header>pyqtgraph</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
