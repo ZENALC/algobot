@@ -818,7 +818,7 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_15">
           <item row="0" column="0">
-           <widget class="QRadioButton" name="advancedLoggingRadioBUtton">
+           <widget class="QRadioButton" name="advancedLoggingRadioButton">
             <property name="text">
              <string>Advanced Logging</string>
             </property>

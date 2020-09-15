@@ -53,8 +53,8 @@ class Interface(QMainWindow):
 
         self.advancedLogging = True
 
-        self.configuration.simpleLoggingRadioButton.toggled.connect(lambda: self.set_advanced_logging(False))
-        self.configuration.simpleLoggingRadioButton.toggled.connect(lambda: self.set_advanced_logging(True))
+        self.configuration.simpleLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(False))
+        self.configuration.advancedLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(True))
 
         self.otherCommandsAction.triggered.connect(lambda: self.otherCommands.show())
         self.configurationAction.triggered.connect(lambda: self.configuration.show())
