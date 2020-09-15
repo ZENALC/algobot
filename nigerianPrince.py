@@ -1,42 +1,22 @@
 import sys
 import traceback
+import assets
 
 from trader import SimulatedTrader, Option, Data
 from helpers import *
 
 from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot
-from PyQt5.QtGui import QPalette, QColor
-
+from PyQt5.QtGui import QPalette, QColor, QPixmap, QIcon
 
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
 
-uiFile = 'nigerianPrince.ui'
-
-
-def get_dark_palette():
-    palette = QPalette()
-    palette.setColor(QPalette.Window, QColor(53, 53, 53))
-    palette.setColor(QPalette.WindowText, QColor(255, 255, 255))
-    palette.setColor(QPalette.Base, QColor(25, 25, 25))
-    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-    palette.setColor(QPalette.ToolTipBase, QColor(0, 0, 0))
-    palette.setColor(QPalette.ToolTipText, QColor(255, 255, 255))
-    palette.setColor(QPalette.Text, QColor(255, 255, 255))
-    palette.setColor(QPalette.Button, QColor(53, 53, 53))
-    palette.setColor(QPalette.ButtonText, QColor(255, 255, 255))
-    palette.setColor(QPalette.BrightText, QColor(255, 0, 0))
-    palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
-    return palette
-
-
-def get_light_palette():
-    palette = QPalette()
-    return palette
+mainUi = 'nigerianPrince.ui'
+configurationUi = 'configuration.ui'
+otherCommandsUi = 'otherCommands.ui'
+statisticsUi = 'statistics.ui'
 
 
 class Worker(QRunnable):
@@ -65,14 +45,21 @@ class Worker(QRunnable):
 class Interface(QMainWindow):
     def __init__(self, parent=None):
         super(Interface, self).__init__(parent)  # Initializing object
-        uic.loadUi(uiFile, self)  # Loading the UI
+        uic.loadUi(mainUi, self)  # Loading the main UI
+        self.configuration = Configuration()
+        self.otherCommands = OtherCommands()
+        self.statistics = Statistics()
         self.threadPool = QThreadPool()
 
-        self.lightModeRadioButton.toggled.connect(lambda: app.setPalette(get_light_palette()))
-        self.darkModeRadioButton.toggled.connect(lambda: app.setPalette(get_dark_palette()))
+        self.advancedLogging = True
 
-        self.doubleCrossCheckMark.toggled.connect(self.interact_double_cross)
-        self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
+        self.configuration.simpleLoggingRadioButton.toggled.connect(lambda: self.set_advanced_logging(False))
+        self.configuration.simpleLoggingRadioButton.toggled.connect(lambda: self.set_advanced_logging(True))
+
+        self.otherCommandsAction.triggered.connect(lambda: self.otherCommands.show())
+        self.configurationAction.triggered.connect(lambda: self.configuration.show())
+        self.statisticsAction.triggered.connect(lambda: self.statistics.show())
+
         self.runSimulationButton.clicked.connect(self.initiate_simulation_thread)
         self.endSimulationButton.clicked.connect(self.end_simulation)
         self.forceLongButton.clicked.connect(self.force_long)
@@ -80,22 +67,18 @@ class Interface(QMainWindow):
         self.pauseBotButton.clicked.connect(self.pause_bot)
         self.exitPositionButton.clicked.connect(self.exit_position)
 
-        self.movingAverageMiscellaneousParameter.currentTextChanged.connect(self.initiate_misc_get_moving_average)
-        self.movingAverageMiscellaneousType.currentTextChanged.connect(self.initiate_misc_get_moving_average)
-        self.movingAverageMiscellaneousValue.valueChanged.connect(self.initiate_misc_get_moving_average)
-
         self.trader = None
         self.runningLive = False
         self.liveThread = None
 
         self.timestamp_message('Greetings.')
 
-    def initiate_misc_get_moving_average(self):
-        thread = Worker(self.get_moving_average_miscellaneous)
-        self.threadPool.start(thread)
-
-    def get_moving_average_miscellaneous(self):
-        self.movingAverageMiscellaneousResult.setText("haha what did you expect?")
+    def set_advanced_logging(self, boolean):
+        if self.advancedLogging:
+            self.timestamp_message(f'Logging method has been changed to advanced.')
+        else:
+            self.timestamp_message(f'Logging method has been changed to simple.')
+        self.advancedLogging = boolean
 
     def enable_override(self):
         self.overrideGroupBox.setEnabled(True)
@@ -141,31 +124,31 @@ class Interface(QMainWindow):
         pass
 
     def get_trading_options(self):
-        baseAverageType = self.averageTypeComboBox.currentText()
-        baseParameter = self.parameterComboBox.currentText().lower()
-        baseInitialValue = self.initialValueSpinBox.value()
-        baseFinalValue = self.finalValueSpinBox.value()
+        baseAverageType = self.configuration.averageTypeComboBox.currentText()
+        baseParameter = self.configuration.parameterComboBox.currentText().lower()
+        baseInitialValue = self.configuration.initialValueSpinBox.value()
+        baseFinalValue = self.configuration.finalValueSpinBox.value()
 
         options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
-        if self.doubleCrossCheckMark.isChecked():
-            additionalAverageType = self.doubleAverageComboBox.currentText()
-            additionalParameter = self.doubleParameterComboBox.currentText().lower()
-            additionalInitialValue = self.doubleInitialValueSpinBox.value()
-            additionalFinalValue = self.doubleFinalValueSpinBox.value()
+        if self.configuration.doubleCrossCheckMark.isChecked():
+            additionalAverageType = self.configuration.doubleAverageComboBox.currentText()
+            additionalParameter = self.configuration.doubleParameterComboBox.currentText().lower()
+            additionalInitialValue = self.configuration.doubleInitialValueSpinBox.value()
+            additionalFinalValue = self.configuration.doubleFinalValueSpinBox.value()
             option = Option(additionalAverageType, additionalParameter, additionalInitialValue, additionalFinalValue)
             options.append(option)
 
         return options
 
     def get_loss_strategy(self):
-        if self.trailingLossRadio.isChecked():
+        if self.configuration.trailingLossRadio.isChecked():
             return 2
         else:
             return 1
 
     def create_simulation_trader(self):
-        symbol = self.tickerComboBox.currentText()
-        interval = self.convert_interval(self.intervalComboBox.currentText())
+        symbol = self.configuration.tickerComboBox.currentText()
+        interval = convert_interval(self.configuration.intervalComboBox.currentText())
         startingBalance = self.simulationStartingBalanceSpinBox.value()
         self.timestamp_message("Retrieving data...")
         self.trader = SimulatedTrader(startingBalance=startingBalance,
@@ -189,10 +172,10 @@ class Interface(QMainWindow):
         self.trader.startingTime = datetime.now()
 
     def set_parameters(self):
-        self.trader.lossPercentage = self.lossPercentageSpinBox.value()
+        self.trader.lossPercentage = self.configuration.lossPercentageSpinBox.value()
         self.trader.lossStrategy = self.get_loss_strategy()
-        self.trader.safetyTimer = self.sleepTimerSpinBox.value()
-        self.trader.safetyMargin = self.marginSpinBox.value()
+        self.trader.safetyTimer = self.configuration.sleepTimerSpinBox.value()
+        self.trader.safetyMargin = self.configuration.marginSpinBox.value()
 
     def display_trade_options(self):
         for option in self.trader.tradingOptions:
@@ -233,8 +216,10 @@ class Interface(QMainWindow):
                 self.timestamp_message("Waiting for a cross.")
 
             self.update_info()
-            self.trader.output_basic_information()
             self.update_trades_to_list_view()
+
+            if self.advancedLogging:
+                self.trader.output_basic_information()
 
             self.trader.currentPrice = self.trader.dataView.get_current_price()
             if self.trader.longTrailingPrice is not None and self.trader.currentPrice > self.trader.longTrailingPrice:
@@ -258,10 +243,10 @@ class Interface(QMainWindow):
 
     def grey_out_main_options(self, boolean):
         boolean = not boolean
-        self.mainOptionsGroupBox.setEnabled(boolean)
-        self.averageOptionsGroupBox.setEnabled(boolean)
-        self.lossOptionsGroupBox.setEnabled(boolean)
-        self.otherOptionsBox.setEnabled(boolean)
+        self.configuration.mainOptionsGroupBox.setEnabled(boolean)
+        self.configuration.averageOptionsGroupBox.setEnabled(boolean)
+        self.configuration.lossOptionsGroupBox.setEnabled(boolean)
+        self.configuration.otherOptionsBox.setEnabled(boolean)
         self.runSimulationButton.setEnabled(boolean)
 
     def destroy_simulation_trader(self):
@@ -273,44 +258,6 @@ class Interface(QMainWindow):
         self.endSimulationButton.setEnabled(False)
         self.runningLive = False
         self.grey_out_main_options(False)
-
-    @staticmethod
-    def convert_interval(interval):
-        intervals = {
-            '12 Hours': '12h',
-            '15 Minutes': '15m',
-            '1 Day': '1d',
-            '1 Hour': '1h',
-            '1 Minute': '1m',
-            '2 Hours': '2h',
-            '30 Minutes': '30m',
-            '3 Days': '3d',
-            '3 Minutes': '3m',
-            '4 Hours': '4h',
-            '5 Minutes': '5m',
-            '6 Hours': '6h',
-            '8 Hours': '8h'
-        }
-        return intervals[interval]
-
-    def initiate_csv_generation(self):
-        thread = Worker(self.generate_csv)
-        self.threadPool.start(thread)
-
-    def generate_csv(self):
-        self.generateCSVButton.setEnabled(False)
-
-        symbol = self.csvGenerationTicker.currentText()
-        interval = self.convert_interval(self.csvGenerationDataInterval.currentText())
-        self.csvGenerationStatus.setText("Downloading data...")
-        savedPath = Data(loadData=False, interval=interval, symbol=symbol).get_csv_data(interval)
-
-        # messageBox = QMessageBox()
-        # messageBox.setText(f"Successfully saved CSV data to {savedPath}.")
-        # messageBox.setIcon(QMessageBox.Information)
-        # messageBox.exec_()
-        self.csvGenerationStatus.setText(f"Successfully saved CSV data to {savedPath}.")
-        self.generateCSVButton.setEnabled(True)
 
     def timestamp_message(self, msg):
         self.botOutput.appendPlainText(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {msg}')
@@ -327,65 +274,192 @@ class Interface(QMainWindow):
     def add_trade_to_list_view(self, msg):
         self.tradesListWidget.addItem(msg)
 
-    def interact_double_cross(self):
-        if self.doubleCrossCheckMark.isChecked():
-            self.doubleCrossGroupBox.setEnabled(True)
-        else:
-            self.doubleCrossGroupBox.setEnabled(False)
-
     def update_info(self):
-        self.currentBalanceValue.setText(f'${round(self.trader.balance, 2)}')
-        self.startingBalanceValue.setText(f'${self.trader.startingBalance}')
+        self.statistics.currentBalanceValue.setText(f'${round(self.trader.balance, 2)}')
+        self.statistics.startingBalanceValue.setText(f'${self.trader.startingBalance}')
 
         if self.trader.get_profit() < 0:
-            self.profitLossLabel.setText("Loss")
-            self.profitLossValue.setText(f'${-round(self.trader.get_profit(), 2)}')
+            self.statistics.profitLossLabel.setText("Loss")
+            self.statistics.profitLossValue.setText(f'${-round(self.trader.get_profit(), 2)}')
         else:
-            self.profitLossLabel.setText("Gain")
-            self.profitLossValue.setText(f'${round(self.trader.get_profit(), 2)}')
-        self.currentPositionValue.setText(str(self.trader.get_position()))
-        self.currentBtcValue.setText(str(self.trader.btc))
-        self.btcOwedValue.setText(str(self.trader.btcOwed))
-        self.tradesMadeValue.setText(str(len(self.trader.trades)))
-        self.currentTickerLabel.setText(str(self.trader.dataView.symbol))
-        self.currentTickerValue.setText(f'${self.trader.dataView.get_current_price()}')
+            self.statistics.profitLossLabel.setText("Gain")
+            self.statistics.profitLossValue.setText(f'${round(self.trader.get_profit(), 2)}')
+        self.statistics.currentPositionValue.setText(str(self.trader.get_position()))
+        self.statistics.currentBtcValue.setText(str(self.trader.btc))
+        self.statistics.btcOwedValue.setText(str(self.trader.btcOwed))
+        self.statistics.tradesMadeValue.setText(str(len(self.trader.trades)))
+        self.statistics.currentTickerLabel.setText(str(self.trader.dataView.symbol))
+        self.statistics.currentTickerValue.setText(f'${self.trader.dataView.get_current_price()}')
 
         if self.trader.get_stop_loss() is not None:
             if self.trader.lossStrategy == 1:
-                self.lossPointLabel.setText('Stop loss')
+                self.statistics.lossPointLabel.setText('Stop loss')
             else:
-                self.lossPointLabel.setText('Trailing loss')
-            self.lossPointValue.setText(f'${round(self.trader.get_stop_loss(), 2)}')
+                self.statistics.lossPointLabel.setText('Trailing loss')
+            self.statistics.lossPointValue.setText(f'${round(self.trader.get_stop_loss(), 2)}')
         else:
-            self.lossPointValue.setText('None')
+            self.statistics.lossPointValue.setText('None')
 
         if len(self.trader.tradingOptions) > 0:
             option = self.trader.tradingOptions[0]
             initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
 
-            self.baseInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})')
-            self.baseInitialMovingAverageValue.setText(f'${initialAverage}')
-            self.baseFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})')
-            self.baseFinalMovingAverageValue.setText(f'${finalAverage}')
+            self.statistics.baseInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})')
+            self.statistics.baseInitialMovingAverageValue.setText(f'${initialAverage}')
+            self.statistics.baseFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})')
+            self.statistics.baseFinalMovingAverageValue.setText(f'${finalAverage}')
 
         if len(self.trader.tradingOptions) > 1:
+            self.statistics.nextInitialMovingAverageLabel.show()
+            self.statistics.nextInitialMovingAverageValue.show()
+            self.statistics.nextFinalMovingAverageLabel.show()
+            self.statistics.nextFinalMovingAverageValue.show()
             option = self.trader.tradingOptions[1]
             initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
 
             print('', end='')  # This is so PyCharm stops nagging us about duplicate code.
 
-            self.nextInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})')
-            self.nextInitialMovingAverageValue.setText(f'${initialAverage}')
-            self.nextFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})')
-            self.nextFinalMovingAverageValue.setText(f'${finalAverage}')
+            self.statistics.nextInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})')
+            self.statistics.nextInitialMovingAverageValue.setText(f'${initialAverage}')
+            self.statistics.nextFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})')
+            self.statistics.nextFinalMovingAverageValue.setText(f'${finalAverage}')
+        else:
+            self.statistics.nextInitialMovingAverageLabel.hide()
+            self.statistics.nextInitialMovingAverageValue.hide()
+            self.statistics.nextFinalMovingAverageLabel.hide()
+            self.statistics.nextFinalMovingAverageValue.hide()
+
+
+class Configuration(QDialog):
+    def __init__(self, parent=None):
+        super(Configuration, self).__init__(parent)  # Initializing object
+        uic.loadUi(configurationUi, self)  # Loading the main UI
+
+        self.lightModeRadioButton.toggled.connect(lambda: app.setPalette(get_light_palette()))
+        self.darkModeRadioButton.toggled.connect(lambda: app.setPalette(get_dark_palette()))
+        self.bloombergModeRadioButton.toggled.connect(lambda: app.setPalette(get_bloomberg_palette()))
+
+        self.doubleCrossCheckMark.toggled.connect(self.interact_double_cross)
+
+    def interact_double_cross(self):
+        if self.doubleCrossCheckMark.isChecked():
+            self.doubleCrossGroupBox.setEnabled(True)
+        else:
+            self.doubleCrossGroupBox.setEnabled(False)
+
+
+class OtherCommands(QDialog):
+    def __init__(self, parent=None):
+        super(OtherCommands, self).__init__(parent)  # Initializing object
+        uic.loadUi(otherCommandsUi, self)  # Loading the main UI
+
+        self.threadPool = QThreadPool()
+
+        self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
+        self.movingAverageMiscellaneousParameter.currentTextChanged.connect(self.initiate_misc_get_moving_average)
+        self.movingAverageMiscellaneousType.currentTextChanged.connect(self.initiate_misc_get_moving_average)
+        self.movingAverageMiscellaneousValue.valueChanged.connect(self.initiate_misc_get_moving_average)
+
+    def initiate_misc_get_moving_average(self):
+        thread = Worker(self.get_moving_average_miscellaneous)
+        self.threadPool.start(thread)
+
+    def get_moving_average_miscellaneous(self):
+        self.movingAverageMiscellaneousResult.setText("haha what did you expect?")
+
+    def initiate_csv_generation(self):
+        thread = Worker(self.generate_csv)
+        self.threadPool.start(thread)
+
+    def generate_csv(self):
+        self.generateCSVButton.setEnabled(False)
+
+        symbol = self.csvGenerationTicker.currentText()
+        interval = convert_interval(self.csvGenerationDataInterval.currentText())
+        self.csvGenerationStatus.setText("Downloading data...")
+        savedPath = Data(loadData=False, interval=interval, symbol=symbol).get_csv_data(interval)
+
+        # messageBox = QMessageBox()
+        # messageBox.setText(f"Successfully saved CSV data to {savedPath}.")
+        # messageBox.setIcon(QMessageBox.Information)
+        # messageBox.exec_()
+        self.csvGenerationStatus.setText(f"Successfully saved CSV data to {savedPath}.")
+        self.generateCSVButton.setEnabled(True)
+
+
+class Statistics(QDialog):
+    def __init__(self, parent=None):
+        super(Statistics, self).__init__(parent)  # Initializing object
+        uic.loadUi(statisticsUi, self)  # Loading the main UI
+
+
+def convert_interval(interval):
+    intervals = {
+        '12 Hours': '12h',
+        '15 Minutes': '15m',
+        '1 Day': '1d',
+        '1 Hour': '1h',
+        '1 Minute': '1m',
+        '2 Hours': '2h',
+        '30 Minutes': '30m',
+        '3 Days': '3d',
+        '3 Minutes': '3m',
+        '4 Hours': '4h',
+        '5 Minutes': '5m',
+        '6 Hours': '6h',
+        '8 Hours': '8h'
+    }
+    return intervals[interval]
+
+
+def get_bloomberg_palette():
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.WindowText, QColor(255, 140, 0))
+    palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ToolTipBase, QColor(0, 0, 0))
+    palette.setColor(QPalette.ToolTipText, QColor(255, 140, 0))
+    palette.setColor(QPalette.Text, QColor(255, 140, 0))
+    palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ButtonText, QColor(255, 140, 0))
+    palette.setColor(QPalette.BrightText, QColor(252, 0, 0))
+    palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
+    return palette
+
+
+def get_dark_palette():
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.WindowText, QColor(255, 255, 255))
+    palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ToolTipBase, QColor(0, 0, 0))
+    palette.setColor(QPalette.ToolTipText, QColor(255, 255, 255))
+    palette.setColor(QPalette.Text, QColor(255, 255, 255))
+    palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ButtonText, QColor(255, 255, 255))
+    palette.setColor(QPalette.BrightText, QColor(255, 0, 0))
+    palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
+    return palette
+
+
+def get_light_palette():
+    palette = QPalette()
+    return palette
 
 
 def main():
     initialize_logger()
     interface = Interface()
     interface.showMaximized()
+    app.setWindowIcon(QIcon(':/logo/nigerianPrince.png'))
     app.exec_()
 
 

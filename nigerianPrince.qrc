@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="logo">
+    <file>nigerianPrince.png</file>
+  </qresource>
+</RCC>
