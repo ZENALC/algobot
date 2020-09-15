@@ -261,8 +261,8 @@ class Data:
         try:
             return float(self.binanceClient.get_symbol_ticker(symbol=self.symbol)['price'])
         except Exception as e:
-            self.output_message(f'Error: {e}. Retrying in 2 seconds...', 4)
-            time.sleep(2)
+            self.output_message(f'Error: {e}. Retrying in 5 seconds...', 4)
+            time.sleep(5)
             self.get_current_price()
 
     def get_interval_unit_and_measurement(self):

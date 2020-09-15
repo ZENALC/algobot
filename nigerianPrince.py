@@ -233,6 +233,7 @@ class Interface(QMainWindow):
                 self.timestamp_message("Waiting for a cross.")
 
             self.update_info()
+            self.trader.output_basic_information()
             self.update_trades_to_list_view()
 
             self.trader.currentPrice = self.trader.dataView.get_current_price()
