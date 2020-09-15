@@ -956,8 +956,8 @@ class SimulatedTrader:
             except Exception as e:
                 if not fail:
                     self.output_message(f'ERROR: {e}')
-                    self.output_message("Something went wrong. Trying again in 5 seconds.")
-                time.sleep(5)
+                    self.output_message("Something went wrong. Trying again in 10 seconds.")
+                time.sleep(10)
                 self.output_message("Attempting to fix error...")
                 fail = True
 

@@ -254,6 +254,7 @@ class Interface(QMainWindow):
 
     def end_simulation(self):
         self.timestamp_message("Ending simulation...\n\n")
+        self.trader.log_trades()
         self.disable_override()
         self.endSimulationButton.setEnabled(False)
         self.runningLive = False
@@ -305,9 +306,11 @@ class Interface(QMainWindow):
             initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
 
-            self.statistics.baseInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})')
+            self.statistics.baseInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound}) '
+                                                                  f'- {option.parameter.capitalize()}')
             self.statistics.baseInitialMovingAverageValue.setText(f'${initialAverage}')
-            self.statistics.baseFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})')
+            self.statistics.baseFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound}) '
+                                                                f'- {option.parameter.capitalize()}')
             self.statistics.baseFinalMovingAverageValue.setText(f'${finalAverage}')
 
         if len(self.trader.tradingOptions) > 1:
@@ -319,11 +322,12 @@ class Interface(QMainWindow):
             initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
 
-            print('', end='')  # This is so PyCharm stops nagging us about duplicate code.
-
-            self.statistics.nextInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})')
+            self.statistics.nextInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})'
+                                                                  f' - {option.parameter.capitalize()}')
+            print("", end="")  # so PyCharm stops nagging us
             self.statistics.nextInitialMovingAverageValue.setText(f'${initialAverage}')
-            self.statistics.nextFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})')
+            self.statistics.nextFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})'
+                                                                f' - {option.parameter.capitalize()}')
             self.statistics.nextFinalMovingAverageValue.setText(f'${finalAverage}')
         else:
             self.statistics.nextInitialMovingAverageLabel.hide()
