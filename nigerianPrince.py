@@ -433,7 +433,7 @@ def get_bloomberg_palette():
     palette.setColor(QPalette.ButtonText, QColor(255, 140, 0))
     palette.setColor(QPalette.BrightText, QColor(252, 0, 0))
     palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.Highlight, QColor(255, 140, 0))
     palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
     return palette
 
