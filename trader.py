@@ -653,8 +653,8 @@ class SimulatedTrader:
         Returns profit or loss.
         :return: A number representing profit if positive and loss if negative.
         """
-        balance = self.balance
         self.currentPrice = self.dataView.get_current_price()
+        balance = self.balance
         balance += self.btc * self.currentPrice * (1 - self.transactionFeePercentage)
         balance -= self.btcOwed * self.currentPrice * (1 + self.transactionFeePercentage)
         return balance - self.startingBalance

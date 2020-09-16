@@ -265,42 +265,45 @@ class Interface(QMainWindow):
             self.plots.append(finalDict)
 
         while self.runningLive:
-            if not self.trader.dataView.data_is_updated():
-                self.timestamp_message("Updating data...")
-                self.trader.dataView.update_data()
+            try:
+                if not self.trader.dataView.data_is_updated():
+                    self.timestamp_message("Updating data...")
+                    self.trader.dataView.update_data()
 
-            if self.trader.get_position() is not None:
-                crossInform = False
+                if self.trader.get_position() is not None:
+                    crossInform = False
 
-            if not crossInform and self.trader.get_position() is None:
-                crossInform = True
-                self.timestamp_message("Waiting for a cross.")
+                if not crossInform and self.trader.get_position() is None:
+                    crossInform = True
+                    self.timestamp_message("Waiting for a cross.")
 
-            self.update_info()
-            self.update_trades_to_list_view()
+                self.update_info()
+                self.update_trades_to_list_view()
 
-            if self.advancedLogging:
-                self.trader.output_basic_information()
+                if self.advancedLogging:
+                    self.trader.output_basic_information()
 
-            self.trader.currentPrice = self.trader.dataView.get_current_price()
-            if self.trader.longTrailingPrice is not None and self.trader.currentPrice > self.trader.longTrailingPrice:
-                self.trader.longTrailingPrice = self.trader.currentPrice
-            if self.trader.shortTrailingPrice is not None and self.trader.currentPrice < self.trader.shortTrailingPrice:
-                self.trader.shortTrailingPrice = self.trader.currentPrice
+                self.trader.currentPrice = self.trader.dataView.get_current_price()
+                if self.trader.longTrailingPrice is not None and self.trader.currentPrice > self.trader.longTrailingPrice:
+                    self.trader.longTrailingPrice = self.trader.currentPrice
+                if self.trader.shortTrailingPrice is not None and self.trader.currentPrice < self.trader.shortTrailingPrice:
+                    self.trader.shortTrailingPrice = self.trader.currentPrice
 
-            if not self.trader.inHumanControl:
-                self.trader.main_logic()
+                if not self.trader.inHumanControl:
+                    self.trader.main_logic()
 
-            if self.trader.get_position() is None:
-                self.exitPositionButton.setEnabled(False)
+                if self.trader.get_position() is None:
+                    self.exitPositionButton.setEnabled(False)
 
-            if self.trader.get_position() == 'Long':
-                self.forceLongButton.setEnabled(False)
-                self.forceShortButton.setEnabled(True)
+                if self.trader.get_position() == 'Long':
+                    self.forceLongButton.setEnabled(False)
+                    self.forceShortButton.setEnabled(True)
 
-            if self.trader.get_position() == "Short":
-                self.forceLongButton.setEnabled(True)
-                self.forceShortButton.setEnabled(False)
+                if self.trader.get_position() == "Short":
+                    self.forceLongButton.setEnabled(True)
+                    self.forceShortButton.setEnabled(False)
+            except Exception as e:
+                self.timestamp_message(f'Error: {e}')
 
     def grey_out_main_options(self, boolean):
         boolean = not boolean
