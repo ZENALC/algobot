@@ -4,6 +4,13 @@ from contextlib import closing
 from binance.client import Client
 from helpers import *
 
+BULLISH = 1
+BEARISH = -1
+LONG = 1
+SHORT = -1
+TRAILING_LOSS = 2
+STOP_LOSS = 1
+
 
 class Data:
     def __init__(self, interval='1h', symbol='BTCUSDT', loadData=True):
@@ -516,6 +523,7 @@ class SimulatedTrader:
         self.waitToEnterShort = False  # Boolean that checks if bot should wait before entering short position
         self.inLongPosition = False  # Boolean that keeps track of whether bot is in a long position or not
         self.inShortPosition = False  # Boolean that keeps track of whether bot is in a short position or not
+        self.previousPosition = None  # Previous position to validate for a cross
 
     @staticmethod
     def output_message(message, level=2):
@@ -588,6 +596,7 @@ class SimulatedTrader:
         self.currentPrice = self.dataView.get_current_price()
         earned = btc * self.currentPrice * (1 - self.transactionFeePercentage)
         self.inLongPosition = False
+        self.previousPosition = LONG
         self.btc -= btc
         self.balance += earned
         self.add_trade(msg)
@@ -614,6 +623,7 @@ class SimulatedTrader:
         self.currentPrice = self.dataView.get_current_price()
         self.btcOwed -= btc
         self.inShortPosition = False
+        self.previousPosition = SHORT
         loss = self.currentPrice * btc * (1 + self.transactionFeePercentage)
         self.balance -= loss
         self.add_trade(msg)
@@ -661,9 +671,9 @@ class SimulatedTrader:
 
     def get_position(self):
         if self.inLongPosition:
-            return "Long"
+            return LONG
         elif self.inShortPosition:
-            return "Short"
+            return SHORT
         else:
             return None
 
@@ -703,6 +713,62 @@ class SimulatedTrader:
         else:
             return None
 
+    def check_cross_v2(self):
+        if len(self.tradingOptions) == 0:  # Checking whether options exist.
+            self.output_message("No trading options provided.")
+            return
+
+        trends = []
+
+        for option in self.tradingOptions:
+            initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound)
+            finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound)
+
+            self.output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
+            self.output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
+
+            if initialAverage > finalAverage:
+                trends.append(BULLISH)
+            else:
+                trends.append(BEARISH)
+
+        if all(trend == BULLISH for trend in trends):
+            self.trend = BULLISH
+        elif all(trend == BEARISH for trend in trends):
+            self.trend = BEARISH
+        else:
+            return False
+
+        position = self.get_position()
+        print(position)
+        print(self.trend)
+        print(self.previousPosition)
+
+        if self.trend == BULLISH:
+            if position == LONG:
+                return False
+            elif position is None and self.previousPosition == LONG:  # This means stop loss occurred.
+                return False
+            else:
+                return True
+        elif self.trend == BEARISH:
+            if position == SHORT:
+                return False
+            elif position is None and self.previousPosition == SHORT:  # This means stop loss occurred.
+                return False
+            else:
+                return True
+        return False
+
+        # if self.previousPosition != LONG and self.trend == BULLISH:
+        #     if not self.inLongPosition:
+        #         return True
+        # elif self.previousPosition != SHORT and self.trend == BEARISH:
+        #     if not self.inShortPosition:
+        #         return True
+        # else:
+        #     return False
+
     def check_cross(self):
         """
         Checks if there is a cross
@@ -725,9 +791,9 @@ class SimulatedTrader:
                 continue
 
             if initialAverage > finalAverage:
-                self.trend = 1  # This means we are bullish
+                self.trend = BULLISH  # This means we are bullish
             else:
-                self.trend = -1  # This means we are bearish
+                self.trend = BEARISH  # This means we are bearish
 
             if option.previousInitialAverage >= option.previousFinalAverage:
                 if initialAverage >= finalAverage:
@@ -967,7 +1033,7 @@ class SimulatedTrader:
                 self.buy_short(f'Bought short because of stop loss.')
                 self.waitToEnterShort = True
 
-            if self.check_cross():
+            if self.check_cross_v2():
                 self.buy_short(f'Bought short because a cross was detected.')
                 self.buy_long(f'Bought long because a cross was detected.')
 
@@ -976,13 +1042,13 @@ class SimulatedTrader:
                 self.sell_long(f'Sold long because of stop loss.')
                 self.waitToEnterLong = True
 
-            if self.check_cross():
+            if self.check_cross_v2():
                 self.sell_long(f'Sold long because a cross was detected.')
                 self.sell_short('Sold short because a cross was detected.')
 
         else:  # This means we are in neither position
-            if self.check_cross():
-                if self.trend == 1:  # This checks if we are bullish or bearish
+            if self.check_cross_v2():
+                if self.trend == BULLISH:  # This checks if we are bullish or bearish
                     self.buy_long("Bought long because a cross was detected.")
                 else:
                     self.sell_short("Sold short because a cross was detected.")

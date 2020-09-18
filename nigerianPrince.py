@@ -2,7 +2,7 @@ import sys
 import traceback
 import assets
 
-from trader import SimulatedTrader, Option, Data
+from trader import SimulatedTrader, Option, Data, LONG, SHORT, BULLISH, BEARISH, TRAILING_LOSS, STOP_LOSS
 from helpers import *
 
 from PyQt5 import uic
@@ -125,10 +125,10 @@ class Interface(QMainWindow):
         self.overrideGroupBox.setEnabled(False)
 
     def exit_position(self):
-        if self.trader.get_position() == 'Long':
+        if self.trader.get_position() == LONG:
             self.timestamp_message('Force exiting long.')
             self.trader.sell_long('Force exiting long.')
-        elif self.trader.get_position() == 'Short':
+        elif self.trader.get_position() == SHORT:
             self.timestamp_message('Force exiting short.')
             self.trader.buy_short('Force exiting short.')
 
@@ -138,7 +138,7 @@ class Interface(QMainWindow):
 
     def force_long(self):
         self.timestamp_message('Forcing long.')
-        if self.trader.get_position() == "Short":
+        if self.trader.get_position() == SHORT:
             self.trader.buy_short('Exiting short because long was forced.')
 
         self.trader.buy_long('Forcing long.')
@@ -148,7 +148,7 @@ class Interface(QMainWindow):
 
     def force_short(self):
         self.timestamp_message('Forcing short.')
-        if self.trader.get_position() == "Long":
+        if self.trader.get_position() == LONG:
             self.trader.sell_long('Exiting long because short was forced.')
 
         self.trader.sell_short('Forcing short.')
@@ -294,16 +294,18 @@ class Interface(QMainWindow):
 
                 if self.trader.get_position() is None:
                     self.exitPositionButton.setEnabled(False)
+                else:
+                    self.exitPositionButton.setEnabled(True)
 
-                if self.trader.get_position() == 'Long':
+                if self.trader.get_position() == LONG:
                     self.forceLongButton.setEnabled(False)
                     self.forceShortButton.setEnabled(True)
 
-                if self.trader.get_position() == "Short":
+                if self.trader.get_position() == SHORT:
                     self.forceLongButton.setEnabled(True)
                     self.forceShortButton.setEnabled(False)
             except Exception as e:
-                self.timestamp_message(f'Error: {e}')
+                self.trader.output_message(f'Error: {e}')
 
     def grey_out_main_options(self, boolean):
         boolean = not boolean
@@ -318,10 +320,10 @@ class Interface(QMainWindow):
 
     def end_simulation(self):
         self.runningLive = False
-        self.timestamp_message("Ending simulation...\n\n")
         self.trader.get_simulation_result()
         self.trader.log_trades()
         self.disable_override()
+        self.timestamp_message("Ending simulation...\n")
         self.update_trades_to_list_view()
         self.endSimulationButton.setEnabled(False)
         self.grey_out_main_options(False)
@@ -336,7 +338,8 @@ class Interface(QMainWindow):
         if widgetCount < tradeCount:
             remaining = tradeCount - widgetCount
             for trade in self.trader.trades[-remaining:]:
-                self.add_trade_to_list_view(f'{trade["date"]}: {trade["action"]}')
+                self.add_trade_to_list_view(f'{trade["action"]}')
+                self.timestamp_message(f'{trade["action"]}')
 
     def add_trade_to_list_view(self, msg):
         self.tradesListWidget.addItem(msg)
@@ -351,7 +354,15 @@ class Interface(QMainWindow):
         else:
             self.statistics.profitLossLabel.setText("Gain")
             self.statistics.profitLossValue.setText(f'${round(self.trader.get_profit(), 2)}')
-        self.statistics.currentPositionValue.setText(str(self.trader.get_position()))
+
+        position = self.trader.get_position()
+        if position == LONG:
+            self.statistics.currentPositionValue.setText('Long')
+        elif position == SHORT:
+            self.statistics.currentPositionValue.setText('Short')
+        else:
+            self.statistics.currentPositionValue.setText('None')
+
         self.statistics.currentBtcValue.setText(str(self.trader.btc))
         self.statistics.btcOwedValue.setText(str(self.trader.btcOwed))
         self.statistics.tradesMadeValue.setText(str(len(self.trader.trades)))
@@ -359,7 +370,7 @@ class Interface(QMainWindow):
         self.statistics.currentTickerValue.setText(f'${self.trader.dataView.get_current_price()}')
 
         if self.trader.get_stop_loss() is not None:
-            if self.trader.lossStrategy == 1:
+            if self.trader.lossStrategy == STOP_LOSS:
                 self.statistics.lossPointLabel.setText('Stop loss')
             else:
                 self.statistics.lossPointLabel.setText('Trailing loss')
@@ -545,7 +556,7 @@ def main():
     interface = Interface()
     interface.showMaximized()
     app.setWindowIcon(QIcon(':/logo/nigerianPrince.png'))
-    app.exec_()
+    sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
