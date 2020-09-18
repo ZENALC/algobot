@@ -72,7 +72,7 @@ class Interface(QMainWindow):
         self.endSimulationButton.clicked.connect(self.end_simulation)
         self.forceLongButton.clicked.connect(self.force_long)
         self.forceShortButton.clicked.connect(self.force_short)
-        self.pauseBotButton.clicked.connect(self.pause_bot)
+        self.pauseBotButton.clicked.connect(self.pause_or_resume_bot)
         self.exitPositionButton.clicked.connect(self.exit_position)
 
         self.trader = None
@@ -118,6 +118,7 @@ class Interface(QMainWindow):
 
     def enable_override(self):
         self.overrideGroupBox.setEnabled(True)
+        self.pauseBotButton.setEnabled(True)
         self.forceLongButton.setEnabled(True)
         self.forceShortButton.setEnabled(True)
 
@@ -125,6 +126,8 @@ class Interface(QMainWindow):
         self.overrideGroupBox.setEnabled(False)
 
     def exit_position(self):
+        self.trader.inHumanControl = True
+        self.pauseBotButton.setText('Resume Bot')
         if self.trader.get_position() == LONG:
             self.timestamp_message('Force exiting long.')
             self.trader.sell_long('Force exiting long.')
@@ -137,27 +140,38 @@ class Interface(QMainWindow):
         self.exitPositionButton.setEnabled(False)
 
     def force_long(self):
-        self.timestamp_message('Forcing long.')
+        self.trader.inHumanControl = True
+        self.pauseBotButton.setText('Resume Bot')
+        self.timestamp_message('Forcing long and stopping autonomous logic.')
         if self.trader.get_position() == SHORT:
             self.trader.buy_short('Exiting short because long was forced.')
 
-        self.trader.buy_long('Forcing long.')
+        self.trader.buy_long('Force executed long.')
         self.forceShortButton.setEnabled(False)
         self.forceLongButton.setEnabled(False)
         self.exitPositionButton.setEnabled(True)
 
     def force_short(self):
-        self.timestamp_message('Forcing short.')
+        self.trader.inHumanControl = True
+        self.pauseBotButton.setText('Resume Bot')
+        self.timestamp_message('Forcing short and stopping autonomous logic.')
         if self.trader.get_position() == LONG:
             self.trader.sell_long('Exiting long because short was forced.')
 
-        self.trader.sell_short('Forcing short.')
+        self.trader.sell_short('Force executed short.')
         self.forceShortButton.setEnabled(False)
         self.forceLongButton.setEnabled(True)
         self.exitPositionButton.setEnabled(True)
 
-    def pause_bot(self):
-        pass
+    def pause_or_resume_bot(self):
+        if self.pauseBotButton.text() == 'Pause Bot':
+            self.trader.inHumanControl = True
+            self.pauseBotButton.setText('Resume Bot')
+            self.timestamp_message('Pausing bot logic.')
+        else:
+            self.trader.inHumanControl = False
+            self.pauseBotButton.setText('Pause Bot')
+            self.timestamp_message('Resuming bot logic.')
 
     def get_trading_options(self):
         baseAverageType = self.configuration.averageTypeComboBox.currentText()
@@ -273,7 +287,7 @@ class Interface(QMainWindow):
                 if self.trader.get_position() is not None:
                     crossInform = False
 
-                if not crossInform and self.trader.get_position() is None:
+                if not crossInform and self.trader.get_position() is None and not self.trader.inHumanControl:
                     crossInform = True
                     self.timestamp_message("Waiting for a cross.")
 
@@ -284,9 +298,10 @@ class Interface(QMainWindow):
                     self.trader.output_basic_information()
 
                 self.trader.currentPrice = self.trader.dataView.get_current_price()
-                if self.trader.longTrailingPrice is not None and self.trader.currentPrice > self.trader.longTrailingPrice:
+                currentPrice = self.trader.currentPrice
+                if self.trader.longTrailingPrice is not None and currentPrice > self.trader.longTrailingPrice:
                     self.trader.longTrailingPrice = self.trader.currentPrice
-                if self.trader.shortTrailingPrice is not None and self.trader.currentPrice < self.trader.shortTrailingPrice:
+                if self.trader.shortTrailingPrice is not None and currentPrice < self.trader.shortTrailingPrice:
                     self.trader.shortTrailingPrice = self.trader.currentPrice
 
                 if not self.trader.inHumanControl:
@@ -347,6 +362,7 @@ class Interface(QMainWindow):
     def update_info(self):
         self.statistics.currentBalanceValue.setText(f'${round(self.trader.balance, 2)}')
         self.statistics.startingBalanceValue.setText(f'${self.trader.startingBalance}')
+        self.statistics.autonomousValue.setText(str(not self.trader.inHumanControl))
 
         if self.trader.get_profit() < 0:
             self.statistics.profitLossLabel.setText("Loss")

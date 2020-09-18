@@ -740,9 +740,6 @@ class SimulatedTrader:
             return False
 
         position = self.get_position()
-        print(position)
-        print(self.trend)
-        print(self.previousPosition)
 
         if self.trend == BULLISH:
             if position == LONG:
