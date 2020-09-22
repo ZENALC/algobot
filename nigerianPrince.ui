@@ -47,7 +47,7 @@
         </property>
         <property name="font">
          <font>
-          <pointsize>16</pointsize>
+          <pointsize>13</pointsize>
          </font>
         </property>
         <property name="text">
@@ -56,26 +56,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QPlainTextEdit" name="botOutput">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>13</pointsize>
-         </font>
-        </property>
-        <property name="toolTip">
-         <string>This is where the bot will output messages</string>
-        </property>
+       <widget class="QTextEdit" name="botOutput">
         <property name="readOnly">
          <bool>true</bool>
-        </property>
-        <property name="plainText">
-         <string/>
         </property>
        </widget>
       </item>

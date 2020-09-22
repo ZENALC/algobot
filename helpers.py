@@ -52,5 +52,15 @@ def initialize_logger():
     if not os.path.exists('Logs'):
         os.mkdir('Logs')
 
-    logFileName = f'{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.log'
-    logging.basicConfig(filename=f'Logs/{logFileName}', level=logging.INFO, format='%(message)s')
+    previousPath = os.getcwd()
+    os.chdir('Logs')
+
+    todayDate = datetime.today().strftime('%Y-%m-%d')
+
+    if not os.path.exists(todayDate):
+        os.mkdir(todayDate)
+
+    os.chdir(previousPath)
+
+    logFileName = f'{datetime.now().strftime("%H-%M-%S")}.log'
+    logging.basicConfig(filename=f'Logs/{todayDate}/{logFileName}', level=logging.INFO, format='%(message)s')

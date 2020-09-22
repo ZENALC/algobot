@@ -35,7 +35,12 @@ class Data:
         self.data = []
         self.ema_data = {}
 
-        self.databaseFile = 'btc.db'
+        try:
+            os.mkdir('Databases')
+        except FileExistsError:
+            pass
+
+        self.databaseFile = os.path.join(os.getcwd(), 'Databases', f'{self.symbol}.db')
         self.databaseTable = f'data_{self.interval}'
         self.create_table()
 
@@ -262,8 +267,8 @@ class Data:
 
     def get_current_price(self):
         """
-        Returns the current market BTC price.
-        :return: BTC market price
+        Returns the current market ticker price.
+        :return: Ticker market price
         """
         try:
             return float(self.binanceClient.get_symbol_ticker(symbol=self.symbol)['price'])
@@ -495,8 +500,9 @@ class SimulatedTrader:
 
         # Initialize initial values
         self.balance = startingBalance  # USD Balance
-        self.btc = 0  # Amount of BTC we own
-        self.btcOwed = 0  # Amount of BTC we owe
+        self.coinName = self.dataView.symbol.upper().split('USDT')[0]
+        self.coin = 0  # Amount of coin we own
+        self.coinOwed = 0  # Amount of coin we owe
         self.transactionFeePercentage = 0.001  # Binance transaction fee
         self.totalTrades = []  # All trades conducted
         self.trades = []  # Amount of trades in previous run
@@ -506,14 +512,14 @@ class SimulatedTrader:
         self.lossPercentage = None  # Loss percentage for stop loss
         self.startingTime = None  # Starting time for previous bot run
         self.endingTime = None  # Ending time for previous bot run
-        self.buyLongPrice = None  # Price we last bought BTC at in long position
-        self.sellShortPrice = None  # Price we last sold BTC at in short position
+        self.buyLongPrice = None  # Price we last bought our target coin at in long position
+        self.sellShortPrice = None  # Price we last sold target coin at in short position
         self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits
-        self.longTrailingPrice = None  # Price BTC has to be above for long position
-        self.shortTrailingPrice = None  # Price BTC has to be below for short position
+        self.longTrailingPrice = None  # Price coin has to be above for long position
+        self.shortTrailingPrice = None  # Price coin has to be below for short position
         self.startingBalance = self.balance  # Balance we started bot run with
-        self.currentPrice = None  # Current price of BTC
+        self.currentPrice = None  # Current price of coin
 
         self.safetyMargin = None  # Margin percentage bot will check to validate cross
         self.safetyTimer = None  # Amount of seconds bot will wait to validate cross
@@ -550,7 +556,7 @@ class SimulatedTrader:
 
     def buy_long(self, msg, usd=None):
         """
-        Buys BTC at current market price with amount of USD specified. If not specified, assumes bot goes all in.
+        Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
         Function also takes into account Binance's 0.1% transaction fee.
         """
         self.currentPrice = self.dataView.get_current_price()
@@ -571,87 +577,87 @@ class SimulatedTrader:
         self.inLongPosition = True
         self.buyLongPrice = self.currentPrice
         self.longTrailingPrice = self.currentPrice
-        self.btc += (usd - transactionFee) / self.currentPrice
+        self.coin += (usd - transactionFee) / self.currentPrice
         self.balance -= usd
         self.add_trade(msg)
         self.output_message(msg)
 
-    def sell_long(self, msg, btc=None):
+    def sell_long(self, msg, coin=None):
         """
-        Sells specified amount of BTC at current market price. If not specified, assumes bot sells all BTC.
+        Sells specified amount of coin at current market price. If not specified, assumes bot sells all coin.
         Function also takes into account Binance's 0.1% transaction fee.
         """
-        if btc is None:
-            btc = self.btc
+        if coin is None:
+            coin = self.coin
 
-        if btc <= 0:
-            self.output_message("You cannot sell 0 or negative BTC.")
-            if self.btc <= 0:
-                self.output_message("Looks like you do not have any BTC.", 4)
+        if coin <= 0:
+            self.output_message(f"You cannot sell 0 or negative {self.coinName}.")
+            if self.coin <= 0:
+                self.output_message(f"Looks like you do not have any {self.coinName}.", 4)
             return
-        elif btc > self.btc:
-            self.output_message(f'You currently have {self.btc} BTC. You cannot sell {btc} BTC.')
+        elif coin > self.coin:
+            self.output_message(f'You have {self.coin} {self.coinName}. You cannot sell {coin} {self.coinName}.')
             return
 
         self.currentPrice = self.dataView.get_current_price()
-        earned = btc * self.currentPrice * (1 - self.transactionFeePercentage)
+        earned = coin * self.currentPrice * (1 - self.transactionFeePercentage)
         self.inLongPosition = False
         self.previousPosition = LONG
-        self.btc -= btc
+        self.coin -= coin
         self.balance += earned
         self.add_trade(msg)
         self.output_message(msg)
 
-        if self.btc == 0:
+        if self.coin == 0:
             self.buyLongPrice = None
             self.longTrailingPrice = None
 
-    def buy_short(self, msg, btc=None):
+    def buy_short(self, msg, coin=None):
         """
-        Buys borrowed BTC at current market price and returns to market.
+        Buys borrowed coin at current market price and returns to market.
         Function also takes into account Binance's 0.1% transaction fee.
-        If BTC amount is not specified, bot will assume to buy all owed back
-        BTC.
+        If coin amount is not specified, bot will assume to buy all owed back
+        coin.
         """
-        if btc is None:
-            btc = self.btcOwed
+        if coin is None:
+            coin = self.coinOwed
 
-        if btc <= 0:
-            self.output_message("You cannot buy 0 or less BTC.")
+        if coin <= 0:
+            self.output_message(f"You cannot buy 0 or less {self.coinName}.")
             return
 
         self.currentPrice = self.dataView.get_current_price()
-        self.btcOwed -= btc
+        self.coinOwed -= coin
         self.inShortPosition = False
         self.previousPosition = SHORT
-        loss = self.currentPrice * btc * (1 + self.transactionFeePercentage)
+        loss = self.currentPrice * coin * (1 + self.transactionFeePercentage)
         self.balance -= loss
         self.add_trade(msg)
         self.output_message(msg)
 
-        if self.btcOwed == 0:
+        if self.coinOwed == 0:
             self.sellShortPrice = None
             self.shortTrailingPrice = None
 
-    def sell_short(self, msg, btc=None):
+    def sell_short(self, msg, coin=None):
         """
-        Borrows BTC and sells them at current market price.
+        Borrows coin and sells them at current market price.
         Function also takes into account Binance's 0.1% transaction fee.
-        If no BTC is provided in function, bot will assume we borrow as much as
+        If no coin is provided in function, bot will assume we borrow as much as
         bot can buy with current balance and market value.
         """
         self.currentPrice = self.dataView.get_current_price()
 
-        if btc is None:
+        if coin is None:
             transactionFee = self.balance * self.transactionFeePercentage
-            btc = (self.balance - transactionFee) / self.currentPrice
+            coin = (self.balance - transactionFee) / self.currentPrice
 
-        if btc <= 0:
-            self.output_message("You cannot borrow 0 or less BTC.")
+        if coin <= 0:
+            self.output_message(f"You cannot borrow 0 or less {self.coinName}.")
             return
 
-        self.btcOwed += btc
-        self.balance += self.currentPrice * btc * (1 - self.transactionFeePercentage)
+        self.coinOwed += coin
+        self.balance += self.currentPrice * coin * (1 - self.transactionFeePercentage)
         self.inShortPosition = True
         self.sellShortPrice = self.currentPrice
         self.shortTrailingPrice = self.currentPrice
@@ -665,8 +671,8 @@ class SimulatedTrader:
         """
         self.currentPrice = self.dataView.get_current_price()
         balance = self.balance
-        balance += self.btc * self.currentPrice * (1 - self.transactionFeePercentage)
-        balance -= self.btcOwed * self.currentPrice * (1 + self.transactionFeePercentage)
+        balance += self.coin * self.currentPrice * (1 - self.transactionFeePercentage)
+        balance -= self.coinOwed * self.currentPrice * (1 + self.transactionFeePercentage)
         return balance - self.startingBalance
 
     def get_position(self):
@@ -829,13 +835,13 @@ class SimulatedTrader:
         else:
             self.output_message(f'Currently in autonomous mode.')
 
-        if self.btc > 0:
-            self.output_message(f'BTC: {self.btc}')
-            self.output_message(f'Price bot bought BTC long for: ${self.buyLongPrice}')
+        if self.coin > 0:
+            self.output_message(f'{self.coinName} owned: {self.coin}')
+            self.output_message(f'Price bot bought {self.coinName} long for: ${self.buyLongPrice}')
 
-        if self.btcOwed > 0:
-            self.output_message(f'BTC owed: {self.btcOwed}')
-            self.output_message(f'Price bot sold BTC short for: ${self.sellShortPrice}')
+        if self.coinOwed > 0:
+            self.output_message(f'{self.coinName} owed: {self.coinOwed}')
+            self.output_message(f'Price bot sold {self.coinName} short for: ${self.sellShortPrice}')
 
         if self.inLongPosition:
             self.output_message(f'\nCurrently in long position.')
@@ -857,7 +863,7 @@ class SimulatedTrader:
             else:
                 self.output_message(f'\nCurrently not a in short or long position. Waiting for human intervention.')
 
-        self.output_message(f'\nCurrent BTC price: ${self.dataView.get_current_price()}')
+        self.output_message(f'\nCurrent {self.coinName} price: ${self.dataView.get_current_price()}')
         self.output_message(f'Balance: ${round(self.balance, 2)}')
         self.output_message(f'\nTrades conducted this simulation: {len(self.trades)}')
 
@@ -875,12 +881,12 @@ class SimulatedTrader:
         Gets end result of simulation.
         """
         self.endingTime = datetime.now()
-        if self.btc > 0:
-            self.output_message("Selling all BTC...")
+        if self.coin > 0:
+            self.output_message(f"Selling all {self.coinName}...")
             self.sell_long(f'Sold long as simulation ended.')
 
-        if self.btcOwed > 0:
-            self.output_message("Returning all borrowed BTC...")
+        if self.coinOwed > 0:
+            self.output_message(f"Returning all borrowed {self.coinName}...")
             self.buy_short(f'Bought short as simulation ended.')
 
         self.output_message("\nResults:")

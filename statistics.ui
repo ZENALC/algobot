@@ -164,7 +164,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Current BTC</string>
+         <string>BTC Owned</string>
         </property>
        </widget>
       </item>
@@ -223,7 +223,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>BTC Owed:</string>
+         <string>BTC Owed</string>
         </property>
        </widget>
       </item>

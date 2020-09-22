@@ -49,6 +49,7 @@ class Interface(QMainWindow):
         uic.loadUi(mainUi, self)  # Loading the main UI
         self.configuration = Configuration()
         self.otherCommands = OtherCommands()
+        self.load_tickers()
         self.statistics = Statistics()
         self.threadPool = QThreadPool()
         self.setup_graph()
@@ -81,6 +82,13 @@ class Interface(QMainWindow):
 
         self.timestamp_message('Greetings.')
 
+    def load_tickers(self):
+        tickers = [ticker['symbol'] for ticker in Data(loadData=False).binanceClient.get_all_tickers()
+                   if 'USDT' in ticker['symbol']]
+        tickers.sort()
+        self.configuration.tickerComboBox.clear()
+        self.configuration.tickerComboBox.addItems(tickers)
+
     def set_dark_mode(self):
         app.setPalette(get_dark_palette())
         self.graphWidget.setBackground('k')
@@ -105,7 +113,7 @@ class Interface(QMainWindow):
         self.graphWidget.setLabel('bottom', 'Datetime in UTC')
         currentDate = datetime.utcnow().timestamp()
         nextDate = currentDate + 3600000
-        self.graphWidget.setLimits(xMin=currentDate, xMax=nextDate, yMin=9000, yMax=15000)
+        self.graphWidget.setLimits(xMin=currentDate, xMax=nextDate)
         self.graphWidget.addLegend()
         self.graphWidget.plotItem.setMouseEnabled(y=False)
 
@@ -241,7 +249,7 @@ class Interface(QMainWindow):
         self.threadPool.start(self.liveThread)
 
     def run_simulation(self):
-        self.timestamp_message('Starting simulation...')
+        self.timestamp_message('<-------Start of Simulation------->')
         self.graphWidget.clear()
         self.endSimulationButton.setEnabled(True)
         self.grey_out_main_options(True)
@@ -262,8 +270,8 @@ class Interface(QMainWindow):
         for option in self.trader.tradingOptions:
             initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
-            initialName = f'{option.movingAverage}({option.initialBound}) - {option.parameter}'
-            finalName = f'{option.movingAverage}({option.finalBound}) - {option.parameter}'
+            initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
+            finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
             initialDict = {
                 'plot': self.plot_graph((currentDate, ), (initialAverage, ), color=colors.pop(), plotName=initialName),
                 'x': [currentDate, ],
@@ -338,13 +346,13 @@ class Interface(QMainWindow):
         self.trader.get_simulation_result()
         self.trader.log_trades()
         self.disable_override()
-        self.timestamp_message("Ending simulation...\n")
         self.update_trades_to_list_view()
+        self.timestamp_message("<--------End of Simulation-------->")
         self.endSimulationButton.setEnabled(False)
         self.grey_out_main_options(False)
 
     def timestamp_message(self, msg):
-        self.botOutput.appendPlainText(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {msg}')
+        self.botOutput.append(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {msg}')
 
     def update_trades_to_list_view(self):
         widgetCount = self.tradesListWidget.count()
@@ -372,6 +380,7 @@ class Interface(QMainWindow):
             self.statistics.profitLossValue.setText(f'${round(self.trader.get_profit(), 2)}')
 
         position = self.trader.get_position()
+
         if position == LONG:
             self.statistics.currentPositionValue.setText('Long')
         elif position == SHORT:
@@ -379,17 +388,19 @@ class Interface(QMainWindow):
         else:
             self.statistics.currentPositionValue.setText('None')
 
-        self.statistics.currentBtcValue.setText(str(self.trader.btc))
-        self.statistics.btcOwedValue.setText(str(self.trader.btcOwed))
+        self.statistics.currentBtcLabel.setText(f'{self.trader.coinName} Owned')
+        self.statistics.currentBtcValue.setText(str(self.trader.coin))
+        self.statistics.btcOwedLabel.setText(f'{self.trader.coinName} Owed')
+        self.statistics.btcOwedValue.setText(str(self.trader.coinOwed))
         self.statistics.tradesMadeValue.setText(str(len(self.trader.trades)))
         self.statistics.currentTickerLabel.setText(str(self.trader.dataView.symbol))
         self.statistics.currentTickerValue.setText(f'${self.trader.dataView.get_current_price()}')
 
         if self.trader.get_stop_loss() is not None:
             if self.trader.lossStrategy == STOP_LOSS:
-                self.statistics.lossPointLabel.setText('Stop loss')
+                self.statistics.lossPointLabel.setText('Stop Loss')
             else:
-                self.statistics.lossPointLabel.setText('Trailing loss')
+                self.statistics.lossPointLabel.setText('Trailing Loss')
             self.statistics.lossPointValue.setText(f'${round(self.trader.get_stop_loss(), 2)}')
         else:
             self.statistics.lossPointValue.setText('None')
@@ -409,11 +420,11 @@ class Interface(QMainWindow):
             self.plots[1]['y'].append(finalAverage)
             self.plots[1]['plot'].setData(self.plots[1]['x'], self.plots[1]['y'])
 
-            self.statistics.baseInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound}) '
-                                                                  f'- {option.parameter.capitalize()}')
+            self.statistics.baseInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})'
+                                                                  f' {option.parameter.capitalize()}')
             self.statistics.baseInitialMovingAverageValue.setText(f'${initialAverage}')
-            self.statistics.baseFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound}) '
-                                                                f'- {option.parameter.capitalize()}')
+            self.statistics.baseFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})'
+                                                                f' {option.parameter.capitalize()}')
             self.statistics.baseFinalMovingAverageValue.setText(f'${finalAverage}')
 
         if len(self.trader.tradingOptions) > 1:
@@ -572,7 +583,12 @@ def main():
     interface = Interface()
     interface.showMaximized()
     app.setWindowIcon(QIcon(':/logo/nigerianPrince.png'))
+    sys.excepthook = except_hook
     sys.exit(app.exec_())
+
+
+def except_hook(cls, exception, trace_back):
+    sys.__excepthook__(cls, exception, trace_back)
 
 
 if __name__ == '__main__':

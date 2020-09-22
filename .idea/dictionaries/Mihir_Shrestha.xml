@@ -3,8 +3,10 @@
     <words>
       <w>asctime</w>
       <w>btcudst</w>
+      <w>excepthook</w>
       <w>getcwd</w>
       <w>levelname</w>
+      <w>usdt</w>
     </words>
   </dictionary>
 </component>
