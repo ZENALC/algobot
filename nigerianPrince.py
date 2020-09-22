@@ -74,7 +74,9 @@ class Interface(QMainWindow):
         self.forceLongButton.clicked.connect(self.force_long)
         self.forceShortButton.clicked.connect(self.force_short)
         self.pauseBotButton.clicked.connect(self.pause_or_resume_bot)
-        self.exitPositionButton.clicked.connect(self.exit_position)
+        self.exitPositionButton.clicked.connect(lambda: self.exit_position(True))
+        self.waitOverrideButton.clicked.connect(lambda: self.exit_position(False))
+        self.sendEmailButton.clicked.connect(lambda: self.timestamp_message('Sent prince emails to random people.'))
 
         self.trader = None
         self.runningLive = False
@@ -133,19 +135,28 @@ class Interface(QMainWindow):
     def disable_override(self):
         self.overrideGroupBox.setEnabled(False)
 
-    def exit_position(self):
-        self.trader.inHumanControl = True
-        self.pauseBotButton.setText('Resume Bot')
+    def exit_position(self, humanControl=True):
+        self.trader.inHumanControl = humanControl
+        if humanControl:
+            self.pauseBotButton.setText('Resume Bot')
+        else:
+            self.pauseBotButton.setText('Pause Bot')
+
         if self.trader.get_position() == LONG:
-            self.timestamp_message('Force exiting long.')
-            self.trader.sell_long('Force exiting long.')
+            if humanControl:
+                self.trader.sell_long('Force exiting long.')
+            else:
+                self.trader.sell_long('Exiting long because of override and resuming autonomous logic.')
         elif self.trader.get_position() == SHORT:
-            self.timestamp_message('Force exiting short.')
-            self.trader.buy_short('Force exiting short.')
+            if humanControl:
+                self.trader.buy_short('Force exiting short.')
+            else:
+                self.trader.buy_short('Exiting short because of override and resuming autonomous logic..')
 
         self.forceShortButton.setEnabled(True)
         self.forceLongButton.setEnabled(True)
         self.exitPositionButton.setEnabled(False)
+        self.waitOverrideButton.setEnabled(False)
 
     def force_long(self):
         self.trader.inHumanControl = True
@@ -158,6 +169,7 @@ class Interface(QMainWindow):
         self.forceShortButton.setEnabled(False)
         self.forceLongButton.setEnabled(False)
         self.exitPositionButton.setEnabled(True)
+        self.waitOverrideButton.setEnabled(True)
 
     def force_short(self):
         self.trader.inHumanControl = True
@@ -170,6 +182,7 @@ class Interface(QMainWindow):
         self.forceShortButton.setEnabled(False)
         self.forceLongButton.setEnabled(True)
         self.exitPositionButton.setEnabled(True)
+        self.waitOverrideButton.setEnabled(True)
 
     def pause_or_resume_bot(self):
         if self.pauseBotButton.text() == 'Pause Bot':
@@ -317,8 +330,10 @@ class Interface(QMainWindow):
 
                 if self.trader.get_position() is None:
                     self.exitPositionButton.setEnabled(False)
+                    self.waitOverrideButton.setEnabled(False)
                 else:
                     self.exitPositionButton.setEnabled(True)
+                    self.waitOverrideButton.setEnabled(True)
 
                 if self.trader.get_position() == LONG:
                     self.forceLongButton.setEnabled(False)
@@ -371,6 +386,11 @@ class Interface(QMainWindow):
         self.statistics.currentBalanceValue.setText(f'${round(self.trader.balance, 2)}')
         self.statistics.startingBalanceValue.setText(f'${self.trader.startingBalance}')
         self.statistics.autonomousValue.setText(str(not self.trader.inHumanControl))
+
+        if self.trader.inHumanControl:
+            self.autonomousStateLabel.setText('WARNING: IN HUMAN CONTROL')
+        else:
+            self.autonomousStateLabel.setText('INFO: IN AUTONOMOUS MODE')
 
         if self.trader.get_profit() < 0:
             self.statistics.profitLossLabel.setText("Loss")
