@@ -249,7 +249,7 @@ class Interface(QMainWindow):
         self.threadPool.start(self.liveThread)
 
     def run_simulation(self):
-        self.timestamp_message('<-------Start of Simulation------->')
+        self.timestamp_message('Starting simulation.')
         self.graphWidget.clear()
         self.endSimulationButton.setEnabled(True)
         self.grey_out_main_options(True)
