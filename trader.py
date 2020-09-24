@@ -500,7 +500,7 @@ class SimulatedTrader:
 
         # Initialize initial values
         self.balance = startingBalance  # USD Balance
-        self.coinName = self.dataView.symbol.upper().split('USDT')[0]
+        self.coinName = self.get_coin_name()
         self.coin = 0  # Amount of coin we own
         self.coinOwed = 0  # Amount of coin we owe
         self.transactionFeePercentage = 0.001  # Binance transaction fee
@@ -530,6 +530,11 @@ class SimulatedTrader:
         self.inLongPosition = False  # Boolean that keeps track of whether bot is in a long position or not
         self.inShortPosition = False  # Boolean that keeps track of whether bot is in a short position or not
         self.previousPosition = None  # Previous position to validate for a cross
+
+    def get_coin_name(self):
+        temp = self.dataView.symbol.upper().split('USDT')
+        temp.remove('')
+        return temp[0]
 
     @staticmethod
     def output_message(message, level=2):
@@ -1135,8 +1140,6 @@ class RealTrader(SimulatedTrader):
         super().__init__(interval=interval, symbol=symbol)
         # self.twilioClient = rest.Client()  # Initialize Twilio client for WhatsApp integration
         self.binanceClient = Client(self.apiKey, self.apiSecret)
-        if not self.verify_api_and_secret():
-            return
 
     def verify_api_and_secret(self):
         """

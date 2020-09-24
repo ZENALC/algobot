@@ -91,6 +91,9 @@ class Interface(QMainWindow):
         self.configuration.tickerComboBox.clear()
         self.configuration.tickerComboBox.addItems(tickers)
 
+        self.otherCommands.csvGenerationTicker.clear()
+        self.otherCommands.csvGenerationTicker.addItems(tickers)
+
     def set_dark_mode(self):
         app.setPalette(get_dark_palette())
         self.graphWidget.setBackground('k')
