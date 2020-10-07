@@ -1,0 +1,3 @@
+# CryptoAlgo
+
+Cryptocurrency trading bot.
