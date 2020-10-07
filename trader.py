@@ -1,7 +1,9 @@
-import sqlite3
-from datetime import timedelta, timezone
-from contextlib import closing
+import math
+import credentials
+from data import Data
 from binance.client import Client
+from binance.enums import *
+from binance.exceptions import BinanceAPIException
 from helpers import *
 
 BULLISH = 1
@@ -12,485 +14,11 @@ TRAILING_LOSS = 2
 STOP_LOSS = 1
 
 
-class Data:
-    def __init__(self, interval='1h', symbol='BTCUSDT', loadData=True):
-        """
-        Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
-        :param interval: Interval for which the data object will track prices.
-        :param symbol: Symbol for which the data object will track prices.
-        """
-        self.binanceClient = Client(None, None)  # Initialize Binance client
-        if not self.is_valid_interval(interval):
-            self.output_message("Invalid interval. Using default interval of 1h.", level=4)
-            interval = '1h'
-
-        self.interval = interval
-        self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
-
-        if not self.is_valid_symbol(symbol):
-            self.output_message('Invalid symbol. Using default symbol of BTCUSDT.', level=4)
-            symbol = 'BTCUSDT'
-
-        self.symbol = symbol
-        self.data = []
-        self.ema_data = {}
-
-        try:
-            os.mkdir('Databases')
-        except FileExistsError:
-            pass
-
-        self.databaseFile = os.path.join(os.getcwd(), 'Databases', f'{self.symbol}.db')
-        self.databaseTable = f'data_{self.interval}'
-        self.create_table()
-
-        if loadData:
-            # Create, initialize, store, and get values from database.
-            self.get_data_from_database()
-            if not self.database_is_updated():
-                self.output_message("Updating data...")
-                self.update_database()
-            else:
-                self.output_message("Database is up-to-date.")
-
-    @staticmethod
-    def output_message(message, level=2):
-        """Prints out and logs message"""
-        # print(message)
-        if level == 2:
-            logging.info(message)
-        elif level == 3:
-            logging.debug(message)
-        elif level == 4:
-            logging.warning(message)
-        elif level == 5:
-            logging.critical(message)
-    
-    def create_table(self):
-        """
-        Creates a new table with interval if it does not exist
-        """
-        with closing(sqlite3.connect(self.databaseFile)) as connection:
-            with closing(connection.cursor()) as cursor:
-                cursor.execute(f'''
-                                CREATE TABLE IF NOT EXISTS {self.databaseTable}(
-                                trade_date TEXT PRIMARY KEY,
-                                open_price TEXT NOT NULL,
-                                high_price TEXT NOT NULL,
-                                low_price TEXT NOT NULL,
-                                close_price TEXT NOT NULL
-                                );''')
-                connection.commit()
-
-    def dump_to_table(self):
-        """
-        Dumps date and price information to database.
-        :return: A boolean whether data entry was successful or not.
-        """
-        query = f'''INSERT INTO {self.databaseTable} (trade_date, open_price, high_price, low_price, close_price) 
-                    VALUES (?, ?, ?, ?, ?);'''
-        with closing(sqlite3.connect(self.databaseFile)) as connection:
-            with closing(connection.cursor()) as cursor:
-                for data in self.data:
-                    try:
-                        cursor.execute(query,
-                                       (data['date'].strftime('%Y-%m-%d %H:%M:%S'),
-                                        data['open'],
-                                        data['high'],
-                                        data['low'],
-                                        data['close'],
-                                        ))
-                        connection.commit()
-                    except sqlite3.IntegrityError:
-                        pass  # This just means the data already exists in the database, so ignore.
-                    except sqlite3.OperationalError:
-                        self.output_message("Insertion to database failed. Will retry next run.", 4)
-                        return False
-        self.output_message("Successfully stored all new data to database.")
-        return True
-
-    def get_latest_database_row(self):
-        """
-        Returns the latest row from database table.
-        :return: Row data or None depending on if value exists.
-        """
-        with closing(sqlite3.connect(self.databaseFile)) as connection:
-            with closing(connection.cursor()) as cursor:
-                cursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
-                return cursor.fetchone()
-
-    def get_data_from_database(self):
-        """
-        Loads data from database and appends it to run-time data.
-        """
-        with closing(sqlite3.connect(self.databaseFile)) as connection:
-            with closing(connection.cursor()) as cursor:
-                rows = cursor.execute(f'''
-                        SELECT "trade_date", "open_price","high_price", "low_price", "close_price"
-                        FROM {self.databaseTable} ORDER BY trade_date DESC
-                        ''').fetchall()
-
-        if len(rows) > 0:
-            self.output_message("Retrieving data from database...")
-        else:
-            self.output_message("No data found in database.")
-            return
-
-        for row in rows:
-            self.data.append({'date': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc),
-                              'open': float(row[1]),
-                              'high': float(row[2]),
-                              'low': float(row[3]),
-                              'close': float(row[4]),
-                              })
-
-    def database_is_updated(self):
-        """
-        Checks if data is updated or not with database by interval provided in accordance to UTC time.
-        :return: A boolean whether data is updated or not.
-        """
-        result = self.get_latest_database_row()
-        if result is None:
-            return False
-        latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-        return self.is_latest_date(latestDate)
-
-    def update_database(self):
-        """
-        Updates database by retrieving information from Binance API
-        """
-        result = self.get_latest_database_row()
-        if result is None:  # Then get the earliest timestamp possible
-            timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
-            self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
-        else:
-            latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            timestamp = int(latestDate.timestamp()) * 1000  # Converting timestamp to milliseconds
-            dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
-            self.output_message(f"Previous data up to UTC {dateWithIntervalAdded} found.")
-
-        if not self.database_is_updated():
-            newData = self.get_new_data(timestamp)
-            self.output_message("Successfully downloaded all new data.")
-            self.output_message("Inserting data to live program...")
-            self.insert_data(newData)
-            self.output_message("Storing updated data to database...")
-            self.dump_to_table()
-        else:
-            self.output_message("Database is up-to-date.")
-
-    def get_new_data(self, timestamp, limit=1000):
-        """
-        Returns new data from Binance API from timestamp specified.
-        :param timestamp: Initial timestamp.
-        :param limit: Limit per pull.
-        :return: A list of dictionaries.
-        """
-        newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
-        return newData[:-1]  # Up to -1st index, because we don't want current period data.
-
-    def is_latest_date(self, latestDate):
-        """
-        Checks whether the latest date available is the latest period available.
-        :param latestDate: Datetime object.
-        :return: True or false whether date is latest period or not.
-        """
-        minutes = self.get_interval_minutes()
-        return latestDate + timedelta(minutes=minutes) >= datetime.now(timezone.utc) - timedelta(minutes=minutes)
-
-    def data_is_updated(self):
-        """
-        Checks whether data is fully updated or not.
-        :return: A boolean whether data is updated or not with Binance values.
-        """
-        latestDate = self.data[0]['date']
-        return self.is_latest_date(latestDate)
-
-    def insert_data(self, newData):
-        """
-        Inserts data from newData to run-time data.
-        :param newData: List with new data values.
-        """
-        for data in newData:
-            parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
-            self.data.insert(0, {'date': parsedDate,
-                                 'open': float(data[1]),
-                                 'high': float(data[2]),
-                                 'low': float(data[3]),
-                                 'close': float(data[4]),
-                                 })
-
-    def update_data(self):
-        """
-        Updates run-time data with Binance API values.
-        """
-        latestDate = self.data[0]['date']
-        timestamp = int(latestDate.timestamp()) * 1000
-        dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
-        self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
-        if not self.data_is_updated():
-            newData = self.get_new_data(timestamp)
-            self.insert_data(newData)
-            self.output_message("Data has been updated successfully.")
-        else:
-            self.output_message("Data is up-to-date.")
-
-    def get_current_data(self):
-        """
-        Retrieves current market dictionary with open, high, low, close prices.
-        :return: A dictionary with current open, high, low, and close prices.
-        """
-        try:
-            if not self.data_is_updated():
-                self.update_data()
-
-            currentInterval = self.data[0]['date'] + timedelta(minutes=self.get_interval_minutes())
-            currentTimestamp = int(currentInterval.timestamp() * 1000)
-
-            nextInterval = currentInterval + timedelta(minutes=self.get_interval_minutes())
-            nextTimestamp = int(nextInterval.timestamp() * 1000) - 1
-            currentData = self.binanceClient.get_klines(symbol=self.symbol,
-                                                        interval=self.interval,
-                                                        startTime=currentTimestamp,
-                                                        endTime=nextTimestamp,
-                                                        )[0]
-            currentDataDictionary = {'date': currentInterval,
-                                     'open': float(currentData[1]),
-                                     'high': float(currentData[2]),
-                                     'low': float(currentData[3]),
-                                     'close': float(currentData[4])}
-            return currentDataDictionary
-        except Exception as e:
-            self.output_message(f"Error: {e}. Retrying in 2 seconds...", 4)
-            time.sleep(2)
-            self.get_current_data()
-
-    def get_current_price(self):
-        """
-        Returns the current market ticker price.
-        :return: Ticker market price
-        """
-        try:
-            return float(self.binanceClient.get_symbol_ticker(symbol=self.symbol)['price'])
-        except Exception as e:
-            self.output_message(f'Error: {e}. Retrying in 5 seconds...', 4)
-            time.sleep(5)
-            self.get_current_price()
-
-    def get_interval_unit_and_measurement(self):
-        """
-        Returns interval unit and measurement.
-        :return: A tuple with interval unit and measurement respectively.
-        """
-        unit = self.interval[-1]  # Gets the unit of the interval. eg 12h = h
-        measurement = int(self.interval[:-1])  # Gets the measurement, eg 12h = 12
-        return unit, measurement
-
-    def get_interval_minutes(self):
-        """
-        Returns interval minutes.
-        :return: An integer representing the minutes for an interval.
-        """
-        if self.intervalUnit == 'h':
-            return self.intervalMeasurement * 60
-        elif self.intervalUnit == 'm':
-            return self.intervalMeasurement
-        elif self.intervalUnit == 'd':
-            return self.intervalMeasurement * 24 * 60
-        else:
-            self.output_message("Invalid interval.", 4)
-            return None
-
-    def get_current_interval_csv_data(self):
-        pass
-
-    def get_csv_data(self, interval):
-        """
-        Creates a new CSV file with interval specified.
-        :param interval: Interval to get data for.
-        """
-        if not self.is_valid_interval(interval):
-            return
-        timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, interval)
-        self.output_message("Downloading all available historical data. This may take a while...")
-        newData = self.binanceClient.get_historical_klines(self.symbol, interval, timestamp, limit=1000)
-        self.output_message("Downloaded all data successfully.")
-
-        folderName = 'CSV'
-        fileName = f'{self.symbol}_data_{interval}.csv'
-        currentPath = os.getcwd()
-
-        try:
-            os.mkdir(folderName)
-        except OSError:
-            pass
-        finally:
-            os.chdir(folderName)
-
-        with open(fileName, 'w') as f:
-            f.write("Date_UTC, Open, High, Low, Close\n")
-            for data in newData:
-                parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc).strftime("%m/%d/%Y %I:%M %p")
-                f.write(f'{parsedDate}, {data[1]}, {data[2]}, {data[3]}, {data[4]}\n')
-
-        path = os.path.join(os.getcwd(), fileName)
-        self.output_message(f'Data saved to {path}.')
-        os.chdir(currentPath)
-
-        return path
-
-    def is_valid_interval(self, interval):
-        """
-        Returns whether interval provided is valid or not.
-        :param interval: Interval argument.
-        :return: A boolean whether the interval is valid or not.
-        """
-        availableIntervals = ('12h', '15m', '1d', '1h',
-                              '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
-        if interval in availableIntervals:
-            return True
-        else:
-            self.output_message(f'Invalid interval. Available intervals are: \n{availableIntervals}')
-            return False
-
-    def is_valid_symbol(self, symbol):
-        """
-        Checks whether the symbol provided is valid or not for Binance.
-        :param symbol: Symbol to be checked.
-        :return: A boolean whether the symbol is valid or not.
-        """
-        tickers = self.binanceClient.get_all_tickers()
-        for ticker in tickers:
-            if ticker['symbol'] == symbol:
-                return True
-        return False
-
-    def is_valid_average_input(self, shift, prices, extraShift=0):
-        """
-        Checks whether shift, prices, and (optional) extraShift are valid.
-        :param shift: Periods from current period.
-        :param prices: Amount of prices to iterate over.
-        :param extraShift: Extra shift for EMA.
-        :return: A boolean whether shift, prices, and extraShift are logical or not.
-        """
-        if shift < 0:
-            self.output_message("Shift cannot be less than 0.")
-            return False
-        elif prices <= 0:
-            self.output_message("Prices cannot be 0 or less than 0.")
-            return False
-        elif shift + extraShift + prices > len(self.data) + 1:
-            self.output_message("Shift + prices period cannot be more than data available.")
-            return False
-        return True
-
-    def verify_integrity(self):
-        """
-        Verifies integrity of data by checking if there's any repeated data.
-        :return: A boolean whether the data contains no repeated data or not.
-        """
-        if len(self.data) < 1:
-            self.output_message("No data found.", 4)
-            return False
-
-        previousData = self.data[0]
-        for data in self.data[1:]:
-            if data['date'] == previousData['date']:
-                self.output_message("Repeated data detected.", 4)
-                self.output_message(f'Previous data: {previousData}', 4)
-                self.output_message(f'Next data: {data}', 4)
-                return False
-            previousData = data
-
-        self.output_message("Data has been verified to be correct.")
-        return True
-
-    def get_sma(self, prices, parameter, shift=0, round_value=True):
-        """
-        Returns the simple moving average with run-time data and prices provided.
-        :param boolean round_value: Boolean that specifies whether return value should be rounded
-        :param int prices: Number of values for average
-        :param int shift: Prices shifted from current price
-        :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
-        :return: SMA
-        """
-        if not self.is_valid_average_input(shift, prices):
-            return None
-
-        data = [self.get_current_data()] + self.data  # Data is current data + all-time period data
-        data = data[shift: prices + shift]  # Data now starts from shift and goes up to prices + shift
-
-        sma = sum([period[parameter] for period in data]) / prices
-        if round_value:
-            return round(sma, 2)
-        return sma
-
-    def get_wma(self, prices, parameter, shift=0, round_value=True):
-        """
-        Returns the weighted moving average with run-time data and prices provided.
-        :param shift: Prices shifted from current period.
-        :param boolean round_value: Boolean that specifies whether return value should be rounded
-        :param int prices: Number of prices to loop over for average
-        :param parameter: Parameter to get the average of (e.g. open, close, high or low values)
-        :return: WMA
-        """
-        if not self.is_valid_average_input(shift, prices):
-            return None
-
-        data = [self.get_current_data()] + self.data
-        total = data[shift][parameter] * prices  # Current total is first data period multiplied by prices.
-        data = data[shift + 1: prices + shift]  # Data now does not include the first shift period.
-
-        index = 0
-        for x in range(prices - 1, 0, -1):
-            total += x * data[index][parameter]
-            index += 1
-
-        divisor = prices * (prices + 1) / 2
-        wma = total / divisor
-        if round_value:
-            return round(wma, 2)
-        return wma
-
-    def get_ema(self, prices, parameter, shift=0, sma_prices=5, round_value=True):
-        """
-        Returns the exponential moving average with data provided.
-        :param shift: Prices shifted from current period.
-        :param round_value: Boolean that specifies whether return value should be rounded
-        :param int sma_prices: SMA prices to get first EMA over
-        :param int prices: Days to iterate EMA over (or the period)
-        :param str parameter: Parameter to get the average of (e.g. open, close, high, or low values)
-        :return: EMA
-        """
-        if not self.is_valid_average_input(shift, prices, sma_prices):
-            return None
-        elif sma_prices <= 0:
-            self.output_message("Initial amount of SMA values for initial EMA must be greater than 0.")
-            return None
-
-        data = [self.get_current_data()] + self.data
-        sma_shift = len(data) - sma_prices
-        ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False)
-        values = [(round(ema, 2), str(data[sma_shift]['date']))]
-        multiplier = 2 / (prices + 1)
-
-        for day in range(len(data) - sma_prices - shift):
-            current_index = len(data) - sma_prices - day - 1
-            current_price = data[current_index][parameter]
-            ema = current_price * multiplier + ema * (1 - multiplier)
-            values.append((round(ema, 2), str(data[current_index]['date'])))
-
-        self.ema_data[prices] = {parameter: values}
-
-        if round_value:
-            return round(ema, 2)
-        return ema
-
-
 class SimulatedTrader:
     def __init__(self, startingBalance=1000, interval='1h', symbol='BTCUSDT', loadData=True):
         self.dataView = Data(interval=interval, symbol=symbol, loadData=loadData)  # Retrieve data-view object
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client
+        self.symbol = self.dataView.symbol
 
         try:  # Attempt to parse startingBalance
             startingBalance = float(startingBalance)
@@ -587,7 +115,7 @@ class SimulatedTrader:
         self.add_trade(msg)
         self.output_message(msg)
 
-    def sell_long(self, msg, coin=None):
+    def sell_long(self, msg, coin=None, stopLoss=None):
         """
         Sells specified amount of coin at current market price. If not specified, assumes bot sells all coin.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -617,7 +145,7 @@ class SimulatedTrader:
             self.buyLongPrice = None
             self.longTrailingPrice = None
 
-    def buy_short(self, msg, coin=None):
+    def buy_short(self, msg, coin=None, stopLoss=None):
         """
         Buys borrowed coin at current market price and returns to market.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -674,11 +202,15 @@ class SimulatedTrader:
         Returns profit or loss.
         :return: A number representing profit if positive and loss if negative.
         """
-        self.currentPrice = self.dataView.get_current_price()
-        balance = self.balance
-        balance += self.coin * self.currentPrice * (1 - self.transactionFeePercentage)
-        balance -= self.coinOwed * self.currentPrice * (1 + self.transactionFeePercentage)
-        return balance - self.startingBalance
+        try:
+            if self.inShortPosition:
+                return self.coinOwed * (self.sellShortPrice - self.currentPrice)
+            balance = self.balance
+            balance += self.coin * self.currentPrice * (1 - self.transactionFeePercentage)
+            balance -= self.coinOwed * self.currentPrice * (1 + self.transactionFeePercentage)
+            return balance - self.startingBalance
+        except TypeError:
+            return 0
 
     def get_position(self):
         if self.inLongPosition:
@@ -712,11 +244,17 @@ class SimulatedTrader:
         :return: Stop loss value.
         """
         if self.inShortPosition:  # If we are in a short position
+            if self.shortTrailingPrice is None:
+                self.shortTrailingPrice = self.dataView.get_current_price()
+                self.sellShortPrice = self.shortTrailingPrice
             if self.lossStrategy == 2:  # This means we use trailing loss.
                 return self.shortTrailingPrice * (1 + self.lossPercentage)
             else:  # This means we use the basic stop loss.
                 return self.sellShortPrice * (1 + self.lossPercentage)
         elif self.inLongPosition:  # If we are in a long position
+            if self.longTrailingPrice is None:
+                self.longTrailingPrice = self.dataView.get_current_price()
+                self.buyLongPrice = self.longTrailingPrice
             if self.lossStrategy == 2:  # This means we use trailing loss.
                 return self.longTrailingPrice * (1 - self.lossPercentage)
             else:  # This means we use the basic stop loss.
@@ -840,11 +378,11 @@ class SimulatedTrader:
         else:
             self.output_message(f'Currently in autonomous mode.')
 
-        if self.coin > 0:
+        if self.coin > 0.0001:
             self.output_message(f'{self.coinName} owned: {self.coin}')
             self.output_message(f'Price bot bought {self.coinName} long for: ${self.buyLongPrice}')
 
-        if self.coinOwed > 0:
+        if self.coinOwed > 0.0001:
             self.output_message(f'{self.coinName} owed: {self.coinOwed}')
             self.output_message(f'Price bot sold {self.coinName} short for: ${self.sellShortPrice}')
 
@@ -870,7 +408,10 @@ class SimulatedTrader:
 
         self.output_message(f'\nCurrent {self.coinName} price: ${self.dataView.get_current_price()}')
         self.output_message(f'Balance: ${round(self.balance, 2)}')
-        self.output_message(f'\nTrades conducted this simulation: {len(self.trades)}')
+        if self.__class__.__name__ == 'SimulatedTrader':
+            self.output_message(f'\nTrades conducted this simulation: {len(self.trades)}')
+        else:
+            self.output_message(f'\nTrades conducted in live market: {len(self.trades)}')
 
         profit = round(self.get_profit(), 2)
         if profit > 0:
@@ -1134,31 +675,256 @@ class SimulatedTrader:
 
 
 class RealTrader(SimulatedTrader):
-    def __init__(self, interval='1h', symbol='BTCUDST'):
-        self.apiKey = os.environ.get('binance_api')  # Retrieving API key from environment variables
-        self.apiSecret = os.environ.get('binance_secret')  # Retrieving API secret from environment variables
+    def __init__(self, apiKey=None, apiSecret=None, interval='1h', symbol='BTCUSDT'):
+        apiKey = credentials.apiKey
+        apiSecret = credentials.apiSecret
+        if apiKey is None or apiSecret is None:
+            self.output_message('API details incorrect.', 5)
+            return
+
         super().__init__(interval=interval, symbol=symbol)
-        # self.twilioClient = rest.Client()  # Initialize Twilio client for WhatsApp integration
-        self.binanceClient = Client(self.apiKey, self.apiSecret)
+        self.binanceClient = Client(apiKey, apiSecret)
+        self.spot_usdt = self.get_spot_usdt()
+        self.spot_coin = self.get_spot_coin()
 
-    def verify_api_and_secret(self):
+        if self.spot_usdt > 10:
+            self.initial_transfer()
+
+        self.balance = self.get_margin_usdt()
+        self.coin = self.get_margin_coin()
+        self.coinOwed = self.get_borrowed_margin_coin()
+        self.startingBalance = self.get_starting_balance()
+        self.check_initial_position()
+
+    def get_starting_balance(self):
         """
-        Checks and prints if both API key and API secret are None values.
-        Returns a boolean whether the API key and secret are valid or not.
+        Returns the initial starting balance for bot.
+        :return: initial starting balance for bot
         """
-        if self.apiKey is None:
-            self.output_message("No API key found.", 4)
-            return False
-        else:
-            self.output_message("API key found.")
+        self.currentPrice = self.dataView.get_current_price()
+        usdt = self.coin * self.currentPrice + self.balance
+        usdt -= self.coinOwed * self.currentPrice
+        return usdt
 
-        if self.apiSecret is None:
-            self.output_message("No API secret found.", 4)
-            return False
-        else:
-            self.output_message("API secret found.")
+    @staticmethod
+    def round_down(num, digits=6):
+        factor = 10.0 ** digits
+        return math.floor(float(num) * factor) / factor
 
-        return True
+    def add_trade(self, message, order=None):
+        """
+        Adds a trade to list of trades
+        :param order: Optional order from Binance API.
+        :param message: Message used for conducting trade.
+        """
+        self.trades.append({
+            'date': datetime.utcnow(),
+            'action': message,
+            'order': order
+        })
+
+    def main_logic(self):
+        if self.inShortPosition:  # This means we are in short position
+            if self.currentPrice > self.get_stop_loss():  # If current price is greater, then exit trade.
+                self.buy_short(f'Bought short because of stop loss.', stopLoss=True)
+                self.waitToEnterShort = True
+
+            if self.check_cross_v2():
+                self.buy_short(f'Bought short because a cross was detected.')
+                self.buy_long(f'Bought long because a cross was detected.')
+
+        elif self.inLongPosition:  # This means we are in long position
+            if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
+                self.sell_long(f'Sold long because of stop loss.', stopLoss=True)
+                self.waitToEnterLong = True
+
+            if self.check_cross_v2():
+                self.sell_long(f'Sold long because a cross was detected.')
+                self.sell_short('Sold short because a cross was detected.')
+
+        else:  # This means we are in neither position
+            if self.check_cross_v2():
+                if self.trend == BULLISH:  # This checks if we are bullish or bearish
+                    self.buy_long("Bought long because a cross was detected.")
+                else:
+                    self.sell_short("Sold short because a cross was detected.")
+
+    def check_initial_position(self):
+        if self.get_margin_coin() > 0.001:
+            self.inLongPosition = True
+            self.currentPrice = self.dataView.get_current_price()
+            self.buyLongPrice = self.currentPrice
+            self.longTrailingPrice = self.buyLongPrice
+            self.add_trade('Was in long position from start of bot.')
+
+        elif self.get_borrowed_margin_coin() > 0.001:
+            self.inShortPosition = True
+            self.currentPrice = self.dataView.get_current_price()
+            self.sellShortPrice = self.currentPrice
+            self.shortTrailingPrice = self.sellShortPrice
+            self.add_trade('Was in short position from start of bot.')
+
+    def get(self, target):
+        assets = self.binanceClient.get_margin_account()['userAssets']
+        coin = [asset for asset in assets if asset['asset'] == target][0]
+        return coin
+
+    def get_spot_usdt(self):
+        return self.round_down(self.binanceClient.get_asset_balance(asset='USDT')['free'])
+
+    def get_spot_coin(self):
+        return self.round_down(self.binanceClient.get_asset_balance(asset=self.coinName)['free'])
+
+    def spot_buy_long(self):
+        self.spot_usdt = self.get_spot_usdt()
+        self.currentPrice = self.dataView.get_current_price()
+        max_buy = self.round_down(self.spot_usdt * (1 - 0.001) / self.currentPrice)
+
+        order = self.binanceClient.order_market_buy(
+            symbol=self.symbol,
+            quantity=max_buy
+        )
+
+        self.add_trade('Bought spot long', order=order)
+
+    def spot_sell_long(self):
+        self.spot_coin = self.get_spot_coin()
+        order = self.binanceClient.order_market_sell(
+            symbol=self.symbol,
+            quantity=self.spot_coin
+        )
+
+        self.add_trade('Sold spot long', order=order)
+
+    def initial_transfer(self):
+        self.spot_buy_long()
+        self.transfer_spot_to_margin()
+
+    def transfer_spot_to_margin(self):
+        order = self.binanceClient.transfer_spot_to_margin(asset=self.coinName, amount=self.get_spot_coin())
+        self.add_trade('Transferred from spot to margin', order=order)
+
+    def transfer_margin_to_spot(self):
+        order = self.binanceClient.transfer_margin_to_spot(asset=self.coinName, amount=self.get_margin_coin())
+        self.add_trade('Transferred from margin to spot', order=order)
+
+    def get_margin_usdt(self):
+        assets = self.binanceClient.get_margin_account()['userAssets']
+        usdt = [asset for asset in assets if asset['asset'] == 'USDT'][0]['free']
+        return self.round_down(usdt)
+
+    def get_margin_coin(self):
+        assets = self.binanceClient.get_margin_account()['userAssets']
+        coin = [asset for asset in assets if asset['asset'] == self.coinName][0]['free']
+        return self.round_down(float(coin), 6)
+
+    def get_borrowed_margin_coin(self):
+        assets = self.binanceClient.get_margin_account()['userAssets']
+        coin = [asset for asset in assets if asset['asset'] == self.coinName][0]['borrowed']
+        return self.round_down(float(coin), 6)
+
+    def get_borrowed_margin_interest(self):
+        assets = self.binanceClient.get_margin_account()['userAssets']
+        coin = [asset for asset in assets if asset['asset'] == self.coinName][0]['interest']
+        return self.round_down(float(coin), 6)
+
+    def buy_long(self, msg, usd=None):
+        self.balance = self.get_margin_usdt()
+        self.currentPrice = self.dataView.get_current_price()
+        max_buy = self.round_down(self.balance / self.currentPrice)
+
+        order = self.binanceClient.create_margin_order(
+            symbol=self.symbol,
+            side=SIDE_BUY,
+            type=ORDER_TYPE_MARKET,
+            quantity=max_buy
+        )
+
+        self.add_trade(msg, order=order)
+        self.coin = self.get_margin_coin()
+        self.coinOwed = self.get_borrowed_margin_coin()
+        self.balance = self.get_margin_usdt()
+        self.inLongPosition = True
+        self.buyLongPrice = self.currentPrice
+        self.longTrailingPrice = self.currentPrice
+        self.output_message(msg)
+
+    def sell_long(self, msg, coin=None, stopLoss=False):
+        order = self.binanceClient.create_margin_order(
+            symbol=self.symbol,
+            side=SIDE_SELL,
+            type=ORDER_TYPE_MARKET,
+            quantity=self.get_margin_coin()
+        )
+
+        self.add_trade(msg, order=order)
+        self.coin = self.get_margin_coin()
+        self.coinOwed = self.get_borrowed_margin_coin()
+        self.balance = self.get_margin_usdt()
+        self.inLongPosition = False
+        self.previousPosition = LONG
+        self.buyLongPrice = None
+        self.longTrailingPrice = None
+        self.output_message(msg)
+
+    def sell_short(self, msg, coin=None):
+        self.balance = self.get_margin_usdt()
+        self.currentPrice = self.dataView.get_current_price()
+        max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
+        try:
+            order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow)
+            self.add_trade('Borrowed BTC.', order=order)
+        except BinanceAPIException as e:
+            print(f"Borrowing failed because {e}")
+            self.output_message(f'Borrowing failed because {e}')
+
+        order = self.binanceClient.create_margin_order(
+            side=SIDE_SELL,
+            symbol=self.symbol,
+            type=ORDER_TYPE_MARKET,
+            quantity=self.round_down(self.get_margin_coin())
+        )
+
+        self.add_trade(msg, order=order)
+        self.balance = self.get_margin_usdt()
+        self.coinOwed = self.get_borrowed_margin_coin()
+        self.coin = self.get_margin_coin()
+        self.inShortPosition = True
+        self.sellShortPrice = self.currentPrice
+        self.shortTrailingPrice = self.currentPrice
+        self.output_message(msg)
+
+    def buy_short(self, msg, coin=None, stopLoss=False):
+        self.coinOwed = self.get_borrowed_margin_coin()
+        difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
+
+        order = self.binanceClient.create_margin_order(
+            symbol=self.symbol,
+            side=SIDE_BUY,
+            type=ORDER_TYPE_MARKET,
+            quantity=self.round_down(difference)
+        )
+        self.add_trade('Bought BTC to repay loan', order=order)
+        self.coin = self.get_margin_coin()
+
+        try:
+            order = self.binanceClient.repay_margin_loan(
+                asset=self.coinName,
+                amount=self.coin
+            )
+            self.add_trade(msg, order=order)
+        except BinanceAPIException as e:
+            print(e)
+            self.output_message(f"Repaying Failed because of {e}.")
+
+        self.coinOwed = self.get_borrowed_margin_coin()
+        self.coin = self.get_margin_coin()
+        self.balance = self.get_margin_usdt()
+        self.inShortPosition = False
+        self.previousPosition = SHORT
+        self.output_message(msg)
+        self.sellShortPrice = None
+        self.shortTrailingPrice = None
 
 
 class Option:

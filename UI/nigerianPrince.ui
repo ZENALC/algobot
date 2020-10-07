@@ -207,7 +207,7 @@
             <item>
              <widget class="QGroupBox" name="realBotGroupBox">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -230,6 +230,9 @@
                  <property name="text">
                   <string>Non-US</string>
                  </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
                 </widget>
                </item>
                <item row="1" column="0" colspan="3">
@@ -242,6 +245,9 @@
                  </property>
                  <property name="toolTip">
                   <string>Enter your Binance API key here</string>
+                 </property>
+                 <property name="echoMode">
+                  <enum>QLineEdit::Password</enum>
                  </property>
                 </widget>
                </item>
@@ -286,6 +292,9 @@
                  <property name="toolTip">
                   <string>Enter your Binance API secret here</string>
                  </property>
+                 <property name="echoMode">
+                  <enum>QLineEdit::Password</enum>
+                 </property>
                 </widget>
                </item>
                <item row="4" column="1">
@@ -319,6 +328,9 @@
                </item>
                <item row="6" column="1" colspan="2">
                 <widget class="QPushButton" name="endBotWithExitingTrade">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -504,7 +516,14 @@
     <addaction name="separator"/>
     <addaction name="statisticsAction"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="aboutNigerianPrinceAction"/>
+   </widget>
    <addaction name="menuSettings"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="configurationAction">
@@ -520,6 +539,11 @@
   <action name="statisticsAction">
    <property name="text">
     <string>Statistics</string>
+   </property>
+  </action>
+  <action name="aboutNigerianPrinceAction">
+   <property name="text">
+    <string>About Nigerian Prince</string>
    </property>
   </action>
  </widget>
