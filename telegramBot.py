@@ -3,7 +3,7 @@ from credentials import telegramApi
 
 
 class TelegramBot:
-    def __init__(self, trader):
+    def __init__(self, trader=None):
         updater = Updater(telegramApi, use_context=True)
 
         # Get the dispatcher to register handlers

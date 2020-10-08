@@ -686,15 +686,23 @@ class RealTrader(SimulatedTrader):
         self.binanceClient = Client(apiKey, apiSecret)
         self.spot_usdt = self.get_spot_usdt()
         self.spot_coin = self.get_spot_coin()
+        self.isolated = self.is_isolated()
 
         if self.spot_usdt > 10:
             self.initial_transfer()
 
-        self.balance = self.get_margin_usdt()
-        self.coin = self.get_margin_coin()
-        self.coinOwed = self.get_borrowed_margin_coin()
+        self.set_margin_values()
+
         self.startingBalance = self.get_starting_balance()
         self.check_initial_position()
+
+    def is_isolated(self):
+        try:  # Attempt to get coin from regular cross margin account.
+            assets = self.binanceClient.get_margin_account()['userAssets']
+            coin = [asset for asset in assets if asset['asset'] == self.coinName][0]
+            return False
+        except IndexError:
+            return True
 
     def get_starting_balance(self):
         """
@@ -808,25 +816,53 @@ class RealTrader(SimulatedTrader):
         order = self.binanceClient.transfer_margin_to_spot(asset=self.coinName, amount=self.get_margin_coin())
         self.add_trade('Transferred from margin to spot', order=order)
 
+    def get_isolated_margin_account(self, **params):
+        return self.binanceClient._request_margin_api('get', 'margin/isolated/account', True, data=params)
+
+    def set_margin_values(self):
+        if self.isolated:
+            assets = self.get_isolated_margin_account()['assets']
+            coin = [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName][0]['baseAsset']
+            usdt = [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName and
+                    asset['quoteAsset']['asset'] == 'USDT'][0]['quoteAsset']
+        else:
+            assets = self.binanceClient.get_margin_account()['userAssets']
+            coin = [asset for asset in assets if asset['asset'] == self.coinName][0]
+            usdt = [asset for asset in assets if asset['asset'] == 'USDT'][0]
+
+        self.balance = self.round_down(float(usdt['free']))
+        self.coin = self.round_down(float(coin['free']))
+        self.coinOwed = self.round_down(float(coin['borrowed']))
+
     def get_margin_usdt(self):
-        assets = self.binanceClient.get_margin_account()['userAssets']
-        usdt = [asset for asset in assets if asset['asset'] == 'USDT'][0]['free']
-        return self.round_down(usdt)
+        if self.isolated:
+            assets = self.get_isolated_margin_account()['assets']
+            for asset in assets:
+                if asset['baseAsset']['asset'] == self.coinName and asset['quoteAsset']['asset'] == 'USDT':
+                    return self.round_down(float(asset['quoteAsset']['free']))
+        else:
+            assets = self.binanceClient.get_margin_account()['userAssets']
+            return self.round_down(float([asset for asset in assets if asset['asset'] == 'USDT'][0]))
+
+    def get_margin_coin_info(self):
+        if self.isolated:
+            assets = self.get_isolated_margin_account()['assets']
+            return [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName][0]['baseAsset']
+        else:
+            assets = self.binanceClient.get_margin_account()['userAssets']
+            return [asset for asset in assets if asset['asset'] == self.coinName][0]
 
     def get_margin_coin(self):
-        assets = self.binanceClient.get_margin_account()['userAssets']
-        coin = [asset for asset in assets if asset['asset'] == self.coinName][0]['free']
-        return self.round_down(float(coin), 6)
+        coin = self.get_margin_coin_info()
+        return self.round_down(float(coin['free']))
 
     def get_borrowed_margin_coin(self):
-        assets = self.binanceClient.get_margin_account()['userAssets']
-        coin = [asset for asset in assets if asset['asset'] == self.coinName][0]['borrowed']
-        return self.round_down(float(coin), 6)
+        coin = self.get_margin_coin_info()
+        return self.round_down(float(coin['borrowed']))
 
     def get_borrowed_margin_interest(self):
-        assets = self.binanceClient.get_margin_account()['userAssets']
-        coin = [asset for asset in assets if asset['asset'] == self.coinName][0]['interest']
-        return self.round_down(float(coin), 6)
+        coin = self.get_margin_coin_info()
+        return self.round_down(float(coin['interest']))
 
     def buy_long(self, msg, usd=None):
         self.balance = self.get_margin_usdt()
@@ -837,7 +873,8 @@ class RealTrader(SimulatedTrader):
             symbol=self.symbol,
             side=SIDE_BUY,
             type=ORDER_TYPE_MARKET,
-            quantity=max_buy
+            quantity=max_buy,
+            isIsolated=self.isolated
         )
 
         self.add_trade(msg, order=order)
@@ -854,7 +891,8 @@ class RealTrader(SimulatedTrader):
             symbol=self.symbol,
             side=SIDE_SELL,
             type=ORDER_TYPE_MARKET,
-            quantity=self.get_margin_coin()
+            quantity=self.get_margin_coin(),
+            isIsolated=self.isolated
         )
 
         self.add_trade(msg, order=order)
@@ -872,8 +910,12 @@ class RealTrader(SimulatedTrader):
         self.currentPrice = self.dataView.get_current_price()
         max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
         try:
-            order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow)
-            self.add_trade('Borrowed BTC.', order=order)
+            if self.isolated:
+                order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow,
+                                                              isIsolated=self.isolated, symbol=self.symbol)
+            else:
+                order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow)
+            self.add_trade(f'Borrowed {self.coinName}.', order=order)
         except BinanceAPIException as e:
             print(f"Borrowing failed because {e}")
             self.output_message(f'Borrowing failed because {e}')
@@ -882,7 +924,8 @@ class RealTrader(SimulatedTrader):
             side=SIDE_SELL,
             symbol=self.symbol,
             type=ORDER_TYPE_MARKET,
-            quantity=self.round_down(self.get_margin_coin())
+            quantity=self.round_down(self.get_margin_coin()),
+            isIsolated=self.isolated
         )
 
         self.add_trade(msg, order=order)
@@ -902,16 +945,25 @@ class RealTrader(SimulatedTrader):
             symbol=self.symbol,
             side=SIDE_BUY,
             type=ORDER_TYPE_MARKET,
-            quantity=self.round_down(difference)
+            quantity=self.round_down(difference),
+            isIsolated=self.isolated
         )
-        self.add_trade('Bought BTC to repay loan', order=order)
+        self.add_trade(f'Bought {self.coinName} to repay loan', order=order)
         self.coin = self.get_margin_coin()
 
         try:
-            order = self.binanceClient.repay_margin_loan(
-                asset=self.coinName,
-                amount=self.coin
-            )
+            if self.isolated:
+                order = self.binanceClient.repay_margin_loan(
+                    asset=self.coinName,
+                    amount=self.coin,
+                    isIsolated=self.isolated,
+                    symbol=self.symbol
+                )
+            else:
+                order = self.binanceClient.repay_margin_loan(
+                    asset=self.coinName,
+                    amount=self.coin
+                )
             self.add_trade(msg, order=order)
         except BinanceAPIException as e:
             print(e)
