@@ -3,6 +3,7 @@ import traceback
 import assets
 
 from data import Data
+from telegramBot import TelegramBot
 from trader import SimulatedTrader, RealTrader, Option, LONG, SHORT, STOP_LOSS
 from helpers import *
 
@@ -85,6 +86,7 @@ class Interface(QMainWindow):
         self.sendEmailButton.clicked.connect(lambda: self.timestamp_message('Sent prince emails to random people.'))
 
         self.trader = None
+        self.telegramBot = None
         self.runningLive = False
         self.liveThread = None
 
@@ -109,6 +111,12 @@ class Interface(QMainWindow):
         self.set_parameters()
         self.trader.tradingOptions = self.get_trading_options()
         self.runningLive = True
+
+        if traderType == 1:
+            if self.telegramBot is None:
+                self.telegramBot = TelegramBot(self.trader, gui=self)
+            self.telegramBot.start()
+            self.timestamp_message('Starting Telegram bot.')
         self.enable_override()
         self.tradesListWidget.clear()
 
@@ -192,6 +200,8 @@ class Interface(QMainWindow):
             self.timestamp_message("<--------End of Simulation-------->")
         else:
             self.endBotWithExitingTrade.setEnabled(False)
+            self.telegramBot.stop()
+            self.timestamp_message('Ending Telegram Bot.')
             self.timestamp_message("<--------End of Bot-------->")
         self.runRealBot.setEnabled(True)
         self.runSimulationButton.setEnabled(True)
@@ -258,7 +268,6 @@ class Interface(QMainWindow):
 
     def grey_out_main_options(self, boolean, traderType):
         boolean = not boolean
-        print(boolean)
         self.configuration.mainOptionsGroupBox.setEnabled(boolean)
         self.configuration.averageOptionsGroupBox.setEnabled(boolean)
         self.configuration.lossOptionsGroupBox.setEnabled(boolean)
