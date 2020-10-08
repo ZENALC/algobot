@@ -233,8 +233,8 @@ class Interface(QMainWindow):
                                           symbol=symbol,
                                           interval=interval, loadData=True)
         else:
-            apiKey = self.apiKeyInput.text()
-            secretKey = self.apiSecretInput.text()
+            apiKey = self.configuration.apiKeyInput.text()
+            secretKey = self.configuration.apiSecretInput.text()
             self.trader = RealTrader(interval=interval, symbol=symbol, apiKey=apiKey, apiSecret=secretKey)
 
         # self.trader.dataView.get_data_from_database()
