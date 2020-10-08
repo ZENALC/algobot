@@ -73,18 +73,22 @@ class TelegramBot:
     def override_telegram(self, update, context):
         update.message.reply_text("Overriding.")
         self.gui.exit_position(False)
+        update.message.reply_text("Successfully overrode.")
 
     def force_long_telegram(self, update, context):
         update.message.reply_text("Forcing long.")
         self.gui.force_long()
+        update.message.reply_text("Successfully forced long.")
 
     def force_short_telegram(self, update, context):
         update.message.reply_text("Forcing short.")
         self.gui.force_short()
+        update.message.reply_text("Successfully forced short.")
 
     def exit_position_telegram(self, update, context):
         update.message.reply_text("Exiting position.")
         self.gui.exit_position(True)
+        update.message.reply_text("Successfully exited position.")
 
     def get_position_telegram(self, update, context):
         if self.trader.get_position() == -1:
