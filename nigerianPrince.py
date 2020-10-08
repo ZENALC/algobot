@@ -111,10 +111,11 @@ class Interface(QMainWindow):
         self.set_parameters()
         self.trader.tradingOptions = self.get_trading_options()
         self.runningLive = True
+        self.trader.startingTime = datetime.utcnow()
 
         if traderType == 1:
             if self.telegramBot is None:
-                self.telegramBot = TelegramBot(self.trader, gui=self)
+                self.telegramBot = TelegramBot(gui=self)
             self.telegramBot.start()
             self.timestamp_message('Starting Telegram bot.')
         self.enable_override()
@@ -210,6 +211,7 @@ class Interface(QMainWindow):
         self.update_trades_to_list_view()
         self.grey_out_main_options(False, traderType=traderType)
         self.trader.dataView.dump_to_table()
+        self.destroy_trader()
 
     def reset_trader(self):
         self.trader.sellShortPrice = None

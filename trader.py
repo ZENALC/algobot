@@ -205,10 +205,11 @@ class SimulatedTrader:
         try:
             if self.inShortPosition:
                 return self.coinOwed * (self.sellShortPrice - self.currentPrice)
-            balance = self.balance
-            balance += self.coin * self.currentPrice * (1 - self.transactionFeePercentage)
-            balance -= self.coinOwed * self.currentPrice * (1 + self.transactionFeePercentage)
-            return balance - self.startingBalance
+            else:
+                balance = self.balance
+                balance += self.coin * self.currentPrice * (1 - self.transactionFeePercentage)
+                balance -= self.coinOwed * self.currentPrice * (1 + self.transactionFeePercentage)
+                return balance - self.startingBalance
         except TypeError:
             return 0
 
@@ -426,7 +427,7 @@ class SimulatedTrader:
         """
         Gets end result of simulation.
         """
-        self.endingTime = datetime.now()
+        self.endingTime = datetime.utcnow()
         if self.coin > 0:
             self.output_message(f"Selling all {self.coinName}...")
             self.sell_long(f'Sold long as simulation ended.')
@@ -491,7 +492,7 @@ class SimulatedTrader:
         self.longTrailingPrice = None
         self.balance = 1000
         self.startingBalance = self.balance
-        self.startingTime = datetime.now()
+        self.startingTime = datetime.utcnow()
 
         easter_egg()
 
@@ -758,14 +759,15 @@ class RealTrader(SimulatedTrader):
                     self.sell_short("Sold short because a cross was detected.")
 
     def check_initial_position(self):
-        if self.get_margin_coin() > 0.001:
+        currentPrice = self.dataView.get_current_price()
+        if self.get_margin_coin() * currentPrice >= 10:
             self.inLongPosition = True
             self.currentPrice = self.dataView.get_current_price()
             self.buyLongPrice = self.currentPrice
             self.longTrailingPrice = self.buyLongPrice
             self.add_trade('Was in long position from start of bot.')
 
-        elif self.get_borrowed_margin_coin() > 0.001:
+        elif self.get_borrowed_margin_coin() * currentPrice >= 10:
             self.inShortPosition = True
             self.currentPrice = self.dataView.get_current_price()
             self.sellShortPrice = self.currentPrice
