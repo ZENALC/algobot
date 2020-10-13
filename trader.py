@@ -221,20 +221,23 @@ class SimulatedTrader:
         else:
             return None
 
-    def get_average(self, movingAverage, parameter, value):
+    def get_average(self, movingAverage, parameter, value, dataObject=None):
         """
         Returns the moving average with parameter and value provided
+        :param dataObject: Data object to be used to get moving averages.
         :param movingAverage: Moving average to get the average from the data view.
         :param parameter: Parameter for the data view to use in the moving average.
         :param value: Value for the moving average to use in the moving average.
         :return: A float value representing the moving average.
         """
+        if dataObject is None:
+            dataObject = self.dataView
         if movingAverage == 'SMA':
-            return self.dataView.get_sma(value, parameter)
+            return dataObject.get_sma(value, parameter)
         elif movingAverage == 'WMA':
-            return self.dataView.get_wma(value, parameter)
+            return dataObject.get_wma(value, parameter)
         elif movingAverage == 'EMA':
-            return self.dataView.get_ema(value, parameter)
+            return dataObject.get_ema(value, parameter)
         else:
             self.output_message(f'Unknown moving average {movingAverage}.', 4)
             return None
@@ -263,16 +266,24 @@ class SimulatedTrader:
         else:
             return None
 
-    def check_cross_v2(self):
+    def check_cross_v2(self, dataObject=None):
         if len(self.tradingOptions) == 0:  # Checking whether options exist.
             self.output_message("No trading options provided.")
             return
 
         trends = []
 
+        if dataObject is None:
+            dataObject = self.dataView
+
         for option in self.tradingOptions:
-            initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound)
-            finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound)
+            initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound, dataObject)
+            finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound, dataObject)
+
+            if dataObject == self.dataView:
+                self.output_message(f'Regular interval ({dataObject.interval}) data:')
+            else:
+                self.output_message(f'Lower interval ({dataObject.interval}) data:')
 
             self.output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
             self.output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
@@ -696,6 +707,15 @@ class RealTrader(SimulatedTrader):
 
         self.startingBalance = self.get_starting_balance()
         self.check_initial_position()
+        self.netWorth = round(self.coin * self.currentPrice - self.coinOwed * self.currentPrice + self.balance, 2)
+
+        if not self.has_enough_money():
+            raise ValueError(f"You only have ${self.netWorth}. Please make sure you have at least $10 in your account.")
+
+    def has_enough_money(self):
+        if self.netWorth < 10:
+            return False
+        return True
 
     def is_isolated(self):
         try:  # Attempt to get coin from regular cross margin account.
@@ -759,15 +779,15 @@ class RealTrader(SimulatedTrader):
                     self.sell_short("Sold short because a cross was detected.")
 
     def check_initial_position(self):
-        currentPrice = self.dataView.get_current_price()
-        if self.get_margin_coin() * currentPrice >= 10:
+        self.currentPrice = self.dataView.get_current_price()
+        if self.get_margin_coin() * self.currentPrice >= 10:
             self.inLongPosition = True
             self.currentPrice = self.dataView.get_current_price()
             self.buyLongPrice = self.currentPrice
             self.longTrailingPrice = self.buyLongPrice
             self.add_trade('Was in long position from start of bot.')
 
-        elif self.get_borrowed_margin_coin() * currentPrice >= 10:
+        elif self.get_borrowed_margin_coin() * self.currentPrice >= 10:
             self.inShortPosition = True
             self.currentPrice = self.dataView.get_current_price()
             self.sellShortPrice = self.currentPrice

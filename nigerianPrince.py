@@ -86,6 +86,8 @@ class Interface(QMainWindow):
         self.sendEmailButton.clicked.connect(lambda: self.timestamp_message('Sent prince emails to random people.'))
 
         self.trader = None
+        self.traderType = None
+        self.lowerIntervalData = None
         self.telegramBot = None
         self.runningLive = False
         self.liveThread = None
@@ -106,7 +108,17 @@ class Interface(QMainWindow):
             self.endSimulationButton.setEnabled(True)
 
         self.grey_out_main_options(True, traderType)
-        self.create_trader(traderType)
+        try:
+            self.create_trader(traderType)
+        except Exception as e:
+            print(e)
+            # self.create_popup(str(e))
+            self.grey_out_main_options(False, traderType)
+            self.endBotWithExitingTrade.setEnabled(False)
+            self.endSimulationButton.setEnabled(False)
+            self.timestamp_message('Ended bot.')
+            return
+
         self.reset_trader()
         self.set_parameters()
         self.trader.tradingOptions = self.get_trading_options()
@@ -123,6 +135,7 @@ class Interface(QMainWindow):
 
         colors = ['b', 'y', 'r', 'g']
         crossInform = False
+        lowerCrossPosition = -5
 
         self.plots = []
         currentDate = datetime.utcnow().timestamp()
@@ -175,6 +188,11 @@ class Interface(QMainWindow):
                 if not self.trader.inHumanControl:
                     self.trader.main_logic()
 
+                if lowerCrossPosition != self.trader.get_position():
+                    if self.trader.check_cross_v2(dataObject=self.lowerIntervalData):
+                        lowerCrossPosition = self.trader.get_position()
+                        self.timestamp_message('Lower interval cross detected.')
+
                 if self.trader.get_position() is None:
                     self.exitPositionButton.setEnabled(False)
                     self.waitOverrideButton.setEnabled(False)
@@ -211,6 +229,9 @@ class Interface(QMainWindow):
         self.update_trades_to_list_view()
         self.grey_out_main_options(False, traderType=traderType)
         self.trader.dataView.dump_to_table()
+        if self.lowerIntervalData is not None:
+            self.lowerIntervalData.dump_to_table()
+            self.lowerIntervalData = None
         self.destroy_trader()
 
     def reset_trader(self):
@@ -227,7 +248,7 @@ class Interface(QMainWindow):
     def create_trader(self, traderType=0):
         symbol = self.configuration.tickerComboBox.currentText()
         interval = convert_interval(self.configuration.intervalComboBox.currentText())
-        self.timestamp_message("Retrieving data...")
+        self.timestamp_message(f"Retrieving data for interval {interval}...")
 
         if traderType == 0:
             startingBalance = self.simulationStartingBalanceSpinBox.value()
@@ -238,6 +259,14 @@ class Interface(QMainWindow):
             apiKey = self.configuration.apiKeyInput.text()
             secretKey = self.configuration.apiSecretInput.text()
             self.trader = RealTrader(interval=interval, symbol=symbol, apiKey=apiKey, apiSecret=secretKey)
+
+        self.traderType = traderType
+        if True:
+            sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
+            if interval != '1m':
+                lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
+                self.timestamp_message(f'Retrieving data for lower interval {lowerInterval}...')
+                self.lowerIntervalData = Data(lowerInterval)
 
         # self.trader.dataView.get_data_from_database()
         # if not self.trader.dataView.database_is_updated():
@@ -501,11 +530,11 @@ class Interface(QMainWindow):
     def closeEvent(self, event):
         if self.runningLive:
             qm = QMessageBox
-            ret = qm.question(self, '', "Are you sure to end the program? Nigerian prince is hard at work.",
+            ret = qm.question(self, 'Close?', "Are you sure to end the program? Nigerian prince is hard at work.",
                               qm.Yes | qm.No)
 
             if ret == qm.Yes:
-                self.runningLive = False
+                self.end_bot(self.traderType)
                 event.accept()
             else:
                 event.ignore()
@@ -535,6 +564,9 @@ class Interface(QMainWindow):
 
         self.otherCommands.csvGenerationTicker.clear()
         self.otherCommands.csvGenerationTicker.addItems(tickers)
+
+    def create_popup(self, msg):
+        QMessageBox.about(self, 'Warning', msg)
 
 
 class Configuration(QDialog):
