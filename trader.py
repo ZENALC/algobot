@@ -34,6 +34,7 @@ class SimulatedTrader:
         self.transactionFeePercentage = 0.001  # Binance transaction fee
         self.totalTrades = []  # All trades conducted
         self.trades = []  # Amount of trades in previous run
+        self.detailedTrades = []
 
         self.tradingOptions = []
         self.trend = None  # 1 is bullish, -1 is bearish

@@ -8,7 +8,7 @@ from trader import SimulatedTrader, RealTrader, Option, LONG, SHORT, STOP_LOSS
 from helpers import *
 
 from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QMessageBox, QTableWidgetItem
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot, QObject, pyqtSignal
 from PyQt5.QtGui import QPalette, QColor, QIcon
 from pyqtgraph import PlotWidget, plot, DateAxisItem, mkPen
@@ -90,8 +90,15 @@ class Interface(QMainWindow):
         self.lowerIntervalData = None
         self.telegramBot = None
         self.runningLive = False
-
         self.timestamp_message('Greetings.')
+
+    def test_table(self, table, trade):
+        rowPosition = self.simulationTable.rowCount()
+        columns = self.simulationTable.columnCount()
+
+        self.simulationTable.insertRow(rowPosition)
+        for column in range(columns):
+            table.setItem(rowPosition, column, QTableWidgetItem(str(trade[column])))
 
     def create_slots(self):
         self.configuration.lightModeRadioButton.toggled.connect(lambda: self.set_light_mode())
@@ -148,36 +155,9 @@ class Interface(QMainWindow):
             }
             self.plots.append(finalDict)
 
-    def run_bot(self, traderType):
-        self.graphWidget.clear()
-        if traderType == 1:
-            self.timestamp_message('Starting bot.')
-            self.endBotWithExitingTrade.setEnabled(True)
-        else:
-            self.timestamp_message('Starting simulation.')
-            self.endSimulationButton.setEnabled(True)
-
-        self.grey_out_main_options(True, traderType)
-        self.create_trader(traderType)
-        self.reset_trader()
-        self.set_parameters()
-        self.trader.tradingOptions = self.get_trading_options()
-        self.runningLive = True
-        self.trader.startingTime = datetime.utcnow()
-
-        if traderType == 1:
-            if self.telegramBot is None:
-                self.telegramBot = TelegramBot(gui=self)
-            self.telegramBot.start()
-            self.timestamp_message('Starting Telegram bot.')
-        self.enable_override()
-        self.tradesListWidget.clear()
-
+    def automate_trading(self):
         crossInform = False
         lowerCrossPosition = -5
-
-        self.plots = []
-        self.setup_plots()
 
         while self.runningLive:
             try:
@@ -230,6 +210,35 @@ class Interface(QMainWindow):
             except Exception as e:
                 raise e
                 # self.trader.output_message(f'Error: {e}')
+
+    def run_bot(self, traderType):
+        self.graphWidget.clear()
+        if traderType == 1:
+            self.timestamp_message('Starting bot.')
+            self.endBotWithExitingTrade.setEnabled(True)
+        else:
+            self.timestamp_message('Starting simulation.')
+            self.endSimulationButton.setEnabled(True)
+
+        self.grey_out_main_options(True, traderType)
+        self.create_trader(traderType)
+        self.reset_trader()
+        self.set_parameters()
+        self.trader.tradingOptions = self.get_trading_options()
+        self.runningLive = True
+        self.trader.startingTime = datetime.utcnow()
+
+        if traderType == 1:
+            if self.telegramBot is None:
+                self.telegramBot = TelegramBot(gui=self)
+            self.telegramBot.start()
+            self.timestamp_message('Starting Telegram bot.')
+        self.enable_override()
+        self.tradesListWidget.clear()
+
+        self.plots = []
+        self.setup_plots()
+        self.automate_trading()
 
     def end_bot(self, traderType):
         self.runningLive = False

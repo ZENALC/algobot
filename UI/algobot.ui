@@ -42,7 +42,7 @@
        <enum>QTabWidget::West</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <property name="movable">
        <bool>true</bool>
@@ -1042,13 +1042,157 @@
         <string>Backtest</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_14">
-        <item row="0" column="0">
+        <item row="1" column="1">
+         <widget class="QPushButton" name="configureTest">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Configure Test</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="6">
+         <widget class="QTableWidget" name="backtestTable">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::Box</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Sunken</enum>
+          </property>
+          <property name="showGrid">
+           <bool>true</bool>
+          </property>
+          <property name="gridStyle">
+           <enum>Qt::SolidLine</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <attribute name="horizontalHeaderCascadingSectionResizes">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="horizontalHeaderDefaultSectionSize">
+           <number>120</number>
+          </attribute>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="verticalHeaderCascadingSectionResizes">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="verticalHeaderDefaultSectionSize">
+           <number>30</number>
+          </attribute>
+          <attribute name="verticalHeaderStretchLastSection">
+           <bool>false</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>Order ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Reason</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Action</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Method</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Price</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Percentage</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Date</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="1" column="5">
+         <widget class="QProgressBar" name="backtestProgressBar">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="value">
+           <number>0</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="textDirection">
+           <enum>QProgressBar::TopToBottom</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QPushButton" name="endBacktest">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>End Test</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="6">
          <widget class="PlotWidget" name="backtestGraph" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="minimumSize">
            <size>
             <width>0</width>
             <height>350</height>
            </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="runBacktest">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Run Test</string>
           </property>
          </widget>
         </item>
@@ -1102,7 +1246,7 @@
          </widget>
         </item>
         <item row="2" column="0" colspan="2">
-         <widget class="QTableWidget" name="tableWidget">
+         <widget class="QTableWidget" name="simulationTable">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -1131,7 +1275,7 @@
            <bool>true</bool>
           </attribute>
           <attribute name="horizontalHeaderDefaultSectionSize">
-           <number>150</number>
+           <number>120</number>
           </attribute>
           <attribute name="horizontalHeaderStretchLastSection">
            <bool>true</bool>
@@ -1142,37 +1286,20 @@
           <attribute name="verticalHeaderCascadingSectionResizes">
            <bool>false</bool>
           </attribute>
+          <attribute name="verticalHeaderDefaultSectionSize">
+           <number>30</number>
+          </attribute>
           <attribute name="verticalHeaderStretchLastSection">
            <bool>false</bool>
           </attribute>
-          <row>
-           <property name="text">
-            <string>1</string>
-           </property>
-          </row>
-          <row>
-           <property name="text">
-            <string>2</string>
-           </property>
-          </row>
-          <row>
-           <property name="text">
-            <string>3</string>
-           </property>
-          </row>
-          <row>
-           <property name="text">
-            <string>4</string>
-           </property>
-          </row>
-          <row>
-           <property name="text">
-            <string>5</string>
-           </property>
-          </row>
           <column>
            <property name="text">
             <string>Order ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Reason</string>
            </property>
           </column>
           <column>
@@ -1182,7 +1309,7 @@
           </column>
           <column>
            <property name="text">
-            <string>Cause</string>
+            <string>Method</string>
            </property>
           </column>
           <column>
@@ -1200,156 +1327,6 @@
             <string>Date</string>
            </property>
           </column>
-          <item row="0" column="0">
-           <property name="text">
-            <string>1</string>
-           </property>
-          </item>
-          <item row="0" column="1">
-           <property name="text">
-            <string>Buy</string>
-           </property>
-          </item>
-          <item row="0" column="2">
-           <property name="text">
-            <string>Automation</string>
-           </property>
-          </item>
-          <item row="0" column="3">
-           <property name="text">
-            <string>$11,502.12</string>
-           </property>
-          </item>
-          <item row="0" column="4">
-           <property name="text">
-            <string>2%</string>
-           </property>
-          </item>
-          <item row="0" column="5">
-           <property name="text">
-            <string>October 12 5:32 AM</string>
-           </property>
-          </item>
-          <item row="1" column="0">
-           <property name="text">
-            <string>2</string>
-           </property>
-          </item>
-          <item row="1" column="1">
-           <property name="text">
-            <string>Sell</string>
-           </property>
-          </item>
-          <item row="1" column="2">
-           <property name="text">
-            <string>Manual</string>
-           </property>
-          </item>
-          <item row="1" column="3">
-           <property name="text">
-            <string>$11,523.1</string>
-           </property>
-          </item>
-          <item row="1" column="4">
-           <property name="text">
-            <string>0.2%</string>
-           </property>
-          </item>
-          <item row="1" column="5">
-           <property name="text">
-            <string>October 12 5:44 AM</string>
-           </property>
-          </item>
-          <item row="2" column="0">
-           <property name="text">
-            <string>3</string>
-           </property>
-          </item>
-          <item row="2" column="1">
-           <property name="text">
-            <string>Buy</string>
-           </property>
-          </item>
-          <item row="2" column="2">
-           <property name="text">
-            <string>Automation</string>
-           </property>
-          </item>
-          <item row="2" column="3">
-           <property name="text">
-            <string>$10,501.23</string>
-           </property>
-          </item>
-          <item row="2" column="4">
-           <property name="text">
-            <string>12%</string>
-           </property>
-          </item>
-          <item row="2" column="5">
-           <property name="text">
-            <string>October 12 5:55 AM</string>
-           </property>
-          </item>
-          <item row="3" column="0">
-           <property name="text">
-            <string>4</string>
-           </property>
-          </item>
-          <item row="3" column="1">
-           <property name="text">
-            <string>Sell</string>
-           </property>
-          </item>
-          <item row="3" column="2">
-           <property name="text">
-            <string>Automation</string>
-           </property>
-          </item>
-          <item row="3" column="3">
-           <property name="text">
-            <string>$9,999.12</string>
-           </property>
-          </item>
-          <item row="3" column="4">
-           <property name="text">
-            <string>5.1%</string>
-           </property>
-          </item>
-          <item row="3" column="5">
-           <property name="text">
-            <string>October 12 5:59 AM</string>
-           </property>
-          </item>
-          <item row="4" column="0">
-           <property name="text">
-            <string>5</string>
-           </property>
-          </item>
-          <item row="4" column="1">
-           <property name="text">
-            <string>Buy</string>
-           </property>
-          </item>
-          <item row="4" column="2">
-           <property name="text">
-            <string>Automation</string>
-           </property>
-          </item>
-          <item row="4" column="3">
-           <property name="text">
-            <string>$69.98</string>
-           </property>
-          </item>
-          <item row="4" column="4">
-           <property name="text">
-            <string>1.65%</string>
-           </property>
-          </item>
-          <item row="4" column="5">
-           <property name="text">
-            <string>October 12 6 AM</string>
-           </property>
-          </item>
          </widget>
         </item>
        </layout>
