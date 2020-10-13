@@ -16,7 +16,7 @@ from pyqtgraph import PlotWidget, plot, DateAxisItem, mkPen
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
 
-mainUi = f'UI{os.path.sep}nigerianPrince.ui'
+mainUi = f'UI{os.path.sep}algobot.ui'
 configurationUi = f'UI{os.path.sep}configuration.ui'
 otherCommandsUi = f'UI{os.path.sep}otherCommands.ui'
 statisticsUi = f'UI{os.path.sep}statistics.ui'
@@ -56,24 +56,30 @@ class Interface(QMainWindow):
         self.statistics = Statistics()  # Loading statistics
         self.threadPool = QThreadPool()  # Initiating threading pool
         self.setup_graph()  # Setting up graph
+        self.create_slots()  # Initiating slots
 
         self.threadPool.start(Worker(self.load_tickers))
         self.plots = []
+        self.advancedLogging = True
+        self.trader = None
+        self.traderType = None
+        self.lowerIntervalData = None
+        self.telegramBot = None
+        self.runningLive = False
+        self.liveThread = None
 
+        self.timestamp_message('Greetings.')
+
+    def create_slots(self):
         self.configuration.lightModeRadioButton.toggled.connect(lambda: self.set_light_mode())
         self.configuration.darkModeRadioButton.toggled.connect(lambda: self.set_dark_mode())
         self.configuration.bloombergModeRadioButton.toggled.connect(lambda: self.set_bloomberg_mode())
-
-        self.advancedLogging = True
-
         self.configuration.simpleLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(False))
         self.configuration.advancedLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(True))
-
         self.otherCommandsAction.triggered.connect(lambda: self.otherCommands.show())
         self.configurationAction.triggered.connect(lambda: self.configuration.show())
         self.statisticsAction.triggered.connect(lambda: self.statistics.show())
         self.aboutNigerianPrinceAction.triggered.connect(lambda: self.about.show())
-
         self.runRealBot.clicked.connect(lambda: self.initiate_bot_thread(traderType=1))
         self.runSimulationButton.clicked.connect(lambda: self.initiate_bot_thread(traderType=0))
         self.endBotWithExitingTrade.clicked.connect(lambda: self.end_bot(traderType=1))
@@ -84,15 +90,6 @@ class Interface(QMainWindow):
         self.exitPositionButton.clicked.connect(lambda: self.exit_position(True))
         self.waitOverrideButton.clicked.connect(lambda: self.exit_position(False))
         self.sendEmailButton.clicked.connect(lambda: self.timestamp_message('Sent prince emails to random people.'))
-
-        self.trader = None
-        self.traderType = None
-        self.lowerIntervalData = None
-        self.telegramBot = None
-        self.runningLive = False
-        self.liveThread = None
-
-        self.timestamp_message('Greetings.')
 
     def initiate_bot_thread(self, traderType):
         self.liveThread = Worker(lambda: self.run_bot(traderType))
@@ -698,7 +695,7 @@ def main():
     initialize_logger()
     interface = Interface()
     interface.showMaximized()
-    app.setWindowIcon(QIcon(':/logo/nigerianPrince.png'))
+    app.setWindowIcon(QIcon('algobotwolf.png'))
     sys.excepthook = except_hook
     sys.exit(app.exec_())
 
