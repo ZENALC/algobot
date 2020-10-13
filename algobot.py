@@ -116,52 +116,19 @@ class Interface(QMainWindow):
 
     def initiate_bot_thread(self, traderType):
         worker = Worker(lambda: self.run_bot(traderType))
-        worker.signals.error.connect(self.create_popup)
+        worker.signals.error.connect(self.end_bot_and_create_popup)
         self.threadPool.start(worker)
 
-    def run_bot(self, traderType):
-        self.graphWidget.clear()
-        if traderType == 1:
-            self.timestamp_message('Starting bot.')
-            self.endBotWithExitingTrade.setEnabled(True)
-        else:
-            self.timestamp_message('Starting simulation.')
-            self.endSimulationButton.setEnabled(True)
+    def end_bot_and_create_popup(self, msg):
+        self.grey_out_main_options(False, self.traderType)
+        self.endBotWithExitingTrade.setEnabled(False)
+        self.endSimulationButton.setEnabled(False)
+        self.timestamp_message('Ended bot because of an error.')
+        self.create_popup(msg)
 
-        self.grey_out_main_options(True, traderType)
-        self.create_trader(traderType)
-        # try:
-        #     self.create_trader(traderType)
-        # except Exception as e:
-        #     print(e)
-        #     # self.create_popup(str(e))
-        #     self.grey_out_main_options(False, traderType)
-        #     self.endBotWithExitingTrade.setEnabled(False)
-        #     self.endSimulationButton.setEnabled(False)
-        #     self.timestamp_message('Ended bot.')
-        #     return
-
-        self.reset_trader()
-        self.set_parameters()
-        self.trader.tradingOptions = self.get_trading_options()
-        self.runningLive = True
-        self.trader.startingTime = datetime.utcnow()
-
-        if traderType == 1:
-            if self.telegramBot is None:
-                self.telegramBot = TelegramBot(gui=self)
-            self.telegramBot.start()
-            self.timestamp_message('Starting Telegram bot.')
-        self.enable_override()
-        self.tradesListWidget.clear()
-
+    def setup_plots(self):
         colors = ['b', 'y', 'r', 'g']
-        crossInform = False
-        lowerCrossPosition = -5
-
-        self.plots = []
         currentDate = datetime.utcnow().timestamp()
-
         for option in self.trader.tradingOptions:
             initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
@@ -180,6 +147,37 @@ class Interface(QMainWindow):
                 'y': [initialAverage, ]
             }
             self.plots.append(finalDict)
+
+    def run_bot(self, traderType):
+        self.graphWidget.clear()
+        if traderType == 1:
+            self.timestamp_message('Starting bot.')
+            self.endBotWithExitingTrade.setEnabled(True)
+        else:
+            self.timestamp_message('Starting simulation.')
+            self.endSimulationButton.setEnabled(True)
+
+        self.grey_out_main_options(True, traderType)
+        self.create_trader(traderType)
+        self.reset_trader()
+        self.set_parameters()
+        self.trader.tradingOptions = self.get_trading_options()
+        self.runningLive = True
+        self.trader.startingTime = datetime.utcnow()
+
+        if traderType == 1:
+            if self.telegramBot is None:
+                self.telegramBot = TelegramBot(gui=self)
+            self.telegramBot.start()
+            self.timestamp_message('Starting Telegram bot.')
+        self.enable_override()
+        self.tradesListWidget.clear()
+
+        crossInform = False
+        lowerCrossPosition = -5
+
+        self.plots = []
+        self.setup_plots()
 
         while self.runningLive:
             try:
@@ -564,6 +562,8 @@ class Interface(QMainWindow):
     def setup_graph(self):
         self.graphWidget.setAxisItems({'bottom': DateAxisItem()})
         self.graphWidget.setBackground('w')
+        self.backtestGraph.setBackground('w')
+        self.simulationGraph.setBackground('w')
         self.graphWidget.setTitle("Graph data.")
         self.graphWidget.setLabel('left', 'Price')
         self.graphWidget.setLabel('bottom', 'Datetime in UTC')
