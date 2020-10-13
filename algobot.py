@@ -14,7 +14,6 @@ from PyQt5.QtGui import QPalette, QColor, QIcon
 from pyqtgraph import PlotWidget, plot, DateAxisItem, mkPen
 
 app = QApplication(sys.argv)
-app.setStyle('Fusion')
 
 mainUi = f'UI{os.path.sep}algobot.ui'
 configurationUi = f'UI{os.path.sep}configuration.ui'
@@ -728,6 +727,7 @@ def get_light_palette():
 
 
 def main():
+    app.setStyle('Fusion')
     initialize_logger()
     interface = Interface()
     interface.showMaximized()
