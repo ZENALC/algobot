@@ -9,7 +9,7 @@ from helpers import *
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QMessageBox
-from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot
+from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot, QObject, pyqtSignal
 from PyQt5.QtGui import QPalette, QColor, QIcon
 from pyqtgraph import PlotWidget, plot, DateAxisItem, mkPen
 
@@ -23,7 +23,29 @@ statisticsUi = f'UI{os.path.sep}statistics.ui'
 aboutUi = f'UI{os.path.sep}about.ui'
 
 
+class WorkerSignals(QObject):
+    """
+    Defines the signals available from a running worker thread.
+    """
+    finished = pyqtSignal()
+    error = pyqtSignal(str)
+    result = pyqtSignal(object)
+    progress = pyqtSignal(int)
+
+
 class Worker(QRunnable):
+    """
+    Worker thread
+
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+
+    :param callback: The function callback to run on this worker thread. Supplied args and
+                     kwargs will be passed through to the runner.
+    :type callback: function
+    :param args: Arguments to pass to the callback function
+    :param kwargs: Keywords to pass to the callback function
+
+    """
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
 
@@ -31,6 +53,7 @@ class Worker(QRunnable):
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
+        self.signals = WorkerSignals()
 
     @pyqtSlot()
     def run(self):
@@ -42,8 +65,9 @@ class Worker(QRunnable):
         try:
             self.fn(*self.args, **self.kwargs)
         except Exception as e:
-            print(f'Error: {e}')
-            traceback.print_exc()
+            # print(f'Error: {e}')
+            # traceback.print_exc()
+            self.signals.error.emit(str(e))
 
 
 class Interface(QMainWindow):
@@ -66,7 +90,6 @@ class Interface(QMainWindow):
         self.lowerIntervalData = None
         self.telegramBot = None
         self.runningLive = False
-        self.liveThread = None
 
         self.timestamp_message('Greetings.')
 
@@ -92,8 +115,9 @@ class Interface(QMainWindow):
         self.sendEmailButton.clicked.connect(lambda: self.timestamp_message('Sent prince emails to random people.'))
 
     def initiate_bot_thread(self, traderType):
-        self.liveThread = Worker(lambda: self.run_bot(traderType))
-        self.threadPool.start(self.liveThread)
+        worker = Worker(lambda: self.run_bot(traderType))
+        worker.signals.error.connect(self.create_popup)
+        self.threadPool.start(worker)
 
     def run_bot(self, traderType):
         self.graphWidget.clear()
@@ -105,16 +129,17 @@ class Interface(QMainWindow):
             self.endSimulationButton.setEnabled(True)
 
         self.grey_out_main_options(True, traderType)
-        try:
-            self.create_trader(traderType)
-        except Exception as e:
-            print(e)
-            # self.create_popup(str(e))
-            self.grey_out_main_options(False, traderType)
-            self.endBotWithExitingTrade.setEnabled(False)
-            self.endSimulationButton.setEnabled(False)
-            self.timestamp_message('Ended bot.')
-            return
+        self.create_trader(traderType)
+        # try:
+        #     self.create_trader(traderType)
+        # except Exception as e:
+        #     print(e)
+        #     # self.create_popup(str(e))
+        #     self.grey_out_main_options(False, traderType)
+        #     self.endBotWithExitingTrade.setEnabled(False)
+        #     self.endSimulationButton.setEnabled(False)
+        #     self.timestamp_message('Ended bot.')
+        #     return
 
         self.reset_trader()
         self.set_parameters()
@@ -527,7 +552,7 @@ class Interface(QMainWindow):
     def closeEvent(self, event):
         if self.runningLive:
             qm = QMessageBox
-            ret = qm.question(self, 'Close?', "Are you sure to end the program? Nigerian prince is hard at work.",
+            ret = qm.question(self, 'Close?', "Are you sure to end the program?",
                               qm.Yes | qm.No)
 
             if ret == qm.Yes:
@@ -563,6 +588,8 @@ class Interface(QMainWindow):
         self.otherCommands.csvGenerationTicker.addItems(tickers)
 
     def create_popup(self, msg):
+        if '-1021' in msg:
+            msg = msg + ' Please sync your system time.'
         QMessageBox.about(self, 'Warning', msg)
 
 
