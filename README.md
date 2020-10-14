@@ -4,6 +4,7 @@ Cryptocurrency trading bot that allows users to create strategies and then backt
 
 # Installation
 
+Please make sure you have an installation of at least Python 3.6.
 To install requirements and related Python packages, type ```pip install requirements.txt```.
 
 # Features
@@ -39,4 +40,4 @@ The project is open-source. Please feel free to support it. Supporters are alway
 
 # Compatability
 
-Works fine on Python versions 3.6 and up
+Works fine on Python versions 3.6 and up.
