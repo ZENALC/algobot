@@ -8,12 +8,13 @@ To install requirements and related Python packages, type pip install requiremen
 
 # Features
 
-View real time data\
-Create graphs with real time data\
-Run simulations\
-Telegram Integration\
-Create stop losses\
-Run bots with different parameters
+• View real time data\
+• Create graphs with real time data\
+• Run simulations\
+• Run backtests\
+• Run live bots\
+• Telegram Integration\
+• Create stop losses
 
 # User Interface
 
