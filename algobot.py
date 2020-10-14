@@ -54,6 +54,8 @@ class Worker(QRunnable):
         self.kwargs = kwargs
         self.signals = WorkerSignals()
 
+        self.kwargs['progress_callback'] = self.signals.progress
+
     @pyqtSlot()
     def run(self):
         """
@@ -123,6 +125,7 @@ class Interface(QMainWindow):
     def initiate_bot_thread(self, traderType):
         worker = Worker(lambda: self.run_bot(traderType))
         worker.signals.error.connect(self.end_bot_and_create_popup)
+        worker.signals.result.connect(lambda: print("lol"))
         self.threadPool.start(worker)
 
     def end_bot_and_create_popup(self, msg):
@@ -154,7 +157,7 @@ class Interface(QMainWindow):
             }
             self.plots.append(finalDict)
 
-    def automate_trading(self):
+    def automate_trading(self, progress_callback=None):
         crossInform = False
         lowerCrossPosition = -5
 
@@ -171,6 +174,7 @@ class Interface(QMainWindow):
                     crossInform = True
                     self.timestamp_message("Waiting for a cross.")
 
+                progress_callback.emit()
                 self.update_info()
                 self.update_trades_to_list_view()
 
@@ -210,7 +214,7 @@ class Interface(QMainWindow):
                 raise e
                 # self.trader.output_message(f'Error: {e}')
 
-    def run_bot(self, traderType):
+    def run_bot(self, traderType, progress_callback=None):
         self.graphWidget.clear()
         if traderType == 1:
             self.timestamp_message('Starting bot.')
@@ -237,7 +241,7 @@ class Interface(QMainWindow):
 
         self.plots = []
         self.setup_plots()
-        self.automate_trading()
+        self.automate_trading(progress_callback)
 
     def end_bot(self, traderType):
         self.runningLive = False
@@ -572,7 +576,7 @@ class Interface(QMainWindow):
         self.graphWidget.setBackground('w')
         self.backtestGraph.setBackground('w')
         self.simulationGraph.setBackground('w')
-        self.graphWidget.setTitle("Graph data.")
+        self.graphWidget.setTitle("Moving Average Data")
         self.graphWidget.setLabel('left', 'Price')
         self.graphWidget.setLabel('bottom', 'Datetime in UTC')
         currentDate = datetime.utcnow().timestamp()
