@@ -29,6 +29,10 @@ Bot usage is as is. I am not responsible for any financial burdens caused by thi
 
 GNU General Public License v3.0
 
+# Contributors
+
+Mihir Shrestha
+
 # Compatability
 
 Works fine on Python versions 3.6 and up
