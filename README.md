@@ -13,7 +13,7 @@ Create graphs with real time data\
 Run simulations\
 Telegram Integration\
 Create stop losses\
-Run bots with different parameters\
+Run bots with different parameters
 
 # Disclaimer
 
