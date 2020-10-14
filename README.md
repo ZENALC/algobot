@@ -17,7 +17,7 @@ Run bots with different parameters
 
 # User Interface
 
-![alt text](https://imgur.com/S9DPoRy)
+![Alt text](https://i.imgur.com/S9DPoRy.png "Optional title")
 
 # Disclaimer
 
