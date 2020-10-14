@@ -4,7 +4,7 @@ Cryptocurrency trading bot that allows users to create strategies and then backt
 
 # Installation
 
-To install requirements and related Python packages, type pip install requirements.txt
+To install requirements and related Python packages, type ```pip install requirements.txt```.
 
 # Features
 
@@ -23,7 +23,7 @@ To install requirements and related Python packages, type pip install requiremen
 
 # Disclaimer
 
-Bot usage is as is. I am not responsible for any financial burdens caused by this program.
+Bot usage is as is. I am not responsible for any financial burdens or unexpected monetary bugs or glitches caused by this program.
 
 # License
 
@@ -32,6 +32,10 @@ GNU General Public License v3.0
 # Contributors
 
 Mihir Shrestha
+
+# Contribution
+
+The project is open-source. Please feel free to support it. Supporters are always welcome!
 
 # Compatability
 
