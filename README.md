@@ -1,6 +1,6 @@
 # CryptoAlgo
 
-Cryptocurrency trading bot.
+Cryptocurrency trading bot that allows users to create strategies and then backtest, simulate, or run live bots using them. Telegram integration has been added to support easier and remote trading. 
 
 # Installation
 
