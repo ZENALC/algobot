@@ -15,6 +15,10 @@ Telegram Integration\
 Create stop losses\
 Run bots with different parameters
 
+# User Interface
+
+![alt text](https://imgur.com/S9DPoRy)
+
 # Disclaimer
 
 Bot usage is as is. I am not responsible for any financial burdens caused by this program.
