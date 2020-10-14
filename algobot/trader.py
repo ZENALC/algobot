@@ -506,8 +506,6 @@ class SimulatedTrader:
         self.startingBalance = self.balance
         self.startingTime = datetime.utcnow()
 
-        easter_egg()
-
         while self.lossStrategy not in (1, 2):
             try:
                 self.lossStrategy = int(input('Enter 1 for stop loss or 2 for trailing loss strategy>>'))

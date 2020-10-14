@@ -1,5 +1,4 @@
 import sys
-import traceback
 import assets
 
 from data import Data
@@ -11,15 +10,15 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QMessageBox, QTableWidgetItem
 from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot, QObject, pyqtSignal
 from PyQt5.QtGui import QPalette, QColor, QIcon
-from pyqtgraph import PlotWidget, plot, DateAxisItem, mkPen
+from pyqtgraph import DateAxisItem, mkPen
 
 app = QApplication(sys.argv)
 
-mainUi = f'UI{os.path.sep}algobot.ui'
-configurationUi = f'UI{os.path.sep}configuration.ui'
-otherCommandsUi = f'UI{os.path.sep}otherCommands.ui'
-statisticsUi = f'UI{os.path.sep}statistics.ui'
-aboutUi = f'UI{os.path.sep}about.ui'
+mainUi = f'../UI{os.path.sep}algobot.ui'
+configurationUi = f'../UI{os.path.sep}configuration.ui'
+otherCommandsUi = f'../UI{os.path.sep}otherCommands.ui'
+statisticsUi = f'../UI{os.path.sep}statistics.ui'
+aboutUi = f'../UI{os.path.sep}about.ui'
 
 
 class WorkerSignals(QObject):
@@ -53,8 +52,6 @@ class Worker(QRunnable):
         self.args = args
         self.kwargs = kwargs
         self.signals = WorkerSignals()
-
-        self.kwargs['progress_callback'] = self.signals.progress
 
     @pyqtSlot()
     def run(self):
@@ -157,7 +154,7 @@ class Interface(QMainWindow):
             }
             self.plots.append(finalDict)
 
-    def automate_trading(self, progress_callback=None):
+    def automate_trading(self):
         crossInform = False
         lowerCrossPosition = -5
 
@@ -174,7 +171,6 @@ class Interface(QMainWindow):
                     crossInform = True
                     self.timestamp_message("Waiting for a cross.")
 
-                progress_callback.emit()
                 self.update_info()
                 self.update_trades_to_list_view()
 
@@ -214,7 +210,7 @@ class Interface(QMainWindow):
                 raise e
                 # self.trader.output_message(f'Error: {e}')
 
-    def run_bot(self, traderType, progress_callback=None):
+    def run_bot(self, traderType):
         self.graphWidget.clear()
         if traderType == 1:
             self.timestamp_message('Starting bot.')
@@ -241,7 +237,7 @@ class Interface(QMainWindow):
 
         self.plots = []
         self.setup_plots()
-        self.automate_trading(progress_callback)
+        self.automate_trading()
 
     def end_bot(self, traderType):
         self.runningLive = False
@@ -735,7 +731,7 @@ def main():
     initialize_logger()
     interface = Interface()
     interface.showMaximized()
-    app.setWindowIcon(QIcon('algobotwolf.png'))
+    app.setWindowIcon(QIcon('../media/algobotwolf.png'))
     sys.excepthook = except_hook
     sys.exit(app.exec_())
 

@@ -29,13 +29,15 @@ class Data:
         self.data = []
         self.ema_data = {}
 
-        try:
+        currentPath = os.getcwd()
+        os.chdir('../')
+        if not os.path.exists('Databases'):
             os.mkdir('Databases')
-        except FileExistsError:
-            pass
 
         self.databaseFile = os.path.join(os.getcwd(), 'Databases', f'{self.symbol}.db')
         self.databaseTable = f'data_{self.interval}'
+        os.chdir(currentPath)
+
         self.create_table()
 
         if loadData:
@@ -306,6 +308,7 @@ class Data:
         folderName = 'CSV'
         fileName = f'{self.symbol}_data_{self.interval}.csv'
         currentPath = os.getcwd()
+        os.chdir('../')
 
         try:
             os.mkdir(folderName)
@@ -341,6 +344,7 @@ class Data:
         folderName = 'CSV'
         fileName = f'{self.symbol}_data_{interval}.csv'
         currentPath = os.getcwd()
+        os.chdir('../')
 
         try:
             os.mkdir(folderName)

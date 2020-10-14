@@ -19,7 +19,7 @@
    <string>Algobot</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../algobot.qrc">
+   <iconset resource="../media/algobot.qrc">
     <normaloff>:/logo/algobotwolf.png</normaloff>:/logo/algobotwolf.png</iconset>
   </property>
   <property name="autoFillBackground">
@@ -1398,7 +1398,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../algobot.qrc"/>
+  <include location="../media/algobot.qrc"/>
  </resources>
  <connections/>
 </ui>
