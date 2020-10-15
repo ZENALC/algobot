@@ -1,8 +1,8 @@
-from helpers import *
 import sqlite3
 from datetime import timedelta, timezone
 from contextlib import closing
 from binance.client import Client
+from helpers import *
 
 
 class Data:

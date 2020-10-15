@@ -3,7 +3,10 @@ import assets
 
 from data import Data
 from telegramBot import TelegramBot
-from trader import SimulatedTrader, RealTrader, Option, LONG, SHORT, STOP_LOSS
+from realtrader import RealTrader
+from simulationtrader import SimulatedTrader
+from option import Option
+from enums import *
 from helpers import *
 
 from PyQt5 import uic
