@@ -546,6 +546,10 @@ class Interface(QMainWindow):
                 return STOP_LOSS, self.configuration.lossPercentageSpinBox.value()
 
     def closeEvent(self, event):
+        """
+        Close event override. Makes user confirm they want to end program if something is running live.
+        :param event: close event
+        """
         if self.runningLive:
             qm = QMessageBox
             ret = qm.question(self, 'Close?', "Are you sure to end the program?",
@@ -558,6 +562,9 @@ class Interface(QMainWindow):
                 event.ignore()
 
     def setup_graphs(self):
+        """
+        Sets up all available graphs in application.
+        """
         currentDate = datetime.utcnow().timestamp()
         nextDate = currentDate + 3600000
 
@@ -608,6 +615,9 @@ class Interface(QMainWindow):
             self.plots.append(finalDict)
 
     def get_graph_colors(self):
+        """
+        Returns graph colors to be placed based on configuration.
+        """
         config = self.configuration
         colorDict = {'blue': 'b',
                      'green': 'g',
@@ -623,10 +633,23 @@ class Interface(QMainWindow):
 
     @staticmethod
     def plot_graph(graph, x, y, plotName, color):
+        """
+        Plots to graph provided.
+        :param graph: Graph function will plot on.
+        :param x: X values of graph.
+        :param y: Y values of graph.
+        :param plotName: Name of graph.
+        :param color: Color graph will be drawn in.
+        """
         pen = mkPen(color=color)
         return graph.plot(x, y, name=plotName, pen=pen)
 
     def test_table(self, table, trade):
+        """
+        Initial function made to test table functionalities in QT.
+        :param table: Table to insert row at.
+        :param trade: Trade information to add.
+        """
         rowPosition = self.simulationTable.rowCount()
         columns = self.simulationTable.columnCount()
 
@@ -635,25 +658,43 @@ class Interface(QMainWindow):
             table.setItem(rowPosition, column, QTableWidgetItem(str(trade[column])))
 
     def add_to_activity_monitor(self, message: str):
+        """
+        Function that adds activity information to activity monitor.
+        :param message: Message to add to activity log.
+        """
         self.add_to_table(self.activityMonitor, [message])
 
     def show_main_settings(self):
+        """
+        Opens main settings in the configuration window.
+        """
         self.configuration.show()
         self.configuration.configurationTabWidget.setCurrentIndex(0)
         self.configuration.mainConfigurationTabWidget.setCurrentIndex(0)
 
     def show_backtest_settings(self):
+        """
+        Opens backtest settings in the configuration window.
+        """
         self.configuration.show()
         self.configuration.configurationTabWidget.setCurrentIndex(1)
         self.configuration.backtestConfigurationTabWidget.setCurrentIndex(0)
 
     def show_simulation_settings(self):
+        """
+        Opens simulation settings in the configuration window.
+        """
         self.configuration.show()
         self.configuration.configurationTabWidget.setCurrentIndex(2)
         self.configuration.simulationConfigurationTabWidget.setCurrentIndex(0)
 
     @staticmethod
     def add_to_table(table, data):
+        """
+        Function that will add specified data to a provided table.
+        :param table: Table we will add data to.
+        :param data: Data we will add to table.
+        """
         rowPosition = table.rowCount()
         columns = table.columnCount()
 
@@ -667,6 +708,9 @@ class Interface(QMainWindow):
             table.setItem(rowPosition, column, QTableWidgetItem(str(data[column])))
 
     def create_configuration_slots(self):
+        """
+        Creates configuration slots.
+        """
         self.configuration.lightModeRadioButton.toggled.connect(lambda: self.set_light_mode())
         self.configuration.darkModeRadioButton.toggled.connect(lambda: self.set_dark_mode())
         self.configuration.bloombergModeRadioButton.toggled.connect(lambda: self.set_bloomberg_mode())
@@ -674,12 +718,18 @@ class Interface(QMainWindow):
         self.configuration.advancedLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(True))
 
     def create_action_slots(self):
+        """
+        Creates actions slots.
+        """
         self.otherCommandsAction.triggered.connect(lambda: self.otherCommands.show())
         self.configurationAction.triggered.connect(lambda: self.configuration.show())
         self.statisticsAction.triggered.connect(lambda: self.statistics.show())
         self.aboutNigerianPrinceAction.triggered.connect(lambda: self.about.show())
 
     def create_bot_slots(self):
+        """
+        Creates bot slots.
+        """
         self.runBotButton.clicked.connect(lambda: self.initiate_bot_thread(caller=LIVE))
         self.endBotButton.clicked.connect(lambda: self.end_bot(caller=LIVE))
         self.configureBotButton.clicked.connect(self.show_main_settings)
@@ -690,6 +740,9 @@ class Interface(QMainWindow):
         self.waitOverrideButton.clicked.connect(lambda: self.exit_position(False))
 
     def create_simulation_slots(self):
+        """
+        Creates simulation slots.
+        """
         self.runSimulationButton.clicked.connect(lambda: self.initiate_bot_thread(caller=SIMULATION))
         self.endSimulationButton.clicked.connect(lambda: self.end_bot(caller=LIVE))
         self.configureSimulationButton.clicked.connect(self.show_simulation_settings)
@@ -700,21 +753,33 @@ class Interface(QMainWindow):
         self.waitOverrideSimulationButton.clicked.connect(lambda: print("lol"))
 
     def create_backtest_slots(self):
+        """
+        Creates backtest slots.
+        """
         self.configureBacktestButton.clicked.connect(self.show_backtest_settings)
         self.runBacktestButton.clicked.connect(lambda: print("backtest pressed"))
         self.endBacktestButton.clicked.connect(lambda: print("end backtest"))
 
     def create_interface_slots(self):
+        """
+        Creates interface slots.
+        """
         self.create_bot_slots()
         self.create_simulation_slots()
         self.create_backtest_slots()
 
     def initiate_slots(self):
+        """
+        Initiates all interface slots.
+        """
         self.create_action_slots()
         self.create_configuration_slots()
         self.create_interface_slots()
 
     def load_tickers(self):
+        """
+        Loads all available tickers from Binance API and displays them on appropriate combo boxes in application.
+        """
         tickers = [ticker['symbol'] for ticker in Data(loadData=False).binanceClient.get_all_tickers()
                    if 'USDT' in ticker['symbol']]
         tickers.sort()
@@ -730,30 +795,51 @@ class Interface(QMainWindow):
         self.otherCommands.csvGenerationTicker.addItems(tickers)
 
     def create_popup(self, msg):
+        """
+        Creates a popup with message provided.
+        :param msg: Message provided.
+        """
         if '-1021' in msg:
             msg = msg + ' Please sync your system time.'
         QMessageBox.about(self, 'Warning', msg)
 
     def set_dark_mode(self):
+        """
+        Switches interface to a dark theme.
+        """
         app.setPalette(get_dark_palette())
         for graph in self.graphs:
             graph.setBackground('k')
 
     def set_light_mode(self):
+        """
+        Switches interface to a light theme.
+        """
         app.setPalette(get_light_palette())
         for graph in self.graphs:
             graph.setBackground('w')
 
     def set_bloomberg_mode(self):
+        """
+        Switches interface to bloomberg theme.
+        """
         app.setPalette(get_bloomberg_palette())
         for graph in self.graphs:
             graph.setBackground('k')
 
     @staticmethod
     def timestamp_message(msg, output=None):
+        """
+        This is not used anymore, but it adds a message to a ListWidget object from QT.
+        :param msg: Message to be added.
+        :param output: ListWidget object.
+        """
         output.append(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {msg}')
 
     def display_trade_options(self):
+        """
+        This is never used, but it displays trading options.
+        """
         for option in self.trader.tradingOptions:
             initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
@@ -770,6 +856,9 @@ class Configuration(QDialog):
         self.load_slots()
 
     def load_slots(self):
+        """
+        Loads all configuration interface slots.
+        """
         self.doubleCrossCheckMark.toggled.connect(self.toggle_double_cross_groupbox)
         self.simulationDoubleCrossCheckMark.toggled.connect(self.toggle_simulation_double_cross_groupbox)
         self.backtestDoubleCrossCheckMark.toggled.connect(self.toggle_backtest_double_cross_groupbox)
@@ -782,7 +871,11 @@ class Configuration(QDialog):
 
         self.testTelegramButton.clicked.connect(self.test_telegram)
 
+    # To fix
     def test_telegram(self):
+        """
+        Tests Telegram connection.
+        """
         self.telegrationConnectionResult.setText('Testing connection...')
         print(self.telegramApiKey.text())
 
