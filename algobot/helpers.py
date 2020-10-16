@@ -43,3 +43,22 @@ def convert_interval(interval):
     return intervals[interval]
 
 
+def load_from_csv(path):
+    with open(path) as f:
+        data = []
+        readLines = f.readlines()
+        headers = list(map(str.lower, readLines[0].rstrip().split(', ')))
+        for line in readLines[1:]:
+            line = line.rstrip()  # strip newline character
+            splitLine = line.split(', ')
+            data.append({
+                headers[-1]: float(splitLine[-1]),  # close
+                headers[-2]: float(splitLine[-2]),  # low
+                headers[-3]: float(splitLine[-3]),  # high
+                headers[-4]: float(splitLine[-4]),  # open
+                headers[-5]: ' '.join(splitLine[0: -4])  # date in UTC
+            })
+        return data
+
+
+

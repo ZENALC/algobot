@@ -1,5 +1,5 @@
 import math
-import credentials
+# import credentials
 from enums import *
 from simulationtrader import SimulatedTrader
 from binance.client import Client
