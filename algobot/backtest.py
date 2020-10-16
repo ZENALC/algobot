@@ -1,3 +1,5 @@
+# to implement
+
 class Backtester:
     def __init__(self, startingBalance, data):
         self.startingBalance = startingBalance
