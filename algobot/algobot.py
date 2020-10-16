@@ -106,7 +106,7 @@ class Interface(QMainWindow):
 
     def end_bot_and_create_popup(self, msg):
         self.disable_interface(False, self.traderType)
-        self.endBotWithExitingTrade.setEnabled(False)
+        self.endBotButton.setEnabled(False)
         self.endSimulationButton.setEnabled(False)
         # self.timestamp_message('Ended bot because of an error.')
         self.create_popup(msg)
@@ -173,7 +173,7 @@ class Interface(QMainWindow):
         self.set_parameters(caller)
         self.enable_override(caller)
 
-        if self.configuration.enableTelegramTrading.ischecked():
+        if self.configuration.enableTelegramTrading.isChecked():
             if self.telegramBot is None:
                 self.telegramBot = TelegramBot(gui=self)
             self.telegramBot.start()
@@ -187,7 +187,7 @@ class Interface(QMainWindow):
         if caller == SIMULATION:
             self.simulationTrader.get_simulation_result()
             self.endSimulationButton.setEnabled(False)
-            self.add_to_activity_monitor("Ended Simulation")
+            self.add_to_simulation_activity_monitor("Ended Simulation")
             self.runSimulationButton.setEnabled(True)
             tempTrader = self.simulationTrader
         else:
@@ -205,7 +205,7 @@ class Interface(QMainWindow):
         # if self.lowerIntervalData is not None:
         #     self.lowerIntervalData.dump_to_table()
         #     self.lowerIntervalData = None
-        self.destroy_trader(caller)
+        self.destroy_trader(tempTrader)
 
     def destroy_trader(self, caller):
         if caller == SIMULATION:
@@ -221,8 +221,8 @@ class Interface(QMainWindow):
         if caller == SIMULATION:
             symbol = self.configuration.simulationTickerComboBox.currentText()
             interval = convert_interval(self.configuration.simulationIntervalComboBox.currentText())
-            startingBalance = self.simulationStartingBalanceSpinBox.value()
-            self.add_to_activity_monitor(f"Retrieving data for interval {interval}...")
+            startingBalance = self.configuration.simulationStartingBalanceSpinBox.value()
+            self.add_to_simulation_activity_monitor(f"Retrieving data for interval {interval}...")
             self.simulationTrader = SimulatedTrader(startingBalance=startingBalance,
                                                     symbol=symbol,
                                                     interval=interval,
@@ -245,7 +245,7 @@ class Interface(QMainWindow):
             sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
             if interval != '1m':
                 lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
-                self.timestamp_message(f'Retrieving data for lower interval {lowerInterval}...')
+                self.add_to_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
                 self.lowerIntervalData = Data(lowerInterval)
 
         # self.trader.dataView.get_data_from_database()
@@ -656,6 +656,9 @@ class Interface(QMainWindow):
         self.simulationTable.insertRow(rowPosition)
         for column in range(columns):
             table.setItem(rowPosition, column, QTableWidgetItem(str(trade[column])))
+
+    def add_to_simulation_activity_monitor(self, message: str):
+        self.add_to_table(self.simulationActivityMonitor, [message])
 
     def add_to_activity_monitor(self, message: str):
         """
