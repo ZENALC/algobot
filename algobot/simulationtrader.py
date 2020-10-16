@@ -1,4 +1,8 @@
+import time
+
+from datetime import datetime
 from data import Data
+from option import Option
 from enums import *
 from helpers import *
 
@@ -28,7 +32,7 @@ class SimulatedTrader:
         self.tradingOptions = []
         self.trend = None  # 1 is bullish, -1 is bearish
         self.lossPercentage = None  # Loss percentage for stop loss
-        self.startingTime = None  # Starting time for previous bot run
+        self.startingTime = datetime.utcnow()  # Starting time in UTC
         self.endingTime = None  # Ending time for previous bot run
         self.buyLongPrice = None  # Price we last bought our target coin at in long position
         self.sellShortPrice = None  # Price we last sold target coin at in short position

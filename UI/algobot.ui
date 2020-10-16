@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1000</width>
-    <height>981</height>
+    <width>1118</width>
+    <height>1087</height>
    </rect>
   </property>
   <property name="font">
@@ -36,7 +36,7 @@
     </size>
    </property>
    <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="0">
+    <item row="0" column="1">
      <widget class="QTabWidget" name="homeTab">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -44,11 +44,16 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="tabPosition">
        <enum>QTabWidget::West</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>4</number>
       </property>
       <property name="movable">
        <bool>true</bool>
@@ -60,341 +65,335 @@
        <attribute name="title">
         <string>Dashboard</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="1">
-         <widget class="QGroupBox" name="basicInfo">
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="2" column="11">
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="5" column="1" colspan="11">
+         <widget class="QTableWidget" name="activityMonitor">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::Box</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Sunken</enum>
+          </property>
+          <property name="showGrid">
+           <bool>true</bool>
+          </property>
+          <property name="gridStyle">
+           <enum>Qt::SolidLine</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <attribute name="horizontalHeaderCascadingSectionResizes">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="horizontalHeaderDefaultSectionSize">
+           <number>200</number>
+          </attribute>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="verticalHeaderCascadingSectionResizes">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="verticalHeaderDefaultSectionSize">
+           <number>30</number>
+          </attribute>
+          <attribute name="verticalHeaderStretchLastSection">
+           <bool>false</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>Date</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Message</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="4" column="1" colspan="4">
+         <widget class="QLabel" name="label">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="title">
-           <string>Basic Info</string>
+          <property name="text">
+           <string>Activity Monitor</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_6">
-           <item row="0" column="0">
-            <widget class="QGroupBox" name="botGroupBox">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="title">
-              <string>Bot</string>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout">
-              <item>
-               <widget class="QGroupBox" name="simulationBotGroupBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="title">
-                 <string>Simulation</string>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_8">
-                 <item row="3" column="0">
-                  <widget class="QPushButton" name="runSimulationButton">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Button to run simulation</string>
-                   </property>
-                   <property name="text">
-                    <string>Run Simulation</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QSpinBox" name="simulationStartingBalanceSpinBox">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Starting balance for simulation. Minimum possible value is $100.</string>
-                   </property>
-                   <property name="minimum">
-                    <number>100</number>
-                   </property>
-                   <property name="maximum">
-                    <number>99999999</number>
-                   </property>
-                   <property name="singleStep">
-                    <number>25</number>
-                   </property>
-                   <property name="value">
-                    <number>1000</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QPushButton" name="endSimulationButton">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Button to end simulation</string>
-                   </property>
-                   <property name="text">
-                    <string>End Simulation</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="simulationStartingBalance">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Starting Balance</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="realBotGroupBox">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="title">
-                 <string>Real</string>
-                </property>
-                <layout class="QGridLayout" name="gridLayout">
-                 <item row="0" column="0">
-                  <widget class="QPushButton" name="runRealBot">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Run live bot.</string>
-                   </property>
-                   <property name="text">
-                    <string>Run Bot</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QPushButton" name="endBotWithExitingTrade">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>End live bot.</string>
-                   </property>
-                   <property name="text">
-                    <string>End Bot</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="overrideGroupBox">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="title">
-                 <string>Override</string>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_5">
-                 <item row="0" column="0">
-                  <widget class="QPushButton" name="forceLongButton">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Force bot to take long position</string>
-                   </property>
-                   <property name="text">
-                    <string>Force Long</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QPushButton" name="forceShortButton">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Force bot to take short position</string>
-                   </property>
-                   <property name="text">
-                    <string>Force Short</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QPushButton" name="pauseBotButton">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Pause bot</string>
-                   </property>
-                   <property name="text">
-                    <string>Pause Bot</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QPushButton" name="exitPositionButton">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
-                   <property name="text">
-                    <string>Exit Position</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="2">
-                  <widget class="QPushButton" name="waitOverrideButton">
-                   <property name="text">
-                    <string>Wait Override</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QPushButton" name="sendEmailButton">
-                   <property name="text">
-                    <string>Send Email</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="autonomousStateLabel">
-             <property name="font">
-              <font>
-               <pointsize>14</pointsize>
-               <weight>75</weight>
-               <italic>true</italic>
-               <bold>true</bold>
-               <underline>false</underline>
-              </font>
-             </property>
-             <property name="text">
-              <string>AUTONOMOUS MODE</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QGroupBox" name="tradesConductedGroupBox">
+        <item row="1" column="11">
+         <widget class="QGroupBox" name="groupBox_4">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="title">
-           <string>Trades Conducted</string>
+           <string/>
           </property>
-          <layout class="QGridLayout" name="gridLayout_10">
-           <item row="0" column="0">
-            <widget class="QListWidget" name="tradesListWidget">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QLabel" name="label_4">
+             <property name="font">
+              <font>
+               <pointsize>15</pointsize>
+              </font>
              </property>
-             <property name="minimumSize">
-              <size>
-               <width>300</width>
-               <height>0</height>
-              </size>
+             <property name="text">
+              <string>Profit</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="font">
+              <font>
+               <pointsize>30</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>$0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
              </property>
             </widget>
            </item>
           </layout>
          </widget>
         </item>
-        <item row="0" column="0" rowspan="2">
-         <layout class="QVBoxLayout" name="Center">
-          <property name="sizeConstraint">
-           <enum>QLayout::SetDefaultConstraint</enum>
+        <item row="0" column="11">
+         <widget class="QGroupBox" name="groupBox_3">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
-          <item>
-           <widget class="QTextEdit" name="botOutput">
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="PlotWidget" name="graphWidget" native="true">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>350</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-         </layout>
+          <property name="title">
+           <string/>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QLabel" name="label_2">
+             <property name="font">
+              <font>
+               <pointsize>15</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Portfolio Total</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_3">
+             <property name="font">
+              <font>
+               <pointsize>30</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>$0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="1" rowspan="3" colspan="10">
+         <widget class="PlotWidget" name="realGraph" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>350</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QPushButton" name="configureBotButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Configure Bot</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QPushButton" name="runBotButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Run live bot.</string>
+          </property>
+          <property name="text">
+           <string>Run Bot</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QPushButton" name="endBotButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>End live bot.</string>
+          </property>
+          <property name="text">
+           <string>End Bot</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="4">
+         <widget class="QPushButton" name="forceLongButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Force bot to take long position</string>
+          </property>
+          <property name="text">
+           <string>Force Long</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="5">
+         <widget class="QPushButton" name="forceShortButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Force bot to take short position</string>
+          </property>
+          <property name="text">
+           <string>Force Short</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="6">
+         <widget class="QPushButton" name="exitPositionButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Exit Position</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="7">
+         <widget class="QPushButton" name="waitOverrideButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Wait Override</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="8">
+         <widget class="QPushButton" name="pauseBotButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Pause bot</string>
+          </property>
+          <property name="text">
+           <string>Pause Automation</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="9" colspan="3">
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Expanding</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>
@@ -402,7 +401,25 @@
        <attribute name="title">
         <string>History</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_15">
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0">
+         <widget class="QLabel" name="tradeHistoryLabel">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>15</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Trade History</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="0">
          <widget class="QTableWidget" name="historyTable">
           <property name="sizePolicy">
@@ -452,27 +469,17 @@
           </attribute>
           <column>
            <property name="text">
+            <string>Date</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
             <string>Order ID</string>
            </property>
           </column>
           <column>
            <property name="text">
             <string>Pair</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Reason</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Action</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Method</string>
            </property>
           </column>
           <column>
@@ -487,27 +494,19 @@
           </column>
           <column>
            <property name="text">
-            <string>Date</string>
+            <string>Method</string>
            </property>
           </column>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>15</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Trade History</string>
-          </property>
+          <column>
+           <property name="text">
+            <string>Action</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Reason</string>
+           </property>
+          </column>
          </widget>
         </item>
        </layout>
@@ -517,18 +516,6 @@
         <string>Backtest</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_14">
-        <item row="1" column="1">
-         <widget class="QPushButton" name="configureTest">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Configure Test</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="0" colspan="6">
          <widget class="QTableWidget" name="backtestTable">
           <property name="sizePolicy">
@@ -626,20 +613,35 @@
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
+          <property name="invertedAppearance">
+           <bool>false</bool>
+          </property>
           <property name="textDirection">
            <enum>QProgressBar::TopToBottom</enum>
           </property>
          </widget>
         </item>
         <item row="1" column="3">
-         <widget class="QPushButton" name="endBacktest">
+         <widget class="QPushButton" name="endBacktestButton">
           <property name="font">
            <font>
             <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>End Test</string>
+           <string>End Backtest</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="runBacktestButton">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Run Backtest</string>
           </property>
          </widget>
         </item>
@@ -659,15 +661,15 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="runBacktest">
+        <item row="1" column="1">
+         <widget class="QPushButton" name="configureBacktestButton">
           <property name="font">
            <font>
             <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>Run Test</string>
+           <string>Configure Backtest</string>
           </property>
          </widget>
         </item>
@@ -678,7 +680,128 @@
         <string>Simulation</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_3">
-        <item row="2" column="0" colspan="10">
+        <item row="2" column="3">
+         <widget class="QPushButton" name="forceLongSimulationButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Force Long</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="5">
+         <widget class="QPushButton" name="exitPositionSimulationButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Exit Position</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="4">
+         <widget class="QPushButton" name="forceShortSimulationButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Force Short</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QPushButton" name="endSimulationButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>End Simulation</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="6">
+         <widget class="QPushButton" name="waitOverrideSimulationButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Wait Override</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="7">
+         <widget class="QPushButton" name="pauseBotSimulationButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Pause Automation</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="8">
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="3" column="0" colspan="10">
          <widget class="QTableWidget" name="simulationTable">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -762,130 +885,8 @@
           </column>
          </widget>
         </item>
-        <item row="0" column="0" colspan="5">
-         <widget class="PlotWidget" name="simulationGraph_2" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>350</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="5" colspan="5">
-         <widget class="PlotWidget" name="simulationGraph" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>350</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="9">
-         <widget class="QPushButton" name="pushButton_8">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Pause Automation</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="8">
-         <widget class="QPushButton" name="pushButton_7">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Wait Override</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="7">
-         <widget class="QPushButton" name="pushButton_6">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Exit Position</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="6">
-         <widget class="QPushButton" name="pushButton_5">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Force Short</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="5">
-         <widget class="QPushButton" name="pushButton_4">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Force Long</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0" colspan="2">
-         <widget class="QPushButton" name="pushButton">
+        <item row="2" column="0">
+         <widget class="QPushButton" name="configureSimulationButton">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -902,26 +903,8 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="4">
-         <widget class="QPushButton" name="pushButton_3">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>End Simulation</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2" colspan="2">
-         <widget class="QPushButton" name="pushButton_2">
+        <item row="2" column="1">
+         <widget class="QPushButton" name="runSimulationButton">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -938,6 +921,56 @@
           </property>
          </widget>
         </item>
+        <item row="1" column="0" colspan="9">
+         <widget class="PlotWidget" name="simulationGraph" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>350</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="graphTab">
+       <attribute name="title">
+        <string>Graphs</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="PlotWidget" name="simulationAvgGraph" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>350</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Line" name="line">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="PlotWidget" name="avgGraph" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>350</height>
+           </size>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </widget>
@@ -949,7 +982,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1000</width>
+     <width>1118</width>
      <height>21</height>
     </rect>
    </property>
