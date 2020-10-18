@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime
+from dateutil import parser
 
 
 def initialize_logger():
@@ -43,7 +44,7 @@ def convert_interval(interval):
     return intervals[interval]
 
 
-def load_from_csv(path):
+def load_from_csv(path, ):
     with open(path) as f:
         data = []
         readLines = f.readlines()
@@ -58,6 +59,10 @@ def load_from_csv(path):
                 headers[-4]: float(splitLine[-4]),  # open
                 headers[-5]: ' '.join(splitLine[0: -4])  # date in UTC
             })
+        firstDate = parser.parse(data[0]['date_utc'])  # Retrieve first date from CSV data.
+        lastDate = parser.parse(data[-1]['date_utc'])  # Retrieve second date from CSV data.
+        if firstDate > lastDate:  # Check which one is more recent, so we can send data in time ascending format.
+            return data[::-1]
         return data
 
 

@@ -600,7 +600,7 @@ class SimulatedTrader:
                 self.sell_short('Sold short because a cross was detected.')
 
         else:  # This means we are in neither position
-            if self.check_cross_v2():
+            if self.check_cross_v2():  # before i get confused again, this function handles stop loss edge cases too
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
                     self.buy_long("Bought long because a cross was detected.")
                 else:
