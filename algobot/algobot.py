@@ -717,6 +717,9 @@ class Interface(QMainWindow):
         self.configuration.lightModeRadioButton.toggled.connect(lambda: self.set_light_mode())
         self.configuration.darkModeRadioButton.toggled.connect(lambda: self.set_dark_mode())
         self.configuration.bloombergModeRadioButton.toggled.connect(lambda: self.set_bloomberg_mode())
+        self.configuration.bullModeRadioButton.toggled.connect(lambda: self.set_bull_mode())
+        self.configuration.bearModeRadioButton.toggled.connect(lambda: self.set_bear_mode())
+        self.configuration.printingModeRadioButton.toggled.connect(lambda: self.set_printing_mode())
         self.configuration.simpleLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(False))
         self.configuration.advancedLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(True))
 
@@ -829,6 +832,21 @@ class Interface(QMainWindow):
         app.setPalette(get_bloomberg_palette())
         for graph in self.graphs:
             graph.setBackground('k')
+
+    def set_bear_mode(self):
+        app.setPalette(get_yellow_palette())
+        for graph in self.graphs:
+            graph.setBackground('y')
+
+    def set_bull_mode(self):
+        app.setPalette(get_red_palette())
+        for graph in self.graphs:
+            graph.setBackground('r')
+
+    def set_printing_mode(self):
+        app.setPalette(get_green_palette())
+        for graph in self.graphs:
+            graph.setBackground('g')
 
     @staticmethod
     def timestamp_message(msg, output=None):
@@ -1009,6 +1027,52 @@ def get_bloomberg_palette():
     palette.setColor(QPalette.BrightText, QColor(252, 0, 0))
     palette.setColor(QPalette.Link, QColor(42, 130, 218))
     palette.setColor(QPalette.Highlight, QColor(255, 140, 0))
+    palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
+    return palette
+
+
+def get_yellow_palette():
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.WindowText, QColor(255, 255, 0))  # change
+    palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ToolTipBase, QColor(0, 0, 0))
+    palette.setColor(QPalette.ToolTipText, QColor(255, 255, 0))  # change
+    palette.setColor(QPalette.Text, QColor(255, 255, 0))  # change
+    palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ButtonText, QColor(255, 255, 0))  # change
+    palette.setColor(QPalette.BrightText, QColor(252, 0, 0))
+    palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.Highlight, QColor(255, 255, 0))  # change
+    palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
+    return palette
+
+
+def get_green_palette():
+    palette = QPalette()
+    palette.setColor(QPalette.WindowText, QColor(0, 255, 0))  # change
+    palette.setColor(QPalette.ToolTipText, QColor(0, 255, 0))  # change
+    palette.setColor(QPalette.Text, QColor(0, 255, 0))  # change
+    palette.setColor(QPalette.ButtonText, QColor(0, 255, 0))  # change
+    palette.setColor(QPalette.Highlight, QColor(0, 255, 0))  # change
+    return palette
+
+
+def get_red_palette():
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.WindowText, QColor(255, 0, 0))  # change
+    palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ToolTipBase, QColor(0, 0, 0))
+    palette.setColor(QPalette.ToolTipText, QColor(255, 0, 0))  # change
+    palette.setColor(QPalette.Text, QColor(255, 0, 0))  # change
+    palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ButtonText, QColor(255, 0, 0))  # change
+    palette.setColor(QPalette.BrightText, QColor(252, 0, 0))
+    palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.Highlight, QColor(255, 0, 0))  # change
     palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
     return palette
 

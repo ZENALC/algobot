@@ -823,20 +823,7 @@
                 </property>
                </widget>
               </item>
-              <item row="5" column="2">
-               <spacer name="verticalSpacer_7">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>17</width>
-                  <height>567</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item row="1" column="1" colspan="3">
+              <item row="1" column="1" colspan="2">
                <widget class="QComboBox" name="backtestIntervalComboBox">
                 <property name="font">
                  <font>
@@ -913,86 +900,24 @@
                 </item>
                </widget>
               </item>
-              <item row="4" column="0" colspan="4">
-               <widget class="QGroupBox" name="groupBox_2">
-                <property name="title">
-                 <string>Data</string>
+              <item row="0" column="1" colspan="2">
+               <widget class="QComboBox" name="backtestTickerComboBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
                 </property>
-                <layout class="QHBoxLayout" name="horizontalLayout">
-                 <item>
-                  <widget class="QPushButton" name="backtestDownloadDataButton">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Download Data</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="backtestImportDataButton">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="whatsThis">
-                    <string>Import CSV data here.</string>
-                   </property>
-                   <property name="text">
-                    <string>Import Data</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="backtestInfoLabel">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Please import or download data to begin backtesting.</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_3">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeType">
-                    <enum>QSizePolicy::Preferred</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>BTCUSDT</string>
+                 </property>
+                </item>
                </widget>
               </item>
               <item row="0" column="0">
@@ -1013,26 +938,6 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="1" colspan="3">
-               <widget class="QComboBox" name="backtestTickerComboBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>10</pointsize>
-                 </font>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>BTCUSDT</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
               <item row="3" column="0">
                <widget class="QPushButton" name="backtestCopySettingsButton">
                 <property name="sizePolicy">
@@ -1046,8 +951,138 @@
                 </property>
                </widget>
               </item>
+              <item row="4" column="0" colspan="3">
+               <widget class="QGroupBox" name="groupBox_2">
+                <property name="title">
+                 <string>Data</string>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_35">
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_4">
+                   <property name="text">
+                    <string>End Period</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QCalendarWidget" name="calendarWidget">
+                   <property name="gridVisible">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <layout class="QHBoxLayout" name="horizontalLayout">
+                   <item>
+                    <widget class="QPushButton" name="backtestDownloadDataButton">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Download Data</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="backtestImportDataButton">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="whatsThis">
+                      <string>Import CSV data here.</string>
+                     </property>
+                     <property name="text">
+                      <string>Import Data</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="backtestInfoLabel">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Please import or download data to begin backtesting.</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                     </property>
+                     <property name="wordWrap">
+                      <bool>false</bool>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_3">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Preferred</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label">
+                   <property name="text">
+                    <string>Start Period</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QCalendarWidget" name="calendarWidget_2">
+                   <property name="gridVisible">
+                    <bool>true</bool>
+                   </property>
+                   <property name="selectionMode">
+                    <enum>QCalendarWidget::SingleSelection</enum>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
              </layout>
             </widget>
+           </item>
+           <item row="1" column="0">
+            <spacer name="verticalSpacer_7">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -1532,7 +1567,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="simulationMainTab">
           <attribute name="title">
@@ -2231,7 +2266,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tab_10">
           <property name="enabled">
@@ -2256,7 +2291,7 @@
               <item>
                <widget class="QRadioButton" name="lightModeRadioButton">
                 <property name="text">
-                 <string>Light Mode</string>
+                 <string>Light Theme</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
@@ -2266,14 +2301,48 @@
               <item>
                <widget class="QRadioButton" name="darkModeRadioButton">
                 <property name="text">
-                 <string>Dark Mode</string>
+                 <string>Dark Theme</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QRadioButton" name="bloombergModeRadioButton">
                 <property name="text">
-                 <string>Bloomberg Mode</string>
+                 <string>Bloomberg Theme</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="printingModeRadioButton">
+                <property name="text">
+                 <string>Printing Theme</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="bullModeRadioButton">
+                <property name="text">
+                 <string>Bull Theme</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="bearModeRadioButton">
+                <property name="text">
+                 <string>Bear Theme</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="createThemeButton">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Create Theme</string>
                 </property>
                </widget>
               </item>
@@ -2294,6 +2363,11 @@
             </widget>
            </item>
           </layout>
+         </widget>
+         <widget class="QWidget" name="tab">
+          <attribute name="title">
+           <string>Sound FX</string>
+          </attribute>
          </widget>
          <widget class="QWidget" name="tab_11">
           <attribute name="title">
