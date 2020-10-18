@@ -146,6 +146,7 @@ class Backtester:
     def main_logic(self):
         if self.inShortPosition:  # This means we are in short position
             if self.currentPrice > self.get_stop_loss():  # If current price is greater, then exit trade.
+                # print(f"{self.currentPeriod['date_utc']}: Stop loss causing exit short.")
                 self.exit_short('Exited short because of a stop loss.')
 
             elif self.trend == BULLISH:
@@ -154,6 +155,7 @@ class Backtester:
 
         elif self.inLongPosition:  # This means we are in long position
             if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
+                # print(f"{self.currentPeriod['date_utc']}: Stop loss causing exit long.")
                 self.exit_long('Exited long because of a stop loss.')
 
             elif self.trend == BEARISH:
@@ -179,22 +181,40 @@ class Backtester:
             'action': message
         })
 
+    def print_options(self):
+        # print("Options:")
+        for index, option in enumerate(self.options):
+            print(f'\tOption {index + 1}) {option.movingAverage}{option.initialBound, option.finalBound}'
+                  f'- {option.parameter}')
+
     def print_stats(self):
-        print(f'Starting balance: ${round(self.startingBalance, 2)}')
+        print("Backtest results configuration:")
+        print(f"\tStarting Balance: ${self.startingBalance}")
+        self.print_options()
+        # print("Loss options:")
+        print(f'\tLoss Percentage: {self.lossPercentage}')
+        if self.lossStrategy == TRAILING_LOSS:
+            print(f"\tLoss Strategy: Trailing")
+        else:
+            print("\tLoss Strategy: Stop")
+
+        print("\nBacktest results:")
+        print(f"\tEnd date: {self.currentPeriod['date_utc']}")
+        print(f'\tStarting balance: ${round(self.startingBalance, 2)}')
         # print(f'Balance: ${round(self.balance, 2)}')
-        print(f'Net: ${round(self.get_net(), 2)}')
+        print(f'\tNet: ${round(self.get_net(), 2)}')
         difference = round(self.get_net() - self.startingBalance, 2)
         if difference > 0:
-            print(f'Profit: ${difference}')
+            print(f'\tProfit: ${difference}')
         elif difference < 0:
-            print(f'Loss: ${difference}')
+            print(f'\tLoss: ${difference}')
         else:
-            print("No profit or loss incurred.")
+            print("\tNo profit or loss incurred.")
         # print(f'Coin owed: {round(self.coinOwed, 2)}')
         # print(f'Coin owned: {round(self.coin, 2)}')
-        print(f'Commissions paid: ${round(self.commissionsPaid, 2)}')
+        print(f'\tCommissions paid: ${round(self.commissionsPaid, 2)}')
         # print(f'Trend: {self.trend}')
-        print(f'Trades made: {len(self.trades)}')
+        print(f'\tTrades made: {len(self.trades)}')
         print()
 
     def print_trades(self):
@@ -203,8 +223,9 @@ class Backtester:
 
     def moving_average_test(self):
         seenData = self.data[:self.minPeriod][::-1]  # Start from minimum previous period data.
-        end = self.minPeriod + 10
-        for period in self.data[self.minPeriod:]:
+        periods = 1000
+        end = self.minPeriod + periods
+        for period in self.data[self.minPeriod:end]:
             seenData.insert(0, period)
             self.currentPeriod = period
             self.currentPrice = period['open']
