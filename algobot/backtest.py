@@ -8,7 +8,7 @@ from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
 
 class Backtester:
     def __init__(self, startingBalance: float, data: list, lossStrategy: int, lossPercentage: float, options: list,
-                 marginEnabled: bool = True):
+                 marginEnabled: bool = True, startDate: datetime = None, endDate: datetime = None):
         self.startingBalance = startingBalance
         self.balance = startingBalance
         self.coin = 0
@@ -20,9 +20,6 @@ class Backtester:
         self.profit = 0
         self.marginEnabled = marginEnabled
 
-        self.startingTime = None
-        self.endingTime = None
-
         self.data = data
         self.interval = self.get_interval()
         self.lossStrategy = lossStrategy
@@ -31,6 +28,11 @@ class Backtester:
         self.validate_options()
         self.minPeriod = self.get_min_option_period()
         self.trend = None
+
+        self.movingAverageTestStartTime = None
+        self.movingAverageTestEndTime = None
+        self.startDateIndex = self.get_start_date_index(startDate)
+        self.endDateIndex = self.get_end_date_index(endDate)
 
         self.inLongPosition = False
         self.inShortPosition = False
@@ -50,6 +52,32 @@ class Backtester:
         for option in self.options:
             if type(option) != Option:
                 raise TypeError(f"'{option}' is not a valid option type.")
+
+    def get_start_date_index(self, startDate):
+        if startDate:
+            startDateIndex = self.find_date_index(startDate)
+            if startDateIndex == -1:
+                raise IndexError("Date not found.")
+            elif startDateIndex < self.minPeriod:
+                raise IndexError(f"Start requires more periods than minimum period amount {self.minPeriod}")
+            else:
+                return startDateIndex
+        else:
+            return self.minPeriod
+
+    def get_end_date_index(self, endDate):
+        if endDate:
+            endDateIndex = self.find_date_index(endDate)
+            if endDateIndex == -1:
+                raise IndexError("Date not found.")
+            if endDateIndex < self.minPeriod:
+                raise IndexError(f"End date requires more periods than minimum period amount {self.minPeriod}")
+            if endDateIndex <= self.startDateIndex:
+                raise IndexError("End date cannot be equal to or less than start date.")
+            else:
+                return endDateIndex
+        else:
+            return -1
 
     def get_min_option_period(self) -> int:
         """
@@ -329,21 +357,21 @@ class Backtester:
         """
         Performs a moving average test with given configurations.
         """
-        self.startingTime = time.time()
+        self.movingAverageTestStartTime = time.time()
         seenData = self.data[:self.minPeriod][::-1]  # Start from minimum previous period data.
-        for period in self.data[self.minPeriod:]:
+        for period in self.data[self.startDateIndex:self.endDateIndex]:
             seenData.insert(0, period)
             self.currentPeriod = period
             self.currentPrice = period['open']
-            self.check_trend(seenData)
             self.main_logic()
+            self.check_trend(seenData)
 
         if self.inShortPosition:
             self.exit_short('Exited short because of end of backtest.')
         elif self.inLongPosition:
             self.exit_long('Exiting long because of end of backtest.')
 
-        self.endingTime = time.time()
+        self.movingAverageTestEndTime = time.time()
         self.print_stats()
         # self.print_trades()
 
@@ -390,8 +418,8 @@ class Backtester:
         Prints out backtest results.
         """
         print("\nBacktest results:")
-        print(f'\tElapsed: {round(self.endingTime - self.startingTime, 2)} seconds')
-        print(f'\tStart Period: {self.data[0]["date_utc"]}')
+        print(f'\tElapsed: {round(self.movingAverageTestEndTime - self.movingAverageTestStartTime, 2)} seconds')
+        print(f'\tStart Period: {self.data[self.startDateIndex]["date_utc"]}')
         print(f"\tEnd Period: {self.currentPeriod['date_utc']}")
         print(f'\tStarting balance: ${round(self.startingBalance, 2)}')
         print(f'\tNet: ${round(self.get_net(), 2)}')
@@ -429,9 +457,8 @@ class Backtester:
 
 path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT_data_1d.csv'
 testData = load_from_csv(path)
-opt = [Option('sma', 'high', 10, 12), Option('wma', 'low', 5, 6)]
-a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=0.5, options=opt,
+opt = [Option('sma', 'high', 10, 20), Option('sma', 'low', 10, 20)]
+a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=99999, options=opt,
                marginEnabled=False)
 a.moving_average_test()
 a.print_trades()
-

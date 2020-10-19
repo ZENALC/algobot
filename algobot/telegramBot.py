@@ -61,7 +61,7 @@ class TelegramBot:
             label = 'Profit'
         else:
             label = 'Loss'
-        runtime = datetime.utcnow() - self.gui.trader.startingTime
+        runtime = datetime.utcnow() - self.gui.trader.movingAverageTestStartTime
         update.message.reply_text(f"Here are your statistics:\n"
                                   f'Symbol: {self.gui.trader.symbol}\n'
                                   f'Position: {pos}\n'
