@@ -341,6 +341,13 @@ class Backtester:
         #     avg2 = self.get_wma(seenData, 5, 'open')
         #     print(avg1)
 
+    def find_optimal_moving_average(self):
+        """
+        Runs extensive moving average tests and returns the one with best return percentages.
+        :return: A dictionary of values for the test.
+        """
+        pass
+
     def print_options(self):
         """
         Prints out options provided in configuration.
@@ -371,6 +378,7 @@ class Backtester:
         """
         print("\nBacktest results:")
         print(f'\tElapsed: {round(self.endingTime - self.startingTime, 2)} seconds')
+        print(f'\tStart Period: {self.data[0]["date_utc"]}')
         print(f"\tEnd Period: {self.currentPeriod['date_utc']}")
         print(f'\tStarting balance: ${round(self.startingBalance, 2)}')
         print(f'\tNet: ${round(self.get_net(), 2)}')
@@ -385,7 +393,6 @@ class Backtester:
             print(f'\tLoss Percentage: ${round(self.get_net() / self.startingBalance * 100, 2)}%')
         else:
             print("\tNo profit or loss incurred.")
-        print()
         # print(f'Balance: ${round(self.balance, 2)}')
         # print(f'Coin owed: {round(self.coinOwed, 2)}')
         # print(f'Coin owned: {round(self.coin, 2)}')
