@@ -330,9 +330,10 @@ class Data:
 
         return path
 
-    def get_csv_data(self, interval):
+    def get_csv_data(self, interval, descending=True):
         """
         Creates a new CSV file with interval specified.
+        :param descending: Returns data in specified sort. If descending, writes data from most recent to oldest data.
         :param interval: Interval to get data for.
         """
         if not self.is_valid_interval(interval):
@@ -340,6 +341,8 @@ class Data:
         timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, interval)
         self.output_message("Downloading all available historical data. This may take a while...")
         newData = self.binanceClient.get_historical_klines(self.symbol, interval, timestamp, limit=1000)
+        if not descending:
+            newData = newData[::-1]
         self.output_message("Downloaded all data successfully.")
 
         folderName = 'CSV'
@@ -357,7 +360,7 @@ class Data:
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close\n")
             for data in newData:
-                parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc).strftime("%m/%d/%Y %I:%M %p")
+                parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc).strftime("%m/%d/%Y %H:%M")
                 f.write(f'{parsedDate}, {data[1]}, {data[2]}, {data[3]}, {data[4]}\n')
 
         path = os.path.join(os.getcwd(), fileName)

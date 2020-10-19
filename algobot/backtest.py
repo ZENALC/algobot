@@ -455,10 +455,11 @@ class Backtester:
             print(f'\t{trade}')
 
 
-path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT_data_1d.csv'
+path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT_data_15m.csv'
 testData = load_from_csv(path)
 opt = [Option('sma', 'high', 10, 20), Option('sma', 'low', 10, 20)]
 a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=99999, options=opt,
                marginEnabled=False)
-a.moving_average_test()
-a.print_trades()
+print(a.data[0])
+# a.moving_average_test()
+# a.print_trades()
