@@ -1,6 +1,8 @@
+import time
+from dateutil import parser
 from helpers import load_from_csv
 from option import Option
-from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS
+from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
 
 
 class Backtester:
@@ -9,10 +11,13 @@ class Backtester:
         self.balance = startingBalance
         self.currentPrice = None
         self.transactionFeePercentage = 0.001
+        self.startingTime = None
+        self.endingTime = None
         self.coin = 0
         self.coinOwed = 0
         self.profit = 0
         self.data = data
+        self.interval = self.get_interval()
         self.lossStrategy = lossStrategy
         self.lossPercentage = lossPercentage
         self.options = options
@@ -187,6 +192,13 @@ class Backtester:
             print(f'\tOption {index + 1}) {option.movingAverage}{option.initialBound, option.finalBound}'
                   f'- {option.parameter}')
 
+    def get_interval(self):
+        period1 = parser.parse(self.data[0]['date_utc'])
+        period2 = parser.parse(self.data[1]['date_utc'])
+        difference = period2 - period1
+        seconds = difference.seconds
+        return difference
+
     def print_stats(self):
         print("Backtest results configuration:")
         print(f"\tStarting Balance: ${self.startingBalance}")
@@ -199,6 +211,7 @@ class Backtester:
             print("\tLoss Strategy: Stop")
 
         print("\nBacktest results:")
+        print(f'\tElapsed: {round(self.endingTime - self.startingTime, 2)} seconds')
         print(f"\tEnd date: {self.currentPeriod['date_utc']}")
         print(f'\tStarting balance: ${round(self.startingBalance, 2)}')
         # print(f'Balance: ${round(self.balance, 2)}')
@@ -206,8 +219,10 @@ class Backtester:
         difference = round(self.get_net() - self.startingBalance, 2)
         if difference > 0:
             print(f'\tProfit: ${difference}')
+            print(f'\tProfit Percentage: {round(self.get_net() / self.startingBalance * 100, 2)}%')
         elif difference < 0:
-            print(f'\tLoss: ${difference}')
+            print(f'\tLoss: ${-difference}')
+            print(f'\tLoss Percentage: ${round(self.get_net() / self.startingBalance * 100, 2)}%')
         else:
             print("\tNo profit or loss incurred.")
         # print(f'Coin owed: {round(self.coinOwed, 2)}')
@@ -222,10 +237,11 @@ class Backtester:
             print(trade)
 
     def moving_average_test(self):
+        self.startingTime = time.time()
         seenData = self.data[:self.minPeriod][::-1]  # Start from minimum previous period data.
         periods = 1000
         end = self.minPeriod + periods
-        for period in self.data[self.minPeriod:end]:
+        for period in self.data[self.minPeriod:]:
             seenData.insert(0, period)
             self.currentPeriod = period
             self.currentPrice = period['open']
@@ -238,6 +254,7 @@ class Backtester:
         elif self.inLongPosition:
             self.exit_long('Exiting long because of end of backtest.')
 
+        self.endingTime = time.time()
         self.print_stats()
         # self.print_trades()
 
@@ -290,8 +307,8 @@ class Backtester:
         return ema
 
 
-path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT_data_1h.csv'
+path = r'/Users/mihirshrestha/PycharmProjects/CryptoAlgo/CSV/btc_data_1h.csv'
 testData = load_from_csv(path)
-opt = [Option('sma', 'high', 1, 2), Option('wma', 'low', 4, 5)]
-a = Backtester(data=testData, startingBalance=1000, lossStrategy=2, lossPercentage=0.02, options=opt)
+opt = [Option('sma', 'high', 50, 32), Option('wma', 'low', 5, 26)]
+a = Backtester(data=testData, startingBalance=1000, lossStrategy=TRAILING_LOSS, lossPercentage=0.058, options=opt)
 a.moving_average_test()
