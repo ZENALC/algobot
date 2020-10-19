@@ -1,12 +1,14 @@
 import time
 from dateutil import parser
+from datetime import datetime
 from helpers import load_from_csv
 from option import Option
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
 
 
 class Backtester:
-    def __init__(self, startingBalance: float, data: list, lossStrategy: int, lossPercentage: float, options: list):
+    def __init__(self, startingBalance: float, data: list, lossStrategy: int, lossPercentage: float, options: list,
+                 marginEnabled: bool = True):
         self.startingBalance = startingBalance
         self.balance = startingBalance
         self.coin = 0
@@ -16,6 +18,7 @@ class Backtester:
         self.currentPrice = None
         self.transactionFeePercentage = 0.001
         self.profit = 0
+        self.marginEnabled = marginEnabled
 
         self.startingTime = None
         self.endingTime = None
@@ -101,6 +104,12 @@ class Backtester:
             self.trend = BULLISH
         elif all(trend == BEARISH for trend in trends):
             self.trend = BEARISH
+
+    def find_date_index(self, datetimeObject):
+        for data in self.data:
+            if parser.parse(data['date_utc']) == datetimeObject:
+                return self.data.index(data)
+        return -1
 
     def go_long(self, msg):
         """
@@ -305,13 +314,16 @@ class Backtester:
 
             elif self.trend == BEARISH:
                 self.exit_long('Exited long because a cross was detected.')
-                self.go_short('Entered short because a cross was detected.')
+                if self.marginEnabled:
+                    self.go_short('Entered short because a cross was detected.')
 
         else:  # This means we are in neither position
             if self.trend == BULLISH and self.previousPosition is not LONG:
                 self.go_long('Entered long because a cross was detected.')
-            elif self.trend == BEARISH and self.previousPosition is not SHORT:
+            elif self.marginEnabled and self.trend == BEARISH and self.previousPosition is not SHORT:
                 self.go_short('Entered short because a cross was detected.')
+            elif self.trend == BEARISH:
+                self.previousPosition = None
 
     def moving_average_test(self):
         """
@@ -363,10 +375,11 @@ class Backtester:
         """
         print("Backtest results configuration:")
         print(f'\tInterval: {self.interval}')
+        print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")
         self.print_options()
         # print("Loss options:")
-        print(f'\tLoss Percentage: {round(self.lossPercentage * 100, 2)}%')
+        print(f'\tStop Loss Percentage: {round(self.lossPercentage * 100, 2)}%')
         if self.lossStrategy == TRAILING_LOSS:
             print(f"\tLoss Strategy: Trailing")
         else:
@@ -409,12 +422,16 @@ class Backtester:
         """
         Prints out all the trades conducted so far.
         """
+        print("\nTrades made:")
         for trade in self.trades:
-            print(trade)
+            print(f'\t{trade}')
 
 
 path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT_data_1d.csv'
 testData = load_from_csv(path)
-opt = [Option('sma', 'high', 50, 32), Option('wma', 'low', 5, 26)]
-a = Backtester(data=testData, startingBalance=1000, lossStrategy=TRAILING_LOSS, lossPercentage=5, options=opt)
+opt = [Option('sma', 'high', 10, 12), Option('wma', 'low', 5, 6)]
+a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=0.5, options=opt,
+               marginEnabled=False)
 a.moving_average_test()
+a.print_trades()
+
