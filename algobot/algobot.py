@@ -1,5 +1,4 @@
 import sys
-import traceback
 
 import assets
 
@@ -15,8 +14,8 @@ from helpers import *
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QMessageBox, QTableWidgetItem
-from PyQt5.QtCore import QThreadPool, QRunnable, pyqtSlot, QObject, pyqtSignal
-from PyQt5.QtGui import QPalette, QColor, QIcon
+from PyQt5.QtCore import QThreadPool
+from PyQt5.QtGui import QIcon
 from pyqtgraph import DateAxisItem, mkPen
 
 app = QApplication(sys.argv)
