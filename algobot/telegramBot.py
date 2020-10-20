@@ -1,11 +1,10 @@
 from telegram.ext import Updater, CommandHandler
-# from credentials import telegramApi
 from datetime import datetime
 
 
 class TelegramBot:
-    def __init__(self, gui):
-        self.updater = Updater(telegramApi, use_context=True)
+    def __init__(self, gui, apiKey):
+        self.updater = Updater(apiKey, use_context=True)
 
         # Get the dispatcher to register handlers
         self.gui = gui

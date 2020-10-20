@@ -1,5 +1,4 @@
 import math
-# import credentials
 from enums import *
 from simulationtrader import SimulatedTrader
 from binance.client import Client
@@ -9,9 +8,7 @@ from helpers import *
 
 
 class RealTrader(SimulatedTrader):
-    def __init__(self, apiKey=None, apiSecret=None, interval='1h', symbol='BTCUSDT'):
-        apiKey = credentials.apiKey
-        apiSecret = credentials.apiSecret
+    def __init__(self, apiKey, apiSecret, interval='1h', symbol='BTCUSDT'):
         if apiKey is None or apiSecret is None:
             self.output_message('API details incorrect.', 5)
             return

@@ -53,7 +53,7 @@
        <enum>QTabWidget::West</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <property name="movable">
        <bool>true</bool>
@@ -79,7 +79,7 @@
           </property>
           <layout class="QFormLayout" name="formLayout">
            <item row="0" column="0">
-            <widget class="QLabel" name="label_2">
+            <widget class="QLabel" name="netTotalLabel">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -88,7 +88,7 @@
              </property>
              <property name="font">
               <font>
-               <pointsize>10</pointsize>
+               <pointsize>12</pointsize>
               </font>
              </property>
              <property name="text">
@@ -100,7 +100,7 @@
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLabel" name="label_3">
+            <widget class="QLabel" name="netTotalValue">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -109,7 +109,7 @@
              </property>
              <property name="font">
               <font>
-               <pointsize>10</pointsize>
+               <pointsize>12</pointsize>
               </font>
              </property>
              <property name="text">
@@ -121,7 +121,7 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="label_4">
+            <widget class="QLabel" name="profitLabel">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -130,7 +130,7 @@
              </property>
              <property name="font">
               <font>
-               <pointsize>10</pointsize>
+               <pointsize>12</pointsize>
               </font>
              </property>
              <property name="text">
@@ -142,7 +142,7 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QLabel" name="label_5">
+            <widget class="QLabel" name="profitValue">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -151,7 +151,7 @@
              </property>
              <property name="font">
               <font>
-               <pointsize>10</pointsize>
+               <pointsize>12</pointsize>
               </font>
              </property>
              <property name="text">
@@ -163,30 +163,50 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QLabel" name="label_8">
+            <widget class="QLabel" name="percentageLabel">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Percentage</string>
              </property>
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QLabel" name="label_9">
+            <widget class="QLabel" name="percentageValue">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>0%</string>
              </property>
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QLabel" name="label_6">
+            <widget class="QLabel" name="tickerLabel">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Ticker</string>
              </property>
             </widget>
            </item>
            <item row="3" column="1">
-            <widget class="QLabel" name="label_7">
+            <widget class="QLabel" name="tickerValue">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
              <property name="text">
-              <string>$0</string>
+              <string/>
              </property>
             </widget>
            </item>
@@ -204,7 +224,7 @@
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QGroupBox" name="groupBox_2">
+         <widget class="QGroupBox" name="mainCommandsGroupBox">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -267,7 +287,7 @@
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="QGroupBox" name="groupBox_3">
+         <widget class="QGroupBox" name="overrideGroupBox">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -362,7 +382,7 @@
          </widget>
         </item>
         <item row="3" column="0">
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="activityMonitorLabel">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -540,11 +560,6 @@
             <string>Action</string>
            </property>
           </column>
-          <column>
-           <property name="text">
-            <string>Reason</string>
-           </property>
-          </column>
          </widget>
         </item>
         <item row="2" column="0">
@@ -619,11 +634,6 @@
           </column>
           <column>
            <property name="text">
-            <string>Order ID</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
             <string>Pair</string>
            </property>
           </column>
@@ -645,11 +655,6 @@
           <column>
            <property name="text">
             <string>Action</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Reason</string>
            </property>
           </column>
          </widget>
@@ -710,37 +715,12 @@
           </attribute>
           <column>
            <property name="text">
-            <string>Order ID</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Reason</string>
+            <string>Date</string>
            </property>
           </column>
           <column>
            <property name="text">
             <string>Action</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Method</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Price</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Percentage</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Date</string>
            </property>
           </column>
          </widget>
@@ -841,24 +821,6 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="configureSimulationButton">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Configure Simulation</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="1">
          <widget class="QPushButton" name="runSimulationButton">
           <property name="sizePolicy">
@@ -895,6 +857,24 @@
           </property>
          </widget>
         </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="configureSimulationButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Configure Simulation</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="3">
          <widget class="QPushButton" name="forceLongSimulationButton">
           <property name="sizePolicy">
@@ -910,24 +890,6 @@
           </property>
           <property name="text">
            <string>Force Long</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="4">
-         <widget class="QPushButton" name="forceShortSimulationButton">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Force Short</string>
           </property>
          </widget>
         </item>
@@ -949,8 +911,8 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="6">
-         <widget class="QPushButton" name="waitOverrideSimulationButton">
+        <item row="1" column="4">
+         <widget class="QPushButton" name="forceShortSimulationButton">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -963,9 +925,22 @@
            </font>
           </property>
           <property name="text">
-           <string>Wait Override</string>
+           <string>Force Short</string>
           </property>
          </widget>
+        </item>
+        <item row="1" column="8">
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
         <item row="1" column="7">
          <widget class="QPushButton" name="pauseBotSimulationButton">
@@ -985,20 +960,25 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="8">
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+        <item row="1" column="6">
+         <widget class="QPushButton" name="waitOverrideSimulationButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
           </property>
-         </spacer>
+          <property name="text">
+           <string>Wait Override</string>
+          </property>
+         </widget>
         </item>
-        <item row="2" column="0" colspan="9">
+        <item row="3" column="0" colspan="9">
          <widget class="QTableWidget" name="simulationActivityMonitor">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -1055,6 +1035,19 @@
             <string>Message</string>
            </property>
           </column>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Activity Monitor</string>
+          </property>
          </widget>
         </item>
        </layout>

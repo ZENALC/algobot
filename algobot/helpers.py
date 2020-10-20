@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 from datetime import datetime
 from dateutil import parser
 
@@ -64,6 +65,18 @@ def load_from_csv(path, ):
         if firstDate > lastDate:  # Check which one is more recent, so we can send data in time ascending format.
             return data[::-1]
         return data
+
+
+def write_credentials(**kwargs):
+    with open('secret.json', 'w') as f:
+        json.dump(kwargs, f)
+
+
+def load_credentials(jsonfile='secret.json'):
+    with open(jsonfile) as f:
+        return json.load(f)
+
+
 
 
 

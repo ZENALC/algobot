@@ -1,6 +1,5 @@
 import time
 
-from datetime import datetime
 from data import Data
 from option import Option
 from enums import *
@@ -9,9 +8,9 @@ from helpers import *
 
 class SimulatedTrader:
     def __init__(self, startingBalance=1000, interval='1h', symbol='BTCUSDT', loadData=True):
-        self.dataView = Data(interval=interval, symbol=symbol, loadData=loadData)  # Retrieve data-view object
-        self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client
-        self.symbol = self.dataView.symbol
+        self.dataView = Data(interval=interval, symbol=symbol, loadData=loadData)  # Retrieve data-view object.
+        self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
+        self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
 
         try:  # Attempt to parse startingBalance
             startingBalance = float(startingBalance)
@@ -20,40 +19,41 @@ class SimulatedTrader:
             startingBalance = 1000
 
         # Initialize initial values
-        self.balance = startingBalance  # USD Balance
-        self.coinName = self.get_coin_name()
-        self.coin = 0  # Amount of coin we own
-        self.coinOwed = 0  # Amount of coin we owe
-        self.transactionFeePercentage = 0.001  # Binance transaction fee
-        self.totalTrades = []  # All trades conducted
-        self.trades = []  # Amount of trades in previous run
-        self.detailedTrades = []
+        self.balance = startingBalance  # USDT Balance.
+        self.coinName = self.get_coin_name()  # Retrieve primary coin to trade.
+        self.coin = 0  # Amount of coin we own.
+        self.coinOwed = 0  # Amount of coin we owe.
+        self.transactionFeePercentage = 0.001  # Binance transaction fee percentage.
+        self.totalTrades = []  # All trades conducted.
+        self.trades = []  # Amount of trades in previous run.
+        self.detailedTrades = []  # Trades conducted in more detail.
 
-        self.tradingOptions = []
-        self.trend = None  # 1 is bullish, -1 is bearish
-        self.lossPercentage = None  # Loss percentage for stop loss
-        self.startingTime = datetime.utcnow()  # Starting time in UTC
-        self.endingTime = None  # Ending time for previous bot run
-        self.buyLongPrice = None  # Price we last bought our target coin at in long position
-        self.sellShortPrice = None  # Price we last sold target coin at in short position
-        self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss
-        self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits
-        self.longTrailingPrice = None  # Price coin has to be above for long position
-        self.shortTrailingPrice = None  # Price coin has to be below for short position
-        self.startingBalance = self.balance  # Balance we started bot run with
-        self.currentPrice = None  # Current price of coin
+        self.tradingOptions = []  # List with Option elements. Helps specify what moving averages to trade with.
+        self.trend = None  # 1 is bullish, -1 is bearish; usually handled with enums.
+        self.lossPercentage = None  # Loss percentage for stop loss.
+        self.startingTime = datetime.utcnow()  # Starting time in UTC.
+        self.endingTime = None  # Ending time for previous bot run.
+        self.buyLongPrice = None  # Price we last bought our target coin at in long position.
+        self.sellShortPrice = None  # Price we last sold target coin at in short position.
+        self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
+        self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
+        self.longTrailingPrice = None  # Price coin has to be above for long position.
+        self.shortTrailingPrice = None  # Price coin has to be below for short position.
+        self.startingBalance = self.balance  # Balance we started bot run with.
+        self.currentPrice = None  # Current price of coin.
 
-        self.safetyMargin = None  # Margin percentage bot will check to validate cross
-        self.safetyTimer = None  # Amount of seconds bot will wait to validate cross
+        self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
+        self.waitToEnterLong = False  # Boolean that checks if bot should wait before entering long position.
+        self.waitToEnterShort = False  # Boolean that checks if bot should wait before entering short position.
+        self.inLongPosition = False  # Boolean that keeps track of whether bot is in a long position or not.
+        self.inShortPosition = False  # Boolean that keeps track of whether bot is in a short position or not.
+        self.previousPosition = None  # Previous position to validate for a cross.
 
-        self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions
-        self.waitToEnterLong = False  # Boolean that checks if bot should wait before entering long position
-        self.waitToEnterShort = False  # Boolean that checks if bot should wait before entering short position
-        self.inLongPosition = False  # Boolean that keeps track of whether bot is in a long position or not
-        self.inShortPosition = False  # Boolean that keeps track of whether bot is in a short position or not
-        self.previousPosition = None  # Previous position to validate for a cross
-
-    def get_coin_name(self):
+    def get_coin_name(self) -> str:
+        """
+        Returns target coin name.
+        Function assumes trader is using a coin paired with USDT.
+        """
         temp = self.dataView.symbol.upper().split('USDT')
         temp.remove('')
         return temp[0]

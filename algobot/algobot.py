@@ -1,16 +1,20 @@
 import sys
 
 import assets
+import helpers
+import os
 
 from data import Data
+from datetime import datetime
 from threadWorkers import Worker
 from palettes import *
 from telegramBot import TelegramBot
+from telegram.ext import Updater
+from binance.client import Client
 from realtrader import RealTrader
 from simulationtrader import SimulatedTrader
 from option import Option
 from enums import *
-from helpers import *
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QMessageBox, QTableWidgetItem
@@ -128,7 +132,8 @@ class Interface(QMainWindow):
 
         if self.configuration.enableTelegramTrading.isChecked():
             if self.telegramBot is None:
-                self.telegramBot = TelegramBot(gui=self)
+                apiKey = self.configuration.telegramApiKey.text()
+                self.telegramBot = TelegramBot(gui=self, apiKey=apiKey)
             self.telegramBot.start()
             self.add_to_activity_monitor('Starting Telegram bot.')
 
@@ -173,7 +178,7 @@ class Interface(QMainWindow):
     def create_trader(self, caller):
         if caller == SIMULATION:
             symbol = self.configuration.simulationTickerComboBox.currentText()
-            interval = convert_interval(self.configuration.simulationIntervalComboBox.currentText())
+            interval = helpers.convert_interval(self.configuration.simulationIntervalComboBox.currentText())
             startingBalance = self.configuration.simulationStartingBalanceSpinBox.value()
             self.add_to_simulation_activity_monitor(f"Retrieving data for interval {interval}...")
             self.simulationTrader = SimulatedTrader(startingBalance=startingBalance,
@@ -182,7 +187,7 @@ class Interface(QMainWindow):
                                                     loadData=True)
         elif caller == LIVE:
             symbol = self.configuration.tickerComboBox.currentText()
-            interval = convert_interval(self.configuration.intervalComboBox.currentText())
+            interval = helpers.convert_interval(self.configuration.intervalComboBox.currentText())
             apiSecret = self.configuration.binanceApiSecret.text()
             apiKey = self.configuration.binanceApiKey.text()
             if len(apiSecret) == 0:
@@ -544,7 +549,6 @@ class Interface(QMainWindow):
         # self.graphWidget.addLegend()
         # self.graphWidget.plotItem.setMouseEnabled(y=False)
 
-    # to fix
     def setup_plots(self, graph, trader):
         colors = self.get_graph_colors()
         currentDate = datetime.utcnow().timestamp()
@@ -554,14 +558,16 @@ class Interface(QMainWindow):
             initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
             finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
             initialDict = {
-                'plot': self.plot_graph((currentDate,), (initialAverage,), color=colors.pop(), plotName=initialName),
+                'plot': self.plot_graph(graph, (currentDate,), (initialAverage,),
+                                        color=colors.pop(), plotName=initialName),
                 'x': [currentDate, ],
                 'y': [initialAverage, ]
             }
             self.plots.append(initialDict)
 
             finalDict = {
-                'plot': self.plot_graph((currentDate,), (finalAverage,), color=colors.pop(), plotName=finalName),
+                'plot': self.plot_graph(graph, (currentDate,), (finalAverage,),
+                                        color=colors.pop(), plotName=finalName),
                 'x': [currentDate, ],
                 'y': [initialAverage, ]
             }
@@ -828,6 +834,7 @@ class Configuration(QDialog):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
         self.load_slots()
+        self.load_credentials()
 
     def load_slots(self):
         """
@@ -843,15 +850,57 @@ class Configuration(QDialog):
         self.backtestImportDataButton.clicked.connect(self.import_data)
         self.backtestDownloadDataButton.clicked.connect(self.download_data)
 
+        self.testCredentialsButton.clicked.connect(self.test_binance_credentials)
+        self.saveCredentialsButton.clicked.connect(self.save_credentials)
+        self.loadCredentialsButton.clicked.connect(self.load_credentials)
         self.testTelegramButton.clicked.connect(self.test_telegram)
 
-    # To fix
+    def test_binance_credentials(self):
+        apiKey = self.binanceApiKey.text()
+        apiSecret = self.binanceApiSecret.text()
+        try:
+            Client(apiKey, apiSecret).get_account()
+            self.credentialResult.setText('Connected successfully.')
+        except Exception as e:
+            self.credentialResult.setText(str(e))
+
+    def load_credentials(self):
+        try:
+            credentials = helpers.load_credentials()
+            self.binanceApiKey.setText(credentials['apiKey'])
+            self.binanceApiSecret.setText(credentials['apiSecret'])
+            self.telegramApiKey.setText(credentials['telegramApiKey'])
+            self.credentialResult.setText('Credentials have been loaded successfully.')
+        except FileNotFoundError:
+            self.credentialResult.setText('Credentials not found. Please first save credentials to load them.')
+        except Exception as e:
+            self.credentialResult.setText(str(e))
+
+    def save_credentials(self):
+        apiKey = self.binanceApiKey.text()
+        if len(apiKey) == 0:
+            self.credentialResult.setText('Please fill in Binance API key details.')
+            return
+
+        apiSecret = self.binanceApiSecret.text()
+        if len(apiSecret) == 0:
+            self.credentialResult.setText('Please fill in Binance API secret details.')
+            return
+
+        telegramApiKey = self.telegramApiKey.text()
+        helpers.write_credentials(apiKey=apiKey, apiSecret=apiSecret, telegramApiKey=telegramApiKey)
+        self.credentialResult.setText('Credentials have been saved successfully.')
+
     def test_telegram(self):
         """
         Tests Telegram connection.
         """
-        self.telegrationConnectionResult.setText('Testing connection...')
-        print(self.telegramApiKey.text())
+        try:
+            telegramApikey = self.telegramApiKey.text()
+            Updater(telegramApikey, use_context=True)
+            self.telegrationConnectionResult.setText('Connected successfully.')
+        except Exception as e:
+            self.telegrationConnectionResult.setText(str(e))
 
     def download_data(self):
         self.backtestInfoLabel.setText("Downloading data...")
@@ -942,7 +991,7 @@ class OtherCommands(QDialog):
         self.generateCSVButton.setEnabled(False)
 
         symbol = self.csvGenerationTicker.currentText()
-        interval = convert_interval(self.csvGenerationDataInterval.currentText())
+        interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
         self.csvGenerationStatus.setText("Downloading data...")
         savedPath = Data(loadData=False, interval=interval, symbol=symbol).get_current_interval_csv_data()
 
@@ -968,7 +1017,7 @@ class About(QDialog):
 
 def main():
     app.setStyle('Fusion')
-    initialize_logger()
+    helpers.initialize_logger()
     interface = Interface()
     interface.showMaximized()
     app.setWindowIcon(QIcon('../media/algobotwolf.png'))

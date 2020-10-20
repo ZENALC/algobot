@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>866</width>
+    <width>876</width>
     <height>776</height>
    </rect>
   </property>
@@ -86,6 +86,19 @@
               <string>Live Main Options</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_13">
+              <item row="8" column="1">
+               <spacer name="verticalSpacer_6">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
               <item row="3" column="0">
                <widget class="QLabel" name="binanceSecretKeyLabel">
                 <property name="text">
@@ -121,8 +134,8 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="1" colspan="3">
-               <widget class="QLineEdit" name="binanceApiSecret">
+              <item row="2" column="1" colspan="3">
+               <widget class="QLineEdit" name="binanceApiKey">
                 <property name="echoMode">
                  <enum>QLineEdit::PasswordEchoOnEdit</enum>
                 </property>
@@ -213,13 +226,6 @@
                 </property>
                </widget>
               </item>
-              <item row="2" column="1" colspan="3">
-               <widget class="QLineEdit" name="binanceApiKey">
-                <property name="echoMode">
-                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
-                </property>
-               </widget>
-              </item>
               <item row="4" column="0">
                <widget class="QLabel" name="maximumMarginLabel">
                 <property name="text">
@@ -227,13 +233,10 @@
                 </property>
                </widget>
               </item>
-              <item row="4" column="1" colspan="3">
-               <widget class="QDoubleSpinBox" name="doubleSpinBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
+              <item row="3" column="1" colspan="3">
+               <widget class="QLineEdit" name="binanceApiSecret">
+                <property name="echoMode">
+                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
                 </property>
                </widget>
               </item>
@@ -261,6 +264,16 @@
                 </property>
                </widget>
               </item>
+              <item row="4" column="1" colspan="3">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
               <item row="5" column="1">
                <widget class="QRadioButton" name="usRegionRadio">
                 <property name="text">
@@ -268,18 +281,39 @@
                 </property>
                </widget>
               </item>
+              <item row="7" column="0" colspan="4">
+               <widget class="QLabel" name="credentialResult">
+                <property name="text">
+                 <string>Successfully connected.</string>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="0">
+               <widget class="QPushButton" name="saveCredentialsButton">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Save Credentials</string>
+                </property>
+               </widget>
+              </item>
               <item row="6" column="1">
-               <spacer name="verticalSpacer_6">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+               <widget class="QPushButton" name="loadCredentialsButton">
+                <property name="text">
+                 <string>Load Credentials</string>
                 </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
+               </widget>
+              </item>
+              <item row="6" column="2">
+               <widget class="QPushButton" name="testCredentialsButton">
+                <property name="text">
+                 <string>Test Credentials</string>
                 </property>
-               </spacer>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -966,6 +1000,13 @@
                  </item>
                  <item row="2" column="0">
                   <widget class="QCalendarWidget" name="calendarWidget">
+                   <property name="minimumDate">
+                    <date>
+                     <year>2015</year>
+                     <month>9</month>
+                     <day>14</day>
+                    </date>
+                   </property>
                    <property name="gridVisible">
                     <bool>true</bool>
                    </property>
@@ -1066,6 +1107,13 @@
                   </widget>
                  </item>
                 </layout>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QCheckBox" name="marginTradingCheckBox">
+                <property name="text">
+                 <string>Enable Margin Trading?</string>
+                </property>
                </widget>
               </item>
              </layout>
@@ -2266,7 +2314,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="tab_10">
           <property name="enabled">
@@ -2432,20 +2480,6 @@
               <string>Telegram Integration</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_33">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>API Key</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="telegramApiKey">
-                <property name="echoMode">
-                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
-                </property>
-               </widget>
-              </item>
               <item row="0" column="2">
                <widget class="QPushButton" name="testTelegramButton">
                 <property name="sizePolicy">
@@ -2459,40 +2493,10 @@
                 </property>
                </widget>
               </item>
-              <item row="1" column="0" colspan="2">
-               <widget class="QCheckBox" name="enableTelegramTrading">
-                <property name="text">
-                 <string>Enable Telegram Trading?</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="2">
-               <widget class="QLabel" name="telegrationConnectionResult">
-                <property name="text">
-                 <string>Ready to test.</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0" colspan="2">
-               <widget class="QCheckBox" name="checkBox_4">
-                <property name="text">
-                 <string>Always enable when running bot?</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0" colspan="2">
-               <widget class="QCheckBox" name="checkBox_3">
-                <property name="text">
-                 <string>Send lower-interval cross info?</string>
+              <item row="0" column="1">
+               <widget class="QLineEdit" name="telegramApiKey">
+                <property name="echoMode">
+                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
                 </property>
                </widget>
               </item>
@@ -2565,6 +2569,50 @@
                   </spacer>
                  </item>
                 </layout>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QLabel" name="telegrationConnectionResult">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>API Key</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0" colspan="2">
+               <widget class="QCheckBox" name="enableTelegramTrading">
+                <property name="text">
+                 <string>Enable Telegram Trading?</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0" colspan="2">
+               <widget class="QCheckBox" name="checkBox_4">
+                <property name="text">
+                 <string>Always enable when running bot?</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0" colspan="2">
+               <widget class="QCheckBox" name="checkBox_3">
+                <property name="text">
+                 <string>Send lower-interval cross info?</string>
+                </property>
                </widget>
               </item>
              </layout>

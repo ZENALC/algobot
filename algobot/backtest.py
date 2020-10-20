@@ -443,7 +443,7 @@ class Backtester:
             print(f'\tProfit Percentage: {round(self.get_net() / self.startingBalance * 100, 2)}%')
         elif difference < 0:
             print(f'\tLoss: ${-difference}')
-            print(f'\tLoss Percentage: {round(self.get_net() / self.startingBalance * 100, 2)}%')
+            print(f'\tLoss Percentage: {round(100 - self.get_net() / self.startingBalance * 100, 2)}%')
         else:
             print("\tNo profit or loss incurred.")
         # print(f'Balance: ${round(self.balance, 2)}')
@@ -497,7 +497,7 @@ path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT_data_15m
 testData = load_from_csv(path)
 opt = [Option('sma', 'high', 10, 20), Option('sma', 'low', 10, 20)]
 a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=2, options=opt,
-               marginEnabled=False, startDate=datetime(2020, 1, 1))
+               marginEnabled=True, startDate=datetime(2020, 1, 1))
 a.moving_average_test()
 # a.print_stats()
 a.write_results()
