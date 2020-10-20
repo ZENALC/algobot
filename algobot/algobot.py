@@ -20,7 +20,7 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QMessageBox, QTableWidgetItem
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtGui import QIcon
-from pyqtgraph import DateAxisItem, mkPen
+from pyqtgraph import DateAxisItem, mkPen, PlotWidget
 
 app = QApplication(sys.argv)
 
@@ -40,7 +40,13 @@ class Interface(QMainWindow):
         self.about = About()  # Loading about information
         self.statistics = Statistics()  # Loading statistics
         self.threadPool = QThreadPool()  # Initiating threading pool
-        self.graphs = (self.simulationGraph, self.backtestGraph, self.realGraph, self.avgGraph, self.simulationAvgGraph)
+        self.graphs = (
+            {'graph': self.simulationGraph, 'plots': []},
+            {'graph': self.backtestGraph, 'plots': []},
+            {'graph': self.realGraph, 'plots': []},
+            {'graph': self.avgGraph, 'plots': []},
+            {'graph': self.simulationAvgGraph, 'plots': []},
+        )
         self.setup_graphs()  # Setting up graphs
         self.initiate_slots()  # Initiating slots
         self.threadPool.start(Worker(self.load_tickers))  # Load tickers
@@ -71,6 +77,9 @@ class Interface(QMainWindow):
     def automate_trading(self):
         crossInform = False
         lowerCrossPosition = -5
+        print("live")
+        self.add_data_to_plot(self.simulationTrader, 0, 1, 5)
+        self.add_data_to_plot(self.simulationTrader, 1, 10, 5)
 
         while self.runningLive:
             try:
@@ -138,7 +147,10 @@ class Interface(QMainWindow):
             self.add_to_activity_monitor('Starting Telegram bot.')
 
         self.plots = []
-        self.setup_plots()
+        if caller == LIVE:
+            self.setup_graph_plots(self.realGraph, self.trader)
+        elif caller == SIMULATION:
+            self.setup_graph_plots(self.simulationGraph, self.simulationTrader)
         self.automate_trading()
 
     def end_bot(self, caller):
@@ -199,19 +211,23 @@ class Interface(QMainWindow):
         else:
             raise ValueError("Invalid caller.")
 
-        if True:
-            sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
-            if interval != '1m':
-                lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
-                self.add_to_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
-                self.lowerIntervalData = Data(lowerInterval)
-
+        self.initialize_lower_interval_trading(caller=caller, interval=interval)
         # self.trader.dataView.get_data_from_database()
         # if not self.trader.dataView.database_is_updated():
         #     self.timestamp_message("Updating data...")
         #     self.trader.dataView.update_database()
         # else:
         #     self.timestamp_message("Data is up-to-date.")
+
+    def initialize_lower_interval_trading(self, caller, interval):
+        sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
+        if interval != '1m':
+            lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
+            if caller == LIVE:
+                self.add_to_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
+            else:
+                self.add_to_simulation_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
+            self.lowerIntervalData = Data(lowerInterval)
 
     def set_parameters(self, caller):
         if caller == LIVE:
@@ -527,6 +543,7 @@ class Interface(QMainWindow):
         nextDate = currentDate + 3600000
 
         for graph in self.graphs:
+            graph = graph['graph']
             graph.setAxisItems({'bottom': DateAxisItem()})
             graph.setBackground('w')
             graph.setLabel('left', 'Price')
@@ -546,32 +563,65 @@ class Interface(QMainWindow):
                 graph.setTitle("Live Moving Averages")
 
         # self.graphWidget.setLimits(xMin=currentDate, xMax=nextDate)
-        # self.graphWidget.addLegend()
         # self.graphWidget.plotItem.setMouseEnabled(y=False)
 
-    def setup_plots(self, graph, trader):
+    def add_data_to_plot(self, targetGraph: PlotWidget, plotIndex: int, x: float, y: float):
+        """
+        Adds data to plot in provided graph.
+        :param targetGraph: Graph to use for plot to add data to.
+        :param plotIndex: Index of plot in target graph's list of plots.
+        :param x: X value to add.
+        :param y: Y value to add.
+        """
+        for graph in self.graphs:
+            if graph['graph'] == targetGraph:
+                plot = graph['plots'][plotIndex]
+                plot['x'].append(x)
+                plot['y'].append(y)
+                plot['plot'].setData(plot['x'], plot['y'])
+
+    def append_plot_to_graph(self, targetGraph, toAdd: list):
+        """
+        Appends plot to graph provided.
+        :param targetGraph: Graph to add plot to.
+        :param toAdd: List of plots to add to target graph.
+        """
+        for graph in self.graphs:
+            if graph['graph'] == targetGraph:
+                graph['plots'] += toAdd
+
+    def destroy_graph_plots(self, targetGraph: PlotWidget):
+        """
+        Resets graph plots for graph provided.
+        :param targetGraph: Graph to destroy plots for.
+        """
+        for graph in self.graphs:
+            if graph['graph'] == targetGraph:
+                graph['plots'] = []
+
+    def setup_graph_plots(self, graph, trader):
         colors = self.get_graph_colors()
         currentDate = datetime.utcnow().timestamp()
+        colorCounter = 1
         for option in trader.tradingOptions:
             initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
             finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
             initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
             finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
-            initialDict = {
-                'plot': self.plot_graph(graph, (currentDate,), (initialAverage,),
-                                        color=colors.pop(), plotName=initialName),
-                'x': [currentDate, ],
-                'y': [initialAverage, ]
+            initialPlotDict = {
+                'plot': self.create_graph_plot(graph, (currentDate,), (initialAverage,),
+                                               color=colors[colorCounter], plotName=initialName),
+                'x': [currentDate],
+                'y': [initialAverage]
             }
-            self.plots.append(initialDict)
-
-            finalDict = {
-                'plot': self.plot_graph(graph, (currentDate,), (finalAverage,),
-                                        color=colors.pop(), plotName=finalName),
-                'x': [currentDate, ],
-                'y': [initialAverage, ]
+            secondaryPlotDict = {
+                'plot': self.create_graph_plot(graph, (currentDate,), (finalAverage,),
+                                               color=colors[colorCounter + 1], plotName=finalName),
+                'x': [currentDate],
+                'y': [finalAverage]
             }
-            self.plots.append(finalDict)
+            colorCounter += 2
+            self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
 
     def get_graph_colors(self):
         """
@@ -591,7 +641,7 @@ class Interface(QMainWindow):
         return [colorDict[color.lower()] for color in colors]
 
     @staticmethod
-    def plot_graph(graph, x, y, plotName, color):
+    def create_graph_plot(graph, x, y, plotName, color):
         """
         Plots to graph provided.
         :param graph: Graph function will plot on.
@@ -774,6 +824,7 @@ class Interface(QMainWindow):
         """
         app.setPalette(get_dark_palette())
         for graph in self.graphs:
+            graph = graph['graph']
             graph.setBackground('k')
 
     def set_light_mode(self):
@@ -782,6 +833,7 @@ class Interface(QMainWindow):
         """
         app.setPalette(get_light_palette())
         for graph in self.graphs:
+            graph = graph['graph']
             graph.setBackground('w')
 
     def set_bloomberg_mode(self):
@@ -790,21 +842,25 @@ class Interface(QMainWindow):
         """
         app.setPalette(get_bloomberg_palette())
         for graph in self.graphs:
+            graph = graph['graph']
             graph.setBackground('k')
 
     def set_bear_mode(self):
         app.setPalette(get_yellow_palette())
         for graph in self.graphs:
+            graph = graph['graph']
             graph.setBackground('y')
 
     def set_bull_mode(self):
         app.setPalette(get_red_palette())
         for graph in self.graphs:
+            graph = graph['graph']
             graph.setBackground('r')
 
     def set_printing_mode(self):
         app.setPalette(get_green_palette())
         for graph in self.graphs:
+            graph = graph['graph']
             graph.setBackground('g')
 
     @staticmethod

@@ -2314,7 +2314,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>4</number>
          </property>
          <widget class="QWidget" name="tab_10">
           <property name="enabled">
@@ -2383,6 +2383,9 @@
               </item>
               <item>
                <widget class="QPushButton" name="createThemeButton">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
