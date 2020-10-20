@@ -78,8 +78,10 @@ class Interface(QMainWindow):
         crossInform = False
         lowerCrossPosition = -5
         print("live")
-        self.add_data_to_plot(self.simulationTrader, 0, 1, 5)
-        self.add_data_to_plot(self.simulationTrader, 1, 10, 5)
+        self.add_data_to_plot(self.simulationGraph, 0, datetime.utcnow().timestamp(), 5)
+        self.add_data_to_plot(self.simulationGraph, 1, datetime.utcnow().timestamp(), 5)
+        self.add_data_to_plot(self.simulationGraph, 0, datetime.utcnow().timestamp(), 11)
+        self.add_data_to_plot(self.simulationGraph, 1, datetime.utcnow().timestamp(), 50)
 
         while self.runningLive:
             try:
@@ -575,7 +577,9 @@ class Interface(QMainWindow):
         """
         for graph in self.graphs:
             if graph['graph'] == targetGraph:
+                print(graph)
                 plot = graph['plots'][plotIndex]
+                print(plot)
                 plot['x'].append(x)
                 plot['y'].append(y)
                 plot['plot'].setData(plot['x'], plot['y'])
