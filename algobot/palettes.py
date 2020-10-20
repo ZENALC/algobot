@@ -39,6 +39,14 @@ def get_yellow_palette():
 
 def get_green_palette():
     palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ToolTipBase, QColor(0, 0, 0))
+    palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.BrightText, QColor(255, 0, 0))
+    palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
     palette.setColor(QPalette.WindowText, QColor(0, 255, 0))  # change
     palette.setColor(QPalette.ToolTipText, QColor(0, 255, 0))  # change
     palette.setColor(QPalette.Text, QColor(0, 255, 0))  # change

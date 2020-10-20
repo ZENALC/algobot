@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 from dateutil import parser
 from datetime import datetime
@@ -372,7 +374,7 @@ class Backtester:
             self.exit_long('Exiting long because of end of backtest.')
 
         self.movingAverageTestEndTime = time.time()
-        self.print_stats()
+        # self.print_stats()
         # self.print_trades()
 
         # for period in self.data[5:]:
@@ -397,11 +399,15 @@ class Backtester:
             print(f'\tOption {index + 1}) {option.movingAverage.upper()}{option.initialBound, option.finalBound}'
                   f' - {option.parameter}')
 
-    def print_configuration_parameters(self):
+    def print_configuration_parameters(self, stdout=None):
         """
         Prints out configuration parameters.
         """
-        print("Backtest results configuration:")
+        previous_stdout = sys.stdout
+        if stdout is not None:  # Temporarily redirects output to stdout provided.
+            sys.stdout = stdout
+
+        print("Backtest configuration:")
         print(f'\tInterval: {self.interval}')
         print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")
@@ -413,10 +419,16 @@ class Backtester:
         else:
             print("\tLoss Strategy: Stop")
 
-    def print_backtest_results(self):
+        sys.stdout = previous_stdout  # revert stdout back to normal
+
+    def print_backtest_results(self, stdout=None):
         """
         Prints out backtest results.
         """
+        previous_stdout = sys.stdout
+        if stdout is not None:  # Temporarily redirects output to stdout provided.
+            sys.stdout = stdout
+
         print("\nBacktest results:")
         print(f'\tElapsed: {round(self.movingAverageTestEndTime - self.movingAverageTestStartTime, 2)} seconds')
         print(f'\tStart Period: {self.data[self.startDateIndex]["date_utc"]}')
@@ -431,13 +443,15 @@ class Backtester:
             print(f'\tProfit Percentage: {round(self.get_net() / self.startingBalance * 100, 2)}%')
         elif difference < 0:
             print(f'\tLoss: ${-difference}')
-            print(f'\tLoss Percentage: ${round(self.get_net() / self.startingBalance * 100, 2)}%')
+            print(f'\tLoss Percentage: {round(self.get_net() / self.startingBalance * 100, 2)}%')
         else:
             print("\tNo profit or loss incurred.")
         # print(f'Balance: ${round(self.balance, 2)}')
         # print(f'Coin owed: {round(self.coinOwed, 2)}')
         # print(f'Coin owned: {round(self.coin, 2)}')
         # print(f'Trend: {self.trend}')
+
+        sys.stdout = previous_stdout  # revert stdout back to normal
 
     def print_stats(self):
         """
@@ -446,20 +460,44 @@ class Backtester:
         self.print_configuration_parameters()
         self.print_backtest_results()
 
-    def print_trades(self):
+    def print_trades(self, stdout):
         """
         Prints out all the trades conducted so far.
         """
+        previous_stdout = sys.stdout
+        if stdout is not None:  # Temporarily redirects output to stdout provided.
+            sys.stdout = stdout
+
         print("\nTrades made:")
         for trade in self.trades:
             print(f'\t{trade}')
+
+        sys.stdout = previous_stdout  # revert stdout back to normal
+
+    def write_results(self):
+        currentPath = os.getcwd()
+        backtestResultsFolder = 'Backtest Results'
+        resultFile = f'backtest_results_{"_".join(self.interval.lower().split())}.txt'
+        os.chdir('../')
+
+        if not os.path.exists(backtestResultsFolder):
+            os.mkdir(backtestResultsFolder)
+        os.chdir(backtestResultsFolder)
+
+        with open(resultFile, 'w') as f:
+            self.print_configuration_parameters(f)
+            self.print_backtest_results(f)
+            self.print_trades(f)
+        filePath = os.path.join(os.getcwd(), resultFile)
+        print(f'Backtest results saved successfully to {filePath}.')
+        os.chdir(currentPath)
 
 
 path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT_data_15m.csv'
 testData = load_from_csv(path)
 opt = [Option('sma', 'high', 10, 20), Option('sma', 'low', 10, 20)]
-a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=99999, options=opt,
-               marginEnabled=False)
-print(a.data[0])
-# a.moving_average_test()
-# a.print_trades()
+a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=2, options=opt,
+               marginEnabled=False, startDate=datetime(2020, 1, 1))
+a.moving_average_test()
+# a.print_stats()
+a.write_results()
