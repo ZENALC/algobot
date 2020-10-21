@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>About Nigerian Prince</string>
+   <string>About Algobot</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
@@ -31,22 +31,25 @@
      <property name="enabled">
       <bool>true</bool>
      </property>
+     <property name="font">
+      <font>
+       <family>Cambria</family>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
      <property name="readOnly">
       <bool>true</bool>
      </property>
      <property name="plainText">
-      <string>Nigerian Prince Version 1.6
+      <string>Algobot Version 1.8
 
-Nigerian Prince is proprietary software written in Python that enables users to create automated bots that can trade with strategies implemented.
-
-This software is property of Mihir Shrestha and Peter Motin. Unauthorized usage of program may result in unintended consequences.
+Algobot Prince is an open-source software written in Python that enables users to create automated bots that can trade, simulate, or backtest with strategies implemented.
 
 This program is not responsible for any financial burdens or debt incurred. 
 
 Use at own risk. 
 
-Copyright - Mihir Shrestha 2020
-All Rights Reserved</string>
+For contribution, visit https://github.com/ZENALC/algobot</string>
      </property>
     </widget>
    </item>
