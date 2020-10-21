@@ -49,6 +49,16 @@ class SimulatedTrader:
         self.inShortPosition = False  # Boolean that keeps track of whether bot is in a short position or not.
         self.previousPosition = None  # Previous position to validate for a cross.
 
+    def get_net(self) -> float:
+        """
+        Returns net balance with current price of coin being traded. It factors in the current balance, the amount
+        shorted, and the amount owned.
+        :return: Net balance.
+        """
+        if self.currentPrice is None:
+            self.currentPrice = self.dataView.get_current_price()
+        return self.coin * self.currentPrice - self.coinOwed * self.currentPrice + self.balance
+
     def get_coin_name(self) -> str:
         """
         Returns target coin name.

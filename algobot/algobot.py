@@ -51,9 +51,10 @@ class Interface(QMainWindow):
         self.initiate_slots()  # Initiating slots
         self.threadPool.start(Worker(self.load_tickers))  # Load tickers
 
-        self.plots = []
         self.advancedLogging = True
         self.runningLive = False
+        self.simulationRunningLive = False
+        self.backtestRunningLive = False
         self.trader = None
         self.simulationTrader = None
         self.traderType = None
@@ -74,19 +75,70 @@ class Interface(QMainWindow):
         # self.timestamp_message('Ended bot because of an error.')
         self.create_popup(msg)
 
+    def automate_simulation_trading(self):
+        crossInform = False
+        lowerCrossPosition = -5
+        trader = self.simulationTrader
+
+        while self.simulationRunningLive:
+            try:
+                if not self.simulationTrader.dataView.data_is_updated():
+                    self.add_to_simulation_activity_monitor("Updating data...")
+                    self.simulationTrader.dataView.update_data()
+
+                if self.simulationTrader.get_position() is not None:
+                    crossInform = False
+
+                if not crossInform and trader.get_position() is None and not trader.inHumanControl:
+                    crossInform = True
+                    self.add_to_simulation_activity_monitor("Waiting for a cross.")
+
+                self.update_simulation_info()
+                # self.update_trades_to_list_view()
+
+                if self.advancedLogging:
+                    trader.output_basic_information()
+
+                trader.currentPrice = trader.dataView.get_current_price()
+                currentPrice = trader.currentPrice
+                if trader.longTrailingPrice is not None and currentPrice > trader.longTrailingPrice:
+                    trader.longTrailingPrice = currentPrice
+                if trader.shortTrailingPrice is not None and currentPrice < trader.shortTrailingPrice:
+                    trader.shortTrailingPrice = currentPrice
+
+                if not trader.inHumanControl:
+                    trader.main_logic()
+
+                if lowerCrossPosition != trader.get_position():
+                    if trader.check_cross_v2(dataObject=self.lowerIntervalData):
+                        lowerCrossPosition = trader.get_position()
+                        self.add_to_activity_monitor('Lower interval cross detected.')
+
+                if trader.get_position() is None:
+                    self.exitPositionSimulationButton.setEnabled(False)
+                    self.waitOverrideSimulationButton.setEnabled(False)
+                else:
+                    self.exitPositionSimulationButton.setEnabled(True)
+                    self.waitOverrideSimulationButton.setEnabled(True)
+
+                if trader.get_position() == LONG:
+                    self.forceLongSimulationButton.setEnabled(False)
+                    self.forceShortSimulationButton.setEnabled(True)
+
+                if trader.get_position() == SHORT:
+                    self.forceLongSimulationButton.setEnabled(True)
+                    self.forceShortSimulationButton.setEnabled(False)
+            except Exception as e:
+                raise e
+
     def automate_trading(self):
         crossInform = False
         lowerCrossPosition = -5
-        print("live")
-        self.add_data_to_plot(self.simulationGraph, 0, datetime.utcnow().timestamp(), 5)
-        self.add_data_to_plot(self.simulationGraph, 1, datetime.utcnow().timestamp(), 5)
-        self.add_data_to_plot(self.simulationGraph, 0, datetime.utcnow().timestamp(), 11)
-        self.add_data_to_plot(self.simulationGraph, 1, datetime.utcnow().timestamp(), 50)
 
         while self.runningLive:
             try:
                 if not self.trader.dataView.data_is_updated():
-                    self.timestamp_message("Updating data...")
+                    self.add_to_activity_monitor("Updating data...")
                     self.trader.dataView.update_data()
 
                 if self.trader.get_position() is not None:
@@ -105,9 +157,9 @@ class Interface(QMainWindow):
                 self.trader.currentPrice = self.trader.dataView.get_current_price()
                 currentPrice = self.trader.currentPrice
                 if self.trader.longTrailingPrice is not None and currentPrice > self.trader.longTrailingPrice:
-                    self.trader.longTrailingPrice = self.trader.currentPrice
+                    self.trader.longTrailingPrice = currentPrice
                 if self.trader.shortTrailingPrice is not None and currentPrice < self.trader.shortTrailingPrice:
-                    self.trader.shortTrailingPrice = self.trader.currentPrice
+                    self.trader.shortTrailingPrice = currentPrice
 
                 if not self.trader.inHumanControl:
                     self.trader.main_logic()
@@ -148,22 +200,28 @@ class Interface(QMainWindow):
             self.telegramBot.start()
             self.add_to_activity_monitor('Starting Telegram bot.')
 
-        self.plots = []
         if caller == LIVE:
-            self.setup_graph_plots(self.realGraph, self.trader)
+            self.runningLive = True
+            self.setup_graph_plots(self.realGraph, self.trader, 'net')
+            self.setup_graph_plots(self.avgGraph, self.trader, 'average')
+            self.automate_trading()
         elif caller == SIMULATION:
-            self.setup_graph_plots(self.simulationGraph, self.simulationTrader)
-        self.automate_trading()
+            self.simulationRunningLive = True
+            self.setup_graph_plots(self.simulationGraph, self.simulationTrader, 'net')
+            self.setup_graph_plots(self.simulationAvgGraph, self.simulationTrader, 'average')
+            self.automate_simulation_trading()
 
     def end_bot(self, caller):
         if caller == SIMULATION:
+            self.simulationRunningLive = False
             self.simulationTrader.get_simulation_result()
             self.endSimulationButton.setEnabled(False)
             self.add_to_simulation_activity_monitor("Ended Simulation")
             self.runSimulationButton.setEnabled(True)
             tempTrader = self.simulationTrader
         else:
-            self.endBotWithExitingTrade.setEnabled(False)
+            self.runningLive = False
+            self.endBotButton.setEnabled(False)
             self.telegramBot.stop()
             self.add_to_activity_monitor('Killed Telegram bot.')
             self.add_to_activity_monitor("Killed bot.>")
@@ -177,7 +235,7 @@ class Interface(QMainWindow):
         # if self.lowerIntervalData is not None:
         #     self.lowerIntervalData.dump_to_table()
         #     self.lowerIntervalData = None
-        self.destroy_trader(tempTrader)
+        self.destroy_trader(caller)
 
     def destroy_trader(self, caller):
         if caller == SIMULATION:
@@ -276,8 +334,80 @@ class Interface(QMainWindow):
     def add_trade_to_list_view(self, msg):
         self.tradesListWidget.addItem(msg)
 
+    def update_simulation_info(self):
+        trader = self.simulationTrader
+        self.statistics.simulationCurrentBalanceValue.setText(f'${round(trader.get_net(), 2)}')
+        self.statistics.simulationStartingBalanceValue.setText(f'${round(trader.startingBalance, 2)}')
+        self.statistics.simulationAutonomousValue.setText(str(not trader.inHumanControl))
+
+        if trader.get_profit() < 0:
+            self.statistics.simulationProfitLossLabel.setText("Loss")
+            self.statistics.simulationProfitLossValue.setText(f'${-round(trader.get_profit(), 2)}')
+        else:
+            self.statistics.simulationProfitLossLabel.setText("Gain")
+            self.statistics.simulationProfitLossValue.setText(f'${round(trader.get_profit(), 2)}')
+
+        position = trader.get_position()
+        if position == LONG:
+            self.statistics.simulationCurrentPositionValue.setText('Long')
+        elif position == SHORT:
+            self.statistics.simulationCurrentPositionValue.setText('Short')
+        else:
+            self.statistics.simulationCurrentPositionValue.setText('None')
+
+        self.statistics.simulationCurrentBtcLabel.setText(f'{trader.coinName} Owned')
+        self.statistics.simulationCurrentBtcValue.setText(f'{round(trader.coin, 6)}')
+        self.statistics.simulationBtcOwedLabel.setText(f'{trader.coinName} Owed')
+        self.statistics.simulationBtcOwedValue.setText(f'{round(trader.coinOwed, 6)}')
+        self.statistics.simulationTradesMadeValue.setText(str(len(trader.trades)))
+        self.statistics.simulationCurrentTickerLabel.setText(str(trader.dataView.symbol))
+        self.statistics.simulationCurrentTickerValue.setText(f'${trader.dataView.get_current_price()}')
+
+        if trader.get_stop_loss() is not None:
+            if trader.lossStrategy == STOP_LOSS:
+                self.statistics.simulationLossPointLabel.setText('Stop Loss')
+            else:
+                self.statistics.simulationLossPointLabel.setText('Trailing Loss')
+            self.statistics.simulationLossPointValue.setText(f'${round(trader.get_stop_loss(), 2)}')
+        else:
+            self.statistics.simulationLossPointValue.setText('None')
+
+        currentUTC = datetime.utcnow().timestamp()
+        self.add_data_to_plot(self.simulationGraph, 0, currentUTC, trader.get_net())
+
+        for index, option in enumerate(trader.tradingOptions):
+            initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
+            finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
+
+            self.add_data_to_plot(self.simulationAvgGraph, index * 2, currentUTC, initialAverage)
+            self.add_data_to_plot(self.simulationAvgGraph, index * 2 + 1, currentUTC, finalAverage)
+            initialAverageLabel = f'{option.movingAverage}({option.initialBound})  {option.parameter.capitalize()}'
+            finalAverageLabel = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
+
+            if index == 0:
+                self.statistics.simulationBaseInitialMovingAverageLabel.setText(initialAverageLabel)
+                self.statistics.simulationBaseInitialMovingAverageValue.setText(f'${initialAverage}')
+                self.statistics.simulationBaseFinalMovingAverageLabel.setText(finalAverageLabel)
+                self.statistics.simulationBaseFinalMovingAverageValue.setText(f'${finalAverage}')
+                if len(trader.tradingOptions) == 1:
+                    self.statistics.simulationNextInitialMovingAverageLabel.hide()
+                    self.statistics.simulationNextInitialMovingAverageValue.hide()
+                    self.statistics.simulationNextFinalMovingAverageLabel.hide()
+                    self.statistics.simulationNextFinalMovingAverageValue.hide()
+
+            if index > 0:
+                self.statistics.simulationNextInitialMovingAverageLabel.show()
+                self.statistics.simulationNextInitialMovingAverageValue.show()
+                self.statistics.simulationNextFinalMovingAverageLabel.show()
+                self.statistics.simulationNextFinalMovingAverageValue.show()
+
+                self.statistics.simulationNextInitialMovingAverageLabel.setText(initialAverageLabel)
+                self.statistics.simulationNextInitialMovingAverageValue.setText(f'${initialAverage}')
+                self.statistics.simulationNextFinalMovingAverageLabel.setText(finalAverageLabel)
+                self.statistics.nextFinalMovingAverageValue.setText(f'${finalAverage}')
+
     def update_info(self):
-        self.statistics.currentBalanceValue.setText(f'${round(self.trader.balance, 2)}')
+        self.statistics.currentBalanceValue.setText(f'${round(self.trader.get_net(), 2)}')
         self.statistics.startingBalanceValue.setText(f'${round(self.trader.startingBalance, 2)}')
         self.statistics.autonomousValue.setText(str(not self.trader.inHumanControl))
 
@@ -385,69 +515,114 @@ class Interface(QMainWindow):
             raise ValueError("Invalid caller specified.")
 
     # to fix
-    def disable_override(self):
+    def disable_override(self, caller):
         self.overrideGroupBox.setEnabled(False)
 
-    def exit_position(self, humanControl=True):
-        self.trader.inHumanControl = humanControl
-        if humanControl:
-            self.pauseBotButton.setText('Resume Bot')
-        else:
-            self.pauseBotButton.setText('Pause Bot')
-
-        if self.trader.get_position() == LONG:
+    def exit_position(self, caller, humanControl=True):
+        if caller == LIVE:
+            trader = self.trader
             if humanControl:
-                self.trader.sell_long('Force exiting long.', stopLoss=True)
+                self.pauseBotButton.setText('Resume Bot')
             else:
-                self.trader.sell_long('Exiting long because of override and resuming autonomous logic.',
-                                      stopLoss=True)
-        elif self.trader.get_position() == SHORT:
+                self.pauseBotButton.setText('Pause Bot')
+            self.forceShortButton.setEnabled(True)
+            self.forceLongButton.setEnabled(True)
+            self.exitPositionButton.setEnabled(False)
+            self.waitOverrideButton.setEnabled(False)
+        elif caller == SIMULATION:
+            trader = self.simulationTrader
             if humanControl:
-                self.trader.buy_short('Force exiting short.', stopLoss=True)
+                self.pauseBotSimulationButton.setText('Resume Bot')
             else:
-                self.trader.buy_short('Exiting short because of override and resuming autonomous logic..',
-                                      stopLoss=True)
-
-        self.forceShortButton.setEnabled(True)
-        self.forceLongButton.setEnabled(True)
-        self.exitPositionButton.setEnabled(False)
-        self.waitOverrideButton.setEnabled(False)
-
-    def force_long(self):
-        self.trader.inHumanControl = True
-        self.pauseBotButton.setText('Resume Bot')
-        self.timestamp_message('Forcing long and stopping autonomous logic.')
-        if self.trader.get_position() == SHORT:
-            self.trader.buy_short('Exiting short because long was forced.')
-
-        self.trader.buy_long('Force executed long.')
-        self.forceShortButton.setEnabled(False)
-        self.forceLongButton.setEnabled(False)
-        self.exitPositionButton.setEnabled(True)
-        self.waitOverrideButton.setEnabled(True)
-
-    def force_short(self):
-        self.trader.inHumanControl = True
-        self.pauseBotButton.setText('Resume Bot')
-        self.timestamp_message('Forcing short and stopping autonomous logic.')
-        if self.trader.get_position() == LONG:
-            self.trader.sell_long('Exiting long because short was forced.')
-
-        self.trader.sell_short('Force executed short.')
-        self.forceShortButton.setEnabled(False)
-        self.forceLongButton.setEnabled(True)
-        self.exitPositionButton.setEnabled(True)
-        self.waitOverrideButton.setEnabled(True)
-
-    def pause_or_resume_bot(self):
-        if self.pauseBotButton.text() == 'Pause Bot':
-            self.trader.inHumanControl = True
-            self.pauseBotButton.setText('Resume Bot')
-            self.timestamp_message('Pausing bot logic.')
+                self.pauseBotSimulationButton.setText('Pause Bot')
+            self.forceShortSimulationButton.setEnabled(True)
+            self.forceLongSimulationButton.setEnabled(True)
+            self.exitPositionSimulationButton.setEnabled(False)
+            self.waitOverrideSimulationButton.setEnabled(False)
         else:
-            self.trader.inHumanControl = False
-            self.pauseBotButton.setText('Pause Bot')
-            self.timestamp_message('Resuming bot logic.')
+            raise ValueError("Invalid caller specified.")
+
+        trader.inHumanControl = humanControl
+        if trader.get_position() == LONG:
+            if humanControl:
+                trader.sell_long('Force exiting long.', stopLoss=True)
+            else:
+                trader.sell_long('Exiting long because of override and resuming autonomous logic.', stopLoss=True)
+        elif trader.get_position() == SHORT:
+            if humanControl:
+                trader.buy_short('Force exiting short.', stopLoss=True)
+            else:
+                trader.buy_short('Exiting short because of override and resuming autonomous logic..', stopLoss=True)
+
+    def force_long(self, caller):
+        if caller == SIMULATION:
+            trader = self.simulationTrader
+            self.pauseBotSimulationButton.setText('Resume Bot')
+            self.add_to_simulation_activity_monitor('Forcing long and stopping autonomous logic.')
+            self.forceShortSimulationButton.setEnabled(False)
+            self.forceLongSimulationButton.setEnabled(False)
+            self.exitPositionSimulationButton.setEnabled(True)
+            self.waitOverrideSimulationButton.setEnabled(True)
+        elif caller == LIVE:
+            trader = self.trader
+            self.pauseBotButton.setText('Resume Bot')
+            self.add_to_activity_monitor('Forcing long and stopping autonomous logic.')
+            self.forceShortButton.setEnabled(False)
+            self.forceLongButton.setEnabled(False)
+            self.exitPositionButton.setEnabled(True)
+            self.waitOverrideButton.setEnabled(True)
+        else:
+            raise ValueError("Invalid type of caller specified.")
+
+        trader.inHumanControl = True
+        if trader.get_position() == SHORT:
+            trader.buy_short('Exiting short because long was forced.')
+        trader.buy_long('Force executed long.')
+
+    def force_short(self, caller):
+        if caller == SIMULATION:
+            trader = self.simulationTrader
+            self.pauseBotSimulationButton.setText('Resume Bot')
+            self.add_to_simulation_activity_monitor('Forcing short and stopping autonomous logic.')
+            self.forceShortSimulationButton.setEnabled(False)
+            self.forceLongSimulationButton.setEnabled(False)
+            self.exitPositionSimulationButton.setEnabled(True)
+            self.waitOverrideSimulationButton.setEnabled(True)
+        elif caller == LIVE:
+            trader = self.trader
+            self.pauseBotButton.setText('Resume Bot')
+            self.add_to_activity_monitor('Forcing short and stopping autonomous logic.')
+            self.forceShortButton.setEnabled(False)
+            self.forceLongButton.setEnabled(False)
+            self.exitPositionButton.setEnabled(True)
+            self.waitOverrideButton.setEnabled(True)
+        else:
+            raise ValueError("Invalid type of caller specified.")
+
+        trader.inHumanControl = True
+        if trader.get_position() == LONG:
+            trader.buy_short('Exiting long because short was forced.')
+        trader.buy_long('Force executed long.')
+
+    def pause_or_resume_bot(self, caller):
+        if caller == 'LIVE':
+            if self.pauseBotButton.text() == 'Pause Bot':
+                self.trader.inHumanControl = True
+                self.pauseBotButton.setText('Resume Bot')
+                self.add_to_activity_monitor('Pausing bot logic.')
+            else:
+                self.trader.inHumanControl = False
+                self.pauseBotButton.setText('Pause Bot')
+                self.add_to_activity_monitor('Resuming bot logic.')
+        elif caller == 'SIMULATION':
+            if self.pauseBotSimulationButton.text() == 'Pause Bot':
+                self.simulationTrader.inHumanControl = True
+                self.pauseBotSimulationButton.setText('Resume Bot')
+                self.add_to_simulation_activity_monitor('Pausing bot logic.')
+            else:
+                self.simulationTrader.inHumanControl = False
+                self.pauseBotSimulationButton.setText('Pause Bot')
+                self.add_to_simulation_activity_monitor('Resuming bot logic.')
 
     def get_trading_options(self, caller):
         if caller == BACKTEST:
@@ -577,9 +752,7 @@ class Interface(QMainWindow):
         """
         for graph in self.graphs:
             if graph['graph'] == targetGraph:
-                print(graph)
                 plot = graph['plots'][plotIndex]
-                print(plot)
                 plot['x'].append(x)
                 plot['y'].append(y)
                 plot['plot'].setData(plot['x'], plot['y'])
@@ -603,29 +776,38 @@ class Interface(QMainWindow):
             if graph['graph'] == targetGraph:
                 graph['plots'] = []
 
-    def setup_graph_plots(self, graph, trader):
+    def setup_graph_plots(self, graph, trader, graphType):
         colors = self.get_graph_colors()
         currentDate = datetime.utcnow().timestamp()
-        colorCounter = 1
-        for option in trader.tradingOptions:
-            initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
-            finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
-            initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
-            finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
-            initialPlotDict = {
-                'plot': self.create_graph_plot(graph, (currentDate,), (initialAverage,),
-                                               color=colors[colorCounter], plotName=initialName),
+        if graphType == 'net':
+            net = 1
+            self.append_plot_to_graph(graph, [{
+                'plot': self.create_graph_plot(graph, (currentDate,), (net,),
+                                               color=colors[0], plotName='Net'),
                 'x': [currentDate],
-                'y': [initialAverage]
-            }
-            secondaryPlotDict = {
-                'plot': self.create_graph_plot(graph, (currentDate,), (finalAverage,),
-                                               color=colors[colorCounter + 1], plotName=finalName),
-                'x': [currentDate],
-                'y': [finalAverage]
-            }
-            colorCounter += 2
-            self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
+                'y': [net]
+            }])
+        elif graphType == 'average':
+            colorCounter = 1
+            for option in trader.tradingOptions:
+                initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
+                finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
+                initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
+                finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
+                initialPlotDict = {
+                    'plot': self.create_graph_plot(graph, (currentDate,), (initialAverage,),
+                                                   color=colors[colorCounter], plotName=initialName),
+                    'x': [currentDate],
+                    'y': [initialAverage]
+                }
+                secondaryPlotDict = {
+                    'plot': self.create_graph_plot(graph, (currentDate,), (finalAverage,),
+                                                   color=colors[colorCounter + 1], plotName=finalName),
+                    'x': [currentDate],
+                    'y': [finalAverage]
+                }
+                colorCounter += 2
+                self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
 
     def get_graph_colors(self):
         """
@@ -755,21 +937,21 @@ class Interface(QMainWindow):
         self.forceLongButton.clicked.connect(self.force_long)
         self.forceShortButton.clicked.connect(self.force_short)
         self.pauseBotButton.clicked.connect(self.pause_or_resume_bot)
-        self.exitPositionButton.clicked.connect(lambda: self.exit_position(True))
-        self.waitOverrideButton.clicked.connect(lambda: self.exit_position(False))
+        self.exitPositionButton.clicked.connect(lambda: self.exit_position(LIVE, True))
+        self.waitOverrideButton.clicked.connect(lambda: self.exit_position(LIVE, False))
 
     def create_simulation_slots(self):
         """
         Creates simulation slots.
         """
         self.runSimulationButton.clicked.connect(lambda: self.initiate_bot_thread(caller=SIMULATION))
-        self.endSimulationButton.clicked.connect(lambda: self.end_bot(caller=LIVE))
+        self.endSimulationButton.clicked.connect(lambda: self.end_bot(caller=SIMULATION))
         self.configureSimulationButton.clicked.connect(self.show_simulation_settings)
-        self.forceLongSimulationButton.clicked.connect(lambda: print("lol"))
-        self.forceShortSimulationButton.clicked.connect(lambda: print("lol"))
-        self.pauseBotSimulationButton.clicked.connect(lambda: print("lol"))
-        self.exitPositionSimulationButton.clicked.connect(lambda: print("lol"))
-        self.waitOverrideSimulationButton.clicked.connect(lambda: print("lol"))
+        self.forceLongSimulationButton.clicked.connect(lambda: self.force_long(SIMULATION))
+        self.forceShortSimulationButton.clicked.connect(lambda: self.force_short(SIMULATION))
+        self.pauseBotSimulationButton.clicked.connect(lambda: self.pause_or_resume_bot(SIMULATION))
+        self.exitPositionSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, True))
+        self.waitOverrideSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, True))
 
     def create_backtest_slots(self):
         """
@@ -802,16 +984,16 @@ class Interface(QMainWindow):
         tickers = [ticker['symbol'] for ticker in Data(loadData=False).binanceClient.get_all_tickers()
                    if 'USDT' in ticker['symbol']]
         tickers.sort()
-        self.configuration.tickerComboBox.clear()
-        self.configuration.backtestTickerComboBox.clear()
-        self.configuration.simulationTickerComboBox.clear()
+        self.configuration.tickerComboBox.clear()  # Clear all existing live tickers.
+        self.configuration.backtestTickerComboBox.clear()  # Clear all existing backtest tickers.
+        self.configuration.simulationTickerComboBox.clear()  # Clear all existing simulation tickers.
 
-        self.configuration.tickerComboBox.addItems(tickers)
-        self.configuration.backtestTickerComboBox.addItems(tickers)
-        self.configuration.simulationTickerComboBox.addItems(tickers)
+        self.configuration.tickerComboBox.addItems(tickers)  # Add the tickers to list of live tickers.
+        self.configuration.backtestTickerComboBox.addItems(tickers)  # Add the tickers to list of backtest tickers.
+        self.configuration.simulationTickerComboBox.addItems(tickers)  # Add the tickers to list of simulation tickers.
 
-        self.otherCommands.csvGenerationTicker.clear()
-        self.otherCommands.csvGenerationTicker.addItems(tickers)
+        self.otherCommands.csvGenerationTicker.clear()  # Clear CSV generation tickers.
+        self.otherCommands.csvGenerationTicker.addItems(tickers)  # Add the tickers to list of CSV generation tickers.
 
     def create_popup(self, msg):
         """

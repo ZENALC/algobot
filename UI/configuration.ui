@@ -2634,23 +2634,10 @@
               <string>Graph Colors</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_11">
-              <item row="0" column="0">
-               <widget class="QLabel" name="balanceColorLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Balance Color</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QComboBox" name="balanceColor">
+              <item row="4" column="1">
+               <widget class="QComboBox" name="avg4Color">
                 <property name="currentIndex">
-                 <number>4</number>
+                 <number>3</number>
                 </property>
                 <item>
                  <property name="text">
@@ -2694,11 +2681,58 @@
                 </item>
                </widget>
               </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="movingAverage1ColorLabel">
+              <item row="4" column="0">
+               <widget class="QLabel" name="movingAverage4ColorLabel">
                 <property name="text">
-                 <string>Moving Average 1 Color</string>
+                 <string>Moving Average 4 Color</string>
                 </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QComboBox" name="avg3Color">
+                <property name="currentIndex">
+                 <number>5</number>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Blue</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Green</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Red</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Cyan</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Magenta</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Yellow</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Black</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>White</string>
+                 </property>
+                </item>
                </widget>
               </item>
               <item row="1" column="1">
@@ -2755,6 +2789,26 @@
                 </property>
                </widget>
               </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="movingAverage1ColorLabel">
+                <property name="text">
+                 <string>Moving Average 1 Color</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="movingAverage3ColorLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Moving Average 3 Color</string>
+                </property>
+               </widget>
+              </item>
               <item row="2" column="1">
                <widget class="QComboBox" name="avg2Color">
                 <property name="currentIndex">
@@ -2802,8 +2856,55 @@
                 </item>
                </widget>
               </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="movingAverage3ColorLabel">
+              <item row="0" column="1">
+               <widget class="QComboBox" name="balanceColor">
+                <property name="currentIndex">
+                 <number>4</number>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Blue</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Green</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Red</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Cyan</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Magenta</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Yellow</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Black</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>White</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="balanceColorLabel">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -2811,109 +2912,15 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Moving Average 3 Color</string>
+                 <string>Balance Color</string>
                 </property>
                </widget>
               </item>
-              <item row="3" column="1">
-               <widget class="QComboBox" name="avg3Color">
-                <property name="currentIndex">
-                 <number>5</number>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Blue</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Green</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Red</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Cyan</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Magenta</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Yellow</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Black</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>White</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="movingAverage4ColorLabel">
+              <item row="5" column="0">
+               <widget class="QLabel" name="label_5">
                 <property name="text">
-                 <string>Moving Average 4 Color</string>
+                 <string>Changes take effect next run.</string>
                 </property>
-               </widget>
-              </item>
-              <item row="4" column="1">
-               <widget class="QComboBox" name="avg4Color">
-                <property name="currentIndex">
-                 <number>3</number>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Blue</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Green</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Red</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Cyan</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Magenta</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Yellow</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Black</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>White</string>
-                 </property>
-                </item>
                </widget>
               </item>
              </layout>
