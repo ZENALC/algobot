@@ -546,12 +546,12 @@ class Interface(QMainWindow):
         trader.inHumanControl = humanControl
         if trader.get_position() == LONG:
             if humanControl:
-                trader.sell_long('Force exiting long.')
+                trader.sell_long('Force exited long.')
             else:
                 trader.sell_long('Exiting long because of override and resuming autonomous logic.')
         elif trader.get_position() == SHORT:
             if humanControl:
-                trader.buy_short('Force exiting short.')
+                trader.buy_short('Force exited short.')
             else:
                 trader.buy_short('Exiting short because of override and resuming autonomous logic..')
 
@@ -559,7 +559,7 @@ class Interface(QMainWindow):
         if caller == SIMULATION:
             trader = self.simulationTrader
             self.pauseBotSimulationButton.setText('Resume Bot')
-            self.add_to_simulation_activity_monitor('Forcing long and stopping autonomous logic.')
+            self.add_to_simulation_activity_monitor('Forced long and stopped autonomous logic.')
             self.forceShortSimulationButton.setEnabled(False)
             self.forceLongSimulationButton.setEnabled(False)
             self.exitPositionSimulationButton.setEnabled(True)
@@ -567,7 +567,7 @@ class Interface(QMainWindow):
         elif caller == LIVE:
             trader = self.trader
             self.pauseBotButton.setText('Resume Bot')
-            self.add_to_activity_monitor('Forcing long and stopping autonomous logic.')
+            self.add_to_activity_monitor('Forced long and stopping autonomous logic.')
             self.forceShortButton.setEnabled(False)
             self.forceLongButton.setEnabled(False)
             self.exitPositionButton.setEnabled(True)
@@ -577,8 +577,8 @@ class Interface(QMainWindow):
 
         trader.inHumanControl = True
         if trader.get_position() == SHORT:
-            trader.buy_short('Exiting short because long was forced.')
-        trader.buy_long('Force executing long.')
+            trader.buy_short('Exited short because long was forced.')
+        trader.buy_long('Force executed long.')
 
     def force_short(self, caller):
         if caller == SIMULATION:
@@ -592,7 +592,7 @@ class Interface(QMainWindow):
         elif caller == LIVE:
             trader = self.trader
             self.pauseBotButton.setText('Resume Bot')
-            self.add_to_activity_monitor('Forcing short and stopping autonomous logic.')
+            self.add_to_activity_monitor('Forced short and stopped autonomous logic.')
             self.forceShortButton.setEnabled(False)
             self.forceLongButton.setEnabled(False)
             self.exitPositionButton.setEnabled(True)
@@ -602,11 +602,11 @@ class Interface(QMainWindow):
 
         trader.inHumanControl = True
         if trader.get_position() == LONG:
-            trader.sell_long('Exiting long because short was forced.')
-        trader.sell_short('Force executing short.')
+            trader.sell_long('Exited long because short was forced.')
+        trader.sell_short('Force executed short.')
 
     def pause_or_resume_bot(self, caller):
-        if caller == 'LIVE':
+        if caller == LIVE:
             if self.pauseBotButton.text() == 'Pause Bot':
                 self.trader.inHumanControl = True
                 self.pauseBotButton.setText('Resume Bot')
@@ -615,7 +615,7 @@ class Interface(QMainWindow):
                 self.trader.inHumanControl = False
                 self.pauseBotButton.setText('Pause Bot')
                 self.add_to_activity_monitor('Resuming bot logic.')
-        elif caller == 'SIMULATION':
+        elif caller == SIMULATION:
             if self.pauseBotSimulationButton.text() == 'Pause Bot':
                 self.simulationTrader.inHumanControl = True
                 self.pauseBotSimulationButton.setText('Resume Bot')
@@ -624,6 +624,8 @@ class Interface(QMainWindow):
                 self.simulationTrader.inHumanControl = False
                 self.pauseBotSimulationButton.setText('Pause Bot')
                 self.add_to_simulation_activity_monitor('Resuming bot logic.')
+        else:
+            raise ValueError("Invalid caller type specified.")
 
     def get_trading_options(self, caller):
         if caller == BACKTEST:

@@ -552,17 +552,12 @@
           </column>
           <column>
            <property name="text">
-            <string>New Column</string>
+            <string>Gain/Loss</string>
            </property>
           </column>
           <column>
            <property name="text">
             <string>Method</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Gain/Loss</string>
            </property>
           </column>
          </widget>
