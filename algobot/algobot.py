@@ -94,7 +94,7 @@ class Interface(QMainWindow):
                     self.add_to_simulation_activity_monitor("Waiting for a cross.")
 
                 self.update_simulation_info()
-                # self.update_trades_to_list_view()
+                self.update_trades_table(SIMULATION)
 
                 if self.advancedLogging:
                     trader.output_basic_information()
@@ -149,7 +149,8 @@ class Interface(QMainWindow):
                     self.timestamp_message("Waiting for a cross.")
 
                 self.update_info()
-                self.update_trades_to_list_view()
+                self.update_trades_table(LIVE)
+                # self.update_trades_to_list_view()
 
                 if self.advancedLogging:
                     self.trader.output_basic_information()
@@ -545,14 +546,14 @@ class Interface(QMainWindow):
         trader.inHumanControl = humanControl
         if trader.get_position() == LONG:
             if humanControl:
-                trader.sell_long('Force exiting long.', stopLoss=True)
+                trader.sell_long('Force exiting long.')
             else:
-                trader.sell_long('Exiting long because of override and resuming autonomous logic.', stopLoss=True)
+                trader.sell_long('Exiting long because of override and resuming autonomous logic.')
         elif trader.get_position() == SHORT:
             if humanControl:
-                trader.buy_short('Force exiting short.', stopLoss=True)
+                trader.buy_short('Force exiting short.')
             else:
-                trader.buy_short('Exiting short because of override and resuming autonomous logic..', stopLoss=True)
+                trader.buy_short('Exiting short because of override and resuming autonomous logic..')
 
     def force_long(self, caller):
         if caller == SIMULATION:
@@ -577,7 +578,7 @@ class Interface(QMainWindow):
         trader.inHumanControl = True
         if trader.get_position() == SHORT:
             trader.buy_short('Exiting short because long was forced.')
-        trader.buy_long('Force executed long.')
+        trader.buy_long('Force executing long.')
 
     def force_short(self, caller):
         if caller == SIMULATION:
@@ -601,8 +602,8 @@ class Interface(QMainWindow):
 
         trader.inHumanControl = True
         if trader.get_position() == LONG:
-            trader.buy_short('Exiting long because short was forced.')
-        trader.buy_long('Force executed long.')
+            trader.sell_long('Exiting long because short was forced.')
+        trader.sell_short('Force executing short.')
 
     def pause_or_resume_bot(self, caller):
         if caller == 'LIVE':
@@ -862,6 +863,47 @@ class Interface(QMainWindow):
         """
         self.add_to_table(self.activityMonitor, [message])
 
+    @staticmethod
+    def add_to_table(table, data):
+        """
+        Function that will add specified data to a provided table.
+        :param table: Table we will add data to.
+        :param data: Data we will add to table.
+        """
+        rowPosition = table.rowCount()
+        columns = table.columnCount()
+
+        data.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+        if len(data) != columns:
+            raise ValueError('Data needs to have the same amount of columns as table.')
+
+        table.insertRow(rowPosition)
+        for column in range(0, columns):
+            table.setItem(rowPosition, column, QTableWidgetItem(str(data[column])))
+
+    def update_trades_table(self, caller):
+        if caller == SIMULATION:
+            table = self.simulationHistoryTable
+            trades = self.simulationTrader.trades
+        elif caller == LIVE:
+            table = self.historyTable
+            trades = self.trader.trades
+        else:
+            raise ValueError('Invalid caller specified.')
+
+        if len(trades) > table.rowCount():
+            remaining = len(trades) - table.rowCount()
+            for trade in trades[-remaining:]:
+                tradeData = [trade['orderID'],
+                             trade['pair'],
+                             trade['price'],
+                             trade['percentage'],
+                             trade['profit'],
+                             trade['method'],
+                             trade['action']]
+                self.add_to_table(table, tradeData)
+
     def show_main_settings(self):
         """
         Opens main settings in the configuration window.
@@ -885,25 +927,6 @@ class Interface(QMainWindow):
         self.configuration.show()
         self.configuration.configurationTabWidget.setCurrentIndex(2)
         self.configuration.simulationConfigurationTabWidget.setCurrentIndex(0)
-
-    @staticmethod
-    def add_to_table(table, data):
-        """
-        Function that will add specified data to a provided table.
-        :param table: Table we will add data to.
-        :param data: Data we will add to table.
-        """
-        rowPosition = table.rowCount()
-        columns = table.columnCount()
-
-        data.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-        if len(data) != columns:
-            raise ValueError('Data needs to have the same amount of columns as table.')
-
-        table.insertRow(rowPosition)
-        for column in range(0, columns):
-            table.setItem(rowPosition, column, QTableWidgetItem(str(data[column])))
 
     def create_configuration_slots(self):
         """
@@ -1032,22 +1055,22 @@ class Interface(QMainWindow):
             graph.setBackground('k')
 
     def set_bear_mode(self):
-        app.setPalette(get_yellow_palette())
-        for graph in self.graphs:
-            graph = graph['graph']
-            graph.setBackground('y')
-
-    def set_bull_mode(self):
         app.setPalette(get_red_palette())
         for graph in self.graphs:
             graph = graph['graph']
-            graph.setBackground('r')
+            graph.setBackground('k')
 
-    def set_printing_mode(self):
+    def set_bull_mode(self):
         app.setPalette(get_green_palette())
         for graph in self.graphs:
             graph = graph['graph']
-            graph.setBackground('g')
+            graph.setBackground('k')
+
+    def set_printing_mode(self):
+        app.setPalette(get_light_green_palette())
+        for graph in self.graphs:
+            graph = graph['graph']
+            graph.setBackground('w')
 
     @staticmethod
     def timestamp_message(msg, output=None):

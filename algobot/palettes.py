@@ -37,6 +37,16 @@ def get_yellow_palette():
     return palette
 
 
+def get_light_green_palette():
+    palette = QPalette()
+    palette.setColor(QPalette.WindowText, QColor(0, 100, 0))  # change
+    palette.setColor(QPalette.ToolTipText, QColor(0, 100, 0))  # change
+    palette.setColor(QPalette.Text, QColor(0, 100, 0))  # change
+    palette.setColor(QPalette.ButtonText, QColor(0, 100, 0))  # change
+    palette.setColor(QPalette.Highlight, QColor(0, 100, 0))  # change
+    return palette
+
+
 def get_green_palette():
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))

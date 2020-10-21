@@ -81,23 +81,52 @@ class SimulatedTrader:
         elif level == 5:
             logging.critical(message)
 
-    def add_trade(self, message):
+    def add_trade(self, message, initialNet, finalNet, price, force, orderID=None):
         """
         Adds a trade to list of trades
+        :param orderID: Order ID returned from Binance API.
+        :param finalNet: Final net balance after trade was conducted.
+        :param initialNet: Initial net balance before trade was conducted.
+        :param force: Boolean that determines whether trade was conducted autonomously or by hand.
+        :param price: Price trade was conducted at.
         :param message: Message used for conducting trade.
         """
+        profit = finalNet - initialNet
+        profitPercentage = self.get_profit_percentage(initialNet, finalNet)
+        if force:
+            force = 'Manual'
+        else:
+            force = 'Automation'
+
         self.trades.append({
             'date': datetime.utcnow(),
-            'action': message
+            'orderID': orderID,
+            'action': message,
+            'pair': self.symbol,
+            'price': f'${round(price, 2)}',
+            'method': force,
+            'percentage': f'{round(profitPercentage, 2)}%',
+            'profit': f'${round(profit, 2)}'
         })
 
-    def buy_long(self, msg, usd=None):
+    @staticmethod
+    def get_profit_percentage(initialNet, finalNet):
+        """
+        Calculates net percentage from initial and final values.
+        :param initialNet: Initial net value.
+        :param finalNet: Final net value.
+        :return:
+        """
+        if finalNet > initialNet:
+            return finalNet / initialNet * 100
+        else:
+            return -1 * (100 - finalNet / initialNet * 100)
+
+    def buy_long(self, msg, usd=None, force=False):
         """
         Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
         Function also takes into account Binance's 0.1% transaction fee.
         """
-        self.currentPrice = self.dataView.get_current_price()
-
         if usd is None:
             usd = self.balance
 
@@ -110,16 +139,19 @@ class SimulatedTrader:
             self.output_message(f'You currently have ${self.balance}. You cannot invest ${usd}.')
             return
 
+        self.currentPrice = self.dataView.get_current_price()
+        initialNet = self.get_net()
         transactionFee = usd * self.transactionFeePercentage
         self.inLongPosition = True
         self.buyLongPrice = self.currentPrice
         self.longTrailingPrice = self.currentPrice
         self.coin += (usd - transactionFee) / self.currentPrice
         self.balance -= usd
-        self.add_trade(msg)
+        finalNet = self.get_net()
+        self.add_trade(msg, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice, force=force)
         self.output_message(msg)
 
-    def sell_long(self, msg, coin=None, stopLoss=None):
+    def sell_long(self, msg, coin=None, force=False):
         """
         Sells specified amount of coin at current market price. If not specified, assumes bot sells all coin.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -137,19 +169,21 @@ class SimulatedTrader:
             return
 
         self.currentPrice = self.dataView.get_current_price()
+        initialNet = self.get_net()
         earned = coin * self.currentPrice * (1 - self.transactionFeePercentage)
         self.inLongPosition = False
         self.previousPosition = LONG
         self.coin -= coin
         self.balance += earned
-        self.add_trade(msg)
+        finalNet = self.get_net()
+        self.add_trade(msg, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice, force=force)
         self.output_message(msg)
 
         if self.coin == 0:
             self.buyLongPrice = None
             self.longTrailingPrice = None
 
-    def buy_short(self, msg, coin=None, stopLoss=None):
+    def buy_short(self, msg, coin=None, force=False):
         """
         Buys borrowed coin at current market price and returns to market.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -164,19 +198,21 @@ class SimulatedTrader:
             return
 
         self.currentPrice = self.dataView.get_current_price()
+        initialNet = self.get_net()
         self.coinOwed -= coin
         self.inShortPosition = False
         self.previousPosition = SHORT
         loss = self.currentPrice * coin * (1 + self.transactionFeePercentage)
         self.balance -= loss
-        self.add_trade(msg)
+        finalNet = self.get_net()
+        self.add_trade(msg, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice, force=force)
         self.output_message(msg)
 
         if self.coinOwed == 0:
             self.sellShortPrice = None
             self.shortTrailingPrice = None
 
-    def sell_short(self, msg, coin=None):
+    def sell_short(self, msg, coin=None, force=False):
         """
         Borrows coin and sells them at current market price.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -193,12 +229,14 @@ class SimulatedTrader:
             self.output_message(f"You cannot borrow 0 or less {self.coinName}.")
             return
 
+        initialNet = self.get_net()
         self.coinOwed += coin
         self.balance += self.currentPrice * coin * (1 - self.transactionFeePercentage)
         self.inShortPosition = True
         self.sellShortPrice = self.currentPrice
         self.shortTrailingPrice = self.currentPrice
-        self.add_trade(msg)
+        finalNet = self.get_net()
+        self.add_trade(msg, force=force, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice)
         self.output_message(msg)
 
     def get_profit(self):
@@ -477,12 +515,10 @@ class SimulatedTrader:
             logging.info(f'\nAction taken: {trade["action"]}')
 
     def simulate(self, movingAverage="WMA", parameter="high", initialBound=20, finalBound=24, lossPercentage=0.015,
-                 lossStrategy=None, safetyTimer=None, safetyMargin=None, options=None):
+                 lossStrategy=None, options=None):
         """
         Starts a live simulation with given parameters.
         :param options: Argument for all trading options.
-        :param safetyMargin: Margin percentage to validate cross
-        :param safetyTimer: Amount of seconds to sleep to validate cross
         :param lossStrategy: Type of loss strategy to use
         :param parameter: Type of parameter to use for averages. e.g close, open, high, low.
         :param movingAverage: Type of trade. e.g. SMA, WMA, EMA.
@@ -498,8 +534,6 @@ class SimulatedTrader:
 
         self.lossPercentage = lossPercentage
         self.lossStrategy = lossStrategy
-        self.safetyTimer = safetyTimer
-        self.safetyMargin = safetyMargin
         self.trades = []
         self.sellShortPrice = None
         self.buyLongPrice = None
@@ -515,18 +549,6 @@ class SimulatedTrader:
             except ValueError:
                 print("Please type in a valid number.")
 
-        while self.safetyTimer is None:
-            try:
-                self.safetyTimer = int(input("Type in your safety timer (or 0 for no timer)>>"))
-            except ValueError:
-                print("Please type in a valid number.")
-
-        while self.safetyMargin is None:
-            try:
-                self.safetyMargin = float(input("Type in your safety margin (for 2% type 0.02 or 0 for no margin)>>"))
-            except ValueError:
-                print("Please type in a valid number.")
-
         self.output_message("Starting simulation...")
 
         self.simulate_option_1()
@@ -536,8 +558,6 @@ class SimulatedTrader:
 
     def simulate_option_1(self):
         fail = False  # Boolean for whether there was an error that occurred.
-        waitTime = self.safetyTimer  # Integer that describes how much bot will sleep to recheck if there is a cross.
-        self.safetyTimer = 0  # Initially the safetyTimer will be 0 until a first trade is made.
         self.waitToEnterShort = False  # Boolean for whether we should wait to exit out of short position.
         self.waitToEnterLong = False  # Boolean for whether we should wait to exit out of long position.
         self.inHumanControl = False  # Boolean for whether the bot is in human control.
@@ -548,8 +568,6 @@ class SimulatedTrader:
         self.inShortPosition = False  # Boolean that keeps track of whether we are in a short position.
 
         while True:
-            if len(self.trades) > 0:
-                self.safetyTimer = waitTime  # Once the first trade is conducted, then only we wait to validate crosses.
             try:
                 self.output_basic_information()
 
@@ -615,47 +633,6 @@ class SimulatedTrader:
                     self.buy_long("Bought long because a cross was detected.")
                 else:
                     self.sell_short("Sold short because a cross was detected.")
-
-    def validate_trade(self):
-        """
-        Checks if bot should go ahead with trade by comparing initial and final averages.
-        :return: A boolean whether trade should be performed or not.
-        """
-        for option in self.tradingOptions:
-            initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound)
-            finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound)
-
-            if initialAverage is None or finalAverage is None:
-                return False  # This means something went wrong with the moving average calculation.
-
-            initialAverageWithMargin = initialAverage + initialAverage * self.safetyMargin
-
-            if self.inLongPosition:
-                if not initialAverageWithMargin > finalAverage:
-                    return False
-            elif self.inShortPosition:
-                if not initialAverageWithMargin < finalAverage:
-                    return False
-            else:
-                if initialAverageWithMargin > finalAverage:
-                    self.inLongPosition = True
-                elif initialAverageWithMargin < finalAverage:
-                    self.inShortPosition = True
-
-        return True
-
-    def validate_cross(self):
-        """
-        Validates if cross is true by waiting then rechecking cross values.
-        :return: Boolean whether cross is real or fake.
-        """
-        if self.safetyTimer > 0:
-            self.output_message(f'Cross detected. Waiting {self.safetyTimer} seconds to validate...')
-            time.sleep(self.safetyTimer)
-        if not self.validate_trade():
-            self.output_message("Irregular averages occurred. Not taking any action.")
-            return False
-        return True
 
     def override(self):
         action = None

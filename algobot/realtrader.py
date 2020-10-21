@@ -74,7 +74,7 @@ class RealTrader(SimulatedTrader):
     def main_logic(self):
         if self.inShortPosition:  # This means we are in short position
             if self.currentPrice > self.get_stop_loss():  # If current price is greater, then exit trade.
-                self.buy_short(f'Bought short because of stop loss.', stopLoss=True)
+                self.buy_short(f'Bought short because of stop loss.')
                 self.waitToEnterShort = True
 
             if self.check_cross_v2():
@@ -83,7 +83,7 @@ class RealTrader(SimulatedTrader):
 
         elif self.inLongPosition:  # This means we are in long position
             if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
-                self.sell_long(f'Sold long because of stop loss.', stopLoss=True)
+                self.sell_long(f'Sold long because of stop loss.')
                 self.waitToEnterLong = True
 
             if self.check_cross_v2():
@@ -227,7 +227,7 @@ class RealTrader(SimulatedTrader):
         self.longTrailingPrice = self.currentPrice
         self.output_message(msg)
 
-    def sell_long(self, msg, coin=None, stopLoss=False):
+    def sell_long(self, msg, coin=None):
         order = self.binanceClient.create_margin_order(
             symbol=self.symbol,
             side=SIDE_SELL,
@@ -278,7 +278,7 @@ class RealTrader(SimulatedTrader):
         self.shortTrailingPrice = self.currentPrice
         self.output_message(msg)
 
-    def buy_short(self, msg, coin=None, stopLoss=False):
+    def buy_short(self, msg, coin=None):
         self.coinOwed = self.get_borrowed_margin_coin()
         difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
 

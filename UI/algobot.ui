@@ -53,7 +53,7 @@
        <enum>QTabWidget::West</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="movable">
        <bool>true</bool>
@@ -508,7 +508,7 @@
            <bool>true</bool>
           </attribute>
           <attribute name="horizontalHeaderDefaultSectionSize">
-           <number>100</number>
+           <number>150</number>
           </attribute>
           <attribute name="horizontalHeaderStretchLastSection">
            <bool>true</bool>
@@ -552,12 +552,17 @@
           </column>
           <column>
            <property name="text">
+            <string>New Column</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
             <string>Method</string>
            </property>
           </column>
           <column>
            <property name="text">
-            <string>Action</string>
+            <string>Gain/Loss</string>
            </property>
           </column>
          </widget>
@@ -610,7 +615,7 @@
            <bool>true</bool>
           </attribute>
           <attribute name="horizontalHeaderDefaultSectionSize">
-           <number>100</number>
+           <number>150</number>
           </attribute>
           <attribute name="horizontalHeaderStretchLastSection">
            <bool>true</bool>
@@ -634,6 +639,11 @@
           </column>
           <column>
            <property name="text">
+            <string>Order ID</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
             <string>Pair</string>
            </property>
           </column>
@@ -645,6 +655,11 @@
           <column>
            <property name="text">
             <string>Percentage</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Gain/Loss</string>
            </property>
           </column>
           <column>
