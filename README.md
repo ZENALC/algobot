@@ -14,7 +14,7 @@ To install requirements and related Python packages, type ```pip install require
 • Run simulations with parameters configured.\
 • Run custom backtests with parameters configured.\
 • Run live bots with parameters configured.\
-• Telegram integration that allows users to trade or view statistics from Telegram.\
+• Telegram integration that allows users to trade or view statistics.\
 • Create custom, trailing, or limit stop losses.
 
 # User Interface
