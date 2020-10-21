@@ -749,7 +749,7 @@ class Interface(QMainWindow):
             graph = graph['graph']
             graph.setAxisItems({'bottom': DateAxisItem()})
             graph.setBackground('w')
-            graph.setLabel('left', 'Price')
+            graph.setLabel('left', 'USDT')
             graph.setLabel('bottom', 'Datetime in UTC')
             graph.setLimits(xMin=currentDate, xMax=nextDate)
             graph.addLegend()
@@ -1160,7 +1160,11 @@ class Configuration(QDialog):
             Client(apiKey, apiSecret).get_account()
             self.credentialResult.setText('Connected successfully.')
         except Exception as e:
-            self.credentialResult.setText(str(e))
+            stringError = str(e)
+            if '1000ms' in stringError:
+                self.credentialResult.setText('Time not synchronized. Please synchronize your time.')
+            else:
+                self.credentialResult.setText(stringError)
 
     def load_credentials(self):
         try:
