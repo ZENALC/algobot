@@ -94,7 +94,7 @@ class Interface(QMainWindow):
                     self.add_to_simulation_activity_monitor("Waiting for a cross.")
 
                 self.update_simulation_info()
-                self.update_trades_table(SIMULATION)
+                self.update_trades_table_and_activity_monitor(SIMULATION)
 
                 if self.advancedLogging:
                     trader.output_basic_information()
@@ -149,7 +149,7 @@ class Interface(QMainWindow):
                     self.timestamp_message("Waiting for a cross.")
 
                 self.update_info()
-                self.update_trades_table(LIVE)
+                self.update_trades_table_and_activity_monitor(LIVE)
                 # self.update_trades_to_list_view()
 
                 if self.advancedLogging:
@@ -229,8 +229,8 @@ class Interface(QMainWindow):
             self.runBotButton.setEnabled(True)
             tempTrader = self.trader
         tempTrader.log_trades()
-        # self.disable_override()
-        # self.update_trades_to_list_view()
+        self.disable_override(caller)
+        self.update_trades_table_and_activity_monitor(caller)
         self.disable_interface(False, caller=caller)
         tempTrader.dataView.dump_to_table()
         # if self.lowerIntervalData is not None:
@@ -374,7 +374,16 @@ class Interface(QMainWindow):
             self.statistics.simulationLossPointValue.setText('None')
 
         currentUTC = datetime.utcnow().timestamp()
-        self.add_data_to_plot(self.simulationGraph, 0, currentUTC, trader.get_net())
+        initialNet = self.simulationTrader.startingBalance
+        netTotal = trader.get_net()
+        profit = initialNet - netTotal
+        percentage = self.simulationTrader.get_profit_percentage(initialNet, netTotal)
+
+        self.simulationNetTotalValue.setText(f'${round(netTotal, 2)}')
+        self.simulationProfitValue.setText(f'${round(profit, 2)}')
+        self.simulationPercentageValue.setText(f'{round(percentage, 2)}%')
+        self.simulationTickerValue.setText(self.simulationTrader.symbol)
+        self.add_data_to_plot(self.simulationGraph, 0, currentUTC, netTotal)
 
         for index, option in enumerate(trader.tradingOptions):
             initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
@@ -504,20 +513,20 @@ class Interface(QMainWindow):
             self.statistics.nextFinalMovingAverageValue.hide()
 
     def enable_override(self, caller):
-        if caller == SIMULATION:
-            self.pauseBotSimulationButton.setEnabled(True)
-            self.forceLongSimulationButton.setEnabled(True)
-            self.forceShortSimulationButton.setEnabled(True)
-        elif caller == LIVE:
-            self.pauseBotButton.setEnabled(True)
-            self.forceLongButton.setEnabled(True)
-            self.forceShortButton.setEnabled(True)
+        if caller == LIVE:
+            self.overrideGroupBox.setEnabled(True)
+        elif caller == SIMULATION:
+            self.simulationOverrideGroupBox.setEnabled(True)
         else:
             raise ValueError("Invalid caller specified.")
 
-    # to fix
     def disable_override(self, caller):
-        self.overrideGroupBox.setEnabled(False)
+        if caller == LIVE:
+            self.overrideGroupBox.setEnabled(False)
+        elif caller == SIMULATION:
+            self.simulationOverrideGroupBox.setEnabled(False)
+        else:
+            raise ValueError("Invalid caller specified.")
 
     def exit_position(self, caller, humanControl=True):
         if caller == LIVE:
@@ -704,16 +713,18 @@ class Interface(QMainWindow):
         Close event override. Makes user confirm they want to end program if something is running live.
         :param event: close event
         """
-        if self.runningLive:
-            qm = QMessageBox
-            ret = qm.question(self, 'Close?', "Are you sure to end the program?",
-                              qm.Yes | qm.No)
+        qm = QMessageBox
+        ret = qm.question(self, 'Close?', "Are you sure to end the program?",
+                          qm.Yes | qm.No)
 
-            if ret == qm.Yes:
-                self.end_bot(self.traderType)
-                event.accept()
-            else:
-                event.ignore()
+        if ret == qm.Yes:
+            if self.runningLive:
+                self.end_bot(LIVE)
+            elif self.simulationRunningLive:
+                self.end_bot(SIMULATION)
+            event.accept()
+        else:
+            event.ignore()
 
     def setup_graphs(self):
         """
@@ -884,7 +895,7 @@ class Interface(QMainWindow):
         for column in range(0, columns):
             table.setItem(rowPosition, column, QTableWidgetItem(str(data[column])))
 
-    def update_trades_table(self, caller):
+    def update_trades_table_and_activity_monitor(self, caller):
         if caller == SIMULATION:
             table = self.simulationHistoryTable
             trades = self.simulationTrader.trades
@@ -905,6 +916,10 @@ class Interface(QMainWindow):
                              trade['method'],
                              trade['action']]
                 self.add_to_table(table, tradeData)
+                if caller == LIVE:
+                    self.add_to_activity_monitor(trade['action'])
+                else:
+                    self.add_to_simulation_activity_monitor(trade['action'])
 
     def show_main_settings(self):
         """
