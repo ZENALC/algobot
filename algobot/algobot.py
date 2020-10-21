@@ -1,5 +1,4 @@
 import sys
-
 import assets
 import helpers
 import os
@@ -9,6 +8,7 @@ from datetime import datetime
 from threadWorkers import Worker
 from palettes import *
 from telegramBot import TelegramBot
+from telegram.error import InvalidToken
 from telegram.ext import Updater
 from binance.client import Client
 from realtrader import RealTrader
@@ -69,7 +69,7 @@ class Interface(QMainWindow):
         self.threadPool.start(worker)
 
     def end_bot_and_create_popup(self, msg):
-        self.disable_interface(False, self.traderType)
+        # self.disable_interface(False)
         self.endBotButton.setEnabled(False)
         self.endSimulationButton.setEnabled(False)
         # self.timestamp_message('Ended bot because of an error.')
@@ -112,7 +112,7 @@ class Interface(QMainWindow):
                 if lowerCrossPosition != trader.get_position():
                     if trader.check_cross_v2(dataObject=self.lowerIntervalData):
                         lowerCrossPosition = trader.get_position()
-                        self.add_to_activity_monitor('Lower interval cross detected.')
+                        self.add_to_simulation_activity_monitor('Lower interval cross detected.')
 
                 if trader.get_position() is None:
                     self.exitPositionSimulationButton.setEnabled(False)
@@ -194,19 +194,24 @@ class Interface(QMainWindow):
         self.set_parameters(caller)
         self.enable_override(caller)
 
-        if self.configuration.enableTelegramTrading.isChecked():
-            if self.telegramBot is None:
-                apiKey = self.configuration.telegramApiKey.text()
-                self.telegramBot = TelegramBot(gui=self, apiKey=apiKey)
-            self.telegramBot.start()
-            self.add_to_activity_monitor('Starting Telegram bot.')
+        if caller == LIVE and self.configuration.enableTelegramTrading.isChecked():
+            try:
+                if self.telegramBot is None:
+                    apiKey = self.configuration.telegramApiKey.text()
+                    self.telegramBot = TelegramBot(gui=self, apiKey=apiKey)
+                self.telegramBot.start()
+                self.add_to_activity_monitor('Starting Telegram bot.')
+            except InvalidToken:
+                self.add_to_activity_monitor('Invalid token for Telegram. Please recheck credentials in settings.')
 
         if caller == LIVE:
+            self.clear_table(self.historyTable)
             self.runningLive = True
             self.setup_graph_plots(self.realGraph, self.trader, 'net')
             self.setup_graph_plots(self.avgGraph, self.trader, 'average')
             self.automate_trading()
         elif caller == SIMULATION:
+            self.clear_table(self.simulationHistoryTable)
             self.simulationRunningLive = True
             self.setup_graph_plots(self.simulationGraph, self.simulationTrader, 'net')
             self.setup_graph_plots(self.simulationAvgGraph, self.simulationTrader, 'average')
@@ -225,7 +230,7 @@ class Interface(QMainWindow):
             self.endBotButton.setEnabled(False)
             self.telegramBot.stop()
             self.add_to_activity_monitor('Killed Telegram bot.')
-            self.add_to_activity_monitor("Killed bot.>")
+            self.add_to_activity_monitor("Killed bot.")
             self.runBotButton.setEnabled(True)
             tempTrader = self.trader
         tempTrader.log_trades()
@@ -309,18 +314,20 @@ class Interface(QMainWindow):
 
     def disable_interface(self, boolean, caller):
         boolean = not boolean
-        if caller == 'backtest':
-            self.backtestConfigurationTabWidget.setEnabled(boolean)
+        if caller == BACKTEST:
+            self.configuration.backtestConfigurationTabWidget.setEnabled(boolean)
             self.runBacktestButton.setEnabled(boolean)
             self.endBacktestButton.setEnabled(not boolean)
-        elif caller == 'simulation':
-            self.simulationConfigurationTabWidget.setEnabled(boolean)
+        elif caller == SIMULATION:
+            self.configuration.simulationConfigurationTabWidget.setEnabled(boolean)
             self.runSimulationButton.setEnabled(boolean)
             self.endSimulationButton.setEnabled(not boolean)
-        elif caller == 'live':
-            self.mainConfigurationTabWidget.setEnabled(boolean)
+        elif caller == LIVE:
+            self.configuration.mainConfigurationTabWidget.setEnabled(boolean)
             self.runBotButton.setEnabled(boolean)
             self.endBotBUtton.setEnabled(not boolean)
+        else:
+            raise ValueError('Invalid caller specified.')
 
     def update_trades_to_list_view(self):
         widgetCount = self.tradesListWidget.count()
@@ -376,8 +383,13 @@ class Interface(QMainWindow):
         currentUTC = datetime.utcnow().timestamp()
         initialNet = self.simulationTrader.startingBalance
         netTotal = trader.get_net()
-        profit = initialNet - netTotal
+        profit = netTotal - initialNet
         percentage = self.simulationTrader.get_profit_percentage(initialNet, netTotal)
+
+        if profit > 0:
+            self.simulationProfitLabel.setText('Profit')
+        else:
+            self.simulationProfitLabel.setText('Loss')
 
         self.simulationNetTotalValue.setText(f'${round(netTotal, 2)}')
         self.simulationProfitValue.setText(f'${round(profit, 2)}')
@@ -555,14 +567,14 @@ class Interface(QMainWindow):
         trader.inHumanControl = humanControl
         if trader.get_position() == LONG:
             if humanControl:
-                trader.sell_long('Force exited long.')
+                trader.sell_long('Force exited long.', force=True)
             else:
-                trader.sell_long('Exiting long because of override and resuming autonomous logic.')
+                trader.sell_long('Exiting long because of override and resuming autonomous logic.', force=True)
         elif trader.get_position() == SHORT:
             if humanControl:
-                trader.buy_short('Force exited short.')
+                trader.buy_short('Force exited short.', force=True)
             else:
-                trader.buy_short('Exiting short because of override and resuming autonomous logic..')
+                trader.buy_short('Exiting short because of override and resuming autonomous logic..', force=True)
 
     def force_long(self, caller):
         if caller == SIMULATION:
@@ -586,8 +598,8 @@ class Interface(QMainWindow):
 
         trader.inHumanControl = True
         if trader.get_position() == SHORT:
-            trader.buy_short('Exited short because long was forced.')
-        trader.buy_long('Force executed long.')
+            trader.buy_short('Exited short because long was forced.', force=True)
+        trader.buy_long('Force executed long.', force=True)
 
     def force_short(self, caller):
         if caller == SIMULATION:
@@ -611,8 +623,8 @@ class Interface(QMainWindow):
 
         trader.inHumanControl = True
         if trader.get_position() == LONG:
-            trader.sell_long('Exited long because short was forced.')
-        trader.sell_short('Force executed short.')
+            trader.sell_long('Exited long because short was forced.', force=True)
+        trader.sell_short('Force executed short.', force=True)
 
     def pause_or_resume_bot(self, caller):
         if caller == LIVE:
@@ -714,7 +726,7 @@ class Interface(QMainWindow):
         :param event: close event
         """
         qm = QMessageBox
-        ret = qm.question(self, 'Close?', "Are you sure to end the program?",
+        ret = qm.question(self, 'Close?', "Are you sure to end AlgoBot?",
                           qm.Yes | qm.No)
 
         if ret == qm.Yes:
@@ -852,6 +864,10 @@ class Interface(QMainWindow):
         """
         pen = mkPen(color=color)
         return graph.plot(x, y, name=plotName, pen=pen)
+
+    @staticmethod
+    def clear_table(table):
+        table.setRowCount(0)
 
     def test_table(self, table, trade):
         """
