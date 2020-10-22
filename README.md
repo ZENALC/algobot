@@ -12,9 +12,9 @@ To install requirements and related Python packages, type ```pip install require
 • View real time data.\
 • Create graphs with real time data and/or moving averages.\
 • Run simulations with parameters configured.\
-• Run backtests with parameters configured.\
+• Run custom backtests with parameters configured.\
 • Run live bots with parameters configured.\
-• Telegram integration that allows users to trade or view statistics from Telegram.\
+• Telegram integration that allows users to trade or view statistics.\
 • Create custom, trailing, or limit stop losses.
 
 # User Interface
@@ -36,7 +36,11 @@ Mihir Shrestha
 
 # Contribution
 
-The project is open-source. Please feel free to support it. Supporters are always welcome!
+The project is open-source. Please feel free to support it. Supporters are always welcome.
+
+# Feature Requests
+
+For any feature requests, feel free to add a feature request through Github's Issues. I would love to hear your ideas and implement them on the application.
 
 # Compatability
 
