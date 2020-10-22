@@ -246,9 +246,7 @@ class SimulationTrader:
 
         balance = self.balance
         balance += self.currentPrice * self.coin
-
-        if self.sellShortPrice is not None:
-            balance -= self.coinOwed * self.currentPrice
+        balance -= self.coinOwed * self.currentPrice
 
         return balance - self.startingBalance
 

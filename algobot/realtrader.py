@@ -8,7 +8,8 @@ from binance.exceptions import BinanceAPIException
 
 
 class RealTrader(SimulationTrader):
-    def __init__(self, apiKey, apiSecret, interval='1h', symbol='BTCUSDT'):
+    def __init__(self, apiKey: str, apiSecret: str, interval: str = '1h', symbol: str = 'BTCUSDT'):
+        from credentials import apiKey, apiSecret
         if apiKey is None or apiSecret is None:
             raise ValueError('API credentials not provided.')
 
@@ -17,42 +18,26 @@ class RealTrader(SimulationTrader):
         self.spot_usdt = self.get_spot_usdt()
         self.spot_coin = self.get_spot_coin()
         self.isolated = self.is_isolated()
+        self.check_spot_and_transfer()
+        self.retrieve_margin_values()
+        self.startingBalance = self.get_starting_balance()
+        self.check_initial_position()
+        self.netWorth = round(self.get_net(), 2)
+        self.validate_minimum_funds()
 
+    def check_spot_and_transfer(self):
+        """
+        Checks if spot account has more than $10. If it does, it transfers money to margin account.
+        """
         if self.spot_usdt > 10:
             self.initial_transfer()
 
-        self.set_margin_values()
-
-        self.startingBalance = self.get_starting_balance()
-        self.check_initial_position()
-        self.netWorth = round(self.coin * self.currentPrice - self.coinOwed * self.currentPrice + self.balance, 2)
-
+    def validate_minimum_funds(self):
+        """
+        Checks if account has enough funds to initiate trading.
+        """
         if not self.has_enough_money():
             raise ValueError(f"You only have ${self.netWorth}. Please make sure you have at least $10 in your account.")
-
-    def transfer_spot_to_margin(self):
-        """
-        Transfer assets from spot account to margin account.
-        """
-        order = self.binanceClient.transfer_spot_to_margin(asset=self.coinName, amount=self.get_spot_coin())
-        self.add_trade(message='Transferred from spot to margin',
-                       initialNet=self.get_net(),
-                       finalNet=self.get_net(),
-                       price=self.currentPrice,
-                       force=False,
-                       orderID=order['clientOrderId'])
-
-    def transfer_margin_to_spot(self):
-        """
-        Transfers assets from margin account to spot account.
-        """
-        order = self.binanceClient.transfer_margin_to_spot(asset=self.coinName, amount=self.get_margin_coin())
-        self.add_trade(message='Transferred from margin to spot',
-                       initialNet=self.get_net(),
-                       finalNet=self.get_net(),
-                       price=self.currentPrice,
-                       force=False,
-                       orderID=order['clientOrderId'])
 
     def has_enough_money(self) -> bool:
         """
@@ -72,16 +57,6 @@ class RealTrader(SimulationTrader):
             return False
         except IndexError:  # If not found, it most likely means it is not in the cross margin account.
             return True
-
-    def get_starting_balance(self) -> float:
-        """
-        Returns the initial starting balance for bot.
-        :return: initial starting balance for bot
-        """
-        self.currentPrice = self.dataView.get_current_price()
-        usdt = self.coin * self.currentPrice + self.balance
-        usdt -= self.coinOwed * self.currentPrice
-        return usdt
 
     @staticmethod
     def round_down(num: float, digits: int = 6) -> float:
@@ -109,27 +84,54 @@ class RealTrader(SimulationTrader):
             self.sellShortPrice = self.currentPrice
             self.shortTrailingPrice = self.sellShortPrice
 
-    def get_asset(self, targetAsset):
+    def retrieve_margin_values(self):
         """
-        Retrieves asset specified (if exists).
-        :param targetAsset: Asset to be retrieved.
-        :return: The target asset (if found).
+        Retrieves margin values and sets them to instance variables.
         """
-        assets = self.binanceClient.get_margin_account()['userAssets']
-        coin = [asset for asset in assets if asset['asset'] == targetAsset][0]
-        return coin
+        if self.isolated:
+            assets = self.get_isolated_margin_account()['assets']
+            coin = [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName][0]['baseAsset']
+            usdt = [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName and
+                    asset['quoteAsset']['asset'] == 'USDT'][0]['quoteAsset']
+        else:
+            assets = self.binanceClient.get_margin_account()['userAssets']
+            coin = [asset for asset in assets if asset['asset'] == self.coinName][0]
+            usdt = [asset for asset in assets if asset['asset'] == 'USDT'][0]
 
-    def get_spot_usdt(self) -> float:
-        """
-        Returns spot USDT amount.
-        """
-        return self.round_down(self.binanceClient.get_asset_balance(asset='USDT')['free'])
+        self.balance = self.round_down(float(usdt['free']))
+        self.coin = self.round_down(float(coin['free']))
+        self.coinOwed = self.round_down(float(coin['borrowed']))
 
-    def get_spot_coin(self) -> float:
+    def transfer_spot_to_margin(self):
         """
-        Returns spot coin amount.
+        Transfer assets from spot account to margin account.
         """
-        return self.round_down(self.binanceClient.get_asset_balance(asset=self.coinName)['free'])
+        order = self.binanceClient.transfer_spot_to_margin(asset=self.coinName, amount=self.get_spot_coin())
+        self.add_trade(message='Transferred from spot to margin',
+                       initialNet=self.get_net(),
+                       finalNet=self.get_net(),
+                       price=self.currentPrice,
+                       force=False,
+                       orderID=order['clientOrderId'])
+
+    def transfer_margin_to_spot(self):
+        """
+        Transfers assets from margin account to spot account.
+        """
+        order = self.binanceClient.transfer_margin_to_spot(asset=self.coinName, amount=self.get_margin_coin())
+        self.add_trade(message='Transferred from margin to spot',
+                       initialNet=self.get_net(),
+                       finalNet=self.get_net(),
+                       price=self.currentPrice,
+                       force=False,
+                       orderID=order['clientOrderId'])
+
+    def initial_transfer(self):
+        """
+        Buys long in spot then transfers it to margin account.
+        """
+        self.spot_buy_long()
+        self.transfer_spot_to_margin()
 
     def spot_buy_long(self):
         """
@@ -137,7 +139,7 @@ class RealTrader(SimulationTrader):
         """
         self.spot_usdt = self.get_spot_usdt()
         self.currentPrice = self.dataView.get_current_price()
-        max_buy = self.round_down(self.spot_usdt * (1 - 0.001) / self.currentPrice)
+        max_buy = self.round_down(self.spot_usdt * (1 - self.transactionFeePercentage) / self.currentPrice)
 
         order = self.binanceClient.order_market_buy(
             symbol=self.symbol,
@@ -168,14 +170,19 @@ class RealTrader(SimulationTrader):
                        force=False,
                        orderID=order['clientOrderId'])
 
-    def initial_transfer(self):
+    def get_spot_usdt(self) -> float:
         """
-        Buys long in spot then transfers it to margin account.
+        Returns spot USDT amount.
         """
-        self.spot_buy_long()
-        self.transfer_spot_to_margin()
+        return self.round_down(self.binanceClient.get_asset_balance(asset='USDT')['free'])
 
-    def get_isolated_margin_account(self, **params):
+    def get_spot_coin(self) -> float:
+        """
+        Returns spot coin amount.
+        """
+        return self.round_down(self.binanceClient.get_asset_balance(asset=self.coinName)['free'])
+
+    def get_isolated_margin_account(self, **params) -> dict:
         """
         Retrieves margin isolated account information.
         :param params: **kwargs that normally go to binanceClient's request_margin_api function.
@@ -183,48 +190,73 @@ class RealTrader(SimulationTrader):
         """
         return self.binanceClient._request_margin_api('get', 'margin/isolated/account', True, data=params)
 
-    def set_margin_values(self):
-        if self.isolated:
+    def get_starting_balance(self) -> float:
+        """
+        Returns the initial starting balance for bot.
+        :return: initial starting balance for bot
+        """
+        self.currentPrice = self.dataView.get_current_price()
+        usdt = self.coin * self.currentPrice + self.balance
+        usdt -= self.coinOwed * self.currentPrice
+        return usdt
+
+    def get_asset(self, targetAsset: str) -> dict:
+        """
+        Retrieves asset specified (if exists).
+        :param targetAsset: Asset to be retrieved.
+        :return: The target asset (if found).
+        """
+        try:
             assets = self.get_isolated_margin_account()['assets']
-            coin = [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName][0]['baseAsset']
-            usdt = [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName and
-                    asset['quoteAsset']['asset'] == 'USDT'][0]['quoteAsset']
-        else:
-            assets = self.binanceClient.get_margin_account()['userAssets']
-            coin = [asset for asset in assets if asset['asset'] == self.coinName][0]
-            usdt = [asset for asset in assets if asset['asset'] == 'USDT'][0]
+            return [asset for asset in assets if asset['baseAsset']['asset'] == targetAsset][0]['baseAsset']
+        except IndexError:
+            try:
+                assets = self.binanceClient.get_margin_account()['userAssets']
+                return [asset for asset in assets if asset['asset'] == targetAsset][0]
+            except IndexError:
+                pass
 
-        self.balance = self.round_down(float(usdt['free']))
-        self.coin = self.round_down(float(coin['free']))
-        self.coinOwed = self.round_down(float(coin['borrowed']))
+    def get_margin_coin_info(self) -> dict:
+        """
+        Retrieves margin info about coin.
+        :return: Margin info about coin.
+        """
+        return self.get_asset(self.coinName)
 
-    def get_margin_usdt(self):
+    def get_margin_usdt(self) -> float:
+        """
+        Retrieves USDT available in margin account.
+        :return: USDT available.
+        """
         if self.isolated:
             assets = self.get_isolated_margin_account()['assets']
             for asset in assets:
                 if asset['baseAsset']['asset'] == self.coinName and asset['quoteAsset']['asset'] == 'USDT':
                     return self.round_down(float(asset['quoteAsset']['free']))
         else:
-            assets = self.binanceClient.get_margin_account()['userAssets']
-            return self.round_down(float([asset for asset in assets if asset['asset'] == 'USDT'][0]))
+            return self.round_down(float(self.get_asset('USDT')['free']))
 
-    def get_margin_coin_info(self):
-        if self.isolated:
-            assets = self.get_isolated_margin_account()['assets']
-            return [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName][0]['baseAsset']
-        else:
-            assets = self.binanceClient.get_margin_account()['userAssets']
-            return [asset for asset in assets if asset['asset'] == self.coinName][0]
-
-    def get_margin_coin(self):
+    def get_margin_coin(self) -> float:
+        """
+        Retrieves margin coin amount.
+        :return: Margin coin amount.
+        """
         coin = self.get_margin_coin_info()
         return self.round_down(float(coin['free']))
 
     def get_borrowed_margin_coin(self):
+        """
+        Retrieves borrowed margin coin amount.
+        :return: Borrowed margin coin amount.
+        """
         coin = self.get_margin_coin_info()
         return self.round_down(float(coin['borrowed']))
 
     def get_borrowed_margin_interest(self):
+        """
+        Retrieves borrowed margin coin interest amount.
+        :return: Borrowed margin coin interest amount.
+        """
         coin = self.get_margin_coin_info()
         return self.round_down(float(coin['interest']))
 
@@ -242,8 +274,6 @@ class RealTrader(SimulationTrader):
             isIsolated=self.isolated
         )
 
-        finalNet = self.get_net()
-        self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
         self.coin = self.get_margin_coin()
         self.coinOwed = self.get_borrowed_margin_coin()
         self.balance = self.get_margin_usdt()
@@ -251,6 +281,13 @@ class RealTrader(SimulationTrader):
         self.buyLongPrice = self.currentPrice
         self.longTrailingPrice = self.currentPrice
         self.output_message(msg)
+        finalNet = self.get_net()
+        self.add_trade(message=msg,
+                       initialNet=initialNet,
+                       finalNet=finalNet,
+                       price=self.currentPrice,
+                       force=force,
+                       orderID=order['clientOrderId'])
 
     def sell_long(self, msg, coin=None, force=False):
         initialNet = self.get_net()
@@ -261,9 +298,7 @@ class RealTrader(SimulationTrader):
             quantity=self.get_margin_coin(),
             isIsolated=self.isolated
         )
-        finalNet = self.get_net()
 
-        self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
         self.coin = self.get_margin_coin()
         self.coinOwed = self.get_borrowed_margin_coin()
         self.balance = self.get_margin_usdt()
@@ -272,6 +307,13 @@ class RealTrader(SimulationTrader):
         self.buyLongPrice = None
         self.longTrailingPrice = None
         self.output_message(msg)
+        finalNet = self.get_net()
+        self.add_trade(message=msg,
+                       initialNet=initialNet,
+                       finalNet=finalNet,
+                       price=self.currentPrice,
+                       force=force,
+                       orderID=order['clientOrderId'])
 
     def sell_short(self, msg, coin=None, force=False):
         self.balance = self.get_margin_usdt()
@@ -298,8 +340,6 @@ class RealTrader(SimulationTrader):
             quantity=self.round_down(self.get_margin_coin()),
             isIsolated=self.isolated
         )
-        finalNet = self.get_net()
-        self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
         self.balance = self.get_margin_usdt()
         self.coinOwed = self.get_borrowed_margin_coin()
         self.coin = self.get_margin_coin()
@@ -307,6 +347,13 @@ class RealTrader(SimulationTrader):
         self.sellShortPrice = self.currentPrice
         self.shortTrailingPrice = self.currentPrice
         self.output_message(msg)
+        finalNet = self.get_net()
+        self.add_trade(message=msg,
+                       initialNet=initialNet,
+                       finalNet=finalNet,
+                       price=self.currentPrice,
+                       force=force,
+                       orderID=order['clientOrderId'])
 
     def buy_short(self, msg, coin=None, force=False):
         self.coinOwed = self.get_borrowed_margin_coin()
