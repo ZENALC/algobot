@@ -3,7 +3,7 @@ from data import Data
 
 
 class MyTestCase(unittest.TestCase):
-    dataObject = Data(interval='1h', symbol='BTCUSDT', loadData=True)
+    dataObject = Data(interval='1h', symbol='YFIUSDT', loadData=True)
 
     def test_initialization(self):
         self.assertTrue(self.dataObject.data, 'Data initialization test.')

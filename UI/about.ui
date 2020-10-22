@@ -43,7 +43,7 @@
      <property name="plainText">
       <string>Algobot Version 1.8
 
-Algobot Prince is an open-source software written in Python that enables users to create automated bots that can trade, simulate, or backtest with strategies implemented.
+Algobot is an open-source software written in Python that enables users to create automated bots that can trade, simulate, or backtest with strategies implemented.
 
 This program is not responsible for any financial burdens or debt incurred. 
 

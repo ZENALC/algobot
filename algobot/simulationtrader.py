@@ -13,34 +13,27 @@ class SimulatedTrader:
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
 
-        try:  # Attempt to parse startingBalance
-            startingBalance = float(startingBalance)
-        except (ValueError, ArithmeticError, ZeroDivisionError):
-            print("Invalid starting balance. Using default value of $1,000.")
-            startingBalance = 1000
-
-        # Initialize initial values
+        # Initialize initial values.
         self.balance = startingBalance  # USDT Balance.
+        self.startingBalance = self.balance  # Balance we started bot run with.
         self.coinName = self.get_coin_name()  # Retrieve primary coin to trade.
         self.coin = 0  # Amount of coin we own.
         self.coinOwed = 0  # Amount of coin we owe.
         self.transactionFeePercentage = 0.001  # Binance transaction fee percentage.
-        self.totalTrades = []  # All trades conducted.
-        self.trades = []  # Amount of trades in previous run.
-        self.detailedTrades = []  # Trades conducted in more detail.
+        self.trades = []  # All trades performed.
 
         self.tradingOptions = []  # List with Option elements. Helps specify what moving averages to trade with.
         self.trend = None  # 1 is bullish, -1 is bearish; usually handled with enums.
-        self.lossPercentage = None  # Loss percentage for stop loss.
+        self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
         self.endingTime = None  # Ending time for previous bot run.
+
         self.buyLongPrice = None  # Price we last bought our target coin at in long position.
         self.sellShortPrice = None  # Price we last sold target coin at in short position.
         self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
         self.longTrailingPrice = None  # Price coin has to be above for long position.
         self.shortTrailingPrice = None  # Price coin has to be below for short position.
-        self.startingBalance = self.balance  # Balance we started bot run with.
         self.currentPrice = None  # Current price of coin.
 
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
@@ -295,17 +288,17 @@ class SimulatedTrader:
                 self.shortTrailingPrice = self.dataView.get_current_price()
                 self.sellShortPrice = self.shortTrailingPrice
             if self.lossStrategy == 2:  # This means we use trailing loss.
-                return self.shortTrailingPrice * (1 + self.lossPercentage)
+                return self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
             else:  # This means we use the basic stop loss.
-                return self.sellShortPrice * (1 + self.lossPercentage)
+                return self.sellShortPrice * (1 + self.lossPercentageDecimal)
         elif self.inLongPosition:  # If we are in a long position
             if self.longTrailingPrice is None:
                 self.longTrailingPrice = self.dataView.get_current_price()
                 self.buyLongPrice = self.longTrailingPrice
             if self.lossStrategy == 2:  # This means we use trailing loss.
-                return self.longTrailingPrice * (1 - self.lossPercentage)
+                return self.longTrailingPrice * (1 - self.lossPercentageDecimal)
             else:  # This means we use the basic stop loss.
-                return self.buyLongPrice * (1 - self.lossPercentage)
+                return self.buyLongPrice * (1 - self.lossPercentageDecimal)
         else:
             return None
 
@@ -444,17 +437,17 @@ class SimulatedTrader:
         if self.inLongPosition:
             self.output_message(f'\nCurrently in long position.')
             if self.lossStrategy == 2:
-                longTrailingLossValue = round(self.longTrailingPrice * (1 - self.lossPercentage), 2)
+                longTrailingLossValue = round(self.longTrailingPrice * (1 - self.lossPercentageDecimal), 2)
                 self.output_message(f'Long trailing loss: ${longTrailingLossValue}')
             else:
-                self.output_message(f'Stop loss: {round(self.buyLongPrice * (1 - self.lossPercentage), 2)}')
+                self.output_message(f'Stop loss: {round(self.buyLongPrice * (1 - self.lossPercentageDecimal), 2)}')
         elif self.inShortPosition:
             self.output_message(f'\nCurrently in short position.')
             if self.lossStrategy == 2:
-                shortTrailingLossValue = round(self.shortTrailingPrice * (1 + self.lossPercentage), 2)
+                shortTrailingLossValue = round(self.shortTrailingPrice * (1 + self.lossPercentageDecimal), 2)
                 self.output_message(f'Short trailing loss: ${shortTrailingLossValue}')
             else:
-                self.output_message(f'Stop loss: {round(self.sellShortPrice * (1 + self.lossPercentage), 2)}')
+                self.output_message(f'Stop loss: {round(self.sellShortPrice * (1 + self.lossPercentageDecimal), 2)}')
         else:
             if not self.inHumanControl:
                 self.output_message(f'\nCurrently not a in short or long position. Waiting for next cross.')
@@ -533,7 +526,7 @@ class SimulatedTrader:
             tradingOption = Option(movingAverage, parameter, initialBound, finalBound)
             self.tradingOptions = [tradingOption]
 
-        self.lossPercentage = lossPercentage
+        self.lossPercentageDecimal = lossPercentage
         self.lossStrategy = lossStrategy
         self.trades = []
         self.sellShortPrice = None

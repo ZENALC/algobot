@@ -299,10 +299,10 @@ class Interface(QMainWindow):
 
     def set_parameters(self, caller):
         if caller == LIVE:
-            self.trader.lossStrategy, self.trader.lossPercentage = self.get_loss_settings(caller)
+            self.trader.lossStrategy, self.trader.lossPercentageDecimal = self.get_loss_settings(caller)
             self.trader.tradingOptions = self.get_trading_options(caller)
         elif caller == SIMULATION:
-            self.simulationTrader.lossStrategy, self.simulationTrader.lossPercentage = self.get_loss_settings(caller)
+            self.simulationTrader.lossStrategy, self.simulationTrader.lossPercentageDecimal = self.get_loss_settings(caller)
             self.simulationTrader.tradingOptions = self.get_trading_options(caller)
         else:
             raise ValueError('Invalid caller.')
