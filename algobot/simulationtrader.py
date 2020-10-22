@@ -5,7 +5,7 @@ from data import Data
 from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
 
 
-class SimulatedTrader:
+class SimulationTrader:
     def __init__(self, startingBalance: float = 1000, interval: str = '1h', symbol: str = 'BTCUSDT',
                  loadData: bool = True):
         self.dataView = Data(interval=interval, symbol=symbol, loadData=loadData)  # Retrieve data-view object.
@@ -41,7 +41,7 @@ class SimulatedTrader:
         self.previousPosition = None  # Previous position to validate for a cross.
 
     @staticmethod
-    def output_message(message: str, level: int = 2, printMessage: bool = True):
+    def output_message(message: str, level: int = 2, printMessage: bool = False):
         """Prints out and logs message"""
         if printMessage:
             print(message)

@@ -1,13 +1,13 @@
 import math
 from enums import *
-from simulationtrader import SimulatedTrader
+from simulationtrader import SimulationTrader
 from binance.client import Client
 from binance.enums import *
 from binance.exceptions import BinanceAPIException
 from helpers import *
 
 
-class RealTrader(SimulatedTrader):
+class RealTrader(SimulationTrader):
     def __init__(self, apiKey, apiSecret, interval='1h', symbol='BTCUSDT'):
         if apiKey is None or apiSecret is None:
             self.output_message('API details incorrect.', 5)

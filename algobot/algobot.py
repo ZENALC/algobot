@@ -12,7 +12,7 @@ from telegram.error import InvalidToken
 from telegram.ext import Updater
 from binance.client import Client
 from realtrader import RealTrader
-from simulationtrader import SimulatedTrader
+from simulationtrader import SimulationTrader
 from option import Option
 from enums import *
 
@@ -260,10 +260,10 @@ class Interface(QMainWindow):
             interval = helpers.convert_interval(self.configuration.simulationIntervalComboBox.currentText())
             startingBalance = self.configuration.simulationStartingBalanceSpinBox.value()
             self.add_to_simulation_activity_monitor(f"Retrieving data for interval {interval}...")
-            self.simulationTrader = SimulatedTrader(startingBalance=startingBalance,
-                                                    symbol=symbol,
-                                                    interval=interval,
-                                                    loadData=True)
+            self.simulationTrader = SimulationTrader(startingBalance=startingBalance,
+                                                     symbol=symbol,
+                                                     interval=interval,
+                                                     loadData=True)
         elif caller == LIVE:
             symbol = self.configuration.tickerComboBox.currentText()
             interval = helpers.convert_interval(self.configuration.intervalComboBox.currentText())
