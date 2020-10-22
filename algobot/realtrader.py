@@ -1,12 +1,10 @@
 import math
+
 from enums import *
 from simulationtrader import SimulationTrader
 from binance.client import Client
 from binance.enums import *
 from binance.exceptions import BinanceAPIException
-
-
-# from helpers import *
 
 
 class RealTrader(SimulationTrader):
@@ -86,7 +84,7 @@ class RealTrader(SimulationTrader):
         return usdt
 
     @staticmethod
-    def round_down(num: int, digits: int = 6) -> float:
+    def round_down(num: float, digits: int = 6) -> float:
         """
         Rounds down number for trading purposes.
         :param num: Number to be rounded down.
@@ -111,18 +109,32 @@ class RealTrader(SimulationTrader):
             self.sellShortPrice = self.currentPrice
             self.shortTrailingPrice = self.sellShortPrice
 
-    def get(self, target):
+    def get_asset(self, targetAsset):
+        """
+        Retrieves asset specified (if exists).
+        :param targetAsset: Asset to be retrieved.
+        :return: The target asset (if found).
+        """
         assets = self.binanceClient.get_margin_account()['userAssets']
-        coin = [asset for asset in assets if asset['asset'] == target][0]
+        coin = [asset for asset in assets if asset['asset'] == targetAsset][0]
         return coin
 
-    def get_spot_usdt(self):
+    def get_spot_usdt(self) -> float:
+        """
+        Returns spot USDT amount.
+        """
         return self.round_down(self.binanceClient.get_asset_balance(asset='USDT')['free'])
 
-    def get_spot_coin(self):
+    def get_spot_coin(self) -> float:
+        """
+        Returns spot coin amount.
+        """
         return self.round_down(self.binanceClient.get_asset_balance(asset=self.coinName)['free'])
 
     def spot_buy_long(self):
+        """
+        Enters long position in spot account.
+        """
         self.spot_usdt = self.get_spot_usdt()
         self.currentPrice = self.dataView.get_current_price()
         max_buy = self.round_down(self.spot_usdt * (1 - 0.001) / self.currentPrice)
@@ -132,22 +144,43 @@ class RealTrader(SimulationTrader):
             quantity=max_buy
         )
 
-        self.add_trade('Bought spot long', order=order)
+        self.add_trade(message='Bought spot long.',
+                       initialNet=self.get_net(),
+                       finalNet=self.get_net(),
+                       price=self.currentPrice,
+                       force=False,
+                       orderID=order['clientOrderId'])
 
     def spot_sell_long(self):
+        """
+        Exits long position in spot account.
+        """
         self.spot_coin = self.get_spot_coin()
         order = self.binanceClient.order_market_sell(
             symbol=self.symbol,
             quantity=self.spot_coin
         )
 
-        self.add_trade('Sold spot long', order=order)
+        self.add_trade(message='Sold spot long.',
+                       initialNet=self.get_net(),
+                       finalNet=self.get_net(),
+                       price=self.currentPrice,
+                       force=False,
+                       orderID=order['clientOrderId'])
 
     def initial_transfer(self):
+        """
+        Buys long in spot then transfers it to margin account.
+        """
         self.spot_buy_long()
         self.transfer_spot_to_margin()
 
     def get_isolated_margin_account(self, **params):
+        """
+        Retrieves margin isolated account information.
+        :param params: **kwargs that normally go to binanceClient's request_margin_api function.
+        :return: Margin isolated account information
+        """
         return self.binanceClient._request_margin_api('get', 'margin/isolated/account', True, data=params)
 
     def set_margin_values(self):
@@ -291,6 +324,7 @@ class RealTrader(SimulationTrader):
         self.coin = self.get_margin_coin()
 
         try:
+            initialNet = self.get_net()
             if self.isolated:
                 order = self.binanceClient.repay_margin_loan(
                     asset=self.coinName,
@@ -303,7 +337,8 @@ class RealTrader(SimulationTrader):
                     asset=self.coinName,
                     amount=self.coin
                 )
-            self.add_trade(msg, order=order)
+            finalNet = self.get_net()
+            self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
         except BinanceAPIException as e:
             print(e)
             self.output_message(f"Repaying Failed because of {e}.")
