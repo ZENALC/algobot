@@ -264,7 +264,7 @@ class RealTrader(SimulationTrader):
         """
         Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
         :param msg: Message to be used for displaying trade information.
-        :param usd: Amount used to enter long.
+        :param usd: Amount used to enter long position.
         :param force: Boolean that determines whether bot executed action or human.
         """
         self.balance = self.get_margin_usdt()
@@ -299,7 +299,7 @@ class RealTrader(SimulationTrader):
         """
         Sells specified amount of coin at current market price. If not specified, assumes bot sells all coin.
         :param msg: Message to be used for displaying trade information.
-        :param coin: Coin amount to sell to exit long.
+        :param coin: Coin amount to sell to exit long position.
         :param force: Boolean that determines whether bot executed action or human.
         """
         initialNet = self.get_net()
@@ -327,47 +327,14 @@ class RealTrader(SimulationTrader):
                        force=force,
                        orderID=order['clientOrderId'])
 
-    def sell_short(self, msg, coin=None, force=False):
-        self.balance = self.get_margin_usdt()
-        self.currentPrice = self.dataView.get_current_price()
-        max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
-        try:
-            initialNet = self.get_net()
-            if self.isolated:
-                order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow,
-                                                              isIsolated=self.isolated, symbol=self.symbol)
-            else:
-                order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow)
-            finalNet = self.get_net()
-            self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
-        except BinanceAPIException as e:
-            print(f"Borrowing failed because {e}")
-            self.output_message(f'Borrowing failed because {e}')
-
-        initialNet = self.get_net()
-        order = self.binanceClient.create_margin_order(
-            side=SIDE_SELL,
-            symbol=self.symbol,
-            type=ORDER_TYPE_MARKET,
-            quantity=self.round_down(self.get_margin_coin()),
-            isIsolated=self.isolated
-        )
-        self.balance = self.get_margin_usdt()
-        self.coinOwed = self.get_borrowed_margin_coin()
-        self.coin = self.get_margin_coin()
-        self.currentPosition = SHORT
-        self.sellShortPrice = self.currentPrice
-        self.shortTrailingPrice = self.currentPrice
-        self.output_message(msg)
-        finalNet = self.get_net()
-        self.add_trade(message=msg,
-                       initialNet=initialNet,
-                       finalNet=finalNet,
-                       price=self.currentPrice,
-                       force=force,
-                       orderID=order['clientOrderId'])
-
     def buy_short(self, msg, coin=None, force=False):
+        """
+        Returns coin by buying them at current market price.
+        If no coin is provided in function, bot will assume we try to pay back everything in return.
+        :param msg: Message to be used for displaying trade information.
+        :param coin: Coin amount to buy back to exit short position.
+        :param force: Boolean that determines whether bot executed action or human.
+        """
         self.coinOwed = self.get_borrowed_margin_coin()
         difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
         initialNet = self.get_net()
@@ -410,3 +377,52 @@ class RealTrader(SimulationTrader):
         self.output_message(msg)
         self.sellShortPrice = None
         self.shortTrailingPrice = None
+
+    def sell_short(self, msg, coin=None, force=False):
+        """
+        Borrows coin and sells them at current market price.
+        If no coin is provided in function, bot will assume we borrow as much as
+        bot can buy with current balance and market value.
+        :param msg: Message to be used for displaying trade information.
+        :param coin: Coin amount to sell to enter short position.
+        :param force: Boolean that determines whether bot executed action or human.
+        """
+        self.balance = self.get_margin_usdt()
+        self.currentPrice = self.dataView.get_current_price()
+        max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
+        try:
+            initialNet = self.get_net()
+            if self.isolated:
+                order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow,
+                                                              isIsolated=self.isolated, symbol=self.symbol)
+            else:
+                order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow)
+            finalNet = self.get_net()
+            self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
+        except BinanceAPIException as e:
+            print(f"Borrowing failed because {e}")
+            self.output_message(f'Borrowing failed because {e}')
+
+        initialNet = self.get_net()
+        order = self.binanceClient.create_margin_order(
+            side=SIDE_SELL,
+            symbol=self.symbol,
+            type=ORDER_TYPE_MARKET,
+            quantity=self.round_down(self.get_margin_coin()),
+            isIsolated=self.isolated
+        )
+        self.balance = self.get_margin_usdt()
+        self.coinOwed = self.get_borrowed_margin_coin()
+        self.coin = self.get_margin_coin()
+        self.currentPosition = SHORT
+        self.sellShortPrice = self.currentPrice
+        self.shortTrailingPrice = self.currentPrice
+        self.output_message(msg)
+        finalNet = self.get_net()
+        self.add_trade(message=msg,
+                       initialNet=initialNet,
+                       finalNet=finalNet,
+                       price=self.currentPrice,
+                       force=force,
+                       orderID=order['clientOrderId'])
+

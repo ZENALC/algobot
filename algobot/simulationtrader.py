@@ -153,8 +153,10 @@ class SimulationTrader:
         """
         Buys borrowed coin at current market price and returns to market.
         Function also takes into account Binance's 0.1% transaction fee.
-        If coin amount is not specified, bot will assume to buy all owed back
-        coin.
+        If coin amount is not specified, bot will assume to try to pay back everything in return.
+        :param msg: Message to be used for displaying trade information.
+        :param coin: Coin amount to buy back to exit short position.
+        :param force: Boolean that determines whether bot executed action or human.
         """
         if coin is None:
             coin = self.coinOwed
@@ -183,6 +185,9 @@ class SimulationTrader:
         Function also takes into account Binance's 0.1% transaction fee.
         If no coin is provided in function, bot will assume we borrow as much as
         bot can buy with current balance and market value.
+        :param msg: Message to be used for displaying trade information.
+        :param coin: Coin amount to sell to enter short position.
+        :param force: Boolean that determines whether bot executed action or human.
         """
         self.currentPrice = self.dataView.get_current_price()
 
