@@ -9,7 +9,7 @@ from binance.exceptions import BinanceAPIException
 
 class RealTrader(SimulationTrader):
     def __init__(self, apiKey: str, apiSecret: str, interval: str = '1h', symbol: str = 'BTCUSDT'):
-        from credentials import apiKey, apiSecret
+        # from credentials import apiKey, apiSecret
         if apiKey is None or apiSecret is None:
             raise ValueError('API credentials not provided.')
 
@@ -260,6 +260,62 @@ class RealTrader(SimulationTrader):
         coin = self.get_margin_coin_info()
         return self.round_down(float(coin['interest']))
 
+    def create_margin_loan(self, amount, force):
+        """
+        Creates margin loan.
+        :param force: Boolean that determines whether bot executed action or human.
+        :param amount: Amount to borrow in margin loan.
+        :return: Order dictionary.
+        """
+        initialNet = self.get_net()
+
+        if self.isolated:
+            order = self.binanceClient.create_margin_loan(asset=self.coinName,
+                                                          amount=amount,
+                                                          isIsolated=True,
+                                                          symbol=self.symbol)
+        else:
+            order = self.binanceClient.create_margin_loan(asset=self.coinName,
+                                                          amount=amount)
+
+        self.retrieve_margin_values()
+        finalNet = self.get_net()
+        self.add_trade(message='Created margin loan.',
+                       initialNet=initialNet,
+                       finalNet=finalNet,
+                       price=self.currentPrice,
+                       force=force,
+                       orderID=order['clientOrderId'])
+
+    def repay_margin_loan(self, force):
+        """
+        Repays margin loan.
+        :param force: Boolean that determines whether bot executed action or human.
+        """
+        initialNet = self.get_net()
+
+        if self.isolated:
+            order = self.binanceClient.repay_margin_loan(
+                asset=self.coinName,
+                amount=self.coin,
+                isIsolated=self.isolated,
+                symbol=self.symbol
+            )
+        else:
+            order = self.binanceClient.repay_margin_loan(
+                asset=self.coinName,
+                amount=self.coin
+            )
+
+        self.retrieve_margin_values()
+        finalNet = self.get_net()
+        self.add_trade(message='Repaid margin loan.',
+                       initialNet=initialNet,
+                       finalNet=finalNet,
+                       price=self.currentPrice,
+                       force=force,
+                       orderID=order['clientOrderId'])
+
     def buy_long(self, msg, usd=None, force=False):
         """
         Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
@@ -280,9 +336,7 @@ class RealTrader(SimulationTrader):
             isIsolated=self.isolated
         )
 
-        self.coin = self.get_margin_coin()
-        self.coinOwed = self.get_borrowed_margin_coin()
-        self.balance = self.get_margin_usdt()
+        self.retrieve_margin_values()
         self.currentPosition = LONG
         self.buyLongPrice = self.currentPrice
         self.longTrailingPrice = self.currentPrice
@@ -311,9 +365,7 @@ class RealTrader(SimulationTrader):
             isIsolated=self.isolated
         )
 
-        self.coin = self.get_margin_coin()
-        self.coinOwed = self.get_borrowed_margin_coin()
-        self.balance = self.get_margin_usdt()
+        self.retrieve_margin_values()
         self.currentPosition = None
         self.previousPosition = LONG
         self.buyLongPrice = None
@@ -345,26 +397,18 @@ class RealTrader(SimulationTrader):
             quantity=self.round_down(difference),
             isIsolated=self.isolated
         )
+
+        self.retrieve_margin_values()
         finalNet = self.get_net()
-        self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
-        self.coin = self.get_margin_coin()
+        self.add_trade(message=msg,
+                       initialNet=initialNet,
+                       finalNet=finalNet,
+                       price=self.currentPrice,
+                       force=force,
+                       orderID=order['clientOrderId'])
 
         try:
-            initialNet = self.get_net()
-            if self.isolated:
-                order = self.binanceClient.repay_margin_loan(
-                    asset=self.coinName,
-                    amount=self.coin,
-                    isIsolated=self.isolated,
-                    symbol=self.symbol
-                )
-            else:
-                order = self.binanceClient.repay_margin_loan(
-                    asset=self.coinName,
-                    amount=self.coin
-                )
-            finalNet = self.get_net()
-            self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
+            self.repay_margin_loan(force=force)
         except BinanceAPIException as e:
             print(e)
             self.output_message(f"Repaying Failed because of {e}.")
@@ -391,14 +435,7 @@ class RealTrader(SimulationTrader):
         self.currentPrice = self.dataView.get_current_price()
         max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
         try:
-            initialNet = self.get_net()
-            if self.isolated:
-                order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow,
-                                                              isIsolated=self.isolated, symbol=self.symbol)
-            else:
-                order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow)
-            finalNet = self.get_net()
-            self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
+            self.create_margin_loan(amount=max_borrow, force=force)
         except BinanceAPIException as e:
             print(f"Borrowing failed because {e}")
             self.output_message(f'Borrowing failed because {e}')
@@ -425,4 +462,3 @@ class RealTrader(SimulationTrader):
                        price=self.currentPrice,
                        force=force,
                        orderID=order['clientOrderId'])
-
