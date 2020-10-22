@@ -111,7 +111,7 @@ class Interface(QMainWindow):
                     trader.main_logic()
 
                 if lowerCrossPosition != trader.get_position():
-                    if trader.check_cross_v2(dataObject=self.lowerIntervalData):
+                    if trader.check_cross(dataObject=self.lowerIntervalData):
                         lowerCrossPosition = trader.get_position()
                         self.add_to_simulation_activity_monitor('Lower interval cross detected.')
 
@@ -167,7 +167,7 @@ class Interface(QMainWindow):
                     self.trader.main_logic()
 
                 if lowerCrossPosition != self.trader.get_position():
-                    if self.trader.check_cross_v2(dataObject=self.lowerIntervalData):
+                    if self.trader.check_cross(dataObject=self.lowerIntervalData):
                         lowerCrossPosition = self.trader.get_position()
                         self.timestamp_message('Lower interval cross detected.')
 

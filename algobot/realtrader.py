@@ -77,7 +77,7 @@ class RealTrader(SimulatedTrader):
                 self.buy_short(f'Bought short because of stop loss.')
                 self.waitToEnterShort = True
 
-            if self.check_cross_v2():
+            if self.check_cross():
                 self.buy_short(f'Bought short because a cross was detected.')
                 self.buy_long(f'Bought long because a cross was detected.')
 
@@ -86,12 +86,12 @@ class RealTrader(SimulatedTrader):
                 self.sell_long(f'Sold long because of stop loss.')
                 self.waitToEnterLong = True
 
-            if self.check_cross_v2():
+            if self.check_cross():
                 self.sell_long(f'Sold long because a cross was detected.')
                 self.sell_short('Sold short because a cross was detected.')
 
         else:  # This means we are in neither position
-            if self.check_cross_v2():
+            if self.check_cross():
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
                     self.buy_long("Bought long because a cross was detected.")
                 else:
