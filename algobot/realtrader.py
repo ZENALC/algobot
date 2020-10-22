@@ -1,10 +1,11 @@
 import math
 from enums import *
-from datetime import datetime
 from simulationtrader import SimulationTrader
 from binance.client import Client
 from binance.enums import *
 from binance.exceptions import BinanceAPIException
+
+
 # from helpers import *
 
 
@@ -31,20 +32,50 @@ class RealTrader(SimulationTrader):
         if not self.has_enough_money():
             raise ValueError(f"You only have ${self.netWorth}. Please make sure you have at least $10 in your account.")
 
-    def has_enough_money(self):
-        if self.netWorth < 10:
-            return False
-        return True
+    def transfer_spot_to_margin(self):
+        """
+        Transfer assets from spot account to margin account.
+        """
+        order = self.binanceClient.transfer_spot_to_margin(asset=self.coinName, amount=self.get_spot_coin())
+        self.add_trade(message='Transferred from spot to margin',
+                       initialNet=self.get_net(),
+                       finalNet=self.get_net(),
+                       price=self.currentPrice,
+                       force=False,
+                       orderID=order['clientOrderId'])
 
-    def is_isolated(self):
+    def transfer_margin_to_spot(self):
+        """
+        Transfers assets from margin account to spot account.
+        """
+        order = self.binanceClient.transfer_margin_to_spot(asset=self.coinName, amount=self.get_margin_coin())
+        self.add_trade(message='Transferred from margin to spot',
+                       initialNet=self.get_net(),
+                       finalNet=self.get_net(),
+                       price=self.currentPrice,
+                       force=False,
+                       orderID=order['clientOrderId'])
+
+    def has_enough_money(self) -> bool:
+        """
+        Live trading requires at least $10. This function checks if our net balance is over or equal to $10.
+        :return: Boolean whether we have at least $10.
+        """
+        return self.get_net() >= 10
+
+    def is_isolated(self) -> bool:
+        """
+        Checks whether the coin we are trying to trade is isolated or not.
+        :return: A boolean whether it is isolated or not.
+        """
         try:  # Attempt to get coin from regular cross margin account.
             assets = self.binanceClient.get_margin_account()['userAssets']
-            coin = [asset for asset in assets if asset['asset'] == self.coinName][0]
+            _ = [asset for asset in assets if asset['asset'] == self.coinName][0]
             return False
-        except IndexError:
+        except IndexError:  # If not found, it most likely means it is not in the cross margin account.
             return True
 
-    def get_starting_balance(self):
+    def get_starting_balance(self) -> float:
         """
         Returns the initial starting balance for bot.
         :return: initial starting balance for bot
@@ -55,25 +86,30 @@ class RealTrader(SimulationTrader):
         return usdt
 
     @staticmethod
-    def round_down(num, digits=6):
+    def round_down(num: int, digits: int = 6) -> float:
+        """
+        Rounds down number for trading purposes.
+        :param num: Number to be rounded down.
+        :param digits: Number of digits to leave for rounding.
+        :return: Rounded down number.
+        """
         factor = 10.0 ** digits
         return math.floor(float(num) * factor) / factor
 
     def check_initial_position(self):
+        """
+        Checks initial position to check if bot is in a long, short, or neither position.
+        """
         self.currentPrice = self.dataView.get_current_price()
         if self.get_margin_coin() * self.currentPrice >= 10:
             self.currentPosition = LONG
-            self.currentPrice = self.dataView.get_current_price()
             self.buyLongPrice = self.currentPrice
             self.longTrailingPrice = self.buyLongPrice
-            self.add_trade('Was in long position from start of bot.')
 
         elif self.get_borrowed_margin_coin() * self.currentPrice >= 10:
             self.currentPosition = SHORT
-            self.currentPrice = self.dataView.get_current_price()
             self.sellShortPrice = self.currentPrice
             self.shortTrailingPrice = self.sellShortPrice
-            self.add_trade('Was in short position from start of bot.')
 
     def get(self, target):
         assets = self.binanceClient.get_margin_account()['userAssets']
@@ -110,14 +146,6 @@ class RealTrader(SimulationTrader):
     def initial_transfer(self):
         self.spot_buy_long()
         self.transfer_spot_to_margin()
-
-    def transfer_spot_to_margin(self):
-        order = self.binanceClient.transfer_spot_to_margin(asset=self.coinName, amount=self.get_spot_coin())
-        self.add_trade('Transferred from spot to margin', order=order)
-
-    def transfer_margin_to_spot(self):
-        order = self.binanceClient.transfer_margin_to_spot(asset=self.coinName, amount=self.get_margin_coin())
-        self.add_trade('Transferred from margin to spot', order=order)
 
     def get_isolated_margin_account(self, **params):
         return self.binanceClient._request_margin_api('get', 'margin/isolated/account', True, data=params)
@@ -167,9 +195,10 @@ class RealTrader(SimulationTrader):
         coin = self.get_margin_coin_info()
         return self.round_down(float(coin['interest']))
 
-    def buy_long(self, msg, usd=None):
+    def buy_long(self, msg, usd=None, force=False):
         self.balance = self.get_margin_usdt()
         self.currentPrice = self.dataView.get_current_price()
+        initialNet = self.get_net()
         max_buy = self.round_down(self.balance / self.currentPrice)
 
         order = self.binanceClient.create_margin_order(
@@ -180,16 +209,18 @@ class RealTrader(SimulationTrader):
             isIsolated=self.isolated
         )
 
-        self.add_trade(msg, order=order)
+        finalNet = self.get_net()
+        self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
         self.coin = self.get_margin_coin()
         self.coinOwed = self.get_borrowed_margin_coin()
         self.balance = self.get_margin_usdt()
-        self.inLongPosition = True
+        self.currentPosition = LONG
         self.buyLongPrice = self.currentPrice
         self.longTrailingPrice = self.currentPrice
         self.output_message(msg)
 
-    def sell_long(self, msg, coin=None):
+    def sell_long(self, msg, coin=None, force=False):
+        initialNet = self.get_net()
         order = self.binanceClient.create_margin_order(
             symbol=self.symbol,
             side=SIDE_SELL,
@@ -197,32 +228,36 @@ class RealTrader(SimulationTrader):
             quantity=self.get_margin_coin(),
             isIsolated=self.isolated
         )
+        finalNet = self.get_net()
 
-        self.add_trade(msg, order=order)
+        self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
         self.coin = self.get_margin_coin()
         self.coinOwed = self.get_borrowed_margin_coin()
         self.balance = self.get_margin_usdt()
-        self.inLongPosition = False
+        self.currentPosition = None
         self.previousPosition = LONG
         self.buyLongPrice = None
         self.longTrailingPrice = None
         self.output_message(msg)
 
-    def sell_short(self, msg, coin=None):
+    def sell_short(self, msg, coin=None, force=False):
         self.balance = self.get_margin_usdt()
         self.currentPrice = self.dataView.get_current_price()
         max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
         try:
+            initialNet = self.get_net()
             if self.isolated:
                 order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow,
                                                               isIsolated=self.isolated, symbol=self.symbol)
             else:
                 order = self.binanceClient.create_margin_loan(asset=self.coinName, amount=max_borrow)
-            self.add_trade(f'Borrowed {self.coinName}.', order=order)
+            finalNet = self.get_net()
+            self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
         except BinanceAPIException as e:
             print(f"Borrowing failed because {e}")
             self.output_message(f'Borrowing failed because {e}')
 
+        initialNet = self.get_net()
         order = self.binanceClient.create_margin_order(
             side=SIDE_SELL,
             symbol=self.symbol,
@@ -230,20 +265,20 @@ class RealTrader(SimulationTrader):
             quantity=self.round_down(self.get_margin_coin()),
             isIsolated=self.isolated
         )
-
-        self.add_trade(msg, order=order)
+        finalNet = self.get_net()
+        self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
         self.balance = self.get_margin_usdt()
         self.coinOwed = self.get_borrowed_margin_coin()
         self.coin = self.get_margin_coin()
-        self.inShortPosition = True
+        self.currentPosition = SHORT
         self.sellShortPrice = self.currentPrice
         self.shortTrailingPrice = self.currentPrice
         self.output_message(msg)
 
-    def buy_short(self, msg, coin=None):
+    def buy_short(self, msg, coin=None, force=False):
         self.coinOwed = self.get_borrowed_margin_coin()
         difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
-
+        initialNet = self.get_net()
         order = self.binanceClient.create_margin_order(
             symbol=self.symbol,
             side=SIDE_BUY,
@@ -251,7 +286,8 @@ class RealTrader(SimulationTrader):
             quantity=self.round_down(difference),
             isIsolated=self.isolated
         )
-        self.add_trade(f'Bought {self.coinName} to repay loan', order=order)
+        finalNet = self.get_net()
+        self.add_trade(msg, initialNet, finalNet, self.currentPrice, force=force, orderID=order['clientOrderId'])
         self.coin = self.get_margin_coin()
 
         try:
@@ -275,7 +311,7 @@ class RealTrader(SimulationTrader):
         self.coinOwed = self.get_borrowed_margin_coin()
         self.coin = self.get_margin_coin()
         self.balance = self.get_margin_usdt()
-        self.inShortPosition = False
+        self.currentPosition = None
         self.previousPosition = SHORT
         self.output_message(msg)
         self.sellShortPrice = None
