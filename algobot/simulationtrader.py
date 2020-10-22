@@ -210,7 +210,9 @@ class SimulatedTrader:
 
         balance = self.balance
         balance += self.currentPrice * self.coin
-        balance += self.coinOwed * (self.sellShortPrice - self.currentPrice)
+
+        if self.sellShortPrice is not None:
+            balance += self.coinOwed * (self.sellShortPrice - self.currentPrice)
         return balance - self.startingBalance
 
     @staticmethod
@@ -354,6 +356,9 @@ class SimulatedTrader:
         """
         Outputs general information about status of bot when not in a position.
         """
+        if self.currentPosition is not None:
+            return
+
         if not self.inHumanControl:
             self.output_message(f'\nCurrently not a in short or long position. Waiting for next cross.')
         else:
@@ -363,6 +368,9 @@ class SimulatedTrader:
         """
         Outputs general information about status of trade when in a short position.
         """
+        if self.currentPosition != SHORT:
+            return
+
         self.output_message(f'\nCurrently in short position.')
         if self.lossStrategy == TRAILING_LOSS:
             shortTrailingLossValue = round(self.shortTrailingPrice * (1 + self.lossPercentageDecimal), 2)
@@ -374,6 +382,9 @@ class SimulatedTrader:
         """
         Outputs general information about status of trade when in a long position.
         """
+        if self.currentPosition != LONG:
+            return
+
         self.output_message(f'\nCurrently in long position.')
         if self.lossStrategy == TRAILING_LOSS:
             longTrailingLossValue = round(self.longTrailingPrice * (1 - self.lossPercentageDecimal), 2)
