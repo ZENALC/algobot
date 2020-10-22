@@ -38,7 +38,7 @@ class Data:
         :param interval: Interval to be checked.
         """
         if not self.is_valid_interval(interval):
-            raise ValueError(f'Invalid interval {interval}')
+            raise ValueError(f'Invalid interval {interval} specified.')
             # self.output_message("Invalid interval. Using default interval of 1h.", level=4)
             # interval = '1h'
 
@@ -48,7 +48,7 @@ class Data:
         :param symbol: Symbol to be checked.
         """
         if not self.is_valid_symbol(symbol):
-            raise ValueError(f'Invalid symbol {symbol}')
+            raise ValueError(f'Invalid symbol {symbol} specified.')
             # self.output_message('Invalid symbol. Using default symbol of BTCUSDT.', level=4)
             # symbol = 'BTCUSDT'
 
@@ -94,8 +94,9 @@ class Data:
         if not os.path.exists('Databases'):
             os.mkdir('Databases')
 
+        filePath = os.path.join(os.getcwd(), 'Databases', f'{self.symbol}.db')
         os.chdir(currentPath)
-        return os.path.join(os.getcwd(), 'Databases', f'{self.symbol}.db')
+        return filePath
 
     def create_table(self):
         """
