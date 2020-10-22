@@ -41,9 +41,10 @@ class SimulatedTrader:
         self.previousPosition = None  # Previous position to validate for a cross.
 
     @staticmethod
-    def output_message(message: str, level: int = 2):
+    def output_message(message: str, level: int = 2, printMessage: bool = True):
         """Prints out and logs message"""
-        # print(message)
+        if printMessage:
+            print(message)
         if level == 2:
             logging.info(message)
         elif level == 3:
@@ -90,7 +91,7 @@ class SimulatedTrader:
             usd = self.balance
 
         if usd <= 0:
-            raise ValueError("You cannot buy with $0 or less.")
+            raise ValueError(f"You cannot buy with ${usd}.")
         elif usd > self.balance:
             raise ValueError(f'You currently have ${self.balance}. You cannot invest ${usd}.')
 
@@ -116,7 +117,7 @@ class SimulatedTrader:
             coin = self.coin
 
         if coin <= 0:
-            raise ValueError(f"You cannot sell 0 or negative {self.coinName}.")
+            raise ValueError(f"You cannot sell {coin} {self.coinName}.")
         elif coin > self.coin:
             raise ValueError(f'You have {self.coin} {self.coinName}. You cannot sell {coin} {self.coinName}.')
 
@@ -146,7 +147,7 @@ class SimulatedTrader:
             coin = self.coinOwed
 
         if coin <= 0:
-            raise ValueError(f"You cannot buy 0 or less {self.coinName}.")
+            raise ValueError(f"You cannot buy {coin} {self.coinName}.")
 
         self.currentPrice = self.dataView.get_current_price()
         initialNet = self.get_net()
@@ -177,7 +178,7 @@ class SimulatedTrader:
             coin = (self.balance - transactionFee) / self.currentPrice
 
         if coin <= 0:
-            raise ValueError(f"You cannot borrow 0 or less {self.coinName}.")
+            raise ValueError(f"You cannot borrow {coin} {self.coinName}.")
 
         initialNet = self.get_net()
         self.coinOwed += coin
@@ -212,7 +213,8 @@ class SimulatedTrader:
         balance += self.currentPrice * self.coin
 
         if self.sellShortPrice is not None:
-            balance += self.coinOwed * (self.sellShortPrice - self.currentPrice)
+            balance -= self.coinOwed * self.currentPrice
+
         return balance - self.startingBalance
 
     @staticmethod
@@ -438,11 +440,11 @@ class SimulatedTrader:
 
         self.output_message(f'\nCurrent {self.coinName} price: ${self.dataView.get_current_price()}')
         self.output_message(f'Balance: ${round(self.balance, 2)}')
+        self.output_profit_information()
         if self.__class__.__name__ == 'SimulatedTrader':
             self.output_message(f'\nTrades conducted this simulation: {len(self.trades)}')
         else:
             self.output_message(f'\nTrades conducted in live market: {len(self.trades)}')
-        self.output_profit_information()
         self.output_message('')
 
     def get_simulation_result(self):
