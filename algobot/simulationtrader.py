@@ -93,6 +93,9 @@ class SimulationTrader:
         """
         Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
         Function also takes into account Binance's 0.1% transaction fee.
+        :param msg: Message to be used for displaying trade information.
+        :param usd: Amount used to enter long.
+        :param force: Boolean that determines whether bot executed action or human.
         """
         if usd is None:
             usd = self.balance
@@ -119,6 +122,9 @@ class SimulationTrader:
         """
         Sells specified amount of coin at current market price. If not specified, assumes bot sells all coin.
         Function also takes into account Binance's 0.1% transaction fee.
+        :param msg: Message to be used for displaying trade information.
+        :param coin: Coin amount to sell to exit long.
+        :param force: Boolean that determines whether bot executed action or human.
         """
         if coin is None:
             coin = self.coin

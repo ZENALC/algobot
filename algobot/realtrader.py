@@ -261,6 +261,12 @@ class RealTrader(SimulationTrader):
         return self.round_down(float(coin['interest']))
 
     def buy_long(self, msg, usd=None, force=False):
+        """
+        Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
+        :param msg: Message to be used for displaying trade information.
+        :param usd: Amount used to enter long.
+        :param force: Boolean that determines whether bot executed action or human.
+        """
         self.balance = self.get_margin_usdt()
         self.currentPrice = self.dataView.get_current_price()
         initialNet = self.get_net()
@@ -290,6 +296,12 @@ class RealTrader(SimulationTrader):
                        orderID=order['clientOrderId'])
 
     def sell_long(self, msg, coin=None, force=False):
+        """
+        Sells specified amount of coin at current market price. If not specified, assumes bot sells all coin.
+        :param msg: Message to be used for displaying trade information.
+        :param coin: Coin amount to sell to exit long.
+        :param force: Boolean that determines whether bot executed action or human.
+        """
         initialNet = self.get_net()
         order = self.binanceClient.create_margin_order(
             symbol=self.symbol,
