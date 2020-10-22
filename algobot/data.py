@@ -15,37 +15,47 @@ class Data:
         :param: loadData: Boolean for whether data will be loaded or not.
         """
         self.binanceClient = Client()  # Initialize Binance client
-        if not self.is_valid_interval(interval):
-            self.output_message("Invalid interval. Using default interval of 1h.", level=4)
-            interval = '1h'
-
+        self.validate_interval(interval)
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
 
-        if not self.is_valid_symbol(symbol):
-            self.output_message('Invalid symbol. Using default symbol of BTCUSDT.', level=4)
-            symbol = 'BTCUSDT'
-
+        self.validate_symbol(symbol)
         self.symbol = symbol
         self.data = []
         self.ema_data = {}
 
-        currentPath = os.getcwd()
-        os.chdir('../')
-        if not os.path.exists('Databases'):
-            os.mkdir('Databases')
-
-        self.databaseFile = os.path.join(os.getcwd(), 'Databases', f'{self.symbol}.db')
         self.databaseTable = f'data_{self.interval}'
-        os.chdir(currentPath)
-
+        self.databaseFile = self.get_database_file()
         self.create_table()
 
         if loadData:
             # Create, initialize, store, and get values from database.
             self.load_data()
 
+    def validate_interval(self, interval):
+        """
+        Validates interval. If incorrect interval, raises ValueError.
+        :param interval: Interval to be checked.
+        """
+        if not self.is_valid_interval(interval):
+            raise ValueError(f'Invalid interval {interval}')
+            # self.output_message("Invalid interval. Using default interval of 1h.", level=4)
+            # interval = '1h'
+
+    def validate_symbol(self, symbol):
+        """
+        Validates symbol for data to be retrieved. Raises ValueError if symbol type is incorrect.
+        :param symbol: Symbol to be checked.
+        """
+        if not self.is_valid_symbol(symbol):
+            raise ValueError(f'Invalid symbol {symbol}')
+            # self.output_message('Invalid symbol. Using default symbol of BTCUSDT.', level=4)
+            # symbol = 'BTCUSDT'
+
     def load_data(self):
+        """
+        Loads data to Data object.
+        """
         self.get_data_from_database()
         if not self.database_is_updated():
             self.output_message("Updating data...")
@@ -54,9 +64,17 @@ class Data:
             self.output_message("Database is up-to-date.")
 
     @staticmethod
-    def output_message(message, level=2):
-        """Prints out and logs message"""
-        # print(message)
+    def output_message(message, level=2, printMessage=False):
+        """
+        I need to research the logging module better, but in essence, this function just logs and optionally prints
+        message provided.
+        :param message: Messaged to be logged and potentially printed.
+        :param level: Level message will be logged at.
+        :param printMessage: Boolean that decides whether message will also be printed or not.
+        """
+        if printMessage:
+            print(message)
+
         if level == 2:
             logging.info(message)
         elif level == 3:
@@ -65,6 +83,19 @@ class Data:
             logging.warning(message)
         elif level == 5:
             logging.critical(message)
+
+    def get_database_file(self):
+        """
+        Retrieves database file path.
+        :return: Database file path.
+        """
+        currentPath = os.getcwd()
+        os.chdir('../')
+        if not os.path.exists('Databases'):
+            os.mkdir('Databases')
+
+        os.chdir(currentPath)
+        return os.path.join(os.getcwd(), 'Databases', f'{self.symbol}.db')
 
     def create_table(self):
         """
@@ -261,8 +292,8 @@ class Data:
                                      'close': float(currentData[4])}
             return currentDataDictionary
         except Exception as e:
-            self.output_message(f"Error: {e}. Retrying in 2 seconds...", 4)
-            time.sleep(2)
+            self.output_message(f"Error: {e}. Retrying in 5 seconds...", 4)
+            time.sleep(5)
             return self.get_current_data()
 
     def get_current_price(self):
@@ -301,73 +332,52 @@ class Data:
             self.output_message("Invalid interval.", 4)
             return None
 
-    def get_current_interval_csv_data(self):
-        """
-        Creates a new CSV file with current interval.
-        """
-        self.load_data()
+    @staticmethod
+    def write_csv_data(totalData, fileName):
         folderName = 'CSV'
-        fileName = f'{self.symbol}_data_{self.interval}.csv'
         currentPath = os.getcwd()
         os.chdir('../')
 
-        try:
+        if not os.path.exists(folderName):
             os.mkdir(folderName)
-        except OSError:
-            pass
-        finally:
-            os.chdir(folderName)
+
+        os.chdir(folderName)
 
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close\n")
-            for data in self.data:
+            for data in totalData:
                 parsedDate = data['date'].strftime("%m/%d/%Y %I:%M %p")
                 f.write(f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}\n')
 
         path = os.path.join(os.getcwd(), fileName)
-        self.output_message(f'Data saved to {path}.')
         os.chdir(currentPath)
 
         return path
 
-    def get_csv_data(self, interval, descending=True):
+    def get_csv_file(self, descending=True):
+        """
+        Creates a new CSV file with current interval.
+        """
+        self.load_data()  # Update data if updates exist.
+        fileName = f'{self.symbol}_data_{self.interval}.csv'
+        if descending:
+            path = self.write_csv_data(self.data, fileName=fileName)
+        else:
+            path = self.write_csv_data(self.data[::-1], fileName=fileName)
+
+        self.output_message(f'Data saved to {path}.')
+        return path
+
+    @staticmethod
+    def get_custom_csv_data(symbol, interval, descending=True):
         """
         Creates a new CSV file with interval specified.
-        :param descending: Returns data in specified sort. If descending, writes data from most recent to oldest data.
+        :param symbol: Symbol to get data for.
         :param interval: Interval to get data for.
+        :param descending: Returns data in specified sort. If descending, writes data from most recent to oldest data.
         """
-        if not self.is_valid_interval(interval):
-            return
-        timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, interval)
-        self.output_message("Downloading all available historical data. This may take a while...")
-        newData = self.binanceClient.get_historical_klines(self.symbol, interval, timestamp, limit=1000)
-        if not descending:
-            newData = newData[::-1]
-        self.output_message("Downloaded all data successfully.")
-
-        folderName = 'CSV'
-        fileName = f'{self.symbol}_data_{interval}.csv'
-        currentPath = os.getcwd()
-        os.chdir('../')
-
-        try:
-            os.mkdir(folderName)
-        except OSError:
-            pass
-        finally:
-            os.chdir(folderName)
-
-        with open(fileName, 'w') as f:
-            f.write("Date_UTC, Open, High, Low, Close\n")
-            for data in newData:
-                parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc).strftime("%m/%d/%Y %H:%M")
-                f.write(f'{parsedDate}, {data[1]}, {data[2]}, {data[3]}, {data[4]}\n')
-
-        path = os.path.join(os.getcwd(), fileName)
-        self.output_message(f'Data saved to {path}.')
-        os.chdir(currentPath)
-
-        return path
+        tempData = Data(interval=interval, symbol=symbol)
+        return tempData.get_csv_file(descending=descending)
 
     def is_valid_interval(self, interval):
         """

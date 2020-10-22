@@ -58,6 +58,7 @@ class Interface(QMainWindow):
         self.trader = None
         self.simulationTrader = None
         self.traderType = None
+        self.simulationLowerIntervalData = None
         self.lowerIntervalData = None
         self.telegramBot = None
         self.add_to_activity_monitor('Initialized interface.')
@@ -65,7 +66,7 @@ class Interface(QMainWindow):
     def initiate_bot_thread(self, caller):
         worker = Worker(lambda: self.run_bot(caller))
         worker.signals.error.connect(self.end_bot_and_create_popup)
-        worker.signals.result.connect(lambda: print("lol"))
+        # worker.signals.result.connect(lambda: print("lol"))
         self.threadPool.start(worker)
 
     def end_bot_and_create_popup(self, msg):
@@ -291,9 +292,10 @@ class Interface(QMainWindow):
             lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
             if caller == LIVE:
                 self.add_to_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
+                self.lowerIntervalData = Data(lowerInterval)
             else:
                 self.add_to_simulation_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
-            self.lowerIntervalData = Data(lowerInterval)
+                self.simulationLowerIntervalData = Data(lowerInterval)
 
     def set_parameters(self, caller):
         if caller == LIVE:
@@ -1295,7 +1297,7 @@ class OtherCommands(QDialog):
         symbol = self.csvGenerationTicker.currentText()
         interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
         self.csvGenerationStatus.setText("Downloading data...")
-        savedPath = Data(loadData=False, interval=interval, symbol=symbol).get_current_interval_csv_data()
+        savedPath = Data(loadData=False, interval=interval, symbol=symbol).get_csv_file()
 
         # messageBox = QMessageBox()
         # messageBox.setText(f"Successfully saved CSV data to {savedPath}.")
