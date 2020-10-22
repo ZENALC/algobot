@@ -45,7 +45,7 @@ def convert_interval(interval):
     return intervals[interval]
 
 
-def load_from_csv(path, ):
+def load_from_csv(path):
     with open(path) as f:
         data = []
         readLines = f.readlines()
