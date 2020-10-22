@@ -9,7 +9,7 @@ from binance.client import Client
 
 
 class Data:
-    def __init__(self, interval='1h', symbol='BTCUSDT', loadData=True):
+    def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True):
         """
         Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
         :param interval: Interval for which the data object will track prices.
@@ -34,7 +34,7 @@ class Data:
             # Create, initialize, store, and get values from database.
             self.load_data()
 
-    def validate_interval(self, interval):
+    def validate_interval(self, interval: str):
         """
         Validates interval. If incorrect interval, raises ValueError.
         :param interval: Interval to be checked.
@@ -44,7 +44,7 @@ class Data:
             # self.output_message("Invalid interval. Using default interval of 1h.", level=4)
             # interval = '1h'
 
-    def validate_symbol(self, symbol):
+    def validate_symbol(self, symbol: str):
         """
         Validates symbol for data to be retrieved. Raises ValueError if symbol type is incorrect.
         :param symbol: Symbol to be checked.
@@ -66,7 +66,7 @@ class Data:
             self.output_message("Database is up-to-date.")
 
     @staticmethod
-    def output_message(message, level=2, printMessage=False):
+    def output_message(message: str, level=2, printMessage: bool = False):
         """
         I need to research the logging module better, but in essence, this function just logs and optionally prints
         message provided.
@@ -86,7 +86,7 @@ class Data:
         elif level == 5:
             logging.critical(message)
 
-    def get_database_file(self):
+    def get_database_file(self) -> str:
         """
         Retrieves database file path.
         :return: Database file path.
@@ -178,7 +178,7 @@ class Data:
                               'close': float(row[4]),
                               })
 
-    def database_is_updated(self):
+    def database_is_updated(self) -> bool:
         """
         Checks if data is updated or not with database by interval provided in accordance to UTC time.
         :return: A boolean whether data is updated or not.
@@ -213,7 +213,7 @@ class Data:
         else:
             self.output_message("Database is up-to-date.")
 
-    def get_new_data(self, timestamp, limit=1000):
+    def get_new_data(self, timestamp, limit: int = 1000):
         """
         Returns new data from Binance API from timestamp specified.
         :param timestamp: Initial timestamp.
@@ -223,7 +223,7 @@ class Data:
         newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
         return newData[:-1]  # Up to -1st index, because we don't want current period data.
 
-    def is_latest_date(self, latestDate):
+    def is_latest_date(self, latestDate) -> bool:
         """
         Checks whether the latest date available is the latest period available.
         :param latestDate: Datetime object.
@@ -232,7 +232,7 @@ class Data:
         minutes = self.get_interval_minutes()
         return latestDate + timedelta(minutes=minutes) >= datetime.now(timezone.utc) - timedelta(minutes=minutes)
 
-    def data_is_updated(self):
+    def data_is_updated(self) -> bool:
         """
         Checks whether data is fully updated or not.
         :return: A boolean whether data is updated or not with Binance values.
@@ -269,7 +269,7 @@ class Data:
         else:
             self.output_message("Data is up-to-date.")
 
-    def get_current_data(self):
+    def get_current_data(self) -> dict:
         """
         Retrieves current market dictionary with open, high, low, close prices.
         :return: A dictionary with current open, high, low, and close prices.
@@ -299,7 +299,7 @@ class Data:
             time.sleep(5)
             return self.get_current_data()
 
-    def get_current_price(self):
+    def get_current_price(self) -> float:
         """
         Returns the current market ticker price.
         :return: Ticker market price
@@ -311,7 +311,7 @@ class Data:
             time.sleep(5)
             self.get_current_price()
 
-    def get_interval_unit_and_measurement(self):
+    def get_interval_unit_and_measurement(self) -> tuple:
         """
         Returns interval unit and measurement.
         :return: A tuple with interval unit and measurement respectively.
@@ -320,7 +320,7 @@ class Data:
         measurement = int(self.interval[:-1])  # Gets the measurement, eg 12h = 12
         return unit, measurement
 
-    def get_interval_minutes(self):
+    def get_interval_minutes(self) -> int:
         """
         Returns interval minutes.
         :return: An integer representing the minutes for an interval.
@@ -332,11 +332,10 @@ class Data:
         elif self.intervalUnit == 'd':
             return self.intervalMeasurement * 24 * 60
         else:
-            self.output_message("Invalid interval.", 4)
-            return None
+            raise ValueError("Invalid interval.", 4)
 
     @staticmethod
-    def write_csv_data(totalData, fileName):
+    def write_csv_data(totalData: list, fileName: str):
         folderName = 'CSV'
         currentPath = os.getcwd()
         os.chdir('../')
@@ -357,7 +356,7 @@ class Data:
 
         return path
 
-    def get_csv_file(self, descending=True):
+    def get_csv_file(self, descending: bool = True):
         """
         Creates a new CSV file with current interval.
         """
@@ -372,7 +371,7 @@ class Data:
         return path
 
     @staticmethod
-    def get_custom_csv_data(symbol, interval, descending=True):
+    def get_custom_csv_data(symbol: str, interval: str, descending: bool = True):
         """
         Creates a new CSV file with interval specified.
         :param symbol: Symbol to get data for.
@@ -382,7 +381,7 @@ class Data:
         tempData = Data(interval=interval, symbol=symbol)
         return tempData.get_csv_file(descending=descending)
 
-    def is_valid_interval(self, interval):
+    def is_valid_interval(self, interval: str):
         """
         Returns whether interval provided is valid or not.
         :param interval: Interval argument.
@@ -396,7 +395,7 @@ class Data:
             self.output_message(f'Invalid interval. Available intervals are: \n{availableIntervals}')
             return False
 
-    def is_valid_symbol(self, symbol):
+    def is_valid_symbol(self, symbol: str):
         """
         Checks whether the symbol provided is valid or not for Binance.
         :param symbol: Symbol to be checked.
@@ -408,7 +407,7 @@ class Data:
                 return True
         return False
 
-    def is_valid_average_input(self, shift, prices, extraShift=0):
+    def is_valid_average_input(self, shift: int, prices: int, extraShift: int = 0):
         """
         Checks whether shift, prices, and (optional) extraShift are valid.
         :param shift: Periods from current period.
@@ -448,7 +447,7 @@ class Data:
         self.output_message("Data has been verified to be correct.")
         return True
 
-    def get_sma(self, prices, parameter, shift=0, round_value=True):
+    def get_sma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True) -> float:
         """
         Returns the simple moving average with run-time data and prices provided.
         :param boolean round_value: Boolean that specifies whether return value should be rounded
@@ -458,7 +457,7 @@ class Data:
         :return: SMA
         """
         if not self.is_valid_average_input(shift, prices):
-            return None
+            raise ValueError('Invalid average input specified.')
 
         data = [self.get_current_data()] + self.data  # Data is current data + all-time period data
         data = data[shift: prices + shift]  # Data now starts from shift and goes up to prices + shift
@@ -468,7 +467,7 @@ class Data:
             return round(sma, 2)
         return sma
 
-    def get_wma(self, prices, parameter, shift=0, round_value=True):
+    def get_wma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True) -> float:
         """
         Returns the weighted moving average with run-time data and prices provided.
         :param shift: Prices shifted from current period.
@@ -478,7 +477,7 @@ class Data:
         :return: WMA
         """
         if not self.is_valid_average_input(shift, prices):
-            return None
+            raise ValueError('Invalid average input specified.')
 
         data = [self.get_current_data()] + self.data
         total = data[shift][parameter] * prices  # Current total is first data period multiplied by prices.
@@ -495,7 +494,8 @@ class Data:
             return round(wma, 2)
         return wma
 
-    def get_ema(self, prices, parameter, shift=0, sma_prices=5, round_value=True):
+    def get_ema(self, prices: int, parameter: str, shift: int = 0, sma_prices: int = 5,
+                round_value: bool = True) -> float:
         """
         Returns the exponential moving average with data provided.
         :param shift: Prices shifted from current period.
@@ -506,10 +506,9 @@ class Data:
         :return: EMA
         """
         if not self.is_valid_average_input(shift, prices, sma_prices):
-            return None
+            raise ValueError('Invalid average input specified.')
         elif sma_prices <= 0:
-            self.output_message("Initial amount of SMA values for initial EMA must be greater than 0.")
-            return None
+            raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
 
         data = [self.get_current_data()] + self.data
         sma_shift = len(data) - sma_prices

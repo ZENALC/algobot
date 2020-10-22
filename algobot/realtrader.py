@@ -1,17 +1,17 @@
 import math
 from enums import *
+from datetime import datetime
 from simulationtrader import SimulationTrader
 from binance.client import Client
 from binance.enums import *
 from binance.exceptions import BinanceAPIException
-from helpers import *
+# from helpers import *
 
 
 class RealTrader(SimulationTrader):
     def __init__(self, apiKey, apiSecret, interval='1h', symbol='BTCUSDT'):
         if apiKey is None or apiSecret is None:
-            self.output_message('API details incorrect.', 5)
-            return
+            raise ValueError('API credentials not provided.')
 
         super().__init__(interval=interval, symbol=symbol)
         self.binanceClient = Client(apiKey, apiSecret)
@@ -59,55 +59,17 @@ class RealTrader(SimulationTrader):
         factor = 10.0 ** digits
         return math.floor(float(num) * factor) / factor
 
-    def add_trade(self, message, order=None):
-        """
-        Adds a trade to list of trades
-        :param order: Optional order from Binance API.
-        :param message: Message used for conducting trade.
-        """
-        self.trades.append({
-            'date': datetime.utcnow(),
-            'action': message,
-            'order': order
-        })
-
-    def main_logic(self):
-        if self.inShortPosition:  # This means we are in short position
-            if self.currentPrice > self.get_stop_loss():  # If current price is greater, then exit trade.
-                self.buy_short(f'Bought short because of stop loss.')
-                self.waitToEnterShort = True
-
-            if self.check_cross():
-                self.buy_short(f'Bought short because a cross was detected.')
-                self.buy_long(f'Bought long because a cross was detected.')
-
-        elif self.inLongPosition:  # This means we are in long position
-            if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
-                self.sell_long(f'Sold long because of stop loss.')
-                self.waitToEnterLong = True
-
-            if self.check_cross():
-                self.sell_long(f'Sold long because a cross was detected.')
-                self.sell_short('Sold short because a cross was detected.')
-
-        else:  # This means we are in neither position
-            if self.check_cross():
-                if self.trend == BULLISH:  # This checks if we are bullish or bearish
-                    self.buy_long("Bought long because a cross was detected.")
-                else:
-                    self.sell_short("Sold short because a cross was detected.")
-
     def check_initial_position(self):
         self.currentPrice = self.dataView.get_current_price()
         if self.get_margin_coin() * self.currentPrice >= 10:
-            self.inLongPosition = True
+            self.currentPosition = LONG
             self.currentPrice = self.dataView.get_current_price()
             self.buyLongPrice = self.currentPrice
             self.longTrailingPrice = self.buyLongPrice
             self.add_trade('Was in long position from start of bot.')
 
         elif self.get_borrowed_margin_coin() * self.currentPrice >= 10:
-            self.inShortPosition = True
+            self.currentPosition = SHORT
             self.currentPrice = self.dataView.get_current_price()
             self.sellShortPrice = self.currentPrice
             self.shortTrailingPrice = self.sellShortPrice

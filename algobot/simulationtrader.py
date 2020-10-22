@@ -8,6 +8,13 @@ from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
 class SimulationTrader:
     def __init__(self, startingBalance: float = 1000, interval: str = '1h', symbol: str = 'BTCUSDT',
                  loadData: bool = True):
+        """
+        SimulationTrader object that will mimic real live market trades.
+        :param startingBalance: Balance to start simulation trader with.
+        :param interval: Interval to start trading on.
+        :param symbol: Symbol to start trading with.
+        :param loadData: Boolean whether we load data from data object or not.
+        """
         self.dataView = Data(interval=interval, symbol=symbol, loadData=loadData)  # Retrieve data-view object.
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
