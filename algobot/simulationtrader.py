@@ -197,6 +197,34 @@ class SimulationTrader:
         self.add_trade(msg, force=force, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice)
         self.output_message(msg)
 
+    def main_logic(self):
+        """
+        Main bot logic will use to trade.
+        If there is a trend and the previous position did not reflect the trend, the bot enters position.
+        """
+        if self.currentPosition == SHORT:  # This means we are in short position
+            if self.currentPrice > self.get_stop_loss():  # If current price is greater, then exit trade.
+                self.buy_short(f'Bought short because of stop loss.')
+
+            if self.check_cross():
+                self.buy_short(f'Bought short because a cross was detected.')
+                self.buy_long(f'Bought long because a cross was detected.')
+
+        elif self.currentPosition == LONG:  # This means we are in long position
+            if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
+                self.sell_long(f'Sold long because of stop loss.')
+
+            if self.check_cross():
+                self.sell_long(f'Sold long because a cross was detected.')
+                self.sell_short('Sold short because a cross was detected.')
+
+        else:  # This means we are in neither position
+            if self.check_cross():  # before i get confused again, this function handles stop loss edge cases too
+                if self.trend == BULLISH:  # This checks if we are bullish or bearish
+                    self.buy_long("Bought long because a cross was detected.")
+                else:
+                    self.sell_short("Sold short because a cross was detected.")
+
     def get_net(self) -> float:
         """
         Returns net balance with current price of coin being traded. It factors in the current balance, the amount
@@ -484,31 +512,3 @@ class SimulationTrader:
         for counter, trade in enumerate(self.trades, 1):
             self.output_message(f'\n{counter}. Date in UTC: {trade["date"]}')
             self.output_message(f'\nAction taken: {trade["action"]}')
-
-    def main_logic(self):
-        """
-        Main bot logic will use to trade.
-        If there is a trend and the previous position did not reflect the trend, the bot enters position.
-        """
-        if self.currentPosition == SHORT:  # This means we are in short position
-            if self.currentPrice > self.get_stop_loss():  # If current price is greater, then exit trade.
-                self.buy_short(f'Bought short because of stop loss.')
-
-            if self.check_cross():
-                self.buy_short(f'Bought short because a cross was detected.')
-                self.buy_long(f'Bought long because a cross was detected.')
-
-        elif self.currentPosition == LONG:  # This means we are in long position
-            if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
-                self.sell_long(f'Sold long because of stop loss.')
-
-            if self.check_cross():
-                self.sell_long(f'Sold long because a cross was detected.')
-                self.sell_short('Sold short because a cross was detected.')
-
-        else:  # This means we are in neither position
-            if self.check_cross():  # before i get confused again, this function handles stop loss edge cases too
-                if self.trend == BULLISH:  # This checks if we are bullish or bearish
-                    self.buy_long("Bought long because a cross was detected.")
-                else:
-                    self.sell_short("Sold short because a cross was detected.")

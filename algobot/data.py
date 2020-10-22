@@ -240,7 +240,7 @@ class Data:
         latestDate = self.data[0]['date']
         return self.is_latest_date(latestDate)
 
-    def insert_data(self, newData):
+    def insert_data(self, newData: list):
         """
         Inserts data from newData to run-time data.
         :param newData: List with new data values.
@@ -335,7 +335,13 @@ class Data:
             raise ValueError("Invalid interval.", 4)
 
     @staticmethod
-    def write_csv_data(totalData: list, fileName: str):
+    def write_csv_data(totalData: list, fileName: str) -> str:
+        """
+        Writes CSV data to CSV folder in root directory of application.
+        :param totalData: Data to write to CSV file.
+        :param fileName: Filename to name CSV in.
+        :return: Absolute path to CSV file.
+        """
         folderName = 'CSV'
         currentPath = os.getcwd()
         os.chdir('../')
@@ -356,9 +362,9 @@ class Data:
 
         return path
 
-    def get_csv_file(self, descending: bool = True):
+    def get_csv_file(self, descending: bool = True) -> str:
         """
-        Creates a new CSV file with current interval.
+        Creates a new CSV file with current interval and returns the absolute path to file.
         """
         self.load_data()  # Update data if updates exist.
         fileName = f'{self.symbol}_data_{self.interval}.csv'
@@ -371,9 +377,9 @@ class Data:
         return path
 
     @staticmethod
-    def get_custom_csv_data(symbol: str, interval: str, descending: bool = True):
+    def get_custom_csv_data(symbol: str, interval: str, descending: bool = True) -> str:
         """
-        Creates a new CSV file with interval specified.
+        Creates a new CSV file with interval specified and returns the absolute path of CSV file.
         :param symbol: Symbol to get data for.
         :param interval: Interval to get data for.
         :param descending: Returns data in specified sort. If descending, writes data from most recent to oldest data.
@@ -381,7 +387,7 @@ class Data:
         tempData = Data(interval=interval, symbol=symbol)
         return tempData.get_csv_file(descending=descending)
 
-    def is_valid_interval(self, interval: str):
+    def is_valid_interval(self, interval: str) -> bool:
         """
         Returns whether interval provided is valid or not.
         :param interval: Interval argument.
@@ -395,7 +401,7 @@ class Data:
             self.output_message(f'Invalid interval. Available intervals are: \n{availableIntervals}')
             return False
 
-    def is_valid_symbol(self, symbol: str):
+    def is_valid_symbol(self, symbol: str) -> bool:
         """
         Checks whether the symbol provided is valid or not for Binance.
         :param symbol: Symbol to be checked.
@@ -407,7 +413,7 @@ class Data:
                 return True
         return False
 
-    def is_valid_average_input(self, shift: int, prices: int, extraShift: int = 0):
+    def is_valid_average_input(self, shift: int, prices: int, extraShift: int = 0) -> bool:
         """
         Checks whether shift, prices, and (optional) extraShift are valid.
         :param shift: Periods from current period.
@@ -426,7 +432,7 @@ class Data:
             return False
         return True
 
-    def verify_integrity(self):
+    def verify_integrity(self) -> bool:
         """
         Verifies integrity of data by checking if there's any repeated data.
         :return: A boolean whether the data contains no repeated data or not.
