@@ -6,8 +6,7 @@ from PyQt5.QtWidgets import QDialog
 from binance.client import Client
 from telegram.ext import Updater
 
-
-configurationUi = f'../UI{os.path.sep}configuration.ui'
+configurationUi = os.path.join('../', 'UI', 'configuration.ui')
 
 
 class Configuration(QDialog):

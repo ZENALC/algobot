@@ -15,7 +15,7 @@ class SimulationTrader:
         :param symbol: Symbol to start trading with.
         :param loadData: Boolean whether we load data from data object or not.
         """
-        self.dataView = Data(interval=interval, symbol=symbol, loadData=loadData)  # Retrieve data-view object.
+        self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData)  # Retrieve data-view object.
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
 
@@ -326,10 +326,11 @@ class SimulationTrader:
         else:  # This means we are not in any position currently.
             return None
 
-    def check_trend(self, dataObject: Data = None):
+    def get_trend(self, dataObject: Data = None):
         """
         Checks whether there is a trend or not.
         :param dataObject: Data object to be used to check if there is a trend or not.
+        :return: Integer specifying trend.
         """
         if len(self.tradingOptions) == 0:  # Checking whether options exist.
             raise ValueError("No trading options provided.")
@@ -357,9 +358,11 @@ class SimulationTrader:
                 trends.append(BEARISH)
 
         if all(trend == BULLISH for trend in trends):
-            self.trend = BULLISH
+            return BULLISH
         elif all(trend == BEARISH for trend in trends):
-            self.trend = BEARISH
+            return BEARISH
+        else:
+            return None
 
     def check_cross(self, dataObject: Data = None) -> bool:
         """
@@ -368,7 +371,7 @@ class SimulationTrader:
         :param dataObject: Data object to be used to check if there is a trend or not.
         :return: Boolean whether there is a cross or not.
         """
-        self.check_trend(dataObject)
+        self.trend = self.get_trend(dataObject)  # Get the trend.
         if self.trend == BULLISH:  # If the sign is bullish; meaning enter long.
             if self.currentPosition == LONG:  # We are already in a long position.
                 return False

@@ -1,3 +1,4 @@
+import assets
 import sys
 import helpers
 import os
@@ -5,17 +6,17 @@ import os
 from data import Data
 from datetime import datetime
 from threadWorkers import Worker
-from palettes import *
+from interface.palettes import *
 from telegramBot import TelegramBot
 from telegram.error import InvalidToken
 from realtrader import RealTrader
 from simulationtrader import SimulationTrader
 from option import Option
 from enums import *
-from configuration import Configuration
-from otherCommands import OtherCommands
-from about import About
-from statistics import Statistics
+from interface.configuration import Configuration
+from interface.otherCommands import OtherCommands
+from interface.about import About
+from interface.statistics import Statistics
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem
@@ -25,11 +26,12 @@ from pyqtgraph import DateAxisItem, mkPen, PlotWidget
 
 app = QApplication(sys.argv)
 
-mainUi = f'../UI{os.path.sep}algobot.ui'
+mainUi = os.path.join('../', 'UI', 'algobot.ui')
 
 
 class Interface(QMainWindow):
     def __init__(self, parent=None):
+        assets.qInitResources()
         super(Interface, self).__init__(parent)  # Initializing object
         uic.loadUi(mainUi, self)  # Loading the main UI
         self.configuration = Configuration()  # Loading configuration
@@ -52,20 +54,22 @@ class Interface(QMainWindow):
         self.runningLive = False
         self.simulationRunningLive = False
         self.backtestRunningLive = False
-        self.trader = None
-        self.simulationTrader = None
+        self.trader: RealTrader or None = None
+        self.simulationTrader: SimulationTrader or None = None
         self.traderType = None
-        self.simulationLowerIntervalData = None
-        self.lowerIntervalData = None
+        self.simulationLowerIntervalData: Data or None = None
+        self.lowerIntervalData: Data or None = None
         self.telegramBot = None
         self.add_to_activity_monitor('Initialized interface.')
 
+    # TO FIX
     def initiate_bot_thread(self, caller):
         worker = Worker(lambda: self.run_bot(caller))
         worker.signals.error.connect(self.end_bot_and_create_popup)
         # worker.signals.result.connect(lambda: print("lol"))
         self.threadPool.start(worker)
 
+    # TO FIX
     def end_bot_and_create_popup(self, msg):
         # self.disable_interface(False)
         self.endBotButton.setEnabled(False)
@@ -73,147 +77,210 @@ class Interface(QMainWindow):
         # self.timestamp_message('Ended bot because of an error.')
         self.create_popup(msg)
 
-    def automate_simulation_trading(self):
-        crossInform = False
-        lowerCrossPosition = -5
-        trader = self.simulationTrader
+    def update_data(self, caller):
+        """
+        Updates data if updated data exists for caller object.
+        :param caller: Object type that will be updated.
+        """
+        if caller == LIVE and not self.trader.dataView.data_is_updated():
+            self.add_to_activity_monitor('New data found. Updating...')
+            self.trader.dataView.update_data()
+        elif caller == SIMULATION and not self.simulationTrader.dataView.data_is_updated():
+            self.add_to_simulation_activity_monitor('New data found. Updating...')
+            self.simulationTrader.dataView.update_data()
 
+    def handle_logging(self, caller):
+        """
+        Handles logging type for caller object.
+        :param caller: Object those logging will be performed.
+        """
+        if caller == LIVE:
+            if self.advancedLogging:
+                self.trader.output_basic_information()
+        elif caller == SIMULATION:
+            if self.advancedLogging:
+                self.simulationTrader.output_basic_information()
+
+    def handle_position_buttons(self, caller):
+        """
+        Handles interface position buttons based on caller.
+        :param caller: Caller object for whose interface buttons will be affected.
+        """
+        if caller == LIVE:
+            if self.trader.get_position() is None:
+                self.exitPositionButton.setEnabled(False)
+                self.waitOverrideButton.setEnabled(False)
+            else:
+                self.exitPositionButton.setEnabled(True)
+                self.waitOverrideButton.setEnabled(True)
+
+            if self.trader.get_position() == LONG:
+                self.forceLongButton.setEnabled(False)
+                self.forceShortButton.setEnabled(True)
+
+            if self.trader.get_position() == SHORT:
+                self.forceLongButton.setEnabled(True)
+                self.forceShortButton.setEnabled(False)
+
+        elif caller == SIMULATION:
+            if self.simulationTrader.get_position() is None:
+                self.exitPositionSimulationButton.setEnabled(False)
+                self.waitOverrideSimulationButton.setEnabled(False)
+            else:
+                self.exitPositionSimulationButton.setEnabled(True)
+                self.waitOverrideSimulationButton.setEnabled(True)
+
+            if self.simulationTrader.get_position() == LONG:
+                self.forceLongSimulationButton.setEnabled(False)
+                self.forceShortSimulationButton.setEnabled(True)
+
+            if self.simulationTrader.get_position() == SHORT:
+                self.forceLongSimulationButton.setEnabled(True)
+                self.forceShortSimulationButton.setEnabled(False)
+
+    def handle_trailing_prices(self, caller):
+        """
+        Handles trailing prices for caller object.
+        :param caller: Trailing prices for what caller to be handled for.
+        """
+        if caller == SIMULATION:
+            trader = self.simulationTrader
+        elif caller == LIVE:
+            trader = self.trader
+        else:
+            raise ValueError("Invalid caller type specified.")
+
+        trader.currentPrice = trader.dataView.get_current_price()
+        if trader.longTrailingPrice is not None and trader.currentPrice > trader.longTrailingPrice:
+            trader.longTrailingPrice = trader.currentPrice
+        if trader.shortTrailingPrice is not None and trader.currentPrice < trader.shortTrailingPrice:
+            trader.shortTrailingPrice = trader.currentPrice
+
+    def handle_trading(self, caller):
+        """
+        Handles trading by checking if automation mode is on or manual.
+        :param caller: Object for which function will handle trading.
+        """
+        if caller == SIMULATION:
+            trader = self.simulationTrader
+        elif caller == LIVE:
+            trader = self.trader
+        else:
+            raise ValueError('Invalid caller type specified.')
+
+        if not trader.inHumanControl:
+            trader.main_logic()
+
+    def handle_cross_notification(self, caller, notification):
+        """
+        Handles cross notifications.
+        :param caller: Caller object for whom function will handle cross notifications/
+        :param notification: Notification boolean whether it is time to notify or not.
+        :return: Boolean whether cross should be notified on next function call.
+        """
+        if caller == SIMULATION:
+            if self.simulationTrader.currentPosition is not None:
+                return True
+            else:
+                if not notification and not self.simulationTrader.inHumanControl:
+                    self.add_to_simulation_activity_monitor("Waiting for a cross.")
+                    return False
+        elif caller == LIVE:
+            if self.trader.currentPosition is not None:
+                return True
+            else:
+                if not notification and not self.trader.inHumanControl:
+                    self.add_to_activity_monitor("Waiting for a cross.")
+                    return False
+        else:
+            raise ValueError("Invalid type of caller or cross notification specified.")
+
+    def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool:
+        """
+        Handles logic and notifications for lower interval cross data.
+        :param previousLowerTrend: Previous lower trend. Used to check if notification is necessary.
+        :param caller: Caller for which we will check lower interval cross data.
+        """
+        if caller == SIMULATION:
+            trader = self.simulationTrader
+            lowerData = self.simulationLowerIntervalData
+        elif caller == LIVE:
+            trader = self.trader
+            lowerData = self.lowerIntervalData
+        else:
+            raise ValueError("Invalid caller specified.")
+
+        lowerTrend = trader.get_trend(dataObject=lowerData)
+        trend = trader.trend
+        if previousLowerTrend == lowerTrend or lowerTrend == trend:
+            return lowerTrend
+        else:
+            trends = {BEARISH: 'Bearish', BULLISH: 'Bullish', None: 'No'}
+            if caller == LIVE:
+                self.add_to_activity_monitor(f'{trends[lowerTrend]} trend detected on lower interval data.')
+            elif caller == SIMULATION:
+                self.add_to_simulation_activity_monitor(f'{trends[lowerTrend]} trend detected on lower interval data.')
+            return lowerTrend
+
+    def handle_telegram_bot(self):
+        """
+        Attempts to initiate Telegram bot.
+        """
+        try:
+            if self.telegramBot is None:
+                apiKey = self.configuration.telegramApiKey.text()
+                self.telegramBot = TelegramBot(gui=self, apiKey=apiKey)
+            self.telegramBot.start()
+            self.add_to_activity_monitor('Started Telegram bot.')
+        except InvalidToken:
+            self.add_to_activity_monitor('Invalid token for Telegram. Please recheck credentials in settings.')
+
+    def automate_trading(self, caller):
+        """
+        Main function to automate trading.
+        :param caller: Caller object to automate trading for.
+        """
+        crossNotification = False
+        lowerTrend = None
         while self.simulationRunningLive:
             try:
-                if not self.simulationTrader.dataView.data_is_updated():
-                    self.add_to_simulation_activity_monitor("Updating data...")
-                    self.simulationTrader.dataView.update_data()
-
-                if self.simulationTrader.get_position() is not None:
-                    crossInform = False
-
-                if not crossInform and trader.get_position() is None and not trader.inHumanControl:
-                    crossInform = True
-                    self.add_to_simulation_activity_monitor("Waiting for a cross.")
-
+                self.update_data(caller=caller)
                 self.update_simulation_info()
-                self.update_trades_table_and_activity_monitor(SIMULATION)
+                self.update_trades_table_and_activity_monitor(caller=caller)
+                self.handle_logging(caller=caller)
+                self.handle_position_buttons(caller=caller)
+                self.handle_trailing_prices(caller=caller)
+                self.handle_trading(caller=caller)
+                crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)
+                lowerTrend = self.handle_lower_interval_cross(caller, lowerTrend)
 
-                if self.advancedLogging:
-                    trader.output_basic_information()
-
-                trader.currentPrice = trader.dataView.get_current_price()
-                currentPrice = trader.currentPrice
-                if trader.longTrailingPrice is not None and currentPrice > trader.longTrailingPrice:
-                    trader.longTrailingPrice = currentPrice
-                if trader.shortTrailingPrice is not None and currentPrice < trader.shortTrailingPrice:
-                    trader.shortTrailingPrice = currentPrice
-
-                if not trader.inHumanControl:
-                    trader.main_logic()
-
-                if lowerCrossPosition != trader.get_position():
-                    if trader.check_cross(dataObject=self.lowerIntervalData):
-                        lowerCrossPosition = trader.get_position()
-                        self.add_to_simulation_activity_monitor('Lower interval cross detected.')
-
-                if trader.get_position() is None:
-                    self.exitPositionSimulationButton.setEnabled(False)
-                    self.waitOverrideSimulationButton.setEnabled(False)
-                else:
-                    self.exitPositionSimulationButton.setEnabled(True)
-                    self.waitOverrideSimulationButton.setEnabled(True)
-
-                if trader.get_position() == LONG:
-                    self.forceLongSimulationButton.setEnabled(False)
-                    self.forceShortSimulationButton.setEnabled(True)
-
-                if trader.get_position() == SHORT:
-                    self.forceLongSimulationButton.setEnabled(True)
-                    self.forceShortSimulationButton.setEnabled(False)
             except Exception as e:
                 raise e
-
-    def automate_trading(self):
-        crossInform = False
-        lowerCrossPosition = -5
-
-        while self.runningLive:
-            try:
-                if not self.trader.dataView.data_is_updated():
-                    self.add_to_activity_monitor("Updating data...")
-                    self.trader.dataView.update_data()
-
-                if self.trader.get_position() is not None:
-                    crossInform = False
-
-                if not crossInform and self.trader.get_position() is None and not self.trader.inHumanControl:
-                    crossInform = True
-                    self.timestamp_message("Waiting for a cross.")
-
-                self.update_info()
-                self.update_trades_table_and_activity_monitor(LIVE)
-                # self.update_trades_to_list_view()
-
-                if self.advancedLogging:
-                    self.trader.output_basic_information()
-
-                self.trader.currentPrice = self.trader.dataView.get_current_price()
-                currentPrice = self.trader.currentPrice
-                if self.trader.longTrailingPrice is not None and currentPrice > self.trader.longTrailingPrice:
-                    self.trader.longTrailingPrice = currentPrice
-                if self.trader.shortTrailingPrice is not None and currentPrice < self.trader.shortTrailingPrice:
-                    self.trader.shortTrailingPrice = currentPrice
-
-                if not self.trader.inHumanControl:
-                    self.trader.main_logic()
-
-                if lowerCrossPosition != self.trader.get_position():
-                    if self.trader.check_cross(dataObject=self.lowerIntervalData):
-                        lowerCrossPosition = self.trader.get_position()
-                        self.timestamp_message('Lower interval cross detected.')
-
-                if self.trader.get_position() is None:
-                    self.exitPositionButton.setEnabled(False)
-                    self.waitOverrideButton.setEnabled(False)
-                else:
-                    self.exitPositionButton.setEnabled(True)
-                    self.waitOverrideButton.setEnabled(True)
-
-                if self.trader.get_position() == LONG:
-                    self.forceLongButton.setEnabled(False)
-                    self.forceShortButton.setEnabled(True)
-
-                if self.trader.get_position() == SHORT:
-                    self.forceLongButton.setEnabled(True)
-                    self.forceShortButton.setEnabled(False)
-            except Exception as e:
-                raise e
-                # self.trader.output_message(f'Error: {e}')
 
     def run_bot(self, caller):
+        """
+        Runs bot with caller specified.
+        :param caller: Type of bot to run - Simulation or LIVE.
+        """
         self.create_trader(caller)
         self.disable_interface(True, caller)
         self.set_parameters(caller)
         self.enable_override(caller)
 
-        if caller == LIVE and self.configuration.enableTelegramTrading.isChecked():
-            try:
-                if self.telegramBot is None:
-                    apiKey = self.configuration.telegramApiKey.text()
-                    self.telegramBot = TelegramBot(gui=self, apiKey=apiKey)
-                self.telegramBot.start()
-                self.add_to_activity_monitor('Starting Telegram bot.')
-            except InvalidToken:
-                self.add_to_activity_monitor('Invalid token for Telegram. Please recheck credentials in settings.')
-
         if caller == LIVE:
+            if self.configuration.enableTelegramTrading.isChecked():
+                self.handle_telegram_bot()
             self.clear_table(self.historyTable)
             self.runningLive = True
             self.setup_graph_plots(self.realGraph, self.trader, 'net')
             self.setup_graph_plots(self.avgGraph, self.trader, 'average')
-            self.automate_trading()
+            self.automate_trading(caller)
         elif caller == SIMULATION:
             self.clear_table(self.simulationHistoryTable)
             self.simulationRunningLive = True
             self.setup_graph_plots(self.simulationGraph, self.simulationTrader, 'net')
             self.setup_graph_plots(self.simulationAvgGraph, self.simulationTrader, 'average')
-            self.automate_simulation_trading()
+            self.automate_trading(caller)
 
     def end_bot(self, caller):
         if caller == SIMULATION:

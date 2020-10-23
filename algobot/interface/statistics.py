@@ -4,7 +4,7 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QDialog
 
 
-statisticsUi = f'../UI{os.path.sep}statistics.ui'
+statisticsUi = os.path.join('../', 'UI', 'statistics.ui')
 
 
 class Statistics(QDialog):

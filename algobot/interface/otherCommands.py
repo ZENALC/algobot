@@ -7,8 +7,7 @@ from PyQt5.QtWidgets import QDialog
 from threadWorkers import Worker
 from data import Data
 
-
-otherCommandsUi = f'../UI{os.path.sep}otherCommands.ui'
+otherCommandsUi = os.path.join('../', 'UI', 'otherCommands.ui')
 
 
 class OtherCommands(QDialog):
@@ -28,7 +27,7 @@ class OtherCommands(QDialog):
         self.threadPool.start(thread)
 
     def get_moving_average_miscellaneous(self):
-        self.movingAverageMiscellaneousResult.setText("haha what did you expect?")
+        self.movingAverageMiscellaneousResult.setText("Not yet implemented.")
 
     def initiate_csv_generation(self):
         thread = Worker(self.generate_csv)
