@@ -252,8 +252,7 @@ class SimulationTrader:
         Returns profit or loss.
         :return: A number representing profit if positive and loss if negative.
         """
-        if self.currentPrice is None:
-            self.currentPrice = self.dataView.get_current_price()
+        self.currentPrice = self.dataView.get_current_price()
 
         balance = self.balance
         balance += self.currentPrice * self.coin

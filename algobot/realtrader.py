@@ -4,7 +4,6 @@ from enums import *
 from simulationtrader import SimulationTrader
 from binance.client import Client
 from binance.enums import *
-from binance.exceptions import BinanceAPIException
 
 
 class RealTrader(SimulationTrader):
@@ -407,20 +406,12 @@ class RealTrader(SimulationTrader):
                        force=force,
                        orderID=order['clientOrderId'])
 
-        try:
-            self.repay_margin_loan(force=force)
-        except BinanceAPIException as e:
-            print(e)
-            self.output_message(f"Repaying Failed because of {e}.")
-
-        self.coinOwed = self.get_borrowed_margin_coin()
-        self.coin = self.get_margin_coin()
-        self.balance = self.get_margin_usdt()
+        self.repay_margin_loan(force=force)
         self.currentPosition = None
         self.previousPosition = SHORT
-        self.output_message(msg)
         self.sellShortPrice = None
         self.shortTrailingPrice = None
+        self.output_message(msg)
 
     def sell_short(self, msg, coin=None, force=False):
         """
@@ -434,11 +425,7 @@ class RealTrader(SimulationTrader):
         self.balance = self.get_margin_usdt()
         self.currentPrice = self.dataView.get_current_price()
         max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
-        try:
-            self.create_margin_loan(amount=max_borrow, force=force)
-        except BinanceAPIException as e:
-            print(f"Borrowing failed because {e}")
-            self.output_message(f'Borrowing failed because {e}')
+        self.create_margin_loan(amount=max_borrow, force=force)
 
         initialNet = self.get_net()
         order = self.binanceClient.create_margin_order(
@@ -448,9 +435,8 @@ class RealTrader(SimulationTrader):
             quantity=self.round_down(self.get_margin_coin()),
             isIsolated=self.isolated
         )
-        self.balance = self.get_margin_usdt()
-        self.coinOwed = self.get_borrowed_margin_coin()
-        self.coin = self.get_margin_coin()
+
+        self.retrieve_margin_values()
         self.currentPosition = SHORT
         self.sellShortPrice = self.currentPrice
         self.shortTrailingPrice = self.currentPrice
