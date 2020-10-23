@@ -694,6 +694,10 @@ class Interface(QMainWindow):
         trader.sell_short('Force executed short.', force=True)
 
     def pause_or_resume_bot(self, caller):
+        """
+        Pauses or resumes bot logic based on caller.
+        :param caller: Caller object that specifies which trading object will be paused or resumed.
+        """
         if caller == LIVE:
             if self.pauseBotButton.text() == 'Pause Bot':
                 self.trader.inHumanControl = True
@@ -715,62 +719,96 @@ class Interface(QMainWindow):
         else:
             raise ValueError("Invalid caller type specified.")
 
-    def get_trading_options(self, caller):
+    def get_backtest_trading_options(self):
+        """
+        Returns trading options for backtest trading configuration.
+        :return: Backtest trading options list.
+        """
+        baseAverageType = self.configuration.backtestAverageTypeComboBox.currentText()
+        baseParameter = self.configuration.backtestParameterComboBox.currentText().lower()
+        baseInitialValue = self.configuration.backtestInitialValueSpinBox.value()
+        baseFinalValue = self.configuration.backtestFinalValueSpinBox.value()
+        options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
+
+        if self.configuration.backtestDoubleCrossCheckMark.isChecked():
+            additionalAverageType = self.configuration.backtestDoubleAverageComboBox.currentText()
+            additionalParameter = self.configuration.backtestDoubleParameterComboBox.currentText().lower()
+            additionalInitialValue = self.configuration.backtestDoubleInitialValueSpinBox.value()
+            additionalFinalValue = self.configuration.backtestDoubleFinalValueSpinBox.value()
+            option = Option(additionalAverageType, additionalParameter, additionalInitialValue,
+                            additionalFinalValue)
+            options.append(option)
+
+        return options
+
+    def get_simulation_trading_options(self) -> list:
+        """
+        Returns trading options for simulation trading configuration.
+        :return: Simulation trading options list.
+        """
+        baseAverageType = self.configuration.simulationAverageTypeComboBox.currentText()
+        baseParameter = self.configuration.simulationParameterComboBox.currentText().lower()
+        baseInitialValue = self.configuration.simulationInitialValueSpinBox.value()
+        baseFinalValue = self.configuration.simulationFinalValueSpinBox.value()
+        options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
+
+        if self.configuration.simulationDoubleCrossCheckMark.isChecked():
+            additionalAverageType = self.configuration.simulationDoubleAverageComboBox.currentText()
+            additionalParameter = self.configuration.simulationDoubleParameterComboBox.currentText().lower()
+            additionalInitialValue = self.configuration.simulationDoubleInitialValueSpinBox.value()
+            additionalFinalValue = self.configuration.simulationDoubleFinalValueSpinBox.value()
+            option = Option(additionalAverageType, additionalParameter, additionalInitialValue,
+                            additionalFinalValue)
+            options.append(option)
+
+        return options
+
+    def get_live_trading_options(self) -> list:
+        """
+        Returns trading options for live trading configuration.
+        :return: Live trading options list.
+        """
+        baseAverageType = self.configuration.averageTypeComboBox.currentText()
+        baseParameter = self.configuration.parameterComboBox.currentText().lower()
+        baseInitialValue = self.configuration.initialValueSpinBox.value()
+        baseFinalValue = self.configuration.finalValueSpinBox.value()
+
+        options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
+        if self.configuration.doubleCrossCheckMark.isChecked():
+            additionalAverageType = self.configuration.doubleAverageComboBox.currentText()
+            additionalParameter = self.configuration.doubleParameterComboBox.currentText().lower()
+            additionalInitialValue = self.configuration.doubleInitialValueSpinBox.value()
+            additionalFinalValue = self.configuration.doubleFinalValueSpinBox.value()
+            option = Option(additionalAverageType, additionalParameter, additionalInitialValue,
+                            additionalFinalValue)
+            options.append(option)
+
+        return options
+
+    def get_trading_options(self, caller) -> list:
+        """
+        Returns trading options for caller specified.
+        :param caller: Caller for which trading options will be returned.
+        :return: Trading options based on caller.
+        """
         if caller == BACKTEST:
-            baseAverageType = self.configuration.backtestAverageTypeComboBox.currentText()
-            baseParameter = self.configuration.backtestParameterComboBox.currentText().lower()
-            baseInitialValue = self.configuration.backtestInitialValueSpinBox.value()
-            baseFinalValue = self.configuration.backtestFinalValueSpinBox.value()
-            options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
+            return self.get_backtest_trading_options()
 
-            if self.configuration.backtestDoubleCrossCheckMark.isChecked():
-                additionalAverageType = self.configuration.backtestDoubleAverageComboBox.currentText()
-                additionalParameter = self.configuration.backtestDoubleParameterComboBox.currentText().lower()
-                additionalInitialValue = self.configuration.backtestDoubleInitialValueSpinBox.value()
-                additionalFinalValue = self.configuration.backtestDoubleFinalValueSpinBox.value()
-                option = Option(additionalAverageType, additionalParameter, additionalInitialValue,
-                                additionalFinalValue)
-                options.append(option)
-
-            return options
         elif caller == SIMULATION:
-            baseAverageType = self.configuration.simulationAverageTypeComboBox.currentText()
-            baseParameter = self.configuration.simulationParameterComboBox.currentText().lower()
-            baseInitialValue = self.configuration.simulationInitialValueSpinBox.value()
-            baseFinalValue = self.configuration.simulationFinalValueSpinBox.value()
-            options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
+            return self.get_simulation_trading_options()
 
-            if self.configuration.simulationDoubleCrossCheckMark.isChecked():
-                additionalAverageType = self.configuration.simulationDoubleAverageComboBox.currentText()
-                additionalParameter = self.configuration.simulationDoubleParameterComboBox.currentText().lower()
-                additionalInitialValue = self.configuration.simulationDoubleInitialValueSpinBox.value()
-                additionalFinalValue = self.configuration.simulationDoubleFinalValueSpinBox.value()
-                option = Option(additionalAverageType, additionalParameter, additionalInitialValue,
-                                additionalFinalValue)
-                options.append(option)
-
-            return options
         elif caller == LIVE:
-            baseAverageType = self.configuration.averageTypeComboBox.currentText()
-            baseParameter = self.configuration.parameterComboBox.currentText().lower()
-            baseInitialValue = self.configuration.initialValueSpinBox.value()
-            baseFinalValue = self.configuration.finalValueSpinBox.value()
+            return self.get_live_trading_options()
 
-            options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
-            if self.configuration.doubleCrossCheckMark.isChecked():
-                additionalAverageType = self.configuration.doubleAverageComboBox.currentText()
-                additionalParameter = self.configuration.doubleParameterComboBox.currentText().lower()
-                additionalInitialValue = self.configuration.doubleInitialValueSpinBox.value()
-                additionalFinalValue = self.configuration.doubleFinalValueSpinBox.value()
-                option = Option(additionalAverageType, additionalParameter, additionalInitialValue,
-                                additionalFinalValue)
-                options.append(option)
-
-            return options
         else:
             raise ValueError("Invalid caller specified.")
 
-    def get_loss_settings(self, caller):
+    def get_loss_settings(self, caller) -> tuple:
+        """
+        Returns loss settings for caller specified.
+        :param caller: Caller for which loss settings will be returned.
+        :return: Tuple with stop loss type and loss percentage.
+        """
         if caller == BACKTEST:
             if self.configuration.backtestTrailingLossRadio.isChecked():
                 return TRAILING_LOSS, self.configuration.backtestLossPercentageSpinBox.value()
@@ -870,12 +908,18 @@ class Interface(QMainWindow):
                 graph['plots'] = []
 
     def setup_graph_plots(self, graph, trader, graphType):
+        """
+        Setups graph plots for graph, trade, and graphType specified.
+        :param graph: Graph that will be setup.
+        :param trader: Trade object that will use this graph.
+        :param graphType: Graph type; i.e. moving average or net balance.
+        """
         colors = self.get_graph_colors()
         currentDate = datetime.utcnow().timestamp()
         if graphType == 'net':
             net = 1
             self.append_plot_to_graph(graph, [{
-                'plot': self.create_graph_plot(graph, (currentDate,), (net,),
+                'plot': self.create_graph_plot(graph, (currentDate,), (trader.startingBalance,),
                                                color=colors[0], plotName='Net'),
                 'x': [currentDate],
                 'y': [net]

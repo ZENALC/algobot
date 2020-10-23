@@ -504,7 +504,7 @@ class SimulationTrader:
 
         if self.coinOwed > 0:
             self.output_message(f"Returning all borrowed {self.coinName}...")
-            self.buy_short(f'Bought up all owed as simulation ended.')
+            self.buy_short(f'Returned all borrowed coin simulation ended.')
 
         self.output_message("\nResults:")
         self.output_message(f'Starting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')
