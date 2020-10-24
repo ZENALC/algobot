@@ -272,14 +272,14 @@ class Interface(QMainWindow):
                 self.handle_telegram_bot()
             self.clear_table(self.historyTable)
             self.runningLive = True
-            self.setup_graph_plots(self.realGraph, self.trader, 'net')
-            self.setup_graph_plots(self.avgGraph, self.trader, 'average')
+            self.setup_graph_plots(self.realGraph, self.trader, NET_GRAPH)
+            self.setup_graph_plots(self.avgGraph, self.trader, AVG_GRAPH)
             self.automate_trading(caller)
         elif caller == SIMULATION:
             self.clear_table(self.simulationHistoryTable)
             self.simulationRunningLive = True
-            self.setup_graph_plots(self.simulationGraph, self.simulationTrader, 'net')
-            self.setup_graph_plots(self.simulationAvgGraph, self.simulationTrader, 'average')
+            self.setup_graph_plots(self.simulationGraph, self.simulationTrader, NET_GRAPH)
+            self.setup_graph_plots(self.simulationAvgGraph, self.simulationTrader, AVG_GRAPH)
             self.automate_trading(caller)
 
     def end_bot(self, caller):
@@ -916,7 +916,7 @@ class Interface(QMainWindow):
         """
         colors = self.get_graph_colors()
         currentDate = datetime.utcnow().timestamp()
-        if graphType == 'net':
+        if graphType == NET_GRAPH:
             net = 1
             self.append_plot_to_graph(graph, [{
                 'plot': self.create_graph_plot(graph, (currentDate,), (trader.startingBalance,),
@@ -924,7 +924,7 @@ class Interface(QMainWindow):
                 'x': [currentDate],
                 'y': [net]
             }])
-        elif graphType == 'average':
+        elif graphType == AVG_GRAPH:
             colorCounter = 1
             for option in trader.tradingOptions:
                 initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)

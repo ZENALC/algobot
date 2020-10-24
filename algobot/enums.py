@@ -1,6 +1,9 @@
 BULLISH = 1
 BEARISH = -1
 
+NET_GRAPH = 1
+AVG_GRAPH = 2
+
 LONG = 1
 SHORT = -1
 
