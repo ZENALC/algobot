@@ -1000,11 +1000,12 @@ class Interface(QMainWindow):
 
     def destroy_graph_plots(self, targetGraph: PlotWidget):
         """
-        Resets graph plots for graph provided.
+        Resets graph plots for graph provided. Does not do anything. Fixing needed.
         :param targetGraph: Graph to destroy plots for.
         """
         for graph in self.graphs:
             if graph['graph'] == targetGraph:
+                graph['graph'].clear()
                 graph['plots'] = []
 
     def setup_net_graph_plot(self, graph: PlotWidget, trader, color: str):
