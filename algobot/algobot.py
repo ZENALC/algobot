@@ -273,12 +273,16 @@ class Interface(QMainWindow):
                 self.handle_telegram_bot()
             self.clear_table(self.historyTable)
             self.runningLive = True
+            self.destroy_graph_plots(self.realGraph)  # clearing the graph plots
+            self.destroy_graph_plots(self.avgGraph)
             self.setup_graph_plots(self.realGraph, self.trader, NET_GRAPH)
             self.setup_graph_plots(self.avgGraph, self.trader, AVG_GRAPH)
             self.automate_trading(caller)
         elif caller == SIMULATION:
             self.clear_table(self.simulationHistoryTable)
             self.simulationRunningLive = True
+            self.destroy_graph_plots(self.simulationGraph)  # clearing the graph plots
+            self.destroy_graph_plots(self.simulationAvgGraph)
             self.setup_graph_plots(self.simulationGraph, self.simulationTrader, NET_GRAPH)
             self.setup_graph_plots(self.simulationAvgGraph, self.simulationTrader, AVG_GRAPH)
             self.automate_trading(caller)
@@ -293,7 +297,7 @@ class Interface(QMainWindow):
             self.simulationTrader.get_simulation_result()
             self.runSimulationButton.setEnabled(True)
             self.endSimulationButton.setEnabled(False)
-            self.add_to_simulation_activity_monitor("Ended Simulation")
+            self.add_to_simulation_activity_monitor("Ended simulation.")
             tempTrader = self.simulationTrader
             if self.simulationLowerIntervalData is not None:
                 self.simulationLowerIntervalData.dump_to_table()
