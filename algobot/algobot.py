@@ -588,6 +588,10 @@ class Interface(QMainWindow):
             self.statistics.nextFinalMovingAverageValue.hide()
 
     def enable_override(self, caller):
+        """
+        Enables override interface for which caller specifies.
+        :param caller: Caller that will specify which interface will have its override interface enabled.
+        """
         if caller == LIVE:
             self.overrideGroupBox.setEnabled(True)
         elif caller == SIMULATION:
@@ -596,6 +600,10 @@ class Interface(QMainWindow):
             raise ValueError("Invalid caller specified.")
 
     def disable_override(self, caller):
+        """
+        Disables override interface for which caller specifies.
+        :param caller: Caller that will specify which interface will have its override interface disabled.
+        """
         if caller == LIVE:
             self.overrideGroupBox.setEnabled(False)
         elif caller == SIMULATION:
@@ -604,6 +612,12 @@ class Interface(QMainWindow):
             raise ValueError("Invalid caller specified.")
 
     def exit_position(self, caller, humanControl=True):
+        """
+        Exits position by either giving up control or not. If the boolean humanControl is true, bot gives up control.
+        If the boolean is false, the bot still retains control, but exits trade and waits for opposite trend.
+        :param humanControl: Boolean that will specify whether bot gives up control or not.
+        :param caller: Caller that will specify which trader will exit position.
+        """
         if caller == LIVE:
             trader = self.trader
             if humanControl:
@@ -640,11 +654,15 @@ class Interface(QMainWindow):
                 trader.buy_short('Exiting short because of override and resuming autonomous logic..', force=True)
 
     def force_long(self, caller):
+        """
+        Forces bot to take long position and gives up its control until bot is resumed.
+        :param caller: Caller that will determine with trader will force long.
+        """
         if caller == SIMULATION:
             trader = self.simulationTrader
             self.pauseBotSimulationButton.setText('Resume Bot')
             self.add_to_simulation_activity_monitor('Forced long and stopped autonomous logic.')
-            self.forceShortSimulationButton.setEnabled(False)
+            self.forceShortSimulationButton.setEnabled(True)
             self.forceLongSimulationButton.setEnabled(False)
             self.exitPositionSimulationButton.setEnabled(True)
             self.waitOverrideSimulationButton.setEnabled(True)
@@ -652,7 +670,7 @@ class Interface(QMainWindow):
             trader = self.trader
             self.pauseBotButton.setText('Resume Bot')
             self.add_to_activity_monitor('Forced long and stopping autonomous logic.')
-            self.forceShortButton.setEnabled(False)
+            self.forceShortButton.setEnabled(True)
             self.forceLongButton.setEnabled(False)
             self.exitPositionButton.setEnabled(True)
             self.waitOverrideButton.setEnabled(True)
@@ -660,17 +678,21 @@ class Interface(QMainWindow):
             raise ValueError("Invalid type of caller specified.")
 
         trader.inHumanControl = True
-        if trader.get_position() == SHORT:
+        if trader.currentPosition == SHORT:
             trader.buy_short('Exited short because long was forced.', force=True)
         trader.buy_long('Force executed long.', force=True)
 
     def force_short(self, caller):
+        """
+        Forces bot to take short position and gives up its control until bot is resumed.
+        :param caller: Caller that will determine with trader will force short.
+        """
         if caller == SIMULATION:
             trader = self.simulationTrader
             self.pauseBotSimulationButton.setText('Resume Bot')
             self.add_to_simulation_activity_monitor('Forcing short and stopping autonomous logic.')
             self.forceShortSimulationButton.setEnabled(False)
-            self.forceLongSimulationButton.setEnabled(False)
+            self.forceLongSimulationButton.setEnabled(True)
             self.exitPositionSimulationButton.setEnabled(True)
             self.waitOverrideSimulationButton.setEnabled(True)
         elif caller == LIVE:
@@ -678,14 +700,14 @@ class Interface(QMainWindow):
             self.pauseBotButton.setText('Resume Bot')
             self.add_to_activity_monitor('Forced short and stopped autonomous logic.')
             self.forceShortButton.setEnabled(False)
-            self.forceLongButton.setEnabled(False)
+            self.forceLongButton.setEnabled(True)
             self.exitPositionButton.setEnabled(True)
             self.waitOverrideButton.setEnabled(True)
         else:
             raise ValueError("Invalid type of caller specified.")
 
         trader.inHumanControl = True
-        if trader.get_position() == LONG:
+        if trader.currentPosition == LONG:
             trader.sell_long('Exited long because short was forced.', force=True)
         trader.sell_short('Force executed short.', force=True)
 
@@ -731,8 +753,7 @@ class Interface(QMainWindow):
             additionalParameter = self.configuration.backtestDoubleParameterComboBox.currentText().lower()
             additionalInitialValue = self.configuration.backtestDoubleInitialValueSpinBox.value()
             additionalFinalValue = self.configuration.backtestDoubleFinalValueSpinBox.value()
-            option = Option(additionalAverageType, additionalParameter, additionalInitialValue,
-                            additionalFinalValue)
+            option = Option(additionalAverageType, additionalParameter, additionalInitialValue, additionalFinalValue)
             options.append(option)
 
         return options
@@ -753,8 +774,7 @@ class Interface(QMainWindow):
             additionalParameter = self.configuration.simulationDoubleParameterComboBox.currentText().lower()
             additionalInitialValue = self.configuration.simulationDoubleInitialValueSpinBox.value()
             additionalFinalValue = self.configuration.simulationDoubleFinalValueSpinBox.value()
-            option = Option(additionalAverageType, additionalParameter, additionalInitialValue,
-                            additionalFinalValue)
+            option = Option(additionalAverageType, additionalParameter, additionalInitialValue, additionalFinalValue)
             options.append(option)
 
         return options
@@ -775,8 +795,7 @@ class Interface(QMainWindow):
             additionalParameter = self.configuration.doubleParameterComboBox.currentText().lower()
             additionalInitialValue = self.configuration.doubleInitialValueSpinBox.value()
             additionalFinalValue = self.configuration.doubleFinalValueSpinBox.value()
-            option = Option(additionalAverageType, additionalParameter, additionalInitialValue,
-                            additionalFinalValue)
+            option = Option(additionalAverageType, additionalParameter, additionalInitialValue, additionalFinalValue)
             options.append(option)
 
         return options
@@ -789,13 +808,10 @@ class Interface(QMainWindow):
         """
         if caller == BACKTEST:
             return self.get_backtest_trading_options()
-
         elif caller == SIMULATION:
             return self.get_simulation_trading_options()
-
         elif caller == LIVE:
             return self.get_live_trading_options()
-
         else:
             raise ValueError("Invalid caller specified.")
 
@@ -807,19 +823,33 @@ class Interface(QMainWindow):
         """
         if caller == BACKTEST:
             if self.configuration.backtestTrailingLossRadio.isChecked():
-                return TRAILING_LOSS, self.configuration.backtestLossPercentageSpinBox.value()
+                return TRAILING_LOSS, self.configuration.backtestLossPercentageSpinBox.value() / 100
             else:
-                return STOP_LOSS, self.configuration.backtestLossPercentageSpinBox.value()
+                return STOP_LOSS, self.configuration.backtestLossPercentageSpinBox.value() / 100
         elif caller == SIMULATION:
             if self.configuration.simulationTrailingLossRadio.isChecked():
-                return TRAILING_LOSS, self.configuration.simulationLossPercentageSpinBox.value()
+                return TRAILING_LOSS, self.configuration.simulationLossPercentageSpinBox.value() / 100
             else:
-                return STOP_LOSS, self.configuration.simulationLossPercentageSpinBox.value()
+                return STOP_LOSS, self.configuration.simulationLossPercentageSpinBox.value() / 100
         elif caller == LIVE:
             if self.configuration.trailingLossRadio.isChecked():
-                return TRAILING_LOSS, self.configuration.lossPercentageSpinBox.value()
+                return TRAILING_LOSS, self.configuration.lossPercentageSpinBox.value() / 100
             else:
-                return STOP_LOSS, self.configuration.lossPercentageSpinBox.value()
+                return STOP_LOSS, self.configuration.lossPercentageSpinBox.value() / 100
+
+    @staticmethod
+    def get_option_info(option: Option, trader) -> tuple:
+        """
+        Returns basic information about option provided.
+        :param option: Option object for whose information will be retrieved.
+        :param trader: Trader object to be used to get averages.
+        :return: Tuple of initial average, final average, initial option name, and final option name.
+        """
+        initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
+        finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
+        initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
+        finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
+        return initialAverage, finalAverage, initialName, finalName
 
     def closeEvent(self, event):
         """
@@ -903,7 +933,7 @@ class Interface(QMainWindow):
             if graph['graph'] == targetGraph:
                 graph['plots'] = []
 
-    def setup_net_graph_plot(self, graph, trader, color):
+    def setup_net_graph_plot(self, graph: PlotWidget, trader, color: str):
         """
         Sets up net balance plot for graph provided.
         :param trader: Type of trader that will use this graph.
@@ -919,21 +949,7 @@ class Interface(QMainWindow):
             'y': [net]
         }])
 
-    @staticmethod
-    def get_option_info(option: Option, trader):
-        """
-        Returns basic information about option provided.
-        :param option: Option object for whose information will be retrieved.
-        :param trader: Trader object to be used to get averages.
-        :return: Tuple of initial average, final average, initial option name, and final option name.
-        """
-        initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
-        finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
-        initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
-        finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
-        return initialAverage, finalAverage, initialName, finalName
-
-    def setup_average_graph_plot(self, graph, trader, colors):
+    def setup_average_graph_plot(self, graph: PlotWidget, trader, colors: list):
         """
         Sets up moving average plots for graph provided.
         :param trader: Type of trader that will use this graph.
@@ -967,7 +983,6 @@ class Interface(QMainWindow):
         :param graphType: Graph type; i.e. moving average or net balance.
         """
         colors = self.get_graph_colors()
-        currentDate = datetime.utcnow().timestamp()
         if graphType == NET_GRAPH:
             self.setup_net_graph_plot(graph=graph, trader=trader, color=colors[0])
         elif graphType == AVG_GRAPH:
