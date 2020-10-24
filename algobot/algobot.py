@@ -171,6 +171,7 @@ class Interface(QMainWindow):
         if not trader.inHumanControl:
             trader.main_logic()
 
+    # to fix
     def handle_cross_notification(self, caller, notification):
         """
         Handles cross notifications.
@@ -245,7 +246,7 @@ class Interface(QMainWindow):
         while self.simulationRunningLive:
             try:
                 self.update_data(caller=caller)
-                self.updated_update_info(caller=caller)
+                self.update_interface_info(caller=caller)
                 self.update_trades_table_and_activity_monitor(caller=caller)
                 self.handle_logging(caller=caller)
                 self.handle_position_buttons(caller=caller)
@@ -283,32 +284,44 @@ class Interface(QMainWindow):
             self.automate_trading(caller)
 
     def end_bot(self, caller):
+        """
+        Ends bot based on caller.
+        :param caller: Caller that decides which bot will be ended.
+        """
         if caller == SIMULATION:
             self.simulationRunningLive = False
             self.simulationTrader.get_simulation_result()
+            self.runSimulationButton.setEnabled(True)
             self.endSimulationButton.setEnabled(False)
             self.add_to_simulation_activity_monitor("Ended Simulation")
-            self.runSimulationButton.setEnabled(True)
             tempTrader = self.simulationTrader
+            if self.simulationLowerIntervalData is not None:
+                self.simulationLowerIntervalData.dump_to_table()
+                self.simulationLowerIntervalData = None
         else:
             self.runningLive = False
             self.endBotButton.setEnabled(False)
+            self.runBotButton.setEnabled(True)
             self.telegramBot.stop()
             self.add_to_activity_monitor('Killed Telegram bot.')
             self.add_to_activity_monitor("Killed bot.")
-            self.runBotButton.setEnabled(True)
             tempTrader = self.trader
+            if self.lowerIntervalData is not None:
+                self.lowerIntervalData.dump_to_table()
+                self.lowerIntervalData = None
+
         tempTrader.log_trades()
         self.disable_override(caller)
         self.update_trades_table_and_activity_monitor(caller)
         self.disable_interface(False, caller=caller)
         tempTrader.dataView.dump_to_table()
-        # if self.lowerIntervalData is not None:
-        #     self.lowerIntervalData.dump_to_table()
-        #     self.lowerIntervalData = None
         # self.destroy_trader(caller)
 
     def destroy_trader(self, caller):
+        """
+        Destroys trader based on caller by setting them equal to none.
+        :param caller: Caller that determines which trading object gets destroyed.
+        """
         if caller == SIMULATION:
             self.simulationTrader = None
         elif caller == LIVE:
@@ -319,6 +332,10 @@ class Interface(QMainWindow):
             raise ValueError("invalid caller type specified.")
 
     def create_trader(self, caller):
+        """
+        Creates a trader based on caller.
+        :param caller: Caller object that will determine what type of trader is created.
+        """
         if caller == SIMULATION:
             symbol = self.configuration.simulationTickerComboBox.currentText()
             interval = helpers.convert_interval(self.configuration.simulationIntervalComboBox.currentText())
@@ -343,14 +360,13 @@ class Interface(QMainWindow):
             raise ValueError("Invalid caller.")
 
         self.initialize_lower_interval_trading(caller=caller, interval=interval)
-        # self.trader.dataView.get_data_from_database()
-        # if not self.trader.dataView.database_is_updated():
-        #     self.timestamp_message("Updating data...")
-        #     self.trader.dataView.update_database()
-        # else:
-        #     self.timestamp_message("Data is up-to-date.")
 
     def initialize_lower_interval_trading(self, caller, interval):
+        """
+        Initializes lower interval trading data object.
+        :param caller: Caller that determines whether lower interval is for simulation or live bot.
+        :param interval: Current interval for simulation or live bot.
+        """
         sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
         if interval != '1m':
             lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
@@ -362,6 +378,11 @@ class Interface(QMainWindow):
                 self.simulationLowerIntervalData = Data(lowerInterval)
 
     def set_parameters(self, caller):
+        """
+        Rrtrieves moving average options and loss settings based on caller.
+        :param caller: Caller that dictates which parameters get set.
+        :return:
+        """
         if caller == LIVE:
             self.trader.lossStrategy, self.trader.lossPercentageDecimal = self.get_loss_settings(caller)
             self.trader.tradingOptions = self.get_trading_options(caller)
@@ -373,6 +394,10 @@ class Interface(QMainWindow):
             raise ValueError('Invalid caller.')
 
     def set_advanced_logging(self, boolean):
+        """
+        Sets logging standard.
+        :param boolean: Boolean that will determine whether logging is advanced or not. If true, advanced, else regular.
+        """
         if self.advancedLogging:
             self.add_to_activity_monitor(f'Logging method has been changed to advanced.')
         else:
@@ -380,6 +405,11 @@ class Interface(QMainWindow):
         self.advancedLogging = boolean
 
     def disable_interface(self, boolean, caller):
+        """
+        Function that will control trading configuration interfaces.
+        :param boolean: If true, configuration settings get disabled.
+        :param caller: Caller that determines which configuration settings get disabled.
+        """
         boolean = not boolean
         if caller == BACKTEST:
             self.configuration.backtestConfigurationTabWidget.setEnabled(boolean)
@@ -447,7 +477,12 @@ class Interface(QMainWindow):
         elif trader == self.trader:
             self.update_live_graphs(net=net)
 
-    def updated_update_info(self, caller):
+    def update_interface_info(self, caller):
+        """
+        Updates interface elements based on caller.
+        :param caller:
+        :return:
+        """
         if caller == SIMULATION:
             trader = self.simulationTrader
         elif caller == LIVE:

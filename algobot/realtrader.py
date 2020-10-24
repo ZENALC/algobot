@@ -367,6 +367,7 @@ class RealTrader(SimulationTrader):
         self.retrieve_margin_values()
         self.currentPosition = None
         self.previousPosition = LONG
+        self.customStopLoss = None
         self.buyLongPrice = None
         self.longTrailingPrice = None
         self.output_message(msg)
@@ -410,6 +411,7 @@ class RealTrader(SimulationTrader):
         self.currentPosition = None
         self.previousPosition = SHORT
         self.sellShortPrice = None
+        self.customStopLoss = None
         self.shortTrailingPrice = None
         self.output_message(msg)
 
