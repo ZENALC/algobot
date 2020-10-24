@@ -142,6 +142,7 @@ class SimulationTrader:
         self.previousPosition = LONG
         self.coin -= coin
         self.balance += earned
+        self.customStopLoss = None
         finalNet = self.get_net()
         self.add_trade(msg, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice, force=force)
         self.output_message(msg)
@@ -168,6 +169,7 @@ class SimulationTrader:
         self.currentPrice = self.dataView.get_current_price()
         initialNet = self.get_net()
         self.coinOwed -= coin
+        self.customStopLoss = None
         self.currentPosition = None
         self.previousPosition = SHORT
         loss = self.currentPrice * coin * (1 + self.transactionFeePercentage)
