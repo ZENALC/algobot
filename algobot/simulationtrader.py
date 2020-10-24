@@ -38,6 +38,7 @@ class SimulationTrader:
         self.buyLongPrice = None  # Price we last bought our target coin at in long position.
         self.sellShortPrice = None  # Price we last sold target coin at in short position.
         self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
+        self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
         self.longTrailingPrice = None  # Price coin has to be above for long position.
         self.shortTrailingPrice = None  # Price coin has to be below for short position.
@@ -214,6 +215,9 @@ class SimulationTrader:
         If there is a trend and the previous position did not reflect the trend, the bot enters position.
         """
         if self.currentPosition == SHORT:  # This means we are in short position
+            if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
+                self.buy_short(f'Bought short because of custom stop loss.')
+
             if self.currentPrice > self.get_stop_loss():  # If current price is greater, then exit trade.
                 self.buy_short(f'Bought short because of stop loss.')
 
@@ -222,6 +226,9 @@ class SimulationTrader:
                 self.buy_long(f'Bought long because a cross was detected.')
 
         elif self.currentPosition == LONG:  # This means we are in long position
+            if self.customStopLoss is not None and self.currentPrice <= self.customStopLoss:
+                self.sell_long(f'Sold long because of custom stop loss.')
+
             if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
                 self.sell_long(f'Sold long because of stop loss.')
 
