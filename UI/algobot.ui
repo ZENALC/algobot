@@ -53,7 +53,7 @@
        <enum>QTabWidget::West</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="movable">
        <bool>true</bool>
@@ -79,7 +79,7 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
-            <widget class="QGroupBox" name="groupBox">
+            <widget class="QGroupBox" name="portfolioGroupBox">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -226,7 +226,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QGroupBox" name="commandsGroupBox_2">
+            <widget class="QGroupBox" name="commandsGroupBox">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -390,7 +390,7 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="PlotWidget" name="realGraph" native="true">
+         <widget class="PlotWidget" name="liveGraph" native="true">
           <property name="minimumSize">
            <size>
             <width>0</width>

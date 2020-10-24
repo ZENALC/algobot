@@ -46,7 +46,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -67,7 +67,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="mainMainTab">
           <attribute name="title">
@@ -761,7 +761,7 @@
                  <number>5</number>
                 </property>
                 <property name="value">
-                 <double>0.050000000000000</double>
+                 <double>5.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -820,7 +820,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="backtestMainTab">
           <attribute name="title">
@@ -1575,7 +1575,7 @@
                  <number>5</number>
                 </property>
                 <property name="value">
-                 <double>0.050000000000000</double>
+                 <double>5.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -1615,7 +1615,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="simulationMainTab">
           <attribute name="title">
@@ -2251,7 +2251,7 @@
                  <number>5</number>
                 </property>
                 <property name="value">
-                 <double>0.050000000000000</double>
+                 <double>5.000000000000000</double>
                 </property>
                </widget>
               </item>

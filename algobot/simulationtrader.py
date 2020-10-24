@@ -243,6 +243,60 @@ class SimulationTrader:
                 else:
                     self.sell_short("Sold short because a cross was detected.")
 
+    def get_stop_loss_strategy_string(self):
+        """
+        Returns stop loss strategy in string format, instead of integer enum.
+        :return: Stop loss strategy in string format.
+        """
+        if self.lossStrategy == STOP_LOSS:
+            return 'Stop Loss'
+        elif self.lossStrategy == TRAILING_LOSS:
+            return 'Trailing Loss'
+        elif self.lossStrategy is None:
+            return 'None'
+        else:
+            raise ValueError("Unknown type of loss strategy.")
+
+    def get_position_string(self):
+        """
+        Returns position in string format, instead of integer enum.
+        :return: Position in string format.
+        """
+        if self.currentPosition == LONG:
+            return 'Long'
+        elif self.currentPosition == SHORT:
+            return 'Short'
+        elif self.currentPosition is None:
+            return 'None'
+        else:
+            raise ValueError("Invalid type of current position.")
+
+    @staticmethod
+    def get_safe_rounded_string(value: float, roundDigits: int = 2, symbol: str = '$') -> str:
+        """
+        Helper function that will, if exists, return value rounded with symbol provided.
+        :param roundDigits: Number of digits to round value.
+        :param symbol: Symbol to insert to beginning of return string.
+        :param value: Value that will be safety checked.
+        :return: Rounded value (if not none) in string format.
+        """
+        if value is None:
+            return "None"
+        else:
+            return f'{symbol}{round(value, roundDigits)}'
+
+    @staticmethod
+    def get_profit_or_loss_string(profit: float) -> str:
+        """
+        Helper function that returns where profit specified is profit or loss. Profit is positive; loss if negative.
+        :param profit: Amount to be checked for negativity or positivity.
+        :return: String value of whether profit ir positive or negative.
+        """
+        if profit >= 0:
+            return "Profit"
+        else:
+            return "Loss"
+
     def get_net(self) -> float:
         """
         Returns net balance with current price of coin being traded. It factors in the current balance, the amount

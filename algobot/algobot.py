@@ -42,7 +42,7 @@ class Interface(QMainWindow):
         self.graphs = (
             {'graph': self.simulationGraph, 'plots': []},
             {'graph': self.backtestGraph, 'plots': []},
-            {'graph': self.realGraph, 'plots': []},
+            {'graph': self.liveGraph, 'plots': []},
             {'graph': self.avgGraph, 'plots': []},
             {'graph': self.simulationAvgGraph, 'plots': []},
         )
@@ -245,7 +245,7 @@ class Interface(QMainWindow):
         while self.simulationRunningLive:
             try:
                 self.update_data(caller=caller)
-                self.update_simulation_info()
+                self.updated_update_info(caller=caller)
                 self.update_trades_table_and_activity_monitor(caller=caller)
                 self.handle_logging(caller=caller)
                 self.handle_position_buttons(caller=caller)
@@ -306,7 +306,7 @@ class Interface(QMainWindow):
         # if self.lowerIntervalData is not None:
         #     self.lowerIntervalData.dump_to_table()
         #     self.lowerIntervalData = None
-        self.destroy_trader(caller)
+        # self.destroy_trader(caller)
 
     def destroy_trader(self, caller):
         if caller == SIMULATION:
@@ -396,73 +396,175 @@ class Interface(QMainWindow):
         else:
             raise ValueError('Invalid caller specified.')
 
-    def update_trades_to_list_view(self):
-        widgetCount = self.tradesListWidget.count()
-        tradeCount = len(self.trader.trades)
+    def update_statistics(self, interfaceDictionary: dict, trader):
+        """
+        Main function that will update interface with information based on interface dictionary and trader.
+        :param trader: Trader object used to determine statistics.
+        :param interfaceDictionary: Dictionary that will dictate that QT objects are updated.
+        """
+        net = trader.get_net()
+        profit = trader.get_profit()
+        stopLoss = trader.get_stop_loss()
+        percentage = trader.get_profit_percentage(trader.startingBalance, net)
 
-        if widgetCount < tradeCount:
-            remaining = tradeCount - widgetCount
-            for trade in self.trader.trades[-remaining:]:
-                self.add_trade_to_list_view(f'{trade["action"]}')
-                self.timestamp_message(f'{trade["action"]}')
+        currentPriceString = f'${trader.dataView.get_current_price()}'
+        percentageString = f'{round(percentage, 2)}%'
+        profitString = f'${abs(round(profit, 2))}'
+        netString = f'${round(net, 2)}'
 
-    def add_trade_to_list_view(self, msg):
-        self.tradesListWidget.addItem(msg)
+        # These are for statistics window.
+        statisticsDictionary = interfaceDictionary['statistics']
+        statisticsDictionary['startingBalanceValue'].setText(f'${round(trader.startingBalance, 2)}')
+        statisticsDictionary['currentBalanceValue'].setText(f'${round(trader.balance, 2)}')
+        statisticsDictionary['netValue'].setText(netString)
+        statisticsDictionary['profitLossLabel'].setText(trader.get_profit_or_loss_string(profit=profit))
+        statisticsDictionary['profitLossValue'].setText(profitString)
+        statisticsDictionary['percentageValue'].setText(percentageString)
+        statisticsDictionary['tradesMadeValue'].setText(str(len(trader.trades)))
+        statisticsDictionary['coinOwnedLabel'].setText(f'{trader.coinName} Owned')
+        statisticsDictionary['coinOwnedValue'].setText(f'{round(trader.coin, 6)}')
+        statisticsDictionary['coinOwedLabel'].setText(f'{trader.coinName} Owed')
+        statisticsDictionary['coinOwedValue'].setText(f'{round(trader.coinOwed, 6)}')
+        statisticsDictionary['currentTickerLabel'].setText(str(trader.dataView.symbol))
+        statisticsDictionary['currentTickerValue'].setText(currentPriceString)
+        statisticsDictionary['lossPointLabel'].setText(trader.get_stop_loss_strategy_string())
+        statisticsDictionary['lossPointValue'].setText(trader.get_safe_rounded_string(stopLoss))
+        statisticsDictionary['customStopPointValue'].setText(trader.get_safe_rounded_string(trader.customStopLoss))
+        statisticsDictionary['currentPositionValue'].setText(trader.get_position_string())
+        statisticsDictionary['autonomousValue'].setText(str(not trader.inHumanControl))
 
-    def update_simulation_info(self):
-        trader = self.simulationTrader
-        self.statistics.simulationCurrentBalanceValue.setText(f'${round(trader.get_net(), 2)}')
-        self.statistics.simulationStartingBalanceValue.setText(f'${round(trader.startingBalance, 2)}')
-        self.statistics.simulationAutonomousValue.setText(str(not trader.inHumanControl))
+        # These are for main interface window.
+        mainInterfaceDictionary = interfaceDictionary['mainInterface']
+        mainInterfaceDictionary['profitLabel'].setText(trader.get_profit_or_loss_string(profit=profit))
+        mainInterfaceDictionary['profitValue'].setText(profitString)
+        mainInterfaceDictionary['percentageValue'].setText(percentageString)
+        mainInterfaceDictionary['netTotalValue'].setText(netString)
+        mainInterfaceDictionary['tickerLabel'].setText(trader.symbol)
+        mainInterfaceDictionary['tickerValue'].setText(currentPriceString)
 
-        if trader.get_profit() < 0:
-            self.statistics.simulationProfitLossLabel.setText("Loss")
-            self.statistics.simulationProfitLossValue.setText(f'${-round(trader.get_profit(), 2)}')
+        if trader == self.simulationTrader:
+            self.update_simulation_graphs(net=net)
+        elif trader == self.trader:
+            self.update_live_graphs(net=net)
+
+    def updated_update_info(self, caller):
+        if caller == SIMULATION:
+            trader = self.simulationTrader
+        elif caller == LIVE:
+            trader = self.trader
         else:
-            self.statistics.simulationProfitLossLabel.setText("Gain")
-            self.statistics.simulationProfitLossValue.setText(f'${round(trader.get_profit(), 2)}')
+            raise TypeError("Invalid type of caller specified.")
 
-        position = trader.get_position()
-        if position == LONG:
-            self.statistics.simulationCurrentPositionValue.setText('Long')
-        elif position == SHORT:
-            self.statistics.simulationCurrentPositionValue.setText('Short')
-        else:
-            self.statistics.simulationCurrentPositionValue.setText('None')
+        interfaceDict = self.get_interface_dictionary(caller)
+        self.update_statistics(interfaceDict, trader=trader)
 
-        self.statistics.simulationCurrentBtcLabel.setText(f'{trader.coinName} Owned')
-        self.statistics.simulationCurrentBtcValue.setText(f'{round(trader.coin, 6)}')
-        self.statistics.simulationBtcOwedLabel.setText(f'{trader.coinName} Owed')
-        self.statistics.simulationBtcOwedValue.setText(f'{round(trader.coinOwed, 6)}')
-        self.statistics.simulationTradesMadeValue.setText(str(len(trader.trades)))
-        self.statistics.simulationCurrentTickerLabel.setText(str(trader.dataView.symbol))
-        self.statistics.simulationCurrentTickerValue.setText(f'${trader.dataView.get_current_price()}')
+    def get_interface_dictionary(self, caller):
+        """
+        Returns dictionary of objects from QT. Used for DRY principles.
+        :param caller: Caller that will determine which sub dictionary gets returned.
+        :return: Dictionary of objects.
+        """
+        interfaceDictionary = {
+            SIMULATION: {
+                'statistics': {
+                    'startingBalanceValue': self.statistics.simulationStartingBalanceValue,
+                    'currentBalanceValue': self.statistics.simulationCurrentBalanceValue,
+                    'netValue': self.statistics.simulationNetValue,
+                    'profitLossLabel': self.statistics.simulationProfitLossLabel,
+                    'profitLossValue': self.statistics.simulationProfitLossValue,
+                    'percentageValue': self.statistics.simulationPercentageValue,
+                    'tradesMadeValue': self.statistics.simulationTradesMadeValue,
+                    'coinOwnedLabel': self.statistics.simulationCoinOwnedLabel,
+                    'coinOwnedValue': self.statistics.simulationCoinOwnedValue,
+                    'coinOwedLabel': self.statistics.simulationCoinOwedLabel,
+                    'coinOwedValue': self.statistics.simulationCoinOwedValue,
+                    'currentTickerLabel': self.statistics.simulationCurrentTickerLabel,
+                    'currentTickerValue': self.statistics.simulationCurrentTickerValue,
+                    'lossPointLabel': self.statistics.simulationLossPointLabel,
+                    'lossPointValue': self.statistics.simulationLossPointValue,
+                    'customStopPointValue': self.statistics.simulationCustomStopPointValue,
+                    'currentPositionValue': self.statistics.simulationCurrentPositionValue,
+                    'autonomousValue': self.statistics.simulationAutonomousValue
+                },
+                'mainInterface': {
+                    'profitLabel': self.simulationProfitLabel,
+                    'profitValue': self.simulationProfitValue,
+                    'percentageValue': self.simulationPercentageValue,
+                    'netTotalValue': self.simulationNetTotalValue,
+                    'tickerLabel': self.simulationTickerLabel,
+                    'tickerValue': self.simulationTickerValue
+                }
+            },
+            LIVE: {
+                'statistics': {
+                    'startingBalanceValue': self.statistics.startingBalanceValue,
+                    'currentBalanceValue': self.statistics.currentBalanceValue,
+                    'netValue': self.statistics.netValue,
+                    'profitLossLabel': self.statistics.profitLossLabel,
+                    'profitLossValue': self.statistics.profitLossValue,
+                    'percentageValue': self.statistics.percentageValue,
+                    'tradesMadeValue': self.statistics.tradesMadeValue,
+                    'coinOwnedLabel': self.statistics.coinOwnedLabel,
+                    'coinOwnedValue': self.statistics.coinOwnedValue,
+                    'coinOwedLabel': self.statistics.coinOwedLabel,
+                    'coinOwedValue': self.statistics.coinOwedValue,
+                    'currentTickerLabel': self.statistics.currentTickerLabel,
+                    'currentTickerValue': self.statistics.currentTickerValue,
+                    'lossPointLabel': self.statistics.lossPointLabel,
+                    'lossPointValue': self.statistics.lossPointValue,
+                    'customStopPointValue': self.statistics.customStopPointValue,
+                    'currentPositionValue': self.statistics.currentPositionValue,
+                    'autonomousValue': self.statistics.autonomousValue
+                },
+                'mainInterface': {
+                    'profitLabel': self.profitLabel,
+                    'profitValue': self.profitValue,
+                    'percentageValue': self.percentageValue,
+                    'netTotalValue': self.netTotalValue,
+                    'tickerLabel': self.tickerLabel,
+                    'tickerValue': self.tickerValue
+                }
+            }}
+        return interfaceDictionary[caller]
 
-        if trader.get_stop_loss() is not None:
-            if trader.lossStrategy == STOP_LOSS:
-                self.statistics.simulationLossPointLabel.setText('Stop Loss')
-            else:
-                self.statistics.simulationLossPointLabel.setText('Trailing Loss')
-            self.statistics.simulationLossPointValue.setText(f'${round(trader.get_stop_loss(), 2)}')
-        else:
-            self.statistics.simulationLossPointValue.setText('None')
-
+    def update_live_graphs(self, net):
+        """
+        Helper function that will update live graphs.
+        :param net: Final net value. Passed to function to avoid calling net function.
+        """
+        trader = self.trader
         currentUTC = datetime.utcnow().timestamp()
-        initialNet = self.simulationTrader.startingBalance
-        netTotal = trader.get_net()
-        profit = netTotal - initialNet
-        percentage = self.simulationTrader.get_profit_percentage(initialNet, netTotal)
+        self.add_data_to_plot(self.liveGraph, 0, currentUTC, net)
 
-        if profit > 0:
-            self.simulationProfitLabel.setText('Profit')
-        else:
-            self.simulationProfitLabel.setText('Loss')
+        if len(trader.tradingOptions) == 1:
+            self.hide_live_next_moving_averages()
 
-        self.simulationNetTotalValue.setText(f'${round(netTotal, 2)}')
-        self.simulationProfitValue.setText(f'${round(profit, 2)}')
-        self.simulationPercentageValue.setText(f'{round(percentage, 2)}%')
-        self.simulationTickerValue.setText(self.simulationTrader.symbol)
-        self.add_data_to_plot(self.simulationGraph, 0, currentUTC, netTotal)
+        for index, option in enumerate(trader.tradingOptions):
+            initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = self.get_option_info(option, trader)
+            self.add_data_to_plot(self.avgGraph, index * 2, currentUTC, initialAverage)
+            self.add_data_to_plot(self.avgGraph, index * 2 + 1, currentUTC, finalAverage)
+
+            if index == 0:
+                self.statistics.baseInitialMovingAverageLabel.setText(initialAverageLabel)
+                self.statistics.baseInitialMovingAverageValue.setText(f'${initialAverage}')
+                self.statistics.baseFinalMovingAverageLabel.setText(finalAverageLabel)
+                self.statistics.baseFinalMovingAverageValue.setText(f'${finalAverage}')
+
+            if index == 1:
+                self.show_live_next_moving_averages()
+                self.statistics.nextInitialMovingAverageLabel.setText(initialAverageLabel)
+                self.statistics.nextInitialMovingAverageValue.setText(f'${initialAverage}')
+                self.statistics.nextFinalMovingAverageLabel.setText(finalAverageLabel)
+                self.statistics.nextFinalMovingAverageValue.setText(f'${finalAverage}')
+
+    def update_simulation_graphs(self, net):
+        """
+        Helper function that will update simulation graphs.
+        :param net: Final net value. Passed to function to avoid calling net function.
+        """
+        trader = self.simulationTrader
+        currentUTC = datetime.utcnow().timestamp()
+        self.add_data_to_plot(self.simulationGraph, 0, currentUTC, net)
 
         for index, option in enumerate(trader.tradingOptions):
             initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = self.get_option_info(option, trader)
@@ -475,117 +577,50 @@ class Interface(QMainWindow):
                 self.statistics.simulationBaseFinalMovingAverageLabel.setText(finalAverageLabel)
                 self.statistics.simulationBaseFinalMovingAverageValue.setText(f'${finalAverage}')
                 if len(trader.tradingOptions) == 1:
-                    self.statistics.simulationNextInitialMovingAverageLabel.hide()
-                    self.statistics.simulationNextInitialMovingAverageValue.hide()
-                    self.statistics.simulationNextFinalMovingAverageLabel.hide()
-                    self.statistics.simulationNextFinalMovingAverageValue.hide()
+                    self.hide_simulation_next_moving_averages()
 
             if index > 0:
-                self.statistics.simulationNextInitialMovingAverageLabel.show()
-                self.statistics.simulationNextInitialMovingAverageValue.show()
-                self.statistics.simulationNextFinalMovingAverageLabel.show()
-                self.statistics.simulationNextFinalMovingAverageValue.show()
-
+                self.show_simulation_next_moving_averages()
                 self.statistics.simulationNextInitialMovingAverageLabel.setText(initialAverageLabel)
                 self.statistics.simulationNextInitialMovingAverageValue.setText(f'${initialAverage}')
                 self.statistics.simulationNextFinalMovingAverageLabel.setText(finalAverageLabel)
                 self.statistics.nextFinalMovingAverageValue.setText(f'${finalAverage}')
 
-    def update_info(self):
-        self.statistics.currentBalanceValue.setText(f'${round(self.trader.get_net(), 2)}')
-        self.statistics.startingBalanceValue.setText(f'${round(self.trader.startingBalance, 2)}')
-        self.statistics.autonomousValue.setText(str(not self.trader.inHumanControl))
+    def hide_simulation_next_moving_averages(self):
+        """
+        Hides simulation next moving averages statistics.
+        """
+        self.statistics.simulationNextInitialMovingAverageLabel.hide()
+        self.statistics.simulationNextInitialMovingAverageValue.hide()
+        self.statistics.simulationNextFinalMovingAverageLabel.hide()
+        self.statistics.simulationNextFinalMovingAverageValue.hide()
 
-        if self.trader.inHumanControl:
-            self.autonomousStateLabel.setText('WARNING: IN HUMAN CONTROL')
-        else:
-            self.autonomousStateLabel.setText('INFO: IN AUTONOMOUS MODE')
+    def show_simulation_next_moving_averages(self):
+        """
+        Shows simulation next moving averages statistics.
+        """
+        self.statistics.simulationNextInitialMovingAverageLabel.show()
+        self.statistics.simulationNextInitialMovingAverageValue.show()
+        self.statistics.simulationNextFinalMovingAverageLabel.show()
+        self.statistics.simulationNextFinalMovingAverageValue.show()
 
-        if self.trader.get_profit() < 0:
-            self.statistics.profitLossLabel.setText("Loss")
-            self.statistics.profitLossValue.setText(f'${-round(self.trader.get_profit(), 2)}')
-        else:
-            self.statistics.profitLossLabel.setText("Gain")
-            self.statistics.profitLossValue.setText(f'${round(self.trader.get_profit(), 2)}')
+    def hide_live_next_moving_averages(self):
+        """
+        Hides live next moving averages statistics.
+        """
+        self.statistics.nextInitialMovingAverageLabel.hide()
+        self.statistics.nextInitialMovingAverageValue.hide()
+        self.statistics.nextFinalMovingAverageLabel.hide()
+        self.statistics.nextFinalMovingAverageValue.hide()
 
-        position = self.trader.get_position()
-
-        if position == LONG:
-            self.statistics.currentPositionValue.setText('Long')
-        elif position == SHORT:
-            self.statistics.currentPositionValue.setText('Short')
-        else:
-            self.statistics.currentPositionValue.setText('None')
-
-        self.statistics.currentBtcLabel.setText(f'{self.trader.coinName} Owned')
-        self.statistics.currentBtcValue.setText(f'{round(self.trader.coin, 6)}')
-        self.statistics.btcOwedLabel.setText(f'{self.trader.coinName} Owed')
-        self.statistics.btcOwedValue.setText(f'{round(self.trader.coinOwed, 6)}')
-        self.statistics.tradesMadeValue.setText(str(len(self.trader.trades)))
-        self.statistics.currentTickerLabel.setText(str(self.trader.dataView.symbol))
-        self.statistics.currentTickerValue.setText(f'${self.trader.dataView.get_current_price()}')
-
-        if self.trader.get_stop_loss() is not None:
-            if self.trader.lossStrategy == STOP_LOSS:
-                self.statistics.lossPointLabel.setText('Stop Loss')
-            else:
-                self.statistics.lossPointLabel.setText('Trailing Loss')
-            self.statistics.lossPointValue.setText(f'${round(self.trader.get_stop_loss(), 2)}')
-        else:
-            self.statistics.lossPointValue.setText('None')
-
-        currentUTC = datetime.utcnow().timestamp()
-
-        if len(self.trader.tradingOptions) > 0:
-            option = self.trader.tradingOptions[0]
-            initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
-            finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
-
-            self.plots[0]['x'].append(currentUTC)
-            self.plots[0]['y'].append(initialAverage)
-            self.plots[0]['plot'].setData(self.plots[0]['x'], self.plots[0]['y'])
-
-            self.plots[1]['x'].append(currentUTC)
-            self.plots[1]['y'].append(finalAverage)
-            self.plots[1]['plot'].setData(self.plots[1]['x'], self.plots[1]['y'])
-
-            self.statistics.baseInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})'
-                                                                  f' {option.parameter.capitalize()}')
-            self.statistics.baseInitialMovingAverageValue.setText(f'${initialAverage}')
-            self.statistics.baseFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})'
-                                                                f' {option.parameter.capitalize()}')
-            self.statistics.baseFinalMovingAverageValue.setText(f'${finalAverage}')
-
-        if len(self.trader.tradingOptions) > 1:
-            self.statistics.nextInitialMovingAverageLabel.show()
-            self.statistics.nextInitialMovingAverageValue.show()
-            self.statistics.nextFinalMovingAverageLabel.show()
-            self.statistics.nextFinalMovingAverageValue.show()
-
-            option = self.trader.tradingOptions[1]
-            initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
-            finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
-
-            self.plots[2]['x'].append(currentUTC)
-            self.plots[2]['y'].append(initialAverage)
-            self.plots[2]['plot'].setData(self.plots[2]['x'], self.plots[2]['y'])
-
-            self.plots[3]['x'].append(currentUTC)
-            self.plots[3]['y'].append(finalAverage)
-            self.plots[3]['plot'].setData(self.plots[3]['x'], self.plots[3]['y'])
-
-            self.statistics.nextInitialMovingAverageLabel.setText(f'{option.movingAverage}({option.initialBound})'
-                                                                  f' - {option.parameter.capitalize()}')
-            print("", end="")  # so PyCharm stops nagging us
-            self.statistics.nextInitialMovingAverageValue.setText(f'${initialAverage}')
-            self.statistics.nextFinalMovingAverageLabel.setText(f'{option.movingAverage}({option.finalBound})'
-                                                                f' - {option.parameter.capitalize()}')
-            self.statistics.nextFinalMovingAverageValue.setText(f'${finalAverage}')
-        else:
-            self.statistics.nextInitialMovingAverageLabel.hide()
-            self.statistics.nextInitialMovingAverageValue.hide()
-            self.statistics.nextFinalMovingAverageLabel.hide()
-            self.statistics.nextFinalMovingAverageValue.hide()
+    def show_live_next_moving_averages(self):
+        """
+        Shows live next moving averages statistics.
+        """
+        self.statistics.nextInitialMovingAverageLabel.show()
+        self.statistics.nextInitialMovingAverageValue.show()
+        self.statistics.nextFinalMovingAverageLabel.show()
+        self.statistics.nextFinalMovingAverageValue.show()
 
     def enable_override(self, caller):
         """
@@ -642,16 +677,16 @@ class Interface(QMainWindow):
             raise ValueError("Invalid caller specified.")
 
         trader.inHumanControl = humanControl
-        if trader.get_position() == LONG:
+        if trader.currentPosition == LONG:
             if humanControl:
                 trader.sell_long('Force exited long.', force=True)
             else:
-                trader.sell_long('Exiting long because of override and resuming autonomous logic.', force=True)
-        elif trader.get_position() == SHORT:
+                trader.sell_long('Exited long because of override and resuming autonomous logic.', force=True)
+        elif trader.currentPosition == SHORT:
             if humanControl:
                 trader.buy_short('Force exited short.', force=True)
             else:
-                trader.buy_short('Exiting short because of override and resuming autonomous logic..', force=True)
+                trader.buy_short('Exited short because of override and resuming autonomous logic.', force=True)
 
     def force_long(self, caller):
         """
@@ -889,7 +924,7 @@ class Interface(QMainWindow):
                 graph.setTitle("Backtest Price Change")
             elif graph == self.simulationGraph:
                 graph.setTitle("Simulation Price Change")
-            elif graph == self.realGraph:
+            elif graph == self.liveGraph:
                 graph.setTitle("Live Price Change")
             elif graph == self.simulationAvgGraph:
                 graph.setTitle("Simulation Moving Averages")
