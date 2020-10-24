@@ -465,13 +465,9 @@ class Interface(QMainWindow):
         self.add_data_to_plot(self.simulationGraph, 0, currentUTC, netTotal)
 
         for index, option in enumerate(trader.tradingOptions):
-            initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
-            finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
-
+            initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = self.get_option_info(option, trader)
             self.add_data_to_plot(self.simulationAvgGraph, index * 2, currentUTC, initialAverage)
             self.add_data_to_plot(self.simulationAvgGraph, index * 2 + 1, currentUTC, finalAverage)
-            initialAverageLabel = f'{option.movingAverage}({option.initialBound})  {option.parameter.capitalize()}'
-            finalAverageLabel = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
 
             if index == 0:
                 self.statistics.simulationBaseInitialMovingAverageLabel.setText(initialAverageLabel)
@@ -907,6 +903,62 @@ class Interface(QMainWindow):
             if graph['graph'] == targetGraph:
                 graph['plots'] = []
 
+    def setup_net_graph_plot(self, graph, trader, color):
+        """
+        Sets up net balance plot for graph provided.
+        :param trader: Type of trader that will use this graph.
+        :param graph: Graph where plot will be setup.
+        :param color: Color plot will be setup in.
+        """
+        net = trader.startingBalance
+        currentDate = datetime.utcnow().timestamp()
+        self.append_plot_to_graph(graph, [{
+            'plot': self.create_graph_plot(graph, (currentDate,), (net,),
+                                           color=color, plotName='Net'),
+            'x': [currentDate],
+            'y': [net]
+        }])
+
+    @staticmethod
+    def get_option_info(option: Option, trader):
+        """
+        Returns basic information about option provided.
+        :param option: Option object for whose information will be retrieved.
+        :param trader: Trader object to be used to get averages.
+        :return: Tuple of initial average, final average, initial option name, and final option name.
+        """
+        initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
+        finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
+        initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
+        finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
+        return initialAverage, finalAverage, initialName, finalName
+
+    def setup_average_graph_plot(self, graph, trader, colors):
+        """
+        Sets up moving average plots for graph provided.
+        :param trader: Type of trader that will use this graph.
+        :param graph: Graph where plots will be setup.
+        :param colors: List of colors plots will be setup in.
+        """
+        currentDate = datetime.utcnow().timestamp()
+        colorCounter = 1
+        for option in trader.tradingOptions:
+            initialAverage, finalAverage, initialName, finalName = self.get_option_info(option, trader)
+            initialPlotDict = {
+                'plot': self.create_graph_plot(graph, (currentDate,), (initialAverage,),
+                                               color=colors[colorCounter], plotName=initialName),
+                'x': [currentDate],
+                'y': [initialAverage]
+            }
+            secondaryPlotDict = {
+                'plot': self.create_graph_plot(graph, (currentDate,), (finalAverage,),
+                                               color=colors[colorCounter + 1], plotName=finalName),
+                'x': [currentDate],
+                'y': [finalAverage]
+            }
+            colorCounter += 2
+            self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
+
     def setup_graph_plots(self, graph, trader, graphType):
         """
         Setups graph plots for graph, trade, and graphType specified.
@@ -917,34 +969,11 @@ class Interface(QMainWindow):
         colors = self.get_graph_colors()
         currentDate = datetime.utcnow().timestamp()
         if graphType == NET_GRAPH:
-            net = 1
-            self.append_plot_to_graph(graph, [{
-                'plot': self.create_graph_plot(graph, (currentDate,), (trader.startingBalance,),
-                                               color=colors[0], plotName='Net'),
-                'x': [currentDate],
-                'y': [net]
-            }])
+            self.setup_net_graph_plot(graph=graph, trader=trader, color=colors[0])
         elif graphType == AVG_GRAPH:
-            colorCounter = 1
-            for option in trader.tradingOptions:
-                initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
-                finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
-                initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
-                finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
-                initialPlotDict = {
-                    'plot': self.create_graph_plot(graph, (currentDate,), (initialAverage,),
-                                                   color=colors[colorCounter], plotName=initialName),
-                    'x': [currentDate],
-                    'y': [initialAverage]
-                }
-                secondaryPlotDict = {
-                    'plot': self.create_graph_plot(graph, (currentDate,), (finalAverage,),
-                                                   color=colors[colorCounter + 1], plotName=finalName),
-                    'x': [currentDate],
-                    'y': [finalAverage]
-                }
-                colorCounter += 2
-                self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
+            self.setup_average_graph_plot(graph=graph, trader=trader, colors=colors)
+        else:
+            raise TypeError("Invalid type of graph provided.")
 
     def get_graph_colors(self):
         """
@@ -978,22 +1007,31 @@ class Interface(QMainWindow):
 
     @staticmethod
     def clear_table(table):
+        """
+        Sets table row count to 0.
+        :param table: Table which is to be cleared.
+        """
         table.setRowCount(0)
 
-    def test_table(self, table, trade):
+    @staticmethod
+    def test_table(table, trade):
         """
         Initial function made to test table functionalities in QT.
         :param table: Table to insert row at.
         :param trade: Trade information to add.
         """
-        rowPosition = self.simulationTable.rowCount()
-        columns = self.simulationTable.columnCount()
+        rowPosition = table.rowCount()
+        columns = table.columnCount()
 
-        self.simulationTable.insertRow(rowPosition)
+        table.insertRow(rowPosition)
         for column in range(columns):
             table.setItem(rowPosition, column, QTableWidgetItem(str(trade[column])))
 
     def add_to_simulation_activity_monitor(self, message: str):
+        """
+        Function that adds activity information to the simulation activity monitor.
+        :param message: Message to add to simulation activity log.
+        """
         self.add_to_table(self.simulationActivityMonitor, [message])
 
     def add_to_activity_monitor(self, message: str):
@@ -1023,6 +1061,10 @@ class Interface(QMainWindow):
             table.setItem(rowPosition, column, QTableWidgetItem(str(data[column])))
 
     def update_trades_table_and_activity_monitor(self, caller):
+        """
+        Updates trade table and activity based on caller.
+        :param caller: Caller object that will rule which tables get updated.
+        """
         if caller == SIMULATION:
             table = self.simulationHistoryTable
             trades = self.simulationTrader.trades
@@ -1032,7 +1074,7 @@ class Interface(QMainWindow):
         else:
             raise ValueError('Invalid caller specified.')
 
-        if len(trades) > table.rowCount():
+        if len(trades) > table.rowCount():  # Basically, only update when row count is not equal to trades count.
             remaining = len(trades) - table.rowCount()
             for trade in trades[-remaining:]:
                 tradeData = [trade['orderID'],
@@ -1043,7 +1085,7 @@ class Interface(QMainWindow):
                              trade['method'],
                              trade['action']]
                 self.add_to_table(table, tradeData)
-                if caller == LIVE:
+                if caller == LIVE:  # Also add action to main activity monitor.
                     self.add_to_activity_monitor(trade['action'])
                 else:
                     self.add_to_simulation_activity_monitor(trade['action'])
@@ -1092,7 +1134,7 @@ class Interface(QMainWindow):
         self.otherCommandsAction.triggered.connect(lambda: self.otherCommands.show())
         self.configurationAction.triggered.connect(lambda: self.configuration.show())
         self.statisticsAction.triggered.connect(lambda: self.statistics.show())
-        self.aboutNigerianPrinceAction.triggered.connect(lambda: self.about.show())
+        self.aboutAlgobotAction.triggered.connect(lambda: self.about.show())
 
     def create_bot_slots(self):
         """
@@ -1199,18 +1241,27 @@ class Interface(QMainWindow):
             graph.setBackground('k')
 
     def set_bear_mode(self):
+        """
+        Sets bear mode color theme. Theme is red and black mimicking a red day.
+        """
         app.setPalette(get_red_palette())
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('k')
 
     def set_bull_mode(self):
+        """
+        Sets bull mode color theme. Theme is green and black mimicking a green day.
+        """
         app.setPalette(get_green_palette())
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('k')
 
     def set_printing_mode(self):
+        """
+        Sets printing mode color theme. Theme is dark green and white mimicking dollars.
+        """
         app.setPalette(get_light_green_palette())
         for graph in self.graphs:
             graph = graph['graph']

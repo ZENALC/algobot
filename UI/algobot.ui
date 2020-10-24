@@ -1325,7 +1325,7 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="aboutNigerianPrinceAction"/>
+    <addaction name="aboutAlgobotAction"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
@@ -1346,7 +1346,7 @@
     <string>Statistics</string>
    </property>
   </action>
-  <action name="aboutNigerianPrinceAction">
+  <action name="aboutAlgobotAction">
    <property name="text">
     <string>About Algobot</string>
    </property>
