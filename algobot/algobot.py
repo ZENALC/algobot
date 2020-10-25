@@ -261,10 +261,10 @@ class Interface(QMainWindow):
     def run_bot(self, caller):
         """
         Runs bot with caller specified.
-        :param caller: Type of bot to run - Simulation or LIVE.
+        :param caller: Type of bot to run - simulation or live.
         """
+        self.disable_interface(True, caller, everything=True)
         self.create_trader(caller)
-        self.disable_interface(True, caller)
         self.set_parameters(caller)
         self.enable_override(caller)
 
@@ -273,6 +273,7 @@ class Interface(QMainWindow):
                 self.handle_telegram_bot()
             self.clear_table(self.historyTable)
             self.runningLive = True
+            self.disable_interface(True, caller, everything=False)
             self.destroy_graph_plots(self.realGraph)  # clearing the graph plots
             self.destroy_graph_plots(self.avgGraph)
             self.setup_graph_plots(self.realGraph, self.trader, NET_GRAPH)
@@ -281,6 +282,7 @@ class Interface(QMainWindow):
         elif caller == SIMULATION:
             self.clear_table(self.simulationHistoryTable)
             self.simulationRunningLive = True
+            self.disable_interface(True, caller, everything=False)
             self.destroy_graph_plots(self.simulationGraph)  # clearing the graph plots
             self.destroy_graph_plots(self.simulationAvgGraph)
             self.setup_graph_plots(self.simulationGraph, self.simulationTrader, NET_GRAPH)
@@ -292,6 +294,7 @@ class Interface(QMainWindow):
         Ends bot based on caller.
         :param caller: Caller that decides which bot will be ended.
         """
+        self.disable_interface(True, caller=caller, everything=True)
         if caller == SIMULATION:
             self.simulationRunningLive = False
             self.simulationTrader.get_simulation_result()
@@ -383,7 +386,7 @@ class Interface(QMainWindow):
 
     def set_parameters(self, caller):
         """
-        Rrtrieves moving average options and loss settings based on caller.
+        Retrieves moving average options and loss settings based on caller.
         :param caller: Caller that dictates which parameters get set.
         :return:
         """
@@ -408,9 +411,10 @@ class Interface(QMainWindow):
             self.add_to_activity_monitor(f'Logging method has been changed to simple.')
         self.advancedLogging = boolean
 
-    def disable_interface(self, boolean, caller):
+    def disable_interface(self, boolean, caller, everything=False):
         """
         Function that will control trading configuration interfaces.
+        :param everything: Disables everything during initialization.
         :param boolean: If true, configuration settings get disabled.
         :param caller: Caller that determines which configuration settings get disabled.
         """
@@ -418,15 +422,24 @@ class Interface(QMainWindow):
         if caller == BACKTEST:
             self.configuration.backtestConfigurationTabWidget.setEnabled(boolean)
             self.runBacktestButton.setEnabled(boolean)
-            self.endBacktestButton.setEnabled(not boolean)
+            if not everything:
+                self.endBacktestButton.setEnabled(not boolean)
+            else:
+                self.endBacktestButton.setEnabled(boolean)
         elif caller == SIMULATION:
             self.configuration.simulationConfigurationTabWidget.setEnabled(boolean)
             self.runSimulationButton.setEnabled(boolean)
-            self.endSimulationButton.setEnabled(not boolean)
+            if not everything:
+                self.endSimulationButton.setEnabled(not boolean)
+            else:
+                self.endSimulationButton.setEnabled(boolean)
         elif caller == LIVE:
             self.configuration.mainConfigurationTabWidget.setEnabled(boolean)
             self.runBotButton.setEnabled(boolean)
-            self.endBotBUtton.setEnabled(not boolean)
+            if not everything:
+                self.endBotButton.setEnabled(not boolean)
+            else:
+                self.endBotButton.setEnabled(boolean)
         else:
             raise ValueError('Invalid caller specified.')
 
@@ -1016,35 +1029,37 @@ class Interface(QMainWindow):
         :param color: Color plot will be setup in.
         """
         net = trader.startingBalance
-        currentDate = datetime.utcnow().timestamp()
+        currentDateTimestamp = datetime.utcnow().timestamp()
+        graph.setLimits(xMin=currentDateTimestamp)
         self.append_plot_to_graph(graph, [{
-            'plot': self.create_graph_plot(graph, (currentDate,), (net,),
+            'plot': self.create_graph_plot(graph, (currentDateTimestamp,), (net,),
                                            color=color, plotName='Net'),
-            'x': [currentDate],
+            'x': [currentDateTimestamp],
             'y': [net]
         }])
 
-    def setup_average_graph_plot(self, graph: PlotWidget, trader, colors: list):
+    def setup_average_graph_plots(self, graph: PlotWidget, trader, colors: list):
         """
         Sets up moving average plots for graph provided.
         :param trader: Type of trader that will use this graph.
         :param graph: Graph where plots will be setup.
         :param colors: List of colors plots will be setup in.
         """
-        currentDate = datetime.utcnow().timestamp()
+        currentDateTimestamp = datetime.utcnow().timestamp()
+        graph.setLimits(xMin=currentDateTimestamp)
         colorCounter = 1
         for option in trader.tradingOptions:
             initialAverage, finalAverage, initialName, finalName = self.get_option_info(option, trader)
             initialPlotDict = {
-                'plot': self.create_graph_plot(graph, (currentDate,), (initialAverage,),
+                'plot': self.create_graph_plot(graph, (currentDateTimestamp,), (initialAverage,),
                                                color=colors[colorCounter], plotName=initialName),
-                'x': [currentDate],
+                'x': [currentDateTimestamp],
                 'y': [initialAverage]
             }
             secondaryPlotDict = {
-                'plot': self.create_graph_plot(graph, (currentDate,), (finalAverage,),
+                'plot': self.create_graph_plot(graph, (currentDateTimestamp,), (finalAverage,),
                                                color=colors[colorCounter + 1], plotName=finalName),
-                'x': [currentDate],
+                'x': [currentDateTimestamp],
                 'y': [finalAverage]
             }
             colorCounter += 2
@@ -1061,7 +1076,7 @@ class Interface(QMainWindow):
         if graphType == NET_GRAPH:
             self.setup_net_graph_plot(graph=graph, trader=trader, color=colors[0])
         elif graphType == AVG_GRAPH:
-            self.setup_average_graph_plot(graph=graph, trader=trader, colors=colors)
+            self.setup_average_graph_plots(graph=graph, trader=trader, colors=colors)
         else:
             raise TypeError("Invalid type of graph provided.")
 
