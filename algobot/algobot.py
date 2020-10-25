@@ -118,9 +118,11 @@ class Interface(QMainWindow):
         if caller == LIVE and not self.trader.dataView.data_is_updated():
             self.add_to_activity_monitor('New data found. Updating...')
             self.trader.dataView.update_data()
+            self.add_to_activity_monitor('Updated data successfully.')
         elif caller == SIMULATION and not self.simulationTrader.dataView.data_is_updated():
             self.add_to_simulation_activity_monitor('New data found. Updating...')
             self.simulationTrader.dataView.update_data()
+            self.add_to_simulation_activity_monitor('Updated data successfully.')
 
     def handle_logging(self, caller):
         """
@@ -274,7 +276,7 @@ class Interface(QMainWindow):
         Main function to automate trading.
         :param caller: Caller object to automate trading for.
         """
-        crossNotification = False
+        # crossNotification = False
         lowerTrend = None
         if caller == LIVE:
             runningLoop = self.runningLive
@@ -292,7 +294,7 @@ class Interface(QMainWindow):
                 self.handle_position_buttons(caller=caller)
                 self.handle_trailing_prices(caller=caller)
                 self.handle_trading(caller=caller)
-                crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)
+                # crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)
                 lowerTrend = self.handle_lower_interval_cross(caller, lowerTrend)
             except Exception as e:
                 raise e
