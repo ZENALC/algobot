@@ -87,15 +87,15 @@ class RealTrader(SimulationTrader):
         """
         Retrieves margin values and sets them to instance variables.
         """
-        if self.isolated:
+        try:
+            assets = self.binanceClient.get_margin_account()['userAssets']
+            coin = [asset for asset in assets if asset['asset'] == self.coinName][0]
+            usdt = [asset for asset in assets if asset['asset'] == 'USDT'][0]
+        except IndexError:
             assets = self.get_isolated_margin_account()['assets']
             coin = [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName][0]['baseAsset']
             usdt = [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName and
                     asset['quoteAsset']['asset'] == 'USDT'][0]['quoteAsset']
-        else:
-            assets = self.binanceClient.get_margin_account()['userAssets']
-            coin = [asset for asset in assets if asset['asset'] == self.coinName][0]
-            usdt = [asset for asset in assets if asset['asset'] == 'USDT'][0]
 
         self.balance = self.round_down(float(usdt['free']))
         self.coin = self.round_down(float(coin['free']))
@@ -227,13 +227,13 @@ class RealTrader(SimulationTrader):
         Retrieves USDT available in margin account.
         :return: USDT available.
         """
-        if self.isolated:
+        try:
+            return self.round_down(float(self.get_asset('USDT')['free']))
+        except IndexError:
             assets = self.get_isolated_margin_account()['assets']
             for asset in assets:
                 if asset['baseAsset']['asset'] == self.coinName and asset['quoteAsset']['asset'] == 'USDT':
                     return self.round_down(float(asset['quoteAsset']['free']))
-        else:
-            return self.round_down(float(self.get_asset('USDT')['free']))
 
     def get_margin_coin(self) -> float:
         """
@@ -325,7 +325,9 @@ class RealTrader(SimulationTrader):
         self.balance = self.get_margin_usdt()
         self.currentPrice = self.dataView.get_current_price()
         initialNet = self.get_net()
-        max_buy = self.round_down(self.balance / self.currentPrice)
+        print(self.balance)
+        max_buy = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
+        print(max_buy)
 
         order = self.binanceClient.create_margin_order(
             symbol=self.symbol,
@@ -426,7 +428,9 @@ class RealTrader(SimulationTrader):
         """
         self.balance = self.get_margin_usdt()
         self.currentPrice = self.dataView.get_current_price()
-        max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
+        transactionFee = self.balance * self.transactionFeePercentage
+        max_borrow = self.round_down((self.balance - transactionFee) / self.currentPrice)
+        # max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
         self.create_margin_loan(amount=max_borrow, force=force)
 
         initialNet = self.get_net()

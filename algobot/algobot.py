@@ -62,20 +62,51 @@ class Interface(QMainWindow):
         self.telegramBot = None
         self.add_to_activity_monitor('Initialized interface.')
 
-    # TO FIX
-    def initiate_bot_thread(self, caller):
-        worker = Worker(lambda: self.run_bot(caller))
-        worker.signals.error.connect(self.end_bot_and_create_popup)
-        # worker.signals.result.connect(lambda: print("lol"))
+    def initiate_live_bot_thread(self):
+        """
+        Hacky fix to initiate live bot thread. Needs to be optimized.
+        """
+        worker = Worker(lambda: self.run_bot(caller=LIVE))
+        worker.signals.error.connect(self.end_live_bot_and_create_popup)
         self.threadPool.start(worker)
 
-    # TO FIX
-    def end_bot_and_create_popup(self, msg):
-        # self.disable_interface(False)
+    def end_live_bot_and_create_popup(self, msg):
+        """
+        Hacky fix to end live bot thread. Needs to be optimized.
+        """
+        self.disable_interface(boolean=False, caller=LIVE)
         self.endBotButton.setEnabled(False)
-        self.endSimulationButton.setEnabled(False)
-        # self.timestamp_message('Ended bot because of an error.')
         self.create_popup(msg)
+
+    def initiate_simulation_bot_thread(self):
+        """
+        Hacky fix to initiate simulation bot thread. Needs to be optimized.
+        """
+        worker = Worker(lambda: self.run_bot(caller=SIMULATION))
+        worker.signals.error.connect(self.end_simulation_bot_and_create_popup)
+        self.threadPool.start(worker)
+
+    def end_simulation_bot_and_create_popup(self, msg):
+        """
+        Hacky fix to end simulation bot thread. Needs to be optimized.
+        """
+        self.disable_interface(boolean=False, caller=SIMULATION)
+        self.endSimulationButton.setEnabled(False)
+        self.create_popup(msg)
+
+    # TO FIX
+    # def initiate_bot_thread(self, caller):
+    #     worker = Worker(lambda: self.run_bot(caller))
+    #     worker.signals.error.connect(self.end_bot_and_create_popup)
+    #     # worker.signals.result.connect(lambda: print("lol"))
+    #     self.threadPool.start(worker)
+    #
+    # TO FIX
+    # def end_bot_and_create_popup(self, msg, caller):
+    #     self.disable_interface(boolean=False, caller=caller)
+    #     self.endBotButton.setEnabled(False)
+    #     self.endSimulationButton.setEnabled(False)
+    #     self.create_popup(msg)
 
     def update_data(self, caller):
         """
@@ -243,7 +274,14 @@ class Interface(QMainWindow):
         """
         crossNotification = False
         lowerTrend = None
-        while self.simulationRunningLive:
+        if caller == LIVE:
+            runningLoop = self.runningLive
+        elif caller == SIMULATION:
+            runningLoop = self.simulationRunningLive
+        else:
+            raise TypeError("Unknown type of caller specified.")
+
+        while runningLoop:
             try:
                 self.update_data(caller=caller)
                 self.update_interface_info(caller=caller)
@@ -254,7 +292,6 @@ class Interface(QMainWindow):
                 self.handle_trading(caller=caller)
                 crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)
                 lowerTrend = self.handle_lower_interval_cross(caller, lowerTrend)
-
             except Exception as e:
                 raise e
 
@@ -274,9 +311,9 @@ class Interface(QMainWindow):
             self.clear_table(self.historyTable)
             self.runningLive = True
             self.disable_interface(True, caller, everything=False)
-            self.destroy_graph_plots(self.realGraph)  # clearing the graph plots
+            self.destroy_graph_plots(self.liveGraph)  # clearing the graph plots
             self.destroy_graph_plots(self.avgGraph)
-            self.setup_graph_plots(self.realGraph, self.trader, NET_GRAPH)
+            self.setup_graph_plots(self.liveGraph, self.trader, NET_GRAPH)
             self.setup_graph_plots(self.avgGraph, self.trader, AVG_GRAPH)
             self.automate_trading(caller)
         elif caller == SIMULATION:
@@ -1245,7 +1282,7 @@ class Interface(QMainWindow):
         """
         Creates bot slots.
         """
-        self.runBotButton.clicked.connect(lambda: self.initiate_bot_thread(caller=LIVE))
+        self.runBotButton.clicked.connect(self.initiate_live_bot_thread)
         self.endBotButton.clicked.connect(lambda: self.end_bot(caller=LIVE))
         self.configureBotButton.clicked.connect(self.show_main_settings)
         self.forceLongButton.clicked.connect(self.force_long)
@@ -1258,7 +1295,7 @@ class Interface(QMainWindow):
         """
         Creates simulation slots.
         """
-        self.runSimulationButton.clicked.connect(lambda: self.initiate_bot_thread(caller=SIMULATION))
+        self.runSimulationButton.clicked.connect(self.initiate_simulation_bot_thread)
         self.endSimulationButton.clicked.connect(lambda: self.end_bot(caller=SIMULATION))
         self.configureSimulationButton.clicked.connect(self.show_simulation_settings)
         self.forceLongSimulationButton.clicked.connect(lambda: self.force_long(SIMULATION))
@@ -1316,6 +1353,9 @@ class Interface(QMainWindow):
         """
         if '-1021' in msg:
             msg = msg + ' Please sync your system time.'
+        if 'list index out of range' in msg:
+            pair = self.configuration.tickerComboBox.currentText()
+            msg = f'You may not have any assets in the symbol {pair}. Please check Binance and try again.'
         QMessageBox.about(self, 'Warning', msg)
 
     def set_dark_mode(self):
