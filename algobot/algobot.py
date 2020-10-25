@@ -1085,7 +1085,7 @@ class Interface(QMainWindow):
     @staticmethod
     def create_graph_plot(graph, x, y, plotName, color):
         """
-        Plots to graph provided.
+        Creates a graph plot with parameters provided.
         :param graph: Graph function will plot on.
         :param x: X values of graph.
         :param y: Y values of graph.
@@ -1106,7 +1106,7 @@ class Interface(QMainWindow):
     @staticmethod
     def test_table(table, trade):
         """
-        Initial function made to test table functionalities in QT.
+        Initial function made to test table functionality in QT.
         :param table: Table to insert row at.
         :param trade: Trade information to add.
         """
