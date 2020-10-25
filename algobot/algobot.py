@@ -76,6 +76,7 @@ class Interface(QMainWindow):
         """
         self.disable_interface(boolean=False, caller=LIVE)
         self.endBotButton.setEnabled(False)
+        self.add_to_activity_monitor(msg)
         self.create_popup(msg)
 
     def initiate_simulation_bot_thread(self):
@@ -92,6 +93,7 @@ class Interface(QMainWindow):
         """
         self.disable_interface(boolean=False, caller=SIMULATION)
         self.endSimulationButton.setEnabled(False)
+        self.add_to_simulation_activity_monitor(msg)
         self.create_popup(msg)
 
     # TO FIX
@@ -206,20 +208,20 @@ class Interface(QMainWindow):
     def handle_cross_notification(self, caller, notification):
         """
         Handles cross notifications.
-        :param caller: Caller object for whom function will handle cross notifications/
+        :param caller: Caller object for whom function will handle cross notifications.
         :param notification: Notification boolean whether it is time to notify or not.
         :return: Boolean whether cross should be notified on next function call.
         """
         if caller == SIMULATION:
-            if self.simulationTrader.currentPosition is not None:
-                return True
-            else:
-                if not notification and not self.simulationTrader.inHumanControl:
+            if self.simulationTrader.currentPosition is None:
+                if not self.simulationTrader.inHumanControl and notification:
                     self.add_to_simulation_activity_monitor("Waiting for a cross.")
                     return False
+            else:
+                return False
         elif caller == LIVE:
             if self.trader.currentPosition is not None:
-                return True
+                return False
             else:
                 if not notification and not self.trader.inHumanControl:
                     self.add_to_activity_monitor("Waiting for a cross.")
@@ -389,6 +391,7 @@ class Interface(QMainWindow):
                                                      symbol=symbol,
                                                      interval=interval,
                                                      loadData=True)
+            self.add_to_simulation_activity_monitor("Retrieved data successfully.")
         elif caller == LIVE:
             symbol = self.configuration.tickerComboBox.currentText()
             interval = helpers.convert_interval(self.configuration.intervalComboBox.currentText())
@@ -400,6 +403,7 @@ class Interface(QMainWindow):
                 raise ValueError("Please specify an API key. No API key found.")
             self.add_to_activity_monitor(f"Retrieving data for interval {interval}...")
             self.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol)
+            self.add_to_activity_monitor("Retrieved data successfully.")
         else:
             raise ValueError("Invalid caller.")
 
@@ -417,9 +421,11 @@ class Interface(QMainWindow):
             if caller == LIVE:
                 self.add_to_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
                 self.lowerIntervalData = Data(lowerInterval)
+                self.add_to_activity_monitor('Retrieved lower interval data successfully.')
             else:
                 self.add_to_simulation_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
                 self.simulationLowerIntervalData = Data(lowerInterval)
+                self.add_to_simulation_activity_monitor("Retrieved lower interval data successfully.")
 
     def set_parameters(self, caller):
         """
