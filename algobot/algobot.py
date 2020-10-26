@@ -943,8 +943,8 @@ class Interface(QMainWindow):
         """
         configDictionary = self.get_interface_dictionary(caller)['configuration']
         if configDictionary['trailingLossRadio'].isChecked():
-            return TRAILING_LOSS, configDictionary['lossPercentage'] / 100
-        return STOP_LOSS, configDictionary['lossPercentage'] / 100
+            return TRAILING_LOSS, configDictionary['lossPercentage'].value() / 100
+        return STOP_LOSS, configDictionary['lossPercentage'].value() / 100
 
     @staticmethod
     def get_option_info(option: Option, trader) -> tuple:
