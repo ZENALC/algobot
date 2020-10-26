@@ -54,6 +54,7 @@ class Interface(QMainWindow):
         self.runningLive = False
         self.simulationRunningLive = False
         self.backtestRunningLive = False
+        self.traders = {SIMULATION: None, LIVE: None}
         self.trader: RealTrader or None = None
         self.simulationTrader: SimulationTrader or None = None
         self.simulationLowerIntervalData: Data or None = None
