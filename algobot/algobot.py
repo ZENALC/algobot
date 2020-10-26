@@ -56,7 +56,6 @@ class Interface(QMainWindow):
         self.backtestRunningLive = False
         self.trader: RealTrader or None = None
         self.simulationTrader: SimulationTrader or None = None
-        self.traderType = None
         self.simulationLowerIntervalData: Data or None = None
         self.lowerIntervalData: Data or None = None
         self.telegramBot = None
