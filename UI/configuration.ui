@@ -67,7 +67,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="mainMainTab">
           <attribute name="title">
@@ -86,43 +86,8 @@
               <string>Live Main Options</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_13">
-              <item row="8" column="1">
-               <spacer name="verticalSpacer_6">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="binanceSecretKeyLabel">
-                <property name="text">
-                 <string>Binance Secret Key</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1" colspan="3">
-               <widget class="QComboBox" name="tickerComboBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>BTCUSDT</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="tickerLabel">
+              <item row="1" column="0">
+               <widget class="QLabel" name="intervalLabel">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -130,14 +95,7 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Ticker</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1" colspan="3">
-               <widget class="QLineEdit" name="binanceApiKey">
-                <property name="echoMode">
-                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                 <string>Interval</string>
                 </property>
                </widget>
               </item>
@@ -213,16 +171,10 @@
                 </item>
                </widget>
               </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="intervalLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
+              <item row="2" column="0">
+               <widget class="QLabel" name="binanceApiKeyLabel">
                 <property name="text">
-                 <string>Interval</string>
+                 <string>Binance API Key</string>
                 </property>
                </widget>
               </item>
@@ -233,24 +185,17 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="1" colspan="3">
-               <widget class="QLineEdit" name="binanceApiSecret">
-                <property name="echoMode">
-                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="binanceApiKeyLabel">
-                <property name="text">
-                 <string>Binance API Key</string>
-                </property>
-               </widget>
-              </item>
               <item row="5" column="0">
                <widget class="QLabel" name="regionLabel">
                 <property name="text">
                  <string>Region</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1" colspan="3">
+               <widget class="QLineEdit" name="binanceApiSecret">
+                <property name="echoMode">
+                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
                 </property>
                </widget>
               </item>
@@ -261,6 +206,68 @@
                 </property>
                 <property name="checked">
                  <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="binanceSecretKeyLabel">
+                <property name="text">
+                 <string>Binance Secret Key</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1" colspan="3">
+               <widget class="QComboBox" name="tickerComboBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>BTCUSDT</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="10" column="1">
+               <spacer name="verticalSpacer_6">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="tickerLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Ticker</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1" colspan="3">
+               <widget class="QLineEdit" name="binanceApiKey">
+                <property name="echoMode">
+                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="0" colspan="4">
+               <widget class="QLabel" name="credentialResult">
+                <property name="text">
+                 <string>Successfully connected.</string>
                 </property>
                </widget>
               </item>
@@ -281,14 +288,7 @@
                 </property>
                </widget>
               </item>
-              <item row="7" column="0" colspan="4">
-               <widget class="QLabel" name="credentialResult">
-                <property name="text">
-                 <string>Successfully connected.</string>
-                </property>
-               </widget>
-              </item>
-              <item row="6" column="0">
+              <item row="8" column="0">
                <widget class="QPushButton" name="saveCredentialsButton">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -301,17 +301,45 @@
                 </property>
                </widget>
               </item>
-              <item row="6" column="1">
+              <item row="8" column="1">
                <widget class="QPushButton" name="loadCredentialsButton">
                 <property name="text">
                  <string>Load Credentials</string>
                 </property>
                </widget>
               </item>
-              <item row="6" column="2">
+              <item row="8" column="2">
                <widget class="QPushButton" name="testCredentialsButton">
                 <property name="text">
                  <string>Test Credentials</string>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="2">
+               <widget class="QRadioButton" name="crossMarginAccountRadio">
+                <property name="text">
+                 <string>Cross Margin</string>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="0">
+               <widget class="QLabel" name="accountTypeLabel">
+                <property name="text">
+                 <string>Account Type</string>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="1">
+               <widget class="QRadioButton" name="isolatedMarginAccountRadio">
+                <property name="text">
+                 <string>Isolated Margin</string>
+                </property>
+               </widget>
+              </item>
+              <item row="7" column="0">
+               <widget class="QCheckBox" name="lowerIntervalCheck">
+                <property name="text">
+                 <string>Lower Interval Notification?</string>
                 </property>
                </widget>
               </item>
@@ -820,7 +848,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="backtestMainTab">
           <attribute name="title">
@@ -1615,7 +1643,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="simulationMainTab">
           <attribute name="title">
@@ -1660,19 +1688,6 @@
                   <string>BTCUSDT</string>
                  </property>
                 </item>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="simulationIntervalLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Interval</string>
-                </property>
                </widget>
               </item>
               <item row="1" column="1">
@@ -1747,6 +1762,19 @@
                 </item>
                </widget>
               </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="simulationIntervalLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Interval</string>
+                </property>
+               </widget>
+              </item>
               <item row="2" column="0">
                <widget class="QLabel" name="simulationStartingBalance">
                 <property name="sizePolicy">
@@ -1757,6 +1785,26 @@
                 </property>
                 <property name="text">
                  <string>Starting Balance</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <spacer name="verticalSpacer_9">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="4" column="0">
+               <widget class="QPushButton" name="simulationCopySettingsButton">
+                <property name="text">
+                 <string>Copy Main Settings</string>
                 </property>
                </widget>
               </item>
@@ -1786,24 +1834,11 @@
                </widget>
               </item>
               <item row="3" column="0">
-               <widget class="QPushButton" name="simulationCopySettingsButton">
+               <widget class="QCheckBox" name="lowerIntervalSimulationCheck">
                 <property name="text">
-                 <string>Copy Main Settings</string>
+                 <string>Lower Interval Notification?</string>
                 </property>
                </widget>
-              </item>
-              <item row="4" column="1">
-               <spacer name="verticalSpacer_9">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
               </item>
              </layout>
             </widget>
@@ -2314,7 +2349,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>4</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="tab_10">
           <property name="enabled">
