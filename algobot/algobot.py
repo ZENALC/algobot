@@ -555,6 +555,7 @@ class Interface(QMainWindow):
         interfaceDict = self.get_interface_dictionary(caller)
         self.update_statistics(interfaceDict, trader=trader)
 
+    # noinspection DuplicatedCode
     def get_interface_dictionary(self, caller):
         """
         Returns dictionary of objects from QT. Used for DRY principles.
@@ -590,6 +591,19 @@ class Interface(QMainWindow):
                     'netTotalValue': self.simulationNetTotalValue,
                     'tickerLabel': self.simulationTickerLabel,
                     'tickerValue': self.simulationTickerValue
+                },
+                'configuration': {
+                    'baseAverageType': self.configuration.simulationAverageTypeComboBox,
+                    'baseParameter':  self.configuration.simulationParameterComboBox,
+                    'baseInitialValue':  self.configuration.simulationInitialValueSpinBox,
+                    'baseFinalValue': self.configuration.simulationFinalValueSpinBox,
+                    'doubleCrossCheck': self.configuration.simulationDoubleCrossCheckMark,
+                    'additionalAverageType': self.configuration.simulationDoubleAverageComboBox,
+                    'additionalParameter': self.configuration.simulationDoubleParameterComboBox,
+                    'additionalInitialValue':  self.configuration.simulationDoubleInitialValueSpinBox,
+                    'additionalFinalValue': self.configuration.simulationDoubleFinalValueSpinBox,
+                    'trailingLossRadio': self.configuration.simulationTrailingLossRadio,
+                    'lossPercentage': self.configuration.simulationLossPercentageSpinBox,
                 }
             },
             LIVE: {
@@ -620,8 +634,37 @@ class Interface(QMainWindow):
                     'netTotalValue': self.netTotalValue,
                     'tickerLabel': self.tickerLabel,
                     'tickerValue': self.tickerValue
+                },
+                'configuration': {
+                    'baseAverageType': self.configuration.averageTypeComboBox,
+                    'baseParameter': self.configuration.parameterComboBox,
+                    'baseInitialValue': self.configuration.initialValueSpinBox,
+                    'baseFinalValue': self.configuration.finalValueSpinBox,
+                    'doubleCrossCheck': self.configuration.doubleCrossCheckMark,
+                    'additionalAverageType': self.configuration.doubleAverageComboBox,
+                    'additionalParameter': self.configuration.doubleParameterComboBox,
+                    'additionalInitialValue': self.configuration.doubleInitialValueSpinBox,
+                    'additionalFinalValue': self.configuration.doubleFinalValueSpinBox,
+                    'trailingLossRadio': self.configuration.trailingLossRadio,
+                    'lossPercentage': self.configuration.lossPercentageSpinBox,
                 }
-            }}
+            },
+            BACKTEST: {
+                'configuration': {
+                    'baseAverageType': self.configuration.backtestAverageTypeComboBox,
+                    'baseParameter':  self.configuration.backtestParameterComboBox,
+                    'baseInitialValue':  self.configuration.backtestInitialValueSpinBox,
+                    'baseFinalValue': self.configuration.backtestFinalValueSpinBox,
+                    'doubleCrossCheck': self.configuration.backtestDoubleCrossCheckMark,
+                    'additionalAverageType': self.configuration.backtestDoubleAverageComboBox,
+                    'additionalParameter': self.configuration.backtestDoubleParameterComboBox,
+                    'additionalInitialValue':  self.configuration.backtestDoubleInitialValueSpinBox,
+                    'additionalFinalValue': self.configuration.backtestDoubleFinalValueSpinBox,
+                    'trailingLossRadio': self.configuration.backtestTrailingLossRadio,
+                    'lossPercentage': self.configuration.backtestLossPercentageSpinBox,
+                }
+            }
+        }
         return interfaceDictionary[caller]
 
     def update_live_graphs(self, net):
@@ -869,83 +912,28 @@ class Interface(QMainWindow):
         else:
             raise ValueError("Invalid caller type specified.")
 
-    def get_backtest_trading_options(self):
-        """
-        Returns trading options for backtest trading configuration.
-        :return: Backtest trading options list.
-        """
-        baseAverageType = self.configuration.backtestAverageTypeComboBox.currentText()
-        baseParameter = self.configuration.backtestParameterComboBox.currentText().lower()
-        baseInitialValue = self.configuration.backtestInitialValueSpinBox.value()
-        baseFinalValue = self.configuration.backtestFinalValueSpinBox.value()
-        options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
-
-        if self.configuration.backtestDoubleCrossCheckMark.isChecked():
-            additionalAverageType = self.configuration.backtestDoubleAverageComboBox.currentText()
-            additionalParameter = self.configuration.backtestDoubleParameterComboBox.currentText().lower()
-            additionalInitialValue = self.configuration.backtestDoubleInitialValueSpinBox.value()
-            additionalFinalValue = self.configuration.backtestDoubleFinalValueSpinBox.value()
-            option = Option(additionalAverageType, additionalParameter, additionalInitialValue, additionalFinalValue)
-            options.append(option)
-
-        return options
-
-    def get_simulation_trading_options(self) -> list:
-        """
-        Returns trading options for simulation trading configuration.
-        :return: Simulation trading options list.
-        """
-        baseAverageType = self.configuration.simulationAverageTypeComboBox.currentText()
-        baseParameter = self.configuration.simulationParameterComboBox.currentText().lower()
-        baseInitialValue = self.configuration.simulationInitialValueSpinBox.value()
-        baseFinalValue = self.configuration.simulationFinalValueSpinBox.value()
-        options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
-
-        if self.configuration.simulationDoubleCrossCheckMark.isChecked():
-            additionalAverageType = self.configuration.simulationDoubleAverageComboBox.currentText()
-            additionalParameter = self.configuration.simulationDoubleParameterComboBox.currentText().lower()
-            additionalInitialValue = self.configuration.simulationDoubleInitialValueSpinBox.value()
-            additionalFinalValue = self.configuration.simulationDoubleFinalValueSpinBox.value()
-            option = Option(additionalAverageType, additionalParameter, additionalInitialValue, additionalFinalValue)
-            options.append(option)
-
-        return options
-
-    def get_live_trading_options(self) -> list:
-        """
-        Returns trading options for live trading configuration.
-        :return: Live trading options list.
-        """
-        baseAverageType = self.configuration.averageTypeComboBox.currentText()
-        baseParameter = self.configuration.parameterComboBox.currentText().lower()
-        baseInitialValue = self.configuration.initialValueSpinBox.value()
-        baseFinalValue = self.configuration.finalValueSpinBox.value()
-
-        options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
-        if self.configuration.doubleCrossCheckMark.isChecked():
-            additionalAverageType = self.configuration.doubleAverageComboBox.currentText()
-            additionalParameter = self.configuration.doubleParameterComboBox.currentText().lower()
-            additionalInitialValue = self.configuration.doubleInitialValueSpinBox.value()
-            additionalFinalValue = self.configuration.doubleFinalValueSpinBox.value()
-            option = Option(additionalAverageType, additionalParameter, additionalInitialValue, additionalFinalValue)
-            options.append(option)
-
-        return options
-
     def get_trading_options(self, caller) -> list:
         """
-        Returns trading options for caller specified.
-        :param caller: Caller for which trading options will be returned.
+        Returns trading options based on caller specified.
+        :param caller: Caller object that will determine which trading options are returned.
         :return: Trading options based on caller.
         """
-        if caller == BACKTEST:
-            return self.get_backtest_trading_options()
-        elif caller == SIMULATION:
-            return self.get_simulation_trading_options()
-        elif caller == LIVE:
-            return self.get_live_trading_options()
-        else:
-            raise ValueError("Invalid caller specified.")
+        configDictionary = self.get_interface_dictionary(caller)['configuration']
+        baseAverageType = configDictionary['baseAverageType'].currentText()
+        baseParameter = configDictionary['baseParameter'].currentText().lower()
+        baseInitialValue = configDictionary['baseInitialValue'].value()
+        baseFinalValue = configDictionary['baseFinalValue'].value()
+        options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
+
+        if configDictionary['doubleCrossCheck'].isChecked():
+            additionalAverageType = configDictionary['additionalAverageType'].currentText()
+            additionalParameter = configDictionary['additionalParameter'].currentText().lower()
+            additionalInitialValue = configDictionary['additionalInitialValue'].value()
+            additionalFinalValue = configDictionary['additionalFinalValue'].value()
+            option = Option(additionalAverageType, additionalParameter, additionalInitialValue, additionalFinalValue)
+            options.append(option)
+
+        return options
 
     def get_loss_settings(self, caller) -> tuple:
         """
@@ -953,21 +941,10 @@ class Interface(QMainWindow):
         :param caller: Caller for which loss settings will be returned.
         :return: Tuple with stop loss type and loss percentage.
         """
-        if caller == BACKTEST:
-            if self.configuration.backtestTrailingLossRadio.isChecked():
-                return TRAILING_LOSS, self.configuration.backtestLossPercentageSpinBox.value() / 100
-            else:
-                return STOP_LOSS, self.configuration.backtestLossPercentageSpinBox.value() / 100
-        elif caller == SIMULATION:
-            if self.configuration.simulationTrailingLossRadio.isChecked():
-                return TRAILING_LOSS, self.configuration.simulationLossPercentageSpinBox.value() / 100
-            else:
-                return STOP_LOSS, self.configuration.simulationLossPercentageSpinBox.value() / 100
-        elif caller == LIVE:
-            if self.configuration.trailingLossRadio.isChecked():
-                return TRAILING_LOSS, self.configuration.lossPercentageSpinBox.value() / 100
-            else:
-                return STOP_LOSS, self.configuration.lossPercentageSpinBox.value() / 100
+        configDictionary = self.get_interface_dictionary(caller)['configuration']
+        if configDictionary['trailingLossRadio'].isChecked():
+            return TRAILING_LOSS, configDictionary['lossPercentage'] / 100
+        return STOP_LOSS, configDictionary['lossPercentage'] / 100
 
     @staticmethod
     def get_option_info(option: Option, trader) -> tuple:
