@@ -464,29 +464,13 @@ class Interface(QMainWindow):
         :param caller: Caller that determines which configuration settings get disabled.
         """
         boolean = not boolean
-        if caller == BACKTEST:
-            self.configuration.backtestConfigurationTabWidget.setEnabled(boolean)
-            self.runBacktestButton.setEnabled(boolean)
-            if not everything:
-                self.endBacktestButton.setEnabled(not boolean)
-            else:
-                self.endBacktestButton.setEnabled(boolean)
-        elif caller == SIMULATION:
-            self.configuration.simulationConfigurationTabWidget.setEnabled(boolean)
-            self.runSimulationButton.setEnabled(boolean)
-            if not everything:
-                self.endSimulationButton.setEnabled(not boolean)
-            else:
-                self.endSimulationButton.setEnabled(boolean)
-        elif caller == LIVE:
-            self.configuration.mainConfigurationTabWidget.setEnabled(boolean)
-            self.runBotButton.setEnabled(boolean)
-            if not everything:
-                self.endBotButton.setEnabled(not boolean)
-            else:
-                self.endBotButton.setEnabled(boolean)
+        interfaceDict = self.get_interface_dictionary(caller=caller)
+        interfaceDict['configuration']['mainConfigurationTabWidget'].setEnabled(boolean)
+        interfaceDict['mainInterface']['runBotButton'].setEnabled(boolean)
+        if not everything:
+            interfaceDict['mainInterface']['endBotButton'].setEnabled(not boolean)
         else:
-            raise ValueError('Invalid caller specified.')
+            interfaceDict['mainInterface']['endBotButton'].setEnabled(boolean)
 
     def update_statistics(self, interfaceDictionary: dict, trader):
         """
@@ -589,17 +573,23 @@ class Interface(QMainWindow):
                     'nextFinalMovingAverageValue': self.statistics.simulationNextFinalMovingAverageValue
                 },
                 'mainInterface': {
+                    # Portfolio
                     'profitLabel': self.simulationProfitLabel,
                     'profitValue': self.simulationProfitValue,
                     'percentageValue': self.simulationPercentageValue,
                     'netTotalValue': self.simulationNetTotalValue,
                     'tickerLabel': self.simulationTickerLabel,
                     'tickerValue': self.simulationTickerValue,
+                    # Buttons
                     'pauseBotButton': self.pauseBotSimulationButton,
+                    'runBotButton': self.runSimulationButton,
+                    'endBotButton': self.endSimulationButton,
                     'forceShortButton': self.forceShortSimulationButton,
                     'forceLongButton': self.forceLongSimulationButton,
                     'exitPositionButton': self.exitPositionSimulationButton,
-                    'waitOverrideButton': self.waitOverrideSimulationButton
+                    'waitOverrideButton': self.waitOverrideSimulationButton,
+                    # Override
+                    'overrideGroupBox': self.simulationOverrideGroupBox
                 },
                 'configuration': {
                     'baseAverageType': self.configuration.simulationAverageTypeComboBox,
@@ -613,6 +603,7 @@ class Interface(QMainWindow):
                     'additionalFinalValue': self.configuration.simulationDoubleFinalValueSpinBox,
                     'trailingLossRadio': self.configuration.simulationTrailingLossRadio,
                     'lossPercentage': self.configuration.simulationLossPercentageSpinBox,
+                    'mainConfigurationTabWidget': self.configuration.simulationConfigurationTabWidget,
                 }
             },
             LIVE: {
@@ -641,17 +632,23 @@ class Interface(QMainWindow):
                     'nextFinalMovingAverageValue': self.statistics.nextFinalMovingAverageValue
                 },
                 'mainInterface': {
+                    # Portfolio
                     'profitLabel': self.profitLabel,
                     'profitValue': self.profitValue,
                     'percentageValue': self.percentageValue,
                     'netTotalValue': self.netTotalValue,
                     'tickerLabel': self.tickerLabel,
                     'tickerValue': self.tickerValue,
-                    'pauseBotButton': self.pauseBotSimulationButton,
+                    # Buttons
+                    'pauseBotButton': self.pauseBotButton,
+                    'runBotButton': self.runBotButton,
+                    'endBotButton': self.endBotButton,
                     'forceShortButton': self.forceShortButton,
                     'forceLongButton': self.forceLongButton,
                     'exitPositionButton': self.exitPositionButton,
-                    'waitOverrideButton': self.waitOverrideButton
+                    'waitOverrideButton': self.waitOverrideButton,
+                    # Override
+                    'overrideGroupBox': self.overrideGroupBox
                 },
                 'configuration': {
                     'baseAverageType': self.configuration.averageTypeComboBox,
@@ -665,6 +662,7 @@ class Interface(QMainWindow):
                     'additionalFinalValue': self.configuration.doubleFinalValueSpinBox,
                     'trailingLossRadio': self.configuration.trailingLossRadio,
                     'lossPercentage': self.configuration.lossPercentageSpinBox,
+                    'mainConfigurationTabWidget': self.configuration.mainConfigurationTabWidget,
                 }
             },
             BACKTEST: {
@@ -680,6 +678,11 @@ class Interface(QMainWindow):
                     'additionalFinalValue': self.configuration.backtestDoubleFinalValueSpinBox,
                     'trailingLossRadio': self.configuration.backtestTrailingLossRadio,
                     'lossPercentage': self.configuration.backtestLossPercentageSpinBox,
+                    'mainConfigurationTabWidget': self.configuration.backtestConfigurationTabWidget
+                },
+                'mainInterface': {
+                    'runBotButton': self.runBacktestButton,
+                    'endBotButton': self.endBacktestButton
                 }
             }
         }
@@ -771,24 +774,16 @@ class Interface(QMainWindow):
         Enables override interface for which caller specifies.
         :param caller: Caller that will specify which interface will have its override interface enabled.
         """
-        if caller == LIVE:
-            self.overrideGroupBox.setEnabled(True)
-        elif caller == SIMULATION:
-            self.simulationOverrideGroupBox.setEnabled(True)
-        else:
-            raise ValueError("Invalid caller specified.")
+        interfaceDict = self.get_interface_dictionary(caller)
+        interfaceDict['mainInterface']['overrideGroupBox'].setEnabled(True)
 
     def disable_override(self, caller):
         """
         Disables override interface for which caller specifies.
         :param caller: Caller that will specify which interface will have its override interface disabled.
         """
-        if caller == LIVE:
-            self.overrideGroupBox.setEnabled(False)
-        elif caller == SIMULATION:
-            self.simulationOverrideGroupBox.setEnabled(False)
-        else:
-            raise ValueError("Invalid caller specified.")
+        interfaceDict = self.get_interface_dictionary(caller)
+        interfaceDict['mainInterface']['overrideGroupBox'].setEnabled(False)
 
     def exit_position(self, caller, humanControl=True):
         """
@@ -799,26 +794,20 @@ class Interface(QMainWindow):
         """
         if caller == LIVE:
             trader = self.trader
-            if humanControl:
-                self.pauseBotButton.setText('Resume Bot')
-            else:
-                self.pauseBotButton.setText('Pause Bot')
-            self.forceShortButton.setEnabled(True)
-            self.forceLongButton.setEnabled(True)
-            self.exitPositionButton.setEnabled(False)
-            self.waitOverrideButton.setEnabled(False)
         elif caller == SIMULATION:
             trader = self.simulationTrader
-            if humanControl:
-                self.pauseBotSimulationButton.setText('Resume Bot')
-            else:
-                self.pauseBotSimulationButton.setText('Pause Bot')
-            self.forceShortSimulationButton.setEnabled(True)
-            self.forceLongSimulationButton.setEnabled(True)
-            self.exitPositionSimulationButton.setEnabled(False)
-            self.waitOverrideSimulationButton.setEnabled(False)
         else:
             raise ValueError("Invalid caller specified.")
+
+        interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
+        if humanControl:
+            interfaceDict['pauseBotButton'].setText('Resume Bot')
+        else:
+            interfaceDict['pauseBotButton'].setText('Pause Bot')
+        interfaceDict['forceShortButton'].setEnabled(True)
+        interfaceDict['forceLongButton'].setEnabled(True)
+        interfaceDict['exitPositionButton'].setEnabled(False)
+        interfaceDict['waitOverrideButton'].setEnabled(False)
 
         trader.inHumanControl = humanControl
         if trader.currentPosition == LONG:

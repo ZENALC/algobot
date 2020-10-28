@@ -1276,7 +1276,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="PlotWidget" name="avgGraph_2" native="true">
+         <widget class="PlotWidget" name="avgGraph" native="true">
           <property name="minimumSize">
            <size>
             <width>0</width>
