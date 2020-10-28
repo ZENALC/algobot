@@ -53,7 +53,7 @@
        <enum>QTabWidget::West</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>4</number>
       </property>
       <property name="movable">
        <bool>true</bool>
@@ -1276,7 +1276,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="PlotWidget" name="simulationAvgGraph" native="true">
+         <widget class="PlotWidget" name="avgGraph_2" native="true">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -1293,7 +1293,7 @@
          </widget>
         </item>
         <item>
-         <widget class="PlotWidget" name="avgGraph" native="true">
+         <widget class="PlotWidget" name="simulationAvgGraph" native="true">
           <property name="minimumSize">
            <size>
             <width>0</width>

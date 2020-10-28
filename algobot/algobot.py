@@ -60,7 +60,7 @@ class Interface(QMainWindow):
         self.simulationLowerIntervalData: Data or None = None
         self.lowerIntervalData: Data or None = None
         self.telegramBot = None
-        self.add_to_activity_monitor('Initialized interface.')
+        self.add_to_live_activity_monitor('Initialized interface.')
 
     def initiate_live_bot_thread(self):
         """
@@ -76,7 +76,7 @@ class Interface(QMainWindow):
         """
         self.disable_interface(boolean=False, caller=LIVE)
         self.endBotButton.setEnabled(False)
-        self.add_to_activity_monitor(msg)
+        self.add_to_live_activity_monitor(msg)
         self.create_popup(msg)
 
     def initiate_simulation_bot_thread(self):
@@ -116,9 +116,9 @@ class Interface(QMainWindow):
         :param caller: Object type that will be updated.
         """
         if caller == LIVE and not self.trader.dataView.data_is_updated():
-            self.add_to_activity_monitor('New data found. Updating...')
+            self.add_to_live_activity_monitor('New data found. Updating...')
             self.trader.dataView.update_data()
-            self.add_to_activity_monitor('Updated data successfully.')
+            self.add_to_live_activity_monitor('Updated data successfully.')
         elif caller == SIMULATION and not self.simulationTrader.dataView.data_is_updated():
             self.add_to_simulation_activity_monitor('New data found. Updating...')
             self.simulationTrader.dataView.update_data()
@@ -226,7 +226,7 @@ class Interface(QMainWindow):
                 return False
             else:
                 if not notification and not self.trader.inHumanControl:
-                    self.add_to_activity_monitor("Waiting for a cross.")
+                    self.add_to_live_activity_monitor("Waiting for a cross.")
                     return False
         else:
             raise ValueError("Invalid type of caller or cross notification specified.")
@@ -253,7 +253,7 @@ class Interface(QMainWindow):
         else:
             trends = {BEARISH: 'Bearish', BULLISH: 'Bullish', None: 'No'}
             if caller == LIVE:
-                self.add_to_activity_monitor(f'{trends[lowerTrend]} trend detected on lower interval data.')
+                self.add_to_live_activity_monitor(f'{trends[lowerTrend]} trend detected on lower interval data.')
             elif caller == SIMULATION:
                 self.add_to_simulation_activity_monitor(f'{trends[lowerTrend]} trend detected on lower interval data.')
             return lowerTrend
@@ -267,9 +267,9 @@ class Interface(QMainWindow):
                 apiKey = self.configuration.telegramApiKey.text()
                 self.telegramBot = TelegramBot(gui=self, apiKey=apiKey)
             self.telegramBot.start()
-            self.add_to_activity_monitor('Started Telegram bot.')
+            self.add_to_live_activity_monitor('Started Telegram bot.')
         except InvalidToken:
-            self.add_to_activity_monitor('Invalid token for Telegram. Please recheck credentials in settings.')
+            self.add_to_live_activity_monitor('Invalid token for Telegram. Please recheck credentials in settings.')
 
     def automate_trading(self, caller):
         """
@@ -351,8 +351,8 @@ class Interface(QMainWindow):
             self.endBotButton.setEnabled(False)
             self.runBotButton.setEnabled(True)
             self.telegramBot.stop()
-            self.add_to_activity_monitor('Killed Telegram bot.')
-            self.add_to_activity_monitor("Killed bot.")
+            self.add_to_live_activity_monitor('Killed Telegram bot.')
+            self.add_to_live_activity_monitor("Killed bot.")
             tempTrader = self.trader
             if self.lowerIntervalData is not None:
                 self.lowerIntervalData.dump_to_table()
@@ -403,9 +403,9 @@ class Interface(QMainWindow):
                 raise ValueError('Please specify an API secret key. No API secret key found.')
             elif len(apiKey) == 0:
                 raise ValueError("Please specify an API key. No API key found.")
-            self.add_to_activity_monitor(f"Retrieving data for interval {interval}...")
+            self.add_to_live_activity_monitor(f"Retrieving data for interval {interval}...")
             self.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol)
-            self.add_to_activity_monitor("Retrieved data successfully.")
+            self.add_to_live_activity_monitor("Retrieved data successfully.")
         else:
             raise ValueError("Invalid caller.")
 
@@ -421,9 +421,9 @@ class Interface(QMainWindow):
         if interval != '1m':
             lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
             if caller == LIVE:
-                self.add_to_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
+                self.add_to_live_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
                 self.lowerIntervalData = Data(lowerInterval)
-                self.add_to_activity_monitor('Retrieved lower interval data successfully.')
+                self.add_to_live_activity_monitor('Retrieved lower interval data successfully.')
             else:
                 self.add_to_simulation_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
                 self.simulationLowerIntervalData = Data(lowerInterval)
@@ -451,9 +451,9 @@ class Interface(QMainWindow):
         :param boolean: Boolean that will determine whether logging is advanced or not. If true, advanced, else regular.
         """
         if self.advancedLogging:
-            self.add_to_activity_monitor(f'Logging method has been changed to advanced.')
+            self.add_to_live_activity_monitor(f'Logging method has been changed to advanced.')
         else:
-            self.add_to_activity_monitor(f'Logging method has been changed to simple.')
+            self.add_to_live_activity_monitor(f'Logging method has been changed to simple.')
         self.advancedLogging = boolean
 
     def disable_interface(self, boolean, caller, everything=False):
@@ -582,7 +582,11 @@ class Interface(QMainWindow):
                     'lossPointValue': self.statistics.simulationLossPointValue,
                     'customStopPointValue': self.statistics.simulationCustomStopPointValue,
                     'currentPositionValue': self.statistics.simulationCurrentPositionValue,
-                    'autonomousValue': self.statistics.simulationAutonomousValue
+                    'autonomousValue': self.statistics.simulationAutonomousValue,
+                    'nextInitialMovingAverageLabel': self.statistics.simulationNextInitialMovingAverageLabel,
+                    'nextInitialMovingAverageValue': self.statistics.simulationNextInitialMovingAverageValue,
+                    'nextFinalMovingAverageLabel': self.statistics.simulationNextFinalMovingAverageLabel,
+                    'nextFinalMovingAverageValue': self.statistics.simulationNextFinalMovingAverageValue
                 },
                 'mainInterface': {
                     'profitLabel': self.simulationProfitLabel,
@@ -590,7 +594,12 @@ class Interface(QMainWindow):
                     'percentageValue': self.simulationPercentageValue,
                     'netTotalValue': self.simulationNetTotalValue,
                     'tickerLabel': self.simulationTickerLabel,
-                    'tickerValue': self.simulationTickerValue
+                    'tickerValue': self.simulationTickerValue,
+                    'pauseBotButton': self.pauseBotSimulationButton,
+                    'forceShortButton': self.forceShortSimulationButton,
+                    'forceLongButton': self.forceLongSimulationButton,
+                    'exitPositionButton': self.exitPositionSimulationButton,
+                    'waitOverrideButton': self.waitOverrideSimulationButton
                 },
                 'configuration': {
                     'baseAverageType': self.configuration.simulationAverageTypeComboBox,
@@ -625,7 +634,11 @@ class Interface(QMainWindow):
                     'lossPointValue': self.statistics.lossPointValue,
                     'customStopPointValue': self.statistics.customStopPointValue,
                     'currentPositionValue': self.statistics.currentPositionValue,
-                    'autonomousValue': self.statistics.autonomousValue
+                    'autonomousValue': self.statistics.autonomousValue,
+                    'nextInitialMovingAverageLabel': self.statistics.nextInitialMovingAverageLabel,
+                    'nextInitialMovingAverageValue': self.statistics.nextInitialMovingAverageValue,
+                    'nextFinalMovingAverageLabel': self.statistics.nextFinalMovingAverageLabel,
+                    'nextFinalMovingAverageValue': self.statistics.nextFinalMovingAverageValue
                 },
                 'mainInterface': {
                     'profitLabel': self.profitLabel,
@@ -633,7 +646,12 @@ class Interface(QMainWindow):
                     'percentageValue': self.percentageValue,
                     'netTotalValue': self.netTotalValue,
                     'tickerLabel': self.tickerLabel,
-                    'tickerValue': self.tickerValue
+                    'tickerValue': self.tickerValue,
+                    'pauseBotButton': self.pauseBotSimulationButton,
+                    'forceShortButton': self.forceShortButton,
+                    'forceLongButton': self.forceLongButton,
+                    'exitPositionButton': self.exitPositionButton,
+                    'waitOverrideButton': self.waitOverrideButton
                 },
                 'configuration': {
                     'baseAverageType': self.configuration.averageTypeComboBox,
@@ -677,7 +695,7 @@ class Interface(QMainWindow):
         self.add_data_to_plot(self.liveGraph, 0, currentUTC, net)
 
         if len(trader.tradingOptions) == 1:
-            self.hide_live_next_moving_averages()
+            self.hide_next_moving_averages(LIVE)
 
         for index, option in enumerate(trader.tradingOptions):
             initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = self.get_option_info(option, trader)
@@ -691,7 +709,7 @@ class Interface(QMainWindow):
                 self.statistics.baseFinalMovingAverageValue.setText(f'${finalAverage}')
 
             if index == 1:
-                self.show_live_next_moving_averages()
+                self.show_next_moving_averages(LIVE)
                 self.statistics.nextInitialMovingAverageLabel.setText(initialAverageLabel)
                 self.statistics.nextInitialMovingAverageValue.setText(f'${initialAverage}')
                 self.statistics.nextFinalMovingAverageLabel.setText(finalAverageLabel)
@@ -717,50 +735,36 @@ class Interface(QMainWindow):
                 self.statistics.simulationBaseFinalMovingAverageLabel.setText(finalAverageLabel)
                 self.statistics.simulationBaseFinalMovingAverageValue.setText(f'${finalAverage}')
                 if len(trader.tradingOptions) == 1:
-                    self.hide_simulation_next_moving_averages()
+                    self.hide_next_moving_averages(SIMULATION)
 
             if index > 0:
-                self.show_simulation_next_moving_averages()
+                self.show_next_moving_averages(SIMULATION)
                 self.statistics.simulationNextInitialMovingAverageLabel.setText(initialAverageLabel)
                 self.statistics.simulationNextInitialMovingAverageValue.setText(f'${initialAverage}')
                 self.statistics.simulationNextFinalMovingAverageLabel.setText(finalAverageLabel)
                 self.statistics.nextFinalMovingAverageValue.setText(f'${finalAverage}')
 
-    def hide_simulation_next_moving_averages(self):
+    def show_next_moving_averages(self, caller):
         """
-        Hides simulation next moving averages statistics.
+        :param caller: Caller that will decide which statistics get shown..
+        Shows next moving averages statistics based on caller.
         """
-        self.statistics.simulationNextInitialMovingAverageLabel.hide()
-        self.statistics.simulationNextInitialMovingAverageValue.hide()
-        self.statistics.simulationNextFinalMovingAverageLabel.hide()
-        self.statistics.simulationNextFinalMovingAverageValue.hide()
+        interfaceDict = self.get_interface_dictionary(caller)['statistics']
+        interfaceDict['nextInitialMovingAverageLabel'].show()
+        interfaceDict['nextInitialMovingAverageValue'].show()
+        interfaceDict['nextFinalMovingAverageLabel'].show()
+        interfaceDict['nextFinalMovingAverageValue'].show()
 
-    def show_simulation_next_moving_averages(self):
+    def hide_next_moving_averages(self, caller):
         """
-        Shows simulation next moving averages statistics.
+        :param caller: Caller that will decide which statistics get hidden.
+        Hides next moving averages statistics based on caller.
         """
-        self.statistics.simulationNextInitialMovingAverageLabel.show()
-        self.statistics.simulationNextInitialMovingAverageValue.show()
-        self.statistics.simulationNextFinalMovingAverageLabel.show()
-        self.statistics.simulationNextFinalMovingAverageValue.show()
-
-    def hide_live_next_moving_averages(self):
-        """
-        Hides live next moving averages statistics.
-        """
-        self.statistics.nextInitialMovingAverageLabel.hide()
-        self.statistics.nextInitialMovingAverageValue.hide()
-        self.statistics.nextFinalMovingAverageLabel.hide()
-        self.statistics.nextFinalMovingAverageValue.hide()
-
-    def show_live_next_moving_averages(self):
-        """
-        Shows live next moving averages statistics.
-        """
-        self.statistics.nextInitialMovingAverageLabel.show()
-        self.statistics.nextInitialMovingAverageValue.show()
-        self.statistics.nextFinalMovingAverageLabel.show()
-        self.statistics.nextFinalMovingAverageValue.show()
+        interfaceDict = self.get_interface_dictionary(caller)['statistics']
+        interfaceDict['nextInitialMovingAverageLabel'].hide()
+        interfaceDict['nextInitialMovingAverageValue'].hide()
+        interfaceDict['nextFinalMovingAverageLabel'].hide()
+        interfaceDict['nextFinalMovingAverageValue'].hide()
 
     def enable_override(self, caller):
         """
@@ -835,22 +839,19 @@ class Interface(QMainWindow):
         """
         if caller == SIMULATION:
             trader = self.simulationTrader
-            self.pauseBotSimulationButton.setText('Resume Bot')
             self.add_to_simulation_activity_monitor('Forced long and stopped autonomous logic.')
-            self.forceShortSimulationButton.setEnabled(True)
-            self.forceLongSimulationButton.setEnabled(False)
-            self.exitPositionSimulationButton.setEnabled(True)
-            self.waitOverrideSimulationButton.setEnabled(True)
         elif caller == LIVE:
             trader = self.trader
-            self.pauseBotButton.setText('Resume Bot')
-            self.add_to_activity_monitor('Forced long and stopping autonomous logic.')
-            self.forceShortButton.setEnabled(True)
-            self.forceLongButton.setEnabled(False)
-            self.exitPositionButton.setEnabled(True)
-            self.waitOverrideButton.setEnabled(True)
+            self.add_to_live_activity_monitor('Forced long and stopping autonomous logic.')
         else:
             raise ValueError("Invalid type of caller specified.")
+
+        interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
+        interfaceDict['pauseBotButton'].setText('Resume Bot')
+        interfaceDict['forceShortButton'].setEnabled(True)
+        interfaceDict['forceLongButton'].setEnabled(False)
+        interfaceDict['exitPositionButton'].setEnabled(True)
+        interfaceDict['waitOverrideButton'].setEnabled(True)
 
         trader.inHumanControl = True
         if trader.currentPosition == SHORT:
@@ -864,22 +865,19 @@ class Interface(QMainWindow):
         """
         if caller == SIMULATION:
             trader = self.simulationTrader
-            self.pauseBotSimulationButton.setText('Resume Bot')
             self.add_to_simulation_activity_monitor('Forcing short and stopping autonomous logic.')
-            self.forceShortSimulationButton.setEnabled(False)
-            self.forceLongSimulationButton.setEnabled(True)
-            self.exitPositionSimulationButton.setEnabled(True)
-            self.waitOverrideSimulationButton.setEnabled(True)
         elif caller == LIVE:
             trader = self.trader
-            self.pauseBotButton.setText('Resume Bot')
-            self.add_to_activity_monitor('Forced short and stopped autonomous logic.')
-            self.forceShortButton.setEnabled(False)
-            self.forceLongButton.setEnabled(True)
-            self.exitPositionButton.setEnabled(True)
-            self.waitOverrideButton.setEnabled(True)
+            self.add_to_live_activity_monitor('Forced short and stopped autonomous logic.')
         else:
             raise ValueError("Invalid type of caller specified.")
+
+        interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
+        interfaceDict['pauseBotButton'].setText('Resume Bot')
+        interfaceDict['forceShortButton'].setEnabled(False)
+        interfaceDict['forceLongButton'].setEnabled(True)
+        interfaceDict['exitPositionButton'].setEnabled(True)
+        interfaceDict['waitOverrideButton'].setEnabled(True)
 
         trader.inHumanControl = True
         if trader.currentPosition == LONG:
@@ -895,11 +893,11 @@ class Interface(QMainWindow):
             if self.pauseBotButton.text() == 'Pause Bot':
                 self.trader.inHumanControl = True
                 self.pauseBotButton.setText('Resume Bot')
-                self.add_to_activity_monitor('Pausing bot logic.')
+                self.add_to_live_activity_monitor('Pausing bot logic.')
             else:
                 self.trader.inHumanControl = False
                 self.pauseBotButton.setText('Pause Bot')
-                self.add_to_activity_monitor('Resuming bot logic.')
+                self.add_to_live_activity_monitor('Resuming bot logic.')
         elif caller == SIMULATION:
             if self.pauseBotSimulationButton.text() == 'Pause Bot':
                 self.simulationTrader.inHumanControl = True
@@ -1154,6 +1152,12 @@ class Interface(QMainWindow):
         for column in range(columns):
             table.setItem(rowPosition, column, QTableWidgetItem(str(trade[column])))
 
+    def add_to_monitor(self, caller, message):
+        if caller == SIMULATION:
+            self.add_to_simulation_activity_monitor(message)
+        elif caller == LIVE:
+            self.add_to_live_activity_monitor(message)
+
     def add_to_simulation_activity_monitor(self, message: str):
         """
         Function that adds activity information to the simulation activity monitor.
@@ -1161,7 +1165,7 @@ class Interface(QMainWindow):
         """
         self.add_to_table(self.simulationActivityMonitor, [message])
 
-    def add_to_activity_monitor(self, message: str):
+    def add_to_live_activity_monitor(self, message: str):
         """
         Function that adds activity information to activity monitor.
         :param message: Message to add to activity log.
@@ -1213,7 +1217,7 @@ class Interface(QMainWindow):
                              trade['action']]
                 self.add_to_table(table, tradeData)
                 if caller == LIVE:  # Also add action to main activity monitor.
-                    self.add_to_activity_monitor(trade['action'])
+                    self.add_to_live_activity_monitor(trade['action'])
                 else:
                     self.add_to_simulation_activity_monitor(trade['action'])
 
@@ -1396,27 +1400,6 @@ class Interface(QMainWindow):
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('w')
-
-    @staticmethod
-    def timestamp_message(msg, output=None):
-        """
-        This is not used anymore, but it adds a message to a ListWidget object from QT.
-        :param msg: Message to be added.
-        :param output: ListWidget object.
-        """
-        output.append(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}: {msg}')
-
-    def display_trade_options(self):
-        """
-        This is never used, but it displays trading options.
-        """
-        for option in self.trader.tradingOptions:
-            initialAverage = self.trader.get_average(option.movingAverage, option.parameter, option.initialBound)
-            finalAverage = self.trader.get_average(option.movingAverage, option.parameter, option.finalBound)
-
-            self.timestamp_message(f'Parameter: {option.parameter}')
-            self.timestamp_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
-            self.timestamp_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
 
 
 def main():
