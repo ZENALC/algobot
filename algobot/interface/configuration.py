@@ -2,7 +2,7 @@ import os
 import helpers
 
 from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QFileDialog
 from binance.client import Client
 from telegram.ext import Updater
 
@@ -98,6 +98,8 @@ class Configuration(QDialog):
 
     def import_data(self):
         self.backtestInfoLabel.setText("Importing data...")
+        fileName, _ = QFileDialog.getOpenFileName(self, 'Open file', os.getcwd(), "CSV (*.csv)")
+        print(fileName)
 
     def copy_settings_to_simulation(self):
         self.simulationIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
