@@ -1,10 +1,12 @@
 import os
 import helpers
 
+from PyQt5.QtCore import QDate
 from PyQt5 import uic
 from PyQt5.QtWidgets import QDialog, QFileDialog
 from binance.client import Client
 from telegram.ext import Updater
+from dateutil import parser
 
 configurationUi = os.path.join('../', 'UI', 'configuration.ui')
 
@@ -98,8 +100,23 @@ class Configuration(QDialog):
 
     def import_data(self):
         self.backtestInfoLabel.setText("Importing data...")
-        fileName, _ = QFileDialog.getOpenFileName(self, 'Open file', os.getcwd(), "CSV (*.csv)")
-        print(fileName)
+        filePath, _ = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(os.getcwd(), '../'), "CSV (*.csv)")
+        if filePath == '':
+            self.backtestInfoLabel.setText("Data not imported.")
+            return
+        data = helpers.load_from_csv(filePath, descending=False)
+        self.backtestInfoLabel.setText("Imported data successfully.")
+
+        startDate = parser.parse(data[0]['date_utc'])
+        startYear, startMonth, startDay = startDate.year, startDate.month, startDate.day
+        qStartDate = QDate(startYear, startMonth, startDay)
+
+        endDate = parser.parse(data[-1]['date_utc'])
+        endYear, endMonth, endDay = endDate.year, endDate.month, endDate.day
+        qEndDate = QDate(endYear, endMonth, endDay)
+
+        self.backtestStartDate.setDateRange(qStartDate, qEndDate)
+        self.backtestEndDate.setDateRange(qStartDate, qEndDate)
 
     def copy_settings_to_simulation(self):
         self.simulationIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())

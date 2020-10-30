@@ -45,7 +45,7 @@ def convert_interval(interval):
     return intervals[interval]
 
 
-def load_from_csv(path):
+def load_from_csv(path, descending=True):
     with open(path) as f:
         data = []
         readLines = f.readlines()
@@ -61,10 +61,15 @@ def load_from_csv(path):
                 headers[-5]: ' '.join(splitLine[0: -4])  # date in UTC
             })
         firstDate = parser.parse(data[0]['date_utc'])  # Retrieve first date from CSV data.
-        lastDate = parser.parse(data[-1]['date_utc'])  # Retrieve second date from CSV data.
-        if firstDate > lastDate:  # Check which one is more recent, so we can send data in time ascending format.
-            return data[::-1]
-        return data
+        lastDate = parser.parse(data[-1]['date_utc'])  # Retrieve last date from CSV data.
+        if descending:
+            if firstDate < lastDate:
+                return data[::-1]
+            return data
+        else:  # This assumes the sort is ascending.
+            if firstDate > lastDate:
+                return data[::-1]
+            return data
 
 
 def write_credentials(**kwargs):

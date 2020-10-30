@@ -364,7 +364,7 @@ class Data:
 
         return path
 
-    def get_csv_file(self, descending: bool = True) -> str:
+    def create_csv_file(self, descending: bool = True) -> str:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
         """
@@ -387,7 +387,7 @@ class Data:
         :param descending: Returns data in specified sort. If descending, writes data from most recent to oldest data.
         """
         tempData = Data(interval=interval, symbol=symbol)
-        return tempData.get_csv_file(descending=descending)
+        return tempData.create_csv_file(descending=descending)
 
     def is_valid_interval(self, interval: str) -> bool:
         """
