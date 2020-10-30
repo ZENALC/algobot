@@ -28,7 +28,7 @@ PyHamcrest==2.0.2
 PyJWT==1.7.1
 pyOpenSSL==19.1.0
 pyparsing==2.4.7
-PyQt5==5.15.0
+PyQt5
 PyQt5-sip==12.8.1
 PyQt5-stubs==5.14.2.2
 pyqtgraph==0.11.0

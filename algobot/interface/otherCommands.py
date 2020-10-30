@@ -1,10 +1,10 @@
 import os
 import helpers
+import threadWorkers
 
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import QDialog, QMessageBox
-from threadWorkers import Worker, CSVGeneratingThread
 from data import Data
 
 otherCommandsUi = os.path.join('../', 'UI', 'otherCommands.ui')
@@ -23,7 +23,7 @@ class OtherCommands(QDialog):
         self.movingAverageMiscellaneousValue.valueChanged.connect(self.initiate_misc_get_moving_average)
 
     def initiate_misc_get_moving_average(self):
-        thread = Worker(self.get_moving_average_miscellaneous)
+        thread = threadWorkers.Worker(self.get_moving_average_miscellaneous)
         self.threadPool.start(thread)
 
     def get_moving_average_miscellaneous(self):
@@ -35,7 +35,7 @@ class OtherCommands(QDialog):
         symbol = self.csvGenerationTicker.currentText()
         interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
         descending = self.descendingDateRadio.isChecked()
-        thread = CSVGeneratingThread(symbol=symbol, interval=interval, descending=descending)
+        thread = threadWorkers.CSVGeneratingThread(symbol=symbol, interval=interval, descending=descending)
         self.threadPool.start(thread)
         thread.signals.finished.connect(self.end_csv_generation)
 

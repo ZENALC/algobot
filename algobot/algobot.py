@@ -2,10 +2,10 @@ import assets
 import sys
 import helpers
 import os
+import threadWorkers
 
 from data import Data
 from datetime import datetime
-from threadWorkers import Worker
 from interface.palettes import *
 from telegramBot import TelegramBot
 from telegram.error import InvalidToken
@@ -48,7 +48,7 @@ class Interface(QMainWindow):
         )
         self.setup_graphs()  # Setting up graphs
         self.initiate_slots()  # Initiating slots
-        self.threadPool.start(Worker(self.load_tickers))  # Load tickers
+        self.threadPool.start(threadWorkers.Worker(self.load_tickers))  # Load tickers
 
         self.advancedLogging = True
         self.runningLive = False
@@ -66,7 +66,7 @@ class Interface(QMainWindow):
         """
         Hacky fix to initiate live bot thread. Needs to be optimized.
         """
-        worker = Worker(lambda: self.run_bot(caller=LIVE))
+        worker = threadWorkers.Worker(lambda: self.run_bot(caller=LIVE))
         worker.signals.error.connect(self.end_live_bot_and_create_popup)
         self.threadPool.start(worker)
 
@@ -83,7 +83,7 @@ class Interface(QMainWindow):
         """
         Hacky fix to initiate simulation bot thread. Needs to be optimized.
         """
-        worker = Worker(lambda: self.run_bot(caller=SIMULATION))
+        worker = threadWorkers.Worker(lambda: self.run_bot(caller=SIMULATION))
         worker.signals.error.connect(self.end_simulation_bot_and_create_popup)
         self.threadPool.start(worker)
 
@@ -96,12 +96,24 @@ class Interface(QMainWindow):
         self.add_to_simulation_activity_monitor(msg)
         self.create_popup(msg)
 
-    # TO FIX
-    # def initiate_bot_thread(self, caller):
-    #     worker = Worker(lambda: self.run_bot(caller))
-    #     worker.signals.error.connect(self.end_bot_and_create_popup)
-    #     # worker.signals.result.connect(lambda: print("lol"))
-    #     self.threadPool.start(worker)
+    def initiate_bot_thread(self, caller):
+        self.disable_interface(True, caller, everything=True)
+        worker = threadWorkers.BotThread(gui=self, caller=caller)
+        worker.signals.error.connect(self.end_simulation_bot_and_create_popup)
+        worker.signals.started.connect(self.initial_bot_ui_setup)
+        worker.signals.updated.connect(self.update_interface_info)
+        self.threadPool.start(worker)
+        self.disable_interface(False, caller=caller)
+
+    def initial_bot_ui_setup(self, caller):
+        trader = self.simulationTrader if caller == SIMULATION else self.trader
+        interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
+        self.enable_override(caller)
+        self.clear_table(interfaceDict['historyTable'])
+        self.destroy_graph_plots(interfaceDict['graph'])
+        self.destroy_graph_plots(interfaceDict['averageGraph'])
+        self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
+        self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
     #
     # TO FIX
     # def end_bot_and_create_popup(self, msg, caller):
@@ -289,9 +301,7 @@ class Interface(QMainWindow):
             try:
                 self.update_data(caller=caller)
                 self.update_interface_info(caller=caller)
-                self.update_trades_table_and_activity_monitor(caller=caller)
                 self.handle_logging(caller=caller)
-                self.handle_position_buttons(caller=caller)
                 self.handle_trailing_prices(caller=caller)
                 self.handle_trading(caller=caller)
                 # crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)
@@ -304,31 +314,22 @@ class Interface(QMainWindow):
         Runs bot with caller specified.
         :param caller: Type of bot to run - simulation or live.
         """
-        self.disable_interface(True, caller, everything=True)
         self.create_trader(caller)
         self.set_parameters(caller)
-        self.enable_override(caller)
 
         if caller == LIVE:
+            trader = self.trader
             if self.configuration.enableTelegramTrading.isChecked():
                 self.handle_telegram_bot()
-            self.clear_table(self.historyTable)
             self.runningLive = True
-            self.disable_interface(True, caller, everything=False)
-            self.destroy_graph_plots(self.liveGraph)  # clearing the graph plots
-            self.destroy_graph_plots(self.avgGraph)
-            self.setup_graph_plots(self.liveGraph, self.trader, NET_GRAPH)
-            self.setup_graph_plots(self.avgGraph, self.trader, AVG_GRAPH)
-            self.automate_trading(caller)
         elif caller == SIMULATION:
-            self.clear_table(self.simulationHistoryTable)
+            trader = self.simulationTrader
             self.simulationRunningLive = True
-            self.disable_interface(True, caller, everything=False)
-            self.destroy_graph_plots(self.simulationGraph)  # clearing the graph plots
-            self.destroy_graph_plots(self.simulationAvgGraph)
-            self.setup_graph_plots(self.simulationGraph, self.simulationTrader, NET_GRAPH)
-            self.setup_graph_plots(self.simulationAvgGraph, self.simulationTrader, AVG_GRAPH)
-            self.automate_trading(caller)
+        else:
+            raise RuntimeError("Invalid type of caller specified.")
+
+        self.initial_bot_ui_setup(caller=caller, trader=trader)
+        self.automate_trading(caller)
 
     def end_bot(self, caller):
         """
@@ -538,6 +539,8 @@ class Interface(QMainWindow):
 
         interfaceDict = self.get_interface_dictionary(caller)
         self.update_statistics(interfaceDict, trader=trader)
+        self.update_trades_table_and_activity_monitor(caller=caller)
+        self.handle_position_buttons(caller=caller)
 
     # noinspection DuplicatedCode
     def get_interface_dictionary(self, caller):
@@ -589,7 +592,12 @@ class Interface(QMainWindow):
                     'exitPositionButton': self.exitPositionSimulationButton,
                     'waitOverrideButton': self.waitOverrideSimulationButton,
                     # Override
-                    'overrideGroupBox': self.simulationOverrideGroupBox
+                    'overrideGroupBox': self.simulationOverrideGroupBox,
+                    # Graphs
+                    'graph': self.simulationGraph,
+                    'averageGraph': self.simulationAvgGraph,
+                    # Table
+                    'historyTable': self.simulationHistoryTable,
                 },
                 'configuration': {
                     'baseAverageType': self.configuration.simulationAverageTypeComboBox,
@@ -648,7 +656,12 @@ class Interface(QMainWindow):
                     'exitPositionButton': self.exitPositionButton,
                     'waitOverrideButton': self.waitOverrideButton,
                     # Override
-                    'overrideGroupBox': self.overrideGroupBox
+                    'overrideGroupBox': self.overrideGroupBox,
+                    # Graphs
+                    'graph': self.liveGraph,
+                    'averageGraph': self.avgGraph,
+                    # Table
+                    'historyTable': self.historyTable,
                 },
                 'configuration': {
                     'baseAverageType': self.configuration.averageTypeComboBox,
@@ -1273,7 +1286,7 @@ class Interface(QMainWindow):
         """
         Creates simulation slots.
         """
-        self.runSimulationButton.clicked.connect(self.initiate_simulation_bot_thread)
+        self.runSimulationButton.clicked.connect(lambda: self.initiate_bot_thread(caller=SIMULATION))
         self.endSimulationButton.clicked.connect(lambda: self.end_bot(caller=SIMULATION))
         self.configureSimulationButton.clicked.connect(self.show_simulation_settings)
         self.forceLongSimulationButton.clicked.connect(lambda: self.force_long(SIMULATION))
