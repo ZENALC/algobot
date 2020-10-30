@@ -46,7 +46,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -1027,7 +1027,7 @@
                   </widget>
                  </item>
                  <item row="2" column="0">
-                  <widget class="QCalendarWidget" name="calendarWidget">
+                  <widget class="QCalendarWidget" name="backtestStartDate">
                    <property name="minimumDate">
                     <date>
                      <year>2015</year>
@@ -1125,7 +1125,7 @@
                   </widget>
                  </item>
                  <item row="4" column="0">
-                  <widget class="QCalendarWidget" name="calendarWidget_2">
+                  <widget class="QCalendarWidget" name="backtestEndDate">
                    <property name="gridVisible">
                     <bool>true</bool>
                    </property>

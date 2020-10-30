@@ -334,8 +334,7 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
-    @staticmethod
-    def write_csv_data(totalData: list, fileName: str) -> str:
+    def write_csv_data(self, totalData: list, fileName: str) -> str:
         """
         Writes CSV data to CSV folder in root directory of application.
         :param totalData: Data to write to CSV file.
@@ -346,10 +345,13 @@ class Data:
         currentPath = os.getcwd()
         os.chdir('../')
 
-        if not os.path.exists(folderName):
+        if not os.path.exists(folderName):  # Inside CSV folder
             os.mkdir(folderName)
-
         os.chdir(folderName)
+
+        if not os.path.exists(self.symbol):  # Insider symbol folder inside CSV
+            os.mkdir(self.symbol)
+        os.chdir(self.symbol)
 
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close\n")
@@ -366,7 +368,7 @@ class Data:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
         """
-        self.load_data()  # Update data if updates exist.
+        self.update_database_and_data()  # Update data if updates exist.
         fileName = f'{self.symbol}_data_{self.interval}.csv'
         if descending:
             path = self.write_csv_data(self.data, fileName=fileName)

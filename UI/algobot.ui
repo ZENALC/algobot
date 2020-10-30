@@ -53,7 +53,7 @@
        <enum>QTabWidget::West</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <property name="movable">
        <bool>true</bool>
@@ -223,6 +223,30 @@
                </widget>
               </item>
              </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="customStopLossValue">
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::UpDownArrows</enum>
+             </property>
+             <property name="maximum">
+              <double>10000000000.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="enableCustomStopLossButton">
+             <property name="text">
+              <string>Enable Custom Stop Loss</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="disableCustomStopLossButton">
+             <property name="text">
+              <string>Disable Custom Stop Loss</string>
+             </property>
             </widget>
            </item>
            <item>
@@ -635,6 +659,27 @@
                </widget>
               </item>
              </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="customSimulationStopLossValue">
+             <property name="maximum">
+              <double>10000000.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="enableSimulationCustomStopLossButton">
+             <property name="text">
+              <string>Enable Custom Stop Loss</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="disableSimulationCustomStopLossButton">
+             <property name="text">
+              <string>Disable Custom Stop Loss</string>
+             </property>
             </widget>
            </item>
            <item>

@@ -86,8 +86,15 @@ class Configuration(QDialog):
         except Exception as e:
             self.telegrationConnectionResult.setText(str(e))
 
+    def get_calendar_dates(self):
+        startDate = self.backtestStartDate.selectedDate().toPyDate()
+        endDate = self.backtestStartDate.selectedDate().toPyDate()
+        return startDate, endDate
+
     def download_data(self):
         self.backtestInfoLabel.setText("Downloading data...")
+        startDate = self.backtestStartDate.selectedDate().toPyDate()
+        endDate = self.backtestStartDate.selectedDate().toPyDate()
 
     def import_data(self):
         self.backtestInfoLabel.setText("Importing data...")
