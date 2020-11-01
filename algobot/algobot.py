@@ -1048,6 +1048,9 @@ class Interface(QMainWindow):
                           qm.Yes | qm.No)
 
         if ret == qm.Yes:
+            for thread in self.threadPool:
+                thread.threadactive = False
+                thread.wait()
             if self.runningLive:
                 self.end_bot(LIVE)
             elif self.simulationRunningLive:
