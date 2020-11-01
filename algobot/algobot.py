@@ -2,8 +2,8 @@ import assets
 import sys
 import helpers
 import os
-import threadWorkers
 
+from threads import workerThread, botThread
 from data import Data
 from datetime import datetime
 from interface.palettes import *
@@ -48,7 +48,7 @@ class Interface(QMainWindow):
         )
         self.setup_graphs()  # Setting up graphs
         self.initiate_slots()  # Initiating slots
-        self.threadPool.start(threadWorkers.Worker(self.load_tickers))  # Load tickers
+        self.threadPool.start(workerThread.Worker(self.load_tickers))  # Load tickers
 
         self.advancedLogging = True
         self.runningLive = False
@@ -66,7 +66,7 @@ class Interface(QMainWindow):
         """
         Hacky fix to initiate live bot thread. Needs to be optimized.
         """
-        worker = threadWorkers.Worker(lambda: self.run_bot(caller=LIVE))
+        worker = workerThread.Worker(lambda: self.run_bot(caller=LIVE))
         worker.signals.error.connect(self.end_live_bot_and_create_popup)
         self.threadPool.start(worker)
 
@@ -83,7 +83,7 @@ class Interface(QMainWindow):
         """
         Hacky fix to initiate simulation bot thread. Needs to be optimized.
         """
-        worker = threadWorkers.Worker(lambda: self.run_bot(caller=SIMULATION))
+        worker = workerThread.Worker(lambda: self.run_bot(caller=SIMULATION))
         worker.signals.error.connect(self.end_simulation_bot_and_create_popup)
         self.threadPool.start(worker)
 
@@ -98,7 +98,7 @@ class Interface(QMainWindow):
 
     def initiate_bot_thread(self, caller):
         self.disable_interface(True, caller, everything=True)
-        worker = threadWorkers.BotThread(gui=self, caller=caller)
+        worker = botThread.BotThread(gui=self, caller=caller)
         worker.signals.error.connect(self.end_simulation_bot_and_create_popup)
         worker.signals.liveActivity.connect(self.add_to_live_activity_monitor)
         worker.signals.simulationActivity.connect(self.add_to_simulation_activity_monitor)
