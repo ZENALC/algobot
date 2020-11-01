@@ -539,12 +539,12 @@ class Interface(QMainWindow):
 
         interfaceDict = self.get_interface_dictionary(caller)
         # self.update_statistics(interfaceDict, trader=trader)
-        self.update_statistics_testing(interfaceDict, trader=trader, statDict=statDict)
+        self.update_statistics_testing(interfaceDict, statDict=statDict, caller=caller)
         self.update_trades_table_and_activity_monitor(caller=caller)
         self.handle_position_buttons(caller=caller)
 
     # noinspection DuplicatedCode
-    def update_statistics_testing(self, interfaceDictionary, trader, statDict):
+    def update_statistics_testing(self, interfaceDictionary, statDict, caller):
         statisticsDictionary = interfaceDictionary['statistics']
         statisticsDictionary['startingBalanceValue'].setText(statDict['startingBalanceValue'])
         statisticsDictionary['currentBalanceValue'].setText(statDict['currentBalanceValue'])
@@ -573,6 +573,10 @@ class Interface(QMainWindow):
         mainInterfaceDictionary['netTotalValue'].setText(statDict['netValue'])
         mainInterfaceDictionary['tickerLabel'].setText(statDict['tickerLabel'])
         mainInterfaceDictionary['tickerValue'].setText(statDict['tickerValue'])
+
+        net = statDict['net']
+        optionDetails = statDict['optionDetails']
+        self.update_graphs(net=net, caller=caller, optionDetails=optionDetails)
 
         # net = statDict['net']
         # if trader == self.simulationTrader:
@@ -608,6 +612,10 @@ class Interface(QMainWindow):
                     'customStopPointValue': self.statistics.simulationCustomStopPointValue,
                     'currentPositionValue': self.statistics.simulationCurrentPositionValue,
                     'autonomousValue': self.statistics.simulationAutonomousValue,
+                    'baseInitialMovingAverageLabel': self.statistics.simulationBaseInitialMovingAverageLabel,
+                    'baseInitialMovingAverageValue': self.statistics.simulationBaseInitialMovingAverageValue,
+                    'baseFinalMovingAverageLabel': self.statistics.simulationBaseFinalMovingAverageLabel,
+                    'baseFinalMovingAverageValue': self.statistics.simulationBaseFinalMovingAverageValue,
                     'nextInitialMovingAverageLabel': self.statistics.simulationNextInitialMovingAverageLabel,
                     'nextInitialMovingAverageValue': self.statistics.simulationNextInitialMovingAverageValue,
                     'nextFinalMovingAverageLabel': self.statistics.simulationNextFinalMovingAverageLabel,
@@ -672,6 +680,10 @@ class Interface(QMainWindow):
                     'customStopPointValue': self.statistics.customStopPointValue,
                     'currentPositionValue': self.statistics.currentPositionValue,
                     'autonomousValue': self.statistics.autonomousValue,
+                    'baseInitialMovingAverageLabel': self.statistics.baseInitialMovingAverageLabel,
+                    'baseInitialMovingAverageValue': self.statistics.baseInitialMovingAverageValue,
+                    'baseFinalMovingAverageLabel': self.statistics.baseFinalMovingAverageLabel,
+                    'baseFinalMovingAverageValue': self.statistics.baseFinalMovingAverageValue,
                     'nextInitialMovingAverageLabel': self.statistics.nextInitialMovingAverageLabel,
                     'nextInitialMovingAverageValue': self.statistics.nextInitialMovingAverageValue,
                     'nextFinalMovingAverageLabel': self.statistics.nextFinalMovingAverageLabel,
@@ -738,6 +750,32 @@ class Interface(QMainWindow):
             }
         }
         return interfaceDictionary[caller]
+
+    def update_graphs(self, net: float, caller: int, optionDetails: list):
+        interfaceDict = self.get_interface_dictionary(caller=caller)
+        currentUTC = datetime.utcnow().timestamp()
+        self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, currentUTC, net)
+
+        if len(optionDetails) == 1:
+            self.hide_next_moving_averages(caller)
+
+        for index, optionDetail in enumerate(optionDetails):
+            initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
+            self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], index * 2, currentUTC, initialAverage)
+            self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], index * 2 + 1, currentUTC,
+                                  finalAverage)
+
+            if index == 0:
+                interfaceDict['statistics']['baseInitialMovingAverageLabel'].setText(initialAverageLabel)
+                interfaceDict['statistics']['baseInitialMovingAverageValue'].setText(f'${initialAverage}')
+                interfaceDict['statistics']['baseFinalMovingAverageLabel'].setText(finalAverageLabel)
+                interfaceDict['statistics']['baseFinalMovingAverageValue'].setText(f'${finalAverage}')
+            if index == 1:
+                self.show_next_moving_averages(caller=caller)
+                interfaceDict['statistics']['nextInitialMovingAverageLabel'].setText(initialAverageLabel)
+                interfaceDict['statistics']['nextInitialMovingAverageValue'].setText(f'${initialAverage}')
+                interfaceDict['statistics']['nextFinalMovingAverageLabel'].setText(finalAverageLabel)
+                interfaceDict['statistics']['nextFinalMovingAverageValue'].setText(f'${finalAverage}')
 
     def update_live_graphs(self, net):
         """

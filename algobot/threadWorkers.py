@@ -125,6 +125,10 @@ class BotThread(QRunnable):
         profitString = f'${abs(round(profit, 2))}'
         netString = f'${round(net, 2)}'
 
+        optionDetails = []
+        for option in trader.tradingOptions:
+            optionDetails.append(self.gui.get_option_info(option, trader))
+
         updateDict = {
             # Statistics window
             'net': net,
@@ -145,7 +149,8 @@ class BotThread(QRunnable):
             'currentPositionValue': trader.get_position_string(),
             'autonomousValue': str(not trader.inHumanControl),
             'tickerLabel': trader.symbol,
-            'tickerValue': currentPriceString
+            'tickerValue': currentPriceString,
+            'optionDetails': optionDetails
         }
 
         return updateDict
