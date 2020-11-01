@@ -122,6 +122,25 @@ class BotThread(QRunnable):
         except InvalidToken:
             self.signals.liveActivity.emit('Invalid token for Telegram. Please recheck credentials in settings.')
 
+    def initialize_lower_interval_trading(self, caller, interval):
+        """
+        Initializes lower interval trading data object.
+        :param caller: Caller that determines whether lower interval is for simulation or live bot.
+        :param interval: Current interval for simulation or live bot.
+        """
+        sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
+        gui = self.gui
+        if interval != '1m':
+            lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
+            if caller == LIVE:
+                self.signals.liveActivity.emit(f'Retrieving data for lower interval {lowerInterval}...')
+                gui.lowerIntervalData = Data(lowerInterval)
+                self.signals.liveActivity.emit('Retrieved lower interval data successfully.')
+            else:
+                self.signals.simulationActivity.emit(f'Retrieving data for lower interval {lowerInterval}...')
+                gui.simulationLowerIntervalData = Data(lowerInterval)
+                self.signals.simulationActivity.emit("Retrieved lower interval data successfully.")
+
     def create_trader(self, caller):
         gui = self.gui
         if caller == SIMULATION:
@@ -149,7 +168,7 @@ class BotThread(QRunnable):
         else:
             raise ValueError("Invalid caller.")
 
-        # gui.initialize_lower_interval_trading(caller=caller, interval=interval)
+        self.initialize_lower_interval_trading(caller=caller, interval=interval)
 
     def setup_bot(self, caller):
         self.create_trader(caller)
