@@ -100,6 +100,8 @@ class Interface(QMainWindow):
         self.disable_interface(True, caller, everything=True)
         worker = threadWorkers.BotThread(gui=self, caller=caller)
         worker.signals.error.connect(self.end_simulation_bot_and_create_popup)
+        worker.signals.liveActivity.connect(self.add_to_live_activity_monitor)
+        worker.signals.simulationActivity.connect(self.add_to_simulation_activity_monitor)
         worker.signals.started.connect(self.initial_bot_ui_setup)
         worker.signals.updated.connect(self.update_interface_info)
         self.threadPool.start(worker)

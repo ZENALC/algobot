@@ -1,9 +1,16 @@
 import traceback
 
+from telegram.error import InvalidToken
+
 import algobot
+import helpers
 from data import Data
 from enums import LIVE, SIMULATION
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
+
+from realtrader import RealTrader
+from simulationtrader import SimulationTrader
+from telegramBot import TelegramBot
 
 
 class WorkerSignals(QObject):
@@ -86,6 +93,8 @@ class CSVGeneratingThread(QRunnable):
 
 class BotSignals(QObject):
     started = pyqtSignal(int)
+    simulationActivity = pyqtSignal(str)
+    liveActivity = pyqtSignal(str)
     updated = pyqtSignal(int, dict)
     finished = pyqtSignal()
     error = pyqtSignal(str)
@@ -99,14 +108,57 @@ class BotThread(QRunnable):
         self.caller = caller
         self.trader = None
 
+    def handle_telegram_bot(self):
+        """
+        Attempts to initiate Telegram bot.
+        """
+        try:
+            gui = self.gui
+            if gui.telegramBot is None:
+                apiKey = gui.configuration.telegramApiKey.text()
+                gui.telegramBot = TelegramBot(gui=gui, apiKey=apiKey)
+            gui.telegramBot.start()
+            self.signals.liveActivity.emit('Started Telegram bot.')
+        except InvalidToken:
+            self.signals.liveActivity.emit('Invalid token for Telegram. Please recheck credentials in settings.')
+
+    def create_trader(self, caller):
+        gui = self.gui
+        if caller == SIMULATION:
+            symbol = gui.configuration.simulationTickerComboBox.currentText()
+            interval = helpers.convert_interval(gui.configuration.simulationIntervalComboBox.currentText())
+            startingBalance = gui.configuration.simulationStartingBalanceSpinBox.value()
+            self.signals.simulationActivity.emit(f"Retrieving data for interval {interval}...")
+            gui.simulationTrader = SimulationTrader(startingBalance=startingBalance,
+                                                    symbol=symbol,
+                                                    interval=interval,
+                                                    loadData=True)
+            self.signals.simulationActivity.emit("Retrieved data successfully.")
+        elif caller == LIVE:
+            symbol = gui.configuration.tickerComboBox.currentText()
+            interval = helpers.convert_interval(gui.configuration.intervalComboBox.currentText())
+            apiSecret = gui.configuration.binanceApiSecret.text()
+            apiKey = gui.configuration.binanceApiKey.text()
+            if len(apiSecret) == 0:
+                raise ValueError('Please specify an API secret key. No API secret key found.')
+            elif len(apiKey) == 0:
+                raise ValueError("Please specify an API key. No API key found.")
+            self.signals.liveActivity.emit(f"Retrieving data for interval {interval}...")
+            gui.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol)
+            self.signals.liveActivity.emit("Retrieved data successfully.")
+        else:
+            raise ValueError("Invalid caller.")
+
+        # gui.initialize_lower_interval_trading(caller=caller, interval=interval)
+
     def setup_bot(self, caller):
-        self.gui.create_trader(caller)
+        self.create_trader(caller)
         self.gui.set_parameters(caller)
         self.trader = self.gui.trader if caller == LIVE else self.gui.simulationTrader
 
         if caller == LIVE:
             if self.gui.configuration.enableTelegramTrading.isChecked():
-                self.gui.handle_telegram_bot()
+                self.handle_telegram_bot()
             self.gui.runningLive = True
         elif caller == SIMULATION:
             self.gui.simulationRunningLive = True
@@ -155,17 +207,32 @@ class BotThread(QRunnable):
 
         return updateDict
 
+    def update_data(self, caller):
+        """
+        Updates data if updated data exists for caller object.
+        :param caller: Object type that will be updated.
+        """
+        gui = self.gui
+        if caller == LIVE and not gui.trader.dataView.data_is_updated():
+            self.signals.liveActivity.emit('New data found. Updating...')
+            gui.trader.dataView.update_data()
+            self.signals.liveActivity.emit('Updated data successfully.')
+        elif caller == SIMULATION and not gui.simulationTrader.dataView.data_is_updated():
+            self.signals.simulationActivity.emit('New data found. Updating...')
+            gui.simulationTrader.dataView.update_data()
+            self.signals.simulationActivity.emit('Updated data successfully.')
+
     def trading_loop(self, caller):
         lowerTrend = None
         runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
 
         while runningLoop:
-            self.gui.update_data(caller)
+            self.update_data(caller)
             self.gui.handle_logging(caller=caller)
             self.gui.handle_trailing_prices(caller=caller)
             self.gui.handle_trading(caller=caller)
             # crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)
-            lowerTrend = self.gui.handle_lower_interval_cross(caller, lowerTrend)
+            # lowerTrend = self.gui.handle_lower_interval_cross(caller, lowerTrend)
             statDict = self.get_statistics()
             self.signals.updated.emit(caller, statDict)
             runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
