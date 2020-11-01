@@ -18,7 +18,7 @@ class BotSignals(QObject):
     liveActivity = pyqtSignal(str)
     updated = pyqtSignal(int, dict)
     finished = pyqtSignal()
-    error = pyqtSignal(str)
+    error = pyqtSignal(int, str)
 
 
 class BotThread(QRunnable):
@@ -191,4 +191,4 @@ class BotThread(QRunnable):
         except Exception as e:
             print(f'Error: {e}')
             traceback.print_exc()
-            self.signals.error.emit(str(e))
+            self.signals.error.emit(self.caller, str(e))

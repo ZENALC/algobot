@@ -7,8 +7,6 @@ from threads import workerThread, botThread
 from data import Data
 from datetime import datetime
 from interface.palettes import *
-from telegramBot import TelegramBot
-from telegram.error import InvalidToken
 from realtrader import RealTrader
 from simulationtrader import SimulationTrader
 from option import Option
@@ -50,6 +48,7 @@ class Interface(QMainWindow):
         self.initiate_slots()  # Initiating slots
         self.threadPool.start(workerThread.Worker(self.load_tickers))  # Load tickers
 
+        self.interfaceDictionary = self.get_interface_dictionary()
         self.advancedLogging = True
         self.runningLive = False
         self.simulationRunningLive = False
@@ -62,44 +61,19 @@ class Interface(QMainWindow):
         self.telegramBot = None
         self.add_to_live_activity_monitor('Initialized interface.')
 
-    def initiate_live_bot_thread(self):
+    def end_crash_bot_and_create_popup(self, caller, msg):
         """
-        Hacky fix to initiate live bot thread. Needs to be optimized.
+        Function that force ends bot in the event that it crashes.
         """
-        worker = workerThread.Worker(lambda: self.run_bot(caller=LIVE))
-        worker.signals.error.connect(self.end_live_bot_and_create_popup)
-        self.threadPool.start(worker)
-
-    def end_live_bot_and_create_popup(self, msg):
-        """
-        Hacky fix to end live bot thread. Needs to be optimized.
-        """
-        self.disable_interface(boolean=False, caller=LIVE)
-        self.endBotButton.setEnabled(False)
-        self.add_to_live_activity_monitor(msg)
-        self.create_popup(msg)
-
-    def initiate_simulation_bot_thread(self):
-        """
-        Hacky fix to initiate simulation bot thread. Needs to be optimized.
-        """
-        worker = workerThread.Worker(lambda: self.run_bot(caller=SIMULATION))
-        worker.signals.error.connect(self.end_simulation_bot_and_create_popup)
-        self.threadPool.start(worker)
-
-    def end_simulation_bot_and_create_popup(self, msg):
-        """
-        Hacky fix to end simulation bot thread. Needs to be optimized.
-        """
-        self.disable_interface(boolean=False, caller=SIMULATION)
-        self.endSimulationButton.setEnabled(False)
-        self.add_to_simulation_activity_monitor(msg)
+        self.disable_interface(boolean=False, caller=caller)
+        self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(False)
+        self.add_to_monitor(caller=caller, message=msg)
         self.create_popup(msg)
 
     def initiate_bot_thread(self, caller):
         self.disable_interface(True, caller, everything=True)
         worker = botThread.BotThread(gui=self, caller=caller)
-        worker.signals.error.connect(self.end_simulation_bot_and_create_popup)
+        worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.liveActivity.connect(self.add_to_live_activity_monitor)
         worker.signals.simulationActivity.connect(self.add_to_simulation_activity_monitor)
         worker.signals.started.connect(self.initial_bot_ui_setup)
@@ -116,13 +90,6 @@ class Interface(QMainWindow):
         self.destroy_graph_plots(interfaceDict['averageGraph'])
         self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
         self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
-    #
-    # TO FIX
-    # def end_bot_and_create_popup(self, msg, caller):
-    #     self.disable_interface(boolean=False, caller=caller)
-    #     self.endBotButton.setEnabled(False)
-    #     self.endSimulationButton.setEnabled(False)
-    #     self.create_popup(msg)
 
     def update_data(self, caller):
         """
@@ -272,67 +239,6 @@ class Interface(QMainWindow):
                 self.add_to_simulation_activity_monitor(f'{trends[lowerTrend]} trend detected on lower interval data.')
             return lowerTrend
 
-    def handle_telegram_bot(self):
-        """
-        Attempts to initiate Telegram bot.
-        """
-        try:
-            if self.telegramBot is None:
-                apiKey = self.configuration.telegramApiKey.text()
-                self.telegramBot = TelegramBot(gui=self, apiKey=apiKey)
-            self.telegramBot.start()
-            self.add_to_live_activity_monitor('Started Telegram bot.')
-        except InvalidToken:
-            self.add_to_live_activity_monitor('Invalid token for Telegram. Please recheck credentials in settings.')
-
-    def automate_trading(self, caller):
-        """
-        Main function to automate trading.
-        :param caller: Caller object to automate trading for.
-        """
-        # crossNotification = False
-        lowerTrend = None
-        if caller == LIVE:
-            runningLoop = self.runningLive
-        elif caller == SIMULATION:
-            runningLoop = self.simulationRunningLive
-        else:
-            raise TypeError("Unknown type of caller specified.")
-
-        while runningLoop:
-            try:
-                self.update_data(caller=caller)
-                self.update_interface_info(caller=caller)
-                self.handle_logging(caller=caller)
-                self.handle_trailing_prices(caller=caller)
-                self.handle_trading(caller=caller)
-                # crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)
-                lowerTrend = self.handle_lower_interval_cross(caller, lowerTrend)
-            except Exception as e:
-                raise e
-
-    def run_bot(self, caller):
-        """
-        Runs bot with caller specified.
-        :param caller: Type of bot to run - simulation or live.
-        """
-        self.create_trader(caller)
-        self.set_parameters(caller)
-
-        if caller == LIVE:
-            trader = self.trader
-            if self.configuration.enableTelegramTrading.isChecked():
-                self.handle_telegram_bot()
-            self.runningLive = True
-        elif caller == SIMULATION:
-            trader = self.simulationTrader
-            self.simulationRunningLive = True
-        else:
-            raise RuntimeError("Invalid type of caller specified.")
-
-        self.initial_bot_ui_setup(caller=caller)
-        self.automate_trading(caller)
-
     def end_bot(self, caller):
         """
         Ends bot based on caller.
@@ -382,56 +288,6 @@ class Interface(QMainWindow):
         else:
             raise ValueError("invalid caller type specified.")
 
-    def create_trader(self, caller):
-        """
-        Creates a trader based on caller.
-        :param caller: Caller object that will determine what type of trader is created.
-        """
-        if caller == SIMULATION:
-            symbol = self.configuration.simulationTickerComboBox.currentText()
-            interval = helpers.convert_interval(self.configuration.simulationIntervalComboBox.currentText())
-            startingBalance = self.configuration.simulationStartingBalanceSpinBox.value()
-            self.add_to_simulation_activity_monitor(f"Retrieving data for interval {interval}...")
-            self.simulationTrader = SimulationTrader(startingBalance=startingBalance,
-                                                     symbol=symbol,
-                                                     interval=interval,
-                                                     loadData=True)
-            self.add_to_simulation_activity_monitor("Retrieved data successfully.")
-        elif caller == LIVE:
-            symbol = self.configuration.tickerComboBox.currentText()
-            interval = helpers.convert_interval(self.configuration.intervalComboBox.currentText())
-            apiSecret = self.configuration.binanceApiSecret.text()
-            apiKey = self.configuration.binanceApiKey.text()
-            if len(apiSecret) == 0:
-                raise ValueError('Please specify an API secret key. No API secret key found.')
-            elif len(apiKey) == 0:
-                raise ValueError("Please specify an API key. No API key found.")
-            self.add_to_live_activity_monitor(f"Retrieving data for interval {interval}...")
-            self.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol)
-            self.add_to_live_activity_monitor("Retrieved data successfully.")
-        else:
-            raise ValueError("Invalid caller.")
-
-        self.initialize_lower_interval_trading(caller=caller, interval=interval)
-
-    def initialize_lower_interval_trading(self, caller, interval):
-        """
-        Initializes lower interval trading data object.
-        :param caller: Caller that determines whether lower interval is for simulation or live bot.
-        :param interval: Current interval for simulation or live bot.
-        """
-        sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
-        if interval != '1m':
-            lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
-            if caller == LIVE:
-                self.add_to_live_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
-                self.lowerIntervalData = Data(lowerInterval)
-                self.add_to_live_activity_monitor('Retrieved lower interval data successfully.')
-            else:
-                self.add_to_simulation_activity_monitor(f'Retrieving data for lower interval {lowerInterval}...')
-                self.simulationLowerIntervalData = Data(lowerInterval)
-                self.add_to_simulation_activity_monitor("Retrieved lower interval data successfully.")
-
     def set_parameters(self, caller):
         """
         Retrieves moving average options and loss settings based on caller.
@@ -475,77 +331,17 @@ class Interface(QMainWindow):
         else:
             interfaceDict['mainInterface']['endBotButton'].setEnabled(boolean)
 
-    def update_statistics(self, interfaceDictionary: dict, trader):
-        """
-        Main function that will update interface with information based on interface dictionary and trader.
-        :param trader: Trader object used to determine statistics.
-        :param interfaceDictionary: Dictionary that will dictate that QT objects are updated.
-        """
-        net = trader.get_net()
-        profit = trader.get_profit()
-        stopLoss = trader.get_stop_loss()
-        percentage = trader.get_profit_percentage(trader.startingBalance, net)
-
-        currentPriceString = f'${trader.dataView.get_current_price()}'
-        percentageString = f'{round(percentage, 2)}%'
-        profitString = f'${abs(round(profit, 2))}'
-        netString = f'${round(net, 2)}'
-
-        # These are for statistics window.
-        statisticsDictionary = interfaceDictionary['statistics']
-        statisticsDictionary['startingBalanceValue'].setText(f'${round(trader.startingBalance, 2)}')
-        statisticsDictionary['currentBalanceValue'].setText(f'${round(trader.balance, 2)}')
-        statisticsDictionary['netValue'].setText(netString)
-        statisticsDictionary['profitLossLabel'].setText(trader.get_profit_or_loss_string(profit=profit))
-        statisticsDictionary['profitLossValue'].setText(profitString)
-        statisticsDictionary['percentageValue'].setText(percentageString)
-        statisticsDictionary['tradesMadeValue'].setText(str(len(trader.trades)))
-        statisticsDictionary['coinOwnedLabel'].setText(f'{trader.coinName} Owned')
-        statisticsDictionary['coinOwnedValue'].setText(f'{round(trader.coin, 6)}')
-        statisticsDictionary['coinOwedLabel'].setText(f'{trader.coinName} Owed')
-        statisticsDictionary['coinOwedValue'].setText(f'{round(trader.coinOwed, 6)}')
-        statisticsDictionary['currentTickerLabel'].setText(str(trader.dataView.symbol))
-        statisticsDictionary['currentTickerValue'].setText(currentPriceString)
-        statisticsDictionary['lossPointLabel'].setText(trader.get_stop_loss_strategy_string())
-        statisticsDictionary['lossPointValue'].setText(trader.get_safe_rounded_string(stopLoss))
-        statisticsDictionary['customStopPointValue'].setText(trader.get_safe_rounded_string(trader.customStopLoss))
-        statisticsDictionary['currentPositionValue'].setText(trader.get_position_string())
-        statisticsDictionary['autonomousValue'].setText(str(not trader.inHumanControl))
-
-        # These are for main interface window.
-        mainInterfaceDictionary = interfaceDictionary['mainInterface']
-        mainInterfaceDictionary['profitLabel'].setText(trader.get_profit_or_loss_string(profit=profit))
-        mainInterfaceDictionary['profitValue'].setText(profitString)
-        mainInterfaceDictionary['percentageValue'].setText(percentageString)
-        mainInterfaceDictionary['netTotalValue'].setText(netString)
-        mainInterfaceDictionary['tickerLabel'].setText(trader.symbol)
-        mainInterfaceDictionary['tickerValue'].setText(currentPriceString)
-
-        if trader == self.simulationTrader:
-            self.update_simulation_graphs(net=net)
-        elif trader == self.trader:
-            self.update_live_graphs(net=net)
-
     def update_interface_info(self, caller, statDict):
         """
         Updates interface elements based on caller.
         :param statDict: Dictionary containing statistics.
         :param caller: Object that determines which object gets updated.
         """
-        if caller == SIMULATION:
-            trader = self.simulationTrader
-        elif caller == LIVE:
-            trader = self.trader
-        else:
-            raise TypeError("Invalid type of caller specified.")
-
         interfaceDict = self.get_interface_dictionary(caller)
-        # self.update_statistics(interfaceDict, trader=trader)
         self.update_statistics_testing(interfaceDict, statDict=statDict, caller=caller)
         self.update_trades_table_and_activity_monitor(caller=caller)
         self.handle_position_buttons(caller=caller)
 
-    # noinspection DuplicatedCode
     def update_statistics_testing(self, interfaceDictionary, statDict, caller):
         statisticsDictionary = interfaceDictionary['statistics']
         statisticsDictionary['startingBalanceValue'].setText(statDict['startingBalanceValue'])
@@ -579,179 +375,6 @@ class Interface(QMainWindow):
         net = statDict['net']
         optionDetails = statDict['optionDetails']
         self.update_graphs(net=net, caller=caller, optionDetails=optionDetails)
-
-        # net = statDict['net']
-        # if trader == self.simulationTrader:
-        #     self.update_simulation_graphs(net=net)
-        # elif trader == self.trader:
-        #     self.update_live_graphs(net=net)
-
-    # noinspection DuplicatedCode
-    def get_interface_dictionary(self, caller):
-        """
-        Returns dictionary of objects from QT. Used for DRY principles.
-        :param caller: Caller that will determine which sub dictionary gets returned.
-        :return: Dictionary of objects.
-        """
-        interfaceDictionary = {
-            SIMULATION: {
-                'statistics': {
-                    'startingBalanceValue': self.statistics.simulationStartingBalanceValue,
-                    'currentBalanceValue': self.statistics.simulationCurrentBalanceValue,
-                    'netValue': self.statistics.simulationNetValue,
-                    'profitLossLabel': self.statistics.simulationProfitLossLabel,
-                    'profitLossValue': self.statistics.simulationProfitLossValue,
-                    'percentageValue': self.statistics.simulationPercentageValue,
-                    'tradesMadeValue': self.statistics.simulationTradesMadeValue,
-                    'coinOwnedLabel': self.statistics.simulationCoinOwnedLabel,
-                    'coinOwnedValue': self.statistics.simulationCoinOwnedValue,
-                    'coinOwedLabel': self.statistics.simulationCoinOwedLabel,
-                    'coinOwedValue': self.statistics.simulationCoinOwedValue,
-                    'currentTickerLabel': self.statistics.simulationCurrentTickerLabel,
-                    'currentTickerValue': self.statistics.simulationCurrentTickerValue,
-                    'lossPointLabel': self.statistics.simulationLossPointLabel,
-                    'lossPointValue': self.statistics.simulationLossPointValue,
-                    'customStopPointValue': self.statistics.simulationCustomStopPointValue,
-                    'currentPositionValue': self.statistics.simulationCurrentPositionValue,
-                    'autonomousValue': self.statistics.simulationAutonomousValue,
-                    'baseInitialMovingAverageLabel': self.statistics.simulationBaseInitialMovingAverageLabel,
-                    'baseInitialMovingAverageValue': self.statistics.simulationBaseInitialMovingAverageValue,
-                    'baseFinalMovingAverageLabel': self.statistics.simulationBaseFinalMovingAverageLabel,
-                    'baseFinalMovingAverageValue': self.statistics.simulationBaseFinalMovingAverageValue,
-                    'nextInitialMovingAverageLabel': self.statistics.simulationNextInitialMovingAverageLabel,
-                    'nextInitialMovingAverageValue': self.statistics.simulationNextInitialMovingAverageValue,
-                    'nextFinalMovingAverageLabel': self.statistics.simulationNextFinalMovingAverageLabel,
-                    'nextFinalMovingAverageValue': self.statistics.simulationNextFinalMovingAverageValue
-                },
-                'mainInterface': {
-                    # Portfolio
-                    'profitLabel': self.simulationProfitLabel,
-                    'profitValue': self.simulationProfitValue,
-                    'percentageValue': self.simulationPercentageValue,
-                    'netTotalValue': self.simulationNetTotalValue,
-                    'tickerLabel': self.simulationTickerLabel,
-                    'tickerValue': self.simulationTickerValue,
-                    # Buttons
-                    'pauseBotButton': self.pauseBotSimulationButton,
-                    'runBotButton': self.runSimulationButton,
-                    'endBotButton': self.endSimulationButton,
-                    'forceShortButton': self.forceShortSimulationButton,
-                    'forceLongButton': self.forceLongSimulationButton,
-                    'exitPositionButton': self.exitPositionSimulationButton,
-                    'waitOverrideButton': self.waitOverrideSimulationButton,
-                    # Override
-                    'overrideGroupBox': self.simulationOverrideGroupBox,
-                    # Graphs
-                    'graph': self.simulationGraph,
-                    'averageGraph': self.simulationAvgGraph,
-                    # Table
-                    'historyTable': self.simulationHistoryTable,
-                },
-                'configuration': {
-                    'baseAverageType': self.configuration.simulationAverageTypeComboBox,
-                    'baseParameter':  self.configuration.simulationParameterComboBox,
-                    'baseInitialValue':  self.configuration.simulationInitialValueSpinBox,
-                    'baseFinalValue': self.configuration.simulationFinalValueSpinBox,
-                    'doubleCrossCheck': self.configuration.simulationDoubleCrossCheckMark,
-                    'additionalAverageType': self.configuration.simulationDoubleAverageComboBox,
-                    'additionalParameter': self.configuration.simulationDoubleParameterComboBox,
-                    'additionalInitialValue':  self.configuration.simulationDoubleInitialValueSpinBox,
-                    'additionalFinalValue': self.configuration.simulationDoubleFinalValueSpinBox,
-                    'trailingLossRadio': self.configuration.simulationTrailingLossRadio,
-                    'lossPercentage': self.configuration.simulationLossPercentageSpinBox,
-                    'mainConfigurationTabWidget': self.configuration.simulationConfigurationTabWidget,
-                }
-            },
-            LIVE: {
-                'statistics': {
-                    'startingBalanceValue': self.statistics.startingBalanceValue,
-                    'currentBalanceValue': self.statistics.currentBalanceValue,
-                    'netValue': self.statistics.netValue,
-                    'profitLossLabel': self.statistics.profitLossLabel,
-                    'profitLossValue': self.statistics.profitLossValue,
-                    'percentageValue': self.statistics.percentageValue,
-                    'tradesMadeValue': self.statistics.tradesMadeValue,
-                    'coinOwnedLabel': self.statistics.coinOwnedLabel,
-                    'coinOwnedValue': self.statistics.coinOwnedValue,
-                    'coinOwedLabel': self.statistics.coinOwedLabel,
-                    'coinOwedValue': self.statistics.coinOwedValue,
-                    'currentTickerLabel': self.statistics.currentTickerLabel,
-                    'currentTickerValue': self.statistics.currentTickerValue,
-                    'lossPointLabel': self.statistics.lossPointLabel,
-                    'lossPointValue': self.statistics.lossPointValue,
-                    'customStopPointValue': self.statistics.customStopPointValue,
-                    'currentPositionValue': self.statistics.currentPositionValue,
-                    'autonomousValue': self.statistics.autonomousValue,
-                    'baseInitialMovingAverageLabel': self.statistics.baseInitialMovingAverageLabel,
-                    'baseInitialMovingAverageValue': self.statistics.baseInitialMovingAverageValue,
-                    'baseFinalMovingAverageLabel': self.statistics.baseFinalMovingAverageLabel,
-                    'baseFinalMovingAverageValue': self.statistics.baseFinalMovingAverageValue,
-                    'nextInitialMovingAverageLabel': self.statistics.nextInitialMovingAverageLabel,
-                    'nextInitialMovingAverageValue': self.statistics.nextInitialMovingAverageValue,
-                    'nextFinalMovingAverageLabel': self.statistics.nextFinalMovingAverageLabel,
-                    'nextFinalMovingAverageValue': self.statistics.nextFinalMovingAverageValue
-                },
-                'mainInterface': {
-                    # Portfolio
-                    'profitLabel': self.profitLabel,
-                    'profitValue': self.profitValue,
-                    'percentageValue': self.percentageValue,
-                    'netTotalValue': self.netTotalValue,
-                    'tickerLabel': self.tickerLabel,
-                    'tickerValue': self.tickerValue,
-                    # Buttons
-                    'pauseBotButton': self.pauseBotButton,
-                    'runBotButton': self.runBotButton,
-                    'endBotButton': self.endBotButton,
-                    'forceShortButton': self.forceShortButton,
-                    'forceLongButton': self.forceLongButton,
-                    'exitPositionButton': self.exitPositionButton,
-                    'waitOverrideButton': self.waitOverrideButton,
-                    # Override
-                    'overrideGroupBox': self.overrideGroupBox,
-                    # Graphs
-                    'graph': self.liveGraph,
-                    'averageGraph': self.avgGraph,
-                    # Table
-                    'historyTable': self.historyTable,
-                },
-                'configuration': {
-                    'baseAverageType': self.configuration.averageTypeComboBox,
-                    'baseParameter': self.configuration.parameterComboBox,
-                    'baseInitialValue': self.configuration.initialValueSpinBox,
-                    'baseFinalValue': self.configuration.finalValueSpinBox,
-                    'doubleCrossCheck': self.configuration.doubleCrossCheckMark,
-                    'additionalAverageType': self.configuration.doubleAverageComboBox,
-                    'additionalParameter': self.configuration.doubleParameterComboBox,
-                    'additionalInitialValue': self.configuration.doubleInitialValueSpinBox,
-                    'additionalFinalValue': self.configuration.doubleFinalValueSpinBox,
-                    'trailingLossRadio': self.configuration.trailingLossRadio,
-                    'lossPercentage': self.configuration.lossPercentageSpinBox,
-                    'mainConfigurationTabWidget': self.configuration.mainConfigurationTabWidget,
-                }
-            },
-            BACKTEST: {
-                'configuration': {
-                    'baseAverageType': self.configuration.backtestAverageTypeComboBox,
-                    'baseParameter':  self.configuration.backtestParameterComboBox,
-                    'baseInitialValue':  self.configuration.backtestInitialValueSpinBox,
-                    'baseFinalValue': self.configuration.backtestFinalValueSpinBox,
-                    'doubleCrossCheck': self.configuration.backtestDoubleCrossCheckMark,
-                    'additionalAverageType': self.configuration.backtestDoubleAverageComboBox,
-                    'additionalParameter': self.configuration.backtestDoubleParameterComboBox,
-                    'additionalInitialValue':  self.configuration.backtestDoubleInitialValueSpinBox,
-                    'additionalFinalValue': self.configuration.backtestDoubleFinalValueSpinBox,
-                    'trailingLossRadio': self.configuration.backtestTrailingLossRadio,
-                    'lossPercentage': self.configuration.backtestLossPercentageSpinBox,
-                    'mainConfigurationTabWidget': self.configuration.backtestConfigurationTabWidget
-                },
-                'mainInterface': {
-                    'runBotButton': self.runBacktestButton,
-                    'endBotButton': self.endBacktestButton
-                }
-            }
-        }
-        return interfaceDictionary[caller]
 
     def update_graphs(self, net: float, caller: int, optionDetails: list):
         interfaceDict = self.get_interface_dictionary(caller=caller)
@@ -1048,9 +671,6 @@ class Interface(QMainWindow):
                           qm.Yes | qm.No)
 
         if ret == qm.Yes:
-            for thread in self.threadPool:
-                thread.threadactive = False
-                thread.wait()
             if self.runningLive:
                 self.end_bot(LIVE)
             elif self.simulationRunningLive:
@@ -1354,7 +974,7 @@ class Interface(QMainWindow):
         """
         Creates bot slots.
         """
-        self.runBotButton.clicked.connect(self.initiate_live_bot_thread)
+        self.runBotButton.clicked.connect(lambda: self.initiate_bot_thread(caller=LIVE))
         self.endBotButton.clicked.connect(lambda: self.end_bot(caller=LIVE))
         self.configureBotButton.clicked.connect(self.show_main_settings)
         self.forceLongButton.clicked.connect(self.force_long)
@@ -1483,6 +1103,175 @@ class Interface(QMainWindow):
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('w')
+
+    # noinspection DuplicatedCode
+    def get_interface_dictionary(self, caller=None):
+        """
+        Returns dictionary of objects from QT. Used for DRY principles.
+        :param caller: Caller that will determine which sub dictionary gets returned.
+        :return: Dictionary of objects.
+        """
+        interfaceDictionary = {
+            SIMULATION: {
+                'statistics': {
+                    'startingBalanceValue': self.statistics.simulationStartingBalanceValue,
+                    'currentBalanceValue': self.statistics.simulationCurrentBalanceValue,
+                    'netValue': self.statistics.simulationNetValue,
+                    'profitLossLabel': self.statistics.simulationProfitLossLabel,
+                    'profitLossValue': self.statistics.simulationProfitLossValue,
+                    'percentageValue': self.statistics.simulationPercentageValue,
+                    'tradesMadeValue': self.statistics.simulationTradesMadeValue,
+                    'coinOwnedLabel': self.statistics.simulationCoinOwnedLabel,
+                    'coinOwnedValue': self.statistics.simulationCoinOwnedValue,
+                    'coinOwedLabel': self.statistics.simulationCoinOwedLabel,
+                    'coinOwedValue': self.statistics.simulationCoinOwedValue,
+                    'currentTickerLabel': self.statistics.simulationCurrentTickerLabel,
+                    'currentTickerValue': self.statistics.simulationCurrentTickerValue,
+                    'lossPointLabel': self.statistics.simulationLossPointLabel,
+                    'lossPointValue': self.statistics.simulationLossPointValue,
+                    'customStopPointValue': self.statistics.simulationCustomStopPointValue,
+                    'currentPositionValue': self.statistics.simulationCurrentPositionValue,
+                    'autonomousValue': self.statistics.simulationAutonomousValue,
+                    'baseInitialMovingAverageLabel': self.statistics.simulationBaseInitialMovingAverageLabel,
+                    'baseInitialMovingAverageValue': self.statistics.simulationBaseInitialMovingAverageValue,
+                    'baseFinalMovingAverageLabel': self.statistics.simulationBaseFinalMovingAverageLabel,
+                    'baseFinalMovingAverageValue': self.statistics.simulationBaseFinalMovingAverageValue,
+                    'nextInitialMovingAverageLabel': self.statistics.simulationNextInitialMovingAverageLabel,
+                    'nextInitialMovingAverageValue': self.statistics.simulationNextInitialMovingAverageValue,
+                    'nextFinalMovingAverageLabel': self.statistics.simulationNextFinalMovingAverageLabel,
+                    'nextFinalMovingAverageValue': self.statistics.simulationNextFinalMovingAverageValue
+                },
+                'mainInterface': {
+                    # Portfolio
+                    'profitLabel': self.simulationProfitLabel,
+                    'profitValue': self.simulationProfitValue,
+                    'percentageValue': self.simulationPercentageValue,
+                    'netTotalValue': self.simulationNetTotalValue,
+                    'tickerLabel': self.simulationTickerLabel,
+                    'tickerValue': self.simulationTickerValue,
+                    # Buttons
+                    'pauseBotButton': self.pauseBotSimulationButton,
+                    'runBotButton': self.runSimulationButton,
+                    'endBotButton': self.endSimulationButton,
+                    'forceShortButton': self.forceShortSimulationButton,
+                    'forceLongButton': self.forceLongSimulationButton,
+                    'exitPositionButton': self.exitPositionSimulationButton,
+                    'waitOverrideButton': self.waitOverrideSimulationButton,
+                    # Override
+                    'overrideGroupBox': self.simulationOverrideGroupBox,
+                    # Graphs
+                    'graph': self.simulationGraph,
+                    'averageGraph': self.simulationAvgGraph,
+                    # Table
+                    'historyTable': self.simulationHistoryTable,
+                },
+                'configuration': {
+                    'baseAverageType': self.configuration.simulationAverageTypeComboBox,
+                    'baseParameter':  self.configuration.simulationParameterComboBox,
+                    'baseInitialValue':  self.configuration.simulationInitialValueSpinBox,
+                    'baseFinalValue': self.configuration.simulationFinalValueSpinBox,
+                    'doubleCrossCheck': self.configuration.simulationDoubleCrossCheckMark,
+                    'additionalAverageType': self.configuration.simulationDoubleAverageComboBox,
+                    'additionalParameter': self.configuration.simulationDoubleParameterComboBox,
+                    'additionalInitialValue':  self.configuration.simulationDoubleInitialValueSpinBox,
+                    'additionalFinalValue': self.configuration.simulationDoubleFinalValueSpinBox,
+                    'trailingLossRadio': self.configuration.simulationTrailingLossRadio,
+                    'lossPercentage': self.configuration.simulationLossPercentageSpinBox,
+                    'mainConfigurationTabWidget': self.configuration.simulationConfigurationTabWidget,
+                }
+            },
+            LIVE: {
+                'statistics': {
+                    'startingBalanceValue': self.statistics.startingBalanceValue,
+                    'currentBalanceValue': self.statistics.currentBalanceValue,
+                    'netValue': self.statistics.netValue,
+                    'profitLossLabel': self.statistics.profitLossLabel,
+                    'profitLossValue': self.statistics.profitLossValue,
+                    'percentageValue': self.statistics.percentageValue,
+                    'tradesMadeValue': self.statistics.tradesMadeValue,
+                    'coinOwnedLabel': self.statistics.coinOwnedLabel,
+                    'coinOwnedValue': self.statistics.coinOwnedValue,
+                    'coinOwedLabel': self.statistics.coinOwedLabel,
+                    'coinOwedValue': self.statistics.coinOwedValue,
+                    'currentTickerLabel': self.statistics.currentTickerLabel,
+                    'currentTickerValue': self.statistics.currentTickerValue,
+                    'lossPointLabel': self.statistics.lossPointLabel,
+                    'lossPointValue': self.statistics.lossPointValue,
+                    'customStopPointValue': self.statistics.customStopPointValue,
+                    'currentPositionValue': self.statistics.currentPositionValue,
+                    'autonomousValue': self.statistics.autonomousValue,
+                    'baseInitialMovingAverageLabel': self.statistics.baseInitialMovingAverageLabel,
+                    'baseInitialMovingAverageValue': self.statistics.baseInitialMovingAverageValue,
+                    'baseFinalMovingAverageLabel': self.statistics.baseFinalMovingAverageLabel,
+                    'baseFinalMovingAverageValue': self.statistics.baseFinalMovingAverageValue,
+                    'nextInitialMovingAverageLabel': self.statistics.nextInitialMovingAverageLabel,
+                    'nextInitialMovingAverageValue': self.statistics.nextInitialMovingAverageValue,
+                    'nextFinalMovingAverageLabel': self.statistics.nextFinalMovingAverageLabel,
+                    'nextFinalMovingAverageValue': self.statistics.nextFinalMovingAverageValue
+                },
+                'mainInterface': {
+                    # Portfolio
+                    'profitLabel': self.profitLabel,
+                    'profitValue': self.profitValue,
+                    'percentageValue': self.percentageValue,
+                    'netTotalValue': self.netTotalValue,
+                    'tickerLabel': self.tickerLabel,
+                    'tickerValue': self.tickerValue,
+                    # Buttons
+                    'pauseBotButton': self.pauseBotButton,
+                    'runBotButton': self.runBotButton,
+                    'endBotButton': self.endBotButton,
+                    'forceShortButton': self.forceShortButton,
+                    'forceLongButton': self.forceLongButton,
+                    'exitPositionButton': self.exitPositionButton,
+                    'waitOverrideButton': self.waitOverrideButton,
+                    # Override
+                    'overrideGroupBox': self.overrideGroupBox,
+                    # Graphs
+                    'graph': self.liveGraph,
+                    'averageGraph': self.avgGraph,
+                    # Table
+                    'historyTable': self.historyTable,
+                },
+                'configuration': {
+                    'baseAverageType': self.configuration.averageTypeComboBox,
+                    'baseParameter': self.configuration.parameterComboBox,
+                    'baseInitialValue': self.configuration.initialValueSpinBox,
+                    'baseFinalValue': self.configuration.finalValueSpinBox,
+                    'doubleCrossCheck': self.configuration.doubleCrossCheckMark,
+                    'additionalAverageType': self.configuration.doubleAverageComboBox,
+                    'additionalParameter': self.configuration.doubleParameterComboBox,
+                    'additionalInitialValue': self.configuration.doubleInitialValueSpinBox,
+                    'additionalFinalValue': self.configuration.doubleFinalValueSpinBox,
+                    'trailingLossRadio': self.configuration.trailingLossRadio,
+                    'lossPercentage': self.configuration.lossPercentageSpinBox,
+                    'mainConfigurationTabWidget': self.configuration.mainConfigurationTabWidget,
+                }
+            },
+            BACKTEST: {
+                'configuration': {
+                    'baseAverageType': self.configuration.backtestAverageTypeComboBox,
+                    'baseParameter':  self.configuration.backtestParameterComboBox,
+                    'baseInitialValue':  self.configuration.backtestInitialValueSpinBox,
+                    'baseFinalValue': self.configuration.backtestFinalValueSpinBox,
+                    'doubleCrossCheck': self.configuration.backtestDoubleCrossCheckMark,
+                    'additionalAverageType': self.configuration.backtestDoubleAverageComboBox,
+                    'additionalParameter': self.configuration.backtestDoubleParameterComboBox,
+                    'additionalInitialValue':  self.configuration.backtestDoubleInitialValueSpinBox,
+                    'additionalFinalValue': self.configuration.backtestDoubleFinalValueSpinBox,
+                    'trailingLossRadio': self.configuration.backtestTrailingLossRadio,
+                    'lossPercentage': self.configuration.backtestLossPercentageSpinBox,
+                    'mainConfigurationTabWidget': self.configuration.backtestConfigurationTabWidget
+                },
+                'mainInterface': {
+                    'runBotButton': self.runBacktestButton,
+                    'endBotButton': self.endBacktestButton
+                }
+            }
+        }
+        if caller is not None:
+            return interfaceDictionary[caller]
+        return interfaceDictionary
 
 
 def main():
