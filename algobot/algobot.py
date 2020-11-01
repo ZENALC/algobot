@@ -103,11 +103,11 @@ class Interface(QMainWindow):
         worker.signals.started.connect(self.initial_bot_ui_setup)
         worker.signals.updated.connect(self.update_interface_info)
         self.threadPool.start(worker)
-        self.disable_interface(False, caller=caller)
 
     def initial_bot_ui_setup(self, caller):
         trader = self.simulationTrader if caller == SIMULATION else self.trader
         interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
+        self.disable_interface(True, caller, False)
         self.enable_override(caller)
         self.clear_table(interfaceDict['historyTable'])
         self.destroy_graph_plots(interfaceDict['graph'])
@@ -328,7 +328,7 @@ class Interface(QMainWindow):
         else:
             raise RuntimeError("Invalid type of caller specified.")
 
-        self.initial_bot_ui_setup(caller=caller, trader=trader)
+        self.initial_bot_ui_setup(caller=caller)
         self.automate_trading(caller)
 
     def end_bot(self, caller):
@@ -524,11 +524,11 @@ class Interface(QMainWindow):
         elif trader == self.trader:
             self.update_live_graphs(net=net)
 
-    def update_interface_info(self, caller):
+    def update_interface_info(self, caller, statDict):
         """
         Updates interface elements based on caller.
-        :param caller:
-        :return:
+        :param statDict: Dictionary containing statistics.
+        :param caller: Object that determines which object gets updated.
         """
         if caller == SIMULATION:
             trader = self.simulationTrader
@@ -538,9 +538,47 @@ class Interface(QMainWindow):
             raise TypeError("Invalid type of caller specified.")
 
         interfaceDict = self.get_interface_dictionary(caller)
-        self.update_statistics(interfaceDict, trader=trader)
+        # self.update_statistics(interfaceDict, trader=trader)
+        self.update_statistics_testing(interfaceDict, trader=trader, statDict=statDict)
         self.update_trades_table_and_activity_monitor(caller=caller)
         self.handle_position_buttons(caller=caller)
+
+    # noinspection DuplicatedCode
+    def update_statistics_testing(self, interfaceDictionary, trader, statDict):
+        statisticsDictionary = interfaceDictionary['statistics']
+        statisticsDictionary['startingBalanceValue'].setText(statDict['startingBalanceValue'])
+        statisticsDictionary['currentBalanceValue'].setText(statDict['currentBalanceValue'])
+        statisticsDictionary['netValue'].setText(statDict['netValue'])
+        statisticsDictionary['profitLossLabel'].setText(statDict['profitLossLabel'])
+        statisticsDictionary['profitLossValue'].setText(statDict['profitLossValue'])
+        statisticsDictionary['percentageValue'].setText(statDict['percentageValue'])
+        statisticsDictionary['tradesMadeValue'].setText(statDict['tradesMadeValue'])
+        statisticsDictionary['coinOwnedLabel'].setText(statDict['coinOwnedLabel'])
+        statisticsDictionary['coinOwnedValue'].setText(statDict['coinOwnedValue'])
+        statisticsDictionary['coinOwedLabel'].setText(statDict['coinOwedLabel'])
+        statisticsDictionary['coinOwedValue'].setText(statDict['coinOwedValue'])
+        statisticsDictionary['currentTickerLabel'].setText(statDict['tickerLabel'])
+        statisticsDictionary['currentTickerValue'].setText(statDict['tickerValue'])
+        statisticsDictionary['lossPointLabel'].setText(statDict['lossPointLabel'])
+        statisticsDictionary['lossPointValue'].setText(statDict['lossPointLabel'])
+        statisticsDictionary['customStopPointValue'].setText(statDict['customStopPointValue'])
+        statisticsDictionary['currentPositionValue'].setText(statDict['currentPositionValue'])
+        statisticsDictionary['autonomousValue'].setText(statDict['autonomousValue'])
+
+        # These are for main interface window.
+        mainInterfaceDictionary = interfaceDictionary['mainInterface']
+        mainInterfaceDictionary['profitLabel'].setText(statDict['profitLossLabel'])
+        mainInterfaceDictionary['profitValue'].setText(statDict['profitLossValue'])
+        mainInterfaceDictionary['percentageValue'].setText(statDict['percentageValue'])
+        mainInterfaceDictionary['netTotalValue'].setText(statDict['netValue'])
+        mainInterfaceDictionary['tickerLabel'].setText(statDict['tickerLabel'])
+        mainInterfaceDictionary['tickerValue'].setText(statDict['tickerValue'])
+
+        # net = statDict['net']
+        # if trader == self.simulationTrader:
+        #     self.update_simulation_graphs(net=net)
+        # elif trader == self.trader:
+        #     self.update_live_graphs(net=net)
 
     # noinspection DuplicatedCode
     def get_interface_dictionary(self, caller):
