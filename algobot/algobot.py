@@ -402,65 +402,6 @@ class Interface(QMainWindow):
                 interfaceDict['statistics']['nextFinalMovingAverageLabel'].setText(finalAverageLabel)
                 interfaceDict['statistics']['nextFinalMovingAverageValue'].setText(f'${finalAverage}')
 
-    def update_live_graphs(self, net):
-        """
-        Helper function that will update live graphs.
-        :param net: Final net value. Passed to function to avoid calling net function.
-        """
-        trader = self.trader
-        currentUTC = datetime.utcnow().timestamp()
-        self.add_data_to_plot(self.liveGraph, 0, currentUTC, net)
-
-        if len(trader.tradingOptions) == 1:
-            self.hide_next_moving_averages(LIVE)
-
-        for index, option in enumerate(trader.tradingOptions):
-            initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = self.get_option_info(option, trader)
-            self.add_data_to_plot(self.avgGraph, index * 2, currentUTC, initialAverage)
-            self.add_data_to_plot(self.avgGraph, index * 2 + 1, currentUTC, finalAverage)
-
-            if index == 0:
-                self.statistics.baseInitialMovingAverageLabel.setText(initialAverageLabel)
-                self.statistics.baseInitialMovingAverageValue.setText(f'${initialAverage}')
-                self.statistics.baseFinalMovingAverageLabel.setText(finalAverageLabel)
-                self.statistics.baseFinalMovingAverageValue.setText(f'${finalAverage}')
-
-            if index == 1:
-                self.show_next_moving_averages(LIVE)
-                self.statistics.nextInitialMovingAverageLabel.setText(initialAverageLabel)
-                self.statistics.nextInitialMovingAverageValue.setText(f'${initialAverage}')
-                self.statistics.nextFinalMovingAverageLabel.setText(finalAverageLabel)
-                self.statistics.nextFinalMovingAverageValue.setText(f'${finalAverage}')
-
-    def update_simulation_graphs(self, net):
-        """
-        Helper function that will update simulation graphs.
-        :param net: Final net value. Passed to function to avoid calling net function.
-        """
-        trader = self.simulationTrader
-        currentUTC = datetime.utcnow().timestamp()
-        self.add_data_to_plot(self.simulationGraph, 0, currentUTC, net)
-
-        for index, option in enumerate(trader.tradingOptions):
-            initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = self.get_option_info(option, trader)
-            self.add_data_to_plot(self.simulationAvgGraph, index * 2, currentUTC, initialAverage)
-            self.add_data_to_plot(self.simulationAvgGraph, index * 2 + 1, currentUTC, finalAverage)
-
-            if index == 0:
-                self.statistics.simulationBaseInitialMovingAverageLabel.setText(initialAverageLabel)
-                self.statistics.simulationBaseInitialMovingAverageValue.setText(f'${initialAverage}')
-                self.statistics.simulationBaseFinalMovingAverageLabel.setText(finalAverageLabel)
-                self.statistics.simulationBaseFinalMovingAverageValue.setText(f'${finalAverage}')
-                if len(trader.tradingOptions) == 1:
-                    self.hide_next_moving_averages(SIMULATION)
-
-            if index > 0:
-                self.show_next_moving_averages(SIMULATION)
-                self.statistics.simulationNextInitialMovingAverageLabel.setText(initialAverageLabel)
-                self.statistics.simulationNextInitialMovingAverageValue.setText(f'${initialAverage}')
-                self.statistics.simulationNextFinalMovingAverageLabel.setText(finalAverageLabel)
-                self.statistics.nextFinalMovingAverageValue.setText(f'${finalAverage}')
-
     def show_next_moving_averages(self, caller):
         """
         :param caller: Caller that will decide which statistics get shown..
@@ -488,16 +429,14 @@ class Interface(QMainWindow):
         Enables override interface for which caller specifies.
         :param caller: Caller that will specify which interface will have its override interface enabled.
         """
-        interfaceDict = self.get_interface_dictionary(caller)
-        interfaceDict['mainInterface']['overrideGroupBox'].setEnabled(True)
+        self.interfaceDictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(True)
 
     def disable_override(self, caller):
         """
         Disables override interface for which caller specifies.
         :param caller: Caller that will specify which interface will have its override interface disabled.
         """
-        interfaceDict = self.get_interface_dictionary(caller)
-        interfaceDict['mainInterface']['overrideGroupBox'].setEnabled(False)
+        self.interfaceDictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(False)
 
     def exit_position(self, caller, humanControl=True):
         """
@@ -919,10 +858,7 @@ class Interface(QMainWindow):
                              trade['method'],
                              trade['action']]
                 self.add_to_table(table, tradeData)
-                if caller == LIVE:  # Also add action to main activity monitor.
-                    self.add_to_live_activity_monitor(trade['action'])
-                else:
-                    self.add_to_simulation_activity_monitor(trade['action'])
+                self.add_to_monitor(caller, trade['action'])
 
     def show_main_settings(self):
         """
