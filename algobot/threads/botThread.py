@@ -128,8 +128,7 @@ class BotThread(QRunnable):
         :param caller: Object for which function will handle trading.
         """
         trader = self.gui.get_trader(caller)
-        if not trader.inHumanControl:
-            trader.main_logic()
+        trader.main_logic()
 
     def handle_trailing_prices(self, caller):
         """

@@ -220,10 +220,10 @@ class SimulationTrader:
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
                 self.buy_short(f'Bought short because of custom stop loss.')
 
-            if self.get_stop_loss() is not None and self.currentPrice > self.get_stop_loss():
+            if self.get_stop_loss() is not None and self.currentPrice >= self.get_stop_loss():
                 self.buy_short(f'Bought short because of stop loss.')
 
-            if self.check_cross():
+            if not self.inHumanControl and self.check_cross():
                 self.buy_short(f'Bought short because a cross was detected.')
                 self.buy_long(f'Bought long because a cross was detected.')
 
@@ -231,15 +231,15 @@ class SimulationTrader:
             if self.customStopLoss is not None and self.currentPrice <= self.customStopLoss:
                 self.sell_long(f'Sold long because of custom stop loss.')
 
-            if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
+            if self.get_stop_loss() is not None and self.currentPrice <= self.get_stop_loss():
                 self.sell_long(f'Sold long because of stop loss.')
 
-            if self.check_cross():
+            if not self.inHumanControl and self.check_cross():
                 self.sell_long(f'Sold long because a cross was detected.')
                 self.sell_short('Sold short because a cross was detected.')
 
         else:  # This means we are in neither position
-            if self.check_cross():  # before i get confused again, this function handles stop loss edge cases too
+            if not self.inHumanControl and self.check_cross():
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
                     self.buy_long("Bought long because a cross was detected.")
                 else:
