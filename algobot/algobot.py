@@ -60,14 +60,6 @@ class Interface(QMainWindow):
         self.telegramBot = None
         self.add_to_live_activity_monitor('Initialized interface.')
 
-    def end_crash_bot_and_create_popup(self, caller: int, msg: str):
-        """
-        Function that force ends bot in the event that it crashes.
-        """
-        self.disable_interface(boolean=False, caller=caller)
-        self.add_to_monitor(caller=caller, message=msg)
-        self.create_popup(msg)
-
     def initiate_bot_thread(self, caller: int):
         """
         Main function that initiates bot thread and handles all data-view logic.
@@ -81,41 +73,7 @@ class Interface(QMainWindow):
         worker.signals.updated.connect(self.update_interface_info)
         self.threadPool.start(worker)
 
-    def initial_bot_ui_setup(self, caller):
-        """
-        Sets up UI based on caller.
-        :param caller: Caller that determines which UI gets setup.
-        """
-        trader = self.get_trader(caller)
-        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
-        self.disable_interface(True, caller, False)
-        self.enable_override(caller)
-        self.clear_table(interfaceDict['historyTable'])
-        self.destroy_graph_plots(interfaceDict['graph'])
-        self.destroy_graph_plots(interfaceDict['averageGraph'])
-        self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
-        self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
-
-    def handle_position_buttons(self, caller):
-        """
-        Handles interface position buttons based on caller.
-        :param caller: Caller object for whose interface buttons will be affected.
-        """
-        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
-        trader = self.get_trader(caller)
-
-        inPosition = False if trader.currentPosition is None else True
-        interfaceDict['exitPositionButton'].setEnabled(inPosition)
-        interfaceDict['waitOverrideButton'].setEnabled(inPosition)
-
-        if trader.currentPosition == LONG:
-            interfaceDict['forceLongButton'].setEnabled(False)
-            interfaceDict['forceShortButton'].setEnabled(True)
-        elif trader.currentPosition == SHORT:
-            interfaceDict['forceLongButton'].setEnabled(True)
-            interfaceDict['forceShortButton'].setEnabled(False)
-
-    def end_bot(self, caller):
+    def end_bot_thread(self, caller):
         """
         Ends bot based on caller.
         :param caller: Caller that decides which bot will be ended.
@@ -146,6 +104,29 @@ class Interface(QMainWindow):
         tempTrader.dataView.dump_to_table()
         # self.destroy_trader(caller)
 
+    def end_crash_bot_and_create_popup(self, caller: int, msg: str):
+        """
+        Function that force ends bot in the event that it crashes.
+        """
+        self.disable_interface(boolean=False, caller=caller)
+        self.add_to_monitor(caller=caller, message=msg)
+        self.create_popup(msg)
+
+    def initial_bot_ui_setup(self, caller):
+        """
+        Sets up UI based on caller.
+        :param caller: Caller that determines which UI gets setup.
+        """
+        trader = self.get_trader(caller)
+        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
+        self.disable_interface(True, caller, False)
+        self.enable_override(caller)
+        self.clear_table(interfaceDict['historyTable'])
+        self.destroy_graph_plots(interfaceDict['graph'])
+        self.destroy_graph_plots(interfaceDict['averageGraph'])
+        self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
+        self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
+
     def destroy_trader(self, caller):
         """
         Destroys trader based on caller by setting them equal to none.
@@ -159,6 +140,25 @@ class Interface(QMainWindow):
             pass
         else:
             raise ValueError("invalid caller type specified.")
+
+    def handle_position_buttons(self, caller):
+        """
+        Handles interface position buttons based on caller.
+        :param caller: Caller object for whose interface buttons will be affected.
+        """
+        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
+        trader = self.get_trader(caller)
+
+        inPosition = False if trader.currentPosition is None else True
+        interfaceDict['exitPositionButton'].setEnabled(inPosition)
+        interfaceDict['waitOverrideButton'].setEnabled(inPosition)
+
+        if trader.currentPosition == LONG:
+            interfaceDict['forceLongButton'].setEnabled(False)
+            interfaceDict['forceShortButton'].setEnabled(True)
+        elif trader.currentPosition == SHORT:
+            interfaceDict['forceLongButton'].setEnabled(True)
+            interfaceDict['forceShortButton'].setEnabled(False)
 
     def set_parameters(self, caller):
         """
@@ -203,11 +203,11 @@ class Interface(QMainWindow):
         :param caller: Object that determines which object gets updated.
         """
         interfaceDict = self.get_interface_dictionary(caller)
-        self.update_statistics_testing(interfaceDict, statDict=statDict, caller=caller)
+        self.update_main_interface(interfaceDict, statDict=statDict, caller=caller)
         self.update_trades_table_and_activity_monitor(caller=caller)
         self.handle_position_buttons(caller=caller)
 
-    def update_statistics_testing(self, interfaceDictionary, statDict, caller):
+    def update_main_interface(self, interfaceDictionary, statDict, caller):
         statisticsDictionary = interfaceDictionary['statistics']
         statisticsDictionary['startingBalanceValue'].setText(statDict['startingBalanceValue'])
         statisticsDictionary['currentBalanceValue'].setText(statDict['currentBalanceValue'])
@@ -440,9 +440,9 @@ class Interface(QMainWindow):
 
         if ret == qm.Yes:
             if self.runningLive:
-                self.end_bot(LIVE)
+                self.end_bot_thread(LIVE)
             elif self.simulationRunningLive:
-                self.end_bot(SIMULATION)
+                self.end_bot_thread(SIMULATION)
             event.accept()
         else:
             event.ignore()
@@ -734,7 +734,7 @@ class Interface(QMainWindow):
         Creates bot slots.
         """
         self.runBotButton.clicked.connect(lambda: self.initiate_bot_thread(caller=LIVE))
-        self.endBotButton.clicked.connect(lambda: self.end_bot(caller=LIVE))
+        self.endBotButton.clicked.connect(lambda: self.end_bot_thread(caller=LIVE))
         self.configureBotButton.clicked.connect(self.show_main_settings)
         self.forceLongButton.clicked.connect(self.force_long)
         self.forceShortButton.clicked.connect(self.force_short)
@@ -747,7 +747,7 @@ class Interface(QMainWindow):
         Creates simulation slots.
         """
         self.runSimulationButton.clicked.connect(lambda: self.initiate_bot_thread(caller=SIMULATION))
-        self.endSimulationButton.clicked.connect(lambda: self.end_bot(caller=SIMULATION))
+        self.endSimulationButton.clicked.connect(lambda: self.end_bot_thread(caller=SIMULATION))
         self.configureSimulationButton.clicked.connect(self.show_simulation_settings)
         self.forceLongSimulationButton.clicked.connect(lambda: self.force_long(SIMULATION))
         self.forceShortSimulationButton.clicked.connect(lambda: self.force_short(SIMULATION))
@@ -863,7 +863,12 @@ class Interface(QMainWindow):
             graph = graph['graph']
             graph.setBackground('w')
 
-    def get_lower_interval_data(self, caller):
+    def get_lower_interval_data(self, caller) -> Data:
+        """
+        Returns a lower interval data object.
+        :param caller: Caller that determines which lower interval data object gets returned.
+        :return: Data object.
+        """
         if caller == SIMULATION:
             return self.simulationLowerIntervalData
         elif caller == LIVE:
@@ -871,7 +876,12 @@ class Interface(QMainWindow):
         else:
             raise TypeError("Invalid type of caller specified.")
 
-    def get_trader(self, caller) -> SimulationTrader or RealTrader:
+    def get_trader(self, caller) -> SimulationTrader:
+        """
+        Returns a trader object.
+        :param caller: Caller that decides which trader object gets returned.
+        :return: Trader object.
+        """
         if caller == SIMULATION:
             return self.simulationTrader
         elif caller == LIVE:
