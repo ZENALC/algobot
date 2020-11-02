@@ -91,32 +91,6 @@ class Interface(QMainWindow):
         self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
         self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
 
-    def update_data(self, caller):
-        """
-        Updates data if updated data exists for caller object.
-        :param caller: Object type that will be updated.
-        """
-        if caller == LIVE and not self.trader.dataView.data_is_updated():
-            self.add_to_live_activity_monitor('New data found. Updating...')
-            self.trader.dataView.update_data()
-            self.add_to_live_activity_monitor('Updated data successfully.')
-        elif caller == SIMULATION and not self.simulationTrader.dataView.data_is_updated():
-            self.add_to_simulation_activity_monitor('New data found. Updating...')
-            self.simulationTrader.dataView.update_data()
-            self.add_to_simulation_activity_monitor('Updated data successfully.')
-
-    def handle_logging(self, caller):
-        """
-        Handles logging type for caller object.
-        :param caller: Object those logging will be performed.
-        """
-        if caller == LIVE:
-            if self.advancedLogging:
-                self.trader.output_basic_information()
-        elif caller == SIMULATION:
-            if self.advancedLogging:
-                self.simulationTrader.output_basic_information()
-
     def handle_position_buttons(self, caller):
         """
         Handles interface position buttons based on caller.
@@ -153,39 +127,6 @@ class Interface(QMainWindow):
             if self.simulationTrader.get_position() == SHORT:
                 self.forceLongSimulationButton.setEnabled(True)
                 self.forceShortSimulationButton.setEnabled(False)
-
-    def handle_trailing_prices(self, caller):
-        """
-        Handles trailing prices for caller object.
-        :param caller: Trailing prices for what caller to be handled for.
-        """
-        if caller == SIMULATION:
-            trader = self.simulationTrader
-        elif caller == LIVE:
-            trader = self.trader
-        else:
-            raise ValueError("Invalid caller type specified.")
-
-        trader.currentPrice = trader.dataView.get_current_price()
-        if trader.longTrailingPrice is not None and trader.currentPrice > trader.longTrailingPrice:
-            trader.longTrailingPrice = trader.currentPrice
-        if trader.shortTrailingPrice is not None and trader.currentPrice < trader.shortTrailingPrice:
-            trader.shortTrailingPrice = trader.currentPrice
-
-    def handle_trading(self, caller):
-        """
-        Handles trading by checking if automation mode is on or manual.
-        :param caller: Object for which function will handle trading.
-        """
-        if caller == SIMULATION:
-            trader = self.simulationTrader
-        elif caller == LIVE:
-            trader = self.trader
-        else:
-            raise ValueError('Invalid caller type specified.')
-
-        if not trader.inHumanControl:
-            trader.main_logic()
 
     # to fix
     def handle_cross_notification(self, caller, notification):

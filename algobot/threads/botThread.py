@@ -162,15 +162,63 @@ class BotThread(QRunnable):
             gui.simulationTrader.dataView.update_data()
             self.signals.simulationActivity.emit('Updated data successfully.')
 
+    def handle_trading(self, caller):
+        """
+        Handles trading by checking if automation mode is on or manual.
+        :param caller: Object for which function will handle trading.
+        """
+        gui = self.gui
+        if caller == SIMULATION:
+            trader = gui.simulationTrader
+        elif caller == LIVE:
+            trader = gui.trader
+        else:
+            raise ValueError('Invalid caller type specified.')
+
+        if not trader.inHumanControl:
+            trader.main_logic()
+
+    def handle_trailing_prices(self, caller):
+        """
+        Handles trailing prices for caller object.
+        :param caller: Trailing prices for what caller to be handled for.
+        """
+        gui = self.gui
+        if caller == SIMULATION:
+            trader = gui.simulationTrader
+        elif caller == LIVE:
+            trader = gui.trader
+        else:
+            raise ValueError("Invalid caller type specified.")
+
+        trader.currentPrice = trader.dataView.get_current_price()
+        if trader.longTrailingPrice is not None and trader.currentPrice > trader.longTrailingPrice:
+            trader.longTrailingPrice = trader.currentPrice
+        if trader.shortTrailingPrice is not None and trader.currentPrice < trader.shortTrailingPrice:
+            trader.shortTrailingPrice = trader.currentPrice
+
+    def handle_logging(self, caller):
+        """
+        Handles logging type for caller object.
+        :param caller: Object those logging will be performed.
+        """
+        gui = self.gui
+        if caller == LIVE:
+            if gui.advancedLogging:
+                gui.trader.output_basic_information()
+        elif caller == SIMULATION:
+            if gui.advancedLogging:
+                gui.simulationTrader.output_basic_information()
+
     def trading_loop(self, caller):
         lowerTrend = None
         runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
 
         while runningLoop:
             self.update_data(caller)
-            self.gui.handle_logging(caller=caller)
-            self.gui.handle_trailing_prices(caller=caller)
-            self.gui.handle_trading(caller=caller)
+            self.handle_logging(caller=caller)
+            self.handle_trailing_prices(caller=caller)
+            self.handle_trading(caller=caller)
             # crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)
             # lowerTrend = self.gui.handle_lower_interval_cross(caller, lowerTrend)
             statDict = self.get_statistics()
