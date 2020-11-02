@@ -81,7 +81,7 @@ class Interface(QMainWindow):
         if caller == SIMULATION:
             self.simulationRunningLive = False
             self.simulationTrader.get_simulation_result()
-            self.add_to_monitor(caller, "Ended simulation.")
+            self.add_to_monitor(caller, "Killed simulation bot.")
             tempTrader = self.simulationTrader
             if self.simulationLowerIntervalData is not None:
                 self.simulationLowerIntervalData.dump_to_table()
@@ -588,6 +588,7 @@ class Interface(QMainWindow):
         Sets table row count to 0.
         :param table: Table which is to be cleared.
         """
+        table.clearContents()
         table.setRowCount(0)
 
     @staticmethod

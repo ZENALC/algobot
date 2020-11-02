@@ -162,7 +162,6 @@ class BotThread(QRunnable):
         except InvalidToken:
             self.signals.activity.emit(LIVE, 'Invalid token for Telegram. Please recheck credentials in settings.')
 
-    # to fix
     def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool:
         """
         Handles logic and notifications for lower interval cross data.
@@ -262,7 +261,7 @@ class BotThread(QRunnable):
             self.handle_trailing_prices(caller=caller)
             self.handle_trading(caller=caller)
             # crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)
-            # lowerTrend = self.gui.handle_lower_interval_cross(caller, lowerTrend)
+            lowerTrend = self.handle_lower_interval_cross(caller, lowerTrend)
             statDict = self.get_statistics()
             self.signals.updated.emit(caller, statDict)
             runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
