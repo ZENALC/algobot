@@ -86,7 +86,7 @@ class Interface(QMainWindow):
         Sets up UI based on caller.
         :param caller: Caller that determines which UI gets setup.
         """
-        trader = self.simulationTrader if caller == SIMULATION else self.trader
+        trader = self.get_trader(caller)
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         self.disable_interface(True, caller, False)
         self.enable_override(caller)
@@ -102,7 +102,7 @@ class Interface(QMainWindow):
         :param caller: Caller object for whose interface buttons will be affected.
         """
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
-        trader = self.trader if caller == LIVE else self.simulationTrader
+        trader = self.get_trader(caller)
 
         inPosition = False if trader.currentPosition is None else True
         interfaceDict['exitPositionButton'].setEnabled(inPosition)
@@ -124,27 +124,23 @@ class Interface(QMainWindow):
         if caller == SIMULATION:
             self.simulationRunningLive = False
             self.simulationTrader.get_simulation_result()
-            self.runSimulationButton.setEnabled(True)
-            self.endSimulationButton.setEnabled(False)
-            self.add_to_simulation_activity_monitor("Ended simulation.")
+            self.add_to_monitor(caller, "Ended simulation.")
             tempTrader = self.simulationTrader
             if self.simulationLowerIntervalData is not None:
                 self.simulationLowerIntervalData.dump_to_table()
                 self.simulationLowerIntervalData = None
         else:
             self.runningLive = False
-            self.endBotButton.setEnabled(False)
-            self.runBotButton.setEnabled(True)
             self.telegramBot.stop()
-            self.add_to_live_activity_monitor('Killed Telegram bot.')
-            self.add_to_live_activity_monitor("Killed bot.")
+            self.add_to_monitor(caller, 'Killed Telegram bot.')
+            self.add_to_monitor(caller, "Killed bot.")
             tempTrader = self.trader
             if self.lowerIntervalData is not None:
                 self.lowerIntervalData.dump_to_table()
                 self.lowerIntervalData = None
 
         tempTrader.log_trades()
-        self.disable_override(caller)
+        self.enable_override(caller, False)
         self.update_trades_table_and_activity_monitor(caller)
         self.disable_interface(False, caller=caller)
         tempTrader.dataView.dump_to_table()
@@ -170,15 +166,9 @@ class Interface(QMainWindow):
         :param caller: Caller that dictates which parameters get set.
         :return:
         """
-        if caller == LIVE:
-            self.trader.lossStrategy, self.trader.lossPercentageDecimal = self.get_loss_settings(caller)
-            self.trader.tradingOptions = self.get_trading_options(caller)
-        elif caller == SIMULATION:
-            self.simulationTrader.lossStrategy, self.simulationTrader.lossPercentageDecimal = self.get_loss_settings(
-                caller)
-            self.simulationTrader.tradingOptions = self.get_trading_options(caller)
-        else:
-            raise ValueError('Invalid caller.')
+        trader = self.get_trader(caller)
+        trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
+        trader.tradingOptions = self.get_trading_options(caller)
 
     def set_advanced_logging(self, boolean):
         """
@@ -299,19 +289,13 @@ class Interface(QMainWindow):
         interfaceDict['nextFinalMovingAverageLabel'].hide()
         interfaceDict['nextFinalMovingAverageValue'].hide()
 
-    def enable_override(self, caller):
+    def enable_override(self, caller, enabled=True):
         """
         Enables override interface for which caller specifies.
+        :param enabled: Boolean that determines whether override is enabled or disable. By default, it is enabled.
         :param caller: Caller that will specify which interface will have its override interface enabled.
         """
-        self.interfaceDictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(True)
-
-    def disable_override(self, caller):
-        """
-        Disables override interface for which caller specifies.
-        :param caller: Caller that will specify which interface will have its override interface disabled.
-        """
-        self.interfaceDictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(False)
+        self.interfaceDictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(enabled)
 
     def exit_position(self, caller, humanControl=True):
         """
@@ -320,13 +304,7 @@ class Interface(QMainWindow):
         :param humanControl: Boolean that will specify whether bot gives up control or not.
         :param caller: Caller that will specify which trader will exit position.
         """
-        if caller == LIVE:
-            trader = self.trader
-        elif caller == SIMULATION:
-            trader = self.simulationTrader
-        else:
-            raise ValueError("Invalid caller specified.")
-
+        trader = self.get_trader(caller)
         interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
         if humanControl:
             interfaceDict['pauseBotButton'].setText('Resume Bot')
@@ -354,15 +332,8 @@ class Interface(QMainWindow):
         Forces bot to take long position and gives up its control until bot is resumed.
         :param caller: Caller that will determine with trader will force long.
         """
-        if caller == SIMULATION:
-            trader = self.simulationTrader
-            self.add_to_simulation_activity_monitor('Forced long and stopped autonomous logic.')
-        elif caller == LIVE:
-            trader = self.trader
-            self.add_to_live_activity_monitor('Forced long and stopping autonomous logic.')
-        else:
-            raise ValueError("Invalid type of caller specified.")
-
+        trader = self.get_trader(caller)
+        self.add_to_monitor(caller, 'Forcing long and stopping autonomous logic.')
         interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
         interfaceDict['pauseBotButton'].setText('Resume Bot')
         interfaceDict['forceShortButton'].setEnabled(True)
@@ -380,15 +351,8 @@ class Interface(QMainWindow):
         Forces bot to take short position and gives up its control until bot is resumed.
         :param caller: Caller that will determine with trader will force short.
         """
-        if caller == SIMULATION:
-            trader = self.simulationTrader
-            self.add_to_simulation_activity_monitor('Forcing short and stopping autonomous logic.')
-        elif caller == LIVE:
-            trader = self.trader
-            self.add_to_live_activity_monitor('Forced short and stopped autonomous logic.')
-        else:
-            raise ValueError("Invalid type of caller specified.")
-
+        trader = self.get_trader(caller)
+        self.add_to_monitor(caller, 'Forcing short and stopping autonomous logic.')
         interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
         interfaceDict['pauseBotButton'].setText('Resume Bot')
         interfaceDict['forceShortButton'].setEnabled(False)
@@ -406,13 +370,7 @@ class Interface(QMainWindow):
         Pauses or resumes bot logic based on caller.
         :param caller: Caller object that specifies which trading object will be paused or resumed.
         """
-        if caller == LIVE:
-            trader = self.trader
-        elif caller == SIMULATION:
-            trader = self.simulationTrader
-        else:
-            raise ValueError("Invalid caller specified.")
-
+        trader = self.get_trader(caller)
         pauseButton = self.get_interface_dictionary(caller)['mainInterface']['pauseBotButton']
         if pauseButton.text() == 'Pause Bot':
             trader.inHumanControl = True
@@ -709,13 +667,8 @@ class Interface(QMainWindow):
         Updates trade table and activity based on caller.
         :param caller: Caller object that will rule which tables get updated.
         """
-        table = self.interfaceDictionary[caller]['historyTable']
-        if caller == SIMULATION:
-            trades = self.simulationTrader.trades
-        elif caller == LIVE:
-            trades = self.trader.trades
-        else:
-            raise ValueError('Invalid caller specified.')
+        table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
+        trades = self.get_trader(caller).trades
 
         if len(trades) > table.rowCount():  # Basically, only update when row count is not equal to trades count.
             remaining = len(trades) - table.rowCount()
@@ -909,6 +862,22 @@ class Interface(QMainWindow):
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('w')
+
+    def get_lower_interval_data(self, caller):
+        if caller == SIMULATION:
+            return self.simulationLowerIntervalData
+        elif caller == LIVE:
+            return self.lowerIntervalData
+        else:
+            raise TypeError("Invalid type of caller specified.")
+
+    def get_trader(self, caller) -> SimulationTrader or RealTrader:
+        if caller == SIMULATION:
+            return self.simulationTrader
+        elif caller == LIVE:
+            return self.trader
+        else:
+            raise TypeError("Invalid type of caller specified.")
 
     # noinspection DuplicatedCode
     def get_interface_dictionary(self, caller=None):
