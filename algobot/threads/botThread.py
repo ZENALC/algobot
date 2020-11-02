@@ -14,8 +14,7 @@ from telegramBot import TelegramBot
 
 class BotSignals(QObject):
     started = pyqtSignal(int)
-    simulationActivity = pyqtSignal(str)
-    liveActivity = pyqtSignal(str)
+    activity = pyqtSignal(int, str)
     updated = pyqtSignal(int, dict)
     finished = pyqtSignal()
     error = pyqtSignal(int, str)
@@ -39,9 +38,9 @@ class BotThread(QRunnable):
                 apiKey = gui.configuration.telegramApiKey.text()
                 gui.telegramBot = TelegramBot(gui=gui, apiKey=apiKey)
             gui.telegramBot.start()
-            self.signals.liveActivity.emit('Started Telegram bot.')
+            self.signals.activity.emit(LIVE, 'Started Telegram bot.')
         except InvalidToken:
-            self.signals.liveActivity.emit('Invalid token for Telegram. Please recheck credentials in settings.')
+            self.signals.activity.emit(LIVE, 'Invalid token for Telegram. Please recheck credentials in settings.')
 
     def initialize_lower_interval_trading(self, caller, interval):
         """
@@ -54,13 +53,13 @@ class BotThread(QRunnable):
         if interval != '1m':
             lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
             if caller == LIVE:
-                self.signals.liveActivity.emit(f'Retrieving data for lower interval {lowerInterval}...')
+                self.signals.activity.emit(caller, f'Retrieving data for lower interval {lowerInterval}...')
                 gui.lowerIntervalData = Data(lowerInterval)
-                self.signals.liveActivity.emit('Retrieved lower interval data successfully.')
+                self.signals.activity.emit(caller, 'Retrieved lower interval data successfully.')
             else:
-                self.signals.simulationActivity.emit(f'Retrieving data for lower interval {lowerInterval}...')
+                self.signals.activity.emit(caller, f'Retrieving data for lower interval {lowerInterval}...')
                 gui.simulationLowerIntervalData = Data(lowerInterval)
-                self.signals.simulationActivity.emit("Retrieved lower interval data successfully.")
+                self.signals.activity.emit(caller, "Retrieved lower interval data successfully.")
 
     def create_trader(self, caller):
         gui = self.gui
@@ -68,12 +67,12 @@ class BotThread(QRunnable):
             symbol = gui.configuration.simulationTickerComboBox.currentText()
             interval = helpers.convert_interval(gui.configuration.simulationIntervalComboBox.currentText())
             startingBalance = gui.configuration.simulationStartingBalanceSpinBox.value()
-            self.signals.simulationActivity.emit(f"Retrieving data for interval {interval}...")
+            self.signals.activity.emit(caller, f"Retrieving data for interval {interval}...")
             gui.simulationTrader = SimulationTrader(startingBalance=startingBalance,
                                                     symbol=symbol,
                                                     interval=interval,
                                                     loadData=True)
-            self.signals.simulationActivity.emit("Retrieved data successfully.")
+            self.signals.activity.emit(caller, "Retrieved data successfully.")
         elif caller == LIVE:
             symbol = gui.configuration.tickerComboBox.currentText()
             interval = helpers.convert_interval(gui.configuration.intervalComboBox.currentText())
@@ -83,9 +82,9 @@ class BotThread(QRunnable):
                 raise ValueError('Please specify an API secret key. No API secret key found.')
             elif len(apiKey) == 0:
                 raise ValueError("Please specify an API key. No API key found.")
-            self.signals.liveActivity.emit(f"Retrieving data for interval {interval}...")
+            self.signals.activity.emit(caller, f"Retrieving data for interval {interval}...")
             gui.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol)
-            self.signals.liveActivity.emit("Retrieved data successfully.")
+            self.signals.activity.emit(caller, "Retrieved data successfully.")
         else:
             raise ValueError("Invalid caller.")
 
@@ -154,13 +153,13 @@ class BotThread(QRunnable):
         """
         gui = self.gui
         if caller == LIVE and not gui.trader.dataView.data_is_updated():
-            self.signals.liveActivity.emit('New data found. Updating...')
+            self.signals.activity.emit(caller, 'New data found. Updating...')
             gui.trader.dataView.update_data()
-            self.signals.liveActivity.emit('Updated data successfully.')
+            self.signals.activity.emit(caller, 'Updated data successfully.')
         elif caller == SIMULATION and not gui.simulationTrader.dataView.data_is_updated():
-            self.signals.simulationActivity.emit('New data found. Updating...')
+            self.signals.activity.emit(caller, 'New data found. Updating...')
             gui.simulationTrader.dataView.update_data()
-            self.signals.simulationActivity.emit('Updated data successfully.')
+            self.signals.activity.emit(caller, 'Updated data successfully.')
 
     def handle_trading(self, caller):
         """

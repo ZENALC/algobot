@@ -23,7 +23,6 @@ from PyQt5.QtGui import QIcon
 from pyqtgraph import DateAxisItem, mkPen, PlotWidget
 
 app = QApplication(sys.argv)
-
 mainUi = os.path.join('../', 'UI', 'algobot.ui')
 
 
@@ -61,28 +60,34 @@ class Interface(QMainWindow):
         self.telegramBot = None
         self.add_to_live_activity_monitor('Initialized interface.')
 
-    def end_crash_bot_and_create_popup(self, caller, msg):
+    def end_crash_bot_and_create_popup(self, caller: int, msg: str):
         """
         Function that force ends bot in the event that it crashes.
         """
         self.disable_interface(boolean=False, caller=caller)
-        self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(False)
         self.add_to_monitor(caller=caller, message=msg)
         self.create_popup(msg)
 
-    def initiate_bot_thread(self, caller):
+    def initiate_bot_thread(self, caller: int):
+        """
+        Main function that initiates bot thread and handles all data-view logic.
+        :param caller: Caller that decides whether a live bot or simulation bot is run.
+        """
         self.disable_interface(True, caller, everything=True)
         worker = botThread.BotThread(gui=self, caller=caller)
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
-        worker.signals.liveActivity.connect(self.add_to_live_activity_monitor)
-        worker.signals.simulationActivity.connect(self.add_to_simulation_activity_monitor)
+        worker.signals.activity.connect(self.add_to_monitor)
         worker.signals.started.connect(self.initial_bot_ui_setup)
         worker.signals.updated.connect(self.update_interface_info)
         self.threadPool.start(worker)
 
     def initial_bot_ui_setup(self, caller):
+        """
+        Sets up UI based on caller.
+        :param caller: Caller that determines which UI gets setup.
+        """
         trader = self.simulationTrader if caller == SIMULATION else self.trader
-        interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
+        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         self.disable_interface(True, caller, False)
         self.enable_override(caller)
         self.clear_table(interfaceDict['historyTable'])
@@ -96,37 +101,19 @@ class Interface(QMainWindow):
         Handles interface position buttons based on caller.
         :param caller: Caller object for whose interface buttons will be affected.
         """
-        if caller == LIVE:
-            if self.trader.get_position() is None:
-                self.exitPositionButton.setEnabled(False)
-                self.waitOverrideButton.setEnabled(False)
-            else:
-                self.exitPositionButton.setEnabled(True)
-                self.waitOverrideButton.setEnabled(True)
+        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
+        trader = self.trader if caller == LIVE else self.simulationTrader
 
-            if self.trader.get_position() == LONG:
-                self.forceLongButton.setEnabled(False)
-                self.forceShortButton.setEnabled(True)
+        inPosition = False if trader.currentPosition is None else True
+        interfaceDict['exitPositionButton'].setEnabled(inPosition)
+        interfaceDict['waitOverrideButton'].setEnabled(inPosition)
 
-            if self.trader.get_position() == SHORT:
-                self.forceLongButton.setEnabled(True)
-                self.forceShortButton.setEnabled(False)
-
-        elif caller == SIMULATION:
-            if self.simulationTrader.get_position() is None:
-                self.exitPositionSimulationButton.setEnabled(False)
-                self.waitOverrideSimulationButton.setEnabled(False)
-            else:
-                self.exitPositionSimulationButton.setEnabled(True)
-                self.waitOverrideSimulationButton.setEnabled(True)
-
-            if self.simulationTrader.get_position() == LONG:
-                self.forceLongSimulationButton.setEnabled(False)
-                self.forceShortSimulationButton.setEnabled(True)
-
-            if self.simulationTrader.get_position() == SHORT:
-                self.forceLongSimulationButton.setEnabled(True)
-                self.forceShortSimulationButton.setEnabled(False)
+        if trader.currentPosition == LONG:
+            interfaceDict['forceLongButton'].setEnabled(False)
+            interfaceDict['forceShortButton'].setEnabled(True)
+        elif trader.currentPosition == SHORT:
+            interfaceDict['forceLongButton'].setEnabled(True)
+            interfaceDict['forceShortButton'].setEnabled(False)
 
     # to fix
     def handle_cross_notification(self, caller, notification):
@@ -264,13 +251,12 @@ class Interface(QMainWindow):
         :param caller: Caller that determines which configuration settings get disabled.
         """
         boolean = not boolean
-        interfaceDict = self.get_interface_dictionary(caller=caller)
-        interfaceDict['configuration']['mainConfigurationTabWidget'].setEnabled(boolean)
-        interfaceDict['mainInterface']['runBotButton'].setEnabled(boolean)
+        self.interfaceDictionary[caller]['configuration']['mainConfigurationTabWidget'].setEnabled(boolean)
+        self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(boolean)
         if not everything:
-            interfaceDict['mainInterface']['endBotButton'].setEnabled(not boolean)
+            self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(not boolean)
         else:
-            interfaceDict['mainInterface']['endBotButton'].setEnabled(boolean)
+            self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(boolean)
 
     def update_interface_info(self, caller, statDict):
         """
@@ -1044,13 +1030,13 @@ class Interface(QMainWindow):
                 },
                 'configuration': {
                     'baseAverageType': self.configuration.simulationAverageTypeComboBox,
-                    'baseParameter':  self.configuration.simulationParameterComboBox,
-                    'baseInitialValue':  self.configuration.simulationInitialValueSpinBox,
+                    'baseParameter': self.configuration.simulationParameterComboBox,
+                    'baseInitialValue': self.configuration.simulationInitialValueSpinBox,
                     'baseFinalValue': self.configuration.simulationFinalValueSpinBox,
                     'doubleCrossCheck': self.configuration.simulationDoubleCrossCheckMark,
                     'additionalAverageType': self.configuration.simulationDoubleAverageComboBox,
                     'additionalParameter': self.configuration.simulationDoubleParameterComboBox,
-                    'additionalInitialValue':  self.configuration.simulationDoubleInitialValueSpinBox,
+                    'additionalInitialValue': self.configuration.simulationDoubleInitialValueSpinBox,
                     'additionalFinalValue': self.configuration.simulationDoubleFinalValueSpinBox,
                     'trailingLossRadio': self.configuration.simulationTrailingLossRadio,
                     'lossPercentage': self.configuration.simulationLossPercentageSpinBox,
@@ -1128,13 +1114,13 @@ class Interface(QMainWindow):
             BACKTEST: {
                 'configuration': {
                     'baseAverageType': self.configuration.backtestAverageTypeComboBox,
-                    'baseParameter':  self.configuration.backtestParameterComboBox,
-                    'baseInitialValue':  self.configuration.backtestInitialValueSpinBox,
+                    'baseParameter': self.configuration.backtestParameterComboBox,
+                    'baseInitialValue': self.configuration.backtestInitialValueSpinBox,
                     'baseFinalValue': self.configuration.backtestFinalValueSpinBox,
                     'doubleCrossCheck': self.configuration.backtestDoubleCrossCheckMark,
                     'additionalAverageType': self.configuration.backtestDoubleAverageComboBox,
                     'additionalParameter': self.configuration.backtestDoubleParameterComboBox,
-                    'additionalInitialValue':  self.configuration.backtestDoubleInitialValueSpinBox,
+                    'additionalInitialValue': self.configuration.backtestDoubleInitialValueSpinBox,
                     'additionalFinalValue': self.configuration.backtestDoubleFinalValueSpinBox,
                     'trailingLossRadio': self.configuration.backtestTrailingLossRadio,
                     'lossPercentage': self.configuration.backtestLossPercentageSpinBox,
