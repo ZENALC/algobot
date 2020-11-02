@@ -1,12 +1,13 @@
 import os
 import helpers
 
-from PyQt5.QtCore import QDate
+from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
 from PyQt5.QtWidgets import QDialog, QFileDialog
 from binance.client import Client
 from telegram.ext import Updater
 from dateutil import parser
+from threads import downloadThread
 
 configurationUi = os.path.join('../', 'UI', 'configuration.ui')
 
@@ -15,8 +16,10 @@ class Configuration(QDialog):
     def __init__(self, parent=None):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
+        self.threadPool = QThreadPool()
         self.load_slots()
         self.load_credentials()
+        self.downloadedData = None
 
     def load_slots(self):
         """
@@ -38,6 +41,9 @@ class Configuration(QDialog):
         self.testTelegramButton.clicked.connect(self.test_telegram)
 
     def test_binance_credentials(self):
+        """
+        Tests Binance credentials provided in configuration.
+        """
         apiKey = self.binanceApiKey.text()
         apiSecret = self.binanceApiSecret.text()
         try:
@@ -51,6 +57,10 @@ class Configuration(QDialog):
                 self.credentialResult.setText(stringError)
 
     def load_credentials(self):
+        """
+        Attempts to load credentials automatically from path Program stores credentials in.
+        :return:
+        """
         try:
             credentials = helpers.load_credentials()
             self.binanceApiKey.setText(credentials['apiKey'])
@@ -63,6 +73,9 @@ class Configuration(QDialog):
             self.credentialResult.setText(str(e))
 
     def save_credentials(self):
+        """
+        Function that saves credentials to base path in a JSON format. Obviously not very secure, but temp fix.
+        """
         apiKey = self.binanceApiKey.text()
         if len(apiKey) == 0:
             self.credentialResult.setText('Please fill in Binance API key details.')
@@ -94,9 +107,19 @@ class Configuration(QDialog):
         return startDate, endDate
 
     def download_data(self):
+        # startDate = self.backtestStartDate.selectedDate().toPyDate()
+        # endDate = self.backtestStartDate.selectedDate().toPyDate()
         self.backtestInfoLabel.setText("Downloading data...")
-        startDate = self.backtestStartDate.selectedDate().toPyDate()
-        endDate = self.backtestStartDate.selectedDate().toPyDate()
+        symbol = self.backtestTickerComboBox.currentText()
+        interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
+        thread = downloadThread.DownloadThread(symbol=symbol, interval=interval)
+        thread.signals.finished.connect(self.get_downloaded_data)
+        thread.signals.error.connect(lambda e: self.backtestInfoLabel.setText(e))
+        self.threadPool.start(thread)
+
+    def get_downloaded_data(self, data):
+        self.downloadedData = data
+        self.backtestInfoLabel.setText("Downloaded data successfully.")
 
     def import_data(self):
         self.backtestInfoLabel.setText("Importing data...")
@@ -168,7 +191,4 @@ class Configuration(QDialog):
 
     @staticmethod
     def toggle_groupbox(checkMark, groupBox):
-        if checkMark.isChecked():
-            groupBox.setEnabled(True)
-        else:
-            groupBox.setEnabled(False)
+        groupBox.setEnabled(checkMark.isChecked())

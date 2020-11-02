@@ -13,9 +13,7 @@ class OtherCommands(QDialog):
     def __init__(self, parent=None):
         super(OtherCommands, self).__init__(parent)  # Initializing object
         uic.loadUi(otherCommandsUi, self)  # Loading the main UI
-
         self.threadPool = QThreadPool()
-
         self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
         self.movingAverageMiscellaneousParameter.currentTextChanged.connect(self.initiate_misc_get_moving_average)
         self.movingAverageMiscellaneousType.currentTextChanged.connect(self.initiate_misc_get_moving_average)
