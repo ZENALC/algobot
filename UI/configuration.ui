@@ -87,7 +87,7 @@
              </property>
              <layout class="QGridLayout" name="gridLayout_13">
               <item row="5" column="0" colspan="4">
-               <widget class="QGroupBox" name="groupBox_5">
+               <widget class="QGroupBox" name="regionGroupBox">
                 <property name="title">
                  <string>Region</string>
                 </property>
@@ -113,7 +113,7 @@
                </widget>
               </item>
               <item row="6" column="0" colspan="4">
-               <widget class="QGroupBox" name="groupBox_4">
+               <widget class="QGroupBox" name="accountTypeGroupBox">
                 <property name="title">
                  <string>Account Type</string>
                 </property>

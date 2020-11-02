@@ -7,16 +7,24 @@ from binance.enums import *
 
 
 class RealTrader(SimulationTrader):
-    def __init__(self, apiKey: str, apiSecret: str, interval: str = '1h', symbol: str = 'BTCUSDT'):
+    def __init__(
+            self,
+            apiKey: str,
+            apiSecret: str,
+            interval: str = '1h',
+            symbol: str = 'BTCUSDT',
+            isIsolated: bool = False,
+            tld: str = 'com'):
+
         # from credentials import apiKey, apiSecret
         if apiKey is None or apiSecret is None:
             raise ValueError('API credentials not provided.')
 
         super().__init__(interval=interval, symbol=symbol)
-        self.binanceClient = Client(apiKey, apiSecret)
+        self.binanceClient = Client(apiKey, apiSecret, tld=tld)
         self.spot_usdt = self.get_spot_usdt()
         self.spot_coin = self.get_spot_coin()
-        self.isolated = self.is_isolated()
+        self.isolated = isIsolated
         self.check_spot_and_transfer()
         self.retrieve_margin_values()
         self.startingBalance = self.get_starting_balance()
@@ -87,15 +95,15 @@ class RealTrader(SimulationTrader):
         """
         Retrieves margin values and sets them to instance variables.
         """
-        try:
-            assets = self.binanceClient.get_margin_account()['userAssets']
-            coin = [asset for asset in assets if asset['asset'] == self.coinName][0]
-            usdt = [asset for asset in assets if asset['asset'] == 'USDT'][0]
-        except IndexError:
+        if self.isolated:
             assets = self.get_isolated_margin_account()['assets']
             coin = [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName][0]['baseAsset']
             usdt = [asset for asset in assets if asset['baseAsset']['asset'] == self.coinName and
                     asset['quoteAsset']['asset'] == 'USDT'][0]['quoteAsset']
+        else:
+            assets = self.binanceClient.get_margin_account()['userAssets']
+            coin = [asset for asset in assets if asset['asset'] == self.coinName][0]
+            usdt = [asset for asset in assets if asset['asset'] == 'USDT'][0]
 
         self.balance = self.round_down(float(usdt['free']))
         self.coin = self.round_down(float(coin['free']))
@@ -205,15 +213,12 @@ class RealTrader(SimulationTrader):
         :param targetAsset: Asset to be retrieved.
         :return: The target asset (if found).
         """
-        try:
+        if self.isolated:
             assets = self.get_isolated_margin_account()['assets']
             return [asset for asset in assets if asset['baseAsset']['asset'] == targetAsset][0]['baseAsset']
-        except IndexError:
-            try:
-                assets = self.binanceClient.get_margin_account()['userAssets']
-                return [asset for asset in assets if asset['asset'] == targetAsset][0]
-            except IndexError:
-                pass
+        else:
+            assets = self.binanceClient.get_margin_account()['userAssets']
+            return [asset for asset in assets if asset['asset'] == targetAsset][0]
 
     def get_margin_coin_info(self) -> dict:
         """
@@ -227,13 +232,13 @@ class RealTrader(SimulationTrader):
         Retrieves USDT available in margin account.
         :return: USDT available.
         """
-        try:
-            return self.round_down(float(self.get_asset('USDT')['free']))
-        except IndexError:
+        if self.isolated:
             assets = self.get_isolated_margin_account()['assets']
             for asset in assets:
                 if asset['baseAsset']['asset'] == self.coinName and asset['quoteAsset']['asset'] == 'USDT':
                     return self.round_down(float(asset['quoteAsset']['free']))
+        else:
+            return self.round_down(float(self.get_asset('USDT')['free']))
 
     def get_margin_coin(self) -> float:
         """
@@ -325,9 +330,7 @@ class RealTrader(SimulationTrader):
         self.balance = self.get_margin_usdt()
         self.currentPrice = self.dataView.get_current_price()
         initialNet = self.get_net()
-        print(self.balance)
         max_buy = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
-        print(max_buy)
 
         order = self.binanceClient.create_margin_order(
             symbol=self.symbol,

@@ -67,9 +67,12 @@ class BotThread(QRunnable):
         elif caller == LIVE:
             apiSecret = gui.configuration.binanceApiSecret.text()
             apiKey = gui.configuration.binanceApiKey.text()
+            tld = 'com' if gui.configuration.otherRegionRadio.isChecked() else 'us'
+            isIsolated = gui.configuration.isolatedMarginAccountRadio.isChecked()
             self.check_api_credentials(apiKey=apiKey, apiSecret=apiSecret)
             self.signals.activity.emit(caller, f"Retrieving data for interval {interval}...")
-            gui.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol)
+            gui.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol, tld=tld,
+                                    isIsolated=isIsolated)
         else:
             raise ValueError("Invalid caller.")
 
