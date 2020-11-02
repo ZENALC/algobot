@@ -19,26 +19,18 @@ class Configuration(QDialog):
         self.threadPool = QThreadPool()
         self.load_slots()
         self.load_credentials()
-        self.downloadedData = None
+        self.data = None
 
-    def load_slots(self):
+    def test_telegram(self):
         """
-        Loads all configuration interface slots.
+        Tests Telegram connection.
         """
-        self.doubleCrossCheckMark.toggled.connect(self.toggle_double_cross_groupbox)
-        self.simulationDoubleCrossCheckMark.toggled.connect(self.toggle_simulation_double_cross_groupbox)
-        self.backtestDoubleCrossCheckMark.toggled.connect(self.toggle_backtest_double_cross_groupbox)
-
-        self.simulationCopySettingsButton.clicked.connect(self.copy_settings_to_simulation)
-
-        self.backtestCopySettingsButton.clicked.connect(self.copy_settings_to_backtest)
-        self.backtestImportDataButton.clicked.connect(self.import_data)
-        self.backtestDownloadDataButton.clicked.connect(self.download_data)
-
-        self.testCredentialsButton.clicked.connect(self.test_binance_credentials)
-        self.saveCredentialsButton.clicked.connect(self.save_credentials)
-        self.loadCredentialsButton.clicked.connect(self.load_credentials)
-        self.testTelegramButton.clicked.connect(self.test_telegram)
+        try:
+            telegramApikey = self.telegramApiKey.text()
+            Updater(telegramApikey, use_context=True)
+            self.telegrationConnectionResult.setText('Connected successfully.')
+        except Exception as e:
+            self.telegrationConnectionResult.setText(str(e))
 
     def test_binance_credentials(self):
         """
@@ -90,46 +82,17 @@ class Configuration(QDialog):
         helpers.write_credentials(apiKey=apiKey, apiSecret=apiSecret, telegramApiKey=telegramApiKey)
         self.credentialResult.setText('Credentials have been saved successfully.')
 
-    def test_telegram(self):
-        """
-        Tests Telegram connection.
-        """
-        try:
-            telegramApikey = self.telegramApiKey.text()
-            Updater(telegramApikey, use_context=True)
-            self.telegrationConnectionResult.setText('Connected successfully.')
-        except Exception as e:
-            self.telegrationConnectionResult.setText(str(e))
-
     def get_calendar_dates(self):
         startDate = self.backtestStartDate.selectedDate().toPyDate()
         endDate = self.backtestStartDate.selectedDate().toPyDate()
         return startDate, endDate
 
-    def download_data(self):
-        # startDate = self.backtestStartDate.selectedDate().toPyDate()
-        # endDate = self.backtestStartDate.selectedDate().toPyDate()
-        self.backtestInfoLabel.setText("Downloading data...")
-        symbol = self.backtestTickerComboBox.currentText()
-        interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
-        thread = downloadThread.DownloadThread(symbol=symbol, interval=interval)
-        thread.signals.finished.connect(self.get_downloaded_data)
-        thread.signals.error.connect(lambda e: self.backtestInfoLabel.setText(e))
-        self.threadPool.start(thread)
-
-    def get_downloaded_data(self, data):
-        self.downloadedData = data
-        self.backtestInfoLabel.setText("Downloaded data successfully.")
-
-    def import_data(self):
-        self.backtestInfoLabel.setText("Importing data...")
-        filePath, _ = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(os.getcwd(), '../'), "CSV (*.csv)")
-        if filePath == '':
-            self.backtestInfoLabel.setText("Data not imported.")
-            return
-        data = helpers.load_from_csv(filePath, descending=False)
-        self.backtestInfoLabel.setText("Imported data successfully.")
-
+    def setup_calendar(self):
+        """
+        Parses data and then manipulates GUI elements with data timeframe.
+        """
+        data = self.data
+        print(data)
         startDate = parser.parse(data[0]['date_utc'])
         startYear, startMonth, startDay = startDate.year, startDate.month, startDate.day
         qStartDate = QDate(startYear, startMonth, startDay)
@@ -140,6 +103,30 @@ class Configuration(QDialog):
 
         self.backtestStartDate.setDateRange(qStartDate, qEndDate)
         self.backtestEndDate.setDateRange(qStartDate, qEndDate)
+
+    def import_data(self):
+        self.backtestInfoLabel.setText("Importing data...")
+        filePath, _ = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(os.getcwd(), '../'), "CSV (*.csv)")
+        if filePath == '':
+            self.backtestInfoLabel.setText("Data not imported.")
+            return
+        self.data = helpers.load_from_csv(filePath, descending=False)
+        self.backtestInfoLabel.setText("Imported data successfully.")
+        self.setup_calendar()
+
+    def download_data(self):
+        self.backtestInfoLabel.setText("Downloading data...")
+        symbol = self.backtestTickerComboBox.currentText()
+        interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
+        thread = downloadThread.DownloadThread(symbol=symbol, interval=interval)
+        thread.signals.finished.connect(self.set_downloaded_data)
+        thread.signals.error.connect(lambda e: self.backtestInfoLabel.setText(e))
+        self.threadPool.start(thread)
+
+    def set_downloaded_data(self, data):
+        self.data = data
+        self.backtestInfoLabel.setText("Downloaded data successfully.")
+        self.setup_calendar()
 
     def copy_settings_to_simulation(self):
         self.simulationIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
@@ -192,3 +179,23 @@ class Configuration(QDialog):
     @staticmethod
     def toggle_groupbox(checkMark, groupBox):
         groupBox.setEnabled(checkMark.isChecked())
+
+    def load_slots(self):
+        """
+        Loads all configuration interface slots.
+        """
+        self.doubleCrossCheckMark.toggled.connect(self.toggle_double_cross_groupbox)
+        self.simulationDoubleCrossCheckMark.toggled.connect(self.toggle_simulation_double_cross_groupbox)
+        self.backtestDoubleCrossCheckMark.toggled.connect(self.toggle_backtest_double_cross_groupbox)
+
+        self.simulationCopySettingsButton.clicked.connect(self.copy_settings_to_simulation)
+
+        self.backtestCopySettingsButton.clicked.connect(self.copy_settings_to_backtest)
+        self.backtestImportDataButton.clicked.connect(self.import_data)
+        self.backtestDownloadDataButton.clicked.connect(self.download_data)
+
+        self.testCredentialsButton.clicked.connect(self.test_binance_credentials)
+        self.saveCredentialsButton.clicked.connect(self.save_credentials)
+        self.loadCredentialsButton.clicked.connect(self.load_credentials)
+        self.testTelegramButton.clicked.connect(self.test_telegram)
+

@@ -46,7 +46,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -841,7 +841,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="backtestMainTab">
           <attribute name="title">
@@ -1012,27 +1012,6 @@
                  <string>Data</string>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_35">
-                 <item row="3" column="0">
-                  <widget class="QLabel" name="label_4">
-                   <property name="text">
-                    <string>End Period</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
-                  <widget class="QCalendarWidget" name="backtestStartDate">
-                   <property name="minimumDate">
-                    <date>
-                     <year>2015</year>
-                     <month>9</month>
-                     <day>14</day>
-                    </date>
-                   </property>
-                   <property name="gridVisible">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="0" column="0">
                   <layout class="QHBoxLayout" name="horizontalLayout">
                    <item>
@@ -1109,23 +1088,6 @@
                     </spacer>
                    </item>
                   </layout>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="label">
-                   <property name="text">
-                    <string>Start Period</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="0">
-                  <widget class="QCalendarWidget" name="backtestEndDate">
-                   <property name="gridVisible">
-                    <bool>true</bool>
-                   </property>
-                   <property name="selectionMode">
-                    <enum>QCalendarWidget::SingleSelection</enum>
-                   </property>
-                  </widget>
                  </item>
                 </layout>
                </widget>
@@ -1614,6 +1576,51 @@
                </spacer>
               </item>
              </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab">
+          <attribute name="title">
+           <string>Backtest Period</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QLabel" name="startingPeriodLabel">
+             <property name="text">
+              <string>Starting Period</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCalendarWidget" name="backtestStartDate">
+             <property name="minimumDate">
+              <date>
+               <year>2015</year>
+               <month>9</month>
+               <day>14</day>
+              </date>
+             </property>
+             <property name="gridVisible">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="endingPeriodLabel">
+             <property name="text">
+              <string>Ending Period</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCalendarWidget" name="backtestEndDate">
+             <property name="gridVisible">
+              <bool>true</bool>
+             </property>
+             <property name="selectionMode">
+              <enum>QCalendarWidget::SingleSelection</enum>
+             </property>
             </widget>
            </item>
           </layout>
