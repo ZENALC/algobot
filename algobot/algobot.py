@@ -52,7 +52,6 @@ class Interface(QMainWindow):
         self.runningLive = False
         self.simulationRunningLive = False
         self.backtestRunningLive = False
-        self.traders = {SIMULATION: None, LIVE: None}
         self.trader: RealTrader or None = None
         self.simulationTrader: SimulationTrader or None = None
         self.simulationLowerIntervalData: Data or None = None
@@ -126,39 +125,6 @@ class Interface(QMainWindow):
         self.destroy_graph_plots(interfaceDict['averageGraph'])
         self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
         self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
-
-    def destroy_trader(self, caller):
-        """
-        Destroys trader based on caller by setting them equal to none.
-        :param caller: Caller that determines which trading object gets destroyed.
-        """
-        if caller == SIMULATION:
-            self.simulationTrader = None
-        elif caller == LIVE:
-            self.trader = None
-        elif caller == BACKTEST:
-            pass
-        else:
-            raise ValueError("invalid caller type specified.")
-
-    def handle_position_buttons(self, caller):
-        """
-        Handles interface position buttons based on caller.
-        :param caller: Caller object for whose interface buttons will be affected.
-        """
-        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
-        trader = self.get_trader(caller)
-
-        inPosition = False if trader.currentPosition is None else True
-        interfaceDict['exitPositionButton'].setEnabled(inPosition)
-        interfaceDict['waitOverrideButton'].setEnabled(inPosition)
-
-        if trader.currentPosition == LONG:
-            interfaceDict['forceLongButton'].setEnabled(False)
-            interfaceDict['forceShortButton'].setEnabled(True)
-        elif trader.currentPosition == SHORT:
-            interfaceDict['forceLongButton'].setEnabled(True)
-            interfaceDict['forceShortButton'].setEnabled(False)
 
     def disable_interface(self, boolean, caller, everything=False):
         """
@@ -268,6 +234,39 @@ class Interface(QMainWindow):
         interfaceDict['nextFinalMovingAverageLabel'].hide()
         interfaceDict['nextFinalMovingAverageValue'].hide()
 
+    def destroy_trader(self, caller):
+        """
+        Destroys trader based on caller by setting them equal to none.
+        :param caller: Caller that determines which trading object gets destroyed.
+        """
+        if caller == SIMULATION:
+            self.simulationTrader = None
+        elif caller == LIVE:
+            self.trader = None
+        elif caller == BACKTEST:
+            pass
+        else:
+            raise ValueError("invalid caller type specified.")
+
+    def handle_position_buttons(self, caller):
+        """
+        Handles interface position buttons based on caller.
+        :param caller: Caller object for whose interface buttons will be affected.
+        """
+        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
+        trader = self.get_trader(caller)
+
+        inPosition = False if trader.currentPosition is None else True
+        interfaceDict['exitPositionButton'].setEnabled(inPosition)
+        interfaceDict['waitOverrideButton'].setEnabled(inPosition)
+
+        if trader.currentPosition == LONG:
+            interfaceDict['forceLongButton'].setEnabled(False)
+            interfaceDict['forceShortButton'].setEnabled(True)
+        elif trader.currentPosition == SHORT:
+            interfaceDict['forceLongButton'].setEnabled(True)
+            interfaceDict['forceShortButton'].setEnabled(False)
+
     def enable_override(self, caller, enabled=True):
         """
         Enables override interface for which caller specifies.
@@ -360,16 +359,6 @@ class Interface(QMainWindow):
             pauseButton.setText('Pause Bot')
             self.add_to_monitor(caller, 'Resuming bot logic.')
 
-    def set_parameters(self, caller):
-        """
-        Retrieves moving average options and loss settings based on caller.
-        :param caller: Caller that dictates which parameters get set.
-        :return:
-        """
-        trader = self.get_trader(caller)
-        trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
-        trader.tradingOptions = self.get_trading_options(caller)
-
     def set_advanced_logging(self, boolean):
         """
         Sets logging standard.
@@ -380,6 +369,16 @@ class Interface(QMainWindow):
         else:
             self.add_to_live_activity_monitor(f'Logging method has been changed to simple.')
         self.advancedLogging = boolean
+
+    def set_parameters(self, caller):
+        """
+        Retrieves moving average options and loss settings based on caller.
+        :param caller: Caller that dictates which parameters get set.
+        :return:
+        """
+        trader = self.get_trader(caller)
+        trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
+        trader.tradingOptions = self.get_trading_options(caller)
 
     def get_trading_options(self, caller) -> list:
         """
@@ -428,24 +427,6 @@ class Interface(QMainWindow):
         initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
         finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
         return initialAverage, finalAverage, initialName, finalName
-
-    def closeEvent(self, event):
-        """
-        Close event override. Makes user confirm they want to end program if something is running live.
-        :param event: close event
-        """
-        qm = QMessageBox
-        ret = qm.question(self, 'Close?', "Are you sure to end AlgoBot?",
-                          qm.Yes | qm.No)
-
-        if ret == qm.Yes:
-            if self.runningLive:
-                self.end_bot_thread(LIVE)
-            elif self.simulationRunningLive:
-                self.end_bot_thread(SIMULATION)
-            event.accept()
-        else:
-            event.ignore()
 
     def setup_graphs(self):
         """
@@ -682,6 +663,24 @@ class Interface(QMainWindow):
                              trade['action']]
                 self.add_to_table(table, tradeData)
                 self.add_to_monitor(caller, trade['action'])
+
+    def closeEvent(self, event):
+        """
+        Close event override. Makes user confirm they want to end program if something is running live.
+        :param event: close event
+        """
+        qm = QMessageBox
+        ret = qm.question(self, 'Close?', "Are you sure to end AlgoBot?",
+                          qm.Yes | qm.No)
+
+        if ret == qm.Yes:
+            if self.runningLive:
+                self.end_bot_thread(LIVE)
+            elif self.simulationRunningLive:
+                self.end_bot_thread(SIMULATION)
+            event.accept()
+        else:
+            event.ignore()
 
     def show_main_settings(self):
         """
