@@ -160,27 +160,6 @@ class Interface(QMainWindow):
             interfaceDict['forceLongButton'].setEnabled(True)
             interfaceDict['forceShortButton'].setEnabled(False)
 
-    def set_parameters(self, caller):
-        """
-        Retrieves moving average options and loss settings based on caller.
-        :param caller: Caller that dictates which parameters get set.
-        :return:
-        """
-        trader = self.get_trader(caller)
-        trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
-        trader.tradingOptions = self.get_trading_options(caller)
-
-    def set_advanced_logging(self, boolean):
-        """
-        Sets logging standard.
-        :param boolean: Boolean that will determine whether logging is advanced or not. If true, advanced, else regular.
-        """
-        if self.advancedLogging:
-            self.add_to_live_activity_monitor(f'Logging method has been changed to advanced.')
-        else:
-            self.add_to_live_activity_monitor(f'Logging method has been changed to simple.')
-        self.advancedLogging = boolean
-
     def disable_interface(self, boolean, caller, everything=False):
         """
         Function that will control trading configuration interfaces.
@@ -202,7 +181,7 @@ class Interface(QMainWindow):
         :param statDict: Dictionary containing statistics.
         :param caller: Object that determines which object gets updated.
         """
-        interfaceDict = self.get_interface_dictionary(caller)
+        interfaceDict = self.interfaceDictionary[caller]
         self.update_main_interface(interfaceDict, statDict=statDict, caller=caller)
         self.update_trades_table_and_activity_monitor(caller=caller)
         self.handle_position_buttons(caller=caller)
@@ -241,8 +220,8 @@ class Interface(QMainWindow):
         optionDetails = statDict['optionDetails']
         self.update_graphs(net=net, caller=caller, optionDetails=optionDetails)
 
-    def update_graphs(self, net: float, caller: int, optionDetails: list):
-        interfaceDict = self.get_interface_dictionary(caller=caller)
+    def update_graphs(self, net: float, caller, optionDetails: list):
+        interfaceDict = self.interfaceDictionary[caller]
         currentUTC = datetime.utcnow().timestamp()
         self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, currentUTC, net)
 
@@ -272,7 +251,7 @@ class Interface(QMainWindow):
         :param caller: Caller that will decide which statistics get shown..
         Shows next moving averages statistics based on caller.
         """
-        interfaceDict = self.get_interface_dictionary(caller)['statistics']
+        interfaceDict = self.interfaceDictionary[caller]['statistics']
         interfaceDict['nextInitialMovingAverageLabel'].show()
         interfaceDict['nextInitialMovingAverageValue'].show()
         interfaceDict['nextFinalMovingAverageLabel'].show()
@@ -283,7 +262,7 @@ class Interface(QMainWindow):
         :param caller: Caller that will decide which statistics get hidden.
         Hides next moving averages statistics based on caller.
         """
-        interfaceDict = self.get_interface_dictionary(caller)['statistics']
+        interfaceDict = self.interfaceDictionary[caller]['statistics']
         interfaceDict['nextInitialMovingAverageLabel'].hide()
         interfaceDict['nextInitialMovingAverageValue'].hide()
         interfaceDict['nextFinalMovingAverageLabel'].hide()
@@ -305,7 +284,7 @@ class Interface(QMainWindow):
         :param caller: Caller that will specify which trader will exit position.
         """
         trader = self.get_trader(caller)
-        interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
+        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         if humanControl:
             interfaceDict['pauseBotButton'].setText('Resume Bot')
         else:
@@ -334,7 +313,7 @@ class Interface(QMainWindow):
         """
         trader = self.get_trader(caller)
         self.add_to_monitor(caller, 'Forcing long and stopping autonomous logic.')
-        interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
+        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         interfaceDict['pauseBotButton'].setText('Resume Bot')
         interfaceDict['forceShortButton'].setEnabled(True)
         interfaceDict['forceLongButton'].setEnabled(False)
@@ -353,7 +332,7 @@ class Interface(QMainWindow):
         """
         trader = self.get_trader(caller)
         self.add_to_monitor(caller, 'Forcing short and stopping autonomous logic.')
-        interfaceDict = self.get_interface_dictionary(caller)['mainInterface']
+        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         interfaceDict['pauseBotButton'].setText('Resume Bot')
         interfaceDict['forceShortButton'].setEnabled(False)
         interfaceDict['forceLongButton'].setEnabled(True)
@@ -371,7 +350,7 @@ class Interface(QMainWindow):
         :param caller: Caller object that specifies which trading object will be paused or resumed.
         """
         trader = self.get_trader(caller)
-        pauseButton = self.get_interface_dictionary(caller)['mainInterface']['pauseBotButton']
+        pauseButton = self.interfaceDictionary[caller]['mainInterface']['pauseBotButton']
         if pauseButton.text() == 'Pause Bot':
             trader.inHumanControl = True
             pauseButton.setText('Resume Bot')
@@ -381,13 +360,34 @@ class Interface(QMainWindow):
             pauseButton.setText('Pause Bot')
             self.add_to_monitor(caller, 'Resuming bot logic.')
 
+    def set_parameters(self, caller):
+        """
+        Retrieves moving average options and loss settings based on caller.
+        :param caller: Caller that dictates which parameters get set.
+        :return:
+        """
+        trader = self.get_trader(caller)
+        trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
+        trader.tradingOptions = self.get_trading_options(caller)
+
+    def set_advanced_logging(self, boolean):
+        """
+        Sets logging standard.
+        :param boolean: Boolean that will determine whether logging is advanced or not. If true, advanced, else regular.
+        """
+        if self.advancedLogging:
+            self.add_to_live_activity_monitor(f'Logging method has been changed to advanced.')
+        else:
+            self.add_to_live_activity_monitor(f'Logging method has been changed to simple.')
+        self.advancedLogging = boolean
+
     def get_trading_options(self, caller) -> list:
         """
         Returns trading options based on caller specified.
         :param caller: Caller object that will determine which trading options are returned.
         :return: Trading options based on caller.
         """
-        configDictionary = self.get_interface_dictionary(caller)['configuration']
+        configDictionary = self.interfaceDictionary[caller]['configuration']
         baseAverageType = configDictionary['baseAverageType'].currentText()
         baseParameter = configDictionary['baseParameter'].currentText().lower()
         baseInitialValue = configDictionary['baseInitialValue'].value()
@@ -410,7 +410,7 @@ class Interface(QMainWindow):
         :param caller: Caller for which loss settings will be returned.
         :return: Tuple with stop loss type and loss percentage.
         """
-        configDictionary = self.get_interface_dictionary(caller)['configuration']
+        configDictionary = self.interfaceDictionary[caller]['configuration']
         if configDictionary['trailingLossRadio'].isChecked():
             return TRAILING_LOSS, configDictionary['lossPercentage'].value() / 100
         return STOP_LOSS, configDictionary['lossPercentage'].value() / 100
