@@ -407,25 +407,21 @@ class Interface(QMainWindow):
         :param caller: Caller object that specifies which trading object will be paused or resumed.
         """
         if caller == LIVE:
-            if self.pauseBotButton.text() == 'Pause Bot':
-                self.trader.inHumanControl = True
-                self.pauseBotButton.setText('Resume Bot')
-                self.add_to_live_activity_monitor('Pausing bot logic.')
-            else:
-                self.trader.inHumanControl = False
-                self.pauseBotButton.setText('Pause Bot')
-                self.add_to_live_activity_monitor('Resuming bot logic.')
+            trader = self.trader
         elif caller == SIMULATION:
-            if self.pauseBotSimulationButton.text() == 'Pause Bot':
-                self.simulationTrader.inHumanControl = True
-                self.pauseBotSimulationButton.setText('Resume Bot')
-                self.add_to_simulation_activity_monitor('Pausing bot logic.')
-            else:
-                self.simulationTrader.inHumanControl = False
-                self.pauseBotSimulationButton.setText('Pause Bot')
-                self.add_to_simulation_activity_monitor('Resuming bot logic.')
+            trader = self.simulationTrader
         else:
-            raise ValueError("Invalid caller type specified.")
+            raise ValueError("Invalid caller specified.")
+
+        pauseButton = self.get_interface_dictionary(caller)['mainInterface']['pauseBotButton']
+        if pauseButton.text() == 'Pause Bot':
+            trader.inHumanControl = True
+            pauseButton.setText('Resume Bot')
+            self.add_to_monitor(caller, 'Pausing bot logic.')
+        else:
+            trader.inHumanControl = False
+            pauseButton.setText('Pause Bot')
+            self.add_to_monitor(caller, 'Resuming bot logic.')
 
     def get_trading_options(self, caller) -> list:
         """
@@ -713,11 +709,10 @@ class Interface(QMainWindow):
         Updates trade table and activity based on caller.
         :param caller: Caller object that will rule which tables get updated.
         """
+        table = self.interfaceDictionary[caller]['historyTable']
         if caller == SIMULATION:
-            table = self.simulationHistoryTable
             trades = self.simulationTrader.trades
         elif caller == LIVE:
-            table = self.historyTable
             trades = self.trader.trades
         else:
             raise ValueError('Invalid caller specified.')
