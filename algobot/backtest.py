@@ -26,7 +26,7 @@ class Backtester:
         self.interval = self.get_interval()
         self.lossStrategy = lossStrategy
         self.lossPercentage = lossPercentage / 100
-        self.options = options
+        self.tradingOptions = options
         self.validate_options()
         self.minPeriod = self.get_min_option_period()
         self.trend = None
@@ -51,7 +51,7 @@ class Backtester:
         """
         Validates options provided. If the list of options provided does not contain all options, an error is raised.
         """
-        for option in self.options:
+        for option in self.tradingOptions:
             if type(option) != Option:
                 raise TypeError(f"'{option}' is not a valid option type.")
 
@@ -88,7 +88,7 @@ class Backtester:
         :return: Minimum period of days required.
         """
         minimum = 0
-        for option in self.options:
+        for option in self.tradingOptions:
             if option.finalBound > minimum:
                 minimum = option.finalBound
             if option.initialBound > minimum:
@@ -120,7 +120,7 @@ class Backtester:
         :param seenData: Data to use to check for trend.
         """
         trends = []  # trends seen so far; can be either BULLISH or BEARISH; they all have to be the same for a trend
-        for option in self.options:
+        for option in self.tradingOptions:
             avg1 = self.get_moving_average(seenData, option.movingAverage, option.initialBound, option.parameter)
             avg2 = self.get_moving_average(seenData, option.movingAverage, option.finalBound, option.parameter)
             if avg1 > avg2:
@@ -395,7 +395,7 @@ class Backtester:
         Prints out options provided in configuration.
         """
         # print("Options:")
-        for index, option in enumerate(self.options):
+        for index, option in enumerate(self.tradingOptions):
             print(f'\tOption {index + 1}) {option.movingAverage.upper()}{option.initialBound, option.finalBound}'
                   f' - {option.parameter}')
 
@@ -493,11 +493,12 @@ class Backtester:
         os.chdir(currentPath)
 
 
-path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT_data_15m.csv'
-testData = load_from_csv(path)
-opt = [Option('sma', 'high', 10, 20), Option('sma', 'low', 10, 20)]
-a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=2, options=opt,
-               marginEnabled=True, startDate=datetime(2020, 1, 1))
-a.moving_average_test()
-# a.print_stats()
-a.write_results()
+if __name__ == '__main__':
+    path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT\BTCUSDT_data_1h.csv'
+    testData = load_from_csv(path)
+    opt = [Option('sma', 'high', 10, 20), Option('sma', 'low', 10, 20)]
+    a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=2, options=opt,
+                   marginEnabled=True, startDate=datetime(2020, 1, 1))
+    a.moving_average_test()
+    # a.print_stats()
+    a.write_results()

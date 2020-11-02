@@ -4,10 +4,11 @@ import helpers
 import os
 import pyqtgraph as pg
 
-from threads import workerThread, botThread
+from threads import workerThread, botThread, backtestThread
 from data import Data
 from datetime import datetime
 from interface.palettes import *
+from backtest import Backtester
 from realtrader import RealTrader
 from simulationtrader import SimulationTrader
 from option import Option
@@ -53,12 +54,21 @@ class Interface(QMainWindow):
         self.runningLive = False
         self.simulationRunningLive = False
         self.backtestRunningLive = False
+        self.backtester: Backtester or None = None
         self.trader: RealTrader or None = None
         self.simulationTrader: SimulationTrader or None = None
         self.simulationLowerIntervalData: Data or None = None
         self.lowerIntervalData: Data or None = None
         self.telegramBot = None
         self.add_to_live_activity_monitor('Initialized interface.')
+
+    def initiate_backtest(self):
+        if self.configuration.data is None:
+            self.create_popup("No data setup yet for backtesting. Please configure them in settings first.")
+            return
+
+    def end_backtest(self):
+        pass
 
     def initiate_bot_thread(self, caller: int):
         """
@@ -247,7 +257,7 @@ class Interface(QMainWindow):
         elif caller == LIVE:
             self.trader = None
         elif caller == BACKTEST:
-            pass
+            self.backtester = None
         else:
             raise ValueError("invalid caller type specified.")
 
@@ -646,6 +656,13 @@ class Interface(QMainWindow):
             self.add_to_simulation_activity_monitor(message)
         elif caller == LIVE:
             self.add_to_live_activity_monitor(message)
+        elif caller == BACKTEST:
+            self.add_to_backtest_monitor(message)
+        else:
+            raise TypeError("Invalid type of caller specified.")
+
+    def add_to_backtest_monitor(self, message: str):
+        self.add_to_table(self.backtestTable, [message])
 
     def add_to_simulation_activity_monitor(self, message: str):
         """
@@ -801,7 +818,7 @@ class Interface(QMainWindow):
         Creates backtest slots.
         """
         self.configureBacktestButton.clicked.connect(self.show_backtest_settings)
-        self.runBacktestButton.clicked.connect(lambda: print("backtest pressed"))
+        self.runBacktestButton.clicked.connect(self.initiate_backtest)
         self.endBacktestButton.clicked.connect(lambda: print("end backtest"))
 
     def create_interface_slots(self):
@@ -927,6 +944,8 @@ class Interface(QMainWindow):
             return self.simulationTrader
         elif caller == LIVE:
             return self.trader
+        elif caller == BACKTEST:
+            return self.backtester
         else:
             raise TypeError("Invalid type of caller specified.")
 
@@ -1105,7 +1124,11 @@ class Interface(QMainWindow):
                 },
                 'mainInterface': {
                     'runBotButton': self.runBacktestButton,
-                    'endBotButton': self.endBacktestButton
+                    'endBotButton': self.endBacktestButton,
+                    # Graphs
+                    'graph': self.backtestGraph,
+                    # Table
+                    'historyTable': self.backtestTable,
                 }
             }
         }

@@ -89,15 +89,19 @@ class Configuration(QDialog):
 
     def setup_calendar(self):
         """
-        Parses data and then manipulates GUI elements with data timeframe.
+        Parses data if needed and then manipulates GUI elements with data timeframe.
         """
         data = self.data
-        print(data)
-        startDate = parser.parse(data[0]['date_utc'])
+        if type(data[0]['date_utc']) == str:
+            startDate = parser.parse(data[0]['date_utc'])
+            endDate = parser.parse(data[-1]['date_utc'])
+        else:
+            startDate = data[0]['date_utc']
+            endDate = data[-1]['date_utc']
+
         startYear, startMonth, startDay = startDate.year, startDate.month, startDate.day
         qStartDate = QDate(startYear, startMonth, startDay)
 
-        endDate = parser.parse(data[-1]['date_utc'])
         endYear, endMonth, endDay = endDate.year, endDate.month, endDate.day
         qEndDate = QDate(endYear, endMonth, endDay)
 
@@ -105,6 +109,9 @@ class Configuration(QDialog):
         self.backtestEndDate.setDateRange(qStartDate, qEndDate)
 
     def import_data(self):
+        """
+        Imports CSV data and loads it.
+        """
         self.backtestInfoLabel.setText("Importing data...")
         filePath, _ = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(os.getcwd(), '../'), "CSV (*.csv)")
         if filePath == '':
@@ -115,6 +122,9 @@ class Configuration(QDialog):
         self.setup_calendar()
 
     def download_data(self):
+        """
+        Loads data from data object.
+        """
         self.backtestInfoLabel.setText("Downloading data...")
         symbol = self.backtestTickerComboBox.currentText()
         interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())

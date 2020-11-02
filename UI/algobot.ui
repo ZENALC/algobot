@@ -53,7 +53,7 @@
        <enum>QTabWidget::West</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <property name="movable">
        <bool>true</bool>
@@ -1293,6 +1293,9 @@
         </item>
         <item row="1" column="3">
          <widget class="QPushButton" name="endBacktestButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="font">
            <font>
             <pointsize>10</pointsize>

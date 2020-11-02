@@ -128,7 +128,7 @@ class Data:
                 for data in self.data:
                     try:
                         cursor.execute(query,
-                                       (data['date'].strftime('%Y-%m-%d %H:%M:%S'),
+                                       (data['date_utc'].strftime('%Y-%m-%d %H:%M:%S'),
                                         data['open'],
                                         data['high'],
                                         data['low'],
@@ -171,7 +171,7 @@ class Data:
             return
 
         for row in rows:
-            self.data.append({'date': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc),
+            self.data.append({'date_utc': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc),
                               'open': float(row[1]),
                               'high': float(row[2]),
                               'low': float(row[3]),
@@ -237,7 +237,7 @@ class Data:
         Checks whether data is fully updated or not.
         :return: A boolean whether data is updated or not with Binance values.
         """
-        latestDate = self.data[0]['date']
+        latestDate = self.data[0]['date_utc']
         return self.is_latest_date(latestDate)
 
     def insert_data(self, newData: list):
@@ -247,7 +247,7 @@ class Data:
         """
         for data in newData:
             parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
-            self.data.insert(0, {'date': parsedDate,
+            self.data.insert(0, {'date_utc': parsedDate,
                                  'open': float(data[1]),
                                  'high': float(data[2]),
                                  'low': float(data[3]),
@@ -258,7 +258,7 @@ class Data:
         """
         Updates run-time data with Binance API values.
         """
-        latestDate = self.data[0]['date']
+        latestDate = self.data[0]['date_utc']
         timestamp = int(latestDate.timestamp()) * 1000
         dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
         self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
@@ -278,7 +278,7 @@ class Data:
             if not self.data_is_updated():
                 self.update_data()
 
-            currentInterval = self.data[0]['date'] + timedelta(minutes=self.get_interval_minutes())
+            currentInterval = self.data[0]['date_utc'] + timedelta(minutes=self.get_interval_minutes())
             currentTimestamp = int(currentInterval.timestamp() * 1000)
 
             nextInterval = currentInterval + timedelta(minutes=self.get_interval_minutes())
@@ -288,7 +288,7 @@ class Data:
                                                         startTime=currentTimestamp,
                                                         endTime=nextTimestamp,
                                                         )[0]
-            currentDataDictionary = {'date': currentInterval,
+            currentDataDictionary = {'date_utc': currentInterval,
                                      'open': float(currentData[1]),
                                      'high': float(currentData[2]),
                                      'low': float(currentData[3]),
@@ -356,7 +356,7 @@ class Data:
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close\n")
             for data in totalData:
-                parsedDate = data['date'].strftime("%m/%d/%Y %I:%M %p")
+                parsedDate = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
                 f.write(f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}\n')
 
         path = os.path.join(os.getcwd(), fileName)
@@ -445,7 +445,7 @@ class Data:
 
         previousData = self.data[0]
         for data in self.data[1:]:
-            if data['date'] == previousData['date']:
+            if data['date_utc'] == previousData['date_utc']:
                 self.output_message("Repeated data detected.", 4)
                 self.output_message(f'Previous data: {previousData}', 4)
                 self.output_message(f'Next data: {data}', 4)
@@ -521,14 +521,14 @@ class Data:
         data = [self.get_current_data()] + self.data
         sma_shift = len(data) - sma_prices
         ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False)
-        values = [(round(ema, 2), str(data[sma_shift]['date']))]
+        values = [(round(ema, 2), str(data[sma_shift]['date_utc']))]
         multiplier = 2 / (prices + 1)
 
         for day in range(len(data) - sma_prices - shift):
             current_index = len(data) - sma_prices - day - 1
             current_price = data[current_index][parameter]
             ema = current_price * multiplier + ema * (1 - multiplier)
-            values.append((round(ema, 2), str(data[current_index]['date'])))
+            values.append((round(ema, 2), str(data[current_index]['date_utc'])))
 
         self.ema_data[prices] = {parameter: values}
 
