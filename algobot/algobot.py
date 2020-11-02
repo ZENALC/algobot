@@ -268,6 +268,9 @@ class Interface(QMainWindow):
         elif trader.currentPosition == SHORT:
             interfaceDict['forceLongButton'].setEnabled(True)
             interfaceDict['forceShortButton'].setEnabled(False)
+        elif trader.currentPosition is None:
+            interfaceDict['forceLongButton'].setEnabled(True)
+            interfaceDict['forceShortButton'].setEnabled(True)
 
     def enable_override(self, caller, enabled=True):
         """
@@ -382,7 +385,7 @@ class Interface(QMainWindow):
         trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
         trader.tradingOptions = self.get_trading_options(caller)
 
-    def enable_custom_stop_loss(self, caller, enable=True):
+    def set_custom_stop_loss(self, caller, enable=True):
         """
         Enables or disables custom stop loss.
         :param enable: Boolean that determines whether custom stop loss is enabled or disabled. Default is enable.
@@ -758,11 +761,13 @@ class Interface(QMainWindow):
         self.runBotButton.clicked.connect(lambda: self.initiate_bot_thread(caller=LIVE))
         self.endBotButton.clicked.connect(lambda: self.end_bot_thread(caller=LIVE))
         self.configureBotButton.clicked.connect(self.show_main_settings)
-        self.forceLongButton.clicked.connect(self.force_long)
-        self.forceShortButton.clicked.connect(self.force_short)
-        self.pauseBotButton.clicked.connect(self.pause_or_resume_bot)
+        self.forceLongButton.clicked.connect(lambda: self.force_long(LIVE))
+        self.forceShortButton.clicked.connect(lambda: self.force_short(LIVE))
+        self.pauseBotButton.clicked.connect(lambda: self.pause_or_resume_bot(LIVE))
         self.exitPositionButton.clicked.connect(lambda: self.exit_position(LIVE, True))
         self.waitOverrideButton.clicked.connect(lambda: self.exit_position(LIVE, False))
+        self.enableCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(LIVE, True))
+        self.disableCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(LIVE, False))
 
     def create_simulation_slots(self):
         """
@@ -776,6 +781,8 @@ class Interface(QMainWindow):
         self.pauseBotSimulationButton.clicked.connect(lambda: self.pause_or_resume_bot(SIMULATION))
         self.exitPositionSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, True))
         self.waitOverrideSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, True))
+        self.enableSimulationCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(SIMULATION, True))
+        self.disableSimulationCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(SIMULATION, False))
 
     def create_backtest_slots(self):
         """

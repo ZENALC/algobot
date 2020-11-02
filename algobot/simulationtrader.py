@@ -220,7 +220,7 @@ class SimulationTrader:
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
                 self.buy_short(f'Bought short because of custom stop loss.')
 
-            if self.currentPrice > self.get_stop_loss():  # If current price is greater, then exit trade.
+            if self.get_stop_loss() is not None and self.currentPrice > self.get_stop_loss():
                 self.buy_short(f'Bought short because of stop loss.')
 
             if self.check_cross():
