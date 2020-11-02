@@ -153,6 +153,7 @@ class Interface(QMainWindow):
         self.update_main_interface(interfaceDict, statDict=statDict, caller=caller)
         self.update_trades_table_and_activity_monitor(caller=caller)
         self.handle_position_buttons(caller=caller)
+        self.handle_custom_stop_loss_buttons(caller=caller)
 
     def update_main_interface(self, interfaceDictionary, statDict, caller):
         statisticsDictionary = interfaceDictionary['statistics']
@@ -170,7 +171,7 @@ class Interface(QMainWindow):
         statisticsDictionary['currentTickerLabel'].setText(statDict['tickerLabel'])
         statisticsDictionary['currentTickerValue'].setText(statDict['tickerValue'])
         statisticsDictionary['lossPointLabel'].setText(statDict['lossPointLabel'])
-        statisticsDictionary['lossPointValue'].setText(statDict['lossPointLabel'])
+        statisticsDictionary['lossPointValue'].setText(statDict['lossPointValue'])
         statisticsDictionary['customStopPointValue'].setText(statDict['customStopPointValue'])
         statisticsDictionary['currentPositionValue'].setText(statDict['currentPositionValue'])
         statisticsDictionary['autonomousValue'].setText(statDict['autonomousValue'])
@@ -249,6 +250,17 @@ class Interface(QMainWindow):
             pass
         else:
             raise ValueError("invalid caller type specified.")
+
+    def handle_custom_stop_loss_buttons(self, caller):
+        trader = self.get_trader(caller)
+        mainDict = self.interfaceDictionary[caller]['mainInterface']
+
+        if trader.customStopLoss is None:
+            mainDict['enableCustomStopLossButton'].setEnabled(True)
+            mainDict['disableCustomStopLossButton'].setEnabled(False)
+        else:
+            mainDict['enableCustomStopLossButton'].setEnabled(False)
+            mainDict['disableCustomStopLossButton'].setEnabled(True)
 
     def handle_position_buttons(self, caller):
         """
