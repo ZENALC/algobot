@@ -2,6 +2,7 @@ import assets
 import sys
 import helpers
 import os
+import pyqtgraph as pg
 
 from threads import workerThread, botThread
 from data import Data
@@ -136,6 +137,7 @@ class Interface(QMainWindow):
         boolean = not boolean
         self.interfaceDictionary[caller]['configuration']['mainConfigurationTabWidget'].setEnabled(boolean)
         self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(boolean)
+        self.interfaceDictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(not boolean)
         if not everything:
             self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(not boolean)
         else:
@@ -379,6 +381,25 @@ class Interface(QMainWindow):
         trader = self.get_trader(caller)
         trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
         trader.tradingOptions = self.get_trading_options(caller)
+
+    def enable_custom_stop_loss(self, caller, enable=True):
+        """
+        Enables or disables custom stop loss.
+        :param enable: Boolean that determines whether custom stop loss is enabled or disabled. Default is enable.
+        :param caller: Caller that decides which trader object gets the stop loss.
+        """
+        trader = self.get_trader(caller)
+        mainDict = self.interfaceDictionary[caller]['mainInterface']
+        if enable:
+            trader.customStopLoss = mainDict['customStopLossValue'].value()
+            mainDict['enableCustomStopLossButton'].setEnabled(False)
+            mainDict['disableCustomStopLossButton'].setEnabled(True)
+            self.add_to_monitor(caller, f'Set custom stop loss at ${trader.customStopLoss}')
+        else:
+            trader.customStopLoss = None
+            mainDict['enableCustomStopLossButton'].setEnabled(True)
+            mainDict['disableCustomStopLossButton'].setEnabled(False)
+            self.add_to_monitor(caller, f'Removed custom stop loss.')
 
     def get_trading_options(self, caller) -> list:
         """
@@ -675,6 +696,7 @@ class Interface(QMainWindow):
                           qm.Yes | qm.No)
 
         if ret == qm.Yes:
+            pg.exit()
             if self.runningLive:
                 self.end_bot_thread(LIVE)
             elif self.simulationRunningLive:
@@ -934,6 +956,7 @@ class Interface(QMainWindow):
                     'netTotalValue': self.simulationNetTotalValue,
                     'tickerLabel': self.simulationTickerLabel,
                     'tickerValue': self.simulationTickerValue,
+                    'customStopLossValue': self.customSimulationStopLossValue,
                     # Buttons
                     'pauseBotButton': self.pauseBotSimulationButton,
                     'runBotButton': self.runSimulationButton,
@@ -942,8 +965,11 @@ class Interface(QMainWindow):
                     'forceLongButton': self.forceLongSimulationButton,
                     'exitPositionButton': self.exitPositionSimulationButton,
                     'waitOverrideButton': self.waitOverrideSimulationButton,
-                    # Override
+                    'enableCustomStopLossButton': self.enableSimulationCustomStopLossButton,
+                    'disableCustomStopLossButton': self.disableSimulationCustomStopLossButton,
+                    # Groupboxes
                     'overrideGroupBox': self.simulationOverrideGroupBox,
+                    'customStopLossGroupBox': self.customSimulationStopLossGroupBox,
                     # Graphs
                     'graph': self.simulationGraph,
                     'averageGraph': self.simulationAvgGraph,
@@ -1005,6 +1031,7 @@ class Interface(QMainWindow):
                     'netTotalValue': self.netTotalValue,
                     'tickerLabel': self.tickerLabel,
                     'tickerValue': self.tickerValue,
+                    'customStopLossValue': self.customStopLossValue,
                     # Buttons
                     'pauseBotButton': self.pauseBotButton,
                     'runBotButton': self.runBotButton,
@@ -1013,8 +1040,11 @@ class Interface(QMainWindow):
                     'forceLongButton': self.forceLongButton,
                     'exitPositionButton': self.exitPositionButton,
                     'waitOverrideButton': self.waitOverrideButton,
-                    # Override
+                    'enableCustomStopLossButton': self.enableCustomStopLossButton,
+                    'disableCustomStopLossButton': self.disableCustomStopLossButton,
+                    # Groupboxes
                     'overrideGroupBox': self.overrideGroupBox,
+                    'customStopLossGroupBox': self.customStopLossGroupBox,
                     # Graphs
                     'graph': self.liveGraph,
                     'averageGraph': self.avgGraph,
