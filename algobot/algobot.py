@@ -115,58 +115,6 @@ class Interface(QMainWindow):
             interfaceDict['forceLongButton'].setEnabled(True)
             interfaceDict['forceShortButton'].setEnabled(False)
 
-    # to fix
-    def handle_cross_notification(self, caller, notification):
-        """
-        Handles cross notifications.
-        :param caller: Caller object for whom function will handle cross notifications.
-        :param notification: Notification boolean whether it is time to notify or not.
-        :return: Boolean whether cross should be notified on next function call.
-        """
-        if caller == SIMULATION:
-            if self.simulationTrader.currentPosition is None:
-                if not self.simulationTrader.inHumanControl and notification:
-                    self.add_to_simulation_activity_monitor("Waiting for a cross.")
-                    return False
-            else:
-                return False
-        elif caller == LIVE:
-            if self.trader.currentPosition is not None:
-                return False
-            else:
-                if not notification and not self.trader.inHumanControl:
-                    self.add_to_live_activity_monitor("Waiting for a cross.")
-                    return False
-        else:
-            raise ValueError("Invalid type of caller or cross notification specified.")
-
-    def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool:
-        """
-        Handles logic and notifications for lower interval cross data.
-        :param previousLowerTrend: Previous lower trend. Used to check if notification is necessary.
-        :param caller: Caller for which we will check lower interval cross data.
-        """
-        if caller == SIMULATION:
-            trader = self.simulationTrader
-            lowerData = self.simulationLowerIntervalData
-        elif caller == LIVE:
-            trader = self.trader
-            lowerData = self.lowerIntervalData
-        else:
-            raise ValueError("Invalid caller specified.")
-
-        lowerTrend = trader.get_trend(dataObject=lowerData)
-        trend = trader.trend
-        if previousLowerTrend == lowerTrend or lowerTrend == trend:
-            return lowerTrend
-        else:
-            trends = {BEARISH: 'Bearish', BULLISH: 'Bullish', None: 'No'}
-            if caller == LIVE:
-                self.add_to_live_activity_monitor(f'{trends[lowerTrend]} trend detected on lower interval data.')
-            elif caller == SIMULATION:
-                self.add_to_simulation_activity_monitor(f'{trends[lowerTrend]} trend detected on lower interval data.')
-            return lowerTrend
-
     def end_bot(self, caller):
         """
         Ends bot based on caller.

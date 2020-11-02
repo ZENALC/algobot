@@ -6,7 +6,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 from telegram.error import InvalidToken
 
 from data import Data
-from enums import LIVE, SIMULATION
+from enums import LIVE, SIMULATION, BEARISH, BULLISH
 from realtrader import RealTrader
 from simulationtrader import SimulationTrader
 from telegramBot import TelegramBot
@@ -27,6 +27,57 @@ class BotThread(QRunnable):
         self.gui = gui
         self.caller = caller
         self.trader = None
+
+    def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool:
+        """
+        Handles logic and notifications for lower interval cross data.
+        :param previousLowerTrend: Previous lower trend. Used to check if notification is necessary.
+        :param caller: Caller for which we will check lower interval cross data.
+        """
+        gui = self.gui
+        if caller == SIMULATION:
+            trader = gui.simulationTrader
+            lowerData = gui.simulationLowerIntervalData
+        elif caller == LIVE:
+            trader = gui.trader
+            lowerData = gui.lowerIntervalData
+        else:
+            raise ValueError("Invalid caller specified.")
+
+        lowerTrend = trader.get_trend(dataObject=lowerData)
+        trend = trader.trend
+        if previousLowerTrend == lowerTrend or lowerTrend == trend:
+            return lowerTrend
+        else:
+            trends = {BEARISH: 'Bearish', BULLISH: 'Bullish', None: 'No'}
+            self.signals.activity.emit(caller, f'{trends[lowerTrend]} trend detected on lower interval data.')
+            return lowerTrend
+
+    # to fix
+    def handle_cross_notification(self, caller, notification):
+        """
+        Handles cross notifications.
+        :param caller: Caller object for whom function will handle cross notifications.
+        :param notification: Notification boolean whether it is time to notify or not.
+        :return: Boolean whether cross should be notified on next function call.
+        """
+        gui = self.gui
+        if caller == SIMULATION:
+            if gui.simulationTrader.currentPosition is None:
+                if not gui.simulationTrader.inHumanControl and notification:
+                    gui.add_to_simulation_activity_monitor("Waiting for a cross.")
+                    return False
+            else:
+                return False
+        elif caller == LIVE:
+            if gui.trader.currentPosition is not None:
+                return False
+            else:
+                if not notification and not gui.trader.inHumanControl:
+                    gui.add_to_live_activity_monitor("Waiting for a cross.")
+                    return False
+        else:
+            raise ValueError("Invalid type of caller or cross notification specified.")
 
     def handle_telegram_bot(self):
         """
