@@ -1107,7 +1107,17 @@
                </widget>
               </item>
               <item row="2" column="1" colspan="2">
-               <widget class="QDoubleSpinBox" name="backtestStartingBalanceSpinBox"/>
+               <widget class="QDoubleSpinBox" name="backtestStartingBalanceSpinBox">
+                <property name="minimum">
+                 <double>1.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>10000000.000000000000000</double>
+                </property>
+                <property name="value">
+                 <double>1000.000000000000000</double>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>

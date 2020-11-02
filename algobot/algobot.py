@@ -4,7 +4,7 @@ import helpers
 import os
 import pyqtgraph as pg
 
-from threads import workerThread, botThread, backtestThread
+from threads import workerThread, backtestThread, botThread
 from data import Data
 from datetime import datetime
 from interface.palettes import *
@@ -67,8 +67,25 @@ class Interface(QMainWindow):
             self.create_popup("No data setup yet for backtesting. Please configure them in settings first.")
             return
 
+        worker = backtestThread.BacktestThread(gui=self)
+        worker.signals.started.connect(self.setup_backtester)
+        worker.signals.error.connect(self.end_crash_bot_and_create_popup)
+        worker.signals.activity.connect(self.update_backtest_gui)
+        worker.signals.finished.connect(self.end_backtest)
+        self.threadPool.start(worker)
+
+    def update_backtest_gui(self, net, utc):
+        self.add_data_to_plot(self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, utc, net)
+
+    def setup_backtester(self):
+        interfaceDict = self.interfaceDictionary[BACKTEST]['mainInterface']
+        self.destroy_graph_plots(interfaceDict['graph'])
+        self.setup_graph_plots(interfaceDict['graph'], self.backtester, NET_GRAPH)
+        self.disable_interface(True, BACKTEST)
+
     def end_backtest(self):
-        pass
+        self.disable_interface(False, BACKTEST)
+        self.create_popup('Finished backtesting.')
 
     def initiate_bot_thread(self, caller: int):
         """
@@ -147,7 +164,8 @@ class Interface(QMainWindow):
         boolean = not boolean
         self.interfaceDictionary[caller]['configuration']['mainConfigurationTabWidget'].setEnabled(boolean)
         self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(boolean)
-        self.interfaceDictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(not boolean)
+        if caller != BACKTEST:
+            self.interfaceDictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(not boolean)
         if not everything:
             self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(not boolean)
         else:
@@ -487,8 +505,9 @@ class Interface(QMainWindow):
             graph.setBackground('w')
             graph.setLabel('left', 'USDT')
             graph.setLabel('bottom', 'Datetime in UTC')
-            graph.setLimits(xMin=currentDate, xMax=nextDate)
             graph.addLegend()
+            if graph != self.backtestGraph:
+                graph.setLimits(xMin=currentDate, xMax=nextDate)
 
             if graph == self.backtestGraph:
                 graph.setTitle("Backtest Price Change")
@@ -504,19 +523,27 @@ class Interface(QMainWindow):
         # self.graphWidget.setLimits(xMin=currentDate, xMax=nextDate)
         # self.graphWidget.plotItem.setMouseEnabled(y=False)
 
-    def add_data_to_plot(self, targetGraph: PlotWidget, plotIndex: int, x: float, y: float):
+    def add_data_to_plot(self, targetGraph: PlotWidget, plotIndex: int, x: float or list, y: float or list):
         """
         Adds data to plot in provided graph.
         :param targetGraph: Graph to use for plot to add data to.
         :param plotIndex: Index of plot in target graph's list of plots.
-        :param x: X value to add.
-        :param y: Y value to add.
+        :param x: X value or values to add depending on whether arg is a list or a function.
+        :param y: Y value or values to add depending on whether arg is a list or a function.
         """
         for graph in self.graphs:
             if graph['graph'] == targetGraph:
                 plot = graph['plots'][plotIndex]
-                plot['x'].append(x)
-                plot['y'].append(y)
+                if type(x) == float:
+                    plot['x'].append(x)
+                elif type(x) == list:
+                    plot['x'] += x
+
+                if type(y) == float:
+                    plot['y'].append(y)
+                elif type(y) == list:
+                    plot['y'] += y
+
                 plot['plot'].setData(plot['x'], plot['y'])
 
     def append_plot_to_graph(self, targetGraph, toAdd: list):
@@ -548,7 +575,8 @@ class Interface(QMainWindow):
         """
         net = trader.startingBalance
         currentDateTimestamp = datetime.utcnow().timestamp()
-        graph.setLimits(xMin=currentDateTimestamp)
+        if graph != self.backtestGraph:
+            graph.setLimits(xMin=currentDateTimestamp)
         self.append_plot_to_graph(graph, [{
             'plot': self.create_graph_plot(graph, (currentDateTimestamp,), (net,),
                                            color=color, plotName='Net'),
@@ -819,7 +847,7 @@ class Interface(QMainWindow):
         """
         self.configureBacktestButton.clicked.connect(self.show_backtest_settings)
         self.runBacktestButton.clicked.connect(self.initiate_backtest)
-        self.endBacktestButton.clicked.connect(lambda: print("end backtest"))
+        self.endBacktestButton.clicked.connect(self.end_backtest)
 
     def create_interface_slots(self):
         """

@@ -25,7 +25,7 @@ class Backtester:
         self.data = data
         self.interval = self.get_interval()
         self.lossStrategy = lossStrategy
-        self.lossPercentage = lossPercentage / 100
+        self.lossPercentageDecimal = lossPercentage / 100
         self.tradingOptions = options
         self.validate_options()
         self.minPeriod = self.get_min_option_period()
@@ -104,11 +104,11 @@ class Backtester:
         :param parameter: Parameter to use to get moving average, i.e. - HIGH, LOW, CLOSE, OPEN
         :return: Moving average.
         """
-        if average == 'sma':
+        if average.lower() == 'sma':
             return self.get_sma(data, prices, parameter)
-        elif average == 'ema':
+        elif average.lower() == 'ema':
             return self.get_ema(data, prices, parameter)
-        elif average == 'wma':
+        elif average.lower() == 'wma':
             return self.get_wma(data, prices, parameter)
         else:
             raise ValueError('Invalid average provided.')
@@ -215,9 +215,9 @@ class Backtester:
             self.shortTrailingPrice = self.currentPrice
             self.sellShortPrice = self.shortTrailingPrice
         if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
-            return self.shortTrailingPrice * (1 + self.lossPercentage)
+            return self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
         elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
-            return self.sellShortPrice * (1 + self.lossPercentage)
+            return self.sellShortPrice * (1 + self.lossPercentageDecimal)
 
     def get_long_stop_loss(self) -> float:
         """
@@ -228,9 +228,9 @@ class Backtester:
             self.longTrailingPrice = self.currentPrice
             self.buyLongPrice = self.longTrailingPrice
         if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
-            return self.longTrailingPrice * (1 - self.lossPercentage)
+            return self.longTrailingPrice * (1 - self.lossPercentageDecimal)
         elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
-            return self.buyLongPrice * (1 - self.lossPercentage)
+            return self.buyLongPrice * (1 - self.lossPercentageDecimal)
 
     def get_stop_loss(self):
         """
@@ -257,8 +257,13 @@ class Backtester:
         Attempts to parse interval from loaded data.
         :return: Interval in str format.
         """
-        period1 = parser.parse(self.data[0]['date_utc'])
-        period2 = parser.parse(self.data[1]['date_utc'])
+        if type(self.data[0]['date_utc']) == str:
+            period1 = parser.parse(self.data[0]['date_utc'])
+            period2 = parser.parse(self.data[1]['date_utc'])
+        else:
+            period1 = self.data[0]['date_utc']
+            period2 = self.data[-1]['date_utc']
+
         difference = period2 - period1
         seconds = difference.total_seconds()
         if seconds < 3600:  # this is 60 minutes
@@ -413,7 +418,7 @@ class Backtester:
         print(f"\tStarting Balance: ${self.startingBalance}")
         self.print_options()
         # print("Loss options:")
-        print(f'\tStop Loss Percentage: {round(self.lossPercentage * 100, 2)}%')
+        print(f'\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%')
         if self.lossStrategy == TRAILING_LOSS:
             print(f"\tLoss Strategy: Trailing")
         else:

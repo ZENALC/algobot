@@ -1,6 +1,5 @@
 import traceback
 import helpers
-import algobot
 
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 from telegram.error import InvalidToken
@@ -21,7 +20,7 @@ class BotSignals(QObject):
 
 
 class BotThread(QRunnable):
-    def __init__(self, caller: int, gui: algobot.Interface):
+    def __init__(self, caller: int, gui):
         super(BotThread, self).__init__()
         self.signals = BotSignals()
         self.gui = gui
