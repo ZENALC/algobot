@@ -962,6 +962,9 @@ class Interface(QMainWindow):
                     'trailingLossRadio': self.configuration.simulationTrailingLossRadio,
                     'lossPercentage': self.configuration.simulationLossPercentageSpinBox,
                     'mainConfigurationTabWidget': self.configuration.simulationConfigurationTabWidget,
+                    'ticker': self.configuration.simulationTickerComboBox,
+                    'interval': self.configuration.simulationIntervalComboBox,
+                    'lowerIntervalCheck': self.configuration.lowerIntervalSimulationCheck,
                 }
             },
             LIVE: {
@@ -1030,6 +1033,9 @@ class Interface(QMainWindow):
                     'trailingLossRadio': self.configuration.trailingLossRadio,
                     'lossPercentage': self.configuration.lossPercentageSpinBox,
                     'mainConfigurationTabWidget': self.configuration.mainConfigurationTabWidget,
+                    'ticker': self.configuration.tickerComboBox,
+                    'interval': self.configuration.intervalComboBox,
+                    'lowerIntervalCheck': self.configuration.lowerIntervalCheck,
                 }
             },
             BACKTEST: {

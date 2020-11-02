@@ -28,22 +28,149 @@ class BotThread(QRunnable):
         self.caller = caller
         self.trader = None
 
+    def initialize_lower_interval_trading(self, caller, interval: str):
+        """
+        Initializes lower interval trading data object.
+        :param caller: Caller that determines whether lower interval is for simulation or live bot.
+        :param interval: Current interval for simulation or live bot.
+        """
+        sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
+        gui = self.gui
+        if interval != '1m':
+            lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
+            self.signals.activity.emit(caller, f'Retrieving data for lower interval {lowerInterval}...')
+            if caller == LIVE:
+                gui.lowerIntervalData = Data(lowerInterval)
+            elif caller == SIMULATION:
+                gui.simulationLowerIntervalData = Data(lowerInterval)
+            else:
+                raise TypeError("Invalid type of caller specified.")
+            self.signals.activity.emit(caller, "Retrieved lower interval data successfully.")
+
+    def create_trader(self, caller):
+        """
+        Creates a trader based on caller specified.
+        :param caller: Caller that determines what type of trader will be created.
+        """
+        gui = self.gui
+        configDict = gui.interfaceDictionary[caller]['configuration']
+        symbol = configDict['ticker'].currentText()
+        interval = helpers.convert_interval(configDict['interval'].currentText())
+
+        if caller == SIMULATION:
+            startingBalance = gui.configuration.simulationStartingBalanceSpinBox.value()
+            self.signals.activity.emit(caller, f"Retrieving data for interval {interval}...")
+            gui.simulationTrader = SimulationTrader(startingBalance=startingBalance,
+                                                    symbol=symbol,
+                                                    interval=interval,
+                                                    loadData=True)
+        elif caller == LIVE:
+            apiSecret = gui.configuration.binanceApiSecret.text()
+            apiKey = gui.configuration.binanceApiKey.text()
+            self.check_api_credentials(apiKey=apiKey, apiSecret=apiSecret)
+            self.signals.activity.emit(caller, f"Retrieving data for interval {interval}...")
+            gui.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol)
+        else:
+            raise ValueError("Invalid caller.")
+
+        self.signals.activity.emit(caller, "Retrieved data successfully.")
+
+        if configDict['lowerIntervalCheck'].isChecked():
+            self.initialize_lower_interval_trading(caller=caller, interval=interval)
+
+    @staticmethod
+    def check_api_credentials(apiKey, apiSecret):
+        """
+        Helper function that checks API credentials specified. Needs to have more tests.
+        :param apiKey: API key for Binance. (for now)
+        :param apiSecret: API secret for Binance. (for now)
+        """
+        if len(apiSecret) == 0:
+            raise ValueError('Please specify an API secret key. No API secret key found.')
+        elif len(apiKey) == 0:
+            raise ValueError("Please specify an API key. No API key found.")
+
+    def setup_bot(self, caller):
+        """
+        Initial full bot setup based on caller.
+        :param caller: Caller that will determine what type of trader will be instantiated.
+        """
+        self.create_trader(caller)
+        self.gui.set_parameters(caller)
+        self.trader = self.gui.get_trader(caller)
+
+        if caller == LIVE:
+            if self.gui.configuration.enableTelegramTrading.isChecked():
+                self.handle_telegram_bot()
+            self.gui.runningLive = True
+        elif caller == SIMULATION:
+            self.gui.simulationRunningLive = True
+        else:
+            raise RuntimeError("Invalid type of caller specified.")
+
+    def update_data(self, caller):
+        """
+        Updates data if updated data exists for caller object.
+        :param caller: Object type that will be updated.
+        """
+        trader = self.gui.get_trader(caller)
+        if not trader.dataView.data_is_updated():
+            self.signals.activity.emit(caller, 'New data found. Updating...')
+            trader.dataView.update_data()
+            self.signals.activity.emit(caller, 'Updated data successfully.')
+
+    def handle_trading(self, caller):
+        """
+        Handles trading by checking if automation mode is on or manual.
+        :param caller: Object for which function will handle trading.
+        """
+        trader = self.gui.get_trader(caller)
+        if not trader.inHumanControl:
+            trader.main_logic()
+
+    def handle_trailing_prices(self, caller):
+        """
+        Handles trailing prices for caller object.
+        :param caller: Trailing prices for what caller to be handled for.
+        """
+        trader = self.gui.get_trader(caller)
+        trader.currentPrice = trader.dataView.get_current_price()
+        if trader.longTrailingPrice is not None and trader.currentPrice > trader.longTrailingPrice:
+            trader.longTrailingPrice = trader.currentPrice
+        if trader.shortTrailingPrice is not None and trader.currentPrice < trader.shortTrailingPrice:
+            trader.shortTrailingPrice = trader.currentPrice
+
+    def handle_logging(self, caller):
+        """
+        Handles logging type for caller object.
+        :param caller: Object those logging will be performed.
+        """
+        if self.gui.advancedLogging:
+            self.gui.get_trader(caller).output_basic_information()
+
+    def handle_telegram_bot(self):
+        """
+        Attempts to initiate Telegram bot.
+        """
+        try:
+            gui = self.gui
+            if gui.telegramBot is None:
+                apiKey = gui.configuration.telegramApiKey.text()
+                gui.telegramBot = TelegramBot(gui=gui, apiKey=apiKey)
+            gui.telegramBot.start()
+            self.signals.activity.emit(LIVE, 'Started Telegram bot.')
+        except InvalidToken:
+            self.signals.activity.emit(LIVE, 'Invalid token for Telegram. Please recheck credentials in settings.')
+
+    # to fix
     def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool:
         """
         Handles logic and notifications for lower interval cross data.
         :param previousLowerTrend: Previous lower trend. Used to check if notification is necessary.
         :param caller: Caller for which we will check lower interval cross data.
         """
-        gui = self.gui
-        if caller == SIMULATION:
-            trader = gui.simulationTrader
-            lowerData = gui.simulationLowerIntervalData
-        elif caller == LIVE:
-            trader = gui.trader
-            lowerData = gui.lowerIntervalData
-        else:
-            raise ValueError("Invalid caller specified.")
-
+        trader = self.gui.get_trader(caller)
+        lowerData = self.gui.get_lower_interval_data(caller)
         lowerTrend = trader.get_trend(dataObject=lowerData)
         trend = trader.trend
         if previousLowerTrend == lowerTrend or lowerTrend == trend:
@@ -78,82 +205,6 @@ class BotThread(QRunnable):
                     return False
         else:
             raise ValueError("Invalid type of caller or cross notification specified.")
-
-    def handle_telegram_bot(self):
-        """
-        Attempts to initiate Telegram bot.
-        """
-        try:
-            gui = self.gui
-            if gui.telegramBot is None:
-                apiKey = gui.configuration.telegramApiKey.text()
-                gui.telegramBot = TelegramBot(gui=gui, apiKey=apiKey)
-            gui.telegramBot.start()
-            self.signals.activity.emit(LIVE, 'Started Telegram bot.')
-        except InvalidToken:
-            self.signals.activity.emit(LIVE, 'Invalid token for Telegram. Please recheck credentials in settings.')
-
-    def initialize_lower_interval_trading(self, caller, interval):
-        """
-        Initializes lower interval trading data object.
-        :param caller: Caller that determines whether lower interval is for simulation or live bot.
-        :param interval: Current interval for simulation or live bot.
-        """
-        sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
-        gui = self.gui
-        if interval != '1m':
-            lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
-            if caller == LIVE:
-                self.signals.activity.emit(caller, f'Retrieving data for lower interval {lowerInterval}...')
-                gui.lowerIntervalData = Data(lowerInterval)
-                self.signals.activity.emit(caller, 'Retrieved lower interval data successfully.')
-            else:
-                self.signals.activity.emit(caller, f'Retrieving data for lower interval {lowerInterval}...')
-                gui.simulationLowerIntervalData = Data(lowerInterval)
-                self.signals.activity.emit(caller, "Retrieved lower interval data successfully.")
-
-    def create_trader(self, caller):
-        gui = self.gui
-        if caller == SIMULATION:
-            symbol = gui.configuration.simulationTickerComboBox.currentText()
-            interval = helpers.convert_interval(gui.configuration.simulationIntervalComboBox.currentText())
-            startingBalance = gui.configuration.simulationStartingBalanceSpinBox.value()
-            self.signals.activity.emit(caller, f"Retrieving data for interval {interval}...")
-            gui.simulationTrader = SimulationTrader(startingBalance=startingBalance,
-                                                    symbol=symbol,
-                                                    interval=interval,
-                                                    loadData=True)
-            self.signals.activity.emit(caller, "Retrieved data successfully.")
-        elif caller == LIVE:
-            symbol = gui.configuration.tickerComboBox.currentText()
-            interval = helpers.convert_interval(gui.configuration.intervalComboBox.currentText())
-            apiSecret = gui.configuration.binanceApiSecret.text()
-            apiKey = gui.configuration.binanceApiKey.text()
-            if len(apiSecret) == 0:
-                raise ValueError('Please specify an API secret key. No API secret key found.')
-            elif len(apiKey) == 0:
-                raise ValueError("Please specify an API key. No API key found.")
-            self.signals.activity.emit(caller, f"Retrieving data for interval {interval}...")
-            gui.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol)
-            self.signals.activity.emit(caller, "Retrieved data successfully.")
-        else:
-            raise ValueError("Invalid caller.")
-
-        self.initialize_lower_interval_trading(caller=caller, interval=interval)
-
-    def setup_bot(self, caller):
-        self.create_trader(caller)
-        self.gui.set_parameters(caller)
-        self.trader = self.gui.trader if caller == LIVE else self.gui.simulationTrader
-
-        if caller == LIVE:
-            if self.gui.configuration.enableTelegramTrading.isChecked():
-                self.handle_telegram_bot()
-            self.gui.runningLive = True
-        elif caller == SIMULATION:
-            self.gui.simulationRunningLive = True
-        else:
-            raise RuntimeError("Invalid type of caller specified.")
 
     def get_statistics(self):
         trader = self.trader
@@ -197,70 +248,11 @@ class BotThread(QRunnable):
 
         return updateDict
 
-    def update_data(self, caller):
-        """
-        Updates data if updated data exists for caller object.
-        :param caller: Object type that will be updated.
-        """
-        gui = self.gui
-        if caller == LIVE and not gui.trader.dataView.data_is_updated():
-            self.signals.activity.emit(caller, 'New data found. Updating...')
-            gui.trader.dataView.update_data()
-            self.signals.activity.emit(caller, 'Updated data successfully.')
-        elif caller == SIMULATION and not gui.simulationTrader.dataView.data_is_updated():
-            self.signals.activity.emit(caller, 'New data found. Updating...')
-            gui.simulationTrader.dataView.update_data()
-            self.signals.activity.emit(caller, 'Updated data successfully.')
-
-    def handle_trading(self, caller):
-        """
-        Handles trading by checking if automation mode is on or manual.
-        :param caller: Object for which function will handle trading.
-        """
-        gui = self.gui
-        if caller == SIMULATION:
-            trader = gui.simulationTrader
-        elif caller == LIVE:
-            trader = gui.trader
-        else:
-            raise ValueError('Invalid caller type specified.')
-
-        if not trader.inHumanControl:
-            trader.main_logic()
-
-    def handle_trailing_prices(self, caller):
-        """
-        Handles trailing prices for caller object.
-        :param caller: Trailing prices for what caller to be handled for.
-        """
-        gui = self.gui
-        if caller == SIMULATION:
-            trader = gui.simulationTrader
-        elif caller == LIVE:
-            trader = gui.trader
-        else:
-            raise ValueError("Invalid caller type specified.")
-
-        trader.currentPrice = trader.dataView.get_current_price()
-        if trader.longTrailingPrice is not None and trader.currentPrice > trader.longTrailingPrice:
-            trader.longTrailingPrice = trader.currentPrice
-        if trader.shortTrailingPrice is not None and trader.currentPrice < trader.shortTrailingPrice:
-            trader.shortTrailingPrice = trader.currentPrice
-
-    def handle_logging(self, caller):
-        """
-        Handles logging type for caller object.
-        :param caller: Object those logging will be performed.
-        """
-        gui = self.gui
-        if caller == LIVE:
-            if gui.advancedLogging:
-                gui.trader.output_basic_information()
-        elif caller == SIMULATION:
-            if gui.advancedLogging:
-                gui.simulationTrader.output_basic_information()
-
     def trading_loop(self, caller):
+        """
+        Main loop that runs based on caller.
+        :param caller: Caller object that determines which bot is running.
+        """
         lowerTrend = None
         runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
 
