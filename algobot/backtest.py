@@ -23,6 +23,7 @@ class Backtester:
         self.marginEnabled = marginEnabled
 
         self.data = data
+        self.check_data()
         self.interval = self.get_interval()
         self.lossStrategy = lossStrategy
         self.lossPercentageDecimal = lossPercentage / 100
@@ -46,6 +47,20 @@ class Backtester:
         self.sellShortPrice = None
         self.shortTrailingPrice = None
         self.currentPeriod = None
+
+    def convert_all_date_to_datetime(self):
+        for data in self.data:
+            data['date_utc'] = parser.parse(data['date_utc'])
+
+    def check_data(self):
+        if type(self.data[0]['date_utc']) == str:
+            self.convert_all_date_to_datetime()
+
+        firstDate = self.data[0]['date_utc']
+        lastDate = self.data[-1]['date_utc']
+
+        if firstDate > lastDate:
+            self.data = self.data[::-1]
 
     def validate_options(self):
         """
@@ -137,7 +152,9 @@ class Backtester:
 
     def find_date_index(self, datetimeObject):
         for data in self.data:
-            if parser.parse(data['date_utc']) == datetimeObject:
+            if type(data['date_utc']) == str:
+                data['date_utc'] = parser.parse(data['date_utc'])
+            if data['date_utc'] == datetimeObject:
                 return self.data.index(data)
         return -1
 
@@ -257,12 +274,13 @@ class Backtester:
         Attempts to parse interval from loaded data.
         :return: Interval in str format.
         """
-        if type(self.data[0]['date_utc']) == str:
-            period1 = parser.parse(self.data[0]['date_utc'])
-            period2 = parser.parse(self.data[1]['date_utc'])
-        else:
-            period1 = self.data[0]['date_utc']
-            period2 = self.data[-1]['date_utc']
+        period1 = self.data[0]['date_utc']
+        period2 = self.data[1]['date_utc']
+
+        if type(period1) == str:
+            period1 = parser.parse(period1)
+        if type(period2) == str:
+            period2 = parser.parse(period2)
 
         difference = period2 - period1
         seconds = difference.total_seconds()
@@ -475,7 +493,7 @@ class Backtester:
 
         print("\nTrades made:")
         for trade in self.trades:
-            print(f'\t{trade}')
+            print(f'\t{trade["date"].strftime("%Y-%m-%d %H:%M")}: {trade["action"]}')
 
         sys.stdout = previous_stdout  # revert stdout back to normal
 
