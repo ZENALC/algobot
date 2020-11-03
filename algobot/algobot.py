@@ -78,12 +78,19 @@ class Interface(QMainWindow):
         self.backtestProgressBar.setValue(progress)
         net = net_and_utc[0]
         utc = net_and_utc[1]
-        # self.add_data_to_plot(self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, utc, net)
+        self.add_data_to_plot(self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, utc, net)
 
     def setup_backtester(self):
         interfaceDict = self.interfaceDictionary[BACKTEST]['mainInterface']
         self.destroy_graph_plots(interfaceDict['graph'])
         self.setup_graph_plots(interfaceDict['graph'], self.backtester, NET_GRAPH)
+        for graph in self.graphs:  # Super hacky temporary fix.
+            if graph['graph'] == self.backtestGraph:
+                plot = graph['plots'][0]
+                plot['x'] = []
+                plot['y'] = []
+                plot['plot'].setData(plot['x'], plot['y'])
+
         self.disable_interface(True, BACKTEST)
 
     def end_backtest(self, path):
@@ -534,7 +541,7 @@ class Interface(QMainWindow):
         # self.graphWidget.setLimits(xMin=currentDate, xMax=nextDate)
         # self.graphWidget.plotItem.setMouseEnabled(y=False)
 
-    def add_data_to_plot(self, targetGraph: PlotWidget, plotIndex: int, x: float or list, y: float or list):
+    def add_data_to_plot(self, targetGraph: PlotWidget, plotIndex: int, x: float, y: float):
         """
         Adds data to plot in provided graph.
         :param targetGraph: Graph to use for plot to add data to.
@@ -545,16 +552,8 @@ class Interface(QMainWindow):
         for graph in self.graphs:
             if graph['graph'] == targetGraph:
                 plot = graph['plots'][plotIndex]
-                if type(x) == float:
-                    plot['x'].append(x)
-                elif type(x) == list:
-                    plot['x'] += x
-
-                if type(y) == float:
-                    plot['y'].append(y)
-                elif type(y) == list:
-                    plot['y'] += y
-
+                plot['x'].append(x)
+                plot['y'].append(y)
                 plot['plot'].setData(plot['x'], plot['y'])
 
     def append_plot_to_graph(self, targetGraph, toAdd: list):
@@ -588,6 +587,7 @@ class Interface(QMainWindow):
         currentDateTimestamp = datetime.utcnow().timestamp()
         if graph != self.backtestGraph:
             graph.setLimits(xMin=currentDateTimestamp)
+
         self.append_plot_to_graph(graph, [{
             'plot': self.create_graph_plot(graph, (currentDateTimestamp,), (net,),
                                            color=color, plotName='Net'),

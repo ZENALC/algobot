@@ -30,27 +30,24 @@ class BacktestThread(QRunnable):
         backtestPeriod = backtester.data[backtester.startDateIndex:backtester.endDateIndex]
         nets = []
         utcList = []
-        previousIndex = 0
+        divisor = len(backtestPeriod) // 100
+        if len(backtestPeriod) % 100 != 0:
+            divisor += 1
+
         for index, period in enumerate(backtestPeriod):
             seenData.insert(0, period)
             backtester.currentPeriod = period
             backtester.currentPrice = period['open']
             backtester.main_logic()
             backtester.check_trend(seenData)
-            utc = period['date_utc'].timestamp()
-            nets.append(backtester.get_net())
-            utcList.append(utc)
-            if index / len(backtestPeriod) >= 0.25:
-                self.signals.activity.emit(25, (nets[previousIndex:index], utcList[previousIndex:index]))
-                previousIndex = index
-            elif index / len(backtestPeriod) >= 0.5:
-                self.signals.activity.emit(50, (nets[previousIndex:index], utcList[previousIndex:index]))
-                previousIndex = index
-            elif index / len(backtestPeriod) >= 0.75:
-                self.signals.activity.emit(75, (nets[previousIndex:index], utcList[previousIndex:index]))
-                previousIndex = index
+            division = index % divisor
 
-            # self.signals.activity.emit(backtester.get_net(), utc)
+            if division == 0:
+                nets.append(backtester.get_net())
+                utc = period['date_utc'].timestamp()
+                utcList.append(utc)
+                percentage = int(index / len(backtestPeriod) * 100)
+                self.signals.activity.emit(percentage, (nets[-1], utcList[-1]))
 
         if backtester.inShortPosition:
             backtester.exit_short('Exited short because of end of backtest.')
