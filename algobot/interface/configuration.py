@@ -120,6 +120,7 @@ class Configuration(QDialog):
         self.data = helpers.load_from_csv(filePath, descending=False)
         self.backtestInfoLabel.setText("Imported data successfully.")
         self.setup_calendar()
+        self.backtestDataLabel.setText('Currently using imported data to conduct backtest.')
 
     def download_data(self):
         """
@@ -135,7 +136,10 @@ class Configuration(QDialog):
 
     def set_downloaded_data(self, data):
         self.data = data
+        symbol = self.backtestTickerComboBox.currentText()
+        interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
         self.backtestInfoLabel.setText("Downloaded data successfully.")
+        self.backtestDataLabel.setText(f'Currently using {symbol} in {interval} intervals to conduct backtest.')
         self.setup_calendar()
 
     def copy_settings_to_simulation(self):

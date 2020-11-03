@@ -74,8 +74,11 @@ class Interface(QMainWindow):
         worker.signals.finished.connect(self.end_backtest)
         self.threadPool.start(worker)
 
-    def update_backtest_gui(self, net, utc):
-        self.add_data_to_plot(self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, utc, net)
+    def update_backtest_gui(self, progress, net_and_utc):
+        self.backtestProgressBar.setValue(progress)
+        net = net_and_utc[0]
+        utc = net_and_utc[1]
+        # self.add_data_to_plot(self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, utc, net)
 
     def setup_backtester(self):
         interfaceDict = self.interfaceDictionary[BACKTEST]['mainInterface']
@@ -83,9 +86,17 @@ class Interface(QMainWindow):
         self.setup_graph_plots(interfaceDict['graph'], self.backtester, NET_GRAPH)
         self.disable_interface(True, BACKTEST)
 
-    def end_backtest(self):
+    def end_backtest(self, path):
         self.disable_interface(False, BACKTEST)
-        self.create_popup('Finished backtesting.')
+        self.backtestProgressBar.setValue(100)
+
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText(f"Backtest results have been saved to {path}.")
+        msgBox.setWindowTitle("Backtest results.")
+        msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
+        if msgBox.exec_() == QMessageBox.Open:
+            os.startfile(path)
 
     def initiate_bot_thread(self, caller: int):
         """

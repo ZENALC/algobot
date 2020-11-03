@@ -494,8 +494,8 @@ class Backtester:
             self.print_backtest_results(f)
             self.print_trades(f)
         filePath = os.path.join(os.getcwd(), resultFile)
-        print(f'Backtest results saved successfully to {filePath}.')
         os.chdir(currentPath)
+        return filePath
 
 
 if __name__ == '__main__':
