@@ -84,7 +84,7 @@ class Configuration(QDialog):
 
     def get_calendar_dates(self):
         startDate = self.backtestStartDate.selectedDate().toPyDate()
-        endDate = self.backtestStartDate.selectedDate().toPyDate()
+        endDate = self.backtestEndDate.selectedDate().toPyDate()
         return startDate, endDate
 
     def setup_calendar(self):

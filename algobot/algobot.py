@@ -74,13 +74,23 @@ class Interface(QMainWindow):
         worker.signals.finished.connect(self.end_backtest)
         self.threadPool.start(worker)
 
-    def update_backtest_gui(self, progress, net_and_utc):
-        self.backtestProgressBar.setValue(progress)
-        net = net_and_utc[0]
-        utc = net_and_utc[1]
+    def update_backtest_gui(self, updatedDict):
+        self.backtestProgressBar.setValue(updatedDict['percentage'])
+        net = updatedDict['net']
+        utc = updatedDict['utc']
+        if net < self.backtester.startingBalance:
+            self.backtestProfitLabel.setText("Loss")
+            self.backtestProfitPercentageLabel.setText("Loss Percentage")
+        self.backtestbalance.setText(updatedDict['balance'])
+        self.backtestNet.setText(updatedDict['netString'])
+        self.backtestCommissionsPaid.setText(updatedDict['commissionsPaid'])
+        self.backtestProfit.setText(updatedDict['profit'])
+        self.backtestProfitPercentage.setText(updatedDict['profitPercentage'])
+        self.backtestTradesMade.setText(updatedDict['tradesMade'])
+        self.backtestCurrentPeriod.setText(updatedDict['currentPeriod'])
         self.add_data_to_plot(self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, utc, net)
 
-    def setup_backtester(self):
+    def setup_backtester(self, statDict):
         interfaceDict = self.interfaceDictionary[BACKTEST]['mainInterface']
         self.destroy_graph_plots(interfaceDict['graph'])
         self.setup_graph_plots(interfaceDict['graph'], self.backtester, NET_GRAPH)
@@ -90,8 +100,18 @@ class Interface(QMainWindow):
                 plot['x'] = []
                 plot['y'] = []
                 plot['plot'].setData(plot['x'], plot['y'])
-
         self.disable_interface(True, BACKTEST)
+        self.backtestStartingBalance.setText(statDict['startingBalance'])
+        self.backtestInterval.setText(statDict['interval'])
+        self.backtestMarginEnabled.setText(statDict['marginEnabled'])
+        self.backtestStopLossPercentage.setText(statDict['stopLossPercentage'])
+        self.backtestLossStrategy.setText(statDict['stopLossStrategy'])
+        self.backtestStartPeriod.setText(statDict['startPeriod'])
+        self.backtestEndPeriod.setText(statDict['endPeriod'])
+        # self.backtestMovingAverage1.setText()
+        # self.backtestMovingAverage2.setText()
+        # self.backtestMovingAverage3.setText()
+        # self.backtestMovingAverage4.setText()
 
     def end_backtest(self, path):
         self.disable_interface(False, BACKTEST)

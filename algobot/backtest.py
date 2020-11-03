@@ -152,9 +152,7 @@ class Backtester:
 
     def find_date_index(self, datetimeObject):
         for data in self.data:
-            if type(data['date_utc']) == str:
-                data['date_utc'] = parser.parse(data['date_utc'])
-            if data['date_utc'] == datetimeObject:
+            if data['date_utc'].date() == datetimeObject:
                 return self.data.index(data)
         return -1
 
