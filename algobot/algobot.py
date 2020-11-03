@@ -96,6 +96,9 @@ class Interface(QMainWindow):
         self.setup_graph_plots(interfaceDict['graph'], self.backtester, NET_GRAPH)
         for graph in self.graphs:  # Super hacky temporary fix.
             if graph['graph'] == self.backtestGraph:
+                initialTimeStamp = self.backtester.data[0]['date_utc'].timestamp()
+                finalTimeStamp = self.backtester.data[-1]['date_utc'].timestamp() + 300
+                graph['graph'].setLimits(xMin=initialTimeStamp, xMax=finalTimeStamp)
                 plot = graph['plots'][0]
                 plot['x'] = []
                 plot['y'] = []
