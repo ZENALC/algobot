@@ -120,7 +120,7 @@ class Interface(QMainWindow):
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
         msgBox.setText(f"Backtest results have been saved to {path}.")
-        msgBox.setWindowTitle("Backtest results.")
+        msgBox.setWindowTitle("Backtest Results")
         msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
         if msgBox.exec_() == QMessageBox.Open:
             os.startfile(path)
