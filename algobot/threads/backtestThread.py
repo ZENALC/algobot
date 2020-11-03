@@ -19,6 +19,9 @@ class BacktestThread(QRunnable):
         self.gui = gui
         self.signals = BacktestSignals()
 
+    def get_statistics(self):
+        pass
+
     def backtest(self):
         self.signals.started.emit()
         backtester = self.gui.backtester
