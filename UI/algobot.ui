@@ -1725,8 +1725,6 @@
     </property>
     <addaction name="configurationAction"/>
     <addaction name="otherCommandsAction"/>
-    <addaction name="separator"/>
-    <addaction name="statisticsAction"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -1734,7 +1732,15 @@
     </property>
     <addaction name="aboutAlgobotAction"/>
    </widget>
+   <widget class="QMenu" name="menuStatistics">
+    <property name="title">
+     <string>Statistics</string>
+    </property>
+    <addaction name="liveStatisticsAction"/>
+    <addaction name="simulationStatisticsAction"/>
+   </widget>
    <addaction name="menuSettings"/>
+   <addaction name="menuStatistics"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -1756,6 +1762,16 @@
   <action name="aboutAlgobotAction">
    <property name="text">
     <string>About Algobot</string>
+   </property>
+  </action>
+  <action name="liveStatisticsAction">
+   <property name="text">
+    <string>Live</string>
+   </property>
+  </action>
+  <action name="simulationStatisticsAction">
+   <property name="text">
+    <string>Simulation</string>
    </property>
   </action>
  </widget>

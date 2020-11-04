@@ -883,6 +883,14 @@ class Interface(QMainWindow):
         self.configuration.configurationTabWidget.setCurrentIndex(2)
         self.configuration.simulationConfigurationTabWidget.setCurrentIndex(0)
 
+    def show_statistics(self, index: int):
+        """
+        Opens statistics window and sets tab index to index provided.
+        :param index: Index to be changed in the tab.
+        """
+        self.statistics.show()
+        self.statistics.statisticsTabWidget.setCurrentIndex(index)
+
     def create_configuration_slots(self):
         """
         Creates configuration slots.
@@ -902,8 +910,9 @@ class Interface(QMainWindow):
         """
         self.otherCommandsAction.triggered.connect(lambda: self.otherCommands.show())
         self.configurationAction.triggered.connect(lambda: self.configuration.show())
-        self.statisticsAction.triggered.connect(lambda: self.statistics.show())
         self.aboutAlgobotAction.triggered.connect(lambda: self.about.show())
+        self.liveStatisticsAction.triggered.connect(lambda: self.show_statistics(0))
+        self.simulationStatisticsAction.triggered.connect(lambda: self.show_statistics(1))
 
     def create_bot_slots(self):
         """

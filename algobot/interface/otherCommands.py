@@ -1,6 +1,6 @@
 import os
 import helpers
-from threads import workerThread, csvThread
+from threads import csvThread
 
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
@@ -15,16 +15,6 @@ class OtherCommands(QDialog):
         uic.loadUi(otherCommandsUi, self)  # Loading the main UI
         self.threadPool = QThreadPool()
         self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
-        self.movingAverageMiscellaneousParameter.currentTextChanged.connect(self.initiate_misc_get_moving_average)
-        self.movingAverageMiscellaneousType.currentTextChanged.connect(self.initiate_misc_get_moving_average)
-        self.movingAverageMiscellaneousValue.valueChanged.connect(self.initiate_misc_get_moving_average)
-
-    def initiate_misc_get_moving_average(self):
-        thread = workerThread.Worker(self.get_moving_average_miscellaneous)
-        self.threadPool.start(thread)
-
-    def get_moving_average_miscellaneous(self):
-        self.movingAverageMiscellaneousResult.setText("Not yet implemented.")
 
     def initiate_csv_generation(self):
         self.generateCSVButton.setEnabled(False)
