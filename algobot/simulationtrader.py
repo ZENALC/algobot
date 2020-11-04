@@ -245,7 +245,7 @@ class SimulationTrader:
                 else:
                     self.sell_short("Sold short because a cross was detected.")
 
-    def get_stop_loss_strategy_string(self):
+    def get_stop_loss_strategy_string(self) -> str:
         """
         Returns stop loss strategy in string format, instead of integer enum.
         :return: Stop loss strategy in string format.
@@ -259,7 +259,7 @@ class SimulationTrader:
         else:
             raise ValueError("Unknown type of loss strategy.")
 
-    def get_position_string(self):
+    def get_position_string(self) -> str:
         """
         Returns position in string format, instead of integer enum.
         :return: Position in string format.
@@ -371,7 +371,7 @@ class SimulationTrader:
         else:
             raise ValueError(f'Unknown moving average {movingAverage}.')
 
-    def get_stop_loss(self):
+    def get_stop_loss(self) -> None or float:
         """
         Returns a stop loss for the position.
         :return: Stop loss value.
@@ -389,7 +389,7 @@ class SimulationTrader:
         else:  # This means we are not in any position currently.
             return None
 
-    def get_trend(self, dataObject: Data = None):
+    def get_trend(self, dataObject: Data = None) -> int or None:
         """
         Checks whether there is a trend or not.
         :param dataObject: Data object to be used to check if there is a trend or not.
