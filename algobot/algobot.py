@@ -28,6 +28,10 @@ mainUi = os.path.join('../', 'UI', 'algobot.ui')
 
 
 class Interface(QMainWindow):
+    """
+        Main Algobot interface.
+        Algobot currently supports trading with live bots, running simulations, and running backtests.
+    """
     def __init__(self, parent=None):
         assets.qInitResources()
         super(Interface, self).__init__(parent)  # Initializing object
