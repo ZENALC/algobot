@@ -75,13 +75,16 @@ class BacktestThread(QRunnable):
         }
 
     def backtest(self):
+        """
+        Main backtest function.
+        """
         backtester = self.gui.backtester
         backtester.movingAverageTestStartTime = time.time()
         seenData = backtester.data[:backtester.minPeriod][::-1]  # Start from minimum previous period data.
         backtestPeriod = backtester.data[backtester.startDateIndex:backtester.endDateIndex]
-        divisor = len(backtestPeriod) // 100
         testLength = len(backtestPeriod)
-        if len(backtestPeriod) % 100 != 0:
+        divisor = testLength // 100
+        if testLength % 100 != 0:
             divisor += 1
 
         for index, period in enumerate(backtestPeriod):
@@ -90,9 +93,8 @@ class BacktestThread(QRunnable):
             backtester.currentPrice = period['open']
             backtester.main_logic()
             backtester.check_trend(seenData)
-            division = index % divisor
 
-            if division == 0:
+            if index % divisor == 0:
                 self.signals.activity.emit(self.get_activity_dictionary(period=period, index=index, length=testLength))
 
         if backtester.inShortPosition:
@@ -100,7 +102,7 @@ class BacktestThread(QRunnable):
         elif backtester.inLongPosition:
             backtester.exit_long('Exiting long because of end of backtest.')
 
-        self.signals.activity.emit(self.get_activity_dictionary(period=backtestPeriod[-1],
+        self.signals.activity.emit(self.get_activity_dictionary(period=backtestPeriod[-1],  # Final backtest data.
                                                                 index=testLength,
                                                                 length=testLength))
         backtester.movingAverageTestEndTime = time.time()
