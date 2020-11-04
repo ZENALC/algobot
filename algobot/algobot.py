@@ -144,7 +144,7 @@ class Interface(QMainWindow):
         Ends bot based on caller.
         :param caller: Caller that decides which bot will be ended.
         """
-        self.disable_interface(True, caller=caller, everything=True)
+        self.disable_interface(True, caller=caller, everything=True)  # Disable everything until everything is done.
         if caller == SIMULATION:
             self.simulationRunningLive = False
             self.simulationTrader.get_simulation_result()
@@ -164,10 +164,10 @@ class Interface(QMainWindow):
                 self.lowerIntervalData = None
 
         tempTrader.log_trades()
+        tempTrader.dataView.dump_to_table()
         self.enable_override(caller, False)
         self.update_trades_table_and_activity_monitor(caller)
-        self.disable_interface(False, caller=caller)
-        tempTrader.dataView.dump_to_table()
+        self.disable_interface(False, caller=caller)  # Finally enable run button.
         # self.destroy_trader(caller)
 
     def end_crash_bot_and_create_popup(self, caller: int, msg: str):
@@ -223,6 +223,12 @@ class Interface(QMainWindow):
         self.handle_custom_stop_loss_buttons(caller=caller)
 
     def update_main_interface(self, interfaceDictionary, statDict, caller):
+        """
+        Updates main interface GUI elements based on caller.
+        :param interfaceDictionary: Dictionary to use for which statistics to update.
+        :param statDict: Dictionary with trader values in formatted data types.
+        :param caller: Caller that decides which main interface gets updated.
+        """
         statisticsDictionary = interfaceDictionary['statistics']
         statisticsDictionary['startingBalanceValue'].setText(statDict['startingBalanceValue'])
         statisticsDictionary['currentBalanceValue'].setText(statDict['currentBalanceValue'])
@@ -257,6 +263,12 @@ class Interface(QMainWindow):
         self.update_graphs(net=net, caller=caller, optionDetails=optionDetails)
 
     def update_graphs(self, net: float, caller, optionDetails: list):
+        """
+        Updates graphs based on caller.
+        :param net: Net to be added to net graph.
+        :param caller: Caller that decides which graphs get updated.
+        :param optionDetails: List of option details for the average graph.
+        """
         interfaceDict = self.interfaceDictionary[caller]
         currentUTC = datetime.utcnow().timestamp()
         self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, currentUTC, net)
@@ -351,7 +363,7 @@ class Interface(QMainWindow):
             interfaceDict['forceLongButton'].setEnabled(True)
             interfaceDict['forceShortButton'].setEnabled(True)
 
-    def enable_override(self, caller, enabled=True):
+    def enable_override(self, caller, enabled: bool = True):
         """
         Enables override interface for which caller specifies.
         :param enabled: Boolean that determines whether override is enabled or disable. By default, it is enabled.
@@ -359,7 +371,7 @@ class Interface(QMainWindow):
         """
         self.interfaceDictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(enabled)
 
-    def exit_position(self, caller, humanControl=True):
+    def exit_position(self, caller, humanControl: bool = True):
         """
         Exits position by either giving up control or not. If the boolean humanControl is true, bot gives up control.
         If the boolean is false, the bot still retains control, but exits trade and waits for opposite trend.
@@ -464,7 +476,7 @@ class Interface(QMainWindow):
         trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
         trader.tradingOptions = self.get_trading_options(caller)
 
-    def set_custom_stop_loss(self, caller, enable=True):
+    def set_custom_stop_loss(self, caller, enable: bool = True):
         """
         Enables or disables custom stop loss.
         :param enable: Boolean that determines whether custom stop loss is enabled or disabled. Default is enable.
@@ -577,7 +589,7 @@ class Interface(QMainWindow):
                 plot['y'].append(y)
                 plot['plot'].setData(plot['x'], plot['y'])
 
-    def append_plot_to_graph(self, targetGraph, toAdd: list):
+    def append_plot_to_graph(self, targetGraph: PlotWidget, toAdd: list):
         """
         Appends plot to graph provided.
         :param targetGraph: Graph to add plot to.
@@ -597,7 +609,7 @@ class Interface(QMainWindow):
                 graph['graph'].clear()
                 graph['plots'] = []
 
-    def setup_net_graph_plot(self, graph: PlotWidget, trader, color: str):
+    def setup_net_graph_plot(self, graph: PlotWidget, trader: SimulationTrader, color: str):
         """
         Sets up net balance plot for graph provided.
         :param trader: Type of trader that will use this graph.
@@ -606,7 +618,7 @@ class Interface(QMainWindow):
         """
         net = trader.startingBalance
         currentDateTimestamp = datetime.utcnow().timestamp()
-        if graph != self.backtestGraph:
+        if graph != self.backtestGraph:  # If backtest, we don't need to start from current UTC. Could be earlier.
             graph.setLimits(xMin=currentDateTimestamp)
 
         self.append_plot_to_graph(graph, [{
@@ -643,7 +655,7 @@ class Interface(QMainWindow):
             colorCounter += 2
             self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
 
-    def setup_graph_plots(self, graph, trader, graphType):
+    def setup_graph_plots(self, graph: PlotWidget, trader: SimulationTrader, graphType: int):
         """
         Setups graph plots for graph, trade, and graphType specified.
         :param graph: Graph that will be setup.
