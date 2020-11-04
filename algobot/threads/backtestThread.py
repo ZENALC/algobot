@@ -105,28 +105,38 @@ class BacktestThread(QRunnable):
                                                                 length=testLength))
         backtester.movingAverageTestEndTime = time.time()
 
+    def get_configuration_details(self) -> dict:
+        """
+        Returns configuration details from GUI in a dictionary.
+        :return: GUI configuration details in a dictionary.
+        """
+        gui = self.gui
+        startDate, endDate = gui.configuration.get_calendar_dates()
+        lossStrategy, lossPercentageDecimal = gui.get_loss_settings(BACKTEST)
+        return {
+            'startingBalance': gui.configuration.backtestStartingBalanceSpinBox.value(),
+            'data': gui.configuration.data,
+            'marginEnabled': gui.configuration.backtestMarginTradingCheckBox.isChecked(),
+            'options': gui.get_trading_options(BACKTEST),
+            'startDate': startDate,
+            'endDate': endDate,
+            'lossStrategy': lossStrategy,
+            'lossPercentage': lossPercentageDecimal * 100
+        }
+
     def setup_bot(self):
         """
         Sets up initial backtester.
         """
-        gui = self.gui
-        startingBalance = gui.configuration.backtestStartingBalanceSpinBox.value()
-        data = gui.configuration.data
-        marginEnabled = gui.configuration.backtestMarginTradingCheckBox.isChecked()
-        lossStrategy, lossPercentageDecimal = gui.get_loss_settings(BACKTEST)
-        options = gui.get_trading_options(BACKTEST)
-        startDate, endDate = gui.configuration.get_calendar_dates()
-        if startDate == endDate:  # This means run everything by default.
-            startDate = None
-            endDate = None
-        gui.backtester = Backtester(startingBalance=startingBalance,
-                                    data=data,
-                                    lossStrategy=lossStrategy,
-                                    lossPercentage=lossPercentageDecimal * 100,
-                                    options=options,
-                                    marginEnabled=marginEnabled,
-                                    startDate=startDate,
-                                    endDate=endDate)
+        configDetails = self.get_configuration_details()
+        self.gui.backtester = Backtester(startingBalance=configDetails['startingBalance'],
+                                         data=configDetails['data'],
+                                         lossStrategy=configDetails['lossStrategy'],
+                                         lossPercentage=configDetails['lossPercentage'],
+                                         options=configDetails['options'],
+                                         marginEnabled=configDetails['marginEnabled'],
+                                         startDate=configDetails['startDate'],
+                                         endDate=configDetails['endDate'])
         self.signals.started.emit(self.get_configuration_dictionary())
 
     @pyqtSlot()
