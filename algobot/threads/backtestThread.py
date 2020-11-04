@@ -27,7 +27,11 @@ class BacktestThread(QRunnable):
         self.gui = gui
         self.signals = BacktestSignals()
 
-    def get_configuration_dictionary(self):
+    def get_configuration_dictionary(self) -> dict:
+        """
+        Returns backtest configuration details.
+        :return: Dictionary containing backtest configuration details.
+        """
         backtester = self.gui.backtester
         options = [get_pretty_option(option) for option in backtester.tradingOptions]
         return {
@@ -41,17 +45,25 @@ class BacktestThread(QRunnable):
             'options': options
         }
 
-    def get_activity_dictionary(self, period, index, length):
+    def get_activity_dictionary(self, period: dict, index: int, length: int) -> dict:
+        """
+        Returns activity dictionary based on current backtest period values.
+        :param period: Current period used to update graphs and GUI with.
+        :param index: Current index from period data. Used to calculate percentage of backtest conducted.
+        :param length: Current length of backtest periods. Used with index to calculate percentage of backtest done.
+        :return: Dictionary containing period activity.
+        """
         backtester = self.gui.backtester
-        profit = backtester.get_net() - backtester.startingBalance
+        net = backtester.get_net()
+        profit = net - backtester.startingBalance
         if profit < 0:
-            profitPercentage = round(100 - backtester.get_net() / backtester.startingBalance * 100, 2)
+            profitPercentage = round(100 - net / backtester.startingBalance * 100, 2)
         else:
-            profitPercentage = round(backtester.get_net() / backtester.startingBalance * 100, 2)
+            profitPercentage = round(net / backtester.startingBalance * 100, 2)
 
         return {
-            'net': backtester.get_net(),
-            'netString': f'${round(backtester.get_net(), 2)}',
+            'net': net,
+            'netString': f'${round(net, 2)}',
             'balance': f'${round(backtester.balance, 2)}',
             'commissionsPaid': f'${round(backtester.commissionsPaid, 2)}',
             'tradesMade': str(len(backtester.trades)),
@@ -94,6 +106,9 @@ class BacktestThread(QRunnable):
         backtester.movingAverageTestEndTime = time.time()
 
     def setup_bot(self):
+        """
+        Sets up initial backtester.
+        """
         gui = self.gui
         startingBalance = gui.configuration.backtestStartingBalanceSpinBox.value()
         data = gui.configuration.data
