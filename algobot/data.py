@@ -189,6 +189,7 @@ class Data:
         latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
         return self.is_latest_date(latestDate)
 
+    # noinspection PyProtectedMember
     def update_database_and_data(self):
         """
         Updates database by retrieving information from Binance API

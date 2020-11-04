@@ -189,6 +189,7 @@ class RealTrader(SimulationTrader):
         """
         return self.round_down(self.binanceClient.get_asset_balance(asset=self.coinName)['free'])
 
+    # noinspection PyProtectedMember
     def get_isolated_margin_account(self, **params) -> dict:
         """
         Retrieves margin isolated account information.
@@ -248,7 +249,7 @@ class RealTrader(SimulationTrader):
         coin = self.get_margin_coin_info()
         return self.round_down(float(coin['free']))
 
-    def get_borrowed_margin_coin(self):
+    def get_borrowed_margin_coin(self) -> float:
         """
         Retrieves borrowed margin coin amount.
         :return: Borrowed margin coin amount.
@@ -256,7 +257,7 @@ class RealTrader(SimulationTrader):
         coin = self.get_margin_coin_info()
         return self.round_down(float(coin['borrowed']))
 
-    def get_borrowed_margin_interest(self):
+    def get_borrowed_margin_interest(self) -> float:
         """
         Retrieves borrowed margin coin interest amount.
         :return: Borrowed margin coin interest amount.
@@ -264,7 +265,7 @@ class RealTrader(SimulationTrader):
         coin = self.get_margin_coin_info()
         return self.round_down(float(coin['interest']))
 
-    def create_margin_loan(self, amount, force):
+    def create_margin_loan(self, amount: float, force: bool):
         """
         Creates margin loan.
         :param force: Boolean that determines whether bot executed action or human.
@@ -291,7 +292,7 @@ class RealTrader(SimulationTrader):
                        force=force,
                        orderID=order['clientOrderId'])
 
-    def repay_margin_loan(self, force):
+    def repay_margin_loan(self, force: bool):
         """
         Repays margin loan.
         :param force: Boolean that determines whether bot executed action or human.
@@ -320,7 +321,7 @@ class RealTrader(SimulationTrader):
                        force=force,
                        orderID=order['clientOrderId'])
 
-    def buy_long(self, msg, usd=None, force=False):
+    def buy_long(self, msg: str, usd: float or None = None, force: bool = False):
         """
         Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
         :param msg: Message to be used for displaying trade information.
@@ -353,7 +354,7 @@ class RealTrader(SimulationTrader):
                        force=force,
                        orderID=order['clientOrderId'])
 
-    def sell_long(self, msg, coin=None, force=False):
+    def sell_long(self, msg: str, coin: float or None = None, force: bool = False):
         """
         Sells specified amount of coin at current market price. If not specified, assumes bot sells all coin.
         :param msg: Message to be used for displaying trade information.
@@ -384,7 +385,7 @@ class RealTrader(SimulationTrader):
                        force=force,
                        orderID=order['clientOrderId'])
 
-    def buy_short(self, msg, coin=None, force=False):
+    def buy_short(self, msg: str, coin: float or None = None, force: bool = False):
         """
         Returns coin by buying them at current market price.
         If no coin is provided in function, bot will assume we try to pay back everything in return.
@@ -420,7 +421,7 @@ class RealTrader(SimulationTrader):
         self.shortTrailingPrice = None
         self.output_message(msg)
 
-    def sell_short(self, msg, coin=None, force=False):
+    def sell_short(self, msg: str, coin: float or None = None, force: bool = False):
         """
         Borrows coin and sells them at current market price.
         If no coin is provided in function, bot will assume we borrow as much as
