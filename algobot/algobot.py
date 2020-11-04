@@ -7,7 +7,7 @@ from threads import workerThread, backtestThread, botThread
 from data import Data
 from datetime import datetime
 from interface.palettes import *
-from backtest import Backtester
+from backtester import Backtester
 from realtrader import RealTrader
 from simulationtrader import SimulationTrader
 from option import Option

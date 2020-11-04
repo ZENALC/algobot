@@ -2,7 +2,7 @@ import time
 import traceback
 
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
-from backtest import Backtester
+from backtester import Backtester
 from enums import BACKTEST
 from option import Option
 
