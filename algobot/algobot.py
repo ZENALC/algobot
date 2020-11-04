@@ -53,7 +53,6 @@ class Interface(QMainWindow):
         self.advancedLogging = True
         self.runningLive = False
         self.simulationRunningLive = False
-        self.backtestRunningLive = False
         self.backtester: Backtester or None = None
         self.trader: RealTrader or None = None
         self.simulationTrader: SimulationTrader or None = None
@@ -786,11 +785,17 @@ class Interface(QMainWindow):
         :param event: close event
         """
         qm = QMessageBox
-        ret = qm.question(self, 'Close?', "Are you sure to end AlgoBot?",
+        message = ""
+        if self.simulationRunningLive and self.runningLive:
+            message = "There is a live bot and a simulation running."
+        elif self.simulationRunningLive:
+            message = "There is a simulation running."
+        elif self.runningLive:
+            message = "There is live bot running."
+        ret = qm.question(self, 'Close?', f"{message} Are you sure you want to end Algobot?",
                           qm.Yes | qm.No)
 
         if ret == qm.Yes:
-            pg.exit()
             if self.runningLive:
                 self.end_bot_thread(LIVE)
             elif self.simulationRunningLive:

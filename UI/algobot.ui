@@ -1666,7 +1666,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Trades Conducted</string>
+           <string>Activity Monitor</string>
           </property>
          </widget>
         </item>
