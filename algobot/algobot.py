@@ -2,7 +2,6 @@ import assets
 import sys
 import helpers
 import os
-import pyqtgraph as pg
 
 from threads import workerThread, backtestThread, botThread
 from data import Data
@@ -659,7 +658,7 @@ class Interface(QMainWindow):
         else:
             raise TypeError("Invalid type of graph provided.")
 
-    def get_graph_colors(self):
+    def get_graph_colors(self) -> list:
         """
         Returns graph colors to be placed based on configuration.
         """
@@ -677,7 +676,7 @@ class Interface(QMainWindow):
         return [colorDict[color.lower()] for color in colors]
 
     @staticmethod
-    def create_graph_plot(graph, x, y, plotName, color):
+    def create_graph_plot(graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):
         """
         Creates a graph plot with parameters provided.
         :param graph: Graph function will plot on.
@@ -689,17 +688,17 @@ class Interface(QMainWindow):
         pen = mkPen(color=color)
         return graph.plot(x, y, name=plotName, pen=pen)
 
+    # TODO This does not work for some reason.
     @staticmethod
     def clear_table(table):
         """
         Sets table row count to 0.
         :param table: Table which is to be cleared.
         """
-        table.clearContents()
         table.setRowCount(0)
 
     @staticmethod
-    def test_table(table, trade):
+    def test_table(table, trade: list):
         """
         Initial function made to test table functionality in QT.
         :param table: Table to insert row at.
@@ -712,7 +711,12 @@ class Interface(QMainWindow):
         for column in range(columns):
             table.setItem(rowPosition, column, QTableWidgetItem(str(trade[column])))
 
-    def add_to_monitor(self, caller, message):
+    def add_to_monitor(self, caller: int, message: str):
+        """
+        Adds message to the monitor based on caller.
+        :param caller: Caller that determines which table gets the message.
+        :param message: Message to be added.
+        """
         if caller == SIMULATION:
             self.add_to_simulation_activity_monitor(message)
         elif caller == LIVE:
@@ -723,6 +727,10 @@ class Interface(QMainWindow):
             raise TypeError("Invalid type of caller specified.")
 
     def add_to_backtest_monitor(self, message: str):
+        """
+        Function that adds activity information to the backtest activity monitor.
+        :param message: Message to add to backtest activity log.
+        """
         self.add_to_table(self.backtestTable, [message])
 
     def add_to_simulation_activity_monitor(self, message: str):
@@ -740,7 +748,7 @@ class Interface(QMainWindow):
         self.add_to_table(self.activityMonitor, [message])
 
     @staticmethod
-    def add_to_table(table, data):
+    def add_to_table(table, data: list):
         """
         Function that will add specified data to a provided table.
         :param table: Table we will add data to.
@@ -922,7 +930,7 @@ class Interface(QMainWindow):
         self.otherCommands.csvGenerationTicker.clear()  # Clear CSV generation tickers.
         self.otherCommands.csvGenerationTicker.addItems(tickers)  # Add the tickers to list of CSV generation tickers.
 
-    def create_popup(self, msg):
+    def create_popup(self, msg: str):
         """
         Creates a popup with message provided.
         :param msg: Message provided.
@@ -988,9 +996,9 @@ class Interface(QMainWindow):
             graph = graph['graph']
             graph.setBackground('w')
 
-    def get_lower_interval_data(self, caller) -> Data:
+    def get_lower_interval_data(self, caller: int) -> Data:
         """
-        Returns a lower interval data object.
+        Returns interface's lower interval data object.
         :param caller: Caller that determines which lower interval data object gets returned.
         :return: Data object.
         """
@@ -1001,7 +1009,7 @@ class Interface(QMainWindow):
         else:
             raise TypeError("Invalid type of caller specified.")
 
-    def get_trader(self, caller) -> SimulationTrader:
+    def get_trader(self, caller: int) -> SimulationTrader:
         """
         Returns a trader object.
         :param caller: Caller that decides which trader object gets returned.
@@ -1017,7 +1025,7 @@ class Interface(QMainWindow):
             raise TypeError("Invalid type of caller specified.")
 
     # noinspection DuplicatedCode
-    def get_interface_dictionary(self, caller=None):
+    def get_interface_dictionary(self, caller: int = None):
         """
         Returns dictionary of objects from QT. Used for DRY principles.
         :param caller: Caller that will determine which sub dictionary gets returned.
