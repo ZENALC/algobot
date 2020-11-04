@@ -4,6 +4,7 @@ import traceback
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 from backtest import Backtester
 from enums import BACKTEST
+from option import Option
 
 
 class BacktestSignals(QObject):
@@ -11,6 +12,13 @@ class BacktestSignals(QObject):
     activity = pyqtSignal(dict)
     started = pyqtSignal(dict)
     error = pyqtSignal(int, str)
+
+
+def get_pretty_option(option: Option):
+    return (
+        f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}',
+        f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}',
+    )
 
 
 class BacktestThread(QRunnable):
@@ -21,6 +29,7 @@ class BacktestThread(QRunnable):
 
     def get_configuration_dictionary(self):
         backtester = self.gui.backtester
+        options = [get_pretty_option(option) for option in backtester.tradingOptions]
         return {
             'startingBalance': f'${backtester.startingBalance}',
             'interval': backtester.interval,
@@ -29,6 +38,7 @@ class BacktestThread(QRunnable):
             'stopLossStrategy': f'{"Trailing Loss" if backtester.lossStrategy == 2 else "Stop Loss"}',
             'startPeriod': f'{backtester.data[backtester.startDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
             'endPeriod': f'{backtester.data[backtester.endDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
+            'options': options
         }
 
     def get_activity_dictionary(self, period, index, length):

@@ -68,6 +68,7 @@ class Interface(QMainWindow):
             self.create_popup("No data setup yet for backtesting. Please configure them in settings first.")
             return
 
+        self.add_to_backtest_monitor("Starting backtest.")
         worker = backtestThread.BacktestThread(gui=self)
         worker.signals.started.connect(self.setup_backtester)
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
@@ -92,7 +93,11 @@ class Interface(QMainWindow):
         if msgBox.exec_() == QMessageBox.Open:
             os.startfile(path)
 
-    def update_backtest_gui(self, updatedDict):
+    def update_backtest_gui(self, updatedDict: dict):
+        """
+        Updates activity backtest details to GUI.
+        :param updatedDict: Dictionary containing backtest data.
+        """
         self.backtestProgressBar.setValue(updatedDict['percentage'])
         net = updatedDict['net']
         utc = updatedDict['utc']
@@ -108,10 +113,40 @@ class Interface(QMainWindow):
         self.backtestCurrentPeriod.setText(updatedDict['currentPeriod'])
         self.add_data_to_plot(self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, utc, net)
 
-    def setup_backtester(self, statDict):
+    def update_backtest_configuration_gui(self, statDict: dict):
+        """
+        Updates backtest interface initial configuration details.
+        :param statDict: Dictionary containing configuration details.
+        """
+        self.backtestStartingBalance.setText(statDict['startingBalance'])
+        self.backtestInterval.setText(statDict['interval'])
+        self.backtestMarginEnabled.setText(statDict['marginEnabled'])
+        self.backtestStopLossPercentage.setText(statDict['stopLossPercentage'])
+        self.backtestLossStrategy.setText(statDict['stopLossStrategy'])
+        self.backtestStartPeriod.setText(statDict['startPeriod'])
+        self.backtestEndPeriod.setText(statDict['endPeriod'])
+        self.backtestMovingAverage1.setText(statDict['options'][0][0])
+        self.backtestMovingAverage2.setText(statDict['options'][0][1])
+        if len(statDict['options']) > 1:
+            self.backtestMovingAverage3.setText(statDict['options'][1][0])
+            self.backtestMovingAverage4.setText(statDict['options'][1][1])
+
+    def setup_backtester(self, configurationDictionary: dict):
+        """
+        Set up backtest GUI with dictionary provided.
+        :param configurationDictionary: Dictionary with configuration details.
+        """
         interfaceDict = self.interfaceDictionary[BACKTEST]['mainInterface']
         self.destroy_graph_plots(interfaceDict['graph'])
         self.setup_graph_plots(interfaceDict['graph'], self.backtester, NET_GRAPH)
+        self.set_backtest_graph_limits_and_empty_plots()
+        self.disable_interface(True, BACKTEST)
+        self.update_backtest_configuration_gui(configurationDictionary)
+
+    def set_backtest_graph_limits_and_empty_plots(self):
+        """
+        Hacky fix, but resets backtest graph and sets x-axis limits.
+        """
         for graph in self.graphs:  # Super hacky temporary fix.
             if graph['graph'] == self.backtestGraph:
                 initialTimeStamp = self.backtester.data[0]['date_utc'].timestamp()
@@ -121,21 +156,6 @@ class Interface(QMainWindow):
                 plot['x'] = []
                 plot['y'] = []
                 plot['plot'].setData(plot['x'], plot['y'])
-        self.disable_interface(True, BACKTEST)
-        self.update_backtest_interface_configuration(statDict)
-
-    def update_backtest_interface_configuration(self, statDict):
-        self.backtestStartingBalance.setText(statDict['startingBalance'])
-        self.backtestInterval.setText(statDict['interval'])
-        self.backtestMarginEnabled.setText(statDict['marginEnabled'])
-        self.backtestStopLossPercentage.setText(statDict['stopLossPercentage'])
-        self.backtestLossStrategy.setText(statDict['stopLossStrategy'])
-        self.backtestStartPeriod.setText(statDict['startPeriod'])
-        self.backtestEndPeriod.setText(statDict['endPeriod'])
-        # self.backtestMovingAverage1.setText()
-        # self.backtestMovingAverage2.setText()
-        # self.backtestMovingAverage3.setText()
-        # self.backtestMovingAverage4.setText()
 
     def initiate_bot_thread(self, caller: int):
         """
@@ -541,7 +561,7 @@ class Interface(QMainWindow):
         return STOP_LOSS, configDictionary['lossPercentage'].value() / 100
 
     @staticmethod
-    def get_option_info(option: Option, trader) -> tuple:
+    def get_option_info(option: Option, trader: SimulationTrader) -> tuple:
         """
         Returns basic information about option provided.
         :param option: Option object for whose information will be retrieved.
