@@ -61,6 +61,9 @@ class Interface(QMainWindow):
         self.add_to_live_activity_monitor('Initialized interface.')
 
     def initiate_backtest(self):
+        """
+        Initiates backtest based on settings configured. If there is no data configured, prompts user to configure data.
+        """
         if self.configuration.data is None:
             self.create_popup("No data setup yet for backtesting. Please configure them in settings first.")
             return
@@ -71,6 +74,23 @@ class Interface(QMainWindow):
         worker.signals.activity.connect(self.update_backtest_gui)
         worker.signals.finished.connect(self.end_backtest)
         self.threadPool.start(worker)
+
+    def end_backtest(self, path: str):
+        """
+        Ends backtest and prompts user if they want to see the results.
+        :param path: Path to result text file.
+        """
+        self.add_to_backtest_monitor(f'Ended backtest and saved results to {path}.')
+        self.disable_interface(False, BACKTEST)
+        self.backtestProgressBar.setValue(100)
+
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText(f"Backtest results have been saved to {path}.")
+        msgBox.setWindowTitle("Backtest Results")
+        msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
+        if msgBox.exec_() == QMessageBox.Open:
+            os.startfile(path)
 
     def update_backtest_gui(self, updatedDict):
         self.backtestProgressBar.setValue(updatedDict['percentage'])
@@ -102,6 +122,9 @@ class Interface(QMainWindow):
                 plot['y'] = []
                 plot['plot'].setData(plot['x'], plot['y'])
         self.disable_interface(True, BACKTEST)
+        self.update_backtest_interface_configuration(statDict)
+
+    def update_backtest_interface_configuration(self, statDict):
         self.backtestStartingBalance.setText(statDict['startingBalance'])
         self.backtestInterval.setText(statDict['interval'])
         self.backtestMarginEnabled.setText(statDict['marginEnabled'])
@@ -113,18 +136,6 @@ class Interface(QMainWindow):
         # self.backtestMovingAverage2.setText()
         # self.backtestMovingAverage3.setText()
         # self.backtestMovingAverage4.setText()
-
-    def end_backtest(self, path):
-        self.disable_interface(False, BACKTEST)
-        self.backtestProgressBar.setValue(100)
-
-        msgBox = QMessageBox()
-        msgBox.setIcon(QMessageBox.Information)
-        msgBox.setText(f"Backtest results have been saved to {path}.")
-        msgBox.setWindowTitle("Backtest Results")
-        msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
-        if msgBox.exec_() == QMessageBox.Open:
-            os.startfile(path)
 
     def initiate_bot_thread(self, caller: int):
         """
@@ -174,7 +185,7 @@ class Interface(QMainWindow):
         """
         Function that force ends bot in the event that it crashes.
         """
-        self.disable_interface(boolean=False, caller=caller)
+        self.disable_interface(disable=False, caller=caller)
         self.add_to_monitor(caller=caller, message=msg)
         self.create_popup(msg)
 
@@ -193,24 +204,24 @@ class Interface(QMainWindow):
         self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
         self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
 
-    def disable_interface(self, boolean, caller, everything=False):
+    def disable_interface(self, disable: bool, caller, everything=False):
         """
         Function that will control trading configuration interfaces.
         :param everything: Disables everything during initialization.
-        :param boolean: If true, configuration settings get disabled.
+        :param disable: If true, configuration settings get disabled.
         :param caller: Caller that determines which configuration settings get disabled.
         """
-        boolean = not boolean
-        self.interfaceDictionary[caller]['configuration']['mainConfigurationTabWidget'].setEnabled(boolean)
-        self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(boolean)
+        disable = not disable
+        self.interfaceDictionary[caller]['configuration']['mainConfigurationTabWidget'].setEnabled(disable)
+        self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(disable)
         if caller != BACKTEST:
-            self.interfaceDictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(not boolean)
+            self.interfaceDictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(not disable)
         if not everything:
-            self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(not boolean)
+            self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(not disable)
         else:
-            self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(boolean)
+            self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(disable)
 
-    def update_interface_info(self, caller, statDict):
+    def update_interface_info(self, caller, statDict: dict):
         """
         Updates interface elements based on caller.
         :param statDict: Dictionary containing statistics.
@@ -222,7 +233,7 @@ class Interface(QMainWindow):
         self.handle_position_buttons(caller=caller)
         self.handle_custom_stop_loss_buttons(caller=caller)
 
-    def update_main_interface(self, interfaceDictionary, statDict, caller):
+    def update_main_interface(self, interfaceDictionary: dict, statDict: dict, caller):
         """
         Updates main interface GUI elements based on caller.
         :param interfaceDictionary: Dictionary to use for which statistics to update.
