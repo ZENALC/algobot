@@ -48,14 +48,8 @@ class TelegramBot:
     def get_statistics_telegram(self, update, context):
         startingBalance = self.gui.trader.startingBalance
         profit = self.gui.trader.get_profit()
-        position = self.gui.trader.get_position()
+        position = self.gui.trader.get_position_string()
         coinName = self.gui.trader.coinName
-        if position == -1:
-            pos = 'Short'
-        elif position == 1:
-            pos = 'Long'
-        else:
-            pos = None
         if profit >= 0:
             label = 'Profit'
         else:
@@ -63,7 +57,7 @@ class TelegramBot:
         runtime = datetime.utcnow() - self.gui.trader.movingAverageTestStartTime
         update.message.reply_text(f"Here are your statistics:\n"
                                   f'Symbol: {self.gui.trader.symbol}\n'
-                                  f'Position: {pos}\n'
+                                  f'Position: {position}\n'
                                   f"Coin owned: {self.gui.trader.coin}\n"
                                   f"Coin owed: {self.gui.trader.coinOwed}\n"
                                   f"Starting balance: ${round(startingBalance, 2)}\n"
