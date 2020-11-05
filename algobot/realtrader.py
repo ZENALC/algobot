@@ -275,13 +275,13 @@ class RealTrader(SimulationTrader):
         initialNet = self.get_net()
 
         if self.isolated:
-            order = self.binanceClient.create_margin_loan(asset=self.coinName,
-                                                          amount=amount,
-                                                          isIsolated=True,
-                                                          symbol=self.symbol)
+            self.binanceClient.create_margin_loan(asset=self.coinName,
+                                                  amount=amount,
+                                                  isIsolated=True,
+                                                  symbol=self.symbol)
         else:
-            order = self.binanceClient.create_margin_loan(asset=self.coinName,
-                                                          amount=amount)
+            self.binanceClient.create_margin_loan(asset=self.coinName,
+                                                  amount=amount)
 
         self.retrieve_margin_values()
         finalNet = self.get_net()
@@ -290,7 +290,7 @@ class RealTrader(SimulationTrader):
                        finalNet=finalNet,
                        price=self.currentPrice,
                        force=force,
-                       orderID=order['clientOrderId'])
+                       orderID=None)
 
     def repay_margin_loan(self, force: bool):
         """
@@ -300,14 +300,14 @@ class RealTrader(SimulationTrader):
         initialNet = self.get_net()
 
         if self.isolated:
-            order = self.binanceClient.repay_margin_loan(
+            self.binanceClient.repay_margin_loan(
                 asset=self.coinName,
                 amount=self.coin,
                 isIsolated=self.isolated,
                 symbol=self.symbol
             )
         else:
-            order = self.binanceClient.repay_margin_loan(
+            self.binanceClient.repay_margin_loan(
                 asset=self.coinName,
                 amount=self.coin
             )
@@ -319,7 +319,7 @@ class RealTrader(SimulationTrader):
                        finalNet=finalNet,
                        price=self.currentPrice,
                        force=force,
-                       orderID=order['clientOrderId'])
+                       orderID=None)
 
     def buy_long(self, msg: str, usd: float or None = None, force: bool = False):
         """

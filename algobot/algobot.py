@@ -219,6 +219,9 @@ class Interface(QMainWindow):
         :param caller: Caller that determines which UI gets setup.
         """
         trader = self.get_trader(caller)
+        traderPosition = trader.get_position()
+        if traderPosition is not None:
+            self.add_to_monitor(caller, f"Detected {trader.get_position_string().lower()} position before bot run.")
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         self.disable_interface(True, caller, False)
         self.enable_override(caller)
