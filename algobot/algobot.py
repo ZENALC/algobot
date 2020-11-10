@@ -1005,7 +1005,11 @@ class Interface(QMainWindow):
         """
         tickers = [ticker['symbol'] for ticker in Data(loadData=False).binanceClient.get_all_tickers()
                    if 'USDT' in ticker['symbol']]
+
         tickers.sort()
+        tickers.remove("BTCUSDT")
+        tickers.insert(0, 'BTCUSDT')
+
         self.configuration.tickerComboBox.clear()  # Clear all existing live tickers.
         self.configuration.backtestTickerComboBox.clear()  # Clear all existing backtest tickers.
         self.configuration.simulationTickerComboBox.clear()  # Clear all existing simulation tickers.
