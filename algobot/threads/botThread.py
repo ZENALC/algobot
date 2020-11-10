@@ -300,6 +300,7 @@ class BotThread(QRunnable):
             'autonomousValue': str(not trader.inHumanControl),
             'tickerLabel': trader.symbol,
             'tickerValue': currentPriceString,
+            'currentPrice': trader.currentPrice,
             'optionDetails': optionDetails
         }
 

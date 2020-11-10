@@ -287,12 +287,12 @@ class Interface(QMainWindow):
         :param caller: Object that determines which object gets updated.
         """
         interfaceDict = self.interfaceDictionary[caller]
-        self.update_main_interface(interfaceDict, statDict=statDict, caller=caller)
+        self.update_main_interface_and_graphs(interfaceDict, statDict=statDict, caller=caller)
         self.update_trades_table_and_activity_monitor(caller=caller)
         self.handle_position_buttons(caller=caller)
         self.handle_custom_stop_loss_buttons(caller=caller)
 
-    def update_main_interface(self, interfaceDictionary: dict, statDict: dict, caller):
+    def update_main_interface_and_graphs(self, interfaceDictionary: dict, statDict: dict, caller):
         """
         Updates main interface GUI elements based on caller.
         :param interfaceDictionary: Dictionary to use for which statistics to update.
@@ -329,12 +329,14 @@ class Interface(QMainWindow):
         mainInterfaceDictionary['tickerValue'].setText(statDict['tickerValue'])
 
         net = statDict['net']
+        price = statDict['currentPrice']
         optionDetails = statDict['optionDetails']
-        self.update_graphs(net=net, caller=caller, optionDetails=optionDetails)
+        self.update_graphs(net=net, caller=caller, optionDetails=optionDetails, price=price)
 
-    def update_graphs(self, net: float, caller, optionDetails: list):
+    def update_graphs(self, net: float, caller, optionDetails: list, price: float):
         """
         Updates graphs based on caller.
+        :param price: Current ticker price.
         :param net: Net to be added to net graph.
         :param caller: Caller that decides which graphs get updated.
         :param optionDetails: List of option details for the average graph.
@@ -363,6 +365,9 @@ class Interface(QMainWindow):
                 interfaceDict['statistics']['nextInitialMovingAverageValue'].setText(f'${initialAverage}')
                 interfaceDict['statistics']['nextFinalMovingAverageLabel'].setText(finalAverageLabel)
                 interfaceDict['statistics']['nextFinalMovingAverageValue'].setText(f'${finalAverage}')
+
+        self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], -1, currentUTC,
+                              price)
 
     def show_next_moving_averages(self, caller):
         """
@@ -711,6 +716,10 @@ class Interface(QMainWindow):
         :param graph: Graph where plots will be setup.
         :param colors: List of colors plots will be setup in.
         """
+        if trader.currentPrice is None:
+            trader.currentPrice = trader.dataView.get_current_price()
+
+        currentPrice = trader.currentPrice
         currentDateTimestamp = datetime.utcnow().timestamp()
         graph.setLimits(xMin=currentDateTimestamp)
         colorCounter = 1
@@ -730,6 +739,13 @@ class Interface(QMainWindow):
             }
             colorCounter += 2
             self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
+
+        self.append_plot_to_graph(graph, [{
+            'plot': self.create_graph_plot(graph, (currentDateTimestamp,), (currentPrice,),
+                                           color=colors[0], plotName=trader.symbol),
+            'x': [currentDateTimestamp],
+            'y': [currentPrice]
+        }])
 
     def setup_graph_plots(self, graph: PlotWidget, trader: SimulationTrader, graphType: int):
         """
