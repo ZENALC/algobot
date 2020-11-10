@@ -180,10 +180,22 @@ class Interface(QMainWindow):
         :param caller: Caller that decides which bot will be ended.
         """
         self.disable_interface(True, caller=caller, everything=True)  # Disable everything until everything is done.
+        self.threadPool.start(workerThread.Worker(lambda: self.end_bot_gracefully(caller=caller)))
+        if caller == SIMULATION:
+            self.add_to_monitor(caller, "Killed simulation bot.")
+        else:
+            self.add_to_monitor(caller, 'Killed Telegram bot.')
+            self.add_to_monitor(caller, "Killed bot.")
+
+        self.enable_override(caller, False)
+        self.update_trades_table_and_activity_monitor(caller)
+        self.disable_interface(False, caller=caller)  # Finally enable run button.
+        # self.destroy_trader(caller)
+
+    def end_bot_gracefully(self, caller):
         if caller == SIMULATION:
             self.simulationRunningLive = False
             self.simulationTrader.get_simulation_result()
-            self.add_to_monitor(caller, "Killed simulation bot.")
             tempTrader = self.simulationTrader
             if self.simulationLowerIntervalData is not None:
                 self.simulationLowerIntervalData.dump_to_table()
@@ -191,8 +203,6 @@ class Interface(QMainWindow):
         else:
             self.runningLive = False
             self.telegramBot.stop()
-            self.add_to_monitor(caller, 'Killed Telegram bot.')
-            self.add_to_monitor(caller, "Killed bot.")
             tempTrader = self.trader
             if self.lowerIntervalData is not None:
                 self.lowerIntervalData.dump_to_table()
@@ -200,9 +210,6 @@ class Interface(QMainWindow):
 
         tempTrader.log_trades()
         tempTrader.dataView.dump_to_table()
-        self.enable_override(caller, False)
-        self.update_trades_table_and_activity_monitor(caller)
-        self.disable_interface(False, caller=caller)  # Finally enable run button.
         # self.destroy_trader(caller)
 
     def end_crash_bot_and_create_popup(self, caller: int, msg: str):

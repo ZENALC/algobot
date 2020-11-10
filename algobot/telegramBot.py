@@ -1,12 +1,12 @@
+from telegram import Bot
 from telegram.ext import Updater, CommandHandler
-from datetime import datetime
-
 from enums import LONG, SHORT
 
 
 class TelegramBot:
-    def __init__(self, gui, apiKey):
-        self.updater = Updater(apiKey, use_context=True)
+    def __init__(self, gui, token):
+        self.token = token
+        self.updater = Updater(token, use_context=True)
 
         # Get the dispatcher to register handlers
         self.gui = gui
@@ -20,6 +20,11 @@ class TelegramBot:
         dp.add_handler(CommandHandler("forceshort", self.force_short_telegram))
         dp.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
         dp.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
+
+    def send_message(self, message):
+        bot = Bot(token=self.token)
+        chatID = '-488085343'
+        bot.send_message(chat_id=chatID, text=message)
 
     def start(self):
         # Start the Bot
@@ -107,4 +112,3 @@ class TelegramBot:
             update.message.reply_text("Bot is currently in a long position.")
         else:
             update.message.reply_text("Bot is currently not in any position.")
-

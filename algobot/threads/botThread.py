@@ -157,7 +157,7 @@ class BotThread(QRunnable):
             gui = self.gui
             if gui.telegramBot is None:
                 apiKey = gui.configuration.telegramApiKey.text()
-                gui.telegramBot = TelegramBot(gui=gui, apiKey=apiKey)
+                gui.telegramBot = TelegramBot(gui=gui, token=apiKey)
             gui.telegramBot.start()
             self.signals.activity.emit(LIVE, 'Started Telegram bot.')
         except InvalidToken:
@@ -177,7 +177,9 @@ class BotThread(QRunnable):
             return lowerTrend
         else:
             trends = {BEARISH: 'Bearish', BULLISH: 'Bullish', None: 'No'}
-            self.signals.activity.emit(caller, f'{trends[lowerTrend]} trend detected on lower interval data.')
+            message = f'{trends[lowerTrend]} trend detected on lower interval data.'
+            self.signals.activity.emit(caller, message)
+            self.gui.telegramBot.send_message(message)
             return lowerTrend
 
     # to fix
