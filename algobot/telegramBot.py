@@ -44,6 +44,7 @@ class TelegramBot:
     def stop(self):
         self.updater.stop()
 
+    # noinspection PyUnusedLocal
     def get_trades_telegram(self, update, context):
         trader = self.gui.trader
         trades = trader.trades
@@ -65,6 +66,7 @@ class TelegramBot:
 
         update.message.reply_text(message)
 
+    # noinspection PyUnusedLocal
     @staticmethod
     def help_telegram(update, context):
         update.message.reply_text("Here are your help commands available:\n"
@@ -110,15 +112,18 @@ class TelegramBot:
         message = f"Periodic statistics every {period}: \n"
         self.send_message(chatID, message + self.get_statistics())
 
+    # noinspection PyUnusedLocal
     def get_statistics_telegram(self, update, context):
         message = "Here are your statistics as requested: \n"
         update.message.reply_text(message + self.get_statistics())
 
+    # noinspection PyUnusedLocal
     def override_telegram(self, update, context):
         update.message.reply_text("Overriding.")
         self.botThread.signals.waitOverride.emit()
         update.message.reply_text("Successfully overrode.")
 
+    # noinspection PyUnusedLocal
     def pause_telegram(self, update, context):
         if self.gui.trader.inHumanControl:
             update.message.reply_text("Bot is already in human control.")
@@ -126,6 +131,7 @@ class TelegramBot:
             self.botThread.signals.pause.emit()
             update.message.reply_text("Bot has been paused successfully.")
 
+    # noinspection PyUnusedLocal
     def resume_telegram(self, update, context):
         if not self.gui.trader.inHumanControl:
             update.message.reply_text("Bot is already in autonomous mode.")
@@ -133,6 +139,7 @@ class TelegramBot:
             self.botThread.signals.resume.emit()
             update.message.reply_text("Bot logic has been resumed.")
 
+    # noinspection PyUnusedLocal
     def remove_custom_stop_loss(self, update, context):
         if self.gui.trader.customStopLoss is None:
             update.message.reply_text("Bot already has no custom stop loss implemented.")
@@ -161,6 +168,7 @@ class TelegramBot:
             self.botThread.signals.setCustomStopLoss.emit(LIVE, True, stopLoss)
             update.message.reply_text(f"Stop loss has been successfully set to ${stopLoss}.")
 
+    # noinspection PyUnusedLocal
     def force_long_telegram(self, update, context):
         position = self.gui.trader.get_position()
         if position == LONG:
@@ -170,6 +178,7 @@ class TelegramBot:
             self.botThread.signals.forceLong.emit()
             update.message.reply_text("Successfully forced long.")
 
+    # noinspection PyUnusedLocal
     def force_short_telegram(self, update, context):
         position = self.gui.trader.get_position()
         if position == SHORT:
@@ -179,6 +188,7 @@ class TelegramBot:
             self.botThread.signals.forceShort.emit()
             update.message.reply_text("Successfully forced short.")
 
+    # noinspection PyUnusedLocal
     def exit_position_telegram(self, update, context):
         if self.gui.trader.get_position() is None:
             update.message.reply_text("Bot is not in a position.")
@@ -187,6 +197,7 @@ class TelegramBot:
             self.botThread.signals.exitPosition.emit()
             update.message.reply_text("Successfully exited position.")
 
+    # noinspection PyUnusedLocal
     def get_position_telegram(self, update, context):
         position = self.gui.trader.get_position()
         if position == SHORT:
