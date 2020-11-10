@@ -32,6 +32,7 @@ class Interface(QMainWindow):
         Main Algobot interface.
         Algobot currently supports trading with live bots, running simulations, and running backtests.
     """
+
     def __init__(self, parent=None):
         assets.qInitResources()
         super(Interface, self).__init__(parent)  # Initializing object
@@ -536,19 +537,24 @@ class Interface(QMainWindow):
         trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
         trader.tradingOptions = self.get_trading_options(caller)
 
-    def set_custom_stop_loss(self, caller, enable: bool = True):
+    def set_custom_stop_loss(self, caller, enable: bool = True, foreignValue: float or None = None):
         """
         Enables or disables custom stop loss.
+        :param foreignValue: Foreign value to set for custom stop loss not related to GUI.
         :param enable: Boolean that determines whether custom stop loss is enabled or disabled. Default is enable.
         :param caller: Caller that decides which trader object gets the stop loss.
         """
         trader = self.get_trader(caller)
         mainDict = self.interfaceDictionary[caller]['mainInterface']
         if enable:
-            trader.customStopLoss = mainDict['customStopLossValue'].value()
+            if foreignValue is None:
+                customStopLoss = mainDict['customStopLossValue'].value()
+            else:
+                customStopLoss = foreignValue
+            trader.customStopLoss = customStopLoss
             mainDict['enableCustomStopLossButton'].setEnabled(False)
             mainDict['disableCustomStopLossButton'].setEnabled(True)
-            self.add_to_monitor(caller, f'Set custom stop loss at ${trader.customStopLoss}')
+            self.add_to_monitor(caller, f'Set custom stop loss at ${customStopLoss}')
         else:
             trader.customStopLoss = None
             mainDict['enableCustomStopLossButton'].setEnabled(True)

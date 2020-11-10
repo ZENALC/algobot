@@ -136,7 +136,7 @@ class TelegramBot:
         if self.gui.trader.customStopLoss is None:
             update.message.reply_text("Bot already has no custom stop loss implemented.")
         else:
-            self.gui.trader.customStopLoss = None
+            self.gui.set_custom_stop_loss(LIVE, False)
             update.message.reply_text("Bot's custom stop loss has been removed.")
 
     def set_custom_stop_loss(self, update, context):
@@ -151,7 +151,7 @@ class TelegramBot:
         if stopLoss < 0:
             update.message.reply_text("Please make sure you specify a non-negative number for the custom stop loss.")
         else:
-            self.gui.trader.customStopLoss = stopLoss
+            self.gui.set_custom_stop_loss(LIVE, True, stopLoss)
             update.message.reply_text(f"Stop loss has been successfully set to ${stopLoss}.")
 
     def force_long_telegram(self, update, context):
