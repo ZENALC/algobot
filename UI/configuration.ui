@@ -314,6 +314,9 @@
                 <property name="text">
                  <string>Lower Interval Notification?</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item row="9" column="1">
@@ -2507,7 +2510,7 @@
                 </property>
                 <layout class="QGridLayout" name="gridLayout_12">
                  <item row="1" column="0">
-                  <widget class="QLabel" name="label_3">
+                  <widget class="QLabel" name="schedulingIntervalLabel">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -2519,43 +2522,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="0" colspan="2">
-                  <widget class="QCheckBox" name="checkBox">
-                   <property name="text">
-                    <string>Schedule Periodic Statistics Notifications?</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QComboBox" name="comboBox">
-                   <item>
-                    <property name="text">
-                     <string>5 Minutes</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>10 Minutes</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>1 Minute</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>30 Minutes</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>1 Hour</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
+                 <item row="4" column="0">
                   <spacer name="verticalSpacer">
                    <property name="orientation">
                     <enum>Qt::Vertical</enum>
@@ -2568,17 +2535,54 @@
                    </property>
                   </spacer>
                  </item>
+                 <item row="0" column="0" colspan="3">
+                  <widget class="QCheckBox" name="schedulingStatisticsCheckBox">
+                   <property name="text">
+                    <string>Schedule Periodic Statistics Notifications? Telegram chat is required for this function.</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QSpinBox" name="schedulingTimeUnit">
+                   <property name="frame">
+                    <bool>true</bool>
+                   </property>
+                   <property name="buttonSymbols">
+                    <enum>QAbstractSpinBox::NoButtons</enum>
+                   </property>
+                   <property name="minimum">
+                    <number>1</number>
+                   </property>
+                   <property name="value">
+                    <number>30</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1" colspan="2">
+                  <widget class="QComboBox" name="schedulingIntervalComboBox">
+                   <item>
+                    <property name="text">
+                     <string>Minutes</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Seconds</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Hours</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Days</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
                 </layout>
-               </widget>
-              </item>
-              <item row="4" column="0" colspan="3">
-               <widget class="QCheckBox" name="checkBox_4">
-                <property name="text">
-                 <string>Always enable when running bot?</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
                </widget>
               </item>
               <item row="0" column="0">
@@ -2620,14 +2624,14 @@
                  <string/>
                 </property>
                 <property name="alignment">
-                 <set>Qt::AlignCenter</set>
+                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                 </property>
                </widget>
               </item>
               <item row="3" column="0" colspan="3">
                <widget class="QCheckBox" name="enableTelegramTrading">
                 <property name="text">
-                 <string>Enable Telegram Trading?</string>
+                 <string>Enable Telegram trading? Telegram bot token is required for this function.</string>
                 </property>
                 <property name="checked">
                  <bool>true</bool>
@@ -2645,6 +2649,16 @@
                <widget class="QLineEdit" name="telegramChatID">
                 <property name="echoMode">
                  <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0" colspan="4">
+               <widget class="QCheckBox" name="enableTelegramNotification">
+                <property name="text">
+                 <string>Enable Telegram lower-interval notification? Telegram chat ID and lower-interval notifications must be setup for this function.</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>

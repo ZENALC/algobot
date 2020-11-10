@@ -2,9 +2,9 @@ import traceback
 import helpers
 
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
-from telegram.error import InvalidToken
 
 from data import Data
+from datetime import datetime, timedelta
 from enums import LIVE, SIMULATION, BEARISH, BULLISH
 from realtrader import RealTrader
 from simulationtrader import SimulationTrader
@@ -24,6 +24,8 @@ class BotThread(QRunnable):
         super(BotThread, self).__init__()
         self.signals = BotSignals()
         self.gui = gui
+        self.nextScheduledEvent = None
+        self.scheduleSeconds = None
         self.telegramChatID = gui.configuration.telegramChatID.text()
         self.caller = caller
         self.trader = None
@@ -93,6 +95,30 @@ class BotThread(QRunnable):
         elif len(apiKey) == 0:
             raise ValueError("Please specify an API key. No API key found.")
 
+    def initialize_scheduler(self):
+        gui = self.gui
+        measurement = gui.configuration.schedulingTimeUnit.value()
+        unit = gui.configuration.schedulingIntervalComboBox.currentText()
+
+        if unit == "Seconds":
+            seconds = measurement
+        elif unit == "Minutes":
+            seconds = measurement * 60
+        elif unit == "Hours":
+            seconds = measurement * 3600
+        elif unit == "Days":
+            seconds = measurement * 3600 * 24
+        else:
+            raise ValueError("Invalid type of unit.")
+
+        self.scheduleSeconds = seconds
+        self.nextScheduledEvent = datetime.now() + timedelta(seconds=seconds)
+
+    def handle_scheduler(self):
+        if self.nextScheduledEvent is not None and datetime.now() >= self.nextScheduledEvent:
+            self.gui.telegramBot.send_statistics_telegram(self.telegramChatID, self.scheduleSeconds)
+            self.nextScheduledEvent = datetime.now() + timedelta(seconds=self.scheduleSeconds)
+
     def setup_bot(self, caller):
         """
         Initial full bot setup based on caller.
@@ -105,6 +131,8 @@ class BotThread(QRunnable):
         if caller == LIVE:
             if self.gui.configuration.enableTelegramTrading.isChecked():
                 self.handle_telegram_bot()
+            if self.gui.configuration.schedulingStatisticsCheckBox.isChecked():
+                self.initialize_scheduler()
             self.gui.runningLive = True
         elif caller == SIMULATION:
             self.gui.simulationRunningLive = True
@@ -154,15 +182,20 @@ class BotThread(QRunnable):
         """
         Attempts to initiate Telegram bot.
         """
-        try:
-            gui = self.gui
-            if gui.telegramBot is None:
-                apiKey = gui.configuration.telegramApiKey.text()
-                gui.telegramBot = TelegramBot(gui=gui, token=apiKey)
-            gui.telegramBot.start()
-            self.signals.activity.emit(LIVE, 'Started Telegram bot.')
-        except InvalidToken:
-            self.signals.activity.emit(LIVE, 'Invalid token for Telegram. Please recheck credentials in settings.')
+        gui = self.gui
+        if gui.telegramBot is None:
+            apiKey = gui.configuration.telegramApiKey.text()
+            gui.telegramBot = TelegramBot(gui=gui, token=apiKey)
+        gui.telegramBot.start()
+        # try:
+        #     gui = self.gui
+        #     if gui.telegramBot is None:
+        #         apiKey = gui.configuration.telegramApiKey.text()
+        #         gui.telegramBot = TelegramBot(gui=gui, token=apiKey)
+        #     gui.telegramBot.start()
+        #     self.signals.activity.emit(LIVE, 'Started Telegram bot.')
+        # except InvalidToken:
+        #     self.signals.activity.emit(LIVE, 'Invalid token for Telegram. Please recheck credentials in settings.')
 
     def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool:
         """
@@ -180,7 +213,8 @@ class BotThread(QRunnable):
             trends = {BEARISH: 'Bearish', BULLISH: 'Bullish', None: 'No'}
             message = f'{trends[lowerTrend]} trend detected on lower interval data.'
             self.signals.activity.emit(caller, message)
-            self.gui.telegramBot.send_message(message=message, chatID=self.telegramChatID)
+            if self.gui.configuration.enableTelegramNotification.isChecked():
+                self.gui.telegramBot.send_message(message=message, chatID=self.telegramChatID)
             return lowerTrend
 
     # to fix
@@ -258,13 +292,15 @@ class BotThread(QRunnable):
         """
         lowerTrend = None
         runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
-        self.gui.telegramBot.send_message(self.telegramChatID, "Initiated bot.")
+        if self.nextScheduledEvent is not None:
+            self.gui.telegramBot.send_message(self.telegramChatID, "Initiated periodic statistics notification.")
 
         while runningLoop:
             self.update_data(caller)
             self.handle_logging(caller=caller)
             self.handle_trailing_prices(caller=caller)
             self.handle_trading(caller=caller)
+            self.handle_scheduler()
             # crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)
             lowerTrend = self.handle_lower_interval_cross(caller, lowerTrend)
             statDict = self.get_statistics()

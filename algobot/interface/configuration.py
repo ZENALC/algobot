@@ -47,7 +47,7 @@ class Configuration(QDialog):
             if chatPass:
                 message += "Chat ID checked and connected to successfully. "
             else:
-                message += f'However, error: "{error}" occurred for chat id.'
+                message += f'However, error: "{error}" occurred for chat ID validation.'
         else:
             message = f'Error: {error}'
 

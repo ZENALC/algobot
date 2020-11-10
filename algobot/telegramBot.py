@@ -1,5 +1,6 @@
 from telegram import Bot
 from telegram.ext import Updater, CommandHandler
+
 from enums import LONG, SHORT
 
 
@@ -17,7 +18,7 @@ class TelegramBot:
         dp.add_handler(CommandHandler("help", self.help_telegram))
         dp.add_handler(CommandHandler("override", self.override_telegram))
         dp.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
-        dp.add_handler(CommandHandler(('trades',), self.get_trades))
+        dp.add_handler(CommandHandler(('trades',), self.get_trades_telegram))
         dp.add_handler(CommandHandler("forcelong", self.force_long_telegram))
         dp.add_handler(CommandHandler("forceshort", self.force_short_telegram))
         dp.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
@@ -38,7 +39,7 @@ class TelegramBot:
     def stop(self):
         self.updater.stop()
 
-    def get_trades(self, update, context):
+    def get_trades_telegram(self, update, context):
         trader = self.gui.trader
         trades = trader.trades
 
@@ -71,7 +72,7 @@ class TelegramBot:
                                   "/exitposition -> To exit position.\n"
                                   "/trades -> To get list of trades made.\n")
 
-    def get_statistics_telegram(self, update, context):
+    def get_statistics(self):
         trader = self.gui.trader
         startingBalance = trader.startingBalance
         profit = trader.get_profit()
@@ -79,21 +80,28 @@ class TelegramBot:
         coinName = trader.coinName
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
 
-        update.message.reply_text(f"Here are your statistics:\n"
-                                  f'Symbol: {trader.symbol}\n'
-                                  f'Position: {trader.get_position_string()}\n'
-                                  f'Total trades made: {len(trader.trades)}\n'
-                                  f"Coin owned: {trader.coin}\n"
-                                  f"Coin owed: {trader.coinOwed}\n"
-                                  f"Starting balance: ${round(startingBalance, 2)}\n"
-                                  f"Balance: ${round(trader.balance, 2)}\n"
-                                  f"{profitLabel}: ${round(abs(profit), 2)}\n"
-                                  f'{profitLabel} Percentage: {round(abs(profitPercentage), 2)}%\n'
-                                  f'Autonomous Mode: {trader.inHumanControl}\n'
-                                  f'Stop Loss: ${round(trader.get_stop_loss(), 2)}\n'
-                                  f"Custom Stop Loss: ${trader.customStopLoss}\n"
-                                  f"Current {coinName} price: ${trader.dataView.get_current_price()}"
-                                  )
+        return (f'Symbol: {trader.symbol}\n'
+                f'Position: {trader.get_position_string()}\n'
+                f'Total trades made: {len(trader.trades)}\n'
+                f"Coin owned: {trader.coin}\n"
+                f"Coin owed: {trader.coinOwed}\n"
+                f"Starting balance: ${round(startingBalance, 2)}\n"
+                f"Balance: ${round(trader.balance, 2)}\n"
+                f"{profitLabel}: ${round(abs(profit), 2)}\n"
+                f'{profitLabel} Percentage: {round(abs(profitPercentage), 2)}%\n'
+                f'Autonomous Mode: {trader.inHumanControl}\n'
+                f'Stop Loss: ${round(trader.get_stop_loss(), 2)}\n'
+                f"Custom Stop Loss: ${trader.customStopLoss}\n"
+                f"Current {coinName} price: ${trader.dataView.get_current_price()}"
+                )
+
+    def send_statistics_telegram(self, chatID, seconds):
+        message = f"Periodic statistics every {seconds} seconds: \n"
+        self.send_message(chatID, message + self.get_statistics())
+
+    def get_statistics_telegram(self, update, context):
+        message = "Here are your statistics as requested: \n"
+        update.message.reply_text(message + self.get_statistics())
 
     def override_telegram(self, update, context):
         update.message.reply_text("Overriding.")

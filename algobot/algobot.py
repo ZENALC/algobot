@@ -221,6 +221,16 @@ class Interface(QMainWindow):
         elif caller == SIMULATION:
             self.simulationRunningLive = False
 
+        if '-1021' in msg:
+            msg = msg + ' Please sync your system time.'
+        if 'list index out of range' in msg:
+            pair = self.configuration.tickerComboBox.currentText()
+            msg = f'You may not have any assets in the symbol {pair}. Please check Binance and try again.'
+        if 'Chat not found' in msg:
+            msg = "Please check your Telegram bot chat ID or turn off Telegram notifications to get rid of this error."
+        if "Invalid token" in msg:
+            msg = "Please check your Telegram bot token or turn off Telegram integration to get rid of this error."
+
         self.disable_interface(disable=False, caller=caller)
         self.add_to_monitor(caller=caller, message=msg)
         self.create_popup(msg)
@@ -1006,11 +1016,6 @@ class Interface(QMainWindow):
         Creates a popup with message provided.
         :param msg: Message provided.
         """
-        if '-1021' in msg:
-            msg = msg + ' Please sync your system time.'
-        if 'list index out of range' in msg:
-            pair = self.configuration.tickerComboBox.currentText()
-            msg = f'You may not have any assets in the symbol {pair}. Please check Binance and try again.'
         QMessageBox.about(self, 'Warning', msg)
 
     def set_dark_mode(self):
