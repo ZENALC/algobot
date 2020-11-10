@@ -165,7 +165,7 @@ class BotThread(QRunnable):
         trader = self.gui.get_trader(caller)
         trader.main_logic()
 
-    def handle_trailing_prices(self, caller):
+    def handle_current_and_trailing_prices(self, caller):
         """
         Handles trailing prices for caller object.
         :param caller: Trailing prices for what caller to be handled for.
@@ -259,7 +259,7 @@ class BotThread(QRunnable):
         stopLoss = trader.get_stop_loss()
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
         percentage = trader.get_profit_percentage(trader.startingBalance, net)
-        currentPriceString = f'${trader.dataView.get_current_price()}'
+        currentPriceString = f'${trader.currentPrice}'
         percentageString = f'{round(percentage, 2)}%'
         profitString = f'${abs(round(profit, 2))}'
         netString = f'${round(net, 2)}'
@@ -305,7 +305,7 @@ class BotThread(QRunnable):
         while runningLoop:
             self.update_data(caller)
             self.handle_logging(caller=caller)
-            self.handle_trailing_prices(caller=caller)
+            self.handle_current_and_trailing_prices(caller=caller)
             self.handle_trading(caller=caller)
             self.handle_scheduler()
             # crossNotification = self.handle_cross_notification(caller=caller, notification=crossNotification)

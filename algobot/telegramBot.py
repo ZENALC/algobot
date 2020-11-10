@@ -94,7 +94,7 @@ class TelegramBot:
                 f'Autonomous Mode: {trader.inHumanControl}\n'
                 f'Stop Loss: ${round(trader.get_stop_loss(), 2)}\n'
                 f"Custom Stop Loss: ${trader.customStopLoss}\n"
-                f"Current {coinName} price: ${trader.dataView.get_current_price()}"
+                f"Current {coinName} price: ${trader.currentPrice}"
                 )
 
     def send_statistics_telegram(self, chatID, period):

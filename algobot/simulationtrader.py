@@ -315,7 +315,8 @@ class SimulationTrader:
         Returns profit or loss.
         :return: A number representing profit if positive and loss if negative.
         """
-        self.currentPrice = self.dataView.get_current_price()
+        if self.currentPrice is None:
+            self.currentPrice = self.dataView.get_current_price()
 
         balance = self.balance
         balance += self.currentPrice * self.coin
@@ -547,7 +548,7 @@ class SimulationTrader:
         elif self.currentPosition is None:
             self.output_no_position_information()
 
-        self.output_message(f'\nCurrent {self.coinName} price: ${self.dataView.get_current_price()}')
+        self.output_message(f'\nCurrent {self.coinName} price: ${self.currentPrice}')
         self.output_message(f'Balance: ${round(self.balance, 2)}')
         self.output_profit_information()
         if self.__class__.__name__ == 'SimulatedTrader':
