@@ -21,6 +21,7 @@ class TelegramBot:
         dp.add_handler(CommandHandler('resume', self.resume_telegram))
         dp.add_handler(CommandHandler('pause', self.pause_telegram))
         dp.add_handler(CommandHandler('removecustomstoploss', self.remove_custom_stop_loss))
+        dp.add_handler(CommandHandler('setcustomstoploss', self.set_custom_stop_loss))
         dp.add_handler(CommandHandler("forcelong", self.force_long_telegram))
         dp.add_handler(CommandHandler("forceshort", self.force_short_telegram))
         dp.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
@@ -75,6 +76,7 @@ class TelegramBot:
                                   "/resume -> To resume bot logic.\n"
                                   "/pause -> To pause bot logic.\n"
                                   "/removecustomstoploss -> To remove currently set custom stop loss.\n"
+                                  "/setcustomstoploss (your stop loss value here) -> To set custom stop loss.\n"
                                   "/exitposition -> To exit position.\n"
                                   "/trades -> To get list of trades made.\n")
 
@@ -136,6 +138,21 @@ class TelegramBot:
         else:
             self.gui.trader.customStopLoss = None
             update.message.reply_text("Bot's custom stop loss has been removed.")
+
+    def set_custom_stop_loss(self, update, context):
+        stopLoss = context.args[0]
+
+        try:
+            stopLoss = float(stopLoss)
+        except ValueError:
+            update.message.reply_text("Please make sure you specify a number for the custom stop loss.")
+            return
+
+        if stopLoss < 0:
+            update.message.reply_text("Please make sure you specify a non-negative number for the custom stop loss.")
+        else:
+            self.gui.trader.customStopLoss = stopLoss
+            update.message.reply_text(f"Stop loss has been successfully set to ${stopLoss}.")
 
     def force_long_telegram(self, update, context):
         position = self.gui.trader.get_position()
