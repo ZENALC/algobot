@@ -97,8 +97,8 @@ class TelegramBot:
                 f"Current {coinName} price: ${trader.dataView.get_current_price()}"
                 )
 
-    def send_statistics_telegram(self, chatID, seconds):
-        message = f"Periodic statistics every {seconds} seconds: \n"
+    def send_statistics_telegram(self, chatID, period):
+        message = f"Periodic statistics every {period}: \n"
         self.send_message(chatID, message + self.get_statistics())
 
     def get_statistics_telegram(self, update, context):
