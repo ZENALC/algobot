@@ -91,7 +91,7 @@ class TelegramBot:
                 f'Net: ${round(net, 2)}\n'
                 f"{profitLabel}: ${round(abs(profit), 2)}\n"
                 f'{profitLabel} Percentage: {round(abs(profitPercentage), 2)}%\n'
-                f'Autonomous Mode: {trader.inHumanControl}\n'
+                f'Autonomous Mode: {not trader.inHumanControl}\n'
                 f'Stop Loss: ${round(trader.get_stop_loss(), 2)}\n'
                 f"Custom Stop Loss: ${trader.customStopLoss}\n"
                 f"Current {coinName} price: ${trader.currentPrice}"
