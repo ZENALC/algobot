@@ -147,6 +147,9 @@ class TelegramBot:
         except ValueError:
             update.message.reply_text("Please make sure you specify a number for the custom stop loss.")
             return
+        except Exception as e:
+            update.message.reply_text(f'An error occurred: {e}.')
+            return
 
         if stopLoss < 0:
             update.message.reply_text("Please make sure you specify a non-negative number for the custom stop loss.")
