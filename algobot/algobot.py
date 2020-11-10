@@ -173,6 +173,15 @@ class Interface(QMainWindow):
         worker.signals.activity.connect(self.add_to_monitor)
         worker.signals.started.connect(self.initial_bot_ui_setup)
         worker.signals.updated.connect(self.update_interface_info)
+        # All these below are for Telegram.
+        worker.signals.forceLong.connect(lambda: self.force_long(LIVE))
+        worker.signals.forceShort.connect(lambda: self.force_short(LIVE))
+        worker.signals.exitPosition.connect(lambda: self.exit_position(LIVE))
+        worker.signals.waitOverride.connect(lambda: self.exit_position(LIVE, False))
+        worker.signals.pause.connect(lambda: self.pause_or_resume_bot(LIVE))
+        worker.signals.resume.connect(lambda: self.pause_or_resume_bot(LIVE))
+        worker.signals.setCustomStopLoss.connect(self.set_custom_stop_loss)
+        worker.signals.removeCustomStopLoss.connect(lambda: self.set_custom_stop_loss(LIVE, False))
         self.threadPool.start(worker)
 
     def end_bot_thread(self, caller):
@@ -551,6 +560,7 @@ class Interface(QMainWindow):
                 customStopLoss = mainDict['customStopLossValue'].value()
             else:
                 customStopLoss = foreignValue
+                mainDict['customStopLossValue'].setValue(round(foreignValue, 2))
             trader.customStopLoss = customStopLoss
             mainDict['enableCustomStopLossButton'].setEnabled(False)
             mainDict['disableCustomStopLossButton'].setEnabled(True)

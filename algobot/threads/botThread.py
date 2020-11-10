@@ -18,6 +18,16 @@ class BotSignals(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(int, str)
 
+    # All of these below are for Telegram integration.
+    forceLong = pyqtSignal()
+    forceShort = pyqtSignal()
+    exitPosition = pyqtSignal()
+    waitOverride = pyqtSignal()
+    resume = pyqtSignal()
+    pause = pyqtSignal()
+    removeCustomStopLoss = pyqtSignal()
+    setCustomStopLoss = pyqtSignal(int, bool, float)
+
 
 class BotThread(QRunnable):
     def __init__(self, caller: int, gui):
@@ -137,7 +147,7 @@ class BotThread(QRunnable):
 
         if caller == LIVE:
             if self.gui.configuration.enableTelegramTrading.isChecked():
-                self.handle_telegram_bot()
+                self.initialize_telegram_bot()
             if self.gui.configuration.schedulingStatisticsCheckBox.isChecked():
                 self.initialize_scheduler()
             self.gui.runningLive = True
@@ -185,15 +195,16 @@ class BotThread(QRunnable):
         if self.gui.advancedLogging:
             self.gui.get_trader(caller).output_basic_information()
 
-    def handle_telegram_bot(self):
+    def initialize_telegram_bot(self):
         """
         Attempts to initiate Telegram bot.
         """
         gui = self.gui
         if gui.telegramBot is None:
             apiKey = gui.configuration.telegramApiKey.text()
-            gui.telegramBot = TelegramBot(gui=gui, token=apiKey)
+            gui.telegramBot = TelegramBot(gui=gui, token=apiKey, botThread=self)
         gui.telegramBot.start()
+        self.signals.activity.emit(LIVE, 'Started Telegram bot.')
         # try:
         #     gui = self.gui
         #     if gui.telegramBot is None:

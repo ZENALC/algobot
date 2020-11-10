@@ -5,13 +5,14 @@ from enums import LONG, SHORT, LIVE
 
 
 class TelegramBot:
-    def __init__(self, gui, token):
+    def __init__(self, gui, token, botThread):
         self.token = token
         self.updater = Updater(token, use_context=True)
         self.bot = Bot(token=self.token)
 
         # Get the dispatcher to register handlers
         self.gui = gui
+        self.botThread = botThread
         dp = self.updater.dispatcher
 
         # on different commands - answer in Telegram
@@ -115,28 +116,28 @@ class TelegramBot:
 
     def override_telegram(self, update, context):
         update.message.reply_text("Overriding.")
-        self.gui.exit_position(False)
+        self.botThread.signals.waitOverride.emit()
         update.message.reply_text("Successfully overrode.")
 
     def pause_telegram(self, update, context):
         if self.gui.trader.inHumanControl:
             update.message.reply_text("Bot is already in human control.")
         else:
-            self.gui.pause_or_resume_bot(LIVE)
+            self.botThread.signals.pause.emit()
             update.message.reply_text("Bot has been paused successfully.")
 
     def resume_telegram(self, update, context):
         if not self.gui.trader.inHumanControl:
             update.message.reply_text("Bot is already in autonomous mode.")
         else:
-            self.gui.pause_or_resume_bot(LIVE)
+            self.botThread.signals.resume.emit()
             update.message.reply_text("Bot logic has been resumed.")
 
     def remove_custom_stop_loss(self, update, context):
         if self.gui.trader.customStopLoss is None:
             update.message.reply_text("Bot already has no custom stop loss implemented.")
         else:
-            self.gui.set_custom_stop_loss(LIVE, False)
+            self.botThread.signals.removeCustomStopLoss.emit()
             update.message.reply_text("Bot's custom stop loss has been removed.")
 
     def set_custom_stop_loss(self, update, context):
@@ -153,8 +154,11 @@ class TelegramBot:
 
         if stopLoss < 0:
             update.message.reply_text("Please make sure you specify a non-negative number for the custom stop loss.")
+        elif stopLoss > 10000000:
+            update.message.reply_text("Please make sure you specify a number that is less than 10000000.")
         else:
-            self.gui.set_custom_stop_loss(LIVE, True, stopLoss)
+            stopLoss = round(stopLoss, 2)
+            self.botThread.signals.setCustomStopLoss.emit(LIVE, True, stopLoss)
             update.message.reply_text(f"Stop loss has been successfully set to ${stopLoss}.")
 
     def force_long_telegram(self, update, context):
@@ -163,7 +167,7 @@ class TelegramBot:
             update.message.reply_text("Bot is already in a long position.")
         else:
             update.message.reply_text("Forcing long.")
-            self.gui.force_long()
+            self.botThread.signals.forceLong.emit()
             update.message.reply_text("Successfully forced long.")
 
     def force_short_telegram(self, update, context):
@@ -172,7 +176,7 @@ class TelegramBot:
             update.message.reply_text("Bot is already in a short position.")
         else:
             update.message.reply_text("Forcing short.")
-            self.gui.force_short()
+            self.botThread.signals.forceShort.emit()
             update.message.reply_text("Successfully forced short.")
 
     def exit_position_telegram(self, update, context):
@@ -180,7 +184,7 @@ class TelegramBot:
             update.message.reply_text("Bot is not in a position.")
         else:
             update.message.reply_text("Exiting position.")
-            self.gui.exit_position(True)
+            self.botThread.signals.exitPosition.emit()
             update.message.reply_text("Successfully exited position.")
 
     def get_position_telegram(self, update, context):
