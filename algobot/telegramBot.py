@@ -74,9 +74,10 @@ class TelegramBot:
 
     def get_statistics(self):
         trader = self.gui.trader
+        net = trader.get_net()
         startingBalance = trader.startingBalance
         profit = trader.get_profit()
-        profitPercentage = trader.get_profit_percentage(trader.startingBalance, trader.get_net())
+        profitPercentage = trader.get_profit_percentage(trader.startingBalance, net)
         coinName = trader.coinName
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
 
@@ -87,6 +88,7 @@ class TelegramBot:
                 f"Coin owed: {trader.coinOwed}\n"
                 f"Starting balance: ${round(startingBalance, 2)}\n"
                 f"Balance: ${round(trader.balance, 2)}\n"
+                f'Net: ${round(net, 2)}\n'
                 f"{profitLabel}: ${round(abs(profit), 2)}\n"
                 f'{profitLabel} Percentage: {round(abs(profitPercentage), 2)}%\n'
                 f'Autonomous Mode: {trader.inHumanControl}\n'
