@@ -26,6 +26,7 @@ class BotThread(QRunnable):
         self.gui = gui
         self.nextScheduledEvent = None
         self.scheduleSeconds = None
+        self.lowerIntervalNotification = False
         self.telegramChatID = gui.configuration.telegramChatID.text()
         self.caller = caller
         self.trader = None
@@ -81,6 +82,7 @@ class BotThread(QRunnable):
         self.signals.activity.emit(caller, "Retrieved data successfully.")
 
         if configDict['lowerIntervalCheck'].isChecked():
+            self.lowerIntervalNotification = True
             self.initialize_lower_interval_trading(caller=caller, interval=interval)
 
     @staticmethod
@@ -197,12 +199,14 @@ class BotThread(QRunnable):
         # except InvalidToken:
         #     self.signals.activity.emit(LIVE, 'Invalid token for Telegram. Please recheck credentials in settings.')
 
-    def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool:
+    def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool or None:
         """
         Handles logic and notifications for lower interval cross data.
         :param previousLowerTrend: Previous lower trend. Used to check if notification is necessary.
         :param caller: Caller for which we will check lower interval cross data.
         """
+        if not self.lowerIntervalNotification:
+            return None
         trader = self.gui.get_trader(caller)
         lowerData = self.gui.get_lower_interval_data(caller)
         lowerTrend = trader.get_trend(dataObject=lowerData)
