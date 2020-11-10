@@ -297,7 +297,8 @@ class BotThread(QRunnable):
         lowerTrend = None
         runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
         if self.nextScheduledEvent is not None:
-            self.gui.telegramBot.send_message(self.telegramChatID, "Initiated periodic statistics notification.")
+            message = f'Initiated periodic statistics notification every {self.scheduleSeconds} seconds.'
+            self.gui.telegramBot.send_message(self.telegramChatID, message=message)
 
         while runningLoop:
             self.update_data(caller)
