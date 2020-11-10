@@ -1,6 +1,8 @@
 from telegram.ext import Updater, CommandHandler
 from datetime import datetime
 
+from enums import LONG, SHORT
+
 
 class TelegramBot:
     def __init__(self, gui, apiKey):
@@ -18,9 +20,6 @@ class TelegramBot:
         dp.add_handler(CommandHandler("forceshort", self.force_short_telegram))
         dp.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
         dp.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
-        dp.add_handler(CommandHandler(('fuckpeter', 'ispetergay', 'fuckyoupeter'), self.peter))
-        dp.add_handler(CommandHandler(('ismihirgay', 'fuckmihir', 'fuckyoumihir'), self.mihir))
-        dp.add_handler(CommandHandler(('praisemihir', 'mihirisalegend', 'phonkboi'), self.mihir1))
 
     def start(self):
         # Start the Bot
@@ -46,28 +45,27 @@ class TelegramBot:
                                   "/exitposition -> To exit position.")
 
     def get_statistics_telegram(self, update, context):
-        startingBalance = self.gui.trader.startingBalance
-        profit = self.gui.trader.get_profit()
-        position = self.gui.trader.get_position_string()
-        coinName = self.gui.trader.coinName
-        if profit >= 0:
-            label = 'Profit'
-        else:
-            label = 'Loss'
-        runtime = datetime.utcnow() - self.gui.trader.movingAverageTestStartTime
+        trader = self.gui.trader
+        startingBalance = trader.startingBalance
+        profit = trader.get_profit()
+        profitPercentage = trader.startingBalance + profit
+        coinName = trader.coinName
+        profitLabel = trader.get_profit_or_loss_string(profit=profit)
+
         update.message.reply_text(f"Here are your statistics:\n"
-                                  f'Symbol: {self.gui.trader.symbol}\n'
-                                  f'Position: {position}\n'
-                                  f"Coin owned: {self.gui.trader.coin}\n"
-                                  f"Coin owed: {self.gui.trader.coinOwed}\n"
+                                  f'Symbol: {trader.symbol}\n'
+                                  f'Position: {trader.get_position_string()}\n'
+                                  f'Total trades made: {len(trader.trades)}\n'
+                                  f"Coin owned: {trader.coin}\n"
+                                  f"Coin owed: {trader.coinOwed}\n"
                                   f"Starting balance: ${round(startingBalance, 2)}\n"
-                                  f"Balance: ${round(self.gui.trader.balance, 2)}\n"
-                                  f"{label}: ${round(abs(profit), 2)}\n"
-                                  f'{label} Percentage: {round(abs(profit / startingBalance), 2)}%\n'
-                                  f'Autonomous Mode: {self.gui.trader.inHumanControl}\n'
-                                  f'Stop Loss: ${round(self.gui.trader.get_stop_loss(), 2)}\n'
-                                  f'Run time: {runtime}\n'
-                                  f"Current {coinName} price: ${self.gui.trader.dataView.get_current_price()}"
+                                  f"Balance: ${round(trader.balance, 2)}\n"
+                                  f"{profitLabel}: ${round(abs(profit), 2)}\n"
+                                  f'{profitLabel} Percentage: {round(abs(profitPercentage), 2)}%\n'
+                                  f'Autonomous Mode: {trader.inHumanControl}\n'
+                                  f'Stop Loss: ${round(trader.get_stop_loss(), 2)}\n'
+                                  f"Custom Stop Loss: ${trader.customStopLoss}\n"
+                                  f"Current {coinName} price: ${trader.dataView.get_current_price()}"
                                   )
 
     def override_telegram(self, update, context):
@@ -77,7 +75,7 @@ class TelegramBot:
 
     def force_long_telegram(self, update, context):
         position = self.gui.trader.get_position()
-        if position == 1:
+        if position == LONG:
             update.message.reply_text("Bot is already in a long position.")
         else:
             update.message.reply_text("Forcing long.")
@@ -86,7 +84,7 @@ class TelegramBot:
 
     def force_short_telegram(self, update, context):
         position = self.gui.trader.get_position()
-        if position == -1:
+        if position == SHORT:
             update.message.reply_text("Bot is already in a short position.")
         else:
             update.message.reply_text("Forcing short.")
@@ -94,7 +92,7 @@ class TelegramBot:
             update.message.reply_text("Successfully forced short.")
 
     def exit_position_telegram(self, update, context):
-        if self.gui.trader.get_position() == 0:
+        if self.gui.trader.get_position() is None:
             update.message.reply_text("Bot is not in a position.")
         else:
             update.message.reply_text("Exiting position.")
@@ -103,22 +101,10 @@ class TelegramBot:
 
     def get_position_telegram(self, update, context):
         position = self.gui.trader.get_position()
-        if position == -1:
+        if position == SHORT:
             update.message.reply_text("Bot is currently in a short position.")
-        elif position == 1:
+        elif position == LONG:
             update.message.reply_text("Bot is currently in a long position.")
         else:
             update.message.reply_text("Bot is currently not in any position.")
-
-    @staticmethod
-    def peter(update, context):
-        update.message.reply_text("Yes, you are right because Peter is an australian wanker kangaroo cunt.")
-
-    @staticmethod
-    def mihir(update, context):
-        update.message.reply_text('No, do not say those things. Mihir is a legend.')
-
-    @staticmethod
-    def mihir1(update, context):
-        update.message.reply_text("Praise be mihir. PHONKBOIZ UNITED")
 
