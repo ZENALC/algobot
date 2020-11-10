@@ -24,6 +24,7 @@ class BotThread(QRunnable):
         super(BotThread, self).__init__()
         self.signals = BotSignals()
         self.gui = gui
+        self.schedulePeriod = None
         self.nextScheduledEvent = None
         self.scheduleSeconds = None
         self.lowerIntervalNotification = False
@@ -101,6 +102,7 @@ class BotThread(QRunnable):
         gui = self.gui
         measurement = gui.configuration.schedulingTimeUnit.value()
         unit = gui.configuration.schedulingIntervalComboBox.currentText()
+        self.schedulePeriod = f'{measurement} {unit.lower()}'
 
         if unit == "Seconds":
             seconds = measurement
@@ -113,12 +115,15 @@ class BotThread(QRunnable):
         else:
             raise ValueError("Invalid type of unit.")
 
+        message = f'Initiated periodic statistics notification every {self.schedulePeriod}.'
+        self.gui.telegramBot.send_message(self.telegramChatID, message=message)
+
         self.scheduleSeconds = seconds
         self.nextScheduledEvent = datetime.now() + timedelta(seconds=seconds)
 
     def handle_scheduler(self):
         if self.nextScheduledEvent is not None and datetime.now() >= self.nextScheduledEvent:
-            self.gui.telegramBot.send_statistics_telegram(self.telegramChatID, self.scheduleSeconds)
+            self.gui.telegramBot.send_statistics_telegram(self.telegramChatID, self.schedulePeriod)
             self.nextScheduledEvent = datetime.now() + timedelta(seconds=self.scheduleSeconds)
 
     def setup_bot(self, caller):
@@ -296,9 +301,6 @@ class BotThread(QRunnable):
         """
         lowerTrend = None
         runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
-        if self.nextScheduledEvent is not None:
-            message = f'Initiated periodic statistics notification every {self.scheduleSeconds} seconds.'
-            self.gui.telegramBot.send_message(self.telegramChatID, message=message)
 
         while runningLoop:
             self.update_data(caller)
