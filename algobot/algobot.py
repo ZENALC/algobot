@@ -909,9 +909,9 @@ class Interface(QMainWindow):
 
         if ret == qm.Yes:
             if self.runningLive:
-                self.end_bot_thread(LIVE)
+                self.end_bot_gracefully(caller=LIVE)
             elif self.simulationRunningLive:
-                self.end_bot_thread(SIMULATION)
+                self.end_bot_gracefully(caller=SIMULATION)
             event.accept()
         else:
             event.ignore()
