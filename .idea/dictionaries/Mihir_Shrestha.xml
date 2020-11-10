@@ -11,8 +11,14 @@
       <w>btcudst</w>
       <w>ethusdt</w>
       <w>excepthook</w>
+      <w>exitposition</w>
+      <w>forcelong</w>
+      <w>forceshort</w>
       <w>getcwd</w>
+      <w>getposition</w>
       <w>levelname</w>
+      <w>removecustomstoploss</w>
+      <w>resumebot</w>
       <w>shrestha</w>
       <w>usdt</w>
     </words>

@@ -1,7 +1,7 @@
 from telegram import Bot
 from telegram.ext import Updater, CommandHandler
 
-from enums import LONG, SHORT
+from enums import LONG, SHORT, LIVE
 
 
 class TelegramBot:
@@ -17,11 +17,14 @@ class TelegramBot:
         # on different commands - answer in Telegram
         dp.add_handler(CommandHandler("help", self.help_telegram))
         dp.add_handler(CommandHandler("override", self.override_telegram))
-        dp.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
-        dp.add_handler(CommandHandler(('trades',), self.get_trades_telegram))
+        dp.add_handler(CommandHandler('trades', self.get_trades_telegram))
+        dp.add_handler(CommandHandler('resume', self.resume_telegram))
+        dp.add_handler(CommandHandler('pause', self.pause_telegram))
+        dp.add_handler(CommandHandler('removecustomstoploss', self.remove_custom_stop_loss))
         dp.add_handler(CommandHandler("forcelong", self.force_long_telegram))
         dp.add_handler(CommandHandler("forceshort", self.force_short_telegram))
         dp.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
+        dp.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
         dp.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
 
     def send_message(self, chatID, message):
@@ -69,6 +72,9 @@ class TelegramBot:
                                   "/position or /getposition -> To get position.\n"
                                   "/stats or /statistics -> To get current statistics.\n"
                                   "/override -> To exit trade and wait for next cross.\n"
+                                  "/resume -> To resume bot logic.\n"
+                                  "/pause -> To pause bot logic.\n"
+                                  "/removecustomstoploss -> To remove currently set custom stop loss.\n"
                                   "/exitposition -> To exit position.\n"
                                   "/trades -> To get list of trades made.\n")
 
@@ -109,6 +115,27 @@ class TelegramBot:
         update.message.reply_text("Overriding.")
         self.gui.exit_position(False)
         update.message.reply_text("Successfully overrode.")
+
+    def pause_telegram(self, update, context):
+        if self.gui.trader.inHumanControl:
+            update.message.reply_text("Bot is already in human control.")
+        else:
+            self.gui.pause_or_resume_bot(LIVE)
+            update.message.reply_text("Bot has been paused successfully.")
+
+    def resume_telegram(self, update, context):
+        if not self.gui.trader.inHumanControl:
+            update.message.reply_text("Bot is already in autonomous mode.")
+        else:
+            self.gui.pause_or_resume_bot(LIVE)
+            update.message.reply_text("Bot logic has been resumed.")
+
+    def remove_custom_stop_loss(self, update, context):
+        if self.gui.trader.customStopLoss is None:
+            update.message.reply_text("Bot already has no custom stop loss implemented.")
+        else:
+            self.gui.trader.customStopLoss = None
+            update.message.reply_text("Bot's custom stop loss has been removed.")
 
     def force_long_telegram(self, update, context):
         position = self.gui.trader.get_position()
