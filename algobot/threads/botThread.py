@@ -24,6 +24,7 @@ class BotThread(QRunnable):
         super(BotThread, self).__init__()
         self.signals = BotSignals()
         self.gui = gui
+        self.telegramChatID = gui.configuration.telegramChatID.text()
         self.caller = caller
         self.trader = None
 
@@ -179,7 +180,7 @@ class BotThread(QRunnable):
             trends = {BEARISH: 'Bearish', BULLISH: 'Bullish', None: 'No'}
             message = f'{trends[lowerTrend]} trend detected on lower interval data.'
             self.signals.activity.emit(caller, message)
-            self.gui.telegramBot.send_message(message)
+            self.gui.telegramBot.send_message(message=message, chatID=self.telegramChatID)
             return lowerTrend
 
     # to fix
@@ -257,6 +258,7 @@ class BotThread(QRunnable):
         """
         lowerTrend = None
         runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
+        self.gui.telegramBot.send_message(self.telegramChatID, "Initiated bot.")
 
         while runningLoop:
             self.update_data(caller)

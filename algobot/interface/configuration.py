@@ -1,4 +1,5 @@
 import os
+import telegram
 import helpers
 
 from PyQt5.QtCore import QDate, QThreadPool
@@ -25,12 +26,32 @@ class Configuration(QDialog):
         """
         Tests Telegram connection.
         """
+        tokenPass = False
+        chatPass = False
+        message = ""
+        error = ''
+
         try:
             telegramApikey = self.telegramApiKey.text()
+            chatID = self.telegramChatID.text()
             Updater(telegramApikey, use_context=True)
-            self.telegrationConnectionResult.setText('Connected successfully.')
+            tokenPass = True
+            telegramBot = telegram.Bot(token=telegramApikey)
+            telegramBot.send_message(chat_id=chatID, text='TESTING CHAT ID CONNECTION')
+            chatPass = True
         except Exception as e:
-            self.telegrationConnectionResult.setText(str(e))
+            error = str(e)
+
+        if tokenPass:
+            message += "Token authorization was successful. "
+            if chatPass:
+                message += "Chat ID checked and connected to successfully. "
+            else:
+                message += f'However, error: "{error}" occurred for chat id.'
+        else:
+            message = f'Error: {error}'
+
+        self.telegrationConnectionResult.setText(message)
 
     def test_binance_credentials(self):
         """
@@ -58,6 +79,7 @@ class Configuration(QDialog):
             self.binanceApiKey.setText(credentials['apiKey'])
             self.binanceApiSecret.setText(credentials['apiSecret'])
             self.telegramApiKey.setText(credentials['telegramApiKey'])
+            self.telegramChatID.setText(credentials['chatID'])
             self.credentialResult.setText('Credentials have been loaded successfully.')
         except FileNotFoundError:
             self.credentialResult.setText('Credentials not found. Please first save credentials to load them.')

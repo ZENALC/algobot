@@ -216,6 +216,11 @@ class Interface(QMainWindow):
         """
         Function that force ends bot in the event that it crashes.
         """
+        if caller == LIVE:
+            self.runningLive = False
+        elif caller == SIMULATION:
+            self.simulationRunningLive = False
+
         self.disable_interface(disable=False, caller=caller)
         self.add_to_monitor(caller=caller, message=msg)
         self.create_popup(msg)

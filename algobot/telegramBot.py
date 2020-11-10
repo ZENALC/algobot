@@ -7,6 +7,7 @@ class TelegramBot:
     def __init__(self, gui, token):
         self.token = token
         self.updater = Updater(token, use_context=True)
+        self.bot = Bot(token=self.token)
 
         # Get the dispatcher to register handlers
         self.gui = gui
@@ -16,15 +17,14 @@ class TelegramBot:
         dp.add_handler(CommandHandler("help", self.help_telegram))
         dp.add_handler(CommandHandler("override", self.override_telegram))
         dp.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
+        dp.add_handler(CommandHandler(('trades',), self.get_trades))
         dp.add_handler(CommandHandler("forcelong", self.force_long_telegram))
         dp.add_handler(CommandHandler("forceshort", self.force_short_telegram))
         dp.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
         dp.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
 
-    def send_message(self, message):
-        bot = Bot(token=self.token)
-        chatID = '-488085343'
-        bot.send_message(chat_id=chatID, text=message)
+    def send_message(self, chatID, message):
+        self.bot.send_message(chat_id=chatID, text=message)
 
     def start(self):
         # Start the Bot
@@ -38,6 +38,27 @@ class TelegramBot:
     def stop(self):
         self.updater.stop()
 
+    def get_trades(self, update, context):
+        trader = self.gui.trader
+        trades = trader.trades
+
+        message = ''
+        for index, trade in enumerate(trades, start=1):
+            message += f'Trade {index}:\n'
+            message += f'Date in UTC: {trade["date"].strftime("%m/%d/%Y, %H:%M:%S")}\n'
+            message += f'Order ID: {trade["orderID"]}\n'
+            message += f'Pair: {trade["pair"]}\n'
+            message += f'Action: {trade["action"]}\n'
+            message += f'Price: {trade["price"]}\n'
+            message += f'Method: {trade["method"]}\n'
+            message += f'Percentage: {trade["percentage"]}\n'
+            message += f'Profit: {trade["profit"]}\n\n'
+
+        if message == '':
+            message = "No trades made yet."
+
+        update.message.reply_text(message)
+
     @staticmethod
     def help_telegram(update, context):
         update.message.reply_text("Here are your help commands available:\n"
@@ -47,13 +68,14 @@ class TelegramBot:
                                   "/position or /getposition -> To get position.\n"
                                   "/stats or /statistics -> To get current statistics.\n"
                                   "/override -> To exit trade and wait for next cross.\n"
-                                  "/exitposition -> To exit position.")
+                                  "/exitposition -> To exit position.\n"
+                                  "/trades -> To get list of trades made.\n")
 
     def get_statistics_telegram(self, update, context):
         trader = self.gui.trader
         startingBalance = trader.startingBalance
         profit = trader.get_profit()
-        profitPercentage = trader.startingBalance + profit
+        profitPercentage = trader.get_profit_percentage(trader.startingBalance, trader.get_net())
         coinName = trader.coinName
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
 
