@@ -4,7 +4,7 @@ import helpers
 
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog, QFileDialog
+from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 from binance.client import Client
 from telegram.ext import Updater
 from dateutil import parser
@@ -98,18 +98,22 @@ class Configuration(QDialog):
         Function that saves credentials to base path in a JSON format. Obviously not very secure, but temp fix.
         """
         apiKey = self.binanceApiKey.text()
-        if len(apiKey) == 0:
-            self.credentialResult.setText('Please fill in Binance API key details.')
-            return
-
         apiSecret = self.binanceApiSecret.text()
-        if len(apiSecret) == 0:
-            self.credentialResult.setText('Please fill in Binance API secret details.')
-            return
-
         telegramApiKey = self.telegramApiKey.text()
-        helpers.write_credentials(apiKey=apiKey, apiSecret=apiSecret, telegramApiKey=telegramApiKey)
-        self.credentialResult.setText('Credentials have been saved successfully.')
+        telegramChatId = self.telegramChatID.text()
+
+        qm = QMessageBox
+        warn = qm.warning(self, 'Close?',
+                          f"Are you sure you want to save these credentials? All previous values will be overwritten!",
+                          qm.Yes | qm.No)
+
+        if warn == qm.Yes:
+            helpers.write_credentials(apiKey=apiKey, apiSecret=apiSecret,
+                                      telegramApiKey=telegramApiKey, chatID=telegramChatId)
+            self.credentialResult.setText('Credentials have been saved successfully.')
+            QMessageBox.about(self, 'Warning', 'Credentials have successfully been overwritten.')
+        else:
+            self.credentialResult.setText('Credentials have not been saved.')
 
     def get_calendar_dates(self):
         startDate = self.backtestStartDate.selectedDate().toPyDate()
