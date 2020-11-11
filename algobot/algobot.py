@@ -77,6 +77,7 @@ class Interface(QMainWindow):
         """
         Runs news thread and sets news to GUI.
         """
+        self.newsStatusLabel.setText("Retrieving latest news...")
         newsThread = listThread.Worker(scrape_news)
         newsThread.signals.error.connect(self.create_popup)
         newsThread.signals.finished.connect(self.setup_news)
@@ -131,6 +132,7 @@ class Interface(QMainWindow):
             self.newsTextBrowser.append(link)
 
         self.newsTextBrowser.moveCursor(QTextCursor.Start)
+        self.newsStatusLabel.setText('Retrieved latest news successfully.')
 
     def initiate_backtest(self):
         """
