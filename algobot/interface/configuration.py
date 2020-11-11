@@ -34,11 +34,9 @@ class Configuration(QDialog):
         try:
             telegramApikey = self.telegramApiKey.text()
             chatID = self.telegramChatID.text()
-            updaterBot = Updater(telegramApikey, use_context=True)
-            updaterBot.start_polling()
+            Updater(telegramApikey, use_context=True)
             tokenPass = True
-            telegramBot = telegram.Bot(token=telegramApikey)
-            telegramBot.send_message(chat_id=chatID, text='TESTING CHAT ID CONNECTION')
+            telegram.Bot(token=telegramApikey).send_message(chat_id=chatID, text='TESTING CHAT ID CONNECTION')
             chatPass = True
         except Exception as e:
             error = str(e)
@@ -46,11 +44,17 @@ class Configuration(QDialog):
                 error = 'There was a connection error. Please check your connection.'
 
         if tokenPass:
-            message += "Token authorization was successful. "
-            if chatPass:
-                message += "Chat ID checked and connected to successfully. "
+            if 'Unauthorized' in error:
+                message = 'Token authorization was unsuccessful. Please recheck your token.'
             else:
-                message += f'However, error: "{error}" occurred for chat ID validation.'
+                message += "Token authorization was successful. "
+                if chatPass:
+                    message += "Chat ID checked and connected to successfully. "
+                else:
+                    if 'Chat not found' in error:
+                        message += "However, the specified chat ID is invalid."
+                    else:
+                        message += f'However, chat ID error occurred: "{error}".'
         else:
             message = f'Error: {error}'
 
