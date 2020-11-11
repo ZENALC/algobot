@@ -16,6 +16,7 @@ from interface.configuration import Configuration
 from interface.otherCommands import OtherCommands
 from interface.about import About
 from interface.statistics import Statistics
+from scrapeNews import scrape_news
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem
@@ -64,6 +65,16 @@ class Interface(QMainWindow):
         self.lowerIntervalData: Data or None = None
         self.telegramBot = None
         self.add_to_live_activity_monitor('Initialized interface.')
+        self.try_scrape()
+
+    def try_scrape(self):
+        try:
+            links = scrape_news()
+            for link in links:
+                self.newsTextBrowser.append(link)
+        except Exception as e:
+            self.newsStatusLabel.setText(str(e))
+            self.create_popup('Could not scrape news successfully. Possibly due to a connection error.')
 
     def initiate_backtest(self):
         """
@@ -1028,23 +1039,26 @@ class Interface(QMainWindow):
         """
         Loads all available tickers from Binance API and displays them on appropriate combo boxes in application.
         """
-        tickers = [ticker['symbol'] for ticker in Data(loadData=False).binanceClient.get_all_tickers()
-                   if 'USDT' in ticker['symbol']]
+        try:
+            tickers = [ticker['symbol'] for ticker in Data(loadData=False).binanceClient.get_all_tickers()
+                       if 'USDT' in ticker['symbol']]
 
-        tickers.sort()
-        tickers.remove("BTCUSDT")
-        tickers.insert(0, 'BTCUSDT')
+            tickers.sort()
+            tickers.remove("BTCUSDT")
+            tickers.insert(0, 'BTCUSDT')
 
-        self.configuration.tickerComboBox.clear()  # Clear all existing live tickers.
-        self.configuration.backtestTickerComboBox.clear()  # Clear all existing backtest tickers.
-        self.configuration.simulationTickerComboBox.clear()  # Clear all existing simulation tickers.
+            self.configuration.tickerComboBox.clear()  # Clear all existing live tickers.
+            self.configuration.backtestTickerComboBox.clear()  # Clear all existing backtest tickers.
+            self.configuration.simulationTickerComboBox.clear()  # Clear all existing simulation tickers.
 
-        self.configuration.tickerComboBox.addItems(tickers)  # Add the tickers to list of live tickers.
-        self.configuration.backtestTickerComboBox.addItems(tickers)  # Add the tickers to list of backtest tickers.
-        self.configuration.simulationTickerComboBox.addItems(tickers)  # Add the tickers to list of simulation tickers.
+            self.configuration.tickerComboBox.addItems(tickers)
+            self.configuration.backtestTickerComboBox.addItems(tickers)
+            self.configuration.simulationTickerComboBox.addItems(tickers)
 
-        self.otherCommands.csvGenerationTicker.clear()  # Clear CSV generation tickers.
-        self.otherCommands.csvGenerationTicker.addItems(tickers)  # Add the tickers to list of CSV generation tickers.
+            self.otherCommands.csvGenerationTicker.clear()
+            self.otherCommands.csvGenerationTicker.addItems(tickers)
+        except Exception as e:
+            self.create_popup(str(e))
 
     def create_popup(self, msg: str):
         """
