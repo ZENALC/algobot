@@ -48,6 +48,24 @@ class Backtester:
         self.shortTrailingPrice = None
         self.currentPeriod = None
 
+    def reset_everything(self):
+        self.balance = self.startingBalance
+        self.coin = 0
+        self.coinOwed = 0
+        self.commissionsPaid = 0
+        self.trades = []
+        self.currentPrice = None
+        self.transactionFeePercentage = 0.001
+        self.profit = 0
+        self.inLongPosition = False
+        self.inShortPosition = False
+        self.previousPosition = None
+        self.buyLongPrice = None
+        self.longTrailingPrice = None
+        self.sellShortPrice = None
+        self.shortTrailingPrice = None
+        self.currentPeriod = None
+
     def convert_all_date_to_datetime(self):
         for data in self.data:
             data['date_utc'] = parser.parse(data['date_utc'])
@@ -72,6 +90,8 @@ class Backtester:
 
     def get_start_date_index(self, startDate):
         if startDate:
+            if type(startDate) == datetime:
+                startDate = startDate.date()
             startDateIndex = self.find_date_index(startDate)
             if startDateIndex == -1:
                 raise IndexError("Date not found.")
@@ -84,6 +104,8 @@ class Backtester:
 
     def get_end_date_index(self, endDate):
         if endDate:
+            if type(endDate) == datetime:
+                endDate = endDate.date()
             endDateIndex = self.find_date_index(endDate)
             if endDateIndex == -1:
                 raise IndexError("Date not found.")
@@ -404,12 +426,36 @@ class Backtester:
         #     avg2 = self.get_wma(seenData, 5, 'open')
         #     print(avg1)
 
-    def find_optimal_moving_average(self):
+    def find_optimal_moving_average(self, averageStart: int, averageLimit: int):
         """
         Runs extensive moving average tests and returns the one with best return percentages.
         :return: A dictionary of values for the test.
         """
-        pass
+        self.balance = 0
+        results = []
+        movingAverages = ('wma', 'sma', 'ema')
+        params = ('high', 'low', 'open', 'close')
+        total = (averageLimit - averageStart + 1) ** 2 * 4 * 3
+        done = 0
+
+        t1 = time.time()
+
+        for limit1 in range(averageStart, averageLimit + 1):
+            for limit2 in range(averageStart, averageLimit + 1):
+                for movingAverage in movingAverages:
+                    for param in params:
+                        options = [Option(movingAverage, param, limit1, limit2)]
+                        self.reset_everything()
+                        self.tradingOptions = options
+                        self.moving_average_test()
+                        results.append((self.profit, options))
+                        done += 1
+                print(f'Done {round(done / total * 100,2)}%')
+
+        print(time.time() - t1)
+
+        results.sort(key=lambda x: x[0], reverse=True)
+        print(results[:20])
 
     def print_options(self):
         """
@@ -515,11 +561,12 @@ class Backtester:
 
 
 if __name__ == '__main__':
-    path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT\BTCUSDT_data_1h.csv'
+    path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT\BTCUSDT_data_1d.csv'
     testData = load_from_csv(path)
     opt = [Option('sma', 'high', 10, 20), Option('sma', 'low', 10, 20)]
     a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=2, options=opt,
                    marginEnabled=True, startDate=datetime(2020, 1, 1))
-    a.moving_average_test()
-    # a.print_stats()
-    a.write_results()
+    a.find_optimal_moving_average(15, 20)
+    # a.moving_average_test()
+    # # a.print_stats()
+    # a.write_results()
