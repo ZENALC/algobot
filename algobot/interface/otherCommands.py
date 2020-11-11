@@ -23,8 +23,10 @@ class OtherCommands(QDialog):
         symbol = self.csvGenerationTicker.currentText()
         interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
         descending = self.descendingDateRadio.isChecked()
+        armyTime = self.armyDateRadio.isChecked()
 
-        thread = csvThread.CSVGeneratingThread(symbol=symbol, interval=interval, descending=descending)
+        thread = csvThread.CSVGeneratingThread(symbol=symbol, interval=interval,
+                                               descending=descending, armyTime=armyTime)
         thread.signals.finished.connect(self.end_csv_generation)
         thread.signals.error.connect(self.handle_csv_generation_error)
         self.threadPool.start(thread)

@@ -11,12 +11,13 @@ class CSVSignals(QObject):
 
 
 class CSVGeneratingThread(QRunnable):
-    def __init__(self, symbol, interval, descending):
+    def __init__(self, symbol, interval, descending, armyTime):
         super(CSVGeneratingThread, self).__init__()
         self.signals = CSVSignals()
         self.symbol = symbol
         self.interval = interval
         self.descending = descending
+        self.armyTime = armyTime
 
     @pyqtSlot()
     def run(self):
@@ -25,7 +26,8 @@ class CSVGeneratingThread(QRunnable):
         """
         # Retrieve args/kwargs here; and fire processing using them
         try:
-            savedPath = Data(interval=self.interval, symbol=self.symbol).create_csv_file(descending=self.descending)
+            savedPath = Data(interval=self.interval, symbol=self.symbol).create_csv_file(descending=self.descending,
+                                                                                         armyTime=self.armyTime)
             self.signals.finished.emit(savedPath)
         except Exception as e:
             print(f'Error: {e}')
