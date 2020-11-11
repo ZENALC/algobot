@@ -333,7 +333,7 @@ class SimulationTrader:
         :return: Profit percentage.
         """
         if finalNet > initialNet:
-            return 100 - (finalNet / initialNet * 100)
+            return finalNet / initialNet * 100 - 100
         else:
             return -1 * (100 - finalNet / initialNet * 100)
 
