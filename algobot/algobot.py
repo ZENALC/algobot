@@ -327,6 +327,7 @@ class Interface(QMainWindow):
         mainInterfaceDictionary['netTotalValue'].setText(statDict['netValue'])
         mainInterfaceDictionary['tickerLabel'].setText(statDict['tickerLabel'])
         mainInterfaceDictionary['tickerValue'].setText(statDict['tickerValue'])
+        mainInterfaceDictionary['positionValue'].setText(statDict['currentPositionValue'])
 
         net = statDict['net']
         price = statDict['currentPrice']
@@ -1182,6 +1183,7 @@ class Interface(QMainWindow):
                     'tickerLabel': self.simulationTickerLabel,
                     'tickerValue': self.simulationTickerValue,
                     'customStopLossValue': self.customSimulationStopLossValue,
+                    'positionValue': self.simulationPositionValue,
                     # Buttons
                     'pauseBotButton': self.pauseBotSimulationButton,
                     'runBotButton': self.runSimulationButton,
@@ -1257,6 +1259,7 @@ class Interface(QMainWindow):
                     'tickerLabel': self.tickerLabel,
                     'tickerValue': self.tickerValue,
                     'customStopLossValue': self.customStopLossValue,
+                    'positionValue': self.positionValue,
                     # Buttons
                     'pauseBotButton': self.pauseBotButton,
                     'runBotButton': self.runBotButton,
