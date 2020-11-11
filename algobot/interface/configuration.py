@@ -236,4 +236,3 @@ class Configuration(QDialog):
         self.saveCredentialsButton.clicked.connect(self.save_credentials)
         self.loadCredentialsButton.clicked.connect(self.load_credentials)
         self.testTelegramButton.clicked.connect(self.test_telegram)
-
