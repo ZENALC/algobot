@@ -111,7 +111,7 @@ class Configuration(QDialog):
             helpers.write_credentials(apiKey=apiKey, apiSecret=apiSecret,
                                       telegramApiKey=telegramApiKey, chatID=telegramChatId)
             self.credentialResult.setText('Credentials have been saved successfully.')
-            QMessageBox.about(self, 'Warning', 'Credentials have successfully been overwritten.')
+            QMessageBox.about(self, 'Info', 'Credentials have successfully been overwritten.')
         else:
             self.credentialResult.setText('Credentials have not been saved.')
 
