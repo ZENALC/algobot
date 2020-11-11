@@ -34,13 +34,16 @@ class Configuration(QDialog):
         try:
             telegramApikey = self.telegramApiKey.text()
             chatID = self.telegramChatID.text()
-            Updater(telegramApikey, use_context=True)
+            updaterBot = Updater(telegramApikey, use_context=True)
+            updaterBot.start_polling()
             tokenPass = True
             telegramBot = telegram.Bot(token=telegramApikey)
             telegramBot.send_message(chat_id=chatID, text='TESTING CHAT ID CONNECTION')
             chatPass = True
         except Exception as e:
             error = str(e)
+            if 'ConnectionError' in error:
+                error = 'There was a connection error. Please check your connection.'
 
         if tokenPass:
             message += "Token authorization was successful. "

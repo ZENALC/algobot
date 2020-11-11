@@ -2339,7 +2339,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="tab_10">
           <property name="enabled">
@@ -2538,7 +2538,7 @@
                  <item row="0" column="0" colspan="3">
                   <widget class="QCheckBox" name="schedulingStatisticsCheckBox">
                    <property name="text">
-                    <string>Schedule Periodic Statistics Notifications? Telegram chat is required for this function.</string>
+                    <string>Schedule Periodic Statistics Notifications? Telegram chat ID is required for this function.</string>
                    </property>
                   </widget>
                  </item>

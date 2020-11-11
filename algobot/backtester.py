@@ -551,6 +551,13 @@ class Backtester:
             os.mkdir(backtestResultsFolder)
         os.chdir(backtestResultsFolder)
 
+        counter = 0
+        previousFile = resultFile
+
+        while os.path.exists(resultFile):
+            resultFile = f'({counter}){previousFile}'
+            counter += 1
+
         with open(resultFile, 'w') as f:
             self.print_configuration_parameters(f)
             self.print_backtest_results(f)

@@ -80,18 +80,32 @@ class Interface(QMainWindow):
         """
         self.newsStatusLabel.setText("Retrieving latest news...")
         newsThread = listThread.Worker(scrape_news)
-        newsThread.signals.error.connect(self.create_popup)
+        newsThread.signals.error.connect(self.news_thread_error)
         newsThread.signals.finished.connect(self.setup_news)
         self.threadPool.start(newsThread)
+
+    def news_thread_error(self, e):
+        self.newsStatusLabel.setText("Failed to retrieve latest news.")
+        if 'www.todayonchain.com' in e:
+            self.create_popup('Failed to retrieve latest news due to a connectivity error.')
+        else:
+            self.create_popup(e)
 
     def tickers_thread(self):
         """
         Runs ticker thread and sets tickers to GUI.
         """
         tickerThread = listThread.Worker(self.get_tickers)
-        tickerThread.signals.error.connect(self.create_popup)
+        tickerThread.signals.error.connect(self.tickers_thread_error)
         tickerThread.signals.finished.connect(self.setup_tickers)
         self.threadPool.start(tickerThread)
+
+    def tickers_thread_error(self, e):
+        self.add_to_live_activity_monitor('Failed to retrieve tickers because of a connectivity issue.')
+        if 'api.binance.com' in e:
+            self.create_popup('Failed to retrieve tickers because of a connectivity issue.')
+        else:
+            self.create_popup(e)
 
     @staticmethod
     def get_tickers() -> list:
