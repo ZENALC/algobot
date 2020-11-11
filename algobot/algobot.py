@@ -21,7 +21,7 @@ from scrapeNews import scrape_news
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem
 from PyQt5.QtCore import QThreadPool
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QTextCursor
 from pyqtgraph import DateAxisItem, mkPen, PlotWidget
 
 app = QApplication(sys.argv)
@@ -70,15 +70,26 @@ class Interface(QMainWindow):
         """
         Loads tickers and most recent news in their own threads.
         """
-        tickerThread = listThread.Worker(self.get_tickers)
-        tickerThread.signals.error.connect(self.create_popup)
-        tickerThread.signals.finished.connect(self.setup_tickers)
-        self.threadPool.start(tickerThread)
+        self.tickers_thread()
+        self.news_thread()
 
+    def news_thread(self):
+        """
+        Runs news thread and sets news to GUI.
+        """
         newsThread = listThread.Worker(scrape_news)
         newsThread.signals.error.connect(self.create_popup)
         newsThread.signals.finished.connect(self.setup_news)
         self.threadPool.start(newsThread)
+
+    def tickers_thread(self):
+        """
+        Runs ticker thread and sets tickers to GUI.
+        """
+        tickerThread = listThread.Worker(self.get_tickers)
+        tickerThread.signals.error.connect(self.create_popup)
+        tickerThread.signals.finished.connect(self.setup_tickers)
+        self.threadPool.start(tickerThread)
 
     @staticmethod
     def get_tickers() -> list:
@@ -115,8 +126,11 @@ class Interface(QMainWindow):
         Sets up all latest available news with news list provided.
         :param news: List of news.
         """
+        self.newsTextBrowser.clear()
         for link in news:
             self.newsTextBrowser.append(link)
+
+        self.newsTextBrowser.moveCursor(QTextCursor.Start)
 
     def initiate_backtest(self):
         """
@@ -1068,6 +1082,9 @@ class Interface(QMainWindow):
         self.create_bot_slots()
         self.create_simulation_slots()
         self.create_backtest_slots()
+
+        # Other buttons in interface.
+        self.refreshNewsButton.clicked.connect(self.news_thread)
 
     def initiate_slots(self):
         """
