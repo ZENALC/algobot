@@ -1,5 +1,6 @@
 import traceback
 import helpers
+import time
 
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 
@@ -34,6 +35,11 @@ class BotThread(QRunnable):
         super(BotThread, self).__init__()
         self.signals = BotSignals()
         self.gui = gui
+        self.startingTime = time.time()
+        self.dailyPercentage = 0
+        self.elapsed = '1 second'
+        self.previousDayTime = None
+        self.previousDayNet = None
         self.schedulePeriod = None
         self.nextScheduledEvent = None
         self.scheduleSeconds = None
@@ -265,16 +271,34 @@ class BotThread(QRunnable):
             raise ValueError("Invalid type of caller or cross notification specified.")
 
     def get_statistics(self):
+        """
+        Returns current bot statistics in a dictionary.
+        :return: Current statistics in a dictionary.
+        """
         trader = self.trader
         net = trader.get_net()
         profit = trader.get_profit()
         stopLoss = trader.get_stop_loss()
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
         percentage = trader.get_profit_percentage(trader.startingBalance, net)
-        currentPriceString = f'${trader.currentPrice}'
-        percentageString = f'{round(percentage, 2)}%'
-        profitString = f'${abs(round(profit, 2))}'
-        netString = f'${round(net, 2)}'
+        intervalSeconds = 216000  # This will be for daily change. 216000 seconds is 1 day.
+
+        self.elapsed = helpers.get_elapsed_time(self.startingTime)
+
+        if self.previousDayTime is None:
+            if time.time() - self.startingTime >= intervalSeconds:
+                self.previousDayTime = time.time()
+                self.previousDayNet = net
+                self.dailyPercentage = 0
+            else:
+                self.dailyPercentage = percentage  # Same as current percentage because of lack of values.
+        else:
+            if time.time() - self.previousDayTime >= intervalSeconds:
+                self.previousDayTime = time.time()
+                self.previousDayNet = net
+                self.dailyPercentage = 0
+            else:
+                self.dailyPercentage = trader.get_profit_percentage(self.previousDayNet, net)
 
         optionDetails = []
         for option in trader.tradingOptions:
@@ -285,10 +309,10 @@ class BotThread(QRunnable):
             'net': net,
             'startingBalanceValue': f'${round(trader.startingBalance, 2)}',
             'currentBalanceValue': f'${round(trader.balance, 2)}',
-            'netValue': netString,
+            'netValue': f'${round(net, 2)}',
             'profitLossLabel': profitLabel,
-            'profitLossValue': profitString,
-            'percentageValue': percentageString,
+            'profitLossValue': f'${abs(round(profit, 2))}',
+            'percentageValue': f'{round(percentage, 2)}%',
             'tradesMadeValue': str(len(trader.trades)),
             'coinOwnedLabel': f'{trader.coinName} Owned',
             'coinOwnedValue': f'{round(trader.coin, 6)}',
@@ -300,9 +324,11 @@ class BotThread(QRunnable):
             'currentPositionValue': trader.get_position_string(),
             'autonomousValue': str(not trader.inHumanControl),
             'tickerLabel': trader.symbol,
-            'tickerValue': currentPriceString,
+            'tickerValue': f'${trader.currentPrice}',
             'currentPrice': trader.currentPrice,
-            'optionDetails': optionDetails
+            'optionDetails': optionDetails,
+            'elapsedValue': self.elapsed,
+            'dailyPercentageValue': f'{round(self.dailyPercentage, 2)}%'
         }
 
         return updateDict

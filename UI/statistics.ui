@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>300</width>
-    <height>400</height>
+    <height>500</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,7 +19,7 @@
   <property name="maximumSize">
    <size>
     <width>300</width>
-    <height>400</height>
+    <height>500</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="statisticsTabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="liveTab">
       <attribute name="title">
@@ -48,8 +48,21 @@
           <string>Statistics of live bot.</string>
          </property>
          <layout class="QGridLayout" name="gridLayout">
-          <item row="10" column="1">
-           <widget class="QLabel" name="currentTickerValue">
+          <item row="4" column="0">
+           <widget class="QLabel" name="profitLossLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Profit/Loss</string>
+            </property>
+           </widget>
+          </item>
+          <item row="17" column="1">
+           <widget class="QLabel" name="nextInitialMovingAverageValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -58,75 +71,44 @@
             </property>
             <property name="text">
              <string>None</string>
+            </property>
+           </widget>
+          </item>
+          <item row="19" column="0">
+           <widget class="QLabel" name="autonomousLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Autonomous</string>
+            </property>
+           </widget>
+          </item>
+          <item row="20" column="1">
+           <widget class="QLabel" name="elapsedValue">
+            <property name="text">
+             <string>None</string>
+            </property>
+           </widget>
+          </item>
+          <item row="20" column="0">
+           <widget class="QLabel" name="elapsedLabel">
+            <property name="text">
+             <string>Time Elapsed</string>
             </property>
            </widget>
           </item>
           <item row="13" column="0">
-           <widget class="QLabel" name="currentPositionLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
+           <widget class="QLabel" name="customStopPointLabel">
             <property name="text">
-             <string>Current Position</string>
+             <string>Custom Stop Loss</string>
             </property>
            </widget>
           </item>
-          <item row="14" column="1">
-           <widget class="QLabel" name="baseInitialMovingAverageValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>None</string>
-            </property>
-           </widget>
-          </item>
-          <item row="11" column="0">
-           <widget class="QLabel" name="lossPointLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Loss Point</string>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="1">
-           <widget class="QLabel" name="currentPositionValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>None</string>
-            </property>
-           </widget>
-          </item>
-          <item row="14" column="0">
-           <widget class="QLabel" name="baseInitialMovingAverageLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Moving Average 1 Initial Value</string>
-            </property>
-           </widget>
-          </item>
-          <item row="17" column="0">
+          <item row="18" column="0">
            <widget class="QLabel" name="nextFinalMovingAverageLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -139,14 +121,7 @@
             </property>
            </widget>
           </item>
-          <item row="12" column="0">
-           <widget class="QLabel" name="customStopPointLabel">
-            <property name="text">
-             <string>Custom Stop Loss</string>
-            </property>
-           </widget>
-          </item>
-          <item row="16" column="0">
+          <item row="17" column="0">
            <widget class="QLabel" name="nextInitialMovingAverageLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -159,27 +134,33 @@
             </property>
            </widget>
           </item>
-          <item row="12" column="1">
-           <widget class="QLabel" name="customStopPointValue">
+          <item row="15" column="0">
+           <widget class="QLabel" name="baseInitialMovingAverageLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Moving Average 1 Initial Value</string>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="1">
+           <widget class="QLabel" name="currentPositionValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>None</string>
             </property>
            </widget>
           </item>
-          <item row="19" column="0">
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="15" column="1">
+          <item row="16" column="1">
            <widget class="QLabel" name="baseFinalMovingAverageValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -187,6 +168,13 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="text">
+             <string>None</string>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="1">
+           <widget class="QLabel" name="customStopPointValue">
             <property name="text">
              <string>None</string>
             </property>
@@ -205,7 +193,7 @@
             </property>
            </widget>
           </item>
-          <item row="18" column="1">
+          <item row="19" column="1">
            <widget class="QLabel" name="autonomousValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -218,68 +206,30 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="profitLossLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+          <item row="21" column="0">
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
             </property>
-            <property name="text">
-             <string>Profit/Loss</string>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
             </property>
-           </widget>
+           </spacer>
           </item>
-          <item row="18" column="0">
-           <widget class="QLabel" name="autonomousLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Autonomous</string>
-            </property>
-           </widget>
-          </item>
-          <item row="16" column="1">
-           <widget class="QLabel" name="nextInitialMovingAverageValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>None</string>
-            </property>
-           </widget>
-          </item>
-          <item row="17" column="1">
-           <widget class="QLabel" name="nextFinalMovingAverageValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>None</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="netValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
+          <item row="1" column="1">
+           <widget class="QLabel" name="currentBalanceValue">
             <property name="text">
              <string>$0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="percentageLabel">
+            <property name="text">
+             <string>Total Percentage</string>
             </property>
            </widget>
           </item>
@@ -296,7 +246,34 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="0">
+          <item row="1" column="0">
+           <widget class="QLabel" name="currentBalanceLabel">
+            <property name="text">
+             <string>Current Balance</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLabel" name="percentageValue">
+            <property name="text">
+             <string>0%</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="netValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>$0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
            <widget class="QLabel" name="tradesLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -309,7 +286,7 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="0" rowspan="2">
+          <item row="8" column="0" rowspan="2">
            <widget class="QLabel" name="coinOwnedLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -322,8 +299,8 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
-           <widget class="QLabel" name="tradesMadeValue">
+          <item row="18" column="1">
+           <widget class="QLabel" name="nextFinalMovingAverageValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -331,20 +308,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item row="15" column="0">
-           <widget class="QLabel" name="baseFinalMovingAverageLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Moving Average 1 Final Value</string>
+             <string>None</string>
             </property>
            </widget>
           </item>
@@ -361,20 +325,7 @@
             </property>
            </widget>
           </item>
-          <item row="10" column="0">
-           <widget class="QLabel" name="currentTickerLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Current Ticker</string>
-            </property>
-           </widget>
-          </item>
-          <item row="11" column="1">
+          <item row="12" column="1">
            <widget class="QLabel" name="lossPointValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -387,8 +338,8 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="1" rowspan="2">
-           <widget class="QLabel" name="coinOwnedValue">
+          <item row="7" column="1">
+           <widget class="QLabel" name="tradesMadeValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -400,8 +351,8 @@
             </property>
            </widget>
           </item>
-          <item row="9" column="1">
-           <widget class="QLabel" name="coinOwedValue">
+          <item row="16" column="0">
+           <widget class="QLabel" name="baseFinalMovingAverageLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -409,7 +360,46 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>0</string>
+             <string>Moving Average 1 Final Value</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0">
+           <widget class="QLabel" name="currentTickerLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Current Ticker</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QLabel" name="coinOwedLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Coin Borrowed</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <widget class="QLabel" name="lossPointLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Loss Point</string>
             </property>
            </widget>
           </item>
@@ -426,8 +416,8 @@
             </property>
            </widget>
           </item>
-          <item row="9" column="0">
-           <widget class="QLabel" name="coinOwedLabel">
+          <item row="10" column="1">
+           <widget class="QLabel" name="coinOwedValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -435,35 +425,73 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Coin Borrowed</string>
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1" rowspan="2">
+           <widget class="QLabel" name="coinOwnedValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="1">
+           <widget class="QLabel" name="currentTickerValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>None</string>
+            </property>
+           </widget>
+          </item>
+          <item row="15" column="1">
+           <widget class="QLabel" name="baseInitialMovingAverageValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>None</string>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="0">
+           <widget class="QLabel" name="currentPositionLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Current Position</string>
             </property>
            </widget>
           </item>
           <item row="5" column="0">
-           <widget class="QLabel" name="percentageLabel">
+           <widget class="QLabel" name="dailyPercentageLabel">
             <property name="text">
-             <string>Percentage</string>
+             <string>Daily Percentage</string>
             </property>
            </widget>
           </item>
           <item row="5" column="1">
-           <widget class="QLabel" name="percentageValue">
+           <widget class="QLabel" name="dailyPercentageValue">
             <property name="text">
              <string>0%</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="currentBalanceLabel">
-            <property name="text">
-             <string>Current Balance</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="currentBalanceValue">
-            <property name="text">
-             <string>$0</string>
             </property>
            </widget>
           </item>
@@ -489,7 +517,7 @@
           <string>Statistics of simulation bot.</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_3">
-          <item row="13" column="1">
+          <item row="14" column="1">
            <widget class="QLabel" name="simulationCurrentPositionValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -502,7 +530,20 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="0">
+          <item row="19" column="1">
+           <widget class="QLabel" name="simulationAutonomousValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>False</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
            <widget class="QLabel" name="simulationTradesLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -512,6 +553,32 @@
             </property>
             <property name="text">
              <string>Trades Made</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1" rowspan="2">
+           <widget class="QLabel" name="simulationCoinOwnedValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QLabel" name="simulationCoinOwedValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -528,60 +595,8 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="1" rowspan="2">
-           <widget class="QLabel" name="simulationCoinOwnedValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="1">
-           <widget class="QLabel" name="simulationCoinOwedValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QLabel" name="simulationTradesMadeValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item row="18" column="1">
-           <widget class="QLabel" name="simulationAutonomousValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>False</string>
-            </property>
-           </widget>
-          </item>
-          <item row="18" column="0">
-           <widget class="QLabel" name="simulationAutonomousLabel">
+          <item row="0" column="0">
+           <widget class="QLabel" name="simulationStartingBalanceLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -589,7 +604,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Autonomous</string>
+             <string>Starting Balance</string>
             </property>
            </widget>
           </item>
@@ -606,7 +621,46 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="0" rowspan="2">
+          <item row="7" column="1">
+           <widget class="QLabel" name="simulationTradesMadeValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="19" column="0">
+           <widget class="QLabel" name="simulationAutonomousLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Autonomous</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="QLabel" name="simulationLossPointValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>None</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0" rowspan="2">
            <widget class="QLabel" name="simulationCoinOwnedLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -616,19 +670,6 @@
             </property>
             <property name="text">
              <string>Coin Owned</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="simulationStartingBalanceLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Starting Balance</string>
             </property>
            </widget>
           </item>
@@ -645,16 +686,68 @@
             </property>
            </widget>
           </item>
-          <item row="11" column="1">
-           <widget class="QLabel" name="simulationLossPointValue">
+          <item row="14" column="0">
+           <widget class="QLabel" name="simulationCurrentPositionLabel">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
             <property name="text">
-             <string>None</string>
+             <string>Current Position</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QLabel" name="simulationCoinOwedLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Coin Borrowed</string>
+            </property>
+           </widget>
+          </item>
+          <item row="21" column="0">
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="12" column="0">
+           <widget class="QLabel" name="simulationLossPointLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Loss Point</string>
+            </property>
+           </widget>
+          </item>
+          <item row="15" column="0">
+           <widget class="QLabel" name="simulationBaseInitialMovingAverageLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Moving Average 1 Initial Value</string>
             </property>
            </widget>
           </item>
@@ -671,72 +764,7 @@
             </property>
            </widget>
           </item>
-          <item row="9" column="0">
-           <widget class="QLabel" name="simulationCoinOwedLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Coin Borrowed</string>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="0">
-           <widget class="QLabel" name="simulationCurrentPositionLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Current Position</string>
-            </property>
-           </widget>
-          </item>
-          <item row="14" column="0">
-           <widget class="QLabel" name="simulationBaseInitialMovingAverageLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Moving Average 1 Initial Value</string>
-            </property>
-           </widget>
-          </item>
-          <item row="14" column="1">
-           <widget class="QLabel" name="simulationBaseInitialMovingAverageValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>None</string>
-            </property>
-           </widget>
-          </item>
-          <item row="19" column="0">
-           <spacer name="verticalSpacer">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="15" column="1">
+          <item row="16" column="1">
            <widget class="QLabel" name="simulationBaseFinalMovingAverageValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -749,8 +777,8 @@
             </property>
            </widget>
           </item>
-          <item row="10" column="0">
-           <widget class="QLabel" name="simulationCurrentTickerLabel">
+          <item row="17" column="0">
+           <widget class="QLabel" name="simulationNextInitialMovingAverageLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -758,20 +786,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Current Ticker</string>
-            </property>
-           </widget>
-          </item>
-          <item row="11" column="0">
-           <widget class="QLabel" name="simulationLossPointLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Loss Point</string>
+             <string>Moving Average 2 Initial Value</string>
             </property>
            </widget>
           </item>
@@ -788,20 +803,20 @@
             </property>
            </widget>
           </item>
-          <item row="16" column="0">
-           <widget class="QLabel" name="simulationNextInitialMovingAverageLabel">
+          <item row="15" column="1">
+           <widget class="QLabel" name="simulationBaseInitialMovingAverageValue">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Moving Average 2 Initial Value</string>
+             <string>None</string>
             </property>
            </widget>
           </item>
-          <item row="17" column="1">
+          <item row="18" column="1">
            <widget class="QLabel" name="simulationNextFinalMovingAverageValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -814,21 +829,8 @@
             </property>
            </widget>
           </item>
-          <item row="10" column="1">
-           <widget class="QLabel" name="simulationCurrentTickerValue">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>None</string>
-            </property>
-           </widget>
-          </item>
-          <item row="15" column="0">
-           <widget class="QLabel" name="simulationBaseFinalMovingAverageLabel">
+          <item row="11" column="0">
+           <widget class="QLabel" name="simulationCurrentTickerLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -836,11 +838,11 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Moving Average 1 Final Value</string>
+             <string>Current Ticker</string>
             </property>
            </widget>
           </item>
-          <item row="16" column="1">
+          <item row="17" column="1">
            <widget class="QLabel" name="simulationNextInitialMovingAverageValue">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -853,7 +855,7 @@
             </property>
            </widget>
           </item>
-          <item row="17" column="0">
+          <item row="18" column="0">
            <widget class="QLabel" name="simulationNextFinalMovingAverageLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -866,28 +868,40 @@
             </property>
            </widget>
           </item>
-          <item row="12" column="1">
-           <widget class="QLabel" name="simulationCustomStopPointValue">
+          <item row="16" column="0">
+           <widget class="QLabel" name="simulationBaseFinalMovingAverageLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Moving Average 1 Final Value</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="1">
+           <widget class="QLabel" name="simulationCurrentTickerValue">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>None</string>
             </property>
            </widget>
           </item>
-          <item row="12" column="0">
-           <widget class="QLabel" name="simulationCustomStopPointLabel">
-            <property name="text">
-             <string>Custom Stop Loss</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
+          <item row="6" column="0">
            <widget class="QLabel" name="simulationPercentageLabel">
             <property name="text">
-             <string>Percentage</string>
+             <string>Total Percentage</string>
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
+          <item row="6" column="1">
            <widget class="QLabel" name="simulationPercentageValue">
             <property name="text">
              <string>0%</string>
@@ -901,10 +915,52 @@
             </property>
            </widget>
           </item>
+          <item row="13" column="1">
+           <widget class="QLabel" name="simulationCustomStopPointValue">
+            <property name="text">
+             <string>None</string>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="0">
+           <widget class="QLabel" name="simulationCustomStopPointLabel">
+            <property name="text">
+             <string>Custom Stop Loss</string>
+            </property>
+           </widget>
+          </item>
+          <item row="20" column="1">
+           <widget class="QLabel" name="simulationElapsedValue">
+            <property name="text">
+             <string>None</string>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="1">
            <widget class="QLabel" name="simulationCurrentBalanceValue">
             <property name="text">
              <string>$0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="20" column="0">
+           <widget class="QLabel" name="simulationElapsedLabel">
+            <property name="text">
+             <string>Time Elapsed</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="simulationDailyPercentageLabel">
+            <property name="text">
+             <string>Daily Percentage</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLabel" name="simulationDailyPercentageValue">
+            <property name="text">
+             <string>0%</string>
             </property>
            </widget>
           </item>

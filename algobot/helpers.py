@@ -1,6 +1,7 @@
 import logging
 import os
 import json
+import time
 from datetime import datetime
 from dateutil import parser
 
@@ -43,6 +44,22 @@ def convert_interval(interval):
         '8 Hours': '8h'
     }
     return intervals[interval]
+
+
+def get_elapsed_time(previousTime):
+    seconds = int(time.time() - previousTime)
+    if seconds <= 60:
+        return f'{seconds} seconds'
+    elif seconds <= 3600:
+        minutes = seconds // 60
+        seconds = seconds % 60
+        return f'{minutes}m {seconds}s'
+    else:
+        hours = seconds // 3600
+        seconds = seconds % 3600
+        minutes = seconds // 60
+        seconds = seconds % 60
+        return f'{hours}h {minutes}m {seconds} s'
 
 
 def load_from_csv(path, descending=True):

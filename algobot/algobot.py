@@ -65,6 +65,7 @@ class Interface(QMainWindow):
         self.telegramBot = None
         self.add_to_live_activity_monitor('Initialized interface.')
         self.load_tickers_and_news()
+        self.homeTab.setCurrentIndex(0)
 
     def load_tickers_and_news(self):
         """
@@ -386,6 +387,8 @@ class Interface(QMainWindow):
         statisticsDictionary['customStopPointValue'].setText(statDict['customStopPointValue'])
         statisticsDictionary['currentPositionValue'].setText(statDict['currentPositionValue'])
         statisticsDictionary['autonomousValue'].setText(statDict['autonomousValue'])
+        statisticsDictionary['elapsedValue'].setText(statDict['elapsedValue'])
+        statisticsDictionary['dailyPercentageValue'].setText(statDict['dailyPercentageValue'])
 
         # These are for main interface window.
         mainInterfaceDictionary = interfaceDictionary['mainInterface']
@@ -1220,7 +1223,9 @@ class Interface(QMainWindow):
                     'nextInitialMovingAverageLabel': self.statistics.simulationNextInitialMovingAverageLabel,
                     'nextInitialMovingAverageValue': self.statistics.simulationNextInitialMovingAverageValue,
                     'nextFinalMovingAverageLabel': self.statistics.simulationNextFinalMovingAverageLabel,
-                    'nextFinalMovingAverageValue': self.statistics.simulationNextFinalMovingAverageValue
+                    'nextFinalMovingAverageValue': self.statistics.simulationNextFinalMovingAverageValue,
+                    'elapsedValue': self.statistics.simulationElapsedValue,
+                    'dailyPercentageValue': self.statistics.simulationDailyPercentageValue,
                 },
                 'mainInterface': {
                     # Portfolio
@@ -1297,7 +1302,9 @@ class Interface(QMainWindow):
                     'nextInitialMovingAverageLabel': self.statistics.nextInitialMovingAverageLabel,
                     'nextInitialMovingAverageValue': self.statistics.nextInitialMovingAverageValue,
                     'nextFinalMovingAverageLabel': self.statistics.nextFinalMovingAverageLabel,
-                    'nextFinalMovingAverageValue': self.statistics.nextFinalMovingAverageValue
+                    'nextFinalMovingAverageValue': self.statistics.nextFinalMovingAverageValue,
+                    'elapsedValue': self.statistics.elapsedValue,
+                    'dailyPercentageValue': self.statistics.dailyPercentageValue,
                 },
                 'mainInterface': {
                     # Portfolio
