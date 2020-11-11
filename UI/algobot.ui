@@ -12,7 +12,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Cambria</family>
+    <family>Arial</family>
    </font>
   </property>
   <property name="windowTitle">
@@ -46,6 +46,7 @@
       </property>
       <property name="font">
        <font>
+        <family>Cambria</family>
         <pointsize>10</pointsize>
        </font>
       </property>

@@ -3,7 +3,7 @@ import sys
 import helpers
 import os
 
-from threads import workerThread, backtestThread, botThread
+from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
 from datetime import datetime
 from interface.palettes import *
@@ -52,7 +52,6 @@ class Interface(QMainWindow):
         )
         self.setup_graphs()  # Setting up graphs
         self.initiate_slots()  # Initiating slots
-        self.threadPool.start(workerThread.Worker(self.load_tickers))  # Load tickers
 
         self.interfaceDictionary = self.get_interface_dictionary()
         self.advancedLogging = True
@@ -65,16 +64,59 @@ class Interface(QMainWindow):
         self.lowerIntervalData: Data or None = None
         self.telegramBot = None
         self.add_to_live_activity_monitor('Initialized interface.')
-        self.try_scrape()
+        self.load_tickers_and_news()
 
-    def try_scrape(self):
-        try:
-            links = scrape_news()
-            for link in links:
-                self.newsTextBrowser.append(link)
-        except Exception as e:
-            self.newsStatusLabel.setText(str(e))
-            self.create_popup('Could not scrape news successfully. Possibly due to a connection error.')
+    def load_tickers_and_news(self):
+        """
+        Loads tickers and most recent news in their own threads.
+        """
+        tickerThread = listThread.Worker(self.get_tickers)
+        tickerThread.signals.error.connect(self.create_popup)
+        tickerThread.signals.finished.connect(self.setup_tickers)
+        self.threadPool.start(tickerThread)
+
+        newsThread = listThread.Worker(scrape_news)
+        newsThread.signals.error.connect(self.create_popup)
+        newsThread.signals.finished.connect(self.setup_news)
+        self.threadPool.start(newsThread)
+
+    @staticmethod
+    def get_tickers() -> list:
+        """
+        Returns all available tickers from Binance API.
+        :return: List of all available tickers.
+        """
+        tickers = [ticker['symbol'] for ticker in Data(loadData=False).binanceClient.get_all_tickers()
+                   if 'USDT' in ticker['symbol']]
+
+        tickers.sort()
+        tickers.remove("BTCUSDT")
+        tickers.insert(0, 'BTCUSDT')
+
+        return tickers
+
+    def setup_tickers(self, tickers):
+        """
+        Sets up all available tickers from Binance API and displays them on appropriate combo boxes in application.
+        """
+        self.configuration.tickerComboBox.clear()  # Clear all existing live tickers.
+        self.configuration.backtestTickerComboBox.clear()  # Clear all existing backtest tickers.
+        self.configuration.simulationTickerComboBox.clear()  # Clear all existing simulation tickers.
+
+        self.configuration.tickerComboBox.addItems(tickers)
+        self.configuration.backtestTickerComboBox.addItems(tickers)
+        self.configuration.simulationTickerComboBox.addItems(tickers)
+
+        self.otherCommands.csvGenerationTicker.clear()
+        self.otherCommands.csvGenerationTicker.addItems(tickers)
+
+    def setup_news(self, news):
+        """
+        Sets up all latest available news with news list provided.
+        :param news: List of news.
+        """
+        for link in news:
+            self.newsTextBrowser.append(link)
 
     def initiate_backtest(self):
         """
@@ -1034,31 +1076,6 @@ class Interface(QMainWindow):
         self.create_action_slots()
         self.create_configuration_slots()
         self.create_interface_slots()
-
-    def load_tickers(self):
-        """
-        Loads all available tickers from Binance API and displays them on appropriate combo boxes in application.
-        """
-        try:
-            tickers = [ticker['symbol'] for ticker in Data(loadData=False).binanceClient.get_all_tickers()
-                       if 'USDT' in ticker['symbol']]
-
-            tickers.sort()
-            tickers.remove("BTCUSDT")
-            tickers.insert(0, 'BTCUSDT')
-
-            self.configuration.tickerComboBox.clear()  # Clear all existing live tickers.
-            self.configuration.backtestTickerComboBox.clear()  # Clear all existing backtest tickers.
-            self.configuration.simulationTickerComboBox.clear()  # Clear all existing simulation tickers.
-
-            self.configuration.tickerComboBox.addItems(tickers)
-            self.configuration.backtestTickerComboBox.addItems(tickers)
-            self.configuration.simulationTickerComboBox.addItems(tickers)
-
-            self.otherCommands.csvGenerationTicker.clear()
-            self.otherCommands.csvGenerationTicker.addItems(tickers)
-        except Exception as e:
-            self.create_popup(str(e))
 
     def create_popup(self, msg: str):
         """
