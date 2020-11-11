@@ -59,6 +59,7 @@ class Data:
     def load_data(self, update: bool = True):
         """
         Loads data to Data object.
+        :param update: Boolean that determines where data is updated or not.
         """
         self.get_data_from_database()
         if update:
@@ -191,6 +192,19 @@ class Data:
             return False
         latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
         return self.is_latest_date(latestDate)
+
+    # noinspection PyProtectedMember
+    def get_latest_timestamp(self) -> float:
+        """
+        Returns latest timestamp available based on database.
+        :return: Latest timestamp.
+        """
+        result = self.get_latest_database_row()
+        if result is None:
+            return self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
+        else:
+            latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            return int(latestDate.timestamp()) * 1000  # Converting timestamp to milliseconds
 
     # noinspection PyProtectedMember
     def update_database_and_data(self):
