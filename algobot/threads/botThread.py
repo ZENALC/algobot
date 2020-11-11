@@ -52,7 +52,7 @@ class BotThread(QRunnable):
         gui = self.gui
         if interval != '1m':
             lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
-            self.signals.activity.emit(caller, f'Retrieving data for lower interval {lowerInterval}...')
+            self.signals.activity.emit(caller, f'Retrieving data for {lowerInterval} lower intervals...')
             if caller == LIVE:
                 gui.lowerIntervalData = Data(lowerInterval)
             elif caller == SIMULATION:
@@ -69,11 +69,12 @@ class BotThread(QRunnable):
         gui = self.gui
         configDict = gui.interfaceDictionary[caller]['configuration']
         symbol = configDict['ticker'].currentText()
-        interval = helpers.convert_interval(configDict['interval'].currentText())
+        prettyInterval = configDict['interval'].currentText()
+        interval = helpers.convert_interval(prettyInterval)
 
         if caller == SIMULATION:
             startingBalance = gui.configuration.simulationStartingBalanceSpinBox.value()
-            self.signals.activity.emit(caller, f"Retrieving data for interval {interval}...")
+            self.signals.activity.emit(caller, f"Retrieving {symbol} data for {prettyInterval.lower()} intervals...")
             gui.simulationTrader = SimulationTrader(startingBalance=startingBalance,
                                                     symbol=symbol,
                                                     interval=interval,
@@ -84,7 +85,7 @@ class BotThread(QRunnable):
             tld = 'com' if gui.configuration.otherRegionRadio.isChecked() else 'us'
             isIsolated = gui.configuration.isolatedMarginAccountRadio.isChecked()
             self.check_api_credentials(apiKey=apiKey, apiSecret=apiSecret)
-            self.signals.activity.emit(caller, f"Retrieving data for interval {interval}...")
+            self.signals.activity.emit(caller, f"Retrieving {symbol} data for {prettyInterval.lower()} intervals...")
             gui.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol, tld=tld,
                                     isIsolated=isIsolated)
         else:

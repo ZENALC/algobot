@@ -257,7 +257,6 @@ class Interface(QMainWindow):
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         self.disable_interface(True, caller, False)
         self.enable_override(caller)
-        self.clear_table(interfaceDict['historyTable'])
         self.destroy_graph_plots(interfaceDict['graph'])
         self.destroy_graph_plots(interfaceDict['averageGraph'])
         self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
@@ -793,7 +792,6 @@ class Interface(QMainWindow):
         pen = mkPen(color=color)
         return graph.plot(x, y, name=plotName, pen=pen)
 
-    # TODO This does not work for some reason.
     @staticmethod
     def clear_table(table):
         """
@@ -1202,6 +1200,7 @@ class Interface(QMainWindow):
                     'averageGraph': self.simulationAvgGraph,
                     # Table
                     'historyTable': self.simulationHistoryTable,
+                    'activityTable': self.simulationActivityMonitor,
                 },
                 'configuration': {
                     'baseAverageType': self.configuration.simulationAverageTypeComboBox,
@@ -1278,6 +1277,7 @@ class Interface(QMainWindow):
                     'averageGraph': self.avgGraph,
                     # Table
                     'historyTable': self.historyTable,
+                    'activityTable': self.activityMonitor,
                 },
                 'configuration': {
                     'baseAverageType': self.configuration.averageTypeComboBox,
