@@ -408,9 +408,10 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
-    def write_csv_data(self, totalData: list, fileName: str) -> str:
+    def write_csv_data(self, totalData: list, fileName: str, armyType: bool = True) -> str:
         """
         Writes CSV data to CSV folder in root directory of application.
+        :param armyType: Boolean if date will be in army type. If false, data will be in standard type.
         :param totalData: Data to write to CSV file.
         :param fileName: Filename to name CSV in.
         :return: Absolute path to CSV file.
@@ -430,7 +431,10 @@ class Data:
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close\n")
             for data in totalData:
-                parsedDate = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
+                if armyType:
+                    parsedDate = data['date_utc'].strftime("%m/%d/%Y %H:%M")
+                else:
+                    parsedDate = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
                 f.write(f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}\n')
 
         path = os.path.join(os.getcwd(), fileName)

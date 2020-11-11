@@ -80,8 +80,3 @@ def write_credentials(**kwargs):
 def load_credentials(jsonfile='secret.json'):
     with open(jsonfile) as f:
         return json.load(f)
-
-
-
-
-
