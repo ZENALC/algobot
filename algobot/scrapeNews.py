@@ -1,5 +1,6 @@
 import requests
-from dateutil import parser, tz
+from datetime import date, timedelta
+from dateutil import parser
 from bs4 import BeautifulSoup
 
 
@@ -15,9 +16,18 @@ def scrape_news():
         hyperlink = link['href']
         title = link.find('div', class_='api_article_title_sm').text
         source = link.find('span', class_='api_article_source').text
+
         eventDate = link.find('time', class_='timeago')['datetime']
-        parsedDate = parser.parse(eventDate).astimezone(tz=None).strftime("%A %m/%d/%Y %H:%M:%S")
-        htmlRow = f'<a href="{hyperlink}">{title}</a> - {source} on {parsedDate} local time.'
+        parsedDate = parser.parse(eventDate).astimezone(tz=None)
+        if parsedDate.date() == date.today():
+            dateString = f'today {parsedDate.strftime("%m/%d/%Y %H:%M:%S")}'
+        elif parsedDate.date() == date.today() - timedelta(days=1):
+            dateString = f'yesterday {parsedDate.strftime("%m/%d/%Y %H:%M:%S")}'
+        else:
+            dateString = parsedDate.strftime("%A %m/%d/%Y %H:%M:%S")
+
+        htmlRow = f'<a href="{hyperlink}">{title}</a>' \
+                  f'<p>Post from {source} published {dateString} local time.</p>'
         htmlRows.append(htmlRow)
 
     return htmlRows
