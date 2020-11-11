@@ -6,15 +6,17 @@ import logging
 from datetime import timedelta, timezone, datetime
 from contextlib import closing
 from binance.client import Client
+from binance.helpers import interval_to_milliseconds, date_to_milliseconds
 
 
 class Data:
-    def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True):
+    def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True, updateData: bool = True):
         """
         Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
         :param interval: Interval for which the data object will track prices.
         :param symbol: Symbol for which the data object will track prices.
         :param: loadData: Boolean for whether data will be loaded or not.
+        :param: UpdateData: Boolean for whether data will be updated if it is loaded.
         """
         self.binanceClient = Client()  # Initialize Binance client
         self.validate_interval(interval)
@@ -32,7 +34,7 @@ class Data:
 
         if loadData:
             # Create, initialize, store, and get values from database.
-            self.load_data()
+            self.load_data(update=updateData)
 
     def validate_interval(self, interval: str):
         """
@@ -54,16 +56,17 @@ class Data:
             # self.output_message('Invalid symbol. Using default symbol of BTCUSDT.', level=4)
             # symbol = 'BTCUSDT'
 
-    def load_data(self):
+    def load_data(self, update: bool = True):
         """
         Loads data to Data object.
         """
         self.get_data_from_database()
-        if not self.database_is_updated():
-            self.output_message("Updating data...")
-            self.update_database_and_data()
-        else:
-            self.output_message("Database is up-to-date.")
+        if update:
+            if not self.database_is_updated():
+                self.output_message("Updating data...")
+                self.update_database_and_data()
+            else:
+                self.output_message("Database is up-to-date.")
 
     @staticmethod
     def output_message(message: str, level=2, printMessage: bool = False):
@@ -213,6 +216,62 @@ class Data:
             self.dump_to_table()
         else:
             self.output_message("Database is up-to-date.")
+
+    # noinspection PyProtectedMember
+    def custom_get_new_data(self, timestamp, limit: int = 1000):
+        """
+        Returns new data from Binance API from timestamp specified, however this one is custom-made.
+        :param timestamp: Initial timestamp.
+        :param limit: Limit per pull.
+        :return: A list of dictionaries.
+        """
+        # This code below is taken from binance client and slightly refactored.
+        output_data = []  # Initialize our list
+        limit = limit  # setup the max limit
+        timeframe = interval_to_milliseconds(self.interval)
+
+        # convert our date strings to milliseconds
+        if type(timestamp) == int:
+            start_ts = timestamp
+        else:
+            start_ts = date_to_milliseconds(timestamp)
+
+        # establish first available start timestamp
+        first_valid_ts = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
+        start_ts = max(start_ts, first_valid_ts)
+
+        end_ts = None
+        idx = 0
+
+        while True:
+            tempData = self.binanceClient.get_klines(
+                symbol=self.symbol,
+                interval=self.interval,
+                limit=limit,
+                starttime=start_ts,
+                endTime=end_ts
+            )
+
+            if not len(tempData):
+                break
+
+            output_data += tempData
+            start_ts = tempData[-1][0]
+
+            idx += 1
+            # check if we received less than the required limit and exit the loop
+            if len(tempData) < limit:
+                # exit the while loop
+                break
+
+            # increment next call by our timeframe
+            start_ts += timeframe
+
+            # sleep after every 3rd call to be kind to the API
+            if idx % 3 == 0:
+                time.sleep(1)
+
+        return output_data
 
     def get_new_data(self, timestamp, limit: int = 1000):
         """
