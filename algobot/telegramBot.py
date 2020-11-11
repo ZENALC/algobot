@@ -112,7 +112,7 @@ class TelegramBot:
                 f'Autonomous Mode: {not trader.inHumanControl}\n'
                 f'Loss Strategy: {trader.get_stop_loss_strategy_string()}\n'
                 f'Stop Loss Percentage: {round(trader.lossPercentageDecimal * 100, 2)}%\n'
-                f'Stop Loss: ${trader.get_safe_rounded_string(trader.get_stop_loss())}\n'
+                f'Stop Loss: {trader.get_safe_rounded_string(trader.get_stop_loss())}\n'
                 f"Custom Stop Loss: {trader.get_safe_rounded_string(trader.customStopLoss)}\n"
                 f"Current {coinName} price: ${trader.currentPrice}\n"
                 f'Elapsed time: {self.botThread.elapsed}\n'
