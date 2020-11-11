@@ -408,10 +408,10 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
-    def write_csv_data(self, totalData: list, fileName: str, armyType: bool = True) -> str:
+    def write_csv_data(self, totalData: list, fileName: str, armyTime: bool = True) -> str:
         """
         Writes CSV data to CSV folder in root directory of application.
-        :param armyType: Boolean if date will be in army type. If false, data will be in standard type.
+        :param armyTime: Boolean if date will be in army type. If false, data will be in standard type.
         :param totalData: Data to write to CSV file.
         :param fileName: Filename to name CSV in.
         :return: Absolute path to CSV file.
@@ -431,7 +431,7 @@ class Data:
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close\n")
             for data in totalData:
-                if armyType:
+                if armyTime:
                     parsedDate = data['date_utc'].strftime("%m/%d/%Y %H:%M")
                 else:
                     parsedDate = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
@@ -442,16 +442,18 @@ class Data:
 
         return path
 
-    def create_csv_file(self, descending: bool = True) -> str:
+    def create_csv_file(self, descending: bool = True, armyTime: bool = True) -> str:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
+        :param descending: Boolean that decides where values in CSV are in descending format or not.
+        :param armyTime: Boolean that dictates where dates will be written in army-time format or not.
         """
         self.update_database_and_data()  # Update data if updates exist.
         fileName = f'{self.symbol}_data_{self.interval}.csv'
         if descending:
-            path = self.write_csv_data(self.data, fileName=fileName)
+            path = self.write_csv_data(self.data, fileName=fileName, armyTime=armyTime)
         else:
-            path = self.write_csv_data(self.data[::-1], fileName=fileName)
+            path = self.write_csv_data(self.data[::-1], fileName=fileName, armyTime=armyTime)
 
         self.output_message(f'Data saved to {path}.')
         return path
