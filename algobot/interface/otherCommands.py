@@ -19,17 +19,22 @@ class OtherCommands(QDialog):
     def initiate_csv_generation(self):
         self.generateCSVButton.setEnabled(False)
         self.csvGenerationStatus.setText("Downloading data...")
+
         symbol = self.csvGenerationTicker.currentText()
         interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
         descending = self.descendingDateRadio.isChecked()
+
         thread = csvThread.CSVGeneratingThread(symbol=symbol, interval=interval, descending=descending)
-        self.threadPool.start(thread)
         thread.signals.finished.connect(self.end_csv_generation)
+        thread.signals.error.connect(self.handle_csv_generation_error)
+        self.threadPool.start(thread)
 
     def end_csv_generation(self, savedPath):
         msg = f"Successfully saved CSV data to {savedPath}."
+
         self.csvGenerationStatus.setText(msg)
         self.generateCSVButton.setEnabled(True)
+
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
         msgBox.setText(f"Successfully saved CSV data to {savedPath}.")
@@ -37,3 +42,7 @@ class OtherCommands(QDialog):
         msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
         if msgBox.exec_() == QMessageBox.Open:
             os.startfile(savedPath)
+
+    def handle_csv_generation_error(self, e):
+        self.csvGenerationStatus.setText(f"Downloading failed because of error: {e}.")
+        self.generateCSVButton.setEnabled(True)

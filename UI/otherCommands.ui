@@ -186,7 +186,7 @@
            </widget>
           </item>
           <item row="2" column="0">
-           <widget class="QLabel" name="label">
+           <widget class="QLabel" name="sortLabel">
             <property name="text">
              <string>Sort Date</string>
             </property>
@@ -212,6 +212,13 @@
             </property>
             <property name="checked">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QPushButton" name="cancelButton">
+            <property name="text">
+             <string>Cancel</string>
             </property>
            </widget>
           </item>

@@ -155,8 +155,11 @@ class Configuration(QDialog):
         interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
         thread = downloadThread.DownloadThread(symbol=symbol, interval=interval)
         thread.signals.finished.connect(self.set_downloaded_data)
-        thread.signals.error.connect(lambda e: self.backtestInfoLabel.setText(e))
+        thread.signals.error.connect(self.handle_download_failure)
         self.threadPool.start(thread)
+
+    def handle_download_failure(self, e):
+        self.backtestInfoLabel.setText(f"Error occurred during download: {e}.")
 
     def set_downloaded_data(self, data):
         self.data = data
