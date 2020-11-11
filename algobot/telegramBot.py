@@ -96,8 +96,8 @@ class TelegramBot:
 
         for option in trader.tradingOptions:
             avg1, avg2, name1, name2 = self.gui.get_option_info(option, trader)
-            optionString += f'{name1}: {avg1}\n'
-            optionString += f'{name2}: {avg2}\n'
+            optionString += f'{name1}: ${avg1}\n'
+            optionString += f'{name2}: ${avg2}\n'
 
         return (f'Symbol: {trader.symbol}\n'
                 f'Position: {trader.get_position_string()}\n'
@@ -113,7 +113,7 @@ class TelegramBot:
                 f'Loss Strategy: {trader.get_stop_loss_strategy_string()}\n'
                 f'Stop Loss Percentage: {round(trader.lossPercentageDecimal * 100, 2)}%\n'
                 f'Stop Loss: ${round(trader.get_stop_loss(), 2)}\n'
-                f"Custom Stop Loss: ${trader.customStopLoss}\n"
+                f"Custom Stop Loss: ${trader.get_safe_rounded_string(trader.customStopLoss)}\n"
                 f"Current {coinName} price: ${trader.currentPrice}\n"
                 f'{optionString}'
                 )
