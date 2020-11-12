@@ -36,6 +36,7 @@ class BotThread(QRunnable):
         self.signals = BotSignals()
         self.gui = gui
         self.startingTime = time.time()
+        self.intervalSeconds = 1800  # Every 30 minutes for now for testing purposes.
         self.dailyPercentage = 0
         self.elapsed = '1 second'
         self.previousDayTime = None
@@ -281,19 +282,17 @@ class BotThread(QRunnable):
         stopLoss = trader.get_stop_loss()
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
         percentage = trader.get_profit_percentage(trader.startingBalance, net)
-        intervalSeconds = 216000  # This will be for daily change. 216000 seconds is 1 day.
-
         self.elapsed = helpers.get_elapsed_time(self.startingTime)
 
         if self.previousDayTime is None:
-            if time.time() - self.startingTime >= intervalSeconds:
+            if time.time() - self.startingTime >= self.intervalSeconds:
                 self.previousDayTime = time.time()
                 self.previousDayNet = net
                 self.dailyPercentage = 0
             else:
                 self.dailyPercentage = percentage  # Same as current percentage because of lack of values.
         else:
-            if time.time() - self.previousDayTime >= intervalSeconds:
+            if time.time() - self.previousDayTime >= self.intervalSeconds:
                 self.previousDayTime = time.time()
                 self.previousDayNet = net
                 self.dailyPercentage = 0
