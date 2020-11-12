@@ -1082,7 +1082,7 @@ class Interface(QMainWindow):
         self.forceShortSimulationButton.clicked.connect(lambda: self.force_short(SIMULATION))
         self.pauseBotSimulationButton.clicked.connect(lambda: self.pause_or_resume_bot(SIMULATION))
         self.exitPositionSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, True))
-        self.waitOverrideSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, True))
+        self.waitOverrideSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, False))
         self.enableSimulationCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(SIMULATION, True))
         self.disableSimulationCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(SIMULATION, False))
 
