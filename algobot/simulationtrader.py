@@ -28,6 +28,7 @@ class SimulationTrader:
         self.transactionFeePercentage = 0.001  # Binance transaction fee percentage.
         self.trades = []  # All trades performed.
         self.commissionPaid = 0  # Total commission paid to broker.
+        self.dailyChangeNets = []  # Daily change net list. Will contain list of all nets.
 
         self.tradingOptions = []  # List with Option elements. Helps specify what moving averages to trade with.
         self.trend = None  # 1 is bullish, -1 is bearish; usually handled with enums.
@@ -579,7 +580,7 @@ class SimulationTrader:
         self.output_message(f'Trades conducted: {len(self.trades)}')
         self.output_profit_information()
 
-    def log_trades(self):
+    def log_trades_and_daily_net(self):
         """
         Logs trades.
         """
@@ -587,3 +588,10 @@ class SimulationTrader:
         for counter, trade in enumerate(self.trades, 1):
             self.output_message(f'\n{counter}. Date in UTC: {trade["date"]}')
             self.output_message(f'\nAction taken: {trade["action"]}')
+
+        self.output_message('\nDaily Nets:')
+
+        for index, net in enumerate(self.dailyChangeNets, start=1):
+            self.output_message(f'Day {index}: {round(net, 2)}%')
+
+        self.output_message("")

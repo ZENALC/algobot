@@ -302,7 +302,7 @@ class Interface(QMainWindow):
                 self.lowerIntervalData.dump_to_table()
                 self.lowerIntervalData = None
 
-        tempTrader.log_trades()
+        tempTrader.log_trades_and_daily_net()
         tempTrader.dataView.dump_to_table()
         # self.destroy_trader(caller)
 

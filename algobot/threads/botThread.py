@@ -36,14 +36,17 @@ class BotThread(QRunnable):
         self.signals = BotSignals()
         self.gui = gui
         self.startingTime = time.time()
-        self.intervalSeconds = 1800  # Every 30 minutes for now for testing purposes.
-        self.dailyPercentage = 0
         self.elapsed = '1 second'
-        self.previousDayTime = None
-        self.previousDayNet = None
-        self.schedulePeriod = None
-        self.nextScheduledEvent = None
-        self.scheduleSeconds = None
+
+        self.intervalSeconds = 216000  # Every 24 hours
+        self.dailyPercentage = 0  # Initial change percentage.
+        self.previousDayTime = None  # Previous day net time to compare to.
+        self.previousDayNet = None  # Previous day net value to compare to.
+
+        self.schedulePeriod = None  # Next period schedule in string format.
+        self.nextScheduledEvent = None  # These are for periodic scheduling. This variable holds next schedule event.
+        self.scheduleSeconds = None  # Amount of seconds to schedule in.
+
         self.lowerIntervalNotification = False
         self.telegramChatID = gui.configuration.telegramChatID.text()
         self.caller = caller
@@ -293,6 +296,7 @@ class BotThread(QRunnable):
                 self.dailyPercentage = percentage  # Same as current percentage because of lack of values.
         else:
             if time.time() - self.previousDayTime >= self.intervalSeconds:
+                trader.dailyChangeNets.append(trader.get_profit_percentage(self.previousDayNet, net))
                 self.previousDayTime = time.time()
                 self.previousDayNet = net
                 self.dailyPercentage = 0
