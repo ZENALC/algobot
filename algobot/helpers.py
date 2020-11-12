@@ -14,7 +14,6 @@ def initialize_logger():
         os.mkdir('Logs')
 
     os.chdir('Logs')
-
     todayDate = datetime.today().strftime('%Y-%m-%d')
 
     if not os.path.exists(todayDate):
