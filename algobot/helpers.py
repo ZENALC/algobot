@@ -58,7 +58,7 @@ def get_elapsed_time(previousTime):
         seconds = seconds % 3600
         minutes = seconds // 60
         seconds = seconds % 60
-        return f'{hours}h {minutes}m {seconds} s'
+        return f'{hours}h {minutes}m {seconds}s'
 
 
 def load_from_csv(path, descending=True):
