@@ -23,7 +23,7 @@ def initialize_logger():
     os.chdir(todayDate)
 
     logFileName = f'{datetime.now().strftime("%H-%M-%S")}.log'
-    logging.basicConfig(filename=f'{logFileName}', level=logging.INFO, format='%(message)s')
+    logging.basicConfig(filename=logFileName, level=logging.INFO, format='%(message)s')
     os.chdir(curPath)
 
 
