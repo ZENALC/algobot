@@ -37,6 +37,7 @@ class BotThread(QRunnable):
         self.gui = gui
         self.startingTime = time.time()
         self.elapsed = '1 second'
+        self.percentage = None
 
         self.intervalSeconds = 86400  # Every 24 hours
         self.dailyPercentage = 0  # Initial change percentage.
@@ -284,7 +285,7 @@ class BotThread(QRunnable):
         profit = trader.get_profit()
         stopLoss = trader.get_stop_loss()
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
-        percentage = trader.get_profit_percentage(trader.startingBalance, net)
+        self.percentage = trader.get_profit_percentage(trader.startingBalance, net)
         self.elapsed = helpers.get_elapsed_time(self.startingTime)
 
         if self.previousDayTime is None:
@@ -293,7 +294,7 @@ class BotThread(QRunnable):
                 self.previousDayNet = net
                 self.dailyPercentage = 0
             else:
-                self.dailyPercentage = percentage  # Same as current percentage because of lack of values.
+                self.dailyPercentage = self.percentage  # Same as current percentage because of lack of values.
         else:
             if time.time() - self.previousDayTime >= self.intervalSeconds:
                 trader.dailyChangeNets.append(trader.get_profit_percentage(self.previousDayNet, net))
@@ -315,7 +316,7 @@ class BotThread(QRunnable):
             'netValue': f'${round(net, 2)}',
             'profitLossLabel': profitLabel,
             'profitLossValue': f'${abs(round(profit, 2))}',
-            'percentageValue': f'{round(percentage, 2)}%',
+            'percentageValue': f'{round(self.percentage, 2)}%',
             'tradesMadeValue': str(len(trader.trades)),
             'coinOwnedLabel': f'{trader.coinName} Owned',
             'coinOwnedValue': f'{round(trader.coin, 6)}',

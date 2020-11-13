@@ -90,11 +90,7 @@ class TelegramBot:
 
     def get_statistics(self):
         trader = self.gui.trader
-        net = trader.get_net()
-        startingBalance = trader.startingBalance
         profit = trader.get_profit()
-        profitPercentage = trader.get_profit_percentage(trader.startingBalance, net)
-        coinName = trader.coinName
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
 
         optionString = ''
@@ -109,18 +105,18 @@ class TelegramBot:
                 f'Total trades made: {len(trader.trades)}\n'
                 f"Coin owned: {trader.coin}\n"
                 f"Coin owed: {trader.coinOwed}\n"
-                f"Starting balance: ${round(startingBalance, 2)}\n"
+                f"Starting balance: ${round(trader.startingBalance, 2)}\n"
                 f"Balance: ${round(trader.balance, 2)}\n"
-                f'Net: ${round(net, 2)}\n'
+                f'Net: ${round(trader.get_net(), 2)}\n'
                 f"{profitLabel}: ${round(abs(profit), 2)}\n"
-                f'{profitLabel} Percentage: {round(abs(profitPercentage), 2)}%\n'
+                f'{profitLabel} Percentage: {round(self.botThread.percentage, 2)}%\n'
                 f'Daily Percentage: {round(self.botThread.dailyPercentage, 2)}%\n'
                 f'Autonomous Mode: {not trader.inHumanControl}\n'
                 f'Loss Strategy: {trader.get_stop_loss_strategy_string()}\n'
                 f'Stop Loss Percentage: {round(trader.lossPercentageDecimal * 100, 2)}%\n'
                 f'Stop Loss: {trader.get_safe_rounded_string(trader.get_stop_loss())}\n'
                 f"Custom Stop Loss: {trader.get_safe_rounded_string(trader.customStopLoss)}\n"
-                f"Current {coinName} price: ${trader.currentPrice}\n"
+                f"Current {trader.coinName} price: ${trader.currentPrice}\n"
                 f'Elapsed time: {self.botThread.elapsed}\n'
                 f'{optionString}'
                 )
