@@ -38,7 +38,7 @@ class BotThread(QRunnable):
         self.startingTime = time.time()
         self.elapsed = '1 second'
 
-        self.intervalSeconds = 216000  # Every 24 hours
+        self.intervalSeconds = 86400  # Every 24 hours
         self.dailyPercentage = 0  # Initial change percentage.
         self.previousDayTime = None  # Previous day net time to compare to.
         self.previousDayNet = None  # Previous day net value to compare to.

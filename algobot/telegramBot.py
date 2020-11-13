@@ -27,6 +27,7 @@ class TelegramBot:
         dp.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
         dp.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
         dp.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
+        dp.add_handler(CommandHandler(("update", 'updatevalues'), self.update_values))
 
     def send_message(self, chatID, message):
         self.bot.send_message(chat_id=chatID, text=message)
@@ -80,7 +81,12 @@ class TelegramBot:
                                   "/removecustomstoploss -> To remove currently set custom stop loss.\n"
                                   "/setcustomstoploss (your stop loss value here) -> To set custom stop loss.\n"
                                   "/exitposition -> To exit position.\n"
-                                  "/trades -> To get list of trades made.\n")
+                                  "/trades -> To get list of trades made.\n"
+                                  "/update or /updatevalues -> To update current coin values.\n")
+
+    # noinspection PyUnusedLocal
+    def update_values(self, update, context):
+        self.botThread.trader.retrieve_margin_values()
 
     def get_statistics(self):
         trader = self.gui.trader
