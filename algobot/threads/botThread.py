@@ -38,6 +38,7 @@ class BotThread(QRunnable):
         self.startingTime = time.time()
         self.elapsed = '1 second'
         self.percentage = None
+        self.optionDetails = []
 
         self.intervalSeconds = 86400  # Every 24 hours
         self.dailyPercentage = 0  # Initial change percentage.
@@ -304,9 +305,7 @@ class BotThread(QRunnable):
             else:
                 self.dailyPercentage = trader.get_profit_percentage(self.previousDayNet, net)
 
-        optionDetails = []
-        for option in trader.tradingOptions:
-            optionDetails.append(self.gui.get_option_info(option, trader))
+        self.optionDetails = [self.gui.get_option_info(option, trader) for option in trader.tradingOptions]
 
         updateDict = {
             # Statistics window
@@ -330,7 +329,7 @@ class BotThread(QRunnable):
             'tickerLabel': trader.symbol,
             'tickerValue': f'${trader.currentPrice}',
             'currentPrice': trader.currentPrice,
-            'optionDetails': optionDetails,
+            'optionDetails': self.optionDetails,
             'elapsedValue': self.elapsed,
             'dailyPercentageValue': f'{round(self.dailyPercentage, 2)}%'
         }

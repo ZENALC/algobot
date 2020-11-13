@@ -95,8 +95,8 @@ class TelegramBot:
 
         optionString = ''
 
-        for option in trader.tradingOptions:
-            avg1, avg2, name1, name2 = self.gui.get_option_info(option, trader)
+        for option in self.botThread.optionDetails:  # previously trader.tradingOptions
+            avg1, avg2, name1, name2 = option
             optionString += f'{name1}: ${avg1}\n'
             optionString += f'{name2}: ${avg2}\n'
 
