@@ -87,6 +87,7 @@ class TelegramBot:
     # noinspection PyUnusedLocal
     def update_values(self, update, context):
         self.botThread.trader.retrieve_margin_values()
+        update.message.reply_text("Successfully retrieved new values from Binance.")
 
     def get_statistics(self):
         trader = self.gui.trader
