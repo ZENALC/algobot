@@ -274,7 +274,12 @@ class Interface(QMainWindow):
         :param caller: Caller that decides which bot will be ended.
         """
         self.disable_interface(True, caller=caller, everything=True)  # Disable everything until everything is done.
-        self.threadPool.start(workerThread.Worker(lambda: self.end_bot_gracefully(caller=caller)))
+        thread = workerThread.Worker(lambda: self.end_bot_gracefully(caller=caller))
+        thread.signals.error.connect(self.create_popup)
+        thread.signals.finished.connect(lambda: self.reset_bot_interface(caller=caller))
+        self.threadPool.start(thread)
+
+    def reset_bot_interface(self, caller):
         if caller == SIMULATION:
             self.add_to_monitor(caller, "Killed simulation bot.")
         else:
@@ -1033,6 +1038,15 @@ class Interface(QMainWindow):
         self.statistics.show()
         self.statistics.statisticsTabWidget.setCurrentIndex(index)
 
+    def update_binance_values(self):
+        if self.trader is not None:
+            thread = workerThread.Worker(self.trader.retrieve_margin_values)
+            thread.signals.finished.connect(lambda: self.create_popup('Successfully updated values.'))
+            thread.signals.error.connect(self.create_popup)
+            self.threadPool.start(self.trader.retrieve_margin_values)
+        else:
+            self.create_popup('There is currently no live bot running.')
+
     def create_configuration_slots(self):
         """
         Creates configuration slots.
@@ -1045,6 +1059,8 @@ class Interface(QMainWindow):
         self.configuration.printingModeRadioButton.toggled.connect(lambda: self.set_printing_mode())
         self.configuration.simpleLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(False))
         self.configuration.advancedLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(True))
+
+        self.configuration.updateBinanceValues.clicked.connect(self.update_binance_values)
 
     def create_action_slots(self):
         """

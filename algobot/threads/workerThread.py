@@ -45,6 +45,7 @@ class Worker(QRunnable):
         # Retrieve args/kwargs here; and fire processing using them
         try:
             self.fn(*self.args, **self.kwargs)
+            self.signals.finished.emit()
         except Exception as e:
             print(f'Error: {e}')
             traceback.print_exc()
