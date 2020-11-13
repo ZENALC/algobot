@@ -38,11 +38,11 @@ class Interface(QMainWindow):
         assets.qInitResources()
         super(Interface, self).__init__(parent)  # Initializing object
         uic.loadUi(mainUi, self)  # Loading the main UI
-        self.configuration = Configuration()  # Loading configuration
-        self.otherCommands = OtherCommands()  # Loading other commands
-        self.about = About()  # Loading about information
-        self.statistics = Statistics()  # Loading statistics
-        self.threadPool = QThreadPool()  # Initiating threading pool
+        self.configuration = Configuration(self)  # Loading configuration
+        self.otherCommands = OtherCommands(self)  # Loading other commands
+        self.about = About(self)  # Loading about information
+        self.statistics = Statistics(self)  # Loading statistics
+        self.threadPool = QThreadPool(self)  # Initiating threading pool
         self.graphs = (
             {'graph': self.simulationGraph, 'plots': []},
             {'graph': self.backtestGraph, 'plots': []},
