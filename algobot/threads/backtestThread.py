@@ -123,7 +123,8 @@ class BacktestThread(QRunnable):
             'startDate': startDate,
             'endDate': endDate,
             'lossStrategy': lossStrategy,
-            'lossPercentage': lossPercentageDecimal * 100
+            'lossPercentage': lossPercentageDecimal * 100,
+            'dataType': gui.configuration.dataType
         }
 
     def setup_bot(self):
@@ -133,6 +134,7 @@ class BacktestThread(QRunnable):
         configDetails = self.get_configuration_details()
         self.gui.backtester = Backtester(startingBalance=configDetails['startingBalance'],
                                          data=configDetails['data'],
+                                         symbol=configDetails['dataType'],
                                          lossStrategy=configDetails['lossStrategy'],
                                          lossPercentage=configDetails['lossPercentage'],
                                          options=configDetails['options'],

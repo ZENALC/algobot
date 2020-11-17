@@ -191,9 +191,14 @@ class Interface(QMainWindow):
         self.backtestProgressBar.setValue(updatedDict['percentage'])
         net = updatedDict['net']
         utc = updatedDict['utc']
+
         if net < self.backtester.startingBalance:
             self.backtestProfitLabel.setText("Loss")
             self.backtestProfitPercentageLabel.setText("Loss Percentage")
+        else:
+            self.backtestProfitLabel.setText("Profit")
+            self.backtestProfitPercentageLabel.setText("Profit Percentage")
+
         self.backtestbalance.setText(updatedDict['balance'])
         self.backtestNet.setText(updatedDict['netString'])
         self.backtestCommissionsPaid.setText(updatedDict['commissionsPaid'])

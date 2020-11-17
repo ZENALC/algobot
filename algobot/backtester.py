@@ -10,8 +10,9 @@ from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
 
 class Backtester:
     def __init__(self, startingBalance: float, data: list, lossStrategy: int, lossPercentage: float, options: list,
-                 marginEnabled: bool = True, startDate: datetime = None, endDate: datetime = None):
+                 marginEnabled: bool = True, startDate: datetime = None, endDate: datetime = None, symbol: str = None):
         self.startingBalance = startingBalance
+        self.symbol = symbol
         self.balance = startingBalance
         self.coin = 0
         self.coinOwed = 0
@@ -497,6 +498,7 @@ class Backtester:
             sys.stdout = stdout
 
         print("\nBacktest results:")
+        print(f'\tSymbol: {"Unknown/Imported Data" if self.symbol is None else self.symbol}')
         print(f'\tElapsed: {round(self.movingAverageTestEndTime - self.movingAverageTestStartTime, 2)} seconds')
         print(f'\tStart Period: {self.data[self.startDateIndex]["date_utc"]}')
         print(f"\tEnd Period: {self.currentPeriod['date_utc']}")
@@ -541,27 +543,31 @@ class Backtester:
 
         sys.stdout = previous_stdout  # revert stdout back to normal
 
-    def write_results(self):
+    def write_results(self, resultFile=None):
         currentPath = os.getcwd()
-        backtestResultsFolder = 'Backtest Results'
-        resultFile = f'backtest_results_{"_".join(self.interval.lower().split())}.txt'
-        os.chdir('../')
 
-        if not os.path.exists(backtestResultsFolder):
-            os.mkdir(backtestResultsFolder)
-        os.chdir(backtestResultsFolder)
+        if not resultFile:
+            backtestResultsFolder = 'Backtest Results'
+            symbol = 'Imported' if not self.symbol else self.symbol
+            resultFile = f'{symbol}_backtest_results_{"_".join(self.interval.lower().split())}.txt'
+            os.chdir('../')
 
-        counter = 0
-        previousFile = resultFile
+            if not os.path.exists(backtestResultsFolder):
+                os.mkdir(backtestResultsFolder)
+            os.chdir(backtestResultsFolder)
 
-        while os.path.exists(resultFile):
-            resultFile = f'({counter}){previousFile}'
-            counter += 1
+            counter = 0
+            previousFile = resultFile
+
+            while os.path.exists(resultFile):
+                resultFile = f'({counter}){previousFile}'
+                counter += 1
 
         with open(resultFile, 'w') as f:
             self.print_configuration_parameters(f)
             self.print_backtest_results(f)
             self.print_trades(f)
+
         filePath = os.path.join(os.getcwd(), resultFile)
         os.chdir(currentPath)
         return filePath

@@ -21,6 +21,7 @@ class Configuration(QDialog):
         self.load_slots()
         self.load_credentials()
         self.data = None
+        self.dataType = None
 
     def test_telegram(self):
         """
@@ -153,6 +154,7 @@ class Configuration(QDialog):
             self.backtestInfoLabel.setText("Data not imported.")
             return
         self.data = helpers.load_from_csv(filePath, descending=False)
+        self.dataType = "Imported"
         self.backtestInfoLabel.setText("Imported data successfully.")
         self.setup_calendar()
         self.backtestDataLabel.setText('Currently using imported data to conduct backtest.')
@@ -173,8 +175,9 @@ class Configuration(QDialog):
         self.backtestInfoLabel.setText(f"Error occurred during download: {e}.")
 
     def set_downloaded_data(self, data):
-        self.data = data
         symbol = self.backtestTickerComboBox.currentText()
+        self.data = data
+        self.dataType = symbol
         interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
         self.backtestInfoLabel.setText("Downloaded data successfully.")
         self.backtestDataLabel.setText(f'Currently using {symbol} in {interval} intervals to conduct backtest.')
