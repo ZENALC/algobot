@@ -400,15 +400,6 @@
               </item>
               <item>
                <widget class="QPushButton" name="exitPositionButton">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
                 <property name="text">
                  <string>Exit Position</string>
                 </property>
@@ -429,20 +420,8 @@
               </item>
               <item>
                <widget class="QPushButton" name="pauseBotButton">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="toolTip">
-                 <string>Pause bot</string>
-                </property>
                 <property name="text">
-                 <string>Pause Automation</string>
+                 <string>Pause Bot</string>
                 </property>
                </widget>
               </item>

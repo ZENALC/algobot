@@ -86,7 +86,7 @@
               <string>Live Main Options</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_13">
-              <item row="5" column="0" colspan="4">
+              <item row="5" column="0" colspan="5">
                <widget class="QGroupBox" name="regionGroupBox">
                 <property name="title">
                  <string>Region</string>
@@ -112,7 +112,7 @@
                 </layout>
                </widget>
               </item>
-              <item row="6" column="0" colspan="4">
+              <item row="6" column="0" colspan="5">
                <widget class="QGroupBox" name="accountTypeGroupBox">
                 <property name="title">
                  <string>Account Type</string>
@@ -138,72 +138,7 @@
                 </layout>
                </widget>
               </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="tickerLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Ticker</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2" colspan="2">
-               <widget class="QLineEdit" name="binanceApiKey">
-                <property name="echoMode">
-                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0" colspan="2">
-               <widget class="QLabel" name="binanceSecretKeyLabel">
-                <property name="text">
-                 <string>Binance Secret Key</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="2" colspan="2">
-               <widget class="QDoubleSpinBox" name="doubleSpinBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2" colspan="2">
-               <widget class="QComboBox" name="tickerComboBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>BTCUSDT</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="intervalLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Interval</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="2" colspan="2">
+              <item row="1" column="2" colspan="3">
                <widget class="QComboBox" name="intervalComboBox">
                 <property name="currentText">
                  <string>1 Hour</string>
@@ -275,27 +210,6 @@
                 </item>
                </widget>
               </item>
-              <item row="2" column="0" colspan="2">
-               <widget class="QLabel" name="binanceApiKeyLabel">
-                <property name="text">
-                 <string>Binance API Key</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="2" colspan="2">
-               <widget class="QLineEdit" name="binanceApiSecret">
-                <property name="echoMode">
-                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0" colspan="2">
-               <widget class="QLabel" name="maximumMarginLabel">
-                <property name="text">
-                 <string>Maximum Margin Level</string>
-                </property>
-               </widget>
-              </item>
               <item row="9" column="0">
                <widget class="QPushButton" name="saveCredentialsButton">
                 <property name="sizePolicy">
@@ -309,20 +223,31 @@
                 </property>
                </widget>
               </item>
-              <item row="8" column="0">
-               <widget class="QCheckBox" name="lowerIntervalCheck">
+              <item row="2" column="0" colspan="2">
+               <widget class="QLabel" name="binanceApiKeyLabel">
                 <property name="text">
-                 <string>Lower Interval Notification?</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
+                 <string>Binance API Key</string>
                 </property>
                </widget>
               </item>
-              <item row="9" column="1">
-               <widget class="QPushButton" name="loadCredentialsButton">
+              <item row="3" column="2" colspan="3">
+               <widget class="QLineEdit" name="binanceApiSecret">
+                <property name="echoMode">
+                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0" colspan="2">
+               <widget class="QLabel" name="maximumMarginLabel">
                 <property name="text">
-                 <string>Load Credentials</string>
+                 <string>Maximum Margin Level</string>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="4">
+               <widget class="QPushButton" name="updateBinanceValues">
+                <property name="text">
+                 <string>Update Binance Values</string>
                 </property>
                </widget>
               </item>
@@ -333,17 +258,99 @@
                 </property>
                </widget>
               </item>
-              <item row="10" column="0" colspan="4">
+              <item row="9" column="1">
+               <widget class="QPushButton" name="loadCredentialsButton">
+                <property name="text">
+                 <string>Load Credentials</string>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="0">
+               <widget class="QCheckBox" name="lowerIntervalCheck">
+                <property name="text">
+                 <string>Lower Interval Notification?</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="10" column="0" colspan="5">
                <widget class="QLabel" name="credentialResult">
                 <property name="text">
                  <string>Successfully connected.</string>
                 </property>
                </widget>
               </item>
-              <item row="9" column="3">
-               <widget class="QPushButton" name="updateBinanceValues">
+              <item row="2" column="2" colspan="3">
+               <widget class="QLineEdit" name="binanceApiKey">
+                <property name="echoMode">
+                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="tickerLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="text">
-                 <string>Update Binance Values</string>
+                 <string>Ticker</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" colspan="3">
+               <widget class="QComboBox" name="tickerComboBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>BTCUSDT</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="intervalLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Interval</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0" colspan="2">
+               <widget class="QLabel" name="binanceSecretKeyLabel">
+                <property name="text">
+                 <string>Binance Secret Key</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="2" colspan="3">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="3">
+               <widget class="QPushButton" name="updateTickers">
+                <property name="text">
+                 <string>Update Tickers</string>
                 </property>
                </widget>
               </item>

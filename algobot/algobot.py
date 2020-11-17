@@ -136,6 +136,7 @@ class Interface(QMainWindow):
 
         self.otherCommands.csvGenerationTicker.clear()
         self.otherCommands.csvGenerationTicker.addItems(tickers)
+        self.configuration.credentialResult.setText("Updated tickers successfully.")
 
     def setup_news(self, news):
         """
@@ -1061,6 +1062,7 @@ class Interface(QMainWindow):
         self.configuration.advancedLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(True))
 
         self.configuration.updateBinanceValues.clicked.connect(self.update_binance_values)
+        self.configuration.updateTickers.clicked.connect(self.tickers_thread)
 
     def create_action_slots(self):
         """
