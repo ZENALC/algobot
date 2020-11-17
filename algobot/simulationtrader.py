@@ -552,7 +552,7 @@ class SimulationTrader:
         self.output_message(f'\nCurrent {self.coinName} price: ${self.currentPrice}')
         self.output_message(f'Balance: ${round(self.balance, 2)}')
         self.output_profit_information()
-        if self.__class__.__name__ == 'SimulatedTrader':
+        if type(self) == SimulationTrader:
             self.output_message(f'\nTrades conducted this simulation: {len(self.trades)}')
         else:
             self.output_message(f'\nTrades conducted in live market: {len(self.trades)}')
