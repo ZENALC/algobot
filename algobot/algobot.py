@@ -19,7 +19,7 @@ from interface.statistics import Statistics
 from scrapeNews import scrape_news
 
 from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem, QFileDialog
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtGui import QIcon, QTextCursor
 from pyqtgraph import DateAxisItem, mkPen, PlotWidget
@@ -166,11 +166,15 @@ class Interface(QMainWindow):
         worker.signals.finished.connect(self.end_backtest)
         self.threadPool.start(worker)
 
-    def end_backtest(self, path: str):
+    def end_backtest(self):
         """
         Ends backtest and prompts user if they want to see the results.
-        :param path: Path to result text file.
         """
+        fileName, _ = QFileDialog.getSaveFileName(self, 'Save Path', os.path.join(os.getcwd(), '../'), 'TXT (*.txt)')
+        fileName = fileName.strip()
+        fileName = fileName if fileName != '' else None
+
+        path = self.backtester.write_results(resultFile=fileName)
         self.add_to_backtest_monitor(f'Ended backtest and saved results to {path}.')
         self.disable_interface(False, BACKTEST)
         self.backtestProgressBar.setValue(100)

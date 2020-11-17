@@ -8,7 +8,7 @@ from option import Option
 
 
 class BacktestSignals(QObject):
-    finished = pyqtSignal(str)
+    finished = pyqtSignal()
     activity = pyqtSignal(dict)
     started = pyqtSignal(dict)
     error = pyqtSignal(int, str)
@@ -152,8 +152,7 @@ class BacktestThread(QRunnable):
         try:
             self.setup_bot()
             self.backtest()
-            path = self.gui.backtester.write_results()
-            self.signals.finished.emit(path)
+            self.signals.finished.emit()
         except Exception as e:
             print(f'Error: {e}')
             traceback.print_exc()
