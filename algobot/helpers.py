@@ -5,6 +5,43 @@ import time
 from datetime import datetime
 from dateutil import parser
 
+BASE_DIR = os.path.dirname(__file__)
+ROOT_DIR = os.path.dirname(BASE_DIR)
+LOG_FOLDER = 'Logs'
+
+
+def setup_and_return_log_path(fileName):
+    previousPath = os.getcwd()
+    os.chdir(ROOT_DIR)
+
+    if not os.path.exists(LOG_FOLDER):
+        os.mkdir(LOG_FOLDER)
+    os.chdir(LOG_FOLDER)
+
+    todayDate = datetime.today().strftime('%Y-%m-%d')
+    if not os.path.exists(todayDate):
+        os.mkdir(todayDate)
+    os.chdir(todayDate)
+
+    logFileName = f'{datetime.now().strftime("%H-%M-%S")}-{fileName}.log'
+    fullPath = os.path.join(os.getcwd(), logFileName)
+    print(fullPath)
+    os.chdir(previousPath)
+    return fullPath
+
+
+def get_logger(logFile, name):
+    logger = logging.getLogger(name=name)
+    logger.setLevel(logging.INFO)
+
+    c_formatter = logging.Formatter('%(message)s')
+    f_handler = logging.FileHandler(filename=setup_and_return_log_path(fileName=logFile), delay=True)
+    # f_handler.setLevel(logging.INFO)
+    f_handler.setFormatter(c_formatter)
+
+    logger.addHandler(f_handler)
+    return logger
+
 
 def initialize_logger():
     """Initializes logger"""

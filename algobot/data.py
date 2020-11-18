@@ -1,16 +1,17 @@
 import sqlite3
 import time
 import os
-import logging
 
 from datetime import timedelta, timezone, datetime
+from helpers import get_logger
 from contextlib import closing
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds, date_to_milliseconds
 
 
 class Data:
-    def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True, updateData: bool = True):
+    def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True,
+                 updateData: bool = True, log: bool = True, logFile: str = 'data'):
         """
         Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
         :param interval: Interval for which the data object will track prices.
@@ -19,6 +20,8 @@ class Data:
         :param: UpdateData: Boolean for whether data will be updated if it is loaded.
         """
         self.binanceClient = Client()  # Initialize Binance client
+        if log:
+            self.logger = get_logger(logFile=logFile, name=__name__)
         self.validate_interval(interval)
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
@@ -69,8 +72,7 @@ class Data:
             else:
                 self.output_message("Database is up-to-date.")
 
-    @staticmethod
-    def output_message(message: str, level=2, printMessage: bool = False):
+    def output_message(self, message: str, level=2, printMessage: bool = False):
         """
         I need to research the logging module better, but in essence, this function just logs and optionally prints
         message provided.
@@ -82,13 +84,13 @@ class Data:
             print(message)
 
         if level == 2:
-            logging.info(message)
+            self.logger.info(message)
         elif level == 3:
-            logging.debug(message)
+            self.logger.debug(message)
         elif level == 4:
-            logging.warning(message)
+            self.logger.warning(message)
         elif level == 5:
-            logging.critical(message)
+            self.logger.critical(message)
 
     def get_database_file(self) -> str:
         """
@@ -534,6 +536,20 @@ class Data:
 
         self.output_message("Data has been verified to be correct.")
         return True
+
+    def get_rsi(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True) -> float:
+        data = [self.get_current_data()] + self.data
+        data = data[shift: prices + shift + 14]
+        data = data[:]
+        data.reverse()
+
+        up = 0
+        down = 0
+
+        for period in data:
+            pass
+
+        return 1
 
     def get_sma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True) -> float:
         """

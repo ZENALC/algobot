@@ -1,6 +1,5 @@
 import assets
 import sys
-import helpers
 import os
 
 from threads import workerThread, backtestThread, botThread, listThread
@@ -113,7 +112,7 @@ class Interface(QMainWindow):
         Returns all available tickers from Binance API.
         :return: List of all available tickers.
         """
-        tickers = [ticker['symbol'] for ticker in Data(loadData=False).binanceClient.get_all_tickers()
+        tickers = [ticker['symbol'] for ticker in Data(loadData=False, log=False).binanceClient.get_all_tickers()
                    if 'USDT' in ticker['symbol']]
 
         tickers.sort()
@@ -1427,7 +1426,7 @@ class Interface(QMainWindow):
 
 def main():
     app.setStyle('Fusion')
-    helpers.initialize_logger()
+    # helpers.initialize_logger()
     interface = Interface()
     interface.showMaximized()
     app.setWindowIcon(QIcon('../media/algobotwolf.png'))

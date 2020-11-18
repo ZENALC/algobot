@@ -26,8 +26,8 @@ class CSVGeneratingThread(QRunnable):
         """
         # Retrieve args/kwargs here; and fire processing using them
         try:
-            savedPath = Data(interval=self.interval, symbol=self.symbol).create_csv_file(descending=self.descending,
-                                                                                         armyTime=self.armyTime)
+            savedPath = Data(interval=self.interval, symbol=self.symbol, log=False).create_csv_file(
+                descending=self.descending, armyTime=self.armyTime)
             self.signals.finished.emit(savedPath)
         except Exception as e:
             print(f'Error: {e}')

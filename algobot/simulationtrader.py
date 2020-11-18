@@ -1,13 +1,12 @@
-import logging
-
 from datetime import datetime
+from helpers import get_logger
 from data import Data
 from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
 
 
 class SimulationTrader:
     def __init__(self, startingBalance: float = 1000, interval: str = '1h', symbol: str = 'BTCUSDT',
-                 loadData: bool = True):
+                 loadData: bool = True, logFile: str = 'simulation', dataLogFile: str = 'simulationData'):
         """
         SimulationTrader object that will mimic real live market trades.
         :param startingBalance: Balance to start simulation trader with.
@@ -15,9 +14,10 @@ class SimulationTrader:
         :param symbol: Symbol to start trading with.
         :param loadData: Boolean whether we load data from data object or not.
         """
-        self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData)  # Retrieve data-view object.
+        self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData, logFile=dataLogFile)
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
+        self.logger = get_logger(logFile=logFile, name=__name__)  # Get logger.
 
         # Initialize initial values.
         self.balance = startingBalance  # USDT Balance.
@@ -49,19 +49,18 @@ class SimulationTrader:
         self.currentPosition = None  # Current position value.
         self.previousPosition = None  # Previous position to validate for a cross.
 
-    @staticmethod
-    def output_message(message: str, level: int = 2, printMessage: bool = False):
+    def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """Prints out and logs message"""
         if printMessage:
             print(message)
         if level == 2:
-            logging.info(message)
+            self.logger.info(message)
         elif level == 3:
-            logging.debug(message)
+            self.logger.debug(message)
         elif level == 4:
-            logging.warning(message)
+            self.logger.warning(message)
         elif level == 5:
-            logging.critical(message)
+            self.logger.critical(message)
 
     def add_trade(self, message: str, initialNet: float, finalNet: float, price: float, force: bool, orderID=None):
         """
