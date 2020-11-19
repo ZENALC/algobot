@@ -16,7 +16,9 @@
       <w>forceshort</w>
       <w>getcwd</w>
       <w>getposition</w>
+      <w>hadot</w>
       <w>levelname</w>
+      <w>philo</w>
       <w>removecustomstoploss</w>
       <w>resumebot</w>
       <w>setcustomstoploss</w>

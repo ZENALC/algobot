@@ -23,5 +23,16 @@
         </library>
       </libraries>
     </data-source>
+    <data-source source="LOCAL" name="YFIUSDT" uuid="d29a12cf-4345-4c7b-b675-1d38c3beefe2">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\Databases\YFIUSDT.db</jdbc-url>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.31.1/sqlite-jdbc-3.31.1.jar</url>
+        </library>
+      </libraries>
+    </data-source>
   </component>
 </project>

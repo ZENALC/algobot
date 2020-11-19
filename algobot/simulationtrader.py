@@ -6,7 +6,7 @@ from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
 
 class SimulationTrader:
     def __init__(self, startingBalance: float = 1000, interval: str = '1h', symbol: str = 'BTCUSDT',
-                 loadData: bool = True, logFile: str = 'simulation', dataLogFile: str = 'simulationData'):
+                 loadData: bool = True, logFile: str = 'simulation'):
         """
         SimulationTrader object that will mimic real live market trades.
         :param startingBalance: Balance to start simulation trader with.
@@ -48,6 +48,7 @@ class SimulationTrader:
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
         self.currentPosition = None  # Current position value.
         self.previousPosition = None  # Previous position to validate for a cross.
+        self.stoicDictionary = {}  # Dictionary for stoic strategies.
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """Prints out and logs message"""
@@ -210,6 +211,61 @@ class SimulationTrader:
         finalNet = self.get_net()
         self.add_trade(msg, force=force, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice)
         self.output_message(msg)
+
+    def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0):
+        rsi_values_one = [self.dataView.get_rsi(input1, shift=shift) for shift in range(input1 + s, s, -1)]
+        rsi_values_two = [self.dataView.get_rsi(input2, shift=shift) for shift in range(input2 + s, s, -1)]
+
+        seneca = max(rsi_values_one) - min(rsi_values_one)
+        if 'seneca' in self.stoicDictionary:
+            self.stoicDictionary['seneca'].insert(0, seneca)
+        else:
+            self.stoicDictionary['seneca'] = [seneca]
+
+        zeno = rsi_values_one[-1] - min(rsi_values_one)
+        if 'zeno' in self.stoicDictionary:
+            self.stoicDictionary['zeno'].insert(0, zeno)
+        else:
+            self.stoicDictionary['zeno'] = [zeno]
+
+        gaius = rsi_values_two[-1] - min(rsi_values_two)
+        if 'gaius' in self.stoicDictionary:
+            self.stoicDictionary['gaius'].insert(0, gaius)
+        else:
+            self.stoicDictionary['gaius'] = [gaius]
+
+        philo = max(rsi_values_two) - min(rsi_values_two)
+        if 'philo' in self.stoicDictionary:
+            self.stoicDictionary['philo'].insert(0, philo)
+        else:
+            self.stoicDictionary['philo'] = [philo]
+
+        if len(self.stoicDictionary['gaius']) < 3:
+            return None
+
+        hadot = sum(self.stoicDictionary['gaius'][:3]) / sum(self.stoicDictionary['philo'][:3]) * 100
+        if 'hadot' in self.stoicDictionary:
+            self.stoicDictionary['hadot'].insert(0, hadot)
+        else:
+            self.stoicDictionary['hadot'] = [hadot]
+
+        if len(self.stoicDictionary['hadot']) < 3:
+            return None
+
+        stoic = sum(self.stoicDictionary['zeno'][:3]) / sum(self.stoicDictionary['seneca'][:3]) * 100
+        marcus = sum(self.stoicDictionary['hadot'][:input3]) / input3
+
+        print(rsi_values_two)
+        print(rsi_values_one)
+        print(stoic)
+        print(marcus)
+
+        if marcus > stoic:
+            return BEARISH
+        elif marcus < stoic:
+            return BULLISH
+        else:
+            return None
 
     def main_logic(self):
         """
