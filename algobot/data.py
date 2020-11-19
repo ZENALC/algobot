@@ -671,7 +671,7 @@ class Data:
 
         data = [self.get_current_data()] + self.data
         start = 500 + prices if len(data) > 500 + prices else len(data)
-        data = data[:start]
+        data = data[shift:start]
         data = data[:]
         data.reverse()
 
