@@ -17,7 +17,7 @@ class SimulationTrader:
         self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData, logFile=dataLogFile)
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
-        self.logger = get_logger(logFile=logFile, name=__name__)  # Get logger.
+        self.logger = get_logger(logFile=logFile, loggerName=logFile)  # Get logger.
 
         # Initialize initial values.
         self.balance = startingBalance  # USDT Balance.

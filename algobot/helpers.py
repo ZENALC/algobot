@@ -30,8 +30,8 @@ def setup_and_return_log_path(fileName):
     return fullPath
 
 
-def get_logger(logFile, name):
-    logger = logging.getLogger(name=name)
+def get_logger(logFile, loggerName):
+    logger = logging.getLogger(loggerName)
     logger.setLevel(logging.INFO)
 
     c_formatter = logging.Formatter('%(message)s')

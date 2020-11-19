@@ -28,6 +28,7 @@ class TelegramBot:
         dp.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
         dp.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
         dp.add_handler(CommandHandler(("update", 'updatevalues'), self.update_values))
+        dp.add_handler(CommandHandler(("thanks", 'thanksbot', 'thankyou'), self.update_values))
 
     def send_message(self, chatID, message):
         self.bot.send_message(chat_id=chatID, text=message)
@@ -82,7 +83,8 @@ class TelegramBot:
                                   "/setcustomstoploss (your stop loss value here) -> To set custom stop loss.\n"
                                   "/exitposition -> To exit position.\n"
                                   "/trades -> To get list of trades made.\n"
-                                  "/update or /updatevalues -> To update current coin values.\n")
+                                  "/update or /updatevalues -> To update current coin values.\n"
+                                  "/thanks or /thankyou or /thanksbot -> to thank the bot. \n")
 
     # noinspection PyUnusedLocal
     def update_values(self, update, context):
@@ -130,6 +132,11 @@ class TelegramBot:
     def get_statistics_telegram(self, update, context):
         message = "Here are your statistics as requested: \n"
         update.message.reply_text(message + self.get_statistics())
+
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def thank_bot_telegram(update, context):
+        update.message.reply_text("You're welcome.")
 
     # noinspection PyUnusedLocal
     def override_telegram(self, update, context):

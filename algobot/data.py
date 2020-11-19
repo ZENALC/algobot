@@ -20,7 +20,7 @@ class Data:
         :param: UpdateData: Boolean for whether data will be updated if it is loaded.
         """
         self.binanceClient = Client()  # Initialize Binance client
-        self.logger = get_logger(logFile=logFile, name=__name__) if log else None
+        self.logger = get_logger(logFile=logFile, loggerName='DataObject') if log else None
         self.validate_interval(interval)
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
@@ -631,6 +631,16 @@ class Data:
             return round(highest, 2)
         return highest
 
+    @staticmethod
+    def helper_get_ema(data, periods):
+        ema = 0
+        alpha = 1 / periods
+
+        for value in data:
+            ema = value * alpha + ema * (1 - alpha)
+
+        return ema
+
     def get_rsi(self, prices: int = 14, parameter: str = 'close', shift: int = 0, round_value: bool = True) -> float:
         """
         Returns relative strength index.
@@ -640,26 +650,33 @@ class Data:
         :param round_value: Boolean that determines whether final value is rounded or not.
         :return: Final relative strength index.
         """
+        if not self.is_valid_average_input(shift, prices):
+            raise ValueError('Invalid input specified.')
+
         data = [self.get_current_data()] + self.data
-        data = data[shift: prices + shift + 1]
+        data = data[shift: prices + shift]
         data = data[:]
         data.reverse()
 
-        up = 0
-        down = 0
+        for _ in data:
+            print(_)
 
+        ups = []
+        downs = []
         previous = data[0]
 
         for period in data[1:]:
             if period[parameter] > previous[parameter]:
-                up += period[parameter] - previous[parameter]
+                ups.append(period[parameter] - previous[parameter])
+                downs.append(0)
             else:
-                down += previous[parameter] - period[parameter]
+                downs.append(previous[parameter] - period[parameter])
+                ups.append(0)
 
             previous = period
 
-        up = up / prices
-        down = down / prices
+        up = self.helper_get_ema(ups, prices)
+        down = self.helper_get_ema(downs, prices)
 
         if down == 0:
             return 100
