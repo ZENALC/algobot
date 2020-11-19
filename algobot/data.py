@@ -3,7 +3,7 @@ import time
 import os
 
 from datetime import timedelta, timezone, datetime
-from helpers import get_logger
+from helpers import get_logger, ROOT_DIR
 from contextlib import closing
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds, date_to_milliseconds
@@ -20,8 +20,7 @@ class Data:
         :param: UpdateData: Boolean for whether data will be updated if it is loaded.
         """
         self.binanceClient = Client()  # Initialize Binance client
-        if log:
-            self.logger = get_logger(logFile=logFile, name=__name__)
+        self.logger = get_logger(logFile=logFile, name=__name__) if log else None
         self.validate_interval(interval)
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
@@ -83,6 +82,9 @@ class Data:
         if printMessage:
             print(message)
 
+        if self.logger is None:
+            return
+
         if level == 2:
             self.logger.info(message)
         elif level == 3:
@@ -98,7 +100,7 @@ class Data:
         :return: Database file path.
         """
         currentPath = os.getcwd()
-        os.chdir('../')
+        os.chdir(ROOT_DIR)
         if not os.path.exists('Databases'):
             os.mkdir('Databases')
 
@@ -114,21 +116,27 @@ class Data:
             with closing(connection.cursor()) as cursor:
                 cursor.execute(f'''
                                 CREATE TABLE IF NOT EXISTS {self.databaseTable}(
-                                trade_date TEXT PRIMARY KEY,
+                                date_utc TEXT PRIMARY KEY,
                                 open_price TEXT NOT NULL,
                                 high_price TEXT NOT NULL,
                                 low_price TEXT NOT NULL,
-                                close_price TEXT NOT NULL
+                                close_price TEXT NOT NULL,
+                                volume TEXT NOT NULL,
+                                quote_asset_volume TEXT NOT NULL,
+                                number_of_trades TEXT NOT NULL,
+                                taker_buy_base_asset TEXT NOT NULL,
+                                taker_buy_quote_asset TEXT NOT NULL
                                 );''')
                 connection.commit()
 
-    def dump_to_table(self):
+    def dump_to_table(self) -> bool:
         """
         Dumps date and price information to database.
         :return: A boolean whether data entry was successful or not.
         """
-        query = f'''INSERT INTO {self.databaseTable} (trade_date, open_price, high_price, low_price, close_price) 
-                    VALUES (?, ?, ?, ?, ?);'''
+        query = f'''INSERT INTO {self.databaseTable} (date_utc, open_price, high_price, low_price, close_price,
+                            volume, quote_asset_volume, number_of_trades, taker_buy_base_asset, taker_buy_quote_asset) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 for data in self.data:
@@ -139,6 +147,11 @@ class Data:
                                         data['high'],
                                         data['low'],
                                         data['close'],
+                                        data['volume'],
+                                        data['quote_asset_volume'],
+                                        data['number_of_trades'],
+                                        data['taker_buy_base_asset'],
+                                        data['taker_buy_quote_asset'],
                                         ))
                         connection.commit()
                     except sqlite3.IntegrityError:
@@ -156,7 +169,7 @@ class Data:
         """
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
-                cursor.execute(f'SELECT trade_date FROM {self.databaseTable} ORDER BY trade_date DESC LIMIT 1')
+                cursor.execute(f'SELECT date_utc FROM {self.databaseTable} ORDER BY date_utc DESC LIMIT 1')
                 return cursor.fetchone()
 
     def get_data_from_database(self):
@@ -166,8 +179,9 @@ class Data:
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 rows = cursor.execute(f'''
-                        SELECT "trade_date", "open_price","high_price", "low_price", "close_price"
-                        FROM {self.databaseTable} ORDER BY trade_date DESC
+                        SELECT "date_utc", "open_price", "high_price", "low_price", "close_price", "volume", 
+                        "quote_asset_volume", "number_of_trades", "taker_buy_base_asset", "taker_buy_quote_asset"
+                        FROM {self.databaseTable} ORDER BY date_utc DESC
                         ''').fetchall()
 
         if len(rows) > 0:
@@ -177,11 +191,17 @@ class Data:
             return
 
         for row in rows:
-            self.data.append({'date_utc': datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc),
+            date_utc = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            self.data.append({'date_utc': date_utc,
                               'open': float(row[1]),
                               'high': float(row[2]),
                               'low': float(row[3]),
                               'close': float(row[4]),
+                              'volume': float(row[5]),
+                              'quote_asset_volume': float(row[6]),
+                              'number_of_trades': float(row[7]),
+                              'taker_buy_base_asset': float(row[8]),
+                              'taker_buy_quote_asset': float(row[9]),
                               })
 
     def database_is_updated(self) -> bool:
@@ -328,6 +348,11 @@ class Data:
                                  'high': float(data[2]),
                                  'low': float(data[3]),
                                  'close': float(data[4]),
+                                 'volume': float(data[5]),
+                                 'quote_asset_volume': float(data[6]),
+                                 'number_of_trades': float(data[7]),
+                                 'taker_buy_base_asset': float(data[8]),
+                                 'taker_buy_quote_asset': float(data[9]),
                                  })
 
     def update_data(self):
@@ -368,7 +393,12 @@ class Data:
                                      'open': float(currentData[1]),
                                      'high': float(currentData[2]),
                                      'low': float(currentData[3]),
-                                     'close': float(currentData[4])}
+                                     'close': float(currentData[4]),
+                                     'volume:': float(currentData[5]),
+                                     'quote_asset_volume:': float(currentData[6]),
+                                     'number_of_trades:': float(currentData[7]),
+                                     'taker_buy_base_asset:': float(currentData[8]),
+                                     'taker_buy_quote_asset:': float(currentData[9]), }
             return currentDataDictionary
         except Exception as e:
             self.output_message(f"Error: {e}. Retrying in 5 seconds...", 4)
@@ -420,24 +450,27 @@ class Data:
         """
         folderName = 'CSV'
         currentPath = os.getcwd()
-        os.chdir('../')
+        os.chdir(ROOT_DIR)
 
-        if not os.path.exists(folderName):  # Inside CSV folder
+        if not os.path.exists(folderName):  # Create CSV folder if it doesn't exist
             os.mkdir(folderName)
-        os.chdir(folderName)
+        os.chdir(folderName)  # Go inside the folder.
 
-        if not os.path.exists(self.symbol):  # Insider symbol folder inside CSV
+        if not os.path.exists(self.symbol):  # Create symbol folder inside CSV folder if it doesn't exist.
             os.mkdir(self.symbol)
-        os.chdir(self.symbol)
+        os.chdir(self.symbol)  # Go inside the folder.
 
         with open(fileName, 'w') as f:
-            f.write("Date_UTC, Open, High, Low, Close\n")
+            f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
+                    "Taker_Buy_Base_Asset, Taker_Buy_Quote_Asset\n")
             for data in totalData:
                 if armyTime:
                     parsedDate = data['date_utc'].strftime("%m/%d/%Y %H:%M")
                 else:
                     parsedDate = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
-                f.write(f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}\n')
+                f.write(f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]},'
+                        f'{data["volume"]}, {data["quote_asset_volume"]}, {data["number_of_trades"]}, '
+                        f'{data["taker_buy_base_asset"]}, {data["taker_buy_quote_asset"]}\n')
 
         path = os.path.join(os.getcwd(), fileName)
         os.chdir(currentPath)
@@ -537,19 +570,106 @@ class Data:
         self.output_message("Data has been verified to be correct.")
         return True
 
-    def get_rsi(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True) -> float:
+    def get_summation(self, prices: int, parameter: str, round_value: bool = True) -> float:
+        """
+        Returns total summation.
+        :param prices: Amount of periods to iterate through for summation.
+        :param parameter: Parameter to iterate through.
+        :param round_value: Boolean that determines whether returned output is rounded or not.
+        :return: Total summation.
+        """
         data = [self.get_current_data()] + self.data
-        data = data[shift: prices + shift + 14]
+        data = data[:prices]
+
+        total = 0
+        for period in data:
+            total += period[parameter]
+
+        if round_value:
+            return round(total, 0)
+        return total
+
+    def get_lowest_low_value(self, prices: int, parameter: str = 'low', round_value: bool = True) -> float:
+        """
+        Function that returns the lowest low values.
+        :param prices: Amount of periods to iterate through.
+        :param parameter: Parameter to iterate through. By default, it is low.
+        :param round_value: Boolean that determines whether returned output is rounded or not.
+        :return: Lowest low value from periods.
+        """
+        data = [self.get_current_data()] + self.data
+        data = data[:prices]
+
+        lowest = data[0][parameter]
+
+        for period in data[1:]:
+            if period[parameter] < lowest:
+                lowest = period[parameter]
+
+        if round_value:
+            return round(lowest, 2)
+        return lowest
+
+    def get_highest_high_value(self, prices: int, parameter: str = 'high', round_value: bool = True) -> float:
+        """
+        Function that returns the highest high values.
+        :param prices: Amount of periods to iterate through.
+        :param parameter: Parameter to iterate through. By default, it is high.
+        :param round_value: Boolean that determines whether returned output is rounded or not.
+        :return: Highest high value from periods.
+        """
+        data = [self.get_current_data()] + self.data
+        data = data[:prices]
+
+        highest = data[0][parameter]
+
+        for period in data[1:]:
+            if period[parameter] > highest:
+                highest = period[parameter]
+
+        if round_value:
+            return round(highest, 2)
+        return highest
+
+    def get_rsi(self, prices: int = 14, parameter: str = 'close', shift: int = 0, round_value: bool = True) -> float:
+        """
+        Returns relative strength index.
+        :param prices: Amount of prices to iterate through.
+        :param parameter: Parameter to use for iterations. By default, it's close.
+        :param shift: Amount of prices to shift prices by. Rarely used.
+        :param round_value: Boolean that determines whether final value is rounded or not.
+        :return: Final relative strength index.
+        """
+        data = [self.get_current_data()] + self.data
+        data = data[shift: prices + shift + 1]
         data = data[:]
         data.reverse()
 
         up = 0
+        upCounter = 0
         down = 0
+        downCounter = 0
 
-        for period in data:
-            pass
+        previous = data[0]
 
-        return 1
+        for period in data[1:]:
+            if period[parameter] > previous[parameter]:
+                up += period[parameter] - previous[parameter]
+                upCounter += 1
+            else:
+                down += previous[parameter] - period[parameter]
+                downCounter += 1
+
+            previous = period
+
+        up = up / upCounter if upCounter != 0 else 0
+        down = down / downCounter if downCounter != 0 else 0
+        rs = up/down if down != 0 else 1
+        rsi = 100 - 100 / (1 + rs)
+
+        if round_value:
+            return round(rsi, 2)
+        return rsi
 
     def get_sma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True) -> float:
         """
