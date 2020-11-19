@@ -29,6 +29,7 @@ class Data:
         self.symbol = symbol
         self.data = []
         self.ema_data = {}
+        self.rsi_data = {}
 
         self.databaseTable = f'data_{self.interval}'
         self.databaseFile = self.get_database_file()
@@ -669,7 +670,12 @@ class Data:
         if not self.is_valid_average_input(shift, prices):
             raise ValueError('Invalid input specified.')
 
-        data = [self.get_current_data()] + self.data
+        if shift > 0:
+            data = self.data
+            shift -= 1
+        else:
+            data = [self.get_current_data()] + self.data
+
         start = 500 + prices if len(data) > 500 + prices else len(data)
         data = data[shift:start]
         data = data[:]
