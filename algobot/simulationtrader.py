@@ -14,10 +14,10 @@ class SimulationTrader:
         :param symbol: Symbol to start trading with.
         :param loadData: Boolean whether we load data from data object or not.
         """
-        self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData, logFile=dataLogFile)
+        self.logger = get_logger(logFile=logFile, loggerName=logFile)  # Get logger.
+        self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData, logObject=self.logger)
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
-        self.logger = get_logger(logFile=logFile, loggerName=logFile)  # Get logger.
 
         # Initialize initial values.
         self.balance = startingBalance  # USDT Balance.

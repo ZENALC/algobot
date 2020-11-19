@@ -11,16 +11,16 @@ from binance.helpers import interval_to_milliseconds, date_to_milliseconds
 
 class Data:
     def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True,
-                 updateData: bool = True, log: bool = False, logFile: str = 'data'):
+                 updateData: bool = True, log: bool = False, logFile: str = 'data', logObject=None):
         """
         Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
         :param interval: Interval for which the data object will track prices.
         :param symbol: Symbol for which the data object will track prices.
         :param: loadData: Boolean for whether data will be loaded or not.
-        :param: UpdateData: Boolean for whether data will be updated if it is loaded.
+        :param: updateData: Boolean for whether data will be updated if it is loaded.
         """
         self.binanceClient = Client()  # Initialize Binance client
-        self.logger = get_logger(logFile=logFile, loggerName='DataObject') if log else None
+        self.logger = self.get_logging_object(log=log, logFile=logFile, logObject=logObject)
         self.validate_interval(interval)
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
@@ -37,6 +37,16 @@ class Data:
         if loadData:
             # Create, initialize, store, and get values from database.
             self.load_data(update=updateData)
+
+    @staticmethod
+    def get_logging_object(log: bool, logFile: str, logObject):
+        if logObject is not None:
+            return logObject
+        else:
+            if not log:
+                return None
+            else:
+                return get_logger(logFile, logFile)
 
     def validate_interval(self, interval: str):
         """
@@ -633,10 +643,10 @@ class Data:
 
     @staticmethod
     def helper_get_ema(data, periods):
-        ema = 0
+        ema = data[0]
         alpha = 1 / periods
 
-        for value in data:
+        for value in data[1:]:
             ema = value * alpha + ema * (1 - alpha)
 
         return ema
@@ -654,15 +664,13 @@ class Data:
             raise ValueError('Invalid input specified.')
 
         data = [self.get_current_data()] + self.data
-        data = data[shift: prices + shift]
+        start = 500 + prices if len(data) > 500 + prices else len(data)
+        data = data[:start]
         data = data[:]
         data.reverse()
 
-        for _ in data:
-            print(_)
-
-        ups = []
-        downs = []
+        ups = [0]
+        downs = [0]
         previous = data[0]
 
         for period in data[1:]:
@@ -670,18 +678,14 @@ class Data:
                 ups.append(period[parameter] - previous[parameter])
                 downs.append(0)
             else:
-                downs.append(previous[parameter] - period[parameter])
                 ups.append(0)
+                downs.append(previous[parameter] - period[parameter])
 
             previous = period
 
-        up = self.helper_get_ema(ups, prices)
-        down = self.helper_get_ema(downs, prices)
-
-        if down == 0:
-            return 100
-
-        rs = up/down
+        averageUp = self.helper_get_ema(ups, prices)
+        averageDown = self.helper_get_ema(downs, prices)
+        rs = averageUp / averageDown
         rsi = 100 - 100 / (1 + rs)
 
         if round_value:
