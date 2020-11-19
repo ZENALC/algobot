@@ -642,7 +642,13 @@ class Data:
         return highest
 
     @staticmethod
-    def helper_get_ema(data, periods):
+    def helper_get_ema(data: list, periods: int) -> float:
+        """
+        Helper function to get the EMA for relative strength index.
+        :param data: Data to get EMA of.
+        :param periods: Number of periods to iterate through.
+        :return: EMA
+        """
         ema = data[0]
         alpha = 1 / periods
 
