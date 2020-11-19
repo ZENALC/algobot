@@ -11,7 +11,7 @@ from binance.helpers import interval_to_milliseconds, date_to_milliseconds
 
 class Data:
     def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True,
-                 updateData: bool = True, log: bool = True, logFile: str = 'data'):
+                 updateData: bool = True, log: bool = False, logFile: str = 'data'):
         """
         Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
         :param interval: Interval for which the data object will track prices.
@@ -646,25 +646,25 @@ class Data:
         data.reverse()
 
         up = 0
-        upCounter = 0
         down = 0
-        downCounter = 0
 
         previous = data[0]
 
         for period in data[1:]:
             if period[parameter] > previous[parameter]:
                 up += period[parameter] - previous[parameter]
-                upCounter += 1
             else:
                 down += previous[parameter] - period[parameter]
-                downCounter += 1
 
             previous = period
 
-        up = up / upCounter if upCounter != 0 else 0
-        down = down / downCounter if downCounter != 0 else 0
-        rs = up/down if down != 0 else 1
+        up = up / prices
+        down = down / prices
+
+        if down == 0:
+            return 100
+
+        rs = up/down
         rsi = 100 - 100 / (1 + rs)
 
         if round_value:
