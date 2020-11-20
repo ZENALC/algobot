@@ -419,6 +419,7 @@ class Interface(QMainWindow):
         statisticsDictionary['dailyPercentageValue'].setText(statDict['dailyPercentageValue'])
         statisticsDictionary['stoicTrend'].setText(statDict['stoicTrend'])
         statisticsDictionary['stoicEnabled'].setText(statDict['stoicEnabled'])
+        statisticsDictionary['stoicInputs'].setText(statDict['stoicInputs'])
 
         # These are for main interface window.
         mainInterfaceDictionary = interfaceDictionary['mainInterface']
@@ -1275,6 +1276,7 @@ class Interface(QMainWindow):
                     'dailyPercentageValue': self.statistics.simulationDailyPercentageValue,
                     'stoicTrend': self.statistics.simulationStoicTrendValue,
                     'stoicEnabled': self.statistics.simulationStoicEnabledValue,
+                    'stoicInputs': self.statistics.simulationStoicInputsValue,
                 },
                 'mainInterface': {
                     # Portfolio
@@ -1360,6 +1362,7 @@ class Interface(QMainWindow):
                     'dailyPercentageValue': self.statistics.dailyPercentageValue,
                     'stoicTrend': self.statistics.stoicTrendValue,
                     'stoicEnabled': self.statistics.stoicEnabledValue,
+                    'stoicInputs': self.statistics.stoicInputsValue,
                 },
                 'mainInterface': {
                     # Portfolio

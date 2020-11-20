@@ -402,6 +402,11 @@ class SimulationTrader:
         else:
             return "Loss"
 
+    def get_stoic_inputs(self):
+        if not self.stoicEnabled:
+            return 'None'
+        return f'{self.stoicOptions[0]}, {self.stoicOptions[1]}, {self.stoicOptions[2]}'
+
     def get_net(self) -> float:
         """
         Returns net balance with current price of coin being traded. It factors in the current balance, the amount
