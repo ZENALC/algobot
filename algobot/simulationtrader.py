@@ -49,7 +49,7 @@ class SimulationTrader:
         self.currentPosition = None  # Current position value.
         self.previousPosition = None  # Previous position to validate for a cross.
         self.stoicEnabled = False  # Boolean that holds whether stoic trading is enabled or not.
-        self.stoicOptions = None  # Stoic options.
+        self.stoicOptions = (None, None, None)  # Stoic options.
         self.stoicDictionary = {}  # Dictionary for stoic strategies.
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
@@ -277,6 +277,7 @@ class SimulationTrader:
         Main bot logic will use to trade.
         If there is a trend and the previous position did not reflect the trend, the bot enters position.
         """
+        s1, s2, s3 = self.stoicOptions
         if self.currentPosition == SHORT:  # This means we are in short position
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
                 self.buy_short(f'Bought short because of custom stop loss.')
@@ -286,7 +287,6 @@ class SimulationTrader:
 
             elif not self.inHumanControl and self.check_cross():
                 if self.stoicEnabled:
-                    s1, s2, s3 = self.stoicOptions
                     if self.stoic_strategy(s1, s2, s3) == BULLISH:
                         self.buy_short(f'Bought short because a cross and stoicism were detected.')
                         self.buy_long(f'Bought long because a cross and stoicism detected.')
@@ -303,7 +303,6 @@ class SimulationTrader:
 
             elif not self.inHumanControl and self.check_cross():
                 if self.stoicEnabled:
-                    s1, s2, s3 = self.stoicOptions
                     if self.stoic_strategy(s1, s2, s3) == BEARISH:
                         self.sell_long(f'Sold long because a cross and stoicism were detected.')
                         self.sell_short('Sold short because a cross and stoicism were detected.')
@@ -315,14 +314,12 @@ class SimulationTrader:
             if not self.inHumanControl and self.check_cross():
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
                     if self.stoicEnabled:
-                        s1, s2, s3 = self.stoicOptions
                         if self.stoic_strategy(s1, s2, s3) == BULLISH:
                             self.buy_long("Bought long because a cross and stoicism were detected.")
                     else:
                         self.buy_long("Bought long because a cross was detected.")
                 elif self.trend == BEARISH:
                     if self.stoicEnabled:
-                        s1, s2, s3 = self.stoicOptions
                         if self.stoic_strategy(s1, s2, s3) == BEARISH:
                             self.sell_short("Sold short because a cross and stoicism detected.")
                     else:
