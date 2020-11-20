@@ -20,7 +20,7 @@ class RealTrader(SimulationTrader):
         if apiKey is None or apiSecret is None:
             raise ValueError('API credentials not provided.')
 
-        super().__init__(interval=interval, symbol=symbol, logFile='live', dataLogFile='liveData')
+        super().__init__(interval=interval, symbol=symbol, logFile='live')
         self.binanceClient = Client(apiKey, apiSecret, tld=tld)
         self.spot_usdt = self.get_spot_usdt()
         self.spot_coin = self.get_spot_coin()
