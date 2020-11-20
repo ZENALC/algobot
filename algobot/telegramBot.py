@@ -1,3 +1,5 @@
+import random
+
 from telegram import Bot
 from telegram.ext import Updater, CommandHandler
 from enums import LONG, SHORT, LIVE
@@ -28,7 +30,8 @@ class TelegramBot:
         dp.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
         dp.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
         dp.add_handler(CommandHandler(("update", 'updatevalues'), self.update_values))
-        dp.add_handler(CommandHandler(("thanks", 'thanksbot', 'thankyou'), self.update_values))
+        dp.add_handler(CommandHandler(("thanks", 'thanksbot', 'thankyou'), self.thank_bot_telegram))
+        dp.add_handler(CommandHandler(("print", 'makethatbread', 'printmoney'), self.print_telegram))
 
     def send_message(self, chatID, message):
         self.bot.send_message(chat_id=chatID, text=message)
@@ -121,6 +124,11 @@ class TelegramBot:
                 f"Custom Stop Loss: {trader.get_safe_rounded_string(trader.customStopLoss)}\n"
                 f"Current {trader.coinName} price: ${trader.currentPrice}\n"
                 f'Elapsed time: {self.botThread.elapsed}\n'
+                f'Stoic Enabled: {trader.stoicEnabled}\n'
+                f'Stoic Trend: {trader.get_trend_string(trader.stoicTrend)}\n'
+                f'Stoic Input 1: {trader.stoicOptions[0]}\n'
+                f'Stoic Input 2: {trader.stoicOptions[1]}\n'
+                f'Stoic Input 3: {trader.stoicOptions[2]}\n'
                 f'{optionString}'
                 )
 
@@ -136,7 +144,30 @@ class TelegramBot:
     # noinspection PyUnusedLocal
     @staticmethod
     def thank_bot_telegram(update, context):
-        update.message.reply_text("You're welcome.")
+        messages = [
+            "You're welcome.",
+            "My pleasure.",
+            "Embrace monke.",
+            "No problem.",
+            "Don't thank me. Thank Monke.",
+            "Sure thing."
+        ]
+        update.message.reply_text(random.choice(messages))
+
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def print_telegram(update, context):
+        messages = [
+            "Let's print this money. Printing...",
+            "Opening a bakery soon. Printing...",
+            "The FED will ask us for money.",
+            "Alright. Printing in progress...",
+            "it's literally free money. Printing...",
+            "Puts on people who don't use AlgoBot. Printing....",
+            "PRINTING IN PROGRESS....",
+            "PRINTING INITIALIZED...."
+        ]
+        update.message.reply_text(random.choice(messages))
 
     # noinspection PyUnusedLocal
     def override_telegram(self, update, context):

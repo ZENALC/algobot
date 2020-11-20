@@ -224,7 +224,6 @@ class SimulationTrader:
         :param s: Shift data to get previous values.
         :return: Bullish, bearish, or none values.
         """
-        print(input1, input2, input3)
         rsi_values_one = [self.dataView.get_rsi(input1, shift=shift) for shift in range(s, input1 + s)]
         rsi_values_two = [self.dataView.get_rsi(input2, shift=shift) for shift in range(s, input2 + s)]
 
