@@ -48,8 +48,9 @@ class SimulationTrader:
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
         self.currentPosition = None  # Current position value.
         self.previousPosition = None  # Previous position to validate for a cross.
+        self.stoicTrend = None  # Current stoic trend is enabled.
         self.stoicEnabled = False  # Boolean that holds whether stoic trading is enabled or not.
-        self.stoicOptions = (None, None, None)  # Stoic options.
+        self.stoicOptions = [None, None, None]  # Stoic options.
         self.stoicDictionary = {}  # Dictionary for stoic strategies.
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
@@ -223,6 +224,7 @@ class SimulationTrader:
         :param s: Shift data to get previous values.
         :return: Bullish, bearish, or none values.
         """
+        print(input1, input2, input3)
         rsi_values_one = [self.dataView.get_rsi(input1, shift=shift) for shift in range(s, input1 + s)]
         rsi_values_two = [self.dataView.get_rsi(input2, shift=shift) for shift in range(s, input2 + s)]
 
@@ -265,19 +267,30 @@ class SimulationTrader:
         stoic = sum(self.stoicDictionary['zeno'][:3]) / sum(self.stoicDictionary['seneca'][:3]) * 100
         marcus = sum(self.stoicDictionary['hadot'][:input3]) / input3
 
+        self.output_message(f'Inputs: {input1}, {input2}, {input3}')
+        self.output_message(f'\nMarcus: {marcus}')
+        self.output_message(f'Stoic: {stoic}\n')
+
         if marcus > stoic:
+            self.stoicTrend = BEARISH
             return BEARISH
         elif marcus < stoic:
+            self.stoicTrend = BULLISH
             return BULLISH
         else:
+            self.stoicTrend = None
             return None
 
+    # noinspection PyTypeChecker
     def main_logic(self):
         """
         Main bot logic will use to trade.
         If there is a trend and the previous position did not reflect the trend, the bot enters position.
         """
         s1, s2, s3 = self.stoicOptions
+        if self.stoicEnabled:
+            self.stoic_strategy(s1, s2, s3)
+
         if self.currentPosition == SHORT:  # This means we are in short position
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
                 self.buy_short(f'Bought short because of custom stop loss.')
@@ -287,9 +300,9 @@ class SimulationTrader:
 
             elif not self.inHumanControl and self.check_cross():
                 if self.stoicEnabled:
-                    if self.stoic_strategy(s1, s2, s3) == BULLISH:
+                    if self.stoicTrend == BULLISH:
                         self.buy_short(f'Bought short because a cross and stoicism were detected.')
-                        self.buy_long(f'Bought long because a cross and stoicism detected.')
+                        self.buy_long(f'Bought long because a cross and stoicism were detected.')
                 else:
                     self.buy_short(f'Bought short because a cross was detected.')
                     self.buy_long(f'Bought long because a cross was detected.')
@@ -303,7 +316,7 @@ class SimulationTrader:
 
             elif not self.inHumanControl and self.check_cross():
                 if self.stoicEnabled:
-                    if self.stoic_strategy(s1, s2, s3) == BEARISH:
+                    if self.stoicTrend == BEARISH:
                         self.sell_long(f'Sold long because a cross and stoicism were detected.')
                         self.sell_short('Sold short because a cross and stoicism were detected.')
                 else:
@@ -314,14 +327,14 @@ class SimulationTrader:
             if not self.inHumanControl and self.check_cross():
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
                     if self.stoicEnabled:
-                        if self.stoic_strategy(s1, s2, s3) == BULLISH:
+                        if self.stoicTrend == BULLISH:
                             self.buy_long("Bought long because a cross and stoicism were detected.")
                     else:
                         self.buy_long("Bought long because a cross was detected.")
                 elif self.trend == BEARISH:
                     if self.stoicEnabled:
-                        if self.stoic_strategy(s1, s2, s3) == BEARISH:
-                            self.sell_short("Sold short because a cross and stoicism detected.")
+                        if self.stoicTrend == BEARISH:
+                            self.sell_short("Sold short because a cross and stoicism were detected.")
                     else:
                         self.sell_short("Sold short because a cross was detected.")
 
@@ -338,6 +351,17 @@ class SimulationTrader:
             return 'None'
         else:
             raise ValueError("Unknown type of loss strategy.")
+
+    @staticmethod
+    def get_trend_string(trend) -> str:
+        if trend == BULLISH:
+            return "Bullish"
+        elif trend == BEARISH:
+            return 'Bearish'
+        elif trend is None:
+            return 'None'
+        else:
+            raise ValueError("Unknown type of trend.")
 
     def get_position_string(self) -> str:
         """

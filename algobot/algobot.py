@@ -417,6 +417,8 @@ class Interface(QMainWindow):
         statisticsDictionary['autonomousValue'].setText(statDict['autonomousValue'])
         statisticsDictionary['elapsedValue'].setText(statDict['elapsedValue'])
         statisticsDictionary['dailyPercentageValue'].setText(statDict['dailyPercentageValue'])
+        statisticsDictionary['stoicTrend'].setText(statDict['stoicTrend'])
+        statisticsDictionary['stoicEnabled'].setText(statDict['stoicEnabled'])
 
         # These are for main interface window.
         mainInterfaceDictionary = interfaceDictionary['mainInterface']
@@ -650,6 +652,11 @@ class Interface(QMainWindow):
         trader = self.get_trader(caller)
         trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
         trader.tradingOptions = self.get_trading_options(caller)
+        trader.stoicEnabled = self.interfaceDictionary[caller]['configuration']['stoicCheck'].isChecked()
+        if trader.stoicEnabled:
+            trader.stoicOptions[0] = self.interfaceDictionary[caller]['configuration']['stoicInput1'].value()
+            trader.stoicOptions[1] = self.interfaceDictionary[caller]['configuration']['stoicInput2'].value()
+            trader.stoicOptions[2] = self.interfaceDictionary[caller]['configuration']['stoicInput3'].value()
 
     def set_custom_stop_loss(self, caller, enable: bool = True, foreignValue: float or None = None):
         """
@@ -1266,6 +1273,8 @@ class Interface(QMainWindow):
                     'nextFinalMovingAverageValue': self.statistics.simulationNextFinalMovingAverageValue,
                     'elapsedValue': self.statistics.simulationElapsedValue,
                     'dailyPercentageValue': self.statistics.simulationDailyPercentageValue,
+                    'stoicTrend': self.statistics.simulationStoicTrendValue,
+                    'stoicEnabled': self.statistics.simulationStoicEnabledValue,
                 },
                 'mainInterface': {
                     # Portfolio
@@ -1313,6 +1322,10 @@ class Interface(QMainWindow):
                     'ticker': self.configuration.simulationTickerComboBox,
                     'interval': self.configuration.simulationIntervalComboBox,
                     'lowerIntervalCheck': self.configuration.lowerIntervalSimulationCheck,
+                    'stoicCheck': self.configuration.simulationStoicCheckMark,
+                    'stoicInput1': self.configuration.simulationStoicSpinBox1,
+                    'stoicInput2': self.configuration.simulationStoicSpinBox2,
+                    'stoicInput3': self.configuration.simulationStoicSpinBox3,
                 }
             },
             LIVE: {
@@ -1345,6 +1358,8 @@ class Interface(QMainWindow):
                     'nextFinalMovingAverageValue': self.statistics.nextFinalMovingAverageValue,
                     'elapsedValue': self.statistics.elapsedValue,
                     'dailyPercentageValue': self.statistics.dailyPercentageValue,
+                    'stoicTrend': self.statistics.stoicTrendValue,
+                    'stoicEnabled': self.statistics.stoicEnabledValue,
                 },
                 'mainInterface': {
                     # Portfolio
@@ -1392,6 +1407,10 @@ class Interface(QMainWindow):
                     'ticker': self.configuration.tickerComboBox,
                     'interval': self.configuration.intervalComboBox,
                     'lowerIntervalCheck': self.configuration.lowerIntervalCheck,
+                    'stoicCheck': self.configuration.stoicCheckMark,
+                    'stoicInput1': self.configuration.stoicSpinBox1,
+                    'stoicInput2': self.configuration.stoicSpinBox2,
+                    'stoicInput3': self.configuration.stoicSpinBox3,
                 }
             },
             BACKTEST: {

@@ -26,7 +26,7 @@
    <string>Configuration</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
+   <item row="0" column="0">
     <widget class="QTabWidget" name="configurationTabWidget">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -46,7 +46,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -743,10 +743,24 @@
                    </property>
                   </widget>
                  </item>
+                 <item row="0" column="1">
+                  <widget class="QSpinBox" name="stoicSpinBox1">
+                   <property name="minimum">
+                    <number>2</number>
+                   </property>
+                  </widget>
+                 </item>
                  <item row="1" column="0">
                   <widget class="QLabel" name="stoicInput2Label">
                    <property name="text">
                     <string>Input 2</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QSpinBox" name="stoicSpinBox2">
+                   <property name="minimum">
+                    <number>2</number>
                    </property>
                   </widget>
                  </item>
@@ -757,14 +771,12 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1">
-                  <widget class="QDoubleSpinBox" name="stoicComboBox1"/>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QDoubleSpinBox" name="stoicComboBox2"/>
-                 </item>
                  <item row="2" column="1">
-                  <widget class="QDoubleSpinBox" name="stoicComboBox3"/>
+                  <widget class="QSpinBox" name="stoicSpinBox3">
+                   <property name="minimum">
+                    <number>1</number>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </widget>
@@ -2276,7 +2288,13 @@
               <item row="7" column="0" colspan="3">
                <widget class="QGroupBox" name="simulationStoicGroupBox">
                 <property name="enabled">
-                 <bool>true</bool>
+                 <bool>false</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
                 </property>
                 <property name="title">
                  <string>Stoics</string>
@@ -2304,13 +2322,25 @@
                   </widget>
                  </item>
                  <item row="0" column="1">
-                  <widget class="QDoubleSpinBox" name="simulationStoicComboBox1"/>
+                  <widget class="QSpinBox" name="simulationStoicSpinBox1">
+                   <property name="minimum">
+                    <number>2</number>
+                   </property>
+                  </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QDoubleSpinBox" name="simulationStoicComboBox2"/>
+                  <widget class="QSpinBox" name="simulationStoicSpinBox2">
+                   <property name="minimum">
+                    <number>2</number>
+                   </property>
+                  </widget>
                  </item>
                  <item row="2" column="1">
-                  <widget class="QDoubleSpinBox" name="simulationStoicComboBox3"/>
+                  <widget class="QSpinBox" name="simulationStoicSpinBox3">
+                   <property name="minimum">
+                    <number>1</number>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </widget>

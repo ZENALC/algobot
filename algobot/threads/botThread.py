@@ -286,6 +286,7 @@ class BotThread(QRunnable):
         profit = trader.get_profit()
         stopLoss = trader.get_stop_loss()
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
+        stoicTrend = trader.get_trend_string(trader.stoicTrend)
         self.percentage = trader.get_profit_percentage(trader.startingBalance, net)
         self.elapsed = helpers.get_elapsed_time(self.startingTime)
 
@@ -331,7 +332,9 @@ class BotThread(QRunnable):
             'currentPrice': trader.currentPrice,
             'optionDetails': self.optionDetails,
             'elapsedValue': self.elapsed,
-            'dailyPercentageValue': f'{round(self.dailyPercentage, 2)}%'
+            'dailyPercentageValue': f'{round(self.dailyPercentage, 2)}%',
+            'stoicTrend': stoicTrend,
+            'stoicEnabled': str(trader.stoicEnabled),
         }
 
         return updateDict

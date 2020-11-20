@@ -231,6 +231,12 @@ class Configuration(QDialog):
     def toggle_backtest_double_cross_groupbox(self):
         self.toggle_groupbox(self.backtestDoubleCrossCheckMark, self.backtestDoubleCrossGroupBox)
 
+    def toggle_simulation_stoic_groupbox(self):
+        self.toggle_groupbox(self.simulationStoicCheckMark, self.simulationStoicGroupBox)
+
+    def toggle_stoic_groupbox(self):
+        self.toggle_groupbox(self.stoicCheckMark, self.stoicGroupBox)
+
     @staticmethod
     def toggle_groupbox(checkMark, groupBox):
         groupBox.setEnabled(checkMark.isChecked())
@@ -242,6 +248,9 @@ class Configuration(QDialog):
         self.doubleCrossCheckMark.toggled.connect(self.toggle_double_cross_groupbox)
         self.simulationDoubleCrossCheckMark.toggled.connect(self.toggle_simulation_double_cross_groupbox)
         self.backtestDoubleCrossCheckMark.toggled.connect(self.toggle_backtest_double_cross_groupbox)
+
+        self.stoicCheckMark.toggled.connect(self.toggle_stoic_groupbox)
+        self.simulationStoicCheckMark.toggled.connect(self.toggle_simulation_stoic_groupbox)
 
         self.simulationCopySettingsButton.clicked.connect(self.copy_settings_to_simulation)
 
