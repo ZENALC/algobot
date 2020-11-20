@@ -25,6 +25,7 @@ class Data:
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
 
+        symbol = symbol.upper()
         self.validate_symbol(symbol)
         self.symbol = symbol
         self.data = []
@@ -643,20 +644,23 @@ class Data:
         return highest
 
     @staticmethod
-    def helper_get_ema(data: list, periods: int) -> float:
+    def helper_get_ema(up_data: list, down_data: list, periods: int) -> tuple:
         """
         Helper function to get the EMA for relative strength index.
-        :param data: Data to get EMA of.
+        :param down_data: Other data to get EMA of.
+        :param up_data: Data to get EMA of.
         :param periods: Number of periods to iterate through.
         :return: EMA
         """
-        ema = data[0]
+        emaUp = up_data[0]
+        emaDown = down_data[0]
         alpha = 1 / periods
 
-        for value in data[1:]:
-            ema = value * alpha + ema * (1 - alpha)
+        for index in range(1, len(up_data)):
+            emaUp = up_data[index] * alpha + emaUp * (1 - alpha)
+            emaDown = down_data[index] * alpha + emaDown * (1 - alpha)
 
-        return ema
+        return emaUp, emaDown
 
     def get_rsi(self, prices: int = 14, parameter: str = 'close', shift: int = 0, round_value: bool = True) -> float:
         """
@@ -676,7 +680,7 @@ class Data:
         else:
             data = [self.get_current_data()] + self.data
 
-        start = 500 + prices if len(data) > 500 + prices else len(data)
+        start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
         data = data[shift:start]
         data = data[:]
         data.reverse()
@@ -695,8 +699,7 @@ class Data:
 
             previous = period
 
-        averageUp = self.helper_get_ema(ups, prices)
-        averageDown = self.helper_get_ema(downs, prices)
+        averageUp, averageDown = self.helper_get_ema(ups, downs, prices)
         rs = averageUp / averageDown
         rsi = 100 - 100 / (1 + rs)
 
@@ -767,20 +770,62 @@ class Data:
         elif sma_prices <= 0:
             raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
 
-        data = [self.get_current_data()] + self.data
-        sma_shift = len(data) - sma_prices
-        ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False)
-        values = [(round(ema, 2), str(data[sma_shift]['date_utc']))]
+        ema_data = self.ema_data
+        if shift > 0:
+            if prices in ema_data and parameter in ema_data[prices] and len(ema_data[prices][parameter]) > 0:
+                latestDate = ema_data[prices][parameter][-1][1]
+                if self.is_latest_date(latestDate):
+                    shift += 1
+                    ema = ema_data[prices][parameter][-shift][0]
+                    if round_value:
+                        return round(ema, 2)
+                    return ema
+
         multiplier = 2 / (prices + 1)
 
-        for day in range(len(data) - sma_prices - shift):
-            current_index = len(data) - sma_prices - day - 1
-            current_price = data[current_index][parameter]
-            ema = current_price * multiplier + ema * (1 - multiplier)
-            values.append((round(ema, 2), str(data[current_index]['date_utc'])))
+        if prices in ema_data and parameter in ema_data[prices] and len(ema_data[prices][parameter]) > 0:
+            latestDate = ema_data[prices][parameter][-1][1]
+            if self.is_latest_date(latestDate):
+                current_price = self.get_current_data()[parameter]
+                previous_ema = ema_data[prices][parameter][-2][0]
+                ema = current_price * multiplier + previous_ema * (1 - multiplier)
+                ema_data[prices][parameter][-1] = (round(ema, 2), latestDate)
+            else:
+                current_data = self.get_current_data()
+                current_price = current_data[parameter]
+                counter = 1
+                for period in self.data[::-1]:
+                    if period['date_utc'] == latestDate:
+                        break
+                    counter += 1
 
-        self.ema_data[prices] = {parameter: values}
+                ema_data[prices][parameter].pop()  # Remove last EMA as it could be invalid.
+                for period in self.data[-counter:]:
+                    previous_ema = ema_data[prices][parameter][-1][0]
+                    ema = period[parameter] * multiplier + previous_ema * (1 - multiplier)
+                    ema_data[prices][parameter].append((round(ema, 2), period['date_utc']))
 
+                previous_ema = ema_data[prices][parameter][-1][0]
+                ema = current_price * multiplier * previous_ema * (1 - multiplier)  # Set current EMA.
+                ema_data[prices][parameter].append((round(ema, 2), current_data['date_utc']))
+
+            if shift > 0:
+                ema = ema_data[prices][parameter][-shift][0]
+        else:
+            data = [self.get_current_data()] + self.data
+            sma_shift = len(data) - sma_prices
+            ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False)
+            values = [(round(ema, 2), str(data[sma_shift]['date_utc']))]
+
+            for day in range(len(data) - sma_prices - shift):
+                current_index = len(data) - sma_prices - day - 1
+                current_price = data[current_index][parameter]
+                ema = current_price * multiplier + ema * (1 - multiplier)
+                values.append((round(ema, 2), data[current_index]['date_utc']))
+
+            ema_data[prices] = {parameter: values}
+
+        self.ema_data = ema_data
         if round_value:
             return round(ema, 2)
         return ema

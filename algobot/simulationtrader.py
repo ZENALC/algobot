@@ -213,8 +213,8 @@ class SimulationTrader:
         self.output_message(msg)
 
     def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0):
-        rsi_values_one = [self.dataView.get_rsi(input1, shift=shift) for shift in range(input1 + s, s, -1)]
-        rsi_values_two = [self.dataView.get_rsi(input2, shift=shift) for shift in range(input2 + s, s, -1)]
+        rsi_values_one = [self.dataView.get_rsi(input1, shift=shift) for shift in range(s, input1 + s)]
+        rsi_values_two = [self.dataView.get_rsi(input2, shift=shift) for shift in range(s, input2 + s)]
 
         seneca = max(rsi_values_one) - min(rsi_values_one)
         if 'seneca' in self.stoicDictionary:
