@@ -762,6 +762,9 @@
                    <property name="minimum">
                     <number>2</number>
                    </property>
+                   <property name="value">
+                    <number>3</number>
+                   </property>
                   </widget>
                  </item>
                  <item row="2" column="0">
@@ -2332,6 +2335,9 @@
                   <widget class="QSpinBox" name="simulationStoicSpinBox2">
                    <property name="minimum">
                     <number>2</number>
+                   </property>
+                   <property name="value">
+                    <number>3</number>
                    </property>
                   </widget>
                  </item>
