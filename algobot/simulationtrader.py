@@ -48,6 +48,8 @@ class SimulationTrader:
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
         self.currentPosition = None  # Current position value.
         self.previousPosition = None  # Previous position to validate for a cross.
+        self.stoicEnabled = False  # Boolean that holds whether stoic trading is enabled or not.
+        self.stoicOptions = None  # Stoic options.
         self.stoicDictionary = {}  # Dictionary for stoic strategies.
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
@@ -212,7 +214,15 @@ class SimulationTrader:
         self.add_trade(msg, force=force, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice)
         self.output_message(msg)
 
-    def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0):
+    def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0) -> None or int:
+        """
+        Custom strategy.
+        :param input1: Custom input 1 for the stoic strategy.
+        :param input2: Custom input 2 for the stoic strategy.
+        :param input3: Custom input 3 for the stoic strategy.
+        :param s: Shift data to get previous values.
+        :return: Bullish, bearish, or none values.
+        """
         rsi_values_one = [self.dataView.get_rsi(input1, shift=shift) for shift in range(s, input1 + s)]
         rsi_values_two = [self.dataView.get_rsi(input2, shift=shift) for shift in range(s, input2 + s)]
 
@@ -222,13 +232,13 @@ class SimulationTrader:
         else:
             self.stoicDictionary['seneca'] = [seneca]
 
-        zeno = rsi_values_one[-1] - min(rsi_values_one)
+        zeno = rsi_values_one[0] - min(rsi_values_one)
         if 'zeno' in self.stoicDictionary:
             self.stoicDictionary['zeno'].insert(0, zeno)
         else:
             self.stoicDictionary['zeno'] = [zeno]
 
-        gaius = rsi_values_two[-1] - min(rsi_values_two)
+        gaius = rsi_values_two[0] - min(rsi_values_two)
         if 'gaius' in self.stoicDictionary:
             self.stoicDictionary['gaius'].insert(0, gaius)
         else:
@@ -255,11 +265,6 @@ class SimulationTrader:
         stoic = sum(self.stoicDictionary['zeno'][:3]) / sum(self.stoicDictionary['seneca'][:3]) * 100
         marcus = sum(self.stoicDictionary['hadot'][:input3]) / input3
 
-        print(rsi_values_two)
-        print(rsi_values_one)
-        print(stoic)
-        print(marcus)
-
         if marcus > stoic:
             return BEARISH
         elif marcus < stoic:
@@ -280,8 +285,14 @@ class SimulationTrader:
                 self.buy_short(f'Bought short because of stop loss.')
 
             elif not self.inHumanControl and self.check_cross():
-                self.buy_short(f'Bought short because a cross was detected.')
-                self.buy_long(f'Bought long because a cross was detected.')
+                if self.stoicEnabled:
+                    s1, s2, s3 = self.stoicOptions
+                    if self.stoic_strategy(s1, s2, s3) == BULLISH:
+                        self.buy_short(f'Bought short because a cross and stoicism were detected.')
+                        self.buy_long(f'Bought long because a cross and stoicism detected.')
+                else:
+                    self.buy_short(f'Bought short because a cross was detected.')
+                    self.buy_long(f'Bought long because a cross was detected.')
 
         elif self.currentPosition == LONG:  # This means we are in long position
             if self.customStopLoss is not None and self.currentPrice <= self.customStopLoss:
@@ -291,15 +302,31 @@ class SimulationTrader:
                 self.sell_long(f'Sold long because of stop loss.')
 
             elif not self.inHumanControl and self.check_cross():
-                self.sell_long(f'Sold long because a cross was detected.')
-                self.sell_short('Sold short because a cross was detected.')
+                if self.stoicEnabled:
+                    s1, s2, s3 = self.stoicOptions
+                    if self.stoic_strategy(s1, s2, s3) == BEARISH:
+                        self.sell_long(f'Sold long because a cross and stoicism were detected.')
+                        self.sell_short('Sold short because a cross and stoicism were detected.')
+                else:
+                    self.sell_long(f'Sold long because a cross was detected.')
+                    self.sell_short('Sold short because a cross was detected.')
 
         else:  # This means we are in neither position
             if not self.inHumanControl and self.check_cross():
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
-                    self.buy_long("Bought long because a cross was detected.")
-                else:
-                    self.sell_short("Sold short because a cross was detected.")
+                    if self.stoicEnabled:
+                        s1, s2, s3 = self.stoicOptions
+                        if self.stoic_strategy(s1, s2, s3) == BULLISH:
+                            self.buy_long("Bought long because a cross and stoicism were detected.")
+                    else:
+                        self.buy_long("Bought long because a cross was detected.")
+                elif self.trend == BEARISH:
+                    if self.stoicEnabled:
+                        s1, s2, s3 = self.stoicOptions
+                        if self.stoic_strategy(s1, s2, s3) == BEARISH:
+                            self.sell_short("Sold short because a cross and stoicism detected.")
+                    else:
+                        self.sell_short("Sold short because a cross was detected.")
 
     def get_stop_loss_strategy_string(self) -> str:
         """
