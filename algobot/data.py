@@ -480,7 +480,7 @@ class Data:
                     parsedDate = data['date_utc'].strftime("%m/%d/%Y %H:%M")
                 else:
                     parsedDate = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
-                f.write(f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]},'
+                f.write(f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}, '
                         f'{data["volume"]}, {data["quote_asset_volume"]}, {data["number_of_trades"]}, '
                         f'{data["taker_buy_base_asset"]}, {data["taker_buy_quote_asset"]}\n')
 

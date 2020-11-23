@@ -638,11 +638,11 @@ class Interface(QMainWindow):
         Sets logging standard.
         :param boolean: Boolean that will determine whether logging is advanced or not. If true, advanced, else regular.
         """
+        self.advancedLogging = boolean
         if self.advancedLogging:
             self.add_to_live_activity_monitor(f'Logging method has been changed to advanced.')
         else:
             self.add_to_live_activity_monitor(f'Logging method has been changed to simple.')
-        self.advancedLogging = boolean
 
     def set_parameters(self, caller):
         """

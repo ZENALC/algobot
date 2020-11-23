@@ -105,13 +105,15 @@ def load_from_csv(path, descending=True):
         headers = list(map(str.lower, readLines[0].rstrip().split(', ')))
         for line in readLines[1:]:
             line = line.rstrip()  # strip newline character
-            splitLine = line.split(', ')
+            splitLine = line.split(',')
+            splitLine = [line.strip() for line in splitLine]
             data.append({
-                headers[-1]: float(splitLine[-1]),  # close
-                headers[-2]: float(splitLine[-2]),  # low
-                headers[-3]: float(splitLine[-3]),  # high
-                headers[-4]: float(splitLine[-4]),  # open
-                headers[-5]: ' '.join(splitLine[0: -4])  # date in UTC
+                headers[0]: splitLine[0],  # date in UTC
+                headers[1]: float(splitLine[1]),  # open
+                headers[2]: float(splitLine[2]),  # high
+                headers[3]: float(splitLine[3]),  # low
+                headers[4]: float(splitLine[4]),  # close
+                headers[5]: float(splitLine[5]),  # volume
             })
         firstDate = parser.parse(data[0]['date_utc'])  # Retrieve first date from CSV data.
         lastDate = parser.parse(data[-1]['date_utc'])  # Retrieve last date from CSV data.

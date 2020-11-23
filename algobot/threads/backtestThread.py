@@ -57,7 +57,7 @@ class BacktestThread(QRunnable):
         net = backtester.get_net()
         profit = net - backtester.startingBalance
         if profit < 0:
-            profitPercentage = round(100 - net / backtester.startingBalance * 100, 2)
+            profitPercentage = round(100 - net / backtester.startingBalance * 100 - 100, 2)
         else:
             profitPercentage = round(net / backtester.startingBalance * 100, 2)
 
@@ -79,6 +79,7 @@ class BacktestThread(QRunnable):
         Main backtest function.
         """
         backtester = self.gui.backtester
+        s1, s2, s3 = backtester.stoicOptions
         backtester.movingAverageTestStartTime = time.time()
         seenData = backtester.data[:backtester.minPeriod][::-1]  # Start from minimum previous period data.
         backtestPeriod = backtester.data[backtester.startDateIndex:backtester.endDateIndex]
@@ -93,6 +94,9 @@ class BacktestThread(QRunnable):
             backtester.currentPrice = period['open']
             backtester.main_logic()
             backtester.check_trend(seenData)
+            backtester.check_trend(seenData)
+            if backtester.stoicEnabled and len(seenData) > max((s1, s2, s3)):
+                backtester.stoic_strategy(seenData, s1, s2, s3)
 
             if index % divisor == 0:
                 self.signals.activity.emit(self.get_activity_dictionary(period=period, index=index, length=testLength))
@@ -113,18 +117,24 @@ class BacktestThread(QRunnable):
         :return: GUI configuration details in a dictionary.
         """
         gui = self.gui
-        startDate, endDate = gui.configuration.get_calendar_dates()
+        config = gui.configuration
+        startDate, endDate = config.get_calendar_dates()
         lossStrategy, lossPercentageDecimal = gui.get_loss_settings(BACKTEST)
+        stoicOptions = [config.backtestStoicSpinBox1.value(), config.backtestStoicSpinBox2.value(),
+                        config.backtestStoicSpinBox3.value()]
+
         return {
-            'startingBalance': gui.configuration.backtestStartingBalanceSpinBox.value(),
-            'data': gui.configuration.data,
-            'marginEnabled': gui.configuration.backtestMarginTradingCheckBox.isChecked(),
+            'startingBalance': config.backtestStartingBalanceSpinBox.value(),
+            'data': config.data,
+            'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
             'options': gui.get_trading_options(BACKTEST),
             'startDate': startDate,
             'endDate': endDate,
             'lossStrategy': lossStrategy,
             'lossPercentage': lossPercentageDecimal * 100,
-            'dataType': gui.configuration.dataType
+            'dataType': config.dataType,
+            'stoicEnabled': config.backtestStoicCheckMark.isChecked(),
+            'stoicOptions': stoicOptions
         }
 
     def setup_bot(self):
@@ -132,6 +142,10 @@ class BacktestThread(QRunnable):
         Sets up initial backtester.
         """
         configDetails = self.get_configuration_details()
+        if configDetails['stoicEnabled']:
+            stoicOptions = configDetails['stoicOptions']
+        else:
+            stoicOptions = None
         self.gui.backtester = Backtester(startingBalance=configDetails['startingBalance'],
                                          data=configDetails['data'],
                                          symbol=configDetails['dataType'],
@@ -140,7 +154,8 @@ class BacktestThread(QRunnable):
                                          options=configDetails['options'],
                                          marginEnabled=configDetails['marginEnabled'],
                                          startDate=configDetails['startDate'],
-                                         endDate=configDetails['endDate'])
+                                         endDate=configDetails['endDate'],
+                                         stoicOptions=stoicOptions)
         self.signals.started.emit(self.get_configuration_dictionary())
 
     @pyqtSlot()

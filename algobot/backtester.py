@@ -10,7 +10,8 @@ from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
 
 class Backtester:
     def __init__(self, startingBalance: float, data: list, lossStrategy: int, lossPercentage: float, options: list,
-                 marginEnabled: bool = True, startDate: datetime = None, endDate: datetime = None, symbol: str = None):
+                 marginEnabled: bool = True, startDate: datetime = None, endDate: datetime = None, symbol: str = None,
+                 stoicOptions=None):
         self.startingBalance = startingBalance
         self.symbol = symbol
         self.balance = startingBalance
@@ -30,8 +31,20 @@ class Backtester:
         self.lossPercentageDecimal = lossPercentage / 100
         self.tradingOptions = options
         self.validate_options()
+
         self.minPeriod = self.get_min_option_period()
         self.trend = None
+
+        self.rsi_dictionary = {}
+        self.stoicDictionary = {}
+        self.stoicTrend = None
+        if stoicOptions is None:
+            self.stoicOptions = [None, None, None]
+            self.stoicEnabled = False
+        else:
+            self.stoicOptions = stoicOptions
+            self.stoicEnabled = True
+        self.ema_values = {}
 
         self.movingAverageTestStartTime = None
         self.movingAverageTestEndTime = None
@@ -50,6 +63,9 @@ class Backtester:
         self.currentPeriod = None
 
     def reset_everything(self):
+        """
+        Resets all data in backtest object.
+        """
         self.balance = self.startingBalance
         self.coin = 0
         self.coinOwed = 0
@@ -68,10 +84,17 @@ class Backtester:
         self.currentPeriod = None
 
     def convert_all_date_to_datetime(self):
+        """
+        Converts all available dates to datetime objects.
+        """
         for data in self.data:
             data['date_utc'] = parser.parse(data['date_utc'])
 
     def check_data(self):
+        """
+        Checks data sorting. If descending, it reverses data, so we can mimic backtest as if we are starting from the
+        beginning.
+        """
         if type(self.data[0]['date_utc']) == str:
             self.convert_all_date_to_datetime()
 
@@ -90,6 +113,11 @@ class Backtester:
                 raise TypeError(f"'{option}' is not a valid option type.")
 
     def get_start_date_index(self, startDate):
+        """
+        Returns index of start date based on startDate argument.
+        :param startDate: Datetime object to compare index with.
+        :return: Index of start date.
+        """
         if startDate:
             if type(startDate) == datetime:
                 startDate = startDate.date()
@@ -104,6 +132,11 @@ class Backtester:
             return self.minPeriod
 
     def get_end_date_index(self, endDate):
+        """
+        Returns index of end date based on endDate argument.
+        :param endDate: Datetime object to compare index with.
+        :return: Index of end date.
+        """
         if endDate:
             if type(endDate) == datetime:
                 endDate = endDate.date()
@@ -127,10 +160,7 @@ class Backtester:
         """
         minimum = 0
         for option in self.tradingOptions:
-            if option.finalBound > minimum:
-                minimum = option.finalBound
-            if option.initialBound > minimum:
-                minimum = option.initialBound
+            minimum = max(minimum, option.finalBound, option.initialBound)
         return minimum
 
     def get_moving_average(self, data: list, average: str, prices: int, parameter: str) -> float:
@@ -174,6 +204,11 @@ class Backtester:
             self.trend = BEARISH
 
     def find_date_index(self, datetimeObject):
+        """
+        Finds index of date from datetimeObject if exists in data loaded.
+        :param datetimeObject: Object to compare date-time with.
+        :return: Index from self.data if found, else -1.
+        """
         for data in self.data:
             if data['date_utc'].date() == datetimeObject:
                 return self.data.index(data)
@@ -236,13 +271,22 @@ class Backtester:
         self.coinOwed -= coin
         self.inShortPosition = False
         self.previousPosition = SHORT
-        loss = self.currentPrice * coin * (1 + self.transactionFeePercentage)
-        self.balance -= loss
+        self.balance -= self.currentPrice * coin * (1 + self.transactionFeePercentage)
         self.add_trade(msg)
 
         if self.coinOwed == 0:
             self.sellShortPrice = None
             self.shortTrailingPrice = None
+
+    def add_trade(self, message):
+        """
+        Adds a trade to list of trades
+        :param message: Message used for conducting trade.
+        """
+        self.trades.append({
+            'date': self.currentPeriod['date_utc'],
+            'action': message
+        })
 
     def get_short_stop_loss(self) -> float:
         """
@@ -270,7 +314,7 @@ class Backtester:
         elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
             return self.buyLongPrice * (1 - self.lossPercentageDecimal)
 
-    def get_stop_loss(self):
+    def get_stop_loss(self) -> float or None:
         """
         Returns stop loss value.
         :return: Stop loss value.
@@ -315,6 +359,165 @@ class Backtester:
             days = seconds / 86400
             return f'{int(days)} Day'
 
+    def reset_stoic_dictionary(self):
+        self.stoicDictionary = {}
+
+    # noinspection DuplicatedCode
+    def stoic_strategy(self, data, input1: int, input2: int, input3: int, s: int = 0) -> None or int:
+        """
+        Custom strategy.
+        :param data: Data list.
+        :param input1: Custom input 1 for the stoic strategy.
+        :param input2: Custom input 2 for the stoic strategy.
+        :param input3: Custom input 3 for the stoic strategy.
+        :param s: Shift data to get previous values.
+        :return: Bullish, bearish, or none values.
+        """
+        rsi_values_one = [self.get_rsi(data, input1, shift=shift) for shift in range(s, input1 + s)]
+        rsi_values_two = [self.get_rsi(data, input2, shift=shift) for shift in range(s, input2 + s)]
+
+        seneca = max(rsi_values_one) - min(rsi_values_one)
+        if 'seneca' in self.stoicDictionary:
+            self.stoicDictionary['seneca'].insert(0, seneca)
+        else:
+            self.stoicDictionary['seneca'] = [seneca]
+
+        zeno = rsi_values_one[0] - min(rsi_values_one)
+        if 'zeno' in self.stoicDictionary:
+            self.stoicDictionary['zeno'].insert(0, zeno)
+        else:
+            self.stoicDictionary['zeno'] = [zeno]
+
+        gaius = rsi_values_two[0] - min(rsi_values_two)
+        if 'gaius' in self.stoicDictionary:
+            self.stoicDictionary['gaius'].insert(0, gaius)
+        else:
+            self.stoicDictionary['gaius'] = [gaius]
+
+        philo = max(rsi_values_two) - min(rsi_values_two)
+        if 'philo' in self.stoicDictionary:
+            self.stoicDictionary['philo'].insert(0, philo)
+        else:
+            self.stoicDictionary['philo'] = [philo]
+
+        if len(self.stoicDictionary['gaius']) < 3:
+            return None
+
+        hadot = sum(self.stoicDictionary['gaius'][:3]) / sum(self.stoicDictionary['philo'][:3]) * 100
+        if 'hadot' in self.stoicDictionary:
+            self.stoicDictionary['hadot'].insert(0, hadot)
+        else:
+            self.stoicDictionary['hadot'] = [hadot]
+
+        if len(self.stoicDictionary['hadot']) < 3:
+            return None
+
+        stoic = sum(self.stoicDictionary['zeno'][:3]) / sum(self.stoicDictionary['seneca'][:3]) * 100
+        marcus = sum(self.stoicDictionary['hadot'][:input3]) / input3
+
+        if marcus > stoic:
+            self.stoicTrend = BEARISH
+            return BEARISH
+        elif marcus < stoic:
+            self.stoicTrend = BULLISH
+            return BULLISH
+        else:
+            self.stoicTrend = None
+            return None
+
+    def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> tuple:
+        """
+        Helper function to get the EMA for relative strength index.
+        :param down_data: Other data to get EMA of.
+        :param up_data: Data to get EMA of.
+        :param periods: Number of periods to iterate through.
+        :return: EMA
+        """
+        emaUp = up_data[0]
+        emaDown = down_data[0]
+        alpha = 1 / periods
+
+        rsi_values = []
+
+        for index in range(1, len(up_data)):
+            emaUp = up_data[index] * alpha + emaUp * (1 - alpha)
+            emaDown = down_data[index] * alpha + emaDown * (1 - alpha)
+
+            if emaDown == 0:
+                rsi = 100
+            else:
+                rsi = 100 - 100 / (1 + emaUp / emaDown)
+
+            rsi_values.append(((round(rsi, 2)), emaUp, emaDown))
+
+        if periods in self.rsi_dictionary:
+            rsi_values = self.rsi_dictionary[periods]['close'] + rsi_values
+
+        self.rsi_dictionary[periods] = {'close': rsi_values}
+
+        return emaUp, emaDown
+
+    # noinspection DuplicatedCode
+    def get_rsi(self, data: list, prices: int = 14, parameter: str = 'close',
+                shift: int = 0, round_value: bool = True) -> float:
+        """
+        Returns relative strength index.
+        :param data: Data values.
+        :param prices: Amount of prices to iterate through.
+        :param parameter: Parameter to use for iterations. By default, it's close.
+        :param shift: Amount of prices to shift prices by.
+        :param round_value: Boolean that determines whether final value is rounded or not.
+        :return: Final relative strength index.
+        """
+        if shift > 0 and prices in self.rsi_dictionary:
+            return self.rsi_dictionary[prices]['close'][-shift][0]
+        elif prices in self.rsi_dictionary:
+            r = self.rsi_dictionary[prices]['close'][-1]
+            alpha = 1 / prices
+            difference = data[0][parameter] - data[1][parameter]
+            if difference > 0:
+                up = difference * alpha + self.rsi_dictionary[prices]['close'][-1][1] * (1 - alpha)
+                down = self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
+            else:
+                up = self.rsi_dictionary[prices]['close'][-1][1] * (1 - alpha)
+                down = -difference * alpha + self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
+
+            rsi = 100 if down == 0 else 100 - 100 / (1 + up / down)
+
+            self.rsi_dictionary[prices]['close'].append((round(rsi, 2), up, down))
+
+            return rsi
+
+        data = data
+        start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
+        data = data[shift:start]
+        data = data[:]
+        data.reverse()
+
+        ups = [0]
+        downs = [0]
+        previous = data[0]
+
+        for period in data[1:]:
+            if period[parameter] > previous[parameter]:
+                ups.append(period[parameter] - previous[parameter])
+                downs.append(0)
+            else:
+                ups.append(0)
+                downs.append(previous[parameter] - period[parameter])
+
+            previous = period
+
+        averageUp, averageDown = self.helper_get_ema(ups, downs, prices)
+        if averageDown == 0:
+            return 100
+        rs = averageUp / averageDown
+        rsi = 100 - 100 / (1 + rs)
+
+        if round_value:
+            return round(rsi, 2)
+        return rsi
+
     @staticmethod
     def get_sma(data: list, prices: int, parameter: str, round_value=True) -> float:
         data = data[0: prices]
@@ -345,27 +548,23 @@ class Backtester:
         elif sma_prices > len(data):
             sma_prices = len(data) - 1
 
-        ema = self.get_sma(data, sma_prices, parameter, round_value=False)
         multiplier = 2 / (prices + 1)
 
-        for day in range(len(data) - sma_prices):
-            current_index = len(data) - sma_prices - day - 1
-            current_price = data[current_index][parameter]
-            ema = current_price * multiplier + ema * (1 - multiplier)
+        if prices in self.ema_values:
+            ema = data[-1][parameter] * multiplier + self.ema_values[prices] * (1 - multiplier)
+            self.ema_values[prices] = ema
+        else:
+            ema = self.get_sma(data, sma_prices, parameter, round_value=False)
+            for day in range(len(data) - sma_prices):
+                current_index = len(data) - sma_prices - day - 1
+                current_price = data[current_index][parameter]
+                ema = current_price * multiplier + ema * (1 - multiplier)
+
+            self.ema_values[prices] = ema
 
         if round_value:
             return round(ema, 2)
         return ema
-
-    def add_trade(self, message):
-        """
-        Adds a trade to list of trades
-        :param message: Message used for conducting trade.
-        """
-        self.trades.append({
-            'date': self.currentPeriod['date_utc'],
-            'action': message
-        })
 
     def main_logic(self):
         """
@@ -378,8 +577,13 @@ class Backtester:
                 self.exit_short('Exited short because of a stop loss.')
 
             elif self.trend == BULLISH:
-                self.exit_short('Exited short because a cross was detected.')
-                self.go_long('Entered long because a cross was detected.')
+                if self.stoicEnabled:
+                    if self.stoicTrend == BULLISH:
+                        self.exit_short(f'Bought short because a cross and stoicism were detected.')
+                        self.go_long(f'Bought long because a cross and stoicism were detected.')
+                else:
+                    self.exit_short('Exited short because a cross was detected.')
+                    self.go_long('Entered long because a cross was detected.')
 
         elif self.inLongPosition:  # This means we are in long position
             if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
@@ -387,15 +591,29 @@ class Backtester:
                 self.exit_long('Exited long because of a stop loss.')
 
             elif self.trend == BEARISH:
-                self.exit_long('Exited long because a cross was detected.')
-                if self.marginEnabled:
-                    self.go_short('Entered short because a cross was detected.')
+                if self.stoicEnabled:
+                    if self.stoicTrend == BEARISH:
+                        self.exit_long('Exited long because a cross and stoicism were detected.')
+                        if self.marginEnabled:
+                            self.go_short('Entered short because a cross and stoicism were detected.')
+                else:
+                    self.exit_long('Exited long because a cross was detected.')
+                    if self.marginEnabled:
+                        self.go_short('Entered short because a cross was detected.')
 
         else:  # This means we are in neither position
             if self.trend == BULLISH and self.previousPosition is not LONG:
-                self.go_long('Entered long because a cross was detected.')
+                if self.stoicEnabled:
+                    if self.stoicTrend == BULLISH:
+                        self.go_long('Entered long because a cross and stoicism were detected.')
+                else:
+                    self.go_long('Entered long because a cross was detected.')
             elif self.marginEnabled and self.trend == BEARISH and self.previousPosition is not SHORT:
-                self.go_short('Entered short because a cross was detected.')
+                if self.stoicEnabled:
+                    if self.stoicTrend == BEARISH:
+                        self.go_short('Entered short because a cross and stoicism were detected.')
+                else:
+                    self.go_short('Entered short because a cross was detected.')
             elif self.trend == BEARISH:
                 self.previousPosition = None
 
@@ -405,12 +623,15 @@ class Backtester:
         """
         self.movingAverageTestStartTime = time.time()
         seenData = self.data[:self.minPeriod][::-1]  # Start from minimum previous period data.
+        s1, s2, s3 = self.stoicOptions
         for period in self.data[self.startDateIndex:self.endDateIndex]:
             seenData.insert(0, period)
             self.currentPeriod = period
             self.currentPrice = period['open']
             self.main_logic()
             self.check_trend(seenData)
+            if self.stoicEnabled and len(seenData) > max((s1, s2, s3)):
+                self.stoic_strategy(seenData, s1, s2, s3)
 
         if self.inShortPosition:
             self.exit_short('Exited short because of end of backtest.')
@@ -500,6 +721,8 @@ class Backtester:
         print("\nBacktest results:")
         print(f'\tSymbol: {"Unknown/Imported Data" if self.symbol is None else self.symbol}')
         print(f'\tElapsed: {round(self.movingAverageTestEndTime - self.movingAverageTestStartTime, 2)} seconds')
+        print(f'\tStoicism enabled: {self.stoicEnabled}')
+        print(f'\tStoicism options: {self.stoicOptions}')
         print(f'\tStart Period: {self.data[self.startDateIndex]["date_utc"]}')
         print(f"\tEnd Period: {self.currentPeriod['date_utc']}")
         print(f'\tStarting balance: ${round(self.startingBalance, 2)}')
@@ -509,7 +732,7 @@ class Backtester:
         difference = round(self.get_net() - self.startingBalance, 2)
         if difference > 0:
             print(f'\tProfit: ${difference}')
-            print(f'\tProfit Percentage: {round(self.get_net() / self.startingBalance * 100, 2)}%')
+            print(f'\tProfit Percentage: {round(self.get_net() / self.startingBalance * 100 - 100, 2)}%')
         elif difference < 0:
             print(f'\tLoss: ${-difference}')
             print(f'\tLoss Percentage: {round(100 - self.get_net() / self.startingBalance * 100, 2)}%')
@@ -569,6 +792,8 @@ class Backtester:
             self.print_trades(f)
 
         filePath = os.path.join(os.getcwd(), resultFile)
+        print(f'Saved file to {filePath}.')
+
         os.chdir(currentPath)
         return filePath
 
@@ -576,10 +801,10 @@ class Backtester:
 if __name__ == '__main__':
     path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT\BTCUSDT_data_1d.csv'
     testData = load_from_csv(path)
-    opt = [Option('sma', 'high', 10, 20), Option('sma', 'low', 10, 20)]
-    a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=2, options=opt,
-                   marginEnabled=True, startDate=datetime(2020, 1, 1))
-    a.find_optimal_moving_average(15, 20)
-    # a.moving_average_test()
+    opt = [Option('sma', 'high', 18, 24), Option('wma', 'low', 19, 23)]
+    a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=99, options=opt,
+                   marginEnabled=True, startDate=datetime(2018, 1, 1), stoicOptions=[32, 20, 1], symbol="BTCUSDT")
+    # a.find_optimal_moving_average(15, 20)
+    a.moving_average_test()
     # # a.print_stats()
-    # a.write_results()
+    a.write_results()

@@ -46,7 +46,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -934,7 +934,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="backtestMainTab">
           <attribute name="title">
@@ -1398,28 +1398,6 @@
                 </item>
                </widget>
               </item>
-              <item row="3" column="1" colspan="2">
-               <widget class="QSpinBox" name="backtestFinalValueSpinBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="toolTip">
-                 <string>Final value for average. For instance, SMA(1) would be 1.</string>
-                </property>
-                <property name="minimum">
-                 <number>1</number>
-                </property>
-                <property name="maximum">
-                 <number>500</number>
-                </property>
-                <property name="value">
-                 <number>2</number>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="1" colspan="2">
                <widget class="QComboBox" name="backtestParameterComboBox">
                 <property name="sizePolicy">
@@ -1451,6 +1429,28 @@
                   <string>Close</string>
                  </property>
                 </item>
+               </widget>
+              </item>
+              <item row="3" column="1" colspan="2">
+               <widget class="QSpinBox" name="backtestFinalValueSpinBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="toolTip">
+                 <string>Final value for average. For instance, SMA(1) would be 1.</string>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>500</number>
+                </property>
+                <property name="value">
+                 <number>2</number>
+                </property>
                </widget>
               </item>
               <item row="2" column="1" colspan="2">
@@ -1498,16 +1498,26 @@
                 </property>
                </widget>
               </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="backtestParameterLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
+              <item row="8" column="0">
+               <spacer name="verticalSpacer_8">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="4" column="0">
+               <widget class="QCheckBox" name="backtestDoubleCrossCheckMark">
+                <property name="toolTip">
+                 <string>Check this if you want to use a double cross</string>
                 </property>
                 <property name="text">
-                 <string>Parameter</string>
+                 <string>Double Cross?</string>
                 </property>
                </widget>
               </item>
@@ -1524,28 +1534,67 @@
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
-               <widget class="QCheckBox" name="backtestDoubleCrossCheckMark">
-                <property name="toolTip">
-                 <string>Check this if you want to use a double cross</string>
+              <item row="1" column="0">
+               <widget class="QLabel" name="backtestParameterLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Double Cross?</string>
+                 <string>Parameter</string>
                 </property>
                </widget>
               </item>
               <item row="6" column="0">
-               <spacer name="verticalSpacer_8">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
+               <widget class="QCheckBox" name="backtestStoicCheckMark">
+                <property name="text">
+                 <string>Enable Stoics?</string>
                 </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
+               </widget>
+              </item>
+              <item row="7" column="0" colspan="3">
+               <widget class="QGroupBox" name="backtestStoicGroupBox">
+                <property name="enabled">
+                 <bool>false</bool>
                 </property>
-               </spacer>
+                <property name="title">
+                 <string>Stoics</string>
+                </property>
+                <layout class="QFormLayout" name="formLayout_3">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="backtestStoicInput1Label">
+                   <property name="text">
+                    <string>Input 1</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="backtestStoicInput2Label">
+                   <property name="text">
+                    <string>Input 2</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="backtestStoicInput3Label">
+                   <property name="text">
+                    <string>Input 3</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QSpinBox" name="backtestStoicSpinBox1"/>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QSpinBox" name="backtestStoicSpinBox2"/>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QSpinBox" name="backtestStoicSpinBox3"/>
+                 </item>
+                </layout>
+               </widget>
               </item>
              </layout>
             </widget>
