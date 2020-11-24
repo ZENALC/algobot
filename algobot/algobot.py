@@ -435,11 +435,15 @@ class Interface(QMainWindow):
         net = statDict['net']
         price = statDict['currentPrice']
         optionDetails = statDict['optionDetails']
-        self.update_graphs(net=net, caller=caller, optionDetails=optionDetails, price=price)
+        rsiDetails = statDict['rsiDetails']
+        self.update_graphs_and_moving_averages(net=net, caller=caller, optionDetails=optionDetails,
+                                               price=price, rsiDetails=rsiDetails)
 
-    def update_graphs(self, net: float, caller, optionDetails: list, price: float):
+    def update_graphs_and_moving_averages(self, net: float, caller, optionDetails: list, price: float,
+                                          rsiDetails: list):
         """
-        Updates graphs based on caller.
+        Updates graphs and moving averages in statistics based on caller.
+        :param rsiDetails: RSI information (if exists).
         :param price: Current ticker price.
         :param net: Net to be added to net graph.
         :param caller: Caller that decides which graphs get updated.
@@ -451,6 +455,15 @@ class Interface(QMainWindow):
 
         if len(optionDetails) == 1:
             self.hide_next_moving_averages(caller)
+
+        if len(rsiDetails) == 0:
+            self.hide_rsi_statistics(caller)
+        else:
+            self.show_rsi_statistics(caller)
+            interfaceDict['statistics']['rsi1Value'].setText(f'${round(rsiDetails[0][1], 2)}')
+            interfaceDict['statistics']['rsi2Value'].setText(f'${round(rsiDetails[1][1], 2)}')
+            interfaceDict['statistics']['rsi1Label'].setText(f'RSI ({rsiDetails[0][0]}) Close')
+            interfaceDict['statistics']['rsi2Label'].setText(f'RSI ({rsiDetails[1][0]}) Close')
 
         for index, optionDetail in enumerate(optionDetails):
             initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
@@ -484,10 +497,30 @@ class Interface(QMainWindow):
         interfaceDict['nextFinalMovingAverageLabel'].show()
         interfaceDict['nextFinalMovingAverageValue'].show()
 
+    def show_rsi_statistics(self, caller):
+        """
+        Shows RSI stats based on caller.
+        :param caller: Caller that will decide which RSI statistics get shown.
+        """
+        self.interfaceDictionary[caller]['statistics']['rsi1Label'].show()
+        self.interfaceDictionary[caller]['statistics']['rsi2Label'].show()
+        self.interfaceDictionary[caller]['statistics']['rsi1Value'].show()
+        self.interfaceDictionary[caller]['statistics']['rsi2Value'].show()
+
+    def hide_rsi_statistics(self, caller):
+        """
+        Hides RSI stats based on caller.
+        :param caller: Caller that will decide which RSI statistics get hidden.
+        """
+        self.interfaceDictionary[caller]['statistics']['rsi1Label'].hide()
+        self.interfaceDictionary[caller]['statistics']['rsi2Label'].hide()
+        self.interfaceDictionary[caller]['statistics']['rsi1Value'].hide()
+        self.interfaceDictionary[caller]['statistics']['rsi2Value'].hide()
+
     def hide_next_moving_averages(self, caller):
         """
-        :param caller: Caller that will decide which statistics get hidden.
         Hides next moving averages statistics based on caller.
+        :param caller: Caller that will decide which statistics get hidden.
         """
         interfaceDict = self.interfaceDictionary[caller]['statistics']
         interfaceDict['nextInitialMovingAverageLabel'].hide()
@@ -1278,6 +1311,10 @@ class Interface(QMainWindow):
                     'stoicEnabled': self.statistics.simulationStoicEnabledValue,
                     'stoicInputs': self.statistics.simulationStoicInputsValue,
                     'movingAverageTrend': self.statistics.simulationMovingAverageTrendValue,
+                    'rsi1Label': self.statistics.simulationRsi1Label,
+                    'rsi2Label': self.statistics.simulationRsi2Label,
+                    'rsi1Value': self.statistics.simulationRsi1Value,
+                    'rsi2Value': self.statistics.simulationRsi2Value,
                 },
                 'mainInterface': {
                     # Portfolio
@@ -1365,6 +1402,10 @@ class Interface(QMainWindow):
                     'stoicEnabled': self.statistics.stoicEnabledValue,
                     'stoicInputs': self.statistics.stoicInputsValue,
                     'movingAverageTrend': self.statistics.movingAverageTrendValue,
+                    'rsi1Label': self.statistics.rsi1Label,
+                    'rsi2Label': self.statistics.rsi2Label,
+                    'rsi1Value': self.statistics.rsi1Value,
+                    'rsi2Value': self.statistics.rsi2Value,
                 },
                 'mainInterface': {
                     # Portfolio

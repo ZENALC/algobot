@@ -310,6 +310,7 @@ class BotThread(QRunnable):
 
         # self.optionDetails = [self.gui.get_option_info(option, trader) for option in trader.tradingOptions]
         self.optionDetails = trader.optionDetails
+        rsi_details = [(key, trader.dataView.rsi_data[key]) for key in trader.dataView.rsi_data]
 
         updateDict = {
             # Statistics window
@@ -340,6 +341,7 @@ class BotThread(QRunnable):
             'stoicEnabled': str(trader.stoicEnabled),
             'stoicInputs': stoicInputs,
             'movingAverageTrend': movingAverageTrend,
+            'rsiDetails': rsi_details,
         }
 
         return updateDict

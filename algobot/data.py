@@ -710,6 +710,9 @@ class Data:
         rs = averageUp / averageDown
         rsi = 100 - 100 / (1 + rs)
 
+        if shift == 0:
+            self.rsi_data[prices] = rsi
+
         if round_value:
             return round(rsi, 2)
         return rsi
