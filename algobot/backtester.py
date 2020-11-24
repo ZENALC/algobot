@@ -443,7 +443,7 @@ class Backtester:
             emaUp = up_data[index] * alpha + emaUp * (1 - alpha)
             emaDown = down_data[index] * alpha + emaDown * (1 - alpha)
             rsi = 100 if emaDown == 0 else 100 - 100 / (1 + emaUp / emaDown)
-            rsi_values.append(((round(rsi, 2)), emaUp, emaDown))
+            rsi_values.append((rsi, emaUp, emaDown))
 
         if periods in self.rsi_dictionary:
             rsi_values = self.rsi_dictionary[periods]['close'] + rsi_values
