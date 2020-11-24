@@ -109,6 +109,7 @@ class TelegramBot:
 
         return (f'Symbol: {trader.symbol}\n'
                 f'Position: {trader.get_position_string()}\n'
+                f'Interval: {trader.dataView.interval}\n'
                 f'Total trades made: {len(trader.trades)}\n'
                 f"Coin owned: {trader.coin}\n"
                 f"Coin owed: {trader.coinOwed}\n"
