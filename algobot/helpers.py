@@ -3,11 +3,37 @@ import os
 import json
 import time
 from datetime import datetime
+from typing import Tuple
+
 from dateutil import parser
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
 LOG_FOLDER = 'Logs'
+
+
+def get_ups_and_downs(data, parameter) -> Tuple[list, list]:
+    """
+    Returns lists of ups and downs from given data and parameter.
+    :param data: List of dictionaries from which we get the ups and downs.
+    :param parameter: Parameter from which data is retrieved.
+    :return: Tuple of list of ups and downs.
+    """
+    ups = [0]
+    downs = [0]
+    previous = data[0]
+
+    for period in data[1:]:
+        if period[parameter] > previous[parameter]:
+            ups.append(period[parameter] - previous[parameter])
+            downs.append(0)
+        else:
+            ups.append(0)
+            downs.append(previous[parameter] - period[parameter])
+
+        previous = period
+
+    return ups, downs
 
 
 def setup_and_return_log_path(fileName):

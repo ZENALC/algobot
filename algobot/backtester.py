@@ -1,11 +1,10 @@
 import os
 import sys
 import time
-from typing import Tuple
 
 from dateutil import parser
 from datetime import datetime
-from helpers import load_from_csv
+from helpers import load_from_csv, get_ups_and_downs
 from option import Option
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
 
@@ -453,30 +452,6 @@ class Backtester:
 
         return rsi_values[-1][0]
 
-    @staticmethod
-    def get_ups_and_downs(data, parameter) -> Tuple[list, list]:
-        """
-        Returns lists of ups and downs from given data and parameter.
-        :param data: List of dictionaries from which we get the ups and downs.
-        :param parameter: Parameter from which data is retrieved.
-        :return: Tuple of list of ups and downs.
-        """
-        ups = [0]
-        downs = [0]
-        previous = data[0]
-
-        for period in data[1:]:
-            if period[parameter] > previous[parameter]:
-                ups.append(period[parameter] - previous[parameter])
-                downs.append(0)
-            else:
-                ups.append(0)
-                downs.append(previous[parameter] - period[parameter])
-
-            previous = period
-
-        return ups, downs
-
     # noinspection DuplicatedCode
     def get_rsi(self, data: list, prices: int = 14, parameter: str = 'close',
                 shift: int = 0, round_value: bool = True) -> float:
@@ -511,7 +486,7 @@ class Backtester:
         data = data[:]
         data.reverse()
 
-        ups, downs = self.get_ups_and_downs(data=data, parameter=parameter)
+        ups, downs = get_ups_and_downs(data=data, parameter=parameter)
         rsi = self.helper_get_ema(ups, downs, prices)
 
         if round_value:

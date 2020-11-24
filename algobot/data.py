@@ -3,7 +3,7 @@ import time
 import os
 
 from datetime import timedelta, timezone, datetime
-from helpers import get_logger, ROOT_DIR
+from helpers import get_logger, ROOT_DIR, get_ups_and_downs
 from contextlib import closing
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds, date_to_milliseconds
@@ -692,20 +692,7 @@ class Data:
         data = data[:]
         data.reverse()
 
-        ups = [0]
-        downs = [0]
-        previous = data[0]
-
-        for period in data[1:]:
-            if period[parameter] > previous[parameter]:
-                ups.append(period[parameter] - previous[parameter])
-                downs.append(0)
-            else:
-                ups.append(0)
-                downs.append(previous[parameter] - period[parameter])
-
-            previous = period
-
+        ups, downs = get_ups_and_downs(data=data, parameter=parameter)
         averageUp, averageDown = self.helper_get_ema(ups, downs, prices)
         rs = averageUp / averageDown
         rsi = 100 - 100 / (1 + rs)
