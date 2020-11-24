@@ -420,6 +420,7 @@ class Interface(QMainWindow):
         statisticsDictionary['stoicTrend'].setText(statDict['stoicTrend'])
         statisticsDictionary['stoicEnabled'].setText(statDict['stoicEnabled'])
         statisticsDictionary['stoicInputs'].setText(statDict['stoicInputs'])
+        statisticsDictionary['movingAverageTrend'].setText(statDict['movingAverageTrend'])
 
         # These are for main interface window.
         mainInterfaceDictionary = interfaceDictionary['mainInterface']
@@ -1276,6 +1277,7 @@ class Interface(QMainWindow):
                     'stoicTrend': self.statistics.simulationStoicTrendValue,
                     'stoicEnabled': self.statistics.simulationStoicEnabledValue,
                     'stoicInputs': self.statistics.simulationStoicInputsValue,
+                    'movingAverageTrend': self.statistics.simulationMovingAverageTrendValue,
                 },
                 'mainInterface': {
                     # Portfolio
@@ -1362,6 +1364,7 @@ class Interface(QMainWindow):
                     'stoicTrend': self.statistics.stoicTrendValue,
                     'stoicEnabled': self.statistics.stoicEnabledValue,
                     'stoicInputs': self.statistics.stoicInputsValue,
+                    'movingAverageTrend': self.statistics.movingAverageTrendValue,
                 },
                 'mainInterface': {
                     # Portfolio
