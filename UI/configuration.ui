@@ -67,7 +67,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="mainMainTab">
           <attribute name="title">
@@ -934,7 +934,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="backtestMainTab">
           <attribute name="title">
@@ -1598,13 +1598,25 @@
                   </widget>
                  </item>
                  <item row="0" column="1">
-                  <widget class="QSpinBox" name="backtestStoicSpinBox1"/>
+                  <widget class="QSpinBox" name="backtestStoicSpinBox1">
+                   <property name="minimum">
+                    <number>2</number>
+                   </property>
+                  </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QSpinBox" name="backtestStoicSpinBox2"/>
+                  <widget class="QSpinBox" name="backtestStoicSpinBox2">
+                   <property name="minimum">
+                    <number>2</number>
+                   </property>
+                  </widget>
                  </item>
                  <item row="2" column="1">
-                  <widget class="QSpinBox" name="backtestStoicSpinBox3"/>
+                  <widget class="QSpinBox" name="backtestStoicSpinBox3">
+                   <property name="minimum">
+                    <number>1</number>
+                   </property>
+                  </widget>
                  </item>
                 </layout>
                </widget>
@@ -1750,6 +1762,9 @@
            </item>
            <item>
             <widget class="QCalendarWidget" name="backtestStartDate">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="minimumDate">
               <date>
                <year>2015</year>
@@ -1771,6 +1786,9 @@
            </item>
            <item>
             <widget class="QCalendarWidget" name="backtestEndDate">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="gridVisible">
               <bool>true</bool>
              </property>

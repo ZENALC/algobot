@@ -1,3 +1,6 @@
+from typing import Tuple
+
+
 class Option:
     """
     Helper class object for trading options.
@@ -69,6 +72,16 @@ class Option:
         Returns current trading option's final bound.
         """
         return self.finalBound
+
+    def get_pretty_option(self) -> Tuple[str, str]:
+        """
+        Returns a prettified tuple of option's initial and final bound.
+        :return: A tuple of prettified option initial and final bound.
+        """
+        return (
+            f'{self.movingAverage}({self.initialBound}) {self.parameter.capitalize()}',
+            f'{self.movingAverage}({self.finalBound}) {self.parameter.capitalize()}',
+        )
 
     def __repr__(self):
         """

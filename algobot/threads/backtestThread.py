@@ -4,7 +4,6 @@ import traceback
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 from backtester import Backtester
 from enums import BACKTEST
-from option import Option
 
 
 class BacktestSignals(QObject):
@@ -14,26 +13,44 @@ class BacktestSignals(QObject):
     error = pyqtSignal(int, str)
 
 
-def get_pretty_option(option: Option):
-    return (
-        f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}',
-        f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}',
-    )
-
-
 class BacktestThread(QRunnable):
     def __init__(self, gui):
         super(BacktestThread, self).__init__()
         self.gui = gui
         self.signals = BacktestSignals()
 
-    def get_configuration_dictionary(self) -> dict:
+    def get_configuration_details_to_setup_backtest(self) -> dict:
         """
-        Returns backtest configuration details.
+        Returns configuration details from GUI in a dictionary to setup backtest.
+        :return: GUI configuration details in a dictionary.
+        """
+        gui = self.gui
+        config = gui.configuration
+        startDate, endDate = config.get_calendar_dates()
+        lossStrategy, lossPercentageDecimal = gui.get_loss_settings(BACKTEST)
+        stoicOptions = [config.backtestStoicSpinBox1.value(), config.backtestStoicSpinBox2.value(),
+                        config.backtestStoicSpinBox3.value()]
+
+        return {
+            'startingBalance': config.backtestStartingBalanceSpinBox.value(),
+            'data': config.data,
+            'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
+            'options': gui.get_trading_options(BACKTEST),
+            'startDate': startDate,
+            'endDate': endDate,
+            'lossStrategy': lossStrategy,
+            'lossPercentage': lossPercentageDecimal * 100,
+            'dataType': config.dataType,
+            'stoicEnabled': config.backtestStoicCheckMark.isChecked(),
+            'stoicOptions': stoicOptions
+        }
+
+    def get_configuration_dictionary_for_gui(self) -> dict:
+        """
+        Returns backtest configuration details to update GUI.
         :return: Dictionary containing backtest configuration details.
         """
         backtester = self.gui.backtester
-        options = [get_pretty_option(option) for option in backtester.tradingOptions]
         return {
             'startingBalance': f'${backtester.startingBalance}',
             'interval': backtester.interval,
@@ -42,7 +59,7 @@ class BacktestThread(QRunnable):
             'stopLossStrategy': f'{"Trailing Loss" if backtester.lossStrategy == 2 else "Stop Loss"}',
             'startPeriod': f'{backtester.data[backtester.startDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
             'endPeriod': f'{backtester.data[backtester.endDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
-            'options': options
+            'options': [option.get_pretty_option() for option in backtester.tradingOptions]
         }
 
     def get_activity_dictionary(self, period: dict, index: int, length: int) -> dict:
@@ -74,15 +91,33 @@ class BacktestThread(QRunnable):
             'percentage': int(index / length * 100)
         }
 
+    def setup_bot(self):
+        """
+        Sets up initial backtester and then emits parameters to GUI.
+        """
+        configDetails = self.get_configuration_details_to_setup_backtest()
+        stoicOptions = configDetails['stoicOptions'] if configDetails['stoicEnabled'] else None
+        self.gui.backtester = Backtester(startingBalance=configDetails['startingBalance'],
+                                         data=configDetails['data'],
+                                         symbol=configDetails['dataType'],
+                                         lossStrategy=configDetails['lossStrategy'],
+                                         lossPercentage=configDetails['lossPercentage'],
+                                         options=configDetails['options'],
+                                         marginEnabled=configDetails['marginEnabled'],
+                                         startDate=configDetails['startDate'],
+                                         endDate=configDetails['endDate'],
+                                         stoicOptions=stoicOptions)
+        self.signals.started.emit(self.get_configuration_dictionary_for_gui())
+
     def backtest(self):
         """
-        Main backtest function.
+        Performs a moving average test with given configurations.
         """
         backtester = self.gui.backtester
         s1, s2, s3 = backtester.stoicOptions
         backtester.movingAverageTestStartTime = time.time()
         seenData = backtester.data[:backtester.minPeriod][::-1]  # Start from minimum previous period data.
-        backtestPeriod = backtester.data[backtester.startDateIndex:backtester.endDateIndex]
+        backtestPeriod = backtester.data[backtester.startDateIndex: backtester.endDateIndex]
         testLength = len(backtestPeriod)
         divisor = testLength // 100
         if testLength % 100 != 0:
@@ -92,11 +127,11 @@ class BacktestThread(QRunnable):
             seenData.insert(0, period)
             backtester.currentPeriod = period
             backtester.currentPrice = period['open']
-            backtester.main_logic()
-            backtester.check_trend(seenData)
             backtester.check_trend(seenData)
             if backtester.stoicEnabled and len(seenData) > max((s1, s2, s3)):
                 backtester.stoic_strategy(seenData, s1, s2, s3)
+
+            backtester.main_logic()
 
             if index % divisor == 0:
                 self.signals.activity.emit(self.get_activity_dictionary(period=period, index=index, length=testLength))
@@ -111,57 +146,11 @@ class BacktestThread(QRunnable):
                                                                 length=testLength))
         backtester.movingAverageTestEndTime = time.time()
 
-    def get_configuration_details(self) -> dict:
-        """
-        Returns configuration details from GUI in a dictionary.
-        :return: GUI configuration details in a dictionary.
-        """
-        gui = self.gui
-        config = gui.configuration
-        startDate, endDate = config.get_calendar_dates()
-        lossStrategy, lossPercentageDecimal = gui.get_loss_settings(BACKTEST)
-        stoicOptions = [config.backtestStoicSpinBox1.value(), config.backtestStoicSpinBox2.value(),
-                        config.backtestStoicSpinBox3.value()]
-
-        return {
-            'startingBalance': config.backtestStartingBalanceSpinBox.value(),
-            'data': config.data,
-            'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
-            'options': gui.get_trading_options(BACKTEST),
-            'startDate': startDate,
-            'endDate': endDate,
-            'lossStrategy': lossStrategy,
-            'lossPercentage': lossPercentageDecimal * 100,
-            'dataType': config.dataType,
-            'stoicEnabled': config.backtestStoicCheckMark.isChecked(),
-            'stoicOptions': stoicOptions
-        }
-
-    def setup_bot(self):
-        """
-        Sets up initial backtester.
-        """
-        configDetails = self.get_configuration_details()
-        if configDetails['stoicEnabled']:
-            stoicOptions = configDetails['stoicOptions']
-        else:
-            stoicOptions = None
-        self.gui.backtester = Backtester(startingBalance=configDetails['startingBalance'],
-                                         data=configDetails['data'],
-                                         symbol=configDetails['dataType'],
-                                         lossStrategy=configDetails['lossStrategy'],
-                                         lossPercentage=configDetails['lossPercentage'],
-                                         options=configDetails['options'],
-                                         marginEnabled=configDetails['marginEnabled'],
-                                         startDate=configDetails['startDate'],
-                                         endDate=configDetails['endDate'],
-                                         stoicOptions=stoicOptions)
-        self.signals.started.emit(self.get_configuration_dictionary())
-
     @pyqtSlot()
     def run(self):
         """
-        Initialise the runner function with passed args, kwargs.
+        Runs the backtest thread. It first sets up the bot, then it backtests. During the backtest, it also emits
+        several signals for GUI to update itself.
         """
         # Retrieve args/kwargs here; and fire processing using them
         try:

@@ -144,6 +144,8 @@ class Configuration(QDialog):
         endYear, endMonth, endDay = endDate.year, endDate.month, endDate.day
         qEndDate = QDate(endYear, endMonth, endDay)
 
+        self.backtestStartDate.setEnabled(True)
+        self.backtestEndDate.setEnabled(True)
         self.backtestStartDate.setDateRange(qStartDate, qEndDate)
         self.backtestEndDate.setDateRange(qStartDate, qEndDate)
 
@@ -191,10 +193,10 @@ class Configuration(QDialog):
         :param data: Data to be used for backtesting.
         """
         symbol = self.backtestTickerComboBox.currentText()
-        interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
+        interval = self.backtestIntervalComboBox.currentText().lower()
         self.data = data
         self.dataType = symbol
-        self.backtestInfoLabel.setText("Downloaded data successfully.")
+        self.backtestInfoLabel.setText(f"Downloaded {symbol} {interval} data successfully.")
         self.backtestDataLabel.setText(f'Currently using {symbol} in {interval} intervals to conduct backtest.')
         self.setup_calendar()
         self.backtestDownloadDataButton.setEnabled(True)
@@ -228,7 +230,7 @@ class Configuration(QDialog):
         self.simulationStoicSpinBox2.setValue(self.stoicSpinBox2.value())
         self.simulationStoicSpinBox3.setValue(self.stoicSpinBox3.value())
 
-        self.simulationCopyLabel.setText("Copied all applicable settings successfully.")
+        self.simulationCopyLabel.setText("Copied all viable settings from main to simulation settings successfully.")
 
     # noinspection DuplicatedCode
     def copy_settings_to_backtest(self):
@@ -258,7 +260,7 @@ class Configuration(QDialog):
         self.backtestStoicSpinBox2.setValue(self.stoicSpinBox2.value())
         self.backtestStoicSpinBox3.setValue(self.stoicSpinBox3.value())
 
-        self.backtestCopyLabel.setText("Copied all applicable settings successfully.")
+        self.backtestCopyLabel.setText("Copied all viable settings from main to backtest settings successfully.")
 
     def toggle_double_cross_groupbox(self):
         self.toggle_groupbox(self.doubleCrossCheckMark, self.doubleCrossGroupBox)

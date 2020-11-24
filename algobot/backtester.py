@@ -791,7 +791,6 @@ class Backtester:
             self.print_trades(f)
 
         filePath = os.path.join(os.getcwd(), resultFile)
-        print(f'Saved file to {filePath}.')
 
         os.chdir(currentPath)
         return filePath
