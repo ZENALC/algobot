@@ -281,7 +281,7 @@ class BotThread(QRunnable):
         Returns current bot statistics in a dictionary.
         :return: Current statistics in a dictionary.
         """
-        trader = self.trader
+        trader: SimulationTrader = self.trader
         net = trader.get_net()
         profit = trader.get_profit()
         stopLoss = trader.get_stop_loss()
@@ -307,7 +307,8 @@ class BotThread(QRunnable):
             else:
                 self.dailyPercentage = trader.get_profit_percentage(self.previousDayNet, net)
 
-        self.optionDetails = [self.gui.get_option_info(option, trader) for option in trader.tradingOptions]
+        # self.optionDetails = [self.gui.get_option_info(option, trader) for option in trader.tradingOptions]
+        self.optionDetails = trader.optionDetails
 
         updateDict = {
             # Statistics window

@@ -582,15 +582,16 @@ class Data:
         self.output_message("Data has been verified to be correct.")
         return True
 
-    def get_summation(self, prices: int, parameter: str, round_value: bool = True) -> float:
+    def get_summation(self, prices: int, parameter: str, round_value: bool = True, update: bool = True) -> float:
         """
         Returns total summation.
+        :param update: Boolean for whether function should call API and get latest data or not.
         :param prices: Amount of periods to iterate through for summation.
         :param parameter: Parameter to iterate through.
         :param round_value: Boolean that determines whether returned output is rounded or not.
         :return: Total summation.
         """
-        data = [self.get_current_data()] + self.data
+        data = [self.get_current_data()] + self.data if update else self.data
         data = data[:prices]
 
         total = 0
@@ -601,15 +602,17 @@ class Data:
             return round(total, 0)
         return total
 
-    def get_lowest_low_value(self, prices: int, parameter: str = 'low', round_value: bool = True) -> float:
+    def get_lowest_low_value(self, prices: int, parameter: str = 'low', round_value: bool = True,
+                             update: bool = True) -> float:
         """
         Function that returns the lowest low values.
+        :param update: Boolean for whether function should call API and get latest data or not.
         :param prices: Amount of periods to iterate through.
         :param parameter: Parameter to iterate through. By default, it is low.
         :param round_value: Boolean that determines whether returned output is rounded or not.
         :return: Lowest low value from periods.
         """
-        data = [self.get_current_data()] + self.data
+        data = [self.get_current_data()] + self.data if update else self.data
         data = data[:prices]
 
         lowest = data[0][parameter]
@@ -622,15 +625,17 @@ class Data:
             return round(lowest, 2)
         return lowest
 
-    def get_highest_high_value(self, prices: int, parameter: str = 'high', round_value: bool = True) -> float:
+    def get_highest_high_value(self, prices: int, parameter: str = 'high', round_value: bool = True,
+                               update: bool = True) -> float:
         """
         Function that returns the highest high values.
+        :param update: Boolean for whether function should call API and get latest data or not.
         :param prices: Amount of periods to iterate through.
         :param parameter: Parameter to iterate through. By default, it is high.
         :param round_value: Boolean that determines whether returned output is rounded or not.
         :return: Highest high value from periods.
         """
-        data = [self.get_current_data()] + self.data
+        data = [self.get_current_data()] + self.data if update else self.data
         data = data[:prices]
 
         highest = data[0][parameter]
@@ -707,9 +712,11 @@ class Data:
             return round(rsi, 2)
         return rsi
 
-    def get_sma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True) -> float:
+    def get_sma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True,
+                update: bool = True) -> float:
         """
         Returns the simple moving average with run-time data and prices provided.
+        :param update: Boolean for whether function should call API and get latest data or not.
         :param boolean round_value: Boolean that specifies whether return value should be rounded
         :param int prices: Number of values for average
         :param int shift: Prices shifted from current price
@@ -719,7 +726,7 @@ class Data:
         if not self.is_valid_average_input(shift, prices):
             raise ValueError('Invalid average input specified.')
 
-        data = [self.get_current_data()] + self.data  # Data is current data + all-time period data
+        data = [self.get_current_data()] + self.data if update else self.data
         data = data[shift: prices + shift]  # Data now starts from shift and goes up to prices + shift
 
         sma = sum([period[parameter] for period in data]) / prices
@@ -727,9 +734,11 @@ class Data:
             return round(sma, 2)
         return sma
 
-    def get_wma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True) -> float:
+    def get_wma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True,
+                update: bool = True) -> float:
         """
         Returns the weighted moving average with run-time data and prices provided.
+        :param update: Boolean for whether function should call API and get latest data or not.
         :param shift: Prices shifted from current period.
         :param boolean round_value: Boolean that specifies whether return value should be rounded
         :param int prices: Number of prices to loop over for average
@@ -739,7 +748,7 @@ class Data:
         if not self.is_valid_average_input(shift, prices):
             raise ValueError('Invalid average input specified.')
 
-        data = [self.get_current_data()] + self.data
+        data = [self.get_current_data()] + self.data if update else self.data
         total = data[shift][parameter] * prices  # Current total is first data period multiplied by prices.
         data = data[shift + 1: prices + shift]  # Data now does not include the first shift period.
 
@@ -755,9 +764,10 @@ class Data:
         return wma
 
     def get_ema(self, prices: int, parameter: str, shift: int = 0, sma_prices: int = 5,
-                round_value: bool = True) -> float:
+                round_value: bool = True, update: bool = True) -> float:
         """
         Returns the exponential moving average with data provided.
+        :param update: Boolean for whether function should call API and get latest data or not.
         :param shift: Prices shifted from current period.
         :param round_value: Boolean that specifies whether return value should be rounded
         :param int sma_prices: SMA prices to get first EMA over
@@ -786,12 +796,12 @@ class Data:
         if prices in ema_data and parameter in ema_data[prices] and len(ema_data[prices][parameter]) > 0:
             latestDate = ema_data[prices][parameter][-1][1]
             if self.is_latest_date(latestDate):
-                current_price = self.get_current_data()[parameter]
+                current_price = self.get_current_data()[parameter] if update else self.data[0][parameter]
                 previous_ema = ema_data[prices][parameter][-2][0]
                 ema = current_price * multiplier + previous_ema * (1 - multiplier)
                 ema_data[prices][parameter][-1] = (round(ema, 2), latestDate)
             else:
-                current_data = self.get_current_data()
+                current_data = self.get_current_data() if update else self.data[0]
                 current_price = current_data[parameter]
                 counter = 1
                 for period in self.data[::-1]:
@@ -812,7 +822,7 @@ class Data:
             if shift > 0:
                 ema = ema_data[prices][parameter][-shift][0]
         else:
-            data = [self.get_current_data()] + self.data
+            data = [self.get_current_data()] + self.data if update else self.data
             sma_shift = len(data) - sma_prices
             ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False)
             values = [(round(ema, 2), str(data[sma_shift]['date_utc']))]

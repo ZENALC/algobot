@@ -31,6 +31,7 @@ class SimulationTrader:
         self.dailyChangeNets = []  # Daily change net list. Will contain list of all nets.
 
         self.tradingOptions = []  # List with Option elements. Helps specify what moving averages to trade with.
+        self.optionDetails = []  # Current option values. Holds most recent option values.
         self.trend = None  # 1 is bullish, -1 is bearish; usually handled with enums.
         self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
@@ -460,9 +461,11 @@ class SimulationTrader:
         """
         return self.currentPosition
 
-    def get_average(self, movingAverage: str, parameter: str, value: int, dataObject: Data = None) -> float:
+    def get_average(self, movingAverage: str, parameter: str, value: int, dataObject: Data = None,
+                    update: bool = True) -> float:
         """
         Returns the moving average with parameter and value provided
+        :param update: Boolean for whether average will call the API to get latest values or not.
         :param dataObject: Data object to be used to get moving averages.
         :param movingAverage: Moving average to get the average from the data view.
         :param parameter: Parameter for the data view to use in the moving average.
@@ -472,11 +475,11 @@ class SimulationTrader:
         if dataObject is None:
             dataObject = self.dataView
         if movingAverage == 'SMA':
-            return dataObject.get_sma(value, parameter)
+            return dataObject.get_sma(value, parameter, update=update)
         elif movingAverage == 'WMA':
-            return dataObject.get_wma(value, parameter)
+            return dataObject.get_wma(value, parameter, update=update)
         elif movingAverage == 'EMA':
-            return dataObject.get_ema(value, parameter)
+            return dataObject.get_ema(value, parameter, update=update)
         else:
             raise ValueError(f'Unknown moving average {movingAverage}.')
 
@@ -512,9 +515,17 @@ class SimulationTrader:
         if dataObject is None:
             dataObject = self.dataView
 
+        dataObject.data.insert(0, dataObject.get_current_data())
+
+        self.optionDetails = []
+
         for option in self.tradingOptions:
-            initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound, dataObject)
-            finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound, dataObject)
+            initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound,
+                                              dataObject, update=False)
+            finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound, dataObject,
+                                            update=False)
+            initialName, finalName = option.get_pretty_option()
+            self.optionDetails.append((initialAverage, finalAverage, initialName, finalName))
 
             if dataObject == self.dataView:
                 self.output_message(f'Regular interval ({dataObject.interval}) data:')
@@ -528,6 +539,8 @@ class SimulationTrader:
                 trends.append(BULLISH)
             else:
                 trends.append(BEARISH)
+
+        dataObject.data = dataObject.data[1:]
 
         if all(trend == BULLISH for trend in trends):
             return BULLISH

@@ -728,8 +728,7 @@ class Interface(QMainWindow):
         """
         initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
         finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
-        initialName = f'{option.movingAverage}({option.initialBound}) {option.parameter.capitalize()}'
-        finalName = f'{option.movingAverage}({option.finalBound}) {option.parameter.capitalize()}'
+        initialName, finalName = option.get_pretty_option()
         return initialAverage, finalAverage, initialName, finalName
 
     def setup_graphs(self):
