@@ -667,9 +667,11 @@ class Data:
 
         return emaUp, emaDown
 
-    def get_rsi(self, prices: int = 14, parameter: str = 'close', shift: int = 0, round_value: bool = True) -> float:
+    def get_rsi(self, prices: int = 14, parameter: str = 'close', shift: int = 0, round_value: bool = True,
+                update: bool = True) -> float:
         """
         Returns relative strength index.
+        :param update: Boolean for whether function should call API and get latest data or not.
         :param prices: Amount of prices to iterate through.
         :param parameter: Parameter to use for iterations. By default, it's close.
         :param shift: Amount of prices to shift prices by. Rarely used.
@@ -683,7 +685,7 @@ class Data:
             data = self.data
             shift -= 1
         else:
-            data = [self.get_current_data()] + self.data
+            data = [self.get_current_data()] + self.data if update else self.data
 
         start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
         data = data[shift:start]

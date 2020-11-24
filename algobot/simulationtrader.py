@@ -216,6 +216,7 @@ class SimulationTrader:
         self.add_trade(msg, force=force, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice)
         self.output_message(msg)
 
+    # noinspection DuplicatedCode
     def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0) -> None or int:
         """
         Custom strategy.
@@ -225,8 +226,10 @@ class SimulationTrader:
         :param s: Shift data to get previous values.
         :return: Bullish, bearish, or none values.
         """
-        rsi_values_one = [self.dataView.get_rsi(input1, shift=shift) for shift in range(s, input1 + s)]
-        rsi_values_two = [self.dataView.get_rsi(input2, shift=shift) for shift in range(s, input2 + s)]
+        self.dataView.data.insert(0, self.dataView.get_current_data())
+        rsi_values_one = [self.dataView.get_rsi(input1, shift=shift, update=False) for shift in range(s, input1 + s)]
+        rsi_values_two = [self.dataView.get_rsi(input2, shift=shift, update=False) for shift in range(s, input2 + s)]
+        self.dataView.data = self.dataView.data[1:]
 
         seneca = max(rsi_values_one) - min(rsi_values_one)
         if 'seneca' in self.stoicDictionary:
@@ -289,7 +292,10 @@ class SimulationTrader:
         """
         s1, s2, s3 = self.stoicOptions
         if self.stoicEnabled:
-            self.stoic_strategy(s1, s2, s3)
+            try:
+                self.stoic_strategy(s1, s2, s3)
+            except Exception as e:
+                raise ValueError(f"Invalid stoic options: {e} occurred.")
 
         if self.currentPosition == SHORT:  # This means we are in short position
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
