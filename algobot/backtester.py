@@ -427,18 +427,17 @@ class Backtester:
             self.stoicTrend = None
             return None
 
-    def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> tuple:
+    def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> float:
         """
-        Helper function to get the EMA for relative strength index.
+        Helper function to get the EMA for relative strength index and return the RSI.
         :param down_data: Other data to get EMA of.
         :param up_data: Data to get EMA of.
         :param periods: Number of periods to iterate through.
-        :return: EMA
+        :return: RSI
         """
         emaUp = up_data[0]
         emaDown = down_data[0]
         alpha = 1 / periods
-
         rsi_values = []
 
         for index in range(1, len(up_data)):
@@ -452,7 +451,7 @@ class Backtester:
 
         self.rsi_dictionary[periods] = {'close': rsi_values}
 
-        return emaUp, emaDown
+        return rsi_values[-1][0]
 
     @staticmethod
     def get_ups_and_downs(data, parameter) -> Tuple[list, list]:
@@ -513,11 +512,7 @@ class Backtester:
         data.reverse()
 
         ups, downs = self.get_ups_and_downs(data=data, parameter=parameter)
-        averageUp, averageDown = self.helper_get_ema(ups, downs, prices)
-        if averageDown == 0:
-            return 100
-        rs = averageUp / averageDown
-        rsi = 100 - 100 / (1 + rs)
+        rsi = self.helper_get_ema(ups, downs, prices)
 
         if round_value:
             return round(rsi, 2)

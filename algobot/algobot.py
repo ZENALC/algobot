@@ -2,6 +2,7 @@ import assets
 import sys
 import os
 
+from helpers import ROOT_DIR
 from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
 from datetime import datetime
@@ -1113,6 +1114,17 @@ class Interface(QMainWindow):
         self.configuration.updateBinanceValues.clicked.connect(self.update_binance_values)
         self.configuration.updateTickers.clicked.connect(self.tickers_thread)
 
+    @staticmethod
+    def open_folder(folder):
+        targetPath = os.path.join(ROOT_DIR, folder)
+        if not os.path.exists(targetPath):
+            cwd = os.getcwd()
+            os.chdir(ROOT_DIR)
+            os.mkdir(folder)
+            os.chdir(cwd)
+
+        os.startfile(targetPath)
+
     def create_action_slots(self):
         """
         Creates actions slots.
@@ -1122,6 +1134,9 @@ class Interface(QMainWindow):
         self.aboutAlgobotAction.triggered.connect(lambda: self.about.show())
         self.liveStatisticsAction.triggered.connect(lambda: self.show_statistics(0))
         self.simulationStatisticsAction.triggered.connect(lambda: self.show_statistics(1))
+        self.openBacktestResultsFolderAction.triggered.connect(lambda: self.open_folder("Backtest Results"))
+        self.openLogFolderAction.triggered.connect(lambda: self.open_folder("Logs"))
+        self.openCsvFolderAction.triggered.connect(lambda: self.open_folder('CSV'))
 
     def create_bot_slots(self):
         """

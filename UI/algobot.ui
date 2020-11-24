@@ -1826,9 +1826,18 @@ p, li { white-space: pre-wrap; }
     <addaction name="liveStatisticsAction"/>
     <addaction name="simulationStatisticsAction"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="openBacktestResultsFolderAction"/>
+    <addaction name="openLogFolderAction"/>
+    <addaction name="openCsvFolderAction"/>
+   </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuStatistics"/>
    <addaction name="menuHelp"/>
+   <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="configurationAction">
@@ -1859,6 +1868,21 @@ p, li { white-space: pre-wrap; }
   <action name="simulationStatisticsAction">
    <property name="text">
     <string>Simulation</string>
+   </property>
+  </action>
+  <action name="openLogFolderAction">
+   <property name="text">
+    <string>Logs</string>
+   </property>
+  </action>
+  <action name="openBacktestResultsFolderAction">
+   <property name="text">
+    <string>Backtest Results</string>
+   </property>
+  </action>
+  <action name="openCsvFolderAction">
+   <property name="text">
+    <string>CSVs</string>
    </property>
   </action>
  </widget>
