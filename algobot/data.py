@@ -826,7 +826,7 @@ class Data:
         else:
             data = [self.get_current_data()] + self.data if update else self.data
             sma_shift = len(data) - sma_prices
-            ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False)
+            ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False, update=update)
             values = [(round(ema, 2), str(data[sma_shift]['date_utc']))]
 
             for day in range(len(data) - sma_prices - shift):
