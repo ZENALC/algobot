@@ -442,12 +442,7 @@ class Backtester:
         for index in range(1, len(up_data)):
             emaUp = up_data[index] * alpha + emaUp * (1 - alpha)
             emaDown = down_data[index] * alpha + emaDown * (1 - alpha)
-
-            if emaDown == 0:
-                rsi = 100
-            else:
-                rsi = 100 - 100 / (1 + emaUp / emaDown)
-
+            rsi = 100 if emaDown == 0 else 100 - 100 / (1 + emaUp / emaDown)
             rsi_values.append(((round(rsi, 2)), emaUp, emaDown))
 
         if periods in self.rsi_dictionary:
@@ -482,9 +477,7 @@ class Backtester:
                 down = -difference * alpha + self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
 
             rsi = 100 if down == 0 else 100 - 100 / (1 + up / down)
-
             self.rsi_dictionary[prices]['close'].append((round(rsi, 2), up, down))
-
             return rsi
 
         data = data
