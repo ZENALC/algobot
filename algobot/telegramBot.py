@@ -3,6 +3,7 @@ import random
 from telegram import Bot
 from telegram.ext import Updater, CommandHandler
 from enums import LONG, SHORT, LIVE
+from simulationtrader import SimulationTrader
 
 
 class TelegramBot:
@@ -95,7 +96,7 @@ class TelegramBot:
         update.message.reply_text("Successfully retrieved new values from Binance.")
 
     def get_statistics(self):
-        trader = self.gui.trader
+        trader: SimulationTrader = self.gui.trader
         profit = trader.get_profit()
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
 
@@ -129,6 +130,7 @@ class TelegramBot:
                 f'Stoic Input 1: {trader.stoicOptions[0]}\n'
                 f'Stoic Input 2: {trader.stoicOptions[1]}\n'
                 f'Stoic Input 3: {trader.stoicOptions[2]}\n'
+                f'Moving Averages Trend: {trader.get_trend_string(trader.trend)}\n'
                 f'{optionString}'
                 )
 
