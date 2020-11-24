@@ -5,7 +5,6 @@ from data import Data
 
 
 class CSVSignals(QObject):
-    started = pyqtSignal()
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
 

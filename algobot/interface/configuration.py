@@ -25,7 +25,7 @@ class Configuration(QDialog):
 
     def test_telegram(self):
         """
-        Tests Telegram connection.
+        Tests Telegram connection and updates respective GUI elements.
         """
         tokenPass = False
         chatPass = False
@@ -79,8 +79,7 @@ class Configuration(QDialog):
 
     def load_credentials(self):
         """
-        Attempts to load credentials automatically from path Program stores credentials in.
-        :return:
+        Attempts to load credentials automatically from path program regularly stores credentials in.
         """
         try:
             credentials = helpers.load_credentials()
@@ -117,6 +116,10 @@ class Configuration(QDialog):
             self.credentialResult.setText('Credentials have not been saved.')
 
     def get_calendar_dates(self):
+        """
+        Returns start end end dates for backtest. If both are the same, returns None.
+        :return: Start and end dates for backtest.
+        """
         startDate = self.backtestStartDate.selectedDate().toPyDate()
         endDate = self.backtestEndDate.selectedDate().toPyDate()
         if startDate == endDate:
@@ -149,20 +152,22 @@ class Configuration(QDialog):
         Imports CSV data and loads it.
         """
         self.backtestInfoLabel.setText("Importing data...")
-        filePath, _ = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(os.getcwd(), '../'), "CSV (*.csv)")
+        filePath, _ = QFileDialog.getOpenFileName(self, 'Open file', helpers.ROOT_DIR, "CSV (*.csv)")
         if filePath == '':
             self.backtestInfoLabel.setText("Data not imported.")
             return
         self.data = helpers.load_from_csv(filePath, descending=False)
         self.dataType = "Imported"
         self.backtestInfoLabel.setText("Imported data successfully.")
-        self.setup_calendar()
         self.backtestDataLabel.setText('Currently using imported data to conduct backtest.')
+        self.setup_calendar()
 
     def download_data(self):
         """
-        Loads data from data object.
+        Loads data from data object. If data object is empty, it downloads it.
         """
+        self.backtestDownloadDataButton.setEnabled(False)
+        self.backtestImportDataButton.setEnabled(False)
         self.backtestInfoLabel.setText("Downloading data...")
         symbol = self.backtestTickerComboBox.currentText()
         interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
@@ -172,18 +177,34 @@ class Configuration(QDialog):
         self.threadPool.start(thread)
 
     def handle_download_failure(self, e):
+        """
+        If download fails for backtest data, then GUI gets updated.
+        :param e: Error for why download failed.
+        """
         self.backtestInfoLabel.setText(f"Error occurred during download: {e}.")
+        self.backtestDownloadDataButton.setEnabled(True)
+        self.backtestImportDataButton.setEnabled(True)
 
     def set_downloaded_data(self, data):
+        """
+        If download is successful, the data passed is set to backtest data.
+        :param data: Data to be used for backtesting.
+        """
         symbol = self.backtestTickerComboBox.currentText()
+        interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
         self.data = data
         self.dataType = symbol
-        interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
         self.backtestInfoLabel.setText("Downloaded data successfully.")
         self.backtestDataLabel.setText(f'Currently using {symbol} in {interval} intervals to conduct backtest.')
         self.setup_calendar()
+        self.backtestDownloadDataButton.setEnabled(True)
+        self.backtestImportDataButton.setEnabled(True)
 
+    # noinspection DuplicatedCode
     def copy_settings_to_simulation(self):
+        """
+        Copies parameters from main configuration to simulation configuration.
+        """
         self.simulationIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
         self.simulationTickerComboBox.setCurrentIndex(self.tickerComboBox.currentIndex())
 
@@ -199,11 +220,21 @@ class Configuration(QDialog):
         self.simulationDoubleFinalValueSpinBox.setValue(self.doubleFinalValueSpinBox.value())
 
         self.simulationLossPercentageSpinBox.setValue(self.lossPercentageSpinBox.value())
-        self.simulationPriceLimitSpinBox.setValue(self.priceLimitSpinBox.value())
         self.simulationStopLossRadio.setChecked(self.stopLossRadio.isChecked())
         self.simulationTrailingLossRadio.setChecked(self.trailingLossRadio.isChecked())
 
+        self.simulationStoicCheckMark.setChecked(self.stoicCheckMark.isChecked())
+        self.simulationStoicSpinBox1.setValue(self.stoicSpinBox1.value())
+        self.simulationStoicSpinBox2.setValue(self.stoicSpinBox2.value())
+        self.simulationStoicSpinBox3.setValue(self.stoicSpinBox3.value())
+
+        self.simulationCopyLabel.setText("Copied all applicable settings successfully.")
+
+    # noinspection DuplicatedCode
     def copy_settings_to_backtest(self):
+        """
+        Copies parameters from main configuration to backtest configuration.
+        """
         self.backtestIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
         self.backtestTickerComboBox.setCurrentIndex(self.tickerComboBox.currentIndex())
 
@@ -221,6 +252,13 @@ class Configuration(QDialog):
         self.backtestLossPercentageSpinBox.setValue(self.lossPercentageSpinBox.value())
         self.backtestStopLossRadio.setChecked(self.stopLossRadio.isChecked())
         self.backtestTrailingLossRadio.setChecked(self.trailingLossRadio.isChecked())
+
+        self.backtestStoicCheckMark.setChecked(self.stoicCheckMark.isChecked())
+        self.backtestStoicSpinBox1.setValue(self.stoicSpinBox1.value())
+        self.backtestStoicSpinBox2.setValue(self.stoicSpinBox2.value())
+        self.backtestStoicSpinBox3.setValue(self.stoicSpinBox3.value())
+
+        self.backtestCopyLabel.setText("Copied all applicable settings successfully.")
 
     def toggle_double_cross_groupbox(self):
         self.toggle_groupbox(self.doubleCrossCheckMark, self.doubleCrossGroupBox)
@@ -255,7 +293,6 @@ class Configuration(QDialog):
         self.stoicCheckMark.toggled.connect(self.toggle_stoic_groupbox)
         self.simulationStoicCheckMark.toggled.connect(self.toggle_simulation_stoic_groupbox)
         self.backtestStoicCheckMark.toggled.connect(self.toggle_backtest_stoic_groupbox)
-
         self.simulationCopySettingsButton.clicked.connect(self.copy_settings_to_simulation)
 
         self.backtestCopySettingsButton.clicked.connect(self.copy_settings_to_backtest)
