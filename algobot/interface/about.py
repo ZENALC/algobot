@@ -1,9 +1,10 @@
 import os
 
+from helpers import ROOT_DIR
 from PyQt5 import uic
 from PyQt5.QtWidgets import QDialog
 
-aboutUi = os.path.join('../', 'UI', 'about.ui')
+aboutUi = os.path.join(ROOT_DIR, 'UI', 'about.ui')
 
 
 class About(QDialog):

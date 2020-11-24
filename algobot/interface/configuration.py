@@ -10,7 +10,7 @@ from telegram.ext import Updater
 from dateutil import parser
 from threads import downloadThread
 
-configurationUi = os.path.join('../', 'UI', 'configuration.ui')
+configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
 
 class Configuration(QDialog):

@@ -472,7 +472,6 @@ class Backtester:
         if shift > 0 and prices in self.rsi_dictionary:
             return self.rsi_dictionary[prices]['close'][-shift][0]
         elif prices in self.rsi_dictionary:
-            r = self.rsi_dictionary[prices]['close'][-1]
             alpha = 1 / prices
             difference = data[0][parameter] - data[1][parameter]
             if difference > 0:

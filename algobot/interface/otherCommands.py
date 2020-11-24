@@ -6,7 +6,7 @@ from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
-otherCommandsUi = os.path.join('../', 'UI', 'otherCommands.ui')
+otherCommandsUi = os.path.join(helpers.ROOT_DIR, 'UI', 'otherCommands.ui')
 
 
 class OtherCommands(QDialog):

@@ -1,9 +1,10 @@
 import os
 
+from helpers import ROOT_DIR
 from PyQt5 import uic
 from PyQt5.QtWidgets import QDialog
 
-statisticsUi = os.path.join('../', 'UI', 'statistics.ui')
+statisticsUi = os.path.join(ROOT_DIR, 'UI', 'statistics.ui')
 
 
 class Statistics(QDialog):
