@@ -378,7 +378,10 @@ class Interface(QMainWindow):
         :param caller: Caller that determines which configuration settings get disabled.
         """
         disable = not disable
-        self.interfaceDictionary[caller]['configuration']['mainConfigurationTabWidget'].setEnabled(disable)
+        # self.interfaceDictionary[caller]['configuration']['mainConfigurationTabWidget'].setEnabled(disable)
+        self.interfaceDictionary[caller]['configuration']['mainTab'].setEnabled(disable)
+        self.interfaceDictionary[caller]['configuration']['averageTab'].setEnabled(disable)
+        self.interfaceDictionary[caller]['configuration']['lossTab'].setEnabled(disable)
         self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(disable)
         if caller != BACKTEST:
             self.interfaceDictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(not disable)
@@ -1371,6 +1374,9 @@ class Interface(QMainWindow):
                     'activityTable': self.simulationActivityMonitor,
                 },
                 'configuration': {
+                    'mainTab': self.configuration.simulationMainTab,
+                    'averageTab': self.configuration.simulationAverageTab,
+                    'lossTab': self.configuration.simulationLossTab,
                     'baseAverageType': self.configuration.simulationAverageTypeComboBox,
                     'baseParameter': self.configuration.simulationParameterComboBox,
                     'baseInitialValue': self.configuration.simulationInitialValueSpinBox,
@@ -1462,6 +1468,9 @@ class Interface(QMainWindow):
                     'activityTable': self.activityMonitor,
                 },
                 'configuration': {
+                    'mainTab': self.configuration.mainMainTab,
+                    'averageTab': self.configuration.mainAverageTab,
+                    'lossTab': self.configuration.mainLossTab,
                     'baseAverageType': self.configuration.averageTypeComboBox,
                     'baseParameter': self.configuration.parameterComboBox,
                     'baseInitialValue': self.configuration.initialValueSpinBox,
@@ -1485,6 +1494,9 @@ class Interface(QMainWindow):
             },
             BACKTEST: {
                 'configuration': {
+                    'mainTab': self.configuration.backtestMainTab,
+                    'averageTab': self.configuration.backtestAverageTab,
+                    'lossTab': self.configuration.backtestLossTab,
                     'baseAverageType': self.configuration.backtestAverageTypeComboBox,
                     'baseParameter': self.configuration.backtestParameterComboBox,
                     'baseInitialValue': self.configuration.backtestInitialValueSpinBox,
