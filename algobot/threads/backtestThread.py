@@ -74,9 +74,9 @@ class BacktestThread(QRunnable):
         net = backtester.get_net()
         profit = net - backtester.startingBalance
         if profit < 0:
-            profitPercentage = round(100 - net / backtester.startingBalance * 100 - 100, 2)
+            profitPercentage = round(100 - net / backtester.startingBalance * 100, 2)
         else:
-            profitPercentage = round(net / backtester.startingBalance * 100, 2)
+            profitPercentage = round(net / backtester.startingBalance * 100 - 100, 2)
 
         return {
             'net': net,
@@ -127,11 +127,10 @@ class BacktestThread(QRunnable):
             seenData.insert(0, period)
             backtester.currentPeriod = period
             backtester.currentPrice = period['open']
+            backtester.main_logic()
             backtester.check_trend(seenData)
             if backtester.stoicEnabled and len(seenData) > max((s1, s2, s3)):
                 backtester.stoic_strategy(seenData, s1, s2, s3)
-
-            backtester.main_logic()
 
             if index % divisor == 0:
                 self.signals.activity.emit(self.get_activity_dictionary(period=period, index=index, length=testLength))

@@ -170,22 +170,31 @@ class Interface(QMainWindow):
         """
         Ends backtest and prompts user if they want to see the results.
         """
-        fileName, _ = QFileDialog.getSaveFileName(self, 'Save Path', os.path.join(os.getcwd(), '../'), 'TXT (*.txt)')
+        backtestFolder = os.path.join(ROOT_DIR, 'Backtest Results')
+        if not os.path.exists(backtestFolder):
+            os.mkdir(backtestFolder)
+
+        defaultFile = os.path.join(backtestFolder, self.backtester.get_default_result_file_name())
+        fileName, _ = QFileDialog.getSaveFileName(self, 'Save Result', defaultFile, 'TXT (*.txt)')
         fileName = fileName.strip()
         fileName = fileName if fileName != '' else None
 
-        path = self.backtester.write_results(resultFile=fileName)
-        self.add_to_backtest_monitor(f'Ended backtest and saved results to {path}.')
+        if not fileName:
+            self.add_to_backtest_monitor(f'Ended backtest.')
+        else:
+            path = self.backtester.write_results(resultFile=fileName)
+            self.add_to_backtest_monitor(f'Ended backtest and saved results to {path}.')
+
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(f"Backtest results have been saved to {path}.")
+            msgBox.setWindowTitle("Backtest Results")
+            msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
+            if msgBox.exec_() == QMessageBox.Open:
+                os.startfile(path)
+
         self.disable_interface(False, BACKTEST)
         self.backtestProgressBar.setValue(100)
-
-        msgBox = QMessageBox()
-        msgBox.setIcon(QMessageBox.Information)
-        msgBox.setText(f"Backtest results have been saved to {path}.")
-        msgBox.setWindowTitle("Backtest Results")
-        msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
-        if msgBox.exec_() == QMessageBox.Open:
-            os.startfile(path)
 
     def update_backtest_gui(self, updatedDict: dict):
         """

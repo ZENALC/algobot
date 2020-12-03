@@ -286,7 +286,8 @@ class Backtester:
         """
         self.trades.append({
             'date': self.currentPeriod['date_utc'],
-            'action': message
+            'action': message,
+            'net': round(self.get_net(), 2)
         })
 
     def get_short_stop_loss(self) -> float:
@@ -704,13 +705,14 @@ class Backtester:
         print(f'\tNet: ${round(self.get_net(), 2)}')
         print(f'\tCommissions paid: ${round(self.commissionsPaid, 2)}')
         print(f'\tTrades made: {len(self.trades)}')
-        difference = round(self.get_net() - self.startingBalance, 2)
+        net = self.get_net()
+        difference = round(net - self.startingBalance, 2)
         if difference > 0:
             print(f'\tProfit: ${difference}')
-            print(f'\tProfit Percentage: {round(self.get_net() / self.startingBalance * 100 - 100, 2)}%')
+            print(f'\tProfit Percentage: {round(net / self.startingBalance * 100 - 100, 2)}%')
         elif difference < 0:
             print(f'\tLoss: ${-difference}')
-            print(f'\tLoss Percentage: {round(100 - self.get_net() / self.startingBalance * 100, 2)}%')
+            print(f'\tLoss Percentage: {round(100 - net / self.startingBalance * 100, 2)}%')
         else:
             print("\tNo profit or loss incurred.")
         # print(f'Balance: ${round(self.balance, 2)}')
@@ -727,7 +729,7 @@ class Backtester:
         self.print_configuration_parameters()
         self.print_backtest_results()
 
-    def print_trades(self, stdout):
+    def print_trades(self, stdout=sys.__stdout__):
         """
         Prints out all the trades conducted so far.
         """
@@ -737,29 +739,34 @@ class Backtester:
 
         print("\nTrades made:")
         for trade in self.trades:
-            print(f'\t{trade["date"].strftime("%Y-%m-%d %H:%M")}: {trade["action"]}')
+            print(f'\t{trade["date"].strftime("%Y-%m-%d %H:%M")}: (${trade["net"]}) {trade["action"]}')
 
         sys.stdout = previous_stdout  # revert stdout back to normal
+
+    def get_default_result_file_name(self):
+        backtestResultsFolder = 'Backtest Results'
+        symbol = 'Imported' if not self.symbol else self.symbol
+        resultFile = f'{symbol}_backtest_results_{"_".join(self.interval.lower().split())}.txt'
+        os.chdir('../')
+
+        if not os.path.exists(backtestResultsFolder):
+            os.mkdir(backtestResultsFolder)
+        os.chdir(backtestResultsFolder)
+
+        counter = 0
+        previousFile = resultFile
+
+        while os.path.exists(resultFile):
+            resultFile = f'({counter}){previousFile}'
+            counter += 1
+
+        return resultFile
 
     def write_results(self, resultFile=None):
         currentPath = os.getcwd()
 
         if not resultFile:
-            backtestResultsFolder = 'Backtest Results'
-            symbol = 'Imported' if not self.symbol else self.symbol
-            resultFile = f'{symbol}_backtest_results_{"_".join(self.interval.lower().split())}.txt'
-            os.chdir('../')
-
-            if not os.path.exists(backtestResultsFolder):
-                os.mkdir(backtestResultsFolder)
-            os.chdir(backtestResultsFolder)
-
-            counter = 0
-            previousFile = resultFile
-
-            while os.path.exists(resultFile):
-                resultFile = f'({counter}){previousFile}'
-                counter += 1
+            resultFile = self.get_default_result_file_name()
 
         with open(resultFile, 'w') as f:
             self.print_configuration_parameters(f)
@@ -777,8 +784,9 @@ if __name__ == '__main__':
     testData = load_from_csv(path)
     opt = [Option('sma', 'high', 18, 24), Option('wma', 'low', 19, 23)]
     a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=99, options=opt,
-                   marginEnabled=True, startDate=datetime(2018, 1, 1), stoicOptions=[32, 20, 1], symbol="BTCUSDT")
+                   marginEnabled=True, startDate=datetime(2018, 1, 1), symbol="BTCUSDT")
     # a.find_optimal_moving_average(15, 20)
     a.moving_average_test()
+    a.print_trades()
     # # a.print_stats()
     a.write_results()
