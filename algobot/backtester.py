@@ -746,7 +746,8 @@ class Backtester:
     def get_default_result_file_name(self):
         backtestResultsFolder = 'Backtest Results'
         symbol = 'Imported' if not self.symbol else self.symbol
-        resultFile = f'{symbol}_backtest_results_{"_".join(self.interval.lower().split())}.txt'
+        dateString = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        resultFile = f'{symbol}_backtest_results_{"_".join(self.interval.lower().split())}-{dateString}.txt'
         os.chdir('../')
 
         if not os.path.exists(backtestResultsFolder):
