@@ -434,6 +434,7 @@ class Interface(QMainWindow):
         statisticsDictionary['stoicEnabled'].setText(statDict['stoicEnabled'])
         statisticsDictionary['stoicInputs'].setText(statDict['stoicInputs'])
         statisticsDictionary['movingAverageTrend'].setText(statDict['movingAverageTrend'])
+        statisticsDictionary['intervalValue'].setText(statDict['interval'])
 
         # These are for main interface window.
         mainInterfaceDictionary = interfaceDictionary['mainInterface']
@@ -1342,6 +1343,8 @@ class Interface(QMainWindow):
                     'rsi2Label': self.statistics.simulationRsi2Label,
                     'rsi1Value': self.statistics.simulationRsi1Value,
                     'rsi2Value': self.statistics.simulationRsi2Value,
+                    'intervalLabel': self.statistics.simulationIntervalLabel,
+                    'intervalValue': self.statistics.simulationIntervalValue,
                 },
                 'mainInterface': {
                     # Portfolio
@@ -1436,6 +1439,8 @@ class Interface(QMainWindow):
                     'rsi2Label': self.statistics.rsi2Label,
                     'rsi1Value': self.statistics.rsi1Value,
                     'rsi2Value': self.statistics.rsi2Value,
+                    'intervalLabel': self.statistics.intervalLabel,
+                    'intervalValue': self.statistics.intervalValue,
                 },
                 'mainInterface': {
                     # Portfolio

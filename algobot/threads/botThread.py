@@ -315,6 +315,7 @@ class BotThread(QRunnable):
         updateDict = {
             # Statistics window
             'net': net,
+            'interval': helpers.convert_interval_to_string(trader.dataView.interval),
             'startingBalanceValue': f'${round(trader.startingBalance, 2)}',
             'currentBalanceValue': f'${round(trader.balance, 2)}',
             'netValue': f'${round(net, 2)}',

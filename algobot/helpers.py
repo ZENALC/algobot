@@ -108,6 +108,26 @@ def convert_interval(interval):
     return intervals[interval]
 
 
+def convert_interval_to_string(interval):
+    intervals = {
+        '12h': '12 Hours',
+        '15m': '15 Minutes',
+        '1d': '1 Day',
+        '1h': '1 Hour',
+        '1m': '1 Minute',
+        '2h': '2 Hours',
+        '30m': '30 Minutes',
+        '3d': '3 Days',
+        '3m': '3 Minutes',
+        '4h': '4 Hours',
+        '5m': '5 Minutes',
+        '6h': '6 Hours',
+        '8h': '8 Hours'
+    }
+    return intervals[interval]
+
+
+
 def get_elapsed_time(previousTime):
     seconds = int(time.time() - previousTime)
     if seconds <= 60:

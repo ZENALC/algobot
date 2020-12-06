@@ -521,9 +521,13 @@ class SimulationTrader:
         if dataObject is None:
             dataObject = self.dataView
 
+        if not dataObject.data_is_updated():
+            dataObject.update_data()
+
         dataObject.data.insert(0, dataObject.get_current_data())
 
-        self.optionDetails = []
+        if dataObject == self.dataView:
+            self.optionDetails = []
 
         for option in self.tradingOptions:
             initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound,
@@ -531,10 +535,10 @@ class SimulationTrader:
             finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound, dataObject,
                                             update=False)
             initialName, finalName = option.get_pretty_option()
-            self.optionDetails.append((initialAverage, finalAverage, initialName, finalName))
 
             if dataObject == self.dataView:
                 self.output_message(f'Regular interval ({dataObject.interval}) data:')
+                self.optionDetails.append((initialAverage, finalAverage, initialName, finalName))
             else:
                 self.output_message(f'Lower interval ({dataObject.interval}) data:')
 
