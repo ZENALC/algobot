@@ -64,13 +64,14 @@ class BotThread(QRunnable):
         """
         sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
         gui = self.gui
+        symbol = self.trader.symbol
         if interval != '1m':
             lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
-            self.signals.activity.emit(caller, f'Retrieving data for {lowerInterval} lower intervals...')
+            self.signals.activity.emit(caller, f'Retrieving {symbol} data for {lowerInterval} lower intervals...')
             if caller == LIVE:
-                gui.lowerIntervalData = Data(lowerInterval)
+                gui.lowerIntervalData = Data(interval=lowerInterval, symbol=symbol)
             elif caller == SIMULATION:
-                gui.simulationLowerIntervalData = Data(lowerInterval)
+                gui.simulationLowerIntervalData = Data(interval=lowerInterval, symbol=symbol)
             else:
                 raise TypeError("Invalid type of caller specified.")
             self.signals.activity.emit(caller, "Retrieved lower interval data successfully.")
@@ -106,6 +107,7 @@ class BotThread(QRunnable):
             raise ValueError("Invalid caller.")
 
         self.signals.activity.emit(caller, "Retrieved data successfully.")
+        self.trader = self.gui.get_trader(caller)
 
         if configDict['lowerIntervalCheck'].isChecked():
             self.lowerIntervalNotification = True
@@ -158,7 +160,6 @@ class BotThread(QRunnable):
         """
         self.create_trader(caller)
         self.gui.set_parameters(caller)
-        self.trader = self.gui.get_trader(caller)
 
         if caller == LIVE:
             if self.gui.configuration.enableTelegramTrading.isChecked():
