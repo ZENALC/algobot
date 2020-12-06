@@ -67,7 +67,8 @@ class BotThread(QRunnable):
         symbol = self.trader.symbol
         if interval != '1m':
             lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
-            self.signals.activity.emit(caller, f'Retrieving {symbol} data for {lowerInterval} lower intervals...')
+            intervalString = helpers.convert_interval_to_string(lowerInterval)
+            self.signals.activity.emit(caller, f'Retrieving {symbol} data for {intervalString.lower()} intervals...')
             if caller == LIVE:
                 gui.lowerIntervalData = Data(interval=lowerInterval, symbol=symbol)
             elif caller == SIMULATION:
