@@ -474,8 +474,7 @@ class Interface(QMainWindow):
         """
         interfaceDict = self.interfaceDictionary[caller]
         currentUTC = datetime.utcnow().timestamp()
-        trader = self.get_trader(caller)
-        lowerData = self.lowerIntervalData if trader == LIVE else self.simulationLowerIntervalData
+        lowerData = self.lowerIntervalData if caller == LIVE else self.simulationLowerIntervalData
         self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, currentUTC, net)
 
         if len(optionDetails) == 1:
