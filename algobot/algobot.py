@@ -2,7 +2,7 @@ import assets
 import sys
 import os
 
-from helpers import ROOT_DIR
+from helpers import ROOT_DIR, convert_interval_to_string
 from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
 from datetime import datetime
@@ -446,17 +446,26 @@ class Interface(QMainWindow):
         mainInterfaceDictionary['tickerValue'].setText(statDict['tickerValue'])
         mainInterfaceDictionary['positionValue'].setText(statDict['currentPositionValue'])
 
+        lowerIntervalTrend = statDict['lowerIntervalTrend']
+        interval = statDict['interval']
         net = statDict['net']
         price = statDict['currentPrice']
         optionDetails = statDict['optionDetails']
+        lowerOptionDetails = statDict['lowerOptionDetails']
         rsiDetails = statDict['rsiDetails']
         self.update_graphs_and_moving_averages(net=net, caller=caller, optionDetails=optionDetails,
-                                               price=price, rsiDetails=rsiDetails)
+                                               price=price, rsiDetails=rsiDetails, interval=interval,
+                                               lowerOptionDetails=lowerOptionDetails,
+                                               lowerIntervalTrend=lowerIntervalTrend)
 
     def update_graphs_and_moving_averages(self, net: float, caller, optionDetails: list, price: float,
-                                          rsiDetails: list):
+                                          rsiDetails: list, lowerOptionDetails: list = None, interval: str = None,
+                                          lowerIntervalTrend: str = None):
         """
         Updates graphs and moving averages in statistics based on caller.
+        :param lowerIntervalTrend: Trend for lower interval.
+        :param lowerOptionDetails: Details for the lower interval options.
+        :param interval: Interval being traded at.
         :param rsiDetails: RSI information (if exists).
         :param price: Current ticker price.
         :param net: Net to be added to net graph.
@@ -465,10 +474,37 @@ class Interface(QMainWindow):
         """
         interfaceDict = self.interfaceDictionary[caller]
         currentUTC = datetime.utcnow().timestamp()
+        trader = self.get_trader(caller)
+        lowerData = self.lowerIntervalData if trader == LIVE else self.simulationLowerIntervalData
         self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, currentUTC, net)
 
         if len(optionDetails) == 1:
             self.hide_next_moving_averages(caller)
+
+        if len(lowerOptionDetails) == 0:
+            self.hide_lower_interval_averages(caller)
+            self.hide_next_lower_interval_averages(caller)
+        else:
+            self.show_lower_interval_averages(caller)
+            interfaceDict['statistics']['lowerIntervalTrendValue'].setText(lowerIntervalTrend)
+            if len(lowerOptionDetails) == 1:
+                self.hide_next_lower_interval_averages(caller)
+
+            for index, optionDetail in enumerate(lowerOptionDetails):
+                initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
+                initialAverageLabel += f' {convert_interval_to_string(lowerData.interval)}'
+                finalAverageLabel += f' {convert_interval_to_string(lowerData.interval)}'
+                if index == 0:
+                    interfaceDict['statistics']['lowerInitialLabel'].setText(initialAverageLabel)
+                    interfaceDict['statistics']['lowerInitialValue'].setText(f'${initialAverage}')
+                    interfaceDict['statistics']['lowerFinalLabel'].setText(finalAverageLabel)
+                    interfaceDict['statistics']['lowerFinalValue'].setText(f'${finalAverage}')
+                elif index == 1:
+                    self.show_next_lower_interval_averages(caller=caller)
+                    interfaceDict['statistics']['lowerNextInitialLabel'].setText(initialAverageLabel)
+                    interfaceDict['statistics']['lowerNextInitialValue'].setText(f'${initialAverage}')
+                    interfaceDict['statistics']['lowerNextFinalLabel'].setText(finalAverageLabel)
+                    interfaceDict['statistics']['lowerNextFinalValue'].setText(f'${finalAverage}')
 
         if len(rsiDetails) == 0:
             self.hide_rsi_statistics(caller)
@@ -481,6 +517,8 @@ class Interface(QMainWindow):
 
         for index, optionDetail in enumerate(optionDetails):
             initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
+            initialAverageLabel += f' {interval}'
+            finalAverageLabel += f' {interval}'
             self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], index * 2, currentUTC, initialAverage)
             self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], index * 2 + 1, currentUTC,
                                   finalAverage)
@@ -502,7 +540,7 @@ class Interface(QMainWindow):
 
     def show_next_moving_averages(self, caller):
         """
-        :param caller: Caller that will decide which statistics get shown..
+        :param caller: Caller that will decide which statistics get shown.
         Shows next moving averages statistics based on caller.
         """
         interfaceDict = self.interfaceDictionary[caller]['statistics']
@@ -510,6 +548,38 @@ class Interface(QMainWindow):
         interfaceDict['nextInitialMovingAverageValue'].show()
         interfaceDict['nextFinalMovingAverageLabel'].show()
         interfaceDict['nextFinalMovingAverageValue'].show()
+
+    def show_lower_interval_averages(self, caller):
+        interfaceDict = self.interfaceDictionary[caller]['statistics']
+        interfaceDict['lowerIntervalTrendLabel'].show()
+        interfaceDict['lowerIntervalTrendValue'].show()
+        interfaceDict['lowerInitialLabel'].show()
+        interfaceDict['lowerInitialValue'].show()
+        interfaceDict['lowerFinalLabel'].show()
+        interfaceDict['lowerFinalValue'].show()
+
+    def hide_lower_interval_averages(self, caller):
+        interfaceDict = self.interfaceDictionary[caller]['statistics']
+        interfaceDict['lowerIntervalTrendLabel'].hide()
+        interfaceDict['lowerIntervalTrendValue'].hide()
+        interfaceDict['lowerInitialLabel'].hide()
+        interfaceDict['lowerInitialValue'].hide()
+        interfaceDict['lowerFinalLabel'].hide()
+        interfaceDict['lowerFinalValue'].hide()
+
+    def show_next_lower_interval_averages(self, caller):
+        interfaceDict = self.interfaceDictionary[caller]['statistics']
+        interfaceDict['lowerNextInitialLabel'].show()
+        interfaceDict['lowerNextInitialValue'].show()
+        interfaceDict['lowerNextFinalLabel'].show()
+        interfaceDict['lowerNextFinalValue'].show()
+
+    def hide_next_lower_interval_averages(self, caller):
+        interfaceDict = self.interfaceDictionary[caller]['statistics']
+        interfaceDict['lowerNextInitialLabel'].hide()
+        interfaceDict['lowerNextInitialValue'].hide()
+        interfaceDict['lowerNextFinalLabel'].hide()
+        interfaceDict['lowerNextFinalValue'].hide()
 
     def show_rsi_statistics(self, caller):
         """
@@ -1345,6 +1415,16 @@ class Interface(QMainWindow):
                     'rsi2Value': self.statistics.simulationRsi2Value,
                     'intervalLabel': self.statistics.simulationIntervalLabel,
                     'intervalValue': self.statistics.simulationIntervalValue,
+                    'lowerIntervalTrendLabel': self.statistics.simulationLowerIntervalTrendLabel,
+                    'lowerIntervalTrendValue': self.statistics.simulationLowerIntervalTrendValue,
+                    'lowerInitialLabel': self.statistics.simulationLowerInitialLabel,
+                    'lowerInitialValue': self.statistics.simulationLowerInitialValue,
+                    'lowerFinalLabel': self.statistics.simulationLowerFinalLabel,
+                    'lowerFinalValue': self.statistics.simulationLowerFinalValue,
+                    'lowerNextInitialLabel': self.statistics.simulationLowerNextInitialLabel,
+                    'lowerNextInitialValue': self.statistics.simulationLowerNextInitialValue,
+                    'lowerNextFinalLabel': self.statistics.simulationLowerNextFinalLabel,
+                    'lowerNextFinalValue': self.statistics.simulationLowerNextFinalValue,
                 },
                 'mainInterface': {
                     # Portfolio
@@ -1441,6 +1521,16 @@ class Interface(QMainWindow):
                     'rsi2Value': self.statistics.rsi2Value,
                     'intervalLabel': self.statistics.intervalLabel,
                     'intervalValue': self.statistics.intervalValue,
+                    'lowerIntervalTrendLabel': self.statistics.lowerIntervalTrendLabel,
+                    'lowerIntervalTrendValue': self.statistics.lowerIntervalTrendValue,
+                    'lowerInitialLabel': self.statistics.lowerInitialLabel,
+                    'lowerInitialValue': self.statistics.lowerInitialValue,
+                    'lowerFinalLabel': self.statistics.lowerFinalLabel,
+                    'lowerFinalValue': self.statistics.lowerFinalValue,
+                    'lowerNextInitialLabel': self.statistics.lowerNextInitialLabel,
+                    'lowerNextInitialValue': self.statistics.lowerNextInitialValue,
+                    'lowerNextFinalLabel': self.statistics.lowerNextFinalLabel,
+                    'lowerNextFinalValue': self.statistics.lowerNextFinalValue,
                 },
                 'mainInterface': {
                     # Portfolio

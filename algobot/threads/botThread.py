@@ -39,6 +39,7 @@ class BotThread(QRunnable):
         self.elapsed = '1 second'
         self.percentage = None
         self.optionDetails = []
+        self.lowerOptionDetails = []
 
         self.intervalSeconds = 86400  # Every 24 hours
         self.dailyPercentage = 0  # Initial change percentage.
@@ -50,6 +51,7 @@ class BotThread(QRunnable):
         self.scheduleSeconds = None  # Amount of seconds to schedule in.
 
         self.lowerIntervalNotification = False
+        self.lowerTrend = 'None'
         self.telegramChatID = gui.configuration.telegramChatID.text()
         self.caller = caller
         self.trader = None
@@ -236,9 +238,10 @@ class BotThread(QRunnable):
         """
         if not self.lowerIntervalNotification:
             return None
-        trader = self.gui.get_trader(caller)
+        trader: SimulationTrader = self.gui.get_trader(caller)
         lowerData = self.gui.get_lower_interval_data(caller)
         lowerTrend = trader.get_trend(dataObject=lowerData)
+        self.lowerTrend = trader.get_trend_string(lowerTrend)
         trend = trader.trend
         if previousLowerTrend == lowerTrend or lowerTrend == trend:
             return lowerTrend
@@ -310,12 +313,14 @@ class BotThread(QRunnable):
 
         # self.optionDetails = [self.gui.get_option_info(option, trader) for option in trader.tradingOptions]
         self.optionDetails = trader.optionDetails
+        self.lowerOptionDetails = trader.lowerOptionDetails
         rsi_details = [(key, trader.dataView.rsi_data[key]) for key in trader.dataView.rsi_data]
 
         updateDict = {
             # Statistics window
             'net': net,
             'interval': helpers.convert_interval_to_string(trader.dataView.interval),
+            'lowerIntervalTrend': self.lowerTrend,
             'startingBalanceValue': f'${round(trader.startingBalance, 2)}',
             'currentBalanceValue': f'${round(trader.balance, 2)}',
             'netValue': f'${round(net, 2)}',
@@ -336,6 +341,7 @@ class BotThread(QRunnable):
             'tickerValue': f'${trader.currentPrice}',
             'currentPrice': trader.currentPrice,
             'optionDetails': self.optionDetails,
+            'lowerOptionDetails': self.lowerOptionDetails,
             'elapsedValue': self.elapsed,
             'dailyPercentageValue': f'{round(self.dailyPercentage, 2)}%',
             'stoicTrend': stoicTrend,

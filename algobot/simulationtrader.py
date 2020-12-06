@@ -32,6 +32,7 @@ class SimulationTrader:
 
         self.tradingOptions = []  # List with Option elements. Helps specify what moving averages to trade with.
         self.optionDetails = []  # Current option values. Holds most recent option values.
+        self.lowerOptionDetails = []  # Lower option values. Holds lower interval option values (if exist).
         self.trend = None  # 1 is bullish, -1 is bearish; usually handled with enums.
         self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
@@ -528,6 +529,8 @@ class SimulationTrader:
 
         if dataObject == self.dataView:
             self.optionDetails = []
+        else:
+            self.lowerOptionDetails = []
 
         for option in self.tradingOptions:
             initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound,
@@ -541,6 +544,7 @@ class SimulationTrader:
                 self.optionDetails.append((initialAverage, finalAverage, initialName, finalName))
             else:
                 self.output_message(f'Lower interval ({dataObject.interval}) data:')
+                self.lowerOptionDetails.append((initialAverage, finalAverage, initialName, finalName))
 
             self.output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
             self.output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
