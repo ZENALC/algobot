@@ -9,12 +9,12 @@ from simulationtrader import SimulationTrader
 class TelegramBot:
     def __init__(self, gui, token, botThread):
         self.token = token
+        self.gui = gui
+        self.botThread = botThread
         self.updater = Updater(token, use_context=True)
         self.bot = Bot(token=self.token)
 
         # Get the dispatcher to register handlers
-        self.gui = gui
-        self.botThread = botThread
         dp = self.updater.dispatcher
 
         # on different commands - answer in Telegram
@@ -35,22 +35,30 @@ class TelegramBot:
         dp.add_handler(CommandHandler(("print", 'makethatbread', 'printmoney'), self.print_telegram))
 
     def send_message(self, chatID, message):
+        """
+        Sends provided message to specified chat ID using Telegram.
+        :param chatID: Chat ID in Telegram to send message to.
+        :param message: Message to send.
+        """
         self.bot.send_message(chat_id=chatID, text=message)
 
     def start(self):
-        # Start the Bot
+        """
+        Starts the Telegram bot.
+        """
         self.updater.start_polling()
 
-        # Run the bot until you press Ctrl-C or the process receives SIGINT,
-        # SIGTERM or SIGABRT. This should be used most of the time, since
-        # start_polling() is non-blocking and will stop the bot gracefully.
-        # self.updater.idle()
-
     def stop(self):
+        """
+        Stops the Telegram bot.
+        """
         self.updater.stop()
 
     # noinspection PyUnusedLocal
     def get_trades_telegram(self, update, context):
+        """
+        Sends trades information using Telegram bot to chat that requested the trades using /trades.
+        """
         trader = self.gui.trader
         trades = trader.trades
 
@@ -74,6 +82,9 @@ class TelegramBot:
     # noinspection PyUnusedLocal
     @staticmethod
     def help_telegram(update, context):
+        """
+        Sends available /help commands when called.
+        """
         update.message.reply_text("Here are your help commands available:\n"
                                   "/help -> To get commands available.\n"
                                   "/forcelong  -> To force long.\n"
@@ -92,10 +103,16 @@ class TelegramBot:
 
     # noinspection PyUnusedLocal
     def update_values(self, update, context):
+        """
+        Updates trader bot values from refreshing its values using the Binance API.
+        """
         self.gui.trader.retrieve_margin_values()
         update.message.reply_text("Successfully retrieved new values from Binance.")
 
-    def get_statistics(self):
+    def get_statistics(self) -> str:
+        """
+        Retrieve available statistics to send using Telegram bot.
+        """
         trader: SimulationTrader = self.gui.trader
         profit = trader.get_profit()
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
@@ -136,30 +153,45 @@ class TelegramBot:
                 )
 
     def send_statistics_telegram(self, chatID, period):
+        """
+        This function is used to periodically send statistics if enabled.
+        :param chatID: Chat ID to send statistics to.
+        :param period: Time period within which to send statistics.
+        """
         message = f"Periodic statistics every {period}: \n"
         self.send_message(chatID, message + self.get_statistics())
 
     # noinspection PyUnusedLocal
     def get_statistics_telegram(self, update, context):
+        """
+        This function is called when /statistics is called. It replies with current bot statistics.
+        """
         message = "Here are your statistics as requested: \n"
         update.message.reply_text(message + self.get_statistics())
 
     # noinspection PyUnusedLocal
     @staticmethod
     def thank_bot_telegram(update, context):
-        messages = [
+        """
+        Small easter egg. You can /thank the bot.
+        """
+        messages = (
             "You're welcome.",
             "My pleasure.",
             "Embrace monke.",
             "No problem.",
             "Don't thank me. Thank Monke.",
-            "Sure thing."
-        ]
+            "Sure thing.",
+            "Do you mean to thank Dasha? She is the reason we exist."
+        )
         update.message.reply_text(random.choice(messages))
 
     # noinspection PyUnusedLocal
     @staticmethod
     def print_telegram(update, context):
+        """
+        Small easter egg. You can tell bot to /print for it to joke around.
+        """
         messages = [
             "Let's print this money. Printing...",
             "Opening a bakery soon. Printing...",
@@ -174,12 +206,18 @@ class TelegramBot:
 
     # noinspection PyUnusedLocal
     def override_telegram(self, update, context):
+        """
+        Function called when /override is called. As the name suggests, it overrides the bot.
+        """
         update.message.reply_text("Overriding.")
         self.botThread.signals.waitOverride.emit()
         update.message.reply_text("Successfully overrode.")
 
     # noinspection PyUnusedLocal
     def pause_telegram(self, update, context):
+        """
+        Function called when /pause is called. As the name suggests, it pauses the bot logic.
+        """
         if self.gui.trader.inHumanControl:
             update.message.reply_text("Bot is already in human control.")
         else:
@@ -188,6 +226,9 @@ class TelegramBot:
 
     # noinspection PyUnusedLocal
     def resume_telegram(self, update, context):
+        """
+        Function called when /resume is called. As the name suggests, it resumes the bot logic.
+        """
         if not self.gui.trader.inHumanControl:
             update.message.reply_text("Bot is already in autonomous mode.")
         else:
@@ -196,6 +237,10 @@ class TelegramBot:
 
     # noinspection PyUnusedLocal
     def remove_custom_stop_loss(self, update, context):
+        """
+        Function called when /removecustomstoploss is called. As the name suggests, it removes the current custom stop
+        loss set.
+        """
         if self.gui.trader.customStopLoss is None:
             update.message.reply_text("Bot already has no custom stop loss implemented.")
         else:
@@ -203,6 +248,10 @@ class TelegramBot:
             update.message.reply_text("Bot's custom stop loss has been removed.")
 
     def set_custom_stop_loss(self, update, context):
+        """
+        Function called when /setcustomstoploss {value} is called. As the name suggests, it sets the custom stop
+        loss with the value provided.
+        """
         stopLoss = context.args[0]
 
         try:
@@ -216,8 +265,8 @@ class TelegramBot:
 
         if stopLoss < 0:
             update.message.reply_text("Please make sure you specify a non-negative number for the custom stop loss.")
-        elif stopLoss > 10000000:
-            update.message.reply_text("Please make sure you specify a number that is less than 10000000.")
+        elif stopLoss > 10_000_000:
+            update.message.reply_text("Please make sure you specify a number that is less than 10,000,000.")
         else:
             stopLoss = round(stopLoss, 2)
             self.botThread.signals.setCustomStopLoss.emit(LIVE, True, stopLoss)
@@ -225,6 +274,9 @@ class TelegramBot:
 
     # noinspection PyUnusedLocal
     def force_long_telegram(self, update, context):
+        """
+        Function called when /forcelong is called. As the name suggests, it forces the bot to go long.
+        """
         position = self.gui.trader.get_position()
         if position == LONG:
             update.message.reply_text("Bot is already in a long position.")
@@ -235,6 +287,9 @@ class TelegramBot:
 
     # noinspection PyUnusedLocal
     def force_short_telegram(self, update, context):
+        """
+        Function called when /forceshort is called. As the name suggests, it forces the bot to go short.
+        """
         position = self.gui.trader.get_position()
         if position == SHORT:
             update.message.reply_text("Bot is already in a short position.")
@@ -245,6 +300,9 @@ class TelegramBot:
 
     # noinspection PyUnusedLocal
     def exit_position_telegram(self, update, context):
+        """
+        Function called when /exitposition is called. It forces the bot to exit its position provided it is in one.
+        """
         if self.gui.trader.get_position() is None:
             update.message.reply_text("Bot is not in a position.")
         else:
@@ -254,6 +312,9 @@ class TelegramBot:
 
     # noinspection PyUnusedLocal
     def get_position_telegram(self, update, context):
+        """
+        Function called when /getposition is called. It responds with the current position of the bot.
+        """
         position = self.gui.trader.get_position()
         if position == SHORT:
             update.message.reply_text("Bot is currently in a short position.")

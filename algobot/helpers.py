@@ -127,7 +127,6 @@ def convert_interval_to_string(interval):
     return intervals[interval]
 
 
-
 def get_elapsed_time(previousTime):
     seconds = int(time.time() - previousTime)
     if seconds <= 60:

@@ -405,10 +405,7 @@ class SimulationTrader:
         :param profit: Amount to be checked for negativity or positivity.
         :return: String value of whether profit ir positive or negative.
         """
-        if profit >= 0:
-            return "Profit"
-        else:
-            return "Loss"
+        return "Profit" if profit >= 0 else "Loss"
 
     def get_stoic_inputs(self):
         if not self.stoicEnabled:
