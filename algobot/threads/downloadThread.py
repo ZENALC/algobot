@@ -24,8 +24,6 @@ class DownloadThread(QRunnable):
         """
         Initialise the runner function with passed args, kwargs.
         """
-
-        # Retrieve args/kwargs here; and fire processing using them
         try:
             data = Data(interval=self.interval, symbol=self.symbol).data
             self.signals.finished.emit(data)
