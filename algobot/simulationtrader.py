@@ -56,7 +56,12 @@ class SimulationTrader:
         self.stoicDictionary = {}  # Dictionary for stoic strategies.
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
-        """Prints out and logs message"""
+        """
+        Prints out and logs message provided.
+        :param message: Message to be logged and/or outputted.
+        :param level: Level to be debugged at.
+        :param printMessage: Boolean that determines whether messaged will be printed or not.
+        """
         if printMessage:
             print(message)
         if level == 2:
@@ -80,10 +85,7 @@ class SimulationTrader:
         """
         profit = finalNet - initialNet
         profitPercentage = self.get_profit_percentage(initialNet, finalNet)
-        if force:
-            force = 'Manual'
-        else:
-            force = 'Automation'
+        method = "Manual" if force else "Automation"
 
         self.trades.append({
             'date': datetime.utcnow(),
@@ -91,7 +93,7 @@ class SimulationTrader:
             'action': message,
             'pair': self.symbol,
             'price': f'${round(price, 2)}',
-            'method': force,
+            'method': method,
             'percentage': f'{round(profitPercentage, 2)}%',
             'profit': f'${round(profit, 2)}'
         })
@@ -117,12 +119,10 @@ class SimulationTrader:
         transactionFee = usd * self.transactionFeePercentage
         self.commissionPaid += transactionFee
         self.currentPosition = LONG
-        self.buyLongPrice = self.currentPrice
-        self.longTrailingPrice = self.currentPrice
+        self.buyLongPrice = self.longTrailingPrice = self.currentPrice
         self.coin += (usd - transactionFee) / self.currentPrice
         self.balance -= usd
-        finalNet = self.get_net()
-        self.add_trade(msg, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice, force=force)
+        self.add_trade(msg, initialNet=initialNet, finalNet=self.get_net(), price=self.currentPrice, force=force)
         self.output_message(msg)
 
     def sell_long(self, msg: str, coin: float = None, force: bool = False):
@@ -142,20 +142,19 @@ class SimulationTrader:
             raise ValueError(f'You have {self.coin} {self.coinName}. You cannot sell {coin} {self.coinName}.')
 
         self.currentPrice = self.dataView.get_current_price()
+        self.commissionPaid += coin * self.currentPrice * self.transactionFeePercentage
         initialNet = self.get_net()
         earned = coin * self.currentPrice * (1 - self.transactionFeePercentage)
         self.currentPosition = None
+        self.customStopLoss = None
         self.previousPosition = LONG
         self.coin -= coin
         self.balance += earned
-        self.customStopLoss = None
-        finalNet = self.get_net()
-        self.add_trade(msg, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice, force=force)
+        self.add_trade(msg, initialNet=initialNet, finalNet=self.get_net(), price=self.currentPrice, force=force)
         self.output_message(msg)
 
         if self.coin == 0:
-            self.buyLongPrice = None
-            self.longTrailingPrice = None
+            self.buyLongPrice = self.longTrailingPrice = None
 
     def buy_short(self, msg: str, coin: float = None, force: bool = False):
         """
@@ -178,10 +177,10 @@ class SimulationTrader:
         self.customStopLoss = None
         self.currentPosition = None
         self.previousPosition = SHORT
+        self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
         loss = self.currentPrice * coin * (1 + self.transactionFeePercentage)
         self.balance -= loss
-        finalNet = self.get_net()
-        self.add_trade(msg, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice, force=force)
+        self.add_trade(msg, initialNet=initialNet, finalNet=self.get_net(), price=self.currentPrice, force=force)
         self.output_message(msg)
 
         if self.coinOwed == 0:
@@ -205,16 +204,15 @@ class SimulationTrader:
             coin = (self.balance - transactionFee) / self.currentPrice
 
         if coin <= 0:
-            raise ValueError(f"You cannot borrow {coin} {self.coinName}.")
+            raise ValueError(f"You cannot borrow negative {abs(coin)} {self.coinName}.")
 
         initialNet = self.get_net()
         self.coinOwed += coin
+        self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
         self.balance += self.currentPrice * coin * (1 - self.transactionFeePercentage)
         self.currentPosition = SHORT
-        self.sellShortPrice = self.currentPrice
-        self.shortTrailingPrice = self.currentPrice
-        finalNet = self.get_net()
-        self.add_trade(msg, force=force, initialNet=initialNet, finalNet=finalNet, price=self.currentPrice)
+        self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
+        self.add_trade(msg, force=force, initialNet=initialNet, finalNet=self.get_net(), price=self.currentPrice)
         self.output_message(msg)
 
     # noinspection DuplicatedCode
