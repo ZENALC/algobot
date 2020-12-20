@@ -431,7 +431,7 @@ class SimulationTrader:
 
         balance = self.balance
         balance += self.currentPrice * self.coin
-        balance -= self.coinOwed * self.currentPrice
+        balance -= self.currentPrice * self.coinOwed
 
         return balance - self.startingBalance
 
@@ -546,8 +546,10 @@ class SimulationTrader:
 
             if initialAverage > finalAverage:
                 trends.append(BULLISH)
-            else:
+            elif initialAverage < finalAverage:
                 trends.append(BEARISH)
+            else:
+                trends.append(None)
 
         dataObject.data = dataObject.data[1:]
 
@@ -598,41 +600,35 @@ class SimulationTrader:
         """
         Outputs general information about status of bot when not in a position.
         """
-        if self.currentPosition is not None:
-            return
-
-        if not self.inHumanControl:
-            self.output_message(f'\nCurrently not a in short or long position. Waiting for next cross.')
-        else:
-            self.output_message(f'\nCurrently not a in short or long position. Waiting for human intervention.')
+        if self.currentPosition is None:
+            if not self.inHumanControl:
+                self.output_message(f'\nCurrently not a in short or long position. Waiting for next cross.')
+            else:
+                self.output_message(f'\nCurrently not a in short or long position. Waiting for human intervention.')
 
     def output_short_information(self):
         """
         Outputs general information about status of trade when in a short position.
         """
-        if self.currentPosition != SHORT:
-            return
-
-        self.output_message(f'\nCurrently in short position.')
-        if self.lossStrategy == TRAILING_LOSS:
-            shortTrailingLossValue = round(self.shortTrailingPrice * (1 + self.lossPercentageDecimal), 2)
-            self.output_message(f'Short trailing loss: ${shortTrailingLossValue}')
-        elif self.lossStrategy == STOP_LOSS:
-            self.output_message(f'Stop loss: {round(self.sellShortPrice * (1 + self.lossPercentageDecimal), 2)}')
+        if self.currentPosition == SHORT:
+            self.output_message(f'\nCurrently in short position.')
+            if self.lossStrategy == TRAILING_LOSS:
+                shortTrailingLossValue = round(self.shortTrailingPrice * (1 + self.lossPercentageDecimal), 2)
+                self.output_message(f'Short trailing loss: ${shortTrailingLossValue}')
+            elif self.lossStrategy == STOP_LOSS:
+                self.output_message(f'Stop loss: {round(self.sellShortPrice * (1 + self.lossPercentageDecimal), 2)}')
 
     def output_long_information(self):
         """
         Outputs general information about status of trade when in a long position.
         """
-        if self.currentPosition != LONG:
-            return
-
-        self.output_message(f'\nCurrently in long position.')
-        if self.lossStrategy == TRAILING_LOSS:
-            longTrailingLossValue = round(self.longTrailingPrice * (1 - self.lossPercentageDecimal), 2)
-            self.output_message(f'Long trailing loss: ${longTrailingLossValue}')
-        elif self.lossStrategy == STOP_LOSS:
-            self.output_message(f'Stop loss: {round(self.buyLongPrice * (1 - self.lossPercentageDecimal), 2)}')
+        if self.currentPosition == LONG:
+            self.output_message(f'\nCurrently in long position.')
+            if self.lossStrategy == TRAILING_LOSS:
+                longTrailingLossValue = round(self.longTrailingPrice * (1 - self.lossPercentageDecimal), 2)
+                self.output_message(f'Long trailing loss: ${longTrailingLossValue}')
+            elif self.lossStrategy == STOP_LOSS:
+                self.output_message(f'Stop loss: {round(self.buyLongPrice * (1 - self.lossPercentageDecimal), 2)}')
 
     def output_control_mode(self):
         """
@@ -663,11 +659,14 @@ class SimulationTrader:
         self.output_message(f'Current time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
         self.output_control_mode()
 
-        if self.coin > 0.0001:
+        if self.currentPrice is None:
+            self.currentPrice = self.dataView.get_current_price()
+
+        if self.currentPrice * self.coin > 5:  # If total worth of coin owned is more than $5, assume we're in long.
             self.output_message(f'{self.coinName} owned: {self.coin}')
             self.output_message(f'Price bot bought {self.coinName} long for: ${self.buyLongPrice}')
 
-        if self.coinOwed > 0.0001:
+        if self.currentPrice * self.coinOwed > 5:  # If total worth of coin owed is more than $5, assume we're in short.
             self.output_message(f'{self.coinName} owed: {self.coinOwed}')
             self.output_message(f'Price bot sold {self.coinName} short for: ${self.sellShortPrice}')
 
