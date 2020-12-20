@@ -320,6 +320,7 @@ class Interface(QMainWindow):
                 self.simulationLowerIntervalData = None
         else:
             self.runningLive = False
+            self.telegramBot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended successfully.")
             self.telegramBot.stop()
             tempTrader = self.trader
             if self.lowerIntervalData is not None:
