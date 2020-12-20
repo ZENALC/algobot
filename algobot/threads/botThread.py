@@ -350,5 +350,5 @@ class BotThread(QRunnable):
             traceback.print_exc()
             self.signals.error.emit(self.caller, str(e))
 
-            if self.gui.telegramBot:
+            if self.gui.telegramBot and len(self.telegramChatID) > 0:
                 self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of {e}.")
