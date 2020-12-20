@@ -27,10 +27,10 @@ class Data:
 
         symbol = symbol.upper()
         self.validate_symbol(symbol)
-        self.symbol = symbol
-        self.data = []
-        self.ema_data = {}
-        self.rsi_data = {}
+        self.symbol = symbol  # Symbol of data being used.
+        self.data = []  # Total bot data.
+        self.ema_data = {}  # Cached past EMA data for memoization.
+        self.rsi_data = {}  # Cached past RSI data for memoization.
 
         self.databaseTable = f'data_{self.interval}'
         self.databaseFile = self.get_database_file()
@@ -42,6 +42,13 @@ class Data:
 
     @staticmethod
     def get_logging_object(log: bool, logFile: str, logObject):
+        """
+        Returns a logger object.
+        :param log: Boolean that determines where logging is enabled or not.
+        :param logFile: File to log to.
+        :param logObject: Log object to return if there is one already specified.
+        :return: Logger object or None.
+        """
         if logObject is not None:
             return logObject
         else:
@@ -57,8 +64,6 @@ class Data:
         """
         if not self.is_valid_interval(interval):
             raise ValueError(f'Invalid interval {interval} specified.')
-            # self.output_message("Invalid interval. Using default interval of 1h.", level=4)
-            # interval = '1h'
 
     def validate_symbol(self, symbol: str):
         """
@@ -67,13 +72,11 @@ class Data:
         """
         if not self.is_valid_symbol(symbol):
             raise ValueError(f'Invalid symbol {symbol} specified.')
-            # self.output_message('Invalid symbol. Using default symbol of BTCUSDT.', level=4)
-            # symbol = 'BTCUSDT'
 
     def load_data(self, update: bool = True):
         """
         Loads data to Data object.
-        :param update: Boolean that determines where data is updated or not.
+        :param update: Boolean that determines whether data is updated or not.
         """
         self.get_data_from_database()
         if update:
@@ -94,17 +97,15 @@ class Data:
         if printMessage:
             print(message)
 
-        if self.logger is None:
-            return
-
-        if level == 2:
-            self.logger.info(message)
-        elif level == 3:
-            self.logger.debug(message)
-        elif level == 4:
-            self.logger.warning(message)
-        elif level == 5:
-            self.logger.critical(message)
+        if self.logger:
+            if level == 2:
+                self.logger.info(message)
+            elif level == 3:
+                self.logger.debug(message)
+            elif level == 4:
+                self.logger.warning(message)
+            elif level == 5:
+                self.logger.critical(message)
 
     def get_database_file(self) -> str:
         """
@@ -674,7 +675,7 @@ class Data:
         :param update: Boolean for whether function should call API and get latest data or not.
         :param prices: Amount of prices to iterate through.
         :param parameter: Parameter to use for iterations. By default, it's close.
-        :param shift: Amount of prices to shift prices by. Rarely used.
+        :param shift: Amount of prices to shift prices by.
         :param round_value: Boolean that determines whether final value is rounded or not.
         :return: Final relative strength index.
         """
