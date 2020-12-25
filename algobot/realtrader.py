@@ -25,7 +25,7 @@ class RealTrader(SimulationTrader):
         self.spot_usdt = self.get_spot_usdt()
         self.spot_coin = self.get_spot_coin()
         self.isolated = isIsolated
-        self.check_spot_and_transfer()
+        # self.check_spot_and_transfer()
         self.retrieve_margin_values()
         self.startingBalance = self.get_starting_balance()
         self.check_initial_position()
@@ -113,13 +113,13 @@ class RealTrader(SimulationTrader):
         """
         Transfer assets from spot account to margin account.
         """
-        order = self.binanceClient.transfer_spot_to_margin(asset=self.coinName, amount=self.get_spot_coin())
+        self.binanceClient.transfer_spot_to_margin(asset=self.coinName, amount=self.get_spot_coin())
         self.add_trade(message='Transferred from spot to margin',
                        initialNet=self.get_net(),
                        finalNet=self.get_net(),
                        price=self.currentPrice,
                        force=False,
-                       orderID=order['clientOrderId'])
+                       orderID="TRANSFER SPOT TO MARGIN")
 
     def transfer_margin_to_spot(self):
         """
