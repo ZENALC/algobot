@@ -22,6 +22,7 @@ class SimulationTrader:
         # Initialize initial values.
         self.balance = startingBalance  # USDT Balance.
         self.startingBalance = self.balance  # Balance we started bot run with.
+        self.previousNet = self.balance
         self.coinName = self.get_coin_name()  # Retrieve primary coin to trade.
         self.coin = 0  # Amount of coin we own.
         self.coinOwed = 0  # Amount of coin we owe.
@@ -115,15 +116,16 @@ class SimulationTrader:
             raise ValueError(f'You currently have ${self.balance}. You cannot invest ${usd}.')
 
         self.currentPrice = self.dataView.get_current_price()
-        initialNet = self.get_net()
         transactionFee = usd * self.transactionFeePercentage
         self.commissionPaid += transactionFee
         self.currentPosition = LONG
         self.buyLongPrice = self.longTrailingPrice = self.currentPrice
         self.coin += (usd - transactionFee) / self.currentPrice
         self.balance -= usd
-        self.add_trade(msg, initialNet=initialNet, finalNet=self.get_net(), price=self.currentPrice, force=force)
+        finalNet = self.get_net()
+        self.add_trade(msg, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice, force=force)
         self.output_message(msg)
+        self.previousNet = finalNet
 
     def sell_long(self, msg: str, coin: float = None, force: bool = False):
         """
@@ -143,15 +145,16 @@ class SimulationTrader:
 
         self.currentPrice = self.dataView.get_current_price()
         self.commissionPaid += coin * self.currentPrice * self.transactionFeePercentage
-        initialNet = self.get_net()
         earned = coin * self.currentPrice * (1 - self.transactionFeePercentage)
         self.currentPosition = None
         self.customStopLoss = None
         self.previousPosition = LONG
         self.coin -= coin
         self.balance += earned
-        self.add_trade(msg, initialNet=initialNet, finalNet=self.get_net(), price=self.currentPrice, force=force)
+        finalNet = self.get_net()
+        self.add_trade(msg, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice, force=force)
         self.output_message(msg)
+        self.previousNet = finalNet
 
         if self.coin == 0:
             self.buyLongPrice = self.longTrailingPrice = None
@@ -172,16 +175,16 @@ class SimulationTrader:
             raise ValueError(f"You cannot buy {coin} {self.coinName}.")
 
         self.currentPrice = self.dataView.get_current_price()
-        initialNet = self.get_net()
         self.coinOwed -= coin
         self.customStopLoss = None
         self.currentPosition = None
         self.previousPosition = SHORT
         self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
-        loss = self.currentPrice * coin * (1 + self.transactionFeePercentage)
-        self.balance -= loss
-        self.add_trade(msg, initialNet=initialNet, finalNet=self.get_net(), price=self.currentPrice, force=force)
+        self.balance -= self.currentPrice * coin * (1 + self.transactionFeePercentage)
+        finalNet = self.get_net()
+        self.add_trade(msg, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice, force=force)
         self.output_message(msg)
+        self.previousNet = finalNet
 
         if self.coinOwed == 0:
             self.sellShortPrice = None
@@ -206,13 +209,14 @@ class SimulationTrader:
         if coin <= 0:
             raise ValueError(f"You cannot borrow negative {abs(coin)} {self.coinName}.")
 
-        initialNet = self.get_net()
         self.coinOwed += coin
         self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
         self.balance += self.currentPrice * coin * (1 - self.transactionFeePercentage)
         self.currentPosition = SHORT
         self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
-        self.add_trade(msg, force=force, initialNet=initialNet, finalNet=self.get_net(), price=self.currentPrice)
+        finalNet = self.get_net()
+        self.add_trade(msg, force=force, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice)
+        self.previousNet = finalNet
         self.output_message(msg)
 
     # noinspection DuplicatedCode
