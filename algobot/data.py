@@ -705,6 +705,15 @@ class Data:
             return round(rsi, 2)
         return rsi
 
+    @staticmethod
+    def get_data_from_parameter(data, parameter) -> float:
+        if parameter == 'high/low':
+            return (data['high'] + data['low']) / 2
+        elif parameter == 'open/close':
+            return (data['open'] + data['close']) / 2
+        else:
+            return data[parameter]
+
     def get_sma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True,
                 update: bool = True) -> float:
         """
@@ -721,8 +730,8 @@ class Data:
 
         data = [self.get_current_data()] + self.data if update else self.data
         data = data[shift: prices + shift]  # Data now starts from shift and goes up to prices + shift
+        sma = sum([self.get_data_from_parameter(data=period, parameter=parameter) for period in data]) / prices
 
-        sma = sum([period[parameter] for period in data]) / prices
         if round_value:
             return round(sma, 2)
         return sma
@@ -742,12 +751,12 @@ class Data:
             raise ValueError('Invalid average input specified.')
 
         data = [self.get_current_data()] + self.data if update else self.data
-        total = data[shift][parameter] * prices  # Current total is first data period multiplied by prices.
+        total = self.get_data_from_parameter(data=data[shift], parameter=parameter) * prices
         data = data[shift + 1: prices + shift]  # Data now does not include the first shift period.
 
         index = 0
         for x in range(prices - 1, 0, -1):
-            total += x * data[index][parameter]
+            total += x * self.get_data_from_parameter(data=data[index], parameter=parameter)
             index += 1
 
         divisor = prices * (prices + 1) / 2
@@ -789,7 +798,8 @@ class Data:
         if prices in ema_data and parameter in ema_data[prices] and len(ema_data[prices][parameter]) > 0:
             latestDate = ema_data[prices][parameter][-1][1]
             if self.is_latest_date(latestDate):
-                current_price = self.get_current_data()[parameter] if update else self.data[0][parameter]
+                current_data = self.get_current_data() if update else self.data[0]
+                current_price = self.get_data_from_parameter(data=current_data, parameter=parameter)
                 previous_ema = ema_data[prices][parameter][-2][0]
                 ema = current_price * multiplier + previous_ema * (1 - multiplier)
                 ema_data[prices][parameter][-1] = (round(ema, 2), latestDate)
@@ -822,7 +832,7 @@ class Data:
 
             for day in range(len(data) - sma_prices - shift):
                 current_index = len(data) - sma_prices - day - 1
-                current_price = data[current_index][parameter]
+                current_price = self.get_data_from_parameter(data=data[current_index], parameter=parameter)
                 ema = current_price * multiplier + ema * (1 - multiplier)
                 values.append((round(ema, 2), data[current_index]['date_utc']))
 

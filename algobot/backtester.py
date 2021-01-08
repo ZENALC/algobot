@@ -495,21 +495,29 @@ class Backtester:
         return rsi
 
     @staticmethod
-    def get_sma(data: list, prices: int, parameter: str, round_value=True) -> float:
+    def get_data_from_parameter(data, parameter) -> float:
+        if parameter == 'high/low':
+            return (data['high'] + data['low']) / 2
+        elif parameter == 'open/close':
+            return (data['open'] + data['close']) / 2
+        else:
+            return data[parameter]
+
+    def get_sma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
         data = data[0: prices]
-        sma = sum([period[parameter] for period in data]) / prices
+        sma = sum([self.get_data_from_parameter(data=period, parameter=parameter) for period in data]) / prices
+
         if round_value:
             return round(sma, 2)
         return sma
 
-    @staticmethod
-    def get_wma(data: list, prices: int, parameter: str, round_value=True) -> float:
-        total = data[0][parameter] * prices  # Current total is first data period multiplied by prices.
+    def get_wma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
+        total = self.get_data_from_parameter(data=data[0], parameter=parameter) * prices
         data = data[1: prices]  # Data now does not include the first shift period.
 
         index = 0
         for x in range(prices - 1, 0, -1):
-            total += x * data[index][parameter]
+            total += x * self.get_data_from_parameter(data=data[index], parameter=parameter)
             index += 1
 
         divisor = prices * (prices + 1) / 2
@@ -527,13 +535,14 @@ class Backtester:
         multiplier = 2 / (prices + 1)
 
         if prices in self.ema_values:
-            ema = data[-1][parameter] * multiplier + self.ema_values[prices] * (1 - multiplier)
+            price = self.get_data_from_parameter(data=data[-1], parameter=parameter)
+            ema = price * multiplier + self.ema_values[prices] * (1 - multiplier)
             self.ema_values[prices] = ema
         else:
             ema = self.get_sma(data, sma_prices, parameter, round_value=False)
             for day in range(len(data) - sma_prices):
                 current_index = len(data) - sma_prices - day - 1
-                current_price = data[current_index][parameter]
+                current_price = self.get_data_from_parameter(data=data[current_index], parameter=parameter)
                 ema = current_price * multiplier + ema * (1 - multiplier)
 
             self.ema_values[prices] = ema
