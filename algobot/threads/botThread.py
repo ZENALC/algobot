@@ -339,16 +339,41 @@ class BotThread(QRunnable):
         """
         Initialise the runner function with passed args, kwargs.
         """
-        # Retrieve args/kwargs here; and fire processing using them
+        caller = self.caller
+        failCount = 0
+        failLimit = 10
+        error = ''
+
         try:
-            caller = self.caller
             self.setup_bot(caller=caller)
             self.signals.started.emit(caller)
-            self.trading_loop(caller)
         except Exception as e:
-            print(f'Error: {e}')
-            traceback.print_exc()
+            error_message = traceback.format_exc()
+            trader: SimulationTrader = self.gui.get_trader(caller)
+            if trader is not None:
+                trader.output_message(f'Error: {e}', printMessage=True)
+                trader.output_message(error_message, printMessage=True)
+            if self.gui.telegramBot and len(self.telegramChatID) > 0:
+                self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
+                self.gui.telegramBot.send_message(self.telegramChatID, error_message)
             self.signals.error.emit(self.caller, str(e))
 
-            if self.gui.telegramBot and len(self.telegramChatID) > 0:
-                self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of {e}.")
+        while failCount < failLimit:
+            try:
+                self.trading_loop(caller)
+            except Exception as e:
+                error = e
+                error_message = traceback.format_exc()
+                trader: SimulationTrader = self.gui.get_trader(caller)
+                if trader is not None:
+                    trader.output_message(f'Error: {e}', printMessage=True)
+                    trader.output_message(error_message, printMessage=True)
+                failCount += 1
+                if self.gui.telegramBot and len(self.telegramChatID) > 0:
+                    self.gui.telegramBot.send_message(self.telegramChatID, error_message)
+                    self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
+                    self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in 10 seconds..")
+                time.sleep(10)
+
+        if failLimit == failCount:
+            self.signals.error.emit(self.caller, str(error))
