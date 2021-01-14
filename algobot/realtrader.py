@@ -2,7 +2,6 @@ import math
 import time
 
 from enums import *
-from decimal import Decimal
 from simulationtrader import SimulationTrader
 from binance.client import Client
 from binance.enums import *
@@ -399,15 +398,12 @@ class RealTrader(SimulationTrader):
         # self.coinOwed = self.get_borrowed_margin_coin()
         # difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
         asset = self.get_asset(self.coinName)
-        difference = Decimal(asset['borrowed']) + Decimal(asset['interest'])
-
-        if difference * self.dataView.get_current_price() >= float(self.get_asset('USDT')['netAsset']):
-            difference = asset['borrowed']
+        # difference = Decimal(asset['borrowed']) + Decimal(asset['interest'])
 
         order = self.binanceClient.create_margin_order(
             side=SIDE_BUY,
             symbol=self.symbol,
-            quantity=f"{difference:.{self.precision}f}",
+            quantity=f"{float(asset['borrowed']):.{self.precision}f}",
             type=ORDER_TYPE_MARKET,
             isIsolated=self.isolated,
             sideEffectType="AUTO_REPAY"
