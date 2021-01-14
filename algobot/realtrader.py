@@ -1,5 +1,4 @@
 import math
-import time
 
 from enums import *
 from simulationtrader import SimulationTrader
@@ -332,15 +331,16 @@ class RealTrader(SimulationTrader):
         :param usd: Amount used to enter long position.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        self.balance = self.get_margin_usdt()
+        self.balance = self.get_margin_usdt() + float(self.get_asset(self.coinName)['netAsset']) * self.currentPrice
         self.currentPrice = self.dataView.get_current_price()
-        max_buy = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
+        if usd is None:
+            usd = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
 
         order = self.binanceClient.create_margin_order(
             symbol=self.symbol,
             side=SIDE_BUY,
             type=ORDER_TYPE_MARKET,
-            quantity=max_buy,
+            quantity=usd,
             isIsolated=self.isolated
         )
 
@@ -364,11 +364,14 @@ class RealTrader(SimulationTrader):
         :param coin: Coin amount to sell to exit long position.
         :param force: Boolean that determines whether bot executed action or human.
         """
+        if coin is None:
+            coin = self.get_margin_coin()
+
         order = self.binanceClient.create_margin_order(
             symbol=self.symbol,
             side=SIDE_SELL,
             type=ORDER_TYPE_MARKET,
-            quantity=self.get_margin_coin(),
+            quantity=coin,
             isIsolated=self.isolated
         )
 
@@ -417,7 +420,6 @@ class RealTrader(SimulationTrader):
         #     isIsolated=self.isolated
         # )
 
-        time.sleep(1)  # Sleep temporarily, so bot registers margin values.
         self.retrieve_margin_values()
         finalNet = self.get_net()
         self.add_trade(message=msg,
@@ -444,10 +446,12 @@ class RealTrader(SimulationTrader):
         :param coin: Coin amount to sell to enter short position.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        self.balance = self.get_margin_usdt()
         self.currentPrice = self.dataView.get_current_price()
+        self.balance = self.get_margin_usdt() + float(self.get_asset(self.coinName)['netAsset']) * self.currentPrice
         transactionFee = self.balance * self.transactionFeePercentage
-        max_borrow = self.round_down((self.balance - transactionFee) / self.currentPrice)
+
+        if coin is None:
+            coin = self.round_down((self.balance - transactionFee) / self.currentPrice)
         # max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
         # self.create_margin_loan(amount=max_borrow, force=force)
 
@@ -455,12 +459,11 @@ class RealTrader(SimulationTrader):
             side=SIDE_SELL,
             symbol=self.symbol,
             type=ORDER_TYPE_MARKET,
-            quantity=self.round_down(max_borrow),
+            quantity=self.round_down(coin),
             isIsolated=self.isolated,
             sideEffectType="MARGIN_BUY"
         )
 
-        time.sleep(1)  # Sleep temporarily, so bot registers margin values.
         self.currentPosition = SHORT
         self.sellShortPrice = self.currentPrice
         self.shortTrailingPrice = self.currentPrice

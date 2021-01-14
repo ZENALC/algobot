@@ -343,7 +343,7 @@ class BotThread(QRunnable):
         """
         caller = self.caller
         failCount = 0
-        failLimit = 10
+        failLimit = 5
         error = ''
 
         try:
@@ -380,7 +380,8 @@ class BotThread(QRunnable):
                     self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in 10 seconds..")
                 time.sleep(10)
 
-            if not failed:
+            runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
+            if not failed or not runningLoop:
                 break
 
         if failLimit == failCount:
