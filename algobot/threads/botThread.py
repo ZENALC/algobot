@@ -197,7 +197,7 @@ class BotThread(QRunnable):
         :param caller: Object for which function will handle trading.
         """
         trader = self.gui.get_trader(caller)
-        trader.main_logic()
+        trader.main_logic(log_data=self.gui.advancedLogging)
 
     def handle_current_and_trailing_prices(self, caller):
         """
@@ -238,7 +238,7 @@ class BotThread(QRunnable):
         if self.lowerIntervalNotification:
             trader: SimulationTrader = self.gui.get_trader(caller)
             lowerData = self.gui.get_lower_interval_data(caller)
-            lowerTrend = trader.get_trend(dataObject=lowerData)
+            lowerTrend = trader.get_trend(dataObject=lowerData, log_data=self.gui.advancedLogging)
             self.lowerTrend = trader.get_trend_string(lowerTrend)
             trend = trader.trend
             if previousLowerTrend == lowerTrend or lowerTrend == trend:

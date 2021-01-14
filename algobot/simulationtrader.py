@@ -99,6 +99,15 @@ class SimulationTrader:
             'profit': f'${round(profit, 2)}'
         })
 
+        self.output_message(f'\nDatetime in UTC: {datetime.utcnow()}\n'
+                            f'Order ID: {orderID}\n'
+                            f'Action: {message}\n'
+                            f'Pair: {self.symbol}\n'
+                            f'Price: {round(price, 2)}\n'
+                            f'Method: {method}\n'
+                            f'Percentage: {round(profitPercentage, 2)}%\n'
+                            f'Profit: ${round(profit, 2)}\n')
+
     def buy_long(self, msg: str, usd: float = None, force: bool = False):
         """
         Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
@@ -124,7 +133,6 @@ class SimulationTrader:
         self.balance -= usd
         finalNet = self.get_net()
         self.add_trade(msg, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice, force=force)
-        self.output_message(msg)
         self.previousNet = finalNet
 
     def sell_long(self, msg: str, coin: float = None, force: bool = False):
@@ -153,7 +161,6 @@ class SimulationTrader:
         self.balance += earned
         finalNet = self.get_net()
         self.add_trade(msg, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice, force=force)
-        self.output_message(msg)
         self.previousNet = finalNet
 
         if self.coin == 0:
@@ -183,7 +190,6 @@ class SimulationTrader:
         self.balance -= self.currentPrice * coin * (1 + self.transactionFeePercentage)
         finalNet = self.get_net()
         self.add_trade(msg, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice, force=force)
-        self.output_message(msg)
         self.previousNet = finalNet
 
         if self.coinOwed == 0:
@@ -217,7 +223,6 @@ class SimulationTrader:
         finalNet = self.get_net()
         self.add_trade(msg, force=force, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice)
         self.previousNet = finalNet
-        self.output_message(msg)
 
     # noinspection DuplicatedCode
     def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0) -> None or int:
@@ -288,10 +293,11 @@ class SimulationTrader:
             return None
 
     # noinspection PyTypeChecker
-    def main_logic(self):
+    def main_logic(self, log_data=True):
         """
         Main bot logic will use to trade.
         If there is a trend and the previous position did not reflect the trend, the bot enters position.
+        :param log_data: Boolean that will determine where data is logged or not.
         """
         s1, s2, s3 = self.stoicOptions
         if self.stoicEnabled:
@@ -307,7 +313,7 @@ class SimulationTrader:
             elif self.get_stop_loss() is not None and self.currentPrice >= self.get_stop_loss():
                 self.buy_short(f'Bought short because of stop loss.')
 
-            elif not self.inHumanControl and self.check_cross():
+            elif not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.stoicEnabled:
                     if self.stoicTrend == BULLISH:
                         self.buy_short(f'Bought short because a cross and stoicism were detected.')
@@ -323,7 +329,7 @@ class SimulationTrader:
             elif self.get_stop_loss() is not None and self.currentPrice <= self.get_stop_loss():
                 self.sell_long(f'Sold long because of stop loss.')
 
-            elif not self.inHumanControl and self.check_cross():
+            elif not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.stoicEnabled:
                     if self.stoicTrend == BEARISH:
                         self.sell_long(f'Sold long because a cross and stoicism were detected.')
@@ -333,7 +339,7 @@ class SimulationTrader:
                     self.sell_short('Sold short because a cross was detected.')
 
         else:  # This means we are in neither position
-            if not self.inHumanControl and self.check_cross():
+            if not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
                     if self.stoicEnabled:
                         if self.stoicTrend == BULLISH:
@@ -507,9 +513,10 @@ class SimulationTrader:
         else:  # This means we are not in any position currently.
             return None
 
-    def get_trend(self, dataObject: Data = None) -> int or None:
+    def get_trend(self, dataObject: Data = None, log_data=True) -> int or None:
         """
         Checks whether there is a trend or not.
+        :param log_data: Boolean that will determine if data will be logged or not.
         :param dataObject: Data object to be used to check if there is a trend or not.
         :return: Integer specifying trend.
         """
@@ -539,14 +546,17 @@ class SimulationTrader:
             initialName, finalName = option.get_pretty_option()
 
             if dataObject == self.dataView:
-                self.output_message(f'Regular interval ({dataObject.interval}) data:')
+                if log_data:
+                    self.output_message(f'Regular interval ({dataObject.interval}) data:')
                 self.optionDetails.append((initialAverage, finalAverage, initialName, finalName))
             else:
-                self.output_message(f'Lower interval ({dataObject.interval}) data:')
+                if log_data:
+                    self.output_message(f'Lower interval ({dataObject.interval}) data:')
                 self.lowerOptionDetails.append((initialAverage, finalAverage, initialName, finalName))
 
-            self.output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
-            self.output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
+            if log_data:
+                self.output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
+                self.output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
 
             if initialAverage > finalAverage:
                 trends.append(BULLISH)
@@ -564,14 +574,15 @@ class SimulationTrader:
         else:
             return None
 
-    def check_cross(self, dataObject: Data = None) -> bool:
+    def check_cross(self, dataObject: Data = None, log_data=True) -> bool:
         """
         Checks whether there is a true cross or not. If there is a trend, but the same trend was in the previous
         position, no action is taken.
+        :param log_data: Boolean that will determine whether data is logged or not.
         :param dataObject: Data object to be used to check if there is a trend or not.
         :return: Boolean whether there is a cross or not.
         """
-        self.trend = self.get_trend(dataObject)  # Get the trend.
+        self.trend = self.get_trend(dataObject, log_data=log_data)  # Get the trend.
         if self.trend == BULLISH:  # If the sign is bullish; meaning enter long.
             if self.currentPosition == LONG:  # We are already in a long position.
                 return False

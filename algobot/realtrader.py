@@ -349,7 +349,6 @@ class RealTrader(SimulationTrader):
         self.currentPosition = LONG
         self.buyLongPrice = self.currentPrice
         self.longTrailingPrice = self.currentPrice
-        self.output_message(msg)
         finalNet = self.get_net()
         self.add_trade(message=msg,
                        initialNet=self.previousNet,
@@ -380,7 +379,6 @@ class RealTrader(SimulationTrader):
         self.customStopLoss = None
         self.buyLongPrice = None
         self.longTrailingPrice = None
-        self.output_message(msg)
         finalNet = self.get_net()
         self.add_trade(message=msg,
                        initialNet=self.previousNet,
@@ -402,6 +400,9 @@ class RealTrader(SimulationTrader):
         # difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
         asset = self.get_asset(self.coinName)
         difference = Decimal(asset['borrowed']) + Decimal(asset['interest'])
+
+        if difference * self.dataView.get_current_price() >= float(self.get_asset('USDT')['netAsset']):
+            difference = asset['borrowed']
 
         order = self.binanceClient.create_margin_order(
             side=SIDE_BUY,
@@ -437,7 +438,6 @@ class RealTrader(SimulationTrader):
         self.sellShortPrice = None
         self.customStopLoss = None
         self.shortTrailingPrice = None
-        self.output_message(msg)
 
     def sell_short(self, msg: str, coin: float or None = None, force: bool = False):
         """
@@ -468,7 +468,6 @@ class RealTrader(SimulationTrader):
         self.currentPosition = SHORT
         self.sellShortPrice = self.currentPrice
         self.shortTrailingPrice = self.currentPrice
-        self.output_message(msg)
         self.retrieve_margin_values()
         finalNet = self.get_net()
         self.add_trade(message=msg,
