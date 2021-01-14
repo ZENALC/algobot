@@ -228,6 +228,8 @@ class BotThread(QRunnable):
         gui.telegramBot = TelegramBot(gui=gui, token=apiKey, botThread=self)
         gui.telegramBot.start()
         self.signals.activity.emit(LIVE, 'Started Telegram bot.')
+        if self.gui.telegramBot and len(self.telegramChatID) > 0:
+            self.gui.telegramBot.send_message(self.telegramChatID, "Started Telegram bot.")
 
     def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool or None:
         """
@@ -361,7 +363,9 @@ class BotThread(QRunnable):
         while failCount < failLimit:
             try:
                 self.trading_loop(caller)
+                failed = False
             except Exception as e:
+                failed = True
                 error = e
                 error_message = traceback.format_exc()
                 trader: SimulationTrader = self.gui.get_trader(caller)
@@ -375,6 +379,9 @@ class BotThread(QRunnable):
                     self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
                     self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in 10 seconds..")
                 time.sleep(10)
+
+            if not failed:
+                break
 
         if failLimit == failCount:
             self.signals.error.emit(self.caller, str(error))

@@ -67,6 +67,12 @@ class Interface(QMainWindow):
         self.load_tickers_and_news()
         self.homeTab.setCurrentIndex(0)
 
+    def inform_telegram(self, message, caller):
+        if caller == LIVE:
+            chatID = self.configuration.telegramChatID.text()
+            if self.telegramBot and len(chatID) > 0:
+                self.telegramBot.send_message(chatID, message)
+
     def load_tickers_and_news(self):
         """
         Loads tickers and most recent news in their own threads.
@@ -696,6 +702,7 @@ class Interface(QMainWindow):
                 trader.buy_short('Force exited short.', force=True)
             else:
                 trader.buy_short('Exited short because of override and resuming autonomous logic.', force=True)
+        self.inform_telegram("Force exited position from GUI.", caller=caller)
 
     def force_long(self, caller):
         """
@@ -715,6 +722,7 @@ class Interface(QMainWindow):
         if trader.currentPosition == SHORT:
             trader.buy_short('Exited short because long was forced.', force=True)
         trader.buy_long('Force executed long.', force=True)
+        self.inform_telegram("Force executed long from GUI.", caller=caller)
 
     def force_short(self, caller):
         """
@@ -734,6 +742,7 @@ class Interface(QMainWindow):
         if trader.currentPosition == LONG:
             trader.sell_long('Exited long because short was forced.', force=True)
         trader.sell_short('Force executed short.', force=True)
+        self.inform_telegram("Force executed short from GUI.", caller=caller)
 
     def pause_or_resume_bot(self, caller):
         """
