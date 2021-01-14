@@ -351,7 +351,7 @@ class BotThread(QRunnable):
             error_message = traceback.format_exc()
             trader: SimulationTrader = self.gui.get_trader(caller)
             if trader is not None:
-                trader.output_message(f'Error: {e}', printMessage=True)
+                trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
                 trader.output_message(error_message, printMessage=True)
             if self.gui.telegramBot and len(self.telegramChatID) > 0:
                 self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
@@ -366,8 +366,9 @@ class BotThread(QRunnable):
                 error_message = traceback.format_exc()
                 trader: SimulationTrader = self.gui.get_trader(caller)
                 if trader is not None:
-                    trader.output_message(f'Error: {e}', printMessage=True)
                     trader.output_message(error_message, printMessage=True)
+                    trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
+                    trader.output_message(f"({failCount})Trying again in 10 seconds..", printMessage=True)
                 failCount += 1
                 if self.gui.telegramBot and len(self.telegramChatID) > 0:
                     self.gui.telegramBot.send_message(self.telegramChatID, error_message)
