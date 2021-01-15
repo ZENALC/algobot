@@ -6,6 +6,7 @@ class WorkerSignals(QObject):
     """
     Defines the signals available from a running worker thread.
     """
+    restore = pyqtSignal()
     started = pyqtSignal()
     finished = pyqtSignal()
     error = pyqtSignal(str)
@@ -51,3 +52,4 @@ class Worker(QRunnable):
             print(f'Error: {e}')
             traceback.print_exc()
             self.signals.error.emit(str(e))
+            self.signals.restore.emit()

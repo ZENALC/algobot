@@ -1,4 +1,5 @@
 import math
+import time
 
 from enums import *
 from simulationtrader import SimulationTrader
@@ -331,7 +332,7 @@ class RealTrader(SimulationTrader):
         :param usd: Amount used to enter long position.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        self.balance = self.get_margin_usdt() + float(self.get_asset(self.coinName)['netAsset']) * self.currentPrice
+        self.balance = self.get_margin_usdt()
         self.currentPrice = self.dataView.get_current_price()
         if usd is None:
             usd = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
@@ -344,6 +345,7 @@ class RealTrader(SimulationTrader):
             isIsolated=self.isolated
         )
 
+        time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
         self.retrieve_margin_values()
         self.currentPosition = LONG
         self.buyLongPrice = self.currentPrice
@@ -375,6 +377,7 @@ class RealTrader(SimulationTrader):
             isIsolated=self.isolated
         )
 
+        time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
         self.retrieve_margin_values()
         self.previousPosition = LONG
         self.currentPosition = None
@@ -401,12 +404,12 @@ class RealTrader(SimulationTrader):
         # self.coinOwed = self.get_borrowed_margin_coin()
         # difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
         asset = self.get_asset(self.coinName)
-        difference = float(asset['borrowed']) + float(asset['interest'])
+        difference = (float(asset['borrowed']) + float(asset['interest'])) * (1 + self.transactionFeePercentage * 2)
 
         order = self.binanceClient.create_margin_order(
             side=SIDE_BUY,
             symbol=self.symbol,
-            quantity=f"{difference:.{self.precision}f}",
+            quantity=self.round_down(difference),
             type=ORDER_TYPE_MARKET,
             isIsolated=self.isolated,
             sideEffectType="AUTO_REPAY"
@@ -420,6 +423,7 @@ class RealTrader(SimulationTrader):
         #     isIsolated=self.isolated
         # )
 
+        time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
         self.retrieve_margin_values()
         finalNet = self.get_net()
         self.add_trade(message=msg,
@@ -447,7 +451,7 @@ class RealTrader(SimulationTrader):
         :param force: Boolean that determines whether bot executed action or human.
         """
         self.currentPrice = self.dataView.get_current_price()
-        self.balance = self.get_margin_usdt() + float(self.get_asset(self.coinName)['netAsset']) * self.currentPrice
+        self.balance = self.get_margin_usdt()
         transactionFee = self.balance * self.transactionFeePercentage
 
         if coin is None:
@@ -464,6 +468,7 @@ class RealTrader(SimulationTrader):
             sideEffectType="MARGIN_BUY"
         )
 
+        time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
         self.currentPosition = SHORT
         self.sellShortPrice = self.currentPrice
         self.shortTrailingPrice = self.currentPrice

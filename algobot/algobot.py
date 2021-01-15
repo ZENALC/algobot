@@ -721,6 +721,7 @@ class Interface(QMainWindow):
         thread = workerThread.Worker(lambda: self.exit_position_thread(caller=caller, humanControl=humanControl))
         thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
         thread.signals.finished.connect(lambda: self.set_exit_position_gui(caller=caller, humanControl=humanControl))
+        thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
         thread.signals.error.connect(self.create_popup)
         self.threadPool.start(thread)
 
@@ -758,6 +759,7 @@ class Interface(QMainWindow):
         thread = workerThread.Worker(lambda: self.force_long_thread(caller=caller))
         thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
         thread.signals.finished.connect(lambda: self.set_force_long_gui(caller=caller))
+        thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
         thread.signals.error.connect(self.create_popup)
         self.threadPool.start(thread)
 
@@ -795,6 +797,7 @@ class Interface(QMainWindow):
         thread = workerThread.Worker(lambda: self.force_short_thread(caller=caller))
         thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
         thread.signals.finished.connect(lambda: self.set_force_short_gui(caller=caller))
+        thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
         thread.signals.error.connect(self.create_popup)
         self.threadPool.start(thread)
 
