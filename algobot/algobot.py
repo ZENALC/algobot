@@ -673,24 +673,13 @@ class Interface(QMainWindow):
         """
         self.interfaceDictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(enabled)
 
-    def exit_position(self, caller, humanControl: bool = True):
+    def exit_position_thread(self, caller, humanControl):
         """
-        Exits position by either giving up control or not. If the boolean humanControl is true, bot gives up control.
-        If the boolean is false, the bot still retains control, but exits trade and waits for opposite trend.
-        :param humanControl: Boolean that will specify whether bot gives up control or not.
+        Thread that'll take care of exiting position.
         :param caller: Caller that will specify which trader will exit position.
+        :param humanControl: Boolean that will specify whether bot gives up control or not.
         """
         trader = self.get_trader(caller)
-        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
-        if humanControl:
-            interfaceDict['pauseBotButton'].setText('Resume Bot')
-        else:
-            interfaceDict['pauseBotButton'].setText('Pause Bot')
-        interfaceDict['forceShortButton'].setEnabled(True)
-        interfaceDict['forceLongButton'].setEnabled(True)
-        interfaceDict['exitPositionButton'].setEnabled(False)
-        interfaceDict['waitOverrideButton'].setEnabled(False)
-
         trader.inHumanControl = humanControl
         if trader.currentPosition == LONG:
             if humanControl:
@@ -704,13 +693,55 @@ class Interface(QMainWindow):
                 trader.buy_short('Exited short because of override and resuming autonomous logic.', force=True)
         self.inform_telegram("Force exited position from GUI.", caller=caller)
 
-    def force_long(self, caller):
+    def set_exit_position_gui(self, caller, humanControl):
         """
-        Forces bot to take long position and gives up its control until bot is resumed.
-        :param caller: Caller that will determine with trader will force long.
+        This function will configure GUI to reflect exit position aftermath.
+        :param caller: Caller that will specify which interface's GUI will change.
+        :param humanControl: Boolean that will specify how interface's GUI will change.
+        """
+        self.enable_override(caller=caller, enabled=True)
+        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
+        if humanControl:
+            interfaceDict['pauseBotButton'].setText('Resume Bot')
+        else:
+            interfaceDict['pauseBotButton'].setText('Pause Bot')
+        interfaceDict['forceShortButton'].setEnabled(True)
+        interfaceDict['forceLongButton'].setEnabled(True)
+        interfaceDict['exitPositionButton'].setEnabled(False)
+        interfaceDict['waitOverrideButton'].setEnabled(False)
+
+    def exit_position(self, caller, humanControl: bool = True):
+        """
+        Exits position by either giving up control or not. If the boolean humanControl is true, bot gives up control.
+        If the boolean is false, the bot still retains control, but exits trade and waits for opposite trend.
+        :param humanControl: Boolean that will specify whether bot gives up control or not.
+        :param caller: Caller that will specify which trader will exit position.
+        """
+        self.add_to_monitor(caller, 'Exiting position...')
+        thread = workerThread.Worker(lambda: self.exit_position_thread(caller=caller, humanControl=humanControl))
+        thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
+        thread.signals.finished.connect(lambda: self.set_exit_position_gui(caller=caller, humanControl=humanControl))
+        thread.signals.error.connect(self.create_popup)
+        self.threadPool.start(thread)
+
+    def force_long_thread(self, caller):
+        """
+        Thread that'll take care of forcing long.
+        :param caller: Caller that will specify which trader will force long.
         """
         trader = self.get_trader(caller)
-        self.add_to_monitor(caller, 'Forcing long and stopping autonomous logic.')
+        trader.inHumanControl = True
+        if trader.currentPosition == SHORT:
+            trader.buy_short('Exited short because long was forced.', force=True)
+        trader.buy_long('Force executed long.', force=True)
+        self.inform_telegram("Force executed long from GUI.", caller=caller)
+
+    def set_force_long_gui(self, caller):
+        """
+        Thread that'll configure GUI to reflect force long aftermath.
+        :param caller: Caller that will specify which interface's GUI will change.
+        """
+        self.enable_override(caller=caller, enabled=True)
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         interfaceDict['pauseBotButton'].setText('Resume Bot')
         interfaceDict['forceShortButton'].setEnabled(True)
@@ -718,19 +749,36 @@ class Interface(QMainWindow):
         interfaceDict['exitPositionButton'].setEnabled(True)
         interfaceDict['waitOverrideButton'].setEnabled(True)
 
-        trader.inHumanControl = True
-        if trader.currentPosition == SHORT:
-            trader.buy_short('Exited short because long was forced.', force=True)
-        trader.buy_long('Force executed long.', force=True)
-        self.inform_telegram("Force executed long from GUI.", caller=caller)
-
-    def force_short(self, caller):
+    def force_long(self, caller):
         """
-        Forces bot to take short position and gives up its control until bot is resumed.
-        :param caller: Caller that will determine with trader will force short.
+        Forces bot to take long position and gives up its control until bot is resumed.
+        :param caller: Caller that will determine with trader will force long.
+        """
+        self.add_to_monitor(caller, 'Forcing long and stopping autonomous logic...')
+        thread = workerThread.Worker(lambda: self.force_long_thread(caller=caller))
+        thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
+        thread.signals.finished.connect(lambda: self.set_force_long_gui(caller=caller))
+        thread.signals.error.connect(self.create_popup)
+        self.threadPool.start(thread)
+
+    def force_short_thread(self, caller):
+        """
+        Thread that'll take care of forcing short.
+        :param caller: Caller that will specify which trader will force short.
         """
         trader = self.get_trader(caller)
-        self.add_to_monitor(caller, 'Forcing short and stopping autonomous logic.')
+        trader.inHumanControl = True
+        if trader.currentPosition == LONG:
+            trader.sell_long('Exited long because short was forced.', force=True)
+        trader.sell_short('Force executed short.', force=True)
+        self.inform_telegram("Force executed short from GUI.", caller=caller)
+
+    def set_force_short_gui(self, caller):
+        """
+        Thread that'll configure GUI to reflect force short aftermath.
+        :param caller: Caller that will specify which interface's GUI will change.
+        """
+        self.enable_override(caller=caller, enabled=True)
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         interfaceDict['pauseBotButton'].setText('Resume Bot')
         interfaceDict['forceShortButton'].setEnabled(False)
@@ -738,11 +786,17 @@ class Interface(QMainWindow):
         interfaceDict['exitPositionButton'].setEnabled(True)
         interfaceDict['waitOverrideButton'].setEnabled(True)
 
-        trader.inHumanControl = True
-        if trader.currentPosition == LONG:
-            trader.sell_long('Exited long because short was forced.', force=True)
-        trader.sell_short('Force executed short.', force=True)
-        self.inform_telegram("Force executed short from GUI.", caller=caller)
+    def force_short(self, caller):
+        """
+        Forces bot to take short position and gives up its control until bot is resumed.
+        :param caller: Caller that will determine with trader will force short.
+        """
+        self.add_to_monitor(caller, 'Forcing short and stopping autonomous logic...')
+        thread = workerThread.Worker(lambda: self.force_short_thread(caller=caller))
+        thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
+        thread.signals.finished.connect(lambda: self.set_force_short_gui(caller=caller))
+        thread.signals.error.connect(self.create_popup)
+        self.threadPool.start(thread)
 
     def pause_or_resume_bot(self, caller):
         """
@@ -1186,7 +1240,7 @@ class Interface(QMainWindow):
             thread = workerThread.Worker(self.trader.retrieve_margin_values)
             thread.signals.finished.connect(lambda: self.create_popup('Successfully updated values.'))
             thread.signals.error.connect(self.create_popup)
-            self.threadPool.start(self.trader.retrieve_margin_values)
+            self.threadPool.start(thread)
         else:
             self.create_popup('There is currently no live bot running.')
 

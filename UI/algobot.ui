@@ -54,7 +54,7 @@
        <enum>QTabWidget::West</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="movable">
        <bool>true</bool>
@@ -911,7 +911,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Pause Automation</string>
+                 <string>Pause Bot</string>
                 </property>
                </widget>
               </item>
