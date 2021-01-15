@@ -344,7 +344,7 @@ class BotThread(QRunnable):
         """
         caller = self.caller
         failCount = 0
-        failLimit = 5
+        failLimit = 10
         error = ''
 
         try:
