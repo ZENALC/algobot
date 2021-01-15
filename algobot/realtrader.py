@@ -401,12 +401,12 @@ class RealTrader(SimulationTrader):
         # self.coinOwed = self.get_borrowed_margin_coin()
         # difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
         asset = self.get_asset(self.coinName)
-        # difference = Decimal(asset['borrowed']) + Decimal(asset['interest'])
+        difference = float(asset['borrowed']) + float(asset['interest'])
 
         order = self.binanceClient.create_margin_order(
             side=SIDE_BUY,
             symbol=self.symbol,
-            quantity=f"{float(asset['borrowed']):.{self.precision}f}",
+            quantity=f"{difference:.{self.precision}f}",
             type=ORDER_TYPE_MARKET,
             isIsolated=self.isolated,
             sideEffectType="AUTO_REPAY"
