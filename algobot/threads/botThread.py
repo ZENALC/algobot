@@ -13,6 +13,7 @@ from telegramBot import TelegramBot
 
 
 class BotSignals(QObject):
+    smallError = pyqtSignal(str)
     started = pyqtSignal(int)
     activity = pyqtSignal(int, str)
     updated = pyqtSignal(int, dict)
@@ -367,6 +368,7 @@ class BotThread(QRunnable):
             except Exception as e:
                 failed = True
                 error = e
+                self.signals.smallError.emit(str(e))
                 error_message = traceback.format_exc()
                 trader: SimulationTrader = self.gui.get_trader(caller)
                 if trader is not None:

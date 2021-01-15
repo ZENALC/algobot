@@ -278,6 +278,7 @@ class Interface(QMainWindow):
         """
         self.disable_interface(True, caller, everything=True)
         worker = botThread.BotThread(gui=self, caller=caller)
+        worker.signals.smallError.connect(self.create_popup)
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.activity.connect(self.add_to_monitor)
         worker.signals.started.connect(self.initial_bot_ui_setup)
