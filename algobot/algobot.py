@@ -85,9 +85,11 @@ class Interface(QMainWindow):
         Runs news thread and sets news to GUI.
         """
         self.newsStatusLabel.setText("Retrieving latest news...")
+        self.refreshNewsButton.setEnabled(False)
         newsThread = listThread.Worker(scrape_news)
         newsThread.signals.error.connect(self.news_thread_error)
         newsThread.signals.finished.connect(self.setup_news)
+        newsThread.signals.restore.connect(lambda: self.refreshNewsButton.setEnabled(True))
         self.threadPool.start(newsThread)
 
     def news_thread_error(self, e):
@@ -101,9 +103,12 @@ class Interface(QMainWindow):
         """
         Runs ticker thread and sets tickers to GUI.
         """
+        self.configuration.credentialResult.setText("Updating tickers...")
+        self.configuration.updateTickers.setEnabled(False)
         tickerThread = listThread.Worker(self.get_tickers)
         tickerThread.signals.error.connect(self.tickers_thread_error)
         tickerThread.signals.finished.connect(self.setup_tickers)
+        tickerThread.signals.restore.connect(lambda: self.configuration.updateTickers.setEnabled(True))
         self.threadPool.start(tickerThread)
 
     def tickers_thread_error(self, e):
