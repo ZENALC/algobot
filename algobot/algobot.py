@@ -52,6 +52,7 @@ class Interface(QMainWindow):
         )
         self.setup_graphs()  # Setting up graphs
         self.initiate_slots()  # Initiating slots
+        self.previousTradesCount = [0, 0]  # Count of previous trades.
 
         self.interfaceDictionary = self.get_interface_dictionary()
         self.advancedLogging = True
@@ -278,12 +279,31 @@ class Interface(QMainWindow):
                 plot['y'] = []
                 plot['plot'].setData(plot['x'], plot['y'])
 
+    def get_previous_trade_count(self, caller):
+        if caller == LIVE:
+            return self.previousTradesCount[1]
+        elif caller == SIMULATION:
+            return self.previousTradesCount[0]
+        else:
+            raise ValueError("Invalid type of caller specified.")
+
+    def set_previous_trade_count(self, caller):
+        trader = self.get_trader(caller=caller)
+        if trader is not None:
+            if caller == LIVE:
+                self.previousTradesCount[1] += len(trader.trades)
+            elif caller == SIMULATION:
+                self.previousTradesCount[0] += len(trader.trades)
+            else:
+                raise ValueError("Invalid type of caller specified.")
+
     def initiate_bot_thread(self, caller: int):
         """
         Main function that initiates bot thread and handles all data-view logic.
         :param caller: Caller that decides whether a live bot or simulation bot is run.
         """
         self.disable_interface(True, caller, everything=True)
+        self.set_previous_trade_count(caller=caller)
 
         worker = botThread.BotThread(gui=self, caller=caller)
         worker.signals.smallError.connect(self.create_popup)
@@ -1170,9 +1190,10 @@ class Interface(QMainWindow):
         """
         table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
         trades = self.get_trader(caller).trades
+        previousTrades = self.get_previous_trade_count(caller=caller)
 
-        if len(trades) > table.rowCount():  # Basically, only update when row count is not equal to trades count.
-            remaining = len(trades) - table.rowCount()
+        if len(trades) + previousTrades > table.rowCount():  # Only update when row count is not equal to trades count.
+            remaining = len(trades) + previousTrades - table.rowCount()
             for trade in trades[-remaining:]:
                 tradeData = [trade['orderID'],
                              trade['pair'],
