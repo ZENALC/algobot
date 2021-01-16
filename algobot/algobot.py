@@ -312,18 +312,20 @@ class Interface(QMainWindow):
         self.disable_interface(True, caller=caller, everything=True)  # Disable everything until everything is done.
         thread = workerThread.Worker(lambda: self.end_bot_gracefully(caller=caller))
         thread.signals.error.connect(self.create_popup)
-        thread.signals.finished.connect(lambda: self.reset_bot_interface(caller=caller))
-        thread.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=caller))
+        thread.signals.finished.connect(lambda: self.end_bot_monitoring(caller=caller))
+        thread.signals.restore.connect(lambda: self.reset_bot_interface(caller=caller))
         self.threadPool.start(thread)
 
-    def reset_bot_interface(self, caller):
+    def end_bot_monitoring(self, caller):
         if caller == SIMULATION:
             self.add_to_monitor(caller, "Killed simulation bot.")
         else:
             self.add_to_monitor(caller, 'Killed Telegram bot.')
             self.add_to_monitor(caller, "Killed bot.")
 
+    def reset_bot_interface(self, caller):
         self.enable_override(caller, False)
+        self.disable_interface(disable=False, caller=caller)
         self.update_trades_table_and_activity_monitor(caller)
         # self.destroy_trader(caller)
 
