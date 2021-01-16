@@ -173,9 +173,10 @@ class Interface(QMainWindow):
         self.add_to_backtest_monitor("Starting backtest.")
         worker = backtestThread.BacktestThread(gui=self)
         worker.signals.started.connect(self.setup_backtester)
-        worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.activity.connect(self.update_backtest_gui)
+        worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.finished.connect(self.end_backtest)
+        worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=BACKTEST))
         self.threadPool.start(worker)
 
     def end_backtest(self):
@@ -205,7 +206,6 @@ class Interface(QMainWindow):
             if msgBox.exec_() == QMessageBox.Open:
                 os.startfile(path)
 
-        self.disable_interface(False, BACKTEST)
         self.backtestProgressBar.setValue(100)
 
     def update_backtest_gui(self, updatedDict: dict):
@@ -363,7 +363,6 @@ class Interface(QMainWindow):
         if "Invalid token" in msg:
             msg = "Please check your Telegram bot token or turn off Telegram integration to get rid of this error."
 
-        self.disable_interface(disable=False, caller=caller)
         self.add_to_monitor(caller=caller, message=msg)
         self.create_popup(msg)
 

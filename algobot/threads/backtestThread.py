@@ -11,6 +11,7 @@ class BacktestSignals(QObject):
     activity = pyqtSignal(dict)
     started = pyqtSignal(dict)
     error = pyqtSignal(int, str)
+    restore = pyqtSignal()
 
 
 class BacktestThread(QRunnable):
@@ -160,3 +161,5 @@ class BacktestThread(QRunnable):
             print(f'Error: {e}')
             traceback.print_exc()
             self.signals.error.emit(BACKTEST, str(e))
+        finally:
+            self.signals.restore.emit()
