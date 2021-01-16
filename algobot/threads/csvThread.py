@@ -1,14 +1,15 @@
 import traceback
 
-from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 from data import Data
+from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 
 class CSVSignals(QObject):
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
-    progress = pyqtSignal(int, str)
     restore = pyqtSignal()
+    progress = pyqtSignal(int, str)
+    locked = pyqtSignal()
 
 
 class CSVGeneratingThread(QRunnable):
@@ -19,6 +20,7 @@ class CSVGeneratingThread(QRunnable):
         self.interval = interval
         self.descending = descending
         self.armyTime = armyTime
+        self.client: Data or None = None
 
     @pyqtSlot()
     def run(self):
@@ -27,17 +29,19 @@ class CSVGeneratingThread(QRunnable):
         """
         # Retrieve args/kwargs here; and fire processing using them
         try:
-            client = Data(interval=self.interval, symbol=self.symbol, updateData=False)
-            data = client.custom_get_new_data(progress_callback=self.signals.progress)
+            self.client: Data = Data(interval=self.interval, symbol=self.symbol, updateData=False)
+            data = self.client.custom_get_new_data(progress_callback=self.signals.progress, locked=self.signals.locked)
             if data:
                 self.signals.progress.emit(100, "Creating CSV file...")
-                savedPath = client.create_csv_file(descending=self.descending, armyTime=self.armyTime)
+                savedPath = self.client.create_csv_file(descending=self.descending, armyTime=self.armyTime)
                 self.signals.finished.emit(savedPath)
-            else:
-                pass
         except Exception as e:
             print(f'Error: {e}')
             traceback.print_exc()
             self.signals.error.emit(str(e))
         finally:
             self.signals.restore.emit()
+
+    def stop(self):
+        if self.client is not None:
+            self.client.downloadLoop = False

@@ -171,12 +171,13 @@ class Data:
                                         data['taker_buy_base_asset'],
                                         data['taker_buy_quote_asset'],
                                         ))
-                        connection.commit()
                     except sqlite3.IntegrityError:
                         pass  # This just means the data already exists in the database, so ignore.
                     except sqlite3.OperationalError:
+                        connection.commit()
                         self.output_message("Insertion to database failed. Will retry next run.", 4)
                         return False
+            connection.commit()
         self.output_message("Successfully stored all new data to database.")
         return True
 
@@ -272,10 +273,11 @@ class Data:
             self.output_message("Database is up-to-date.")
 
     # noinspection PyProtectedMember
-    def custom_get_new_data(self, limit: int = 500, progress_callback=None):
+    def custom_get_new_data(self, limit: int = 500, progress_callback=None, locked=None):
         """
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
-        :param progress_callback: Signal to emit back from for GUI.
+        :param locked: Signal to emit back to GUI when storing data. Cannot be canceled once here.
+        :param progress_callback: Signal to emit back to GUI to show progress.
         :param limit: Limit per pull.
         :return: A list of dictionaries.
         """
@@ -294,10 +296,6 @@ class Data:
         idx = 0
 
         while True and self.downloadLoop:
-            if not self.downloadLoop:
-                progress_callback.emit(-1, "Download canceled.")
-                return []
-
             tempData = self.binanceClient.get_klines(
                 symbol=self.symbol,
                 interval=self.interval,
@@ -312,7 +310,7 @@ class Data:
             output_data += tempData
             start_ts = tempData[-1][0]
             if progress_callback is not None:
-                progress = (start_ts - total_beginning_timestamp) / end_progress * 100
+                progress = (start_ts - total_beginning_timestamp) / end_progress * 90
                 progress_callback.emit(int(progress), "Downloading data...")
 
             idx += 1
@@ -328,11 +326,18 @@ class Data:
             if idx % 5 == 0:
                 time.sleep(1)
 
-        progress_callback.emit(100, "Saving data...")
+        if not self.downloadLoop:
+            progress_callback.emit(-1, "Download canceled.")
+            return []
+
+        if locked:
+            locked.emit()
+
+        progress_callback.emit(95, "Saving data...")
         self.insert_data(output_data)
-        progress_callback.emit(100, "Dumping data to database...")
+        progress_callback.emit(97, "This may take a while. Dumping data to database...")
         self.dump_to_table(self.data[-len(output_data):])
-        progress_callback.emit(100, "Downloaded new data successfully.")
+        progress_callback.emit(100, "Downloaded all new data successfully.")
         return self.data
 
     def get_new_data(self, timestamp, limit: int = 1000):

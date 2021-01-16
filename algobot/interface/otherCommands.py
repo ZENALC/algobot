@@ -15,12 +15,15 @@ class OtherCommands(QDialog):
         uic.loadUi(otherCommandsUi, self)  # Loading the main UI
         self.threadPool = QThreadPool()
         self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
+        self.stopButton.clicked.connect(self.stop_csv_generation)
+        self.csvThread = None
 
     def initiate_csv_generation(self):
         """
         Starts download of data and CSV generation.
         """
         self.generateCSVButton.setEnabled(False)
+        self.stopButton.setEnabled(True)
         self.csvGenerationStatus.setText("Downloading data...")
 
         symbol = self.csvGenerationTicker.currentText()
@@ -29,7 +32,9 @@ class OtherCommands(QDialog):
         armyTime = self.armyDateRadio.isChecked()
 
         thread = CSVGeneratingThread(symbol=symbol, interval=interval, descending=descending, armyTime=armyTime)
+        self.csvThread = thread
         thread.signals.progress.connect(self.progress_update)
+        thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
         thread.signals.finished.connect(self.end_csv_generation)
         thread.signals.error.connect(self.handle_csv_generation_error)
         thread.signals.restore.connect(self.restore_csv_state)
@@ -61,6 +66,13 @@ class OtherCommands(QDialog):
 
     def restore_csv_state(self):
         self.generateCSVButton.setEnabled(True)
+        self.stopButton.setEnabled(False)
+        self.csvThread = None
+
+    def stop_csv_generation(self):
+        if self.csvThread:
+            self.csvGenerationStatus.setText("Canceling download...")
+            self.csvThread.stop()
 
     def handle_csv_generation_error(self, e):
         """

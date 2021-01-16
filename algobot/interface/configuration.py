@@ -18,6 +18,7 @@ class Configuration(QDialog):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
         self.threadPool = QThreadPool()
+        self.downloadThread = None
         self.load_slots()
         self.load_credentials()
         self.data = None
@@ -170,15 +171,23 @@ class Configuration(QDialog):
         """
         self.backtestDownloadDataButton.setEnabled(False)
         self.backtestImportDataButton.setEnabled(False)
+        self.backtestStopDownloadButton.setEnabled(True)
         self.set_progress(progress=0, message="Downloading data...")
         symbol = self.backtestTickerComboBox.currentText()
         interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
+
         thread = downloadThread.DownloadThread(symbol=symbol, interval=interval)
         thread.signals.progress.connect(self.set_progress)
         thread.signals.finished.connect(self.set_downloaded_data)
         thread.signals.error.connect(self.handle_download_failure)
         thread.signals.restore.connect(self.restore_download_state)
+        thread.signals.locked.connect(lambda: self.backtestStopDownloadButton.setEnabled(False))
+        self.downloadThread = thread
         self.threadPool.start(thread)
+
+    def stop_download(self):
+        if self.downloadThread:
+            self.downloadThread.stop()
 
     def set_progress(self, progress, message):
         if progress != -1:
@@ -186,6 +195,8 @@ class Configuration(QDialog):
         self.backtestDownloadLabel.setText(message)
 
     def restore_download_state(self):
+        self.downloadThread = None
+        self.backtestStopDownloadButton.setEnabled(False)
         self.backtestDownloadDataButton.setEnabled(True)
         self.backtestImportDataButton.setEnabled(True)
 
@@ -309,6 +320,7 @@ class Configuration(QDialog):
         self.backtestCopySettingsButton.clicked.connect(self.copy_settings_to_backtest)
         self.backtestImportDataButton.clicked.connect(self.import_data)
         self.backtestDownloadDataButton.clicked.connect(self.download_data)
+        self.backtestStopDownloadButton.clicked.connect(self.stop_download)
 
         self.testCredentialsButton.clicked.connect(self.test_binance_credentials)
         self.saveCredentialsButton.clicked.connect(self.save_credentials)
