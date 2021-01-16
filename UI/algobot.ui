@@ -1833,6 +1833,8 @@ p, li { white-space: pre-wrap; }
     <addaction name="openBacktestResultsFolderAction"/>
     <addaction name="openLogFolderAction"/>
     <addaction name="openCsvFolderAction"/>
+    <addaction name="actionVisit_Binance"/>
+    <addaction name="actionVisit_TradingView"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuStatistics"/>
@@ -1883,6 +1885,16 @@ p, li { white-space: pre-wrap; }
   <action name="openCsvFolderAction">
    <property name="text">
     <string>CSVs</string>
+   </property>
+  </action>
+  <action name="actionVisit_Binance">
+   <property name="text">
+    <string>Visit Binance</string>
+   </property>
+  </action>
+  <action name="actionVisit_TradingView">
+   <property name="text">
+    <string>Visit TradingView</string>
    </property>
   </action>
  </widget>

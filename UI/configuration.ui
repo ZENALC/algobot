@@ -67,7 +67,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="mainMainTab">
           <attribute name="title">
@@ -94,6 +94,9 @@
                 <layout class="QHBoxLayout" name="horizontalLayout_3">
                  <item>
                   <widget class="QRadioButton" name="usRegionRadio">
+                   <property name="toolTip">
+                    <string>Select this if you're in the US.</string>
+                   </property>
                    <property name="text">
                     <string>binance.us (US region only)</string>
                    </property>
@@ -101,6 +104,9 @@
                  </item>
                  <item>
                   <widget class="QRadioButton" name="otherRegionRadio">
+                   <property name="toolTip">
+                    <string>Select this if you're not in the US.</string>
+                   </property>
                    <property name="text">
                     <string>binance.com (all other regions)</string>
                    </property>
@@ -120,6 +126,9 @@
                 <layout class="QHBoxLayout" name="horizontalLayout_2">
                  <item>
                   <widget class="QRadioButton" name="isolatedMarginAccountRadio">
+                   <property name="toolTip">
+                    <string>Select this if the asset you are trading is isolated.</string>
+                   </property>
                    <property name="text">
                     <string>Isolated Margin</string>
                    </property>
@@ -127,6 +136,9 @@
                  </item>
                  <item>
                   <widget class="QRadioButton" name="crossMarginAccountRadio">
+                   <property name="toolTip">
+                    <string>Select this if the asset you are trading is not isolated.</string>
+                   </property>
                    <property name="text">
                     <string>Cross Margin</string>
                    </property>
@@ -140,6 +152,9 @@
               </item>
               <item row="1" column="2" colspan="3">
                <widget class="QComboBox" name="intervalComboBox">
+                <property name="toolTip">
+                 <string>Select interval to trade in here.</string>
+                </property>
                 <property name="currentText">
                  <string>1 Hour</string>
                 </property>
@@ -212,6 +227,9 @@
               </item>
               <item row="3" column="2" colspan="3">
                <widget class="QLineEdit" name="binanceApiSecret">
+                <property name="toolTip">
+                 <string>Enter your Binance secret key here.</string>
+                </property>
                 <property name="echoMode">
                  <enum>QLineEdit::PasswordEchoOnEdit</enum>
                 </property>
@@ -224,6 +242,9 @@
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="toolTip">
+                 <string>Saves Binance and Telegram credentials.</string>
                 </property>
                 <property name="text">
                  <string>Save Credentials</string>
@@ -239,18 +260,11 @@
               </item>
               <item row="8" column="2">
                <widget class="QPushButton" name="testCredentialsButton">
+                <property name="toolTip">
+                 <string>Test Binance API credentials.</string>
+                </property>
                 <property name="text">
                  <string>Test Credentials</string>
-                </property>
-               </widget>
-              </item>
-              <item row="7" column="0">
-               <widget class="QCheckBox" name="lowerIntervalCheck">
-                <property name="text">
-                 <string>Lower Interval Notification?</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -263,6 +277,9 @@
               </item>
               <item row="8" column="1">
                <widget class="QPushButton" name="loadCredentialsButton">
+                <property name="toolTip">
+                 <string>Load Binance and Telegram credentials.</string>
+                </property>
                 <property name="text">
                  <string>Load Credentials</string>
                 </property>
@@ -270,6 +287,9 @@
               </item>
               <item row="8" column="4">
                <widget class="QPushButton" name="updateBinanceValues">
+                <property name="toolTip">
+                 <string>Update and retrieve latest bot values from Binance.</string>
+                </property>
                 <property name="text">
                  <string>Update Binance Values</string>
                 </property>
@@ -295,6 +315,9 @@
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="toolTip">
+                 <string>Select ticker to trade with here.</string>
                 </property>
                 <item>
                  <property name="text">
@@ -325,6 +348,9 @@
               </item>
               <item row="2" column="2" colspan="3">
                <widget class="QLineEdit" name="binanceApiKey">
+                <property name="toolTip">
+                 <string>Enter your Binance API key here.</string>
+                </property>
                 <property name="echoMode">
                  <enum>QLineEdit::PasswordEchoOnEdit</enum>
                 </property>
@@ -332,8 +358,24 @@
               </item>
               <item row="8" column="3">
                <widget class="QPushButton" name="updateTickers">
+                <property name="toolTip">
+                 <string>Update tickers available.</string>
+                </property>
                 <property name="text">
                  <string>Update Tickers</string>
+                </property>
+               </widget>
+              </item>
+              <item row="7" column="0" colspan="5">
+               <widget class="QCheckBox" name="lowerIntervalCheck">
+                <property name="toolTip">
+                 <string>Select this if you'd like to view the lower interval's moving averages trends.</string>
+                </property>
+                <property name="text">
+                 <string>Lower Interval Notification?</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -1864,7 +1906,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="simulationMainTab">
           <attribute name="title">
@@ -2683,6 +2725,9 @@
              <layout class="QVBoxLayout" name="verticalLayout_2">
               <item>
                <widget class="QRadioButton" name="lightModeRadioButton">
+                <property name="toolTip">
+                 <string>Sets light theme.</string>
+                </property>
                 <property name="text">
                  <string>Light Theme</string>
                 </property>
@@ -2693,6 +2738,9 @@
               </item>
               <item>
                <widget class="QRadioButton" name="darkModeRadioButton">
+                <property name="toolTip">
+                 <string>Sets dark theme.</string>
+                </property>
                 <property name="text">
                  <string>Dark Theme</string>
                 </property>
@@ -2700,6 +2748,9 @@
               </item>
               <item>
                <widget class="QRadioButton" name="bloombergModeRadioButton">
+                <property name="toolTip">
+                 <string>Sets bloomberg theme.</string>
+                </property>
                 <property name="text">
                  <string>Bloomberg Theme</string>
                 </property>
@@ -2707,6 +2758,9 @@
               </item>
               <item>
                <widget class="QRadioButton" name="printingModeRadioButton">
+                <property name="toolTip">
+                 <string>Sets printing theme.</string>
+                </property>
                 <property name="text">
                  <string>Printing Theme</string>
                 </property>
@@ -2714,6 +2768,9 @@
               </item>
               <item>
                <widget class="QRadioButton" name="bullModeRadioButton">
+                <property name="toolTip">
+                 <string>Sets bull theme.</string>
+                </property>
                 <property name="text">
                  <string>Bull Theme</string>
                 </property>
@@ -2721,6 +2778,9 @@
               </item>
               <item>
                <widget class="QRadioButton" name="bearModeRadioButton">
+                <property name="toolTip">
+                 <string>Sets bear theme.</string>
+                </property>
                 <property name="text">
                  <string>Bear Theme</string>
                 </property>
@@ -2763,6 +2823,9 @@
              <layout class="QGridLayout" name="gridLayout_15">
               <item row="1" column="0">
                <widget class="QRadioButton" name="simpleLoggingRadioButton">
+                <property name="toolTip">
+                 <string>Enables simple logging.</string>
+                </property>
                 <property name="text">
                  <string>Simple Logging</string>
                 </property>
@@ -2770,6 +2833,9 @@
               </item>
               <item row="0" column="0">
                <widget class="QRadioButton" name="advancedLoggingRadioButton">
+                <property name="toolTip">
+                 <string>Enables advanced logging.</string>
+                </property>
                 <property name="text">
                  <string>Advanced Logging</string>
                 </property>
@@ -2917,6 +2983,9 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="toolTip">
+                 <string>Tests Telegram connection with token and chat ID.</string>
+                </property>
                 <property name="text">
                  <string>Test Connection</string>
                 </property>
@@ -2934,6 +3003,9 @@
               </item>
               <item row="0" column="1" colspan="3">
                <widget class="QLineEdit" name="telegramApiKey">
+                <property name="toolTip">
+                 <string>Enter your Telegram token here.</string>
+                </property>
                 <property name="echoMode">
                  <enum>QLineEdit::PasswordEchoOnEdit</enum>
                 </property>
@@ -2941,6 +3013,9 @@
               </item>
               <item row="1" column="1" colspan="3">
                <widget class="QLineEdit" name="telegramChatID">
+                <property name="toolTip">
+                 <string>Enter your Telegram chat ID here.</string>
+                </property>
                 <property name="echoMode">
                  <enum>QLineEdit::PasswordEchoOnEdit</enum>
                 </property>
@@ -2984,6 +3059,9 @@
              <layout class="QGridLayout" name="gridLayout_11">
               <item row="4" column="1">
                <widget class="QComboBox" name="avg4Color">
+                <property name="toolTip">
+                 <string>Sets color for graph's fourth moving average.</string>
+                </property>
                 <property name="currentIndex">
                  <number>3</number>
                 </property>
@@ -3038,6 +3116,9 @@
               </item>
               <item row="3" column="1">
                <widget class="QComboBox" name="avg3Color">
+                <property name="toolTip">
+                 <string>Sets color for graph's third moving average.</string>
+                </property>
                 <property name="currentIndex">
                  <number>5</number>
                 </property>
@@ -3085,6 +3166,9 @@
               </item>
               <item row="1" column="1">
                <widget class="QComboBox" name="avg1Color">
+                <property name="toolTip">
+                 <string>Sets color for graph's first moving average.</string>
+                </property>
                 <property name="currentIndex">
                  <number>1</number>
                 </property>
@@ -3159,6 +3243,9 @@
               </item>
               <item row="2" column="1">
                <widget class="QComboBox" name="avg2Color">
+                <property name="toolTip">
+                 <string>Sets color for graph's second moving average.</string>
+                </property>
                 <property name="currentIndex">
                  <number>2</number>
                 </property>
@@ -3206,6 +3293,9 @@
               </item>
               <item row="0" column="1">
                <widget class="QComboBox" name="balanceColor">
+                <property name="toolTip">
+                 <string>Sets color for graph's balance and net.</string>
+                </property>
                 <property name="currentIndex">
                  <number>4</number>
                 </property>

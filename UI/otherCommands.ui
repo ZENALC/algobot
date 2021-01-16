@@ -56,6 +56,9 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="toolTip">
+                <string>Select this for data's time in standard time format.</string>
+               </property>
                <property name="text">
                 <string>Standard Time</string>
                </property>
@@ -63,6 +66,9 @@
              </item>
              <item>
               <widget class="QRadioButton" name="armyDateRadio">
+               <property name="toolTip">
+                <string>Select this for data's time in army time format.</string>
+               </property>
                <property name="text">
                 <string>Army Time</string>
                </property>
@@ -88,6 +94,9 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="toolTip">
+                <string>Select this for data in ascending order.</string>
+               </property>
                <property name="text">
                 <string>Ascending</string>
                </property>
@@ -95,6 +104,9 @@
              </item>
              <item>
               <widget class="QRadioButton" name="descendingDateRadio">
+               <property name="toolTip">
+                <string>Select this for data in descending order.</string>
+               </property>
                <property name="text">
                 <string>Descending</string>
                </property>
@@ -113,6 +125,9 @@
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>Select data interval to download CSV for.</string>
             </property>
             <item>
              <property name="text">
@@ -196,6 +211,9 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="toolTip">
+             <string>Start generating CSV file.</string>
+            </property>
             <property name="text">
              <string>Generate CSV File</string>
             </property>
@@ -242,6 +260,9 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="toolTip">
+             <string>Select ticker for which CSV data will be downloaded.</string>
+            </property>
             <item>
              <property name="text">
               <string>BTCUSDT</string>
@@ -251,6 +272,9 @@
           </item>
           <item row="5" column="3" colspan="2">
            <widget class="QProgressBar" name="csvGenerationProgressBar">
+            <property name="toolTip">
+             <string>CSV generation progress bar.</string>
+            </property>
             <property name="value">
              <number>0</number>
             </property>
@@ -260,6 +284,9 @@
            <widget class="QPushButton" name="stopButton">
             <property name="enabled">
              <bool>false</bool>
+            </property>
+            <property name="toolTip">
+             <string>Stop CSV generation.</string>
             </property>
             <property name="text">
              <string>Stop</string>
