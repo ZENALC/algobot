@@ -4,7 +4,7 @@ import helpers
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import QDialog, QMessageBox
-from threads.csvThread import CSVGeneratingThread
+from threads.downloadThread import DownloadThread
 
 otherCommandsUi = os.path.join(helpers.ROOT_DIR, 'UI', 'otherCommands.ui')
 
@@ -37,9 +37,9 @@ class OtherCommands(QDialog):
         armyTime = self.armyDateRadio.isChecked()
         interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
 
-        thread = CSVGeneratingThread(symbol=symbol, interval=interval, descending=descending, armyTime=armyTime)
+        thread = DownloadThread(symbol=symbol, interval=interval, descending=descending, armyTime=armyTime)
         thread.signals.progress.connect(self.progress_update)
-        thread.signals.finished.connect(self.end_csv_generation)
+        thread.signals.csv_finished.connect(self.end_csv_generation)
         thread.signals.error.connect(self.handle_csv_generation_error)
         thread.signals.restore.connect(self.restore_csv_state)
         thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
