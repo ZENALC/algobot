@@ -171,6 +171,8 @@ class Interface(QMainWindow):
             return
 
         self.add_to_backtest_monitor("Starting backtest.")
+        self.disable_interface(disable=True, caller=BACKTEST)
+
         worker = backtestThread.BacktestThread(gui=self)
         worker.signals.started.connect(self.setup_backtester)
         worker.signals.activity.connect(self.update_backtest_gui)
@@ -260,7 +262,6 @@ class Interface(QMainWindow):
         self.destroy_graph_plots(interfaceDict['graph'])
         self.setup_graph_plots(interfaceDict['graph'], self.backtester, NET_GRAPH)
         self.set_backtest_graph_limits_and_empty_plots()
-        self.disable_interface(True, BACKTEST)
         self.update_backtest_configuration_gui(configurationDictionary)
 
     def set_backtest_graph_limits_and_empty_plots(self):
