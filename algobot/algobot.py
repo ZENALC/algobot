@@ -284,12 +284,15 @@ class Interface(QMainWindow):
         :param caller: Caller that decides whether a live bot or simulation bot is run.
         """
         self.disable_interface(True, caller, everything=True)
+
         worker = botThread.BotThread(gui=self, caller=caller)
         worker.signals.smallError.connect(self.create_popup)
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.activity.connect(self.add_to_monitor)
         worker.signals.started.connect(self.initial_bot_ui_setup)
         worker.signals.updated.connect(self.update_interface_info)
+        worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=caller))
+
         # All these below are for Telegram.
         worker.signals.forceLong.connect(lambda: self.force_long(LIVE))
         worker.signals.forceShort.connect(lambda: self.force_short(LIVE))
@@ -310,6 +313,7 @@ class Interface(QMainWindow):
         thread = workerThread.Worker(lambda: self.end_bot_gracefully(caller=caller))
         thread.signals.error.connect(self.create_popup)
         thread.signals.finished.connect(lambda: self.reset_bot_interface(caller=caller))
+        thread.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=caller))
         self.threadPool.start(thread)
 
     def reset_bot_interface(self, caller):
@@ -321,7 +325,6 @@ class Interface(QMainWindow):
 
         self.enable_override(caller, False)
         self.update_trades_table_and_activity_monitor(caller)
-        self.disable_interface(False, caller=caller)  # Finally enable run button.
         # self.destroy_trader(caller)
 
     def end_bot_gracefully(self, caller):

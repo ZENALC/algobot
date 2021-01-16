@@ -19,6 +19,7 @@ class BotSignals(QObject):
     updated = pyqtSignal(int, dict)
     finished = pyqtSignal()
     error = pyqtSignal(int, str)
+    restore = pyqtSignal()
 
     # All of these below are for Telegram integration.
     forceLong = pyqtSignal()
@@ -388,3 +389,5 @@ class BotThread(QRunnable):
 
         if failLimit == failCount:
             self.signals.error.emit(self.caller, str(error))
+
+        self.signals.restore.emit()
