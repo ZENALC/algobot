@@ -1,10 +1,10 @@
 import os
 import helpers
-from threads.csvThread import CSVGeneratingThread
 
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import QDialog, QMessageBox
+from threads.csvThread import CSVGeneratingThread
 
 otherCommandsUi = os.path.join(helpers.ROOT_DIR, 'UI', 'otherCommands.ui')
 
@@ -14,9 +14,15 @@ class OtherCommands(QDialog):
         super(OtherCommands, self).__init__(parent)  # Initializing object
         uic.loadUi(otherCommandsUi, self)  # Loading the main UI
         self.threadPool = QThreadPool()
+        self.load_slots()
+        self.csvThread = None
+
+    def load_slots(self):
+        """
+        Loads all the slots for the GUI.
+        """
         self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
         self.stopButton.clicked.connect(self.stop_csv_generation)
-        self.csvThread = None
 
     def initiate_csv_generation(self):
         """
@@ -27,20 +33,25 @@ class OtherCommands(QDialog):
         self.csvGenerationStatus.setText("Downloading data...")
 
         symbol = self.csvGenerationTicker.currentText()
-        interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
         descending = self.descendingDateRadio.isChecked()
         armyTime = self.armyDateRadio.isChecked()
+        interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
 
         thread = CSVGeneratingThread(symbol=symbol, interval=interval, descending=descending, armyTime=armyTime)
-        self.csvThread = thread
         thread.signals.progress.connect(self.progress_update)
-        thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
         thread.signals.finished.connect(self.end_csv_generation)
         thread.signals.error.connect(self.handle_csv_generation_error)
         thread.signals.restore.connect(self.restore_csv_state)
+        thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
+        self.csvThread = thread
         self.threadPool.start(thread)
 
     def progress_update(self, progress, message):
+        """
+        Updates progress bar and message label with values passed.
+        :param progress: Progress value to set.
+        :param message: Message to set in message label.
+        """
         self.csvGenerationProgressBar.setValue(progress)
         self.csvGenerationStatus.setText(message)
 
@@ -65,11 +76,18 @@ class OtherCommands(QDialog):
             os.startfile(savedPath)
 
     def restore_csv_state(self):
+        """
+        Restores GUI state once CSV generation process is finished.
+        :return:
+        """
         self.generateCSVButton.setEnabled(True)
         self.stopButton.setEnabled(False)
         self.csvThread = None
 
     def stop_csv_generation(self):
+        """
+        Stops download if download is in progress.
+        """
         if self.csvThread:
             self.csvGenerationStatus.setText("Canceling download...")
             self.csvThread.stop()
@@ -79,4 +97,4 @@ class OtherCommands(QDialog):
         In the event that thread fails, it modifies the GUI with the error message passed to function.
         :param e: Error message.
         """
-        self.csvGenerationStatus.setText(f"Downloading failed because of error: {e}.")
+        self.csvGenerationStatus.setText(f"Download failed because of error: {e}.")

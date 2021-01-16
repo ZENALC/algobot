@@ -167,17 +167,18 @@ class Configuration(QDialog):
 
     def download_data(self):
         """
-        Loads data from data object. If data object is empty, it downloads it.
+        Loads data from data object. If the data object is empty, it downloads it.
         """
         self.backtestDownloadDataButton.setEnabled(False)
         self.backtestImportDataButton.setEnabled(False)
         self.backtestStopDownloadButton.setEnabled(True)
-        self.set_progress(progress=0, message="Downloading data...")
+        self.set_download_progress(progress=0, message="Downloading data...")
+
         symbol = self.backtestTickerComboBox.currentText()
         interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
 
         thread = downloadThread.DownloadThread(symbol=symbol, interval=interval)
-        thread.signals.progress.connect(self.set_progress)
+        thread.signals.progress.connect(self.set_download_progress)
         thread.signals.finished.connect(self.set_downloaded_data)
         thread.signals.error.connect(self.handle_download_failure)
         thread.signals.restore.connect(self.restore_download_state)
@@ -186,15 +187,27 @@ class Configuration(QDialog):
         self.threadPool.start(thread)
 
     def stop_download(self):
+        """
+        Stops download if download is in progress.
+        """
         if self.downloadThread:
+            self.backtestDownloadLabel.setText("Canceling download...")
             self.downloadThread.stop()
 
-    def set_progress(self, progress, message):
+    def set_download_progress(self, progress, message):
+        """
+        Sets download progress and message with parameters passed.
+        :param progress: Progress value to set bar at.
+        :param message: Message to display in label.
+        """
         if progress != -1:
             self.backtestDownloadProgressBar.setValue(progress)
         self.backtestDownloadLabel.setText(message)
 
     def restore_download_state(self):
+        """
+        Restores GUI to normal state.
+        """
         self.downloadThread = None
         self.backtestStopDownloadButton.setEnabled(False)
         self.backtestDownloadDataButton.setEnabled(True)
@@ -214,13 +227,12 @@ class Configuration(QDialog):
         """
         symbol = self.backtestTickerComboBox.currentText()
         interval = self.backtestIntervalComboBox.currentText().lower()
+
         self.data = data
         self.dataType = symbol
         self.backtestInfoLabel.setText(f"Downloaded {symbol} {interval} data successfully.")
         self.backtestDataLabel.setText(f'Currently using {symbol} in {interval} intervals to conduct backtest.')
         self.setup_calendar()
-        self.backtestDownloadDataButton.setEnabled(True)
-        self.backtestImportDataButton.setEnabled(True)
 
     # noinspection DuplicatedCode
     def copy_settings_to_simulation(self):
