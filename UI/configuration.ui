@@ -46,7 +46,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -67,7 +67,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="mainMainTab">
           <attribute name="title">
@@ -86,7 +86,7 @@
               <string>Live Main Options</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_13">
-              <item row="5" column="0" colspan="5">
+              <item row="4" column="0" colspan="5">
                <widget class="QGroupBox" name="regionGroupBox">
                 <property name="title">
                  <string>Region</string>
@@ -112,7 +112,7 @@
                 </layout>
                </widget>
               </item>
-              <item row="6" column="0" colspan="5">
+              <item row="5" column="0" colspan="5">
                <widget class="QGroupBox" name="accountTypeGroupBox">
                 <property name="title">
                  <string>Account Type</string>
@@ -210,7 +210,14 @@
                 </item>
                </widget>
               </item>
-              <item row="9" column="0">
+              <item row="3" column="2" colspan="3">
+               <widget class="QLineEdit" name="binanceApiSecret">
+                <property name="echoMode">
+                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="0">
                <widget class="QPushButton" name="saveCredentialsButton">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -230,42 +237,14 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="2" colspan="3">
-               <widget class="QLineEdit" name="binanceApiSecret">
-                <property name="echoMode">
-                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0" colspan="2">
-               <widget class="QLabel" name="maximumMarginLabel">
-                <property name="text">
-                 <string>Maximum Margin Level</string>
-                </property>
-               </widget>
-              </item>
-              <item row="9" column="4">
-               <widget class="QPushButton" name="updateBinanceValues">
-                <property name="text">
-                 <string>Update Binance Values</string>
-                </property>
-               </widget>
-              </item>
-              <item row="9" column="2">
+              <item row="8" column="2">
                <widget class="QPushButton" name="testCredentialsButton">
                 <property name="text">
                  <string>Test Credentials</string>
                 </property>
                </widget>
               </item>
-              <item row="9" column="1">
-               <widget class="QPushButton" name="loadCredentialsButton">
-                <property name="text">
-                 <string>Load Credentials</string>
-                </property>
-               </widget>
-              </item>
-              <item row="8" column="0">
+              <item row="7" column="0">
                <widget class="QCheckBox" name="lowerIntervalCheck">
                 <property name="text">
                  <string>Lower Interval Notification?</string>
@@ -275,17 +254,24 @@
                 </property>
                </widget>
               </item>
-              <item row="10" column="0" colspan="5">
+              <item row="9" column="0" colspan="5">
                <widget class="QLabel" name="credentialResult">
                 <property name="text">
                  <string>Successfully connected.</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="2" colspan="3">
-               <widget class="QLineEdit" name="binanceApiKey">
-                <property name="echoMode">
-                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
+              <item row="8" column="1">
+               <widget class="QPushButton" name="loadCredentialsButton">
+                <property name="text">
+                 <string>Load Credentials</string>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="4">
+               <widget class="QPushButton" name="updateBinanceValues">
+                <property name="text">
+                 <string>Update Binance Values</string>
                 </property>
                </widget>
               </item>
@@ -337,17 +323,14 @@
                 </property>
                </widget>
               </item>
-              <item row="4" column="2" colspan="3">
-               <widget class="QDoubleSpinBox" name="doubleSpinBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
+              <item row="2" column="2" colspan="3">
+               <widget class="QLineEdit" name="binanceApiKey">
+                <property name="echoMode">
+                 <enum>QLineEdit::PasswordEchoOnEdit</enum>
                 </property>
                </widget>
               </item>
-              <item row="9" column="3">
+              <item row="8" column="3">
                <widget class="QPushButton" name="updateTickers">
                 <property name="text">
                  <string>Update Tickers</string>
@@ -2676,7 +2659,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tab_10">
           <property name="enabled">
@@ -2740,22 +2723,6 @@
                <widget class="QRadioButton" name="bearModeRadioButton">
                 <property name="text">
                  <string>Bear Theme</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="createThemeButton">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Create Theme</string>
                 </property>
                </widget>
               </item>
@@ -2955,16 +2922,6 @@
                 </property>
                </widget>
               </item>
-              <item row="2" column="1">
-               <widget class="QLabel" name="telegrationConnectionResult">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
               <item row="3" column="0" colspan="3">
                <widget class="QCheckBox" name="enableTelegramTrading">
                 <property name="text">
@@ -2996,6 +2953,16 @@
                 </property>
                 <property name="checked">
                  <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1" colspan="3">
+               <widget class="QLabel" name="telegrationConnectionResult">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                 </property>
                </widget>
               </item>

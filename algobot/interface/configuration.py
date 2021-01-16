@@ -23,6 +23,8 @@ class Configuration(QDialog):
         self.data = None
         self.dataType = None
         self.downloadThread = None
+        self.tokenPass = False
+        self.chatPass = False
 
     def test_telegram(self):
         """
@@ -61,6 +63,13 @@ class Configuration(QDialog):
             message = f'Error: {error}'
 
         self.telegrationConnectionResult.setText(message)
+        self.chatPass = chatPass
+        self.tokenPass = tokenPass
+
+    def reset_telegram_state(self):
+        self.chatPass = False
+        self.tokenPass = False
+        self.telegrationConnectionResult.setText("Telegram credentials not yet tested.")
 
     def test_binance_credentials(self):
         """
@@ -338,3 +347,6 @@ class Configuration(QDialog):
         self.saveCredentialsButton.clicked.connect(self.save_credentials)
         self.loadCredentialsButton.clicked.connect(self.load_credentials)
         self.testTelegramButton.clicked.connect(self.test_telegram)
+
+        self.telegramApiKey.textChanged.connect(self.reset_telegram_state)
+        self.telegramChatID.textChanged.connect(self.reset_telegram_state)

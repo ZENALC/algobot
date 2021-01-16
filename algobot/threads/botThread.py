@@ -226,11 +226,12 @@ class BotThread(QRunnable):
         Attempts to initiate Telegram bot.
         """
         gui = self.gui
+        gui.configuration.test_telegram()
         apiKey = gui.configuration.telegramApiKey.text()
         gui.telegramBot = TelegramBot(gui=gui, token=apiKey, botThread=self)
         gui.telegramBot.start()
         self.signals.activity.emit(LIVE, 'Started Telegram bot.')
-        if self.gui.telegramBot and len(self.telegramChatID) > 0:
+        if self.gui.telegramBot and gui.configuration.chatPass:
             self.gui.telegramBot.send_message(self.telegramChatID, "Started Telegram bot.")
 
     def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool or None:
@@ -357,7 +358,7 @@ class BotThread(QRunnable):
             if trader is not None:
                 trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
                 trader.output_message(error_message, printMessage=True)
-            if self.gui.telegramBot and len(self.telegramChatID) > 0:
+            if self.gui.telegramBot and self.gui.configuration.chatPass:
                 self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
                 self.gui.telegramBot.send_message(self.telegramChatID, error_message)
             self.signals.error.emit(self.caller, str(e))
@@ -377,7 +378,7 @@ class BotThread(QRunnable):
                     trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
                     trader.output_message(f"({failCount})Trying again in 10 seconds..", printMessage=True)
                 failCount += 1
-                if self.gui.telegramBot and len(self.telegramChatID) > 0:
+                if self.gui.telegramBot and self.gui.configuration.chatPass:
                     self.gui.telegramBot.send_message(self.telegramChatID, error_message)
                     self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
                     self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in 10 seconds..")

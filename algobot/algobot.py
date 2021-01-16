@@ -71,7 +71,7 @@ class Interface(QMainWindow):
     def inform_telegram(self, message, caller):
         if caller == LIVE:
             chatID = self.configuration.telegramChatID.text()
-            if self.telegramBot and len(chatID) > 0:
+            if self.telegramBot and self.configuration.chatPass:
                 self.telegramBot.send_message(chatID, message)
 
     def load_tickers_and_news(self):
