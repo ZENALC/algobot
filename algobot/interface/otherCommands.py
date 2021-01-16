@@ -29,9 +29,14 @@ class OtherCommands(QDialog):
         armyTime = self.armyDateRadio.isChecked()
 
         thread = CSVGeneratingThread(symbol=symbol, interval=interval, descending=descending, armyTime=armyTime)
+        thread.signals.progress.connect(self.progress_update)
         thread.signals.finished.connect(self.end_csv_generation)
         thread.signals.error.connect(self.handle_csv_generation_error)
         self.threadPool.start(thread)
+
+    def progress_update(self, progress, message):
+        self.csvGenerationProgressBar.setValue(progress)
+        self.csvGenerationStatus.setText(message)
 
     def end_csv_generation(self, savedPath):
         """

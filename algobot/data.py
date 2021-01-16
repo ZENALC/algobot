@@ -6,7 +6,7 @@ from datetime import timedelta, timezone, datetime
 from helpers import get_logger, ROOT_DIR, get_ups_and_downs
 from contextlib import closing
 from binance.client import Client
-from binance.helpers import interval_to_milliseconds, date_to_milliseconds
+from binance.helpers import interval_to_milliseconds
 
 
 class Data:
@@ -232,7 +232,7 @@ class Data:
         return self.is_latest_date(latestDate)
 
     # noinspection PyProtectedMember
-    def get_latest_timestamp(self) -> float:
+    def get_latest_timestamp(self) -> int:
         """
         Returns latest timestamp available based on database.
         :return: Latest timestamp.
@@ -265,28 +265,22 @@ class Data:
             self.output_message("Inserting data to live program...")
             self.insert_data(newData)
             self.output_message("Storing updated data to database...")
-            self.dump_to_table(newData)
+            self.dump_to_table(self.data[-len(newData):])
         else:
             self.output_message("Database is up-to-date.")
 
     # noinspection PyProtectedMember
-    def custom_get_new_data(self, timestamp, limit: int = 500, progress_callback=None):
+    def custom_get_new_data(self, limit: int = 500, progress_callback=None):
         """
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
         :param progress_callback: Signal to emit back from for GUI.
-        :param timestamp: Initial timestamp.
         :param limit: Limit per pull.
         :return: A list of dictionaries.
         """
         # This code below is taken from binance client and slightly refactored.
         output_data = []  # Initialize our list
         timeframe = interval_to_milliseconds(self.interval)
-
-        # convert our date strings to milliseconds
-        if type(timestamp) == int:
-            start_ts = timestamp
-        else:
-            start_ts = date_to_milliseconds(timestamp)
+        start_ts = self.get_latest_timestamp()
 
         # establish first available start timestamp
         first_valid_ts = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
@@ -329,7 +323,7 @@ class Data:
         progress_callback.emit(100, "Saving data...")
         self.insert_data(output_data)
         progress_callback.emit(100, "Dumping data to database...")
-        self.dump_to_table(output_data)
+        self.dump_to_table(self.data[-len(output_data):])
         progress_callback.emit(100, "Downloaded new data successfully.")
         return self.data
 

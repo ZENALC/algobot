@@ -7,6 +7,7 @@ from data import Data
 class CSVSignals(QObject):
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
+    progress = pyqtSignal(int, str)
 
 
 class CSVGeneratingThread(QRunnable):
@@ -25,8 +26,10 @@ class CSVGeneratingThread(QRunnable):
         """
         # Retrieve args/kwargs here; and fire processing using them
         try:
-            savedPath = Data(interval=self.interval, symbol=self.symbol, log=False).create_csv_file(
-                descending=self.descending, armyTime=self.armyTime)
+            client = Data(interval=self.interval, symbol=self.symbol, updateData=False)
+            client.custom_get_new_data(progress_callback=self.signals.progress)
+            self.signals.progress.emit(100, "Creating CSV file...")
+            savedPath = client.create_csv_file(descending=self.descending, armyTime=self.armyTime)
             self.signals.finished.emit(savedPath)
         except Exception as e:
             print(f'Error: {e}')
