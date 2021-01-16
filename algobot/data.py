@@ -330,7 +330,7 @@ class Data:
         self.insert_data(output_data)
         progress_callback.emit(100, "Dumping data to database...")
         self.dump_to_table(output_data)
-        progress_callback.emit(100, "All done!")
+        progress_callback.emit(100, "Downloaded new data successfully.")
         return self.data
 
     def get_new_data(self, timestamp, limit: int = 1000):
