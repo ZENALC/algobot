@@ -1,6 +1,7 @@
 import assets
 import sys
 import os
+import webbrowser
 
 from helpers import ROOT_DIR, convert_interval_to_string
 from threads import workerThread, backtestThread, botThread, listThread
@@ -1310,6 +1311,9 @@ class Interface(QMainWindow):
         self.openBacktestResultsFolderAction.triggered.connect(lambda: self.open_folder("Backtest Results"))
         self.openLogFolderAction.triggered.connect(lambda: self.open_folder("Logs"))
         self.openCsvFolderAction.triggered.connect(lambda: self.open_folder('CSV'))
+        self.binanceAction.triggered.connect(lambda: webbrowser.open("https://www.binance.com/en"))
+        self.tradingViewAction.triggered.connect(lambda: webbrowser.open("https://www.tradingview.com/"))
+        self.sourceCodeAction.triggered.connect(lambda: webbrowser.open("https://github.com/ZENALC/algobot"))
 
     def create_bot_slots(self):
         """
