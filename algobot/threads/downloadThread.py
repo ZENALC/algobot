@@ -10,6 +10,8 @@ class DownloadSignals(QObject):
     """
     finished = pyqtSignal(list)
     error = pyqtSignal(str)
+    restore = pyqtSignal()
+    progress = pyqtSignal(int, str)
 
 
 class DownloadThread(QRunnable):
@@ -25,9 +27,13 @@ class DownloadThread(QRunnable):
         Initialise the runner function with passed args, kwargs.
         """
         try:
-            data = Data(interval=self.interval, symbol=self.symbol).data
+            client = Data(interval=self.interval, symbol=self.symbol, updateData=False)
+            timestamp = client.get_latest_timestamp()
+            data = client.custom_get_new_data(timestamp=timestamp, progress_callback=self.signals.progress)
             self.signals.finished.emit(data)
         except Exception as e:
             print(f'Error: {e}')
             traceback.print_exc()
             self.signals.error.emit(str(e))
+        finally:
+            self.signals.restore.emit()

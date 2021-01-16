@@ -142,17 +142,20 @@ class Data:
                                 );''')
                 connection.commit()
 
-    def dump_to_table(self) -> bool:
+    def dump_to_table(self, totalData=None) -> bool:
         """
         Dumps date and price information to database.
         :return: A boolean whether data entry was successful or not.
         """
+        if totalData is None:
+            totalData = self.data
+
         query = f'''INSERT INTO {self.databaseTable} (date_utc, open_price, high_price, low_price, close_price,
                             volume, quote_asset_volume, number_of_trades, taker_buy_base_asset, taker_buy_quote_asset) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
-                for data in self.data:
+                for data in totalData:
                     try:
                         cursor.execute(query,
                                        (data['date_utc'].strftime('%Y-%m-%d %H:%M:%S'),
@@ -262,21 +265,21 @@ class Data:
             self.output_message("Inserting data to live program...")
             self.insert_data(newData)
             self.output_message("Storing updated data to database...")
-            self.dump_to_table()
+            self.dump_to_table(newData)
         else:
             self.output_message("Database is up-to-date.")
 
     # noinspection PyProtectedMember
-    def custom_get_new_data(self, timestamp, limit: int = 1000):
+    def custom_get_new_data(self, timestamp, limit: int = 500, progress_callback=None):
         """
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
+        :param progress_callback: Signal to emit back from for GUI.
         :param timestamp: Initial timestamp.
         :param limit: Limit per pull.
         :return: A list of dictionaries.
         """
         # This code below is taken from binance client and slightly refactored.
         output_data = []  # Initialize our list
-        limit = limit  # setup the max limit
         timeframe = interval_to_milliseconds(self.interval)
 
         # convert our date strings to milliseconds
@@ -289,7 +292,8 @@ class Data:
         first_valid_ts = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
         start_ts = max(start_ts, first_valid_ts)
 
-        end_ts = None
+        total_beginning_timestamp = start_ts
+        end_progress = time.time() * 1000 - total_beginning_timestamp
         idx = 0
 
         while True:
@@ -297,8 +301,8 @@ class Data:
                 symbol=self.symbol,
                 interval=self.interval,
                 limit=limit,
-                starttime=start_ts,
-                endTime=end_ts
+                startTime=start_ts,
+                endTime=None
             )
 
             if not len(tempData):
@@ -306,6 +310,8 @@ class Data:
 
             output_data += tempData
             start_ts = tempData[-1][0]
+            progress = (start_ts - total_beginning_timestamp) / end_progress * 100
+            progress_callback.emit(int(progress), "Downloading data...")
 
             idx += 1
             # check if we received less than the required limit and exit the loop
@@ -316,11 +322,16 @@ class Data:
             # increment next call by our timeframe
             start_ts += timeframe
 
-            # sleep after every 3rd call to be kind to the API
-            if idx % 3 == 0:
+            # sleep after every 5th call to be kind to the API
+            if idx % 5 == 0:
                 time.sleep(1)
 
-        return output_data
+        progress_callback.emit(100, "Saving data...")
+        self.insert_data(output_data)
+        progress_callback.emit(100, "Dumping data to database...")
+        self.dump_to_table(output_data)
+        progress_callback.emit(100, "All done!")
+        return self.data
 
     def get_new_data(self, timestamp, limit: int = 1000):
         """

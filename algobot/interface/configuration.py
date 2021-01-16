@@ -170,13 +170,23 @@ class Configuration(QDialog):
         """
         self.backtestDownloadDataButton.setEnabled(False)
         self.backtestImportDataButton.setEnabled(False)
-        self.backtestInfoLabel.setText("Downloading data...")
+        self.set_progress(progress=0, message="Downloading data...")
         symbol = self.backtestTickerComboBox.currentText()
         interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
         thread = downloadThread.DownloadThread(symbol=symbol, interval=interval)
+        thread.signals.progress.connect(self.set_progress)
         thread.signals.finished.connect(self.set_downloaded_data)
         thread.signals.error.connect(self.handle_download_failure)
+        thread.signals.restore.connect(self.restore_download_state)
         self.threadPool.start(thread)
+
+    def set_progress(self, progress, message):
+        self.backtestDownloadLabel.setText(message)
+        self.backtestDownloadProgressBar.setValue(progress)
+
+    def restore_download_state(self):
+        self.backtestDownloadDataButton.setEnabled(True)
+        self.backtestImportDataButton.setEnabled(True)
 
     def handle_download_failure(self, e):
         """
@@ -184,8 +194,6 @@ class Configuration(QDialog):
         :param e: Error for why download failed.
         """
         self.backtestInfoLabel.setText(f"Error occurred during download: {e}.")
-        self.backtestDownloadDataButton.setEnabled(True)
-        self.backtestImportDataButton.setEnabled(True)
 
     def set_downloaded_data(self, data):
         """
