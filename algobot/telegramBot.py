@@ -33,6 +33,8 @@ class TelegramBot:
         dp.add_handler(CommandHandler(("update", 'updatevalues'), self.update_values))
         dp.add_handler(CommandHandler(("thanks", 'thanksbot', 'thankyou'), self.thank_bot_telegram))
         dp.add_handler(CommandHandler(("print", 'makethatbread', 'printmoney'), self.print_telegram))
+        dp.add_handler(CommandHandler('joke', self.joke))
+        dp.add_handler(CommandHandler('wisdom', self.wisdom))
 
     def send_message(self, chatID, message):
         """
@@ -182,7 +184,8 @@ class TelegramBot:
             "No problem.",
             "Don't thank me. Thank Monke.",
             "Sure thing.",
-            "Do you mean to thank Dasha? She is the reason we exist."
+            "The pleasure is all mine.",
+            "Yes sirree."
         )
         update.message.reply_text(random.choice(messages))
 
@@ -197,12 +200,98 @@ class TelegramBot:
             "Opening a bakery soon. Printing...",
             "The FED will ask us for money.",
             "Alright. Printing in progress...",
-            "it's literally free money. Printing...",
-            "Puts on people who don't use AlgoBot. Printing....",
-            "PRINTING IN PROGRESS....",
-            "PRINTING INITIALIZED...."
+            "It's literally free money. Printing...",
+            "P r i n t i n g",
+            "Printing in progress....",
+            "Printing initialized...."
         ]
         update.message.reply_text(random.choice(messages))
+
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def wisdom(update, context):
+        """
+        Small easter egg. You can tell bot to /wisdom for a random wisdom quote.
+        """
+        quotes = [
+            "Some people die at age 25, but aren't buried until 75.",
+            "After accomplishing a goal just look around to see whether you lost something or someone.",
+            "Holding on to anger is like grasping a hot coal with the intent of throwing it at someone else; "
+            "you are the one who gets burned.",
+            "There are only two kinds of people in this world; those who believe there are two kinds of people "
+            "and those who know better.",
+            "Many men go fishing all of their lives without knowing that it is not fish they are after.",
+            "The smartest people are those that know what they don't know..",
+            "Anywhere is walking distance if you've got the time.",
+            "We stopped checking for monsters under our bed when we realized they were inside us.",
+            "If you don't know where you're going, then any road will take you there.",
+            "People take action with emotion then justify with logic.",
+            "The two most important days of your life are the day you are born and the day you find out why.",
+            "Just because everything is different doesn't mean anything has changed.",
+            "Don't be so humble, you're not that great.",
+            "Pride is not the opposite of shame, but it’s source.",
+            "You don't know what you don't know.",
+            "People will forget what you accomplished, but they will never forget how you made them feel.",
+            "If you're going through hell, keep going.",
+            "More is lost by indecision than a wrong decision.",
+            "A ship is safe in harbor, but that's not what ships are for."
+            "You can be the ripest, tastiest peach in the world, and there'll still be someone who hates peaches.",
+            "Nothing in the world can take the place of Persistence. Talent will not; nothing is more common than "
+            "unsuccessful men with talent. Genius will not; unrewarded genius is almost a proverb. Education will not; "
+            "the world is full of educated derelicts. Persistence and determination alone are omnipotent. "
+            "The slogan 'Press On' has solved and always will solve the problems of the human race.",
+            "Hard work beats Talent, when Talent doesn't work hard.",
+            "Worrying is like paying interest on a debt you may never owe.",
+            "Be the person your dog thinks you are.",
+            "War doesn't decide who's right. War decides who's left.",
+            "A year from now you will wish you had started today.",
+            "Dude, sucking at something is the first step to being sorta good at something.",
+            "We all make choices in life, but in the end our choices make us."
+        ]
+        update.message.reply_text(random.choice(quotes))
+
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def joke(update, context):
+        """
+        Another small easter egg. You can /joke to let bot tell you a random one-liner joke.
+        """
+        jokes = [
+            "My uncle once said \"Go away kid, I'm not your uncle.\"",
+            "I have an inferiority complex, but it's not a very good one.",
+            "I have the heart of a lion and a lifetime ban from the Toronto zoo.",
+            "A man walked into his house and was delighted when he discovered that someone had stolen all his lamps.",
+            "I asked my North Korean friend how it was there, he said he couldn't complain.",
+            "You've gotta hand it to blind prostitutes.",
+            "You'd have to be really low to pickpocket a midget.",
+            "I haven’t slept for ten days, because that would be too long.",
+            "I discovered a substance that had no mass, and I was like \"0mg!\"",
+            "Parallel lines have so much in common but it’s a shame they’ll never meet.",
+            "They all laughed when I said I wanted to be a comedian; Well, they're not laughing now.",
+            "Why do ballerinas always stand in their toes? Why don't they get taller dancers?.",
+            "Say what you want about deaf people.",
+            "How long is a Chinese name.",
+            "I don't have a girlfriend, I just know a girl who would get really mad if she heard me say that.",
+            "I, for one, like Roman numerals.",
+            "On the other hand, you have different fingers.",
+            "You're not completely useless, you can always serve as a bad example.",
+            "How do you find Will Smith in the snow? Look for the fresh prints.",
+            "On the other hand, you have different fingers.",
+            "I remember a guy who was addicted to brake fluids. He said he could stop any time..",
+            "I was at an ATM and this old lady asked me to help check her balance. So I pushed her over.",
+            "I hate Russian dolls, they're so full of themselves.",
+            "What do you call cheese that isn't yours? Nacho cheese.",
+            "When cannibals ate a missionary, they got a taste of religion.",
+            "As the shoe said to the hat, 'You go on ahead, and I'll follow on foot'.",
+            "Talking to her about computer hardware I make my mother board.",
+            "To write with a broken pencil is pointless.",
+            "What does traffic jam taste like.",
+            "Why are deer nuts better than beer nuts? . Beer nuts cost $1.50 but deer nuts are under a buck.",
+            "I just bought shoes from my drug dealer. Don't know what he laced them with, but I been tripping all day.",
+            "Which came first, the chicken or the egg? Neither, the rooster did.",
+            "There are two types of people in this word: those who can extrapolate from incomplete data.",
+        ]
+        update.message.reply_text(random.choice(jokes))
 
     # noinspection PyUnusedLocal
     def override_telegram(self, update, context):
