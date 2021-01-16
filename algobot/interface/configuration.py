@@ -18,11 +18,11 @@ class Configuration(QDialog):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
         self.threadPool = QThreadPool()
-        self.downloadThread = None
         self.load_slots()
         self.load_credentials()
         self.data = None
         self.dataType = None
+        self.downloadThread = None
 
     def test_telegram(self):
         """
