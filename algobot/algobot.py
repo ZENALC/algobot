@@ -711,15 +711,9 @@ class Interface(QMainWindow):
         :param caller: Caller that will specify which interface's GUI will change.
         :param humanControl: Boolean that will specify how interface's GUI will change.
         """
-        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
-        if humanControl:
-            interfaceDict['pauseBotButton'].setText('Resume Bot')
-        else:
-            interfaceDict['pauseBotButton'].setText('Pause Bot')
-        interfaceDict['forceShortButton'].setEnabled(True)
-        interfaceDict['forceLongButton'].setEnabled(True)
-        interfaceDict['exitPositionButton'].setEnabled(False)
-        interfaceDict['waitOverrideButton'].setEnabled(False)
+        text = "Resume Bot" if humanControl else "Pause Bot"
+        self.modify_override_buttons(caller=caller, pauseText=text, shortBtn=True, longBtn=True, exitBtn=False,
+                                     waitBtn=False)
 
     def exit_position(self, caller, humanControl: bool = True):
         """
@@ -736,6 +730,14 @@ class Interface(QMainWindow):
         thread.signals.error.connect(self.create_popup)
         self.threadPool.start(thread)
 
+    def set_force_long_gui(self, caller):
+        """
+        Thread that'll configure GUI to reflect force long aftermath.
+        :param caller: Caller that will specify which interface's GUI will change.
+        """
+        self.modify_override_buttons(caller=caller, pauseText="Resume Bot", shortBtn=True, longBtn=False, exitBtn=True,
+                                     waitBtn=True)
+
     def force_long_thread(self, caller):
         """
         Thread that'll take care of forcing long.
@@ -747,18 +749,6 @@ class Interface(QMainWindow):
             trader.buy_short('Exited short because long was forced.', force=True)
         trader.buy_long('Force executed long.', force=True)
         self.inform_telegram("Force executed long from GUI.", caller=caller)
-
-    def set_force_long_gui(self, caller):
-        """
-        Thread that'll configure GUI to reflect force long aftermath.
-        :param caller: Caller that will specify which interface's GUI will change.
-        """
-        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
-        interfaceDict['pauseBotButton'].setText('Resume Bot')
-        interfaceDict['forceShortButton'].setEnabled(True)
-        interfaceDict['forceLongButton'].setEnabled(False)
-        interfaceDict['exitPositionButton'].setEnabled(True)
-        interfaceDict['waitOverrideButton'].setEnabled(True)
 
     def force_long(self, caller):
         """
@@ -773,6 +763,14 @@ class Interface(QMainWindow):
         thread.signals.error.connect(self.create_popup)
         self.threadPool.start(thread)
 
+    def set_force_short_gui(self, caller):
+        """
+        Thread that'll configure GUI to reflect force short aftermath.
+        :param caller: Caller that will specify which interface's GUI will change.
+        """
+        self.modify_override_buttons(caller=caller, pauseText="Resume Bot", shortBtn=False, longBtn=True, exitBtn=True,
+                                     waitBtn=True)
+
     def force_short_thread(self, caller):
         """
         Thread that'll take care of forcing short.
@@ -784,18 +782,6 @@ class Interface(QMainWindow):
             trader.sell_long('Exited long because short was forced.', force=True)
         trader.sell_short('Force executed short.', force=True)
         self.inform_telegram("Force executed short from GUI.", caller=caller)
-
-    def set_force_short_gui(self, caller):
-        """
-        Thread that'll configure GUI to reflect force short aftermath.
-        :param caller: Caller that will specify which interface's GUI will change.
-        """
-        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
-        interfaceDict['pauseBotButton'].setText('Resume Bot')
-        interfaceDict['forceShortButton'].setEnabled(False)
-        interfaceDict['forceLongButton'].setEnabled(True)
-        interfaceDict['exitPositionButton'].setEnabled(True)
-        interfaceDict['waitOverrideButton'].setEnabled(True)
 
     def force_short(self, caller):
         """
@@ -809,6 +795,14 @@ class Interface(QMainWindow):
         thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
         thread.signals.error.connect(self.create_popup)
         self.threadPool.start(thread)
+
+    def modify_override_buttons(self, caller, pauseText, shortBtn, longBtn, exitBtn, waitBtn):
+        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
+        interfaceDict['pauseBotButton'].setText(pauseText)
+        interfaceDict['forceShortButton'].setEnabled(shortBtn)
+        interfaceDict['forceLongButton'].setEnabled(longBtn)
+        interfaceDict['exitPositionButton'].setEnabled(exitBtn)
+        interfaceDict['waitOverrideButton'].setEnabled(waitBtn)
 
     def pause_or_resume_bot(self, caller):
         """
