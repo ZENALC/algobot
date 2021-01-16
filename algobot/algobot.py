@@ -692,12 +692,12 @@ class Interface(QMainWindow):
             if humanControl:
                 trader.sell_long('Force exited long.', force=True)
             else:
-                trader.sell_long('Exited long because of override and resuming autonomous logic.', force=True)
+                trader.sell_long('Exited long because of override and resumed autonomous logic.', force=True)
         elif trader.currentPosition == SHORT:
             if humanControl:
                 trader.buy_short('Force exited short.', force=True)
             else:
-                trader.buy_short('Exited short because of override and resuming autonomous logic.', force=True)
+                trader.buy_short('Exited short because of override and resumed autonomous logic.', force=True)
         self.inform_telegram("Force exited position from GUI.", caller=caller)
 
     def set_exit_position_gui(self, caller, humanControl):
@@ -706,7 +706,6 @@ class Interface(QMainWindow):
         :param caller: Caller that will specify which interface's GUI will change.
         :param humanControl: Boolean that will specify how interface's GUI will change.
         """
-        self.enable_override(caller=caller, enabled=True)
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         if humanControl:
             interfaceDict['pauseBotButton'].setText('Resume Bot')
@@ -749,7 +748,6 @@ class Interface(QMainWindow):
         Thread that'll configure GUI to reflect force long aftermath.
         :param caller: Caller that will specify which interface's GUI will change.
         """
-        self.enable_override(caller=caller, enabled=True)
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         interfaceDict['pauseBotButton'].setText('Resume Bot')
         interfaceDict['forceShortButton'].setEnabled(True)
@@ -787,7 +785,6 @@ class Interface(QMainWindow):
         Thread that'll configure GUI to reflect force short aftermath.
         :param caller: Caller that will specify which interface's GUI will change.
         """
-        self.enable_override(caller=caller, enabled=True)
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         interfaceDict['pauseBotButton'].setText('Resume Bot')
         interfaceDict['forceShortButton'].setEnabled(False)

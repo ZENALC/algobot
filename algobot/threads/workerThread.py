@@ -52,4 +52,5 @@ class Worker(QRunnable):
             print(f'Error: {e}')
             traceback.print_exc()
             self.signals.error.emit(str(e))
+        finally:
             self.signals.restore.emit()
