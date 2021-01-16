@@ -32,6 +32,7 @@ class OtherCommands(QDialog):
         thread.signals.progress.connect(self.progress_update)
         thread.signals.finished.connect(self.end_csv_generation)
         thread.signals.error.connect(self.handle_csv_generation_error)
+        thread.signals.restore.connect(self.restore_csv_state)
         self.threadPool.start(thread)
 
     def progress_update(self, progress, message):
@@ -58,10 +59,12 @@ class OtherCommands(QDialog):
         if msgBox.exec_() == QMessageBox.Open:
             os.startfile(savedPath)
 
+    def restore_csv_state(self):
+        self.generateCSVButton.setEnabled(True)
+
     def handle_csv_generation_error(self, e):
         """
         In the event that thread fails, it modifies the GUI with the error message passed to function.
         :param e: Error message.
         """
         self.csvGenerationStatus.setText(f"Downloading failed because of error: {e}.")
-        self.generateCSVButton.setEnabled(True)

@@ -181,8 +181,9 @@ class Configuration(QDialog):
         self.threadPool.start(thread)
 
     def set_progress(self, progress, message):
+        if progress != -1:
+            self.backtestDownloadProgressBar.setValue(progress)
         self.backtestDownloadLabel.setText(message)
-        self.backtestDownloadProgressBar.setValue(progress)
 
     def restore_download_state(self):
         self.backtestDownloadDataButton.setEnabled(True)

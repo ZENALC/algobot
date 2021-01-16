@@ -25,6 +25,8 @@ class Data:
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
 
+        self.downloadLoop = True
+
         symbol = symbol.upper()
         self.validate_symbol(symbol)
         self.symbol = symbol  # Symbol of data being used.
@@ -278,6 +280,7 @@ class Data:
         :return: A list of dictionaries.
         """
         # This code below is taken from binance client and slightly refactored.
+        self.downloadLoop = True
         output_data = []  # Initialize our list
         timeframe = interval_to_milliseconds(self.interval)
         start_ts = self.get_latest_timestamp()
@@ -290,7 +293,11 @@ class Data:
         end_progress = time.time() * 1000 - total_beginning_timestamp
         idx = 0
 
-        while True:
+        while True and self.downloadLoop:
+            if not self.downloadLoop:
+                progress_callback.emit(-1, "Download canceled.")
+                return []
+
             tempData = self.binanceClient.get_klines(
                 symbol=self.symbol,
                 interval=self.interval,
@@ -304,8 +311,9 @@ class Data:
 
             output_data += tempData
             start_ts = tempData[-1][0]
-            progress = (start_ts - total_beginning_timestamp) / end_progress * 100
-            progress_callback.emit(int(progress), "Downloading data...")
+            if progress_callback is not None:
+                progress = (start_ts - total_beginning_timestamp) / end_progress * 100
+                progress_callback.emit(int(progress), "Downloading data...")
 
             idx += 1
             # check if we received less than the required limit and exit the loop

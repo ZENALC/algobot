@@ -29,7 +29,8 @@ class DownloadThread(QRunnable):
         try:
             client = Data(interval=self.interval, symbol=self.symbol, updateData=False)
             data = client.custom_get_new_data(progress_callback=self.signals.progress)
-            self.signals.finished.emit(data)
+            if data:
+                self.signals.finished.emit(data)
         except Exception as e:
             print(f'Error: {e}')
             traceback.print_exc()
