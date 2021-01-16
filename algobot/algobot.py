@@ -153,8 +153,9 @@ class Interface(QMainWindow):
         for link in news:
             self.newsTextBrowser.append(link)
 
+        now = datetime.now()
         self.newsTextBrowser.moveCursor(QTextCursor.Start)
-        self.newsStatusLabel.setText('Retrieved latest news successfully.')
+        self.newsStatusLabel.setText(f'Retrieved news successfully. (Updated: {now.strftime("%m/%d/%Y, %H:%M:%S")})')
 
     def initiate_backtest(self):
         """
