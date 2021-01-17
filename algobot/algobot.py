@@ -208,7 +208,7 @@ class Interface(QMainWindow):
             msgBox.setWindowTitle("Backtest Results")
             msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
             if msgBox.exec_() == QMessageBox.Open:
-                os.startfile(path)
+                open_file_or_folder(path)
 
         self.backtestProgressBar.setValue(100)
 
