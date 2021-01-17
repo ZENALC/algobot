@@ -1,11 +1,9 @@
-import platform
-import subprocess
 import assets
 import sys
 import os
 import webbrowser
 
-from helpers import ROOT_DIR, convert_interval_to_string
+from helpers import ROOT_DIR, convert_interval_to_string, open_file_or_folder
 from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
 from datetime import datetime
@@ -1313,12 +1311,7 @@ class Interface(QMainWindow):
             os.mkdir(folder)
             os.chdir(cwd)
 
-        if platform.system() == "Windows":
-            os.startfile(targetPath)
-        elif platform.system() == "Darwin":
-            subprocess.Popen(["open", targetPath])
-        else:
-            subprocess.Popen(["xdg-open", targetPath])
+        open_file_or_folder(targetPath)
 
     def create_action_slots(self):
         """

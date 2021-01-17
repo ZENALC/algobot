@@ -1,4 +1,6 @@
 import logging
+import platform
+import subprocess
 import os
 import json
 import time
@@ -10,6 +12,15 @@ from dateutil import parser
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
 LOG_FOLDER = 'Logs'
+
+
+def open_file_or_folder(targetPath):
+    if platform.system() == "Windows":
+        os.startfile(targetPath)
+    elif platform.system() == "Darwin":
+        subprocess.Popen(["open", targetPath])
+    else:
+        subprocess.Popen(["xdg-open", targetPath])
 
 
 def get_ups_and_downs(data, parameter) -> Tuple[list, list]:

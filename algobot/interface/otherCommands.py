@@ -73,7 +73,7 @@ class OtherCommands(QDialog):
         msgBox.setWindowTitle("Data saved successfully.")
         msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
         if msgBox.exec_() == QMessageBox.Open:
-            os.startfile(savedPath)
+            helpers.open_file_or_folder(savedPath)
 
     def restore_csv_state(self):
         """
