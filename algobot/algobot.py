@@ -975,8 +975,8 @@ class Interface(QMainWindow):
         Adds data to plot in provided graph.
         :param targetGraph: Graph to use for plot to add data to.
         :param plotIndex: Index of plot in target graph's list of plots.
-        :param x: X value or values to add depending on whether arg is a list or a function.
-        :param y: Y value or values to add depending on whether arg is a list or a function.
+        :param x: X value to add.
+        :param y: Y value to add.
         """
         graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
         plot = graphDict['plots'][plotIndex]
