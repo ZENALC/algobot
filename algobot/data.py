@@ -303,7 +303,7 @@ class Data:
 
             output_data += tempData
             start_ts = tempData[-1][0]
-            if progress_callback is not None:
+            if progress_callback:
                 progress = (start_ts - total_beginning_timestamp) / end_progress * 94
                 progress_callback.emit(int(progress), "Downloading data...")
 
