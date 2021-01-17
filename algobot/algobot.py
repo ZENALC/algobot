@@ -45,11 +45,11 @@ class Interface(QMainWindow):
         self.statistics = Statistics(self)  # Loading statistics
         self.threadPool = QThreadPool(self)  # Initiating threading pool
         self.graphs = (
-            {'graph': self.simulationGraph, 'plots': []},
-            {'graph': self.backtestGraph, 'plots': []},
-            {'graph': self.liveGraph, 'plots': []},
-            {'graph': self.avgGraph, 'plots': []},
-            {'graph': self.simulationAvgGraph, 'plots': []},
+            {'graph': self.simulationGraph, 'plots': [], 'label': self.simulationCoordinates},
+            {'graph': self.backtestGraph, 'plots': [], 'label': self.backtestCoordinates},
+            {'graph': self.liveGraph, 'plots': [], 'label': self.liveCoordinates},
+            {'graph': self.avgGraph, 'plots': [], 'label': self.liveAvgCoordinates},
+            {'graph': self.simulationAvgGraph, 'plots': [], 'label': self.simulationAvgCoordinates},
         )
         self.setup_graphs()  # Setting up graphs
         self.initiate_slots()  # Initiating slots
@@ -1094,8 +1094,7 @@ class Interface(QMainWindow):
                   config.avg3Color.currentText(), config.avg4Color.currentText()]
         return [colorDict[color.lower()] for color in colors]
 
-    @staticmethod
-    def create_graph_plot(graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):
+    def create_graph_plot(self, graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):
         """
         Creates a graph plot with parameters provided.
         :param graph: Graph function will plot on.
@@ -1105,7 +1104,27 @@ class Interface(QMainWindow):
         :param color: Color graph will be drawn in.
         """
         pen = mkPen(color=color)
-        return graph.plot(x, y, name=plotName, pen=pen)
+        plot = graph.plot(x, y, name=plotName, pen=pen)
+        plot.curve.scene().sigMouseMoved.connect(lambda point: self.onMouseMoved(point=point, graph=graph))
+        return plot
+
+    def get_graph_dictionary(self, targetGraph) -> dict:
+        """
+        Loops over list of graphs and returns appropriate graph dictionary.
+        :param targetGraph: Graph to find in list of graphs.
+        :return: Dictionary with the graph values.
+        """
+        for graph in self.graphs:
+            if graph["graph"] == targetGraph:
+                return graph
+
+    def onMouseMoved(self, point, graph):
+        p = graph.plotItem.vb.mapSceneToView(point)
+        if p:
+            graphDict = self.get_graph_dictionary(graph)
+            date_string = datetime.utcfromtimestamp(int(p.x()))
+            value = round(p.y(), 2)
+            graphDict['label'].setText(f"{date_string} : ${value}")
 
     @staticmethod
     def clear_table(table):
