@@ -1,3 +1,5 @@
+import platform
+import subprocess
 import assets
 import sys
 import os
@@ -1311,7 +1313,12 @@ class Interface(QMainWindow):
             os.mkdir(folder)
             os.chdir(cwd)
 
-        os.startfile(targetPath)
+        if platform.system() == "Windows":
+            os.startfile(targetPath)
+        elif platform.system() == "Darwin":
+            subprocess.Popen(["open", targetPath])
+        else:
+            subprocess.Popen(["xdg-open", targetPath])
 
     def create_action_slots(self):
         """
