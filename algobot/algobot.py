@@ -1129,6 +1129,16 @@ class Interface(QMainWindow):
         for column in range(columns):
             table.setItem(rowPosition, column, QTableWidgetItem(str(trade[column])))
 
+    def get_activity_table(self, caller):
+        if caller == LIVE:
+            return self.activityMonitor
+        elif caller == SIMULATION:
+            return self.simulationActivityMonitor
+        elif caller == BACKTEST:
+            return self.backtestTable
+        else:
+            raise ValueError("Invalid type of caller specified.")
+
     def add_to_monitor(self, caller: int, message: str):
         """
         Adds message to the monitor based on caller.
@@ -1205,6 +1215,10 @@ class Interface(QMainWindow):
                              trade['action']]
                 self.add_to_table(table, tradeData)
                 self.add_to_monitor(caller, trade['action'])
+
+            monitor = self.get_activity_table(caller=caller)
+            monitor.scrollToBottom()
+            table.scrollToBottom()
 
     def closeEvent(self, event):
         """
