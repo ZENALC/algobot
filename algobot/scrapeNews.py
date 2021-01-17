@@ -1,10 +1,15 @@
 import requests
+
 from datetime import date, timedelta
 from dateutil import parser
 from bs4 import BeautifulSoup
 
 
-def scrape_news():
+def scrape_news() -> list:
+    """
+    Scrapes latest news from www.todayonchain.com.
+    :return: List of latest news.
+    """
     URL = 'https://www.todayonchain.com/'
     page = requests.get(URL)
 

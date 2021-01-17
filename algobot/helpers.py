@@ -52,7 +52,7 @@ def get_ups_and_downs(data, parameter) -> Tuple[list, list]:
 
 def setup_and_return_log_path(fileName) -> str:
     """
-    Creates (if needed) and returns default log path.
+    Creates folders (if needed) and returns default log path.
     :param fileName: Log filename to be created.
     :return: Absolute path to log file.
     """
