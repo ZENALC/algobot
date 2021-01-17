@@ -20,6 +20,7 @@ class BotSignals(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(int, str)
     restore = pyqtSignal()
+    progress = pyqtSignal(int, str)
 
     # All of these below are for Telegram integration.
     forceLong = pyqtSignal()
@@ -96,7 +97,9 @@ class BotThread(QRunnable):
             gui.simulationTrader = SimulationTrader(startingBalance=startingBalance,
                                                     symbol=symbol,
                                                     interval=interval,
-                                                    loadData=True)
+                                                    loadData=True,
+                                                    updateData=True)
+            # gui.simulationTrader.dataView.custom_get_new_data(progress_callback=self.signals.progress)
         elif caller == LIVE:
             apiSecret = gui.configuration.binanceApiSecret.text()
             apiKey = gui.configuration.binanceApiKey.text()
@@ -104,8 +107,15 @@ class BotThread(QRunnable):
             isIsolated = gui.configuration.isolatedMarginAccountRadio.isChecked()
             self.check_api_credentials(apiKey=apiKey, apiSecret=apiSecret)
             self.signals.activity.emit(caller, f"Retrieving {symbol} data for {prettyInterval.lower()} intervals...")
-            gui.trader = RealTrader(apiSecret=apiSecret, apiKey=apiKey, interval=interval, symbol=symbol, tld=tld,
-                                    isIsolated=isIsolated)
+            gui.trader = RealTrader(apiSecret=apiSecret,
+                                    apiKey=apiKey,
+                                    interval=interval,
+                                    symbol=symbol,
+                                    tld=tld,
+                                    isIsolated=isIsolated,
+                                    loadData=True,
+                                    updateData=True)
+            # gui.trader.dataView.custom_get_new_data(progress_callback=self.signals.progress)
         else:
             raise ValueError("Invalid caller.")
 

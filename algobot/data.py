@@ -286,11 +286,6 @@ class Data:
         output_data = []  # Initialize our list
         timeframe = interval_to_milliseconds(self.interval)
         start_ts = self.get_latest_timestamp()
-
-        # establish first available start timestamp
-        first_valid_ts = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
-        start_ts = max(start_ts, first_valid_ts)
-
         total_beginning_timestamp = start_ts
         end_progress = time.time() * 1000 - total_beginning_timestamp
         idx = 0

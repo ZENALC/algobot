@@ -312,6 +312,7 @@ class Interface(QMainWindow):
         worker.signals.activity.connect(self.add_to_monitor)
         worker.signals.started.connect(self.initial_bot_ui_setup)
         worker.signals.updated.connect(self.update_interface_info)
+        worker.signals.progress.connect(self.progress_update)
         worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=caller))
 
         # All these below are for Telegram.
@@ -324,6 +325,9 @@ class Interface(QMainWindow):
         worker.signals.setCustomStopLoss.connect(self.set_custom_stop_loss)
         worker.signals.removeCustomStopLoss.connect(lambda: self.set_custom_stop_loss(LIVE, False))
         self.threadPool.start(worker)
+
+    def progress_update(self, value, message):
+        pass
 
     def end_bot_thread(self, caller):
         """

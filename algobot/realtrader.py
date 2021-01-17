@@ -14,14 +14,25 @@ class RealTrader(SimulationTrader):
             apiSecret: str,
             interval: str = '1h',
             symbol: str = 'BTCUSDT',
+            loadData: bool = True,
+            updateData: bool = True,
             isIsolated: bool = False,
-            tld: str = 'com'):
-
-        # from credentials import apiKey, apiSecret
+            tld: str = 'com'
+    ):
+        """
+        :param apiKey: API key to start trading bot with.
+        :param apiSecret: API secret to start trading bot with.
+        :param interval: Data interval to trade at.
+        :param symbol: Symbol to trade in.
+        :param loadData: Boolean that'll determine whether data object is loaded or not.
+        :param updateData: Boolean that'll determine where data object is updated or not.
+        :param isIsolated: Boolean that'll determine whether margin asset is isolated or not.
+        :param tld: Top level domain. If based in the us, it'll be us; else it'll be com.
+        """
         if apiKey is None or apiSecret is None:
             raise ValueError('API credentials not provided.')
 
-        super().__init__(interval=interval, symbol=symbol, logFile='live')
+        super().__init__(interval=interval, symbol=symbol, logFile='live', loadData=loadData, updateData=updateData)
         self.binanceClient = Client(apiKey, apiSecret, tld=tld)
         self.spot_usdt = self.get_spot_usdt()
         self.spot_coin = self.get_spot_coin()

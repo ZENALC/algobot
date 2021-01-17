@@ -6,16 +6,19 @@ from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
 
 class SimulationTrader:
     def __init__(self, startingBalance: float = 1000, interval: str = '1h', symbol: str = 'BTCUSDT',
-                 loadData: bool = True, logFile: str = 'simulation'):
+                 loadData: bool = True, updateData: bool = True, logFile: str = 'simulation'):
         """
         SimulationTrader object that will mimic real live market trades.
         :param startingBalance: Balance to start simulation trader with.
         :param interval: Interval to start trading on.
         :param symbol: Symbol to start trading with.
         :param loadData: Boolean whether we load data from data object or not.
+        :param updateData: Boolean for whether data will be updated if it is loaded.
+        :param logFile: Filename that logger will log to.
         """
         self.logger = get_logger(logFile=logFile, loggerName=logFile)  # Get logger.
-        self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData, logObject=self.logger)
+        self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData,
+                                   updateData=updateData, logObject=self.logger)
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
 
