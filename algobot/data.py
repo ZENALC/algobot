@@ -285,8 +285,7 @@ class Data:
         self.downloadLoop = True
         output_data = []  # Initialize our list
         timeframe = interval_to_milliseconds(self.interval)
-        start_ts = self.get_latest_timestamp()
-        total_beginning_timestamp = start_ts
+        start_ts = total_beginning_timestamp = self.get_latest_timestamp()
         end_progress = time.time() * 1000 - total_beginning_timestamp
         idx = 0
 
