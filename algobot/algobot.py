@@ -978,12 +978,11 @@ class Interface(QMainWindow):
         :param x: X value or values to add depending on whether arg is a list or a function.
         :param y: Y value or values to add depending on whether arg is a list or a function.
         """
-        for graph in self.graphs:
-            if graph['graph'] == targetGraph:
-                plot = graph['plots'][plotIndex]
-                plot['x'].append(x)
-                plot['y'].append(y)
-                plot['plot'].setData(plot['x'], plot['y'])
+        graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
+        plot = graphDict['plots'][plotIndex]
+        plot['x'].append(x)
+        plot['y'].append(y)
+        plot['plot'].setData(plot['x'], plot['y'])
 
     def append_plot_to_graph(self, targetGraph: PlotWidget, toAdd: list):
         """
@@ -991,19 +990,17 @@ class Interface(QMainWindow):
         :param targetGraph: Graph to add plot to.
         :param toAdd: List of plots to add to target graph.
         """
-        for graph in self.graphs:
-            if graph['graph'] == targetGraph:
-                graph['plots'] += toAdd
+        graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
+        graphDict['plots'] += toAdd
 
     def destroy_graph_plots(self, targetGraph: PlotWidget):
         """
-        Resets graph plots for graph provided. Does not do anything. Fixing needed.
+        Resets graph plots for graph provided.
         :param targetGraph: Graph to destroy plots for.
         """
-        for graph in self.graphs:
-            if graph['graph'] == targetGraph:
-                graph['graph'].clear()
-                graph['plots'] = []
+        graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
+        graphDict['graph'].clear()
+        graphDict['plots'] = []
 
     def setup_net_graph_plot(self, graph: PlotWidget, trader: SimulationTrader, color: str):
         """
@@ -1119,6 +1116,11 @@ class Interface(QMainWindow):
                 return graph
 
     def onMouseMoved(self, point, graph):
+        """
+        Updates coordinates label when mouse is hovered over graph.
+        :param point: Point hovering over graph.
+        :param graph: Graph being hovered on.
+        """
         p = graph.plotItem.vb.mapSceneToView(point)
         if p:
             graphDict = self.get_graph_dictionary(graph)
