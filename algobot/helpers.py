@@ -4,10 +4,10 @@ import subprocess
 import os
 import json
 import time
-from datetime import datetime
-from typing import Tuple
 
+from datetime import datetime
 from dateutil import parser
+from typing import Tuple
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -15,6 +15,10 @@ LOG_FOLDER = 'Logs'
 
 
 def open_file_or_folder(targetPath):
+    """
+    Opens a file or folder based on targetPath.
+    :param targetPath: File or folder to open with system defaults.
+    """
     if platform.system() == "Windows":
         os.startfile(targetPath)
     elif platform.system() == "Darwin":
@@ -41,13 +45,17 @@ def get_ups_and_downs(data, parameter) -> Tuple[list, list]:
         else:
             ups.append(0)
             downs.append(previous[parameter] - period[parameter])
-
         previous = period
 
     return ups, downs
 
 
-def setup_and_return_log_path(fileName):
+def setup_and_return_log_path(fileName) -> str:
+    """
+    Creates (if needed) and returns default log path.
+    :param fileName: Log filename to be created.
+    :return: Absolute path to log file.
+    """
     previousPath = os.getcwd()
     os.chdir(ROOT_DIR)
 
@@ -68,6 +76,12 @@ def setup_and_return_log_path(fileName):
 
 
 def get_logger(logFile, loggerName):
+    """
+    Returns a logger object with loggerName provided and that'll log to logFile.
+    :param logFile: File to log to.
+    :param loggerName: Name logger will have.
+    :return: A logger object.
+    """
     logger = logging.getLogger(loggerName)
     logger.setLevel(logging.INFO)
 
@@ -81,7 +95,9 @@ def get_logger(logFile, loggerName):
 
 
 def initialize_logger():
-    """Initializes logger"""
+    """
+    Initializes logger. THIS FUNCTION IS OFFICIALLY DEPRECATED.
+    """
     curPath = os.getcwd()
     os.chdir('../')
     if not os.path.exists('Logs'):
@@ -100,7 +116,12 @@ def initialize_logger():
     os.chdir(curPath)
 
 
-def convert_interval(interval):
+def convert_interval(interval) -> str:
+    """
+    Converts longer interval string to smaller interval string.
+    :param interval: Long interval string.
+    :return: Smaller interval string.
+    """
     intervals = {
         '12 Hours': '12h',
         '15 Minutes': '15m',
@@ -119,7 +140,12 @@ def convert_interval(interval):
     return intervals[interval]
 
 
-def convert_interval_to_string(interval):
+def convert_interval_to_string(interval) -> str:
+    """
+    Converts smaller interval string to longer interval string.
+    :param interval: Small interval string.
+    :return: Longer interval string.
+    """
     intervals = {
         '12h': '12 Hours',
         '15m': '15 Minutes',
@@ -138,8 +164,13 @@ def convert_interval_to_string(interval):
     return intervals[interval]
 
 
-def get_elapsed_time(previousTime):
-    seconds = int(time.time() - previousTime)
+def get_elapsed_time(startingTime) -> str:
+    """
+    Returns elapsed time in human readable format subtracted from starting time.
+    :param startingTime: Starting time to subtract from current time.
+    :return: Human readable string representing elapsed time.
+    """
+    seconds = int(time.time() - startingTime)
     if seconds <= 60:
         return f'{seconds} seconds'
     elif seconds <= 3600:
@@ -154,7 +185,28 @@ def get_elapsed_time(previousTime):
         return f'{hours}h {minutes}m {seconds}s'
 
 
-def load_from_csv(path, descending=True):
+def get_data_from_parameter(data, parameter) -> float:
+    """
+    Helper function for trading. Will return appropriate data from parameter passed in.
+    :param data: Dictionary data with parameters.
+    :param parameter: Data parameter to return.
+    :return: Appropriate data to return.
+    """
+    if parameter == 'high/low':
+        return (data['high'] + data['low']) / 2
+    elif parameter == 'open/close':
+        return (data['open'] + data['close']) / 2
+    else:
+        return data[parameter]
+
+
+def load_from_csv(path, descending=True) -> list:
+    """
+    Returns data from CSV.
+    :param path: Path to CSV file.
+    :param descending: Boolean representing where data is return in descending or ascending format.
+    :return: List of data.
+    """
     with open(path) as f:
         data = []
         readLines = f.readlines()
@@ -184,10 +236,19 @@ def load_from_csv(path, descending=True):
 
 
 def write_credentials(**kwargs):
+    """
+    Writes credentials to secret.json file.
+    :param kwargs: Dictionary to convert to JSON then write to file.
+    """
     with open('secret.json', 'w') as f:
         json.dump(kwargs, f)
 
 
-def load_credentials(jsonfile='secret.json'):
+def load_credentials(jsonfile='secret.json') -> dict:
+    """
+    Loads credentials from secret.json file and returns dictionary.
+    :param jsonfile: File to read dictionary from.
+    :return: Dictionary with credentials.
+    """
     with open(jsonfile) as f:
         return json.load(f)
