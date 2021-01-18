@@ -367,22 +367,31 @@ class Interface(QMainWindow):
 
     def end_bot_gracefully(self, caller):
         if caller == SIMULATION:
+            if self.simulationTrader:
+                self.simulationTrader.dataView.downloadLoop = False
+
             self.simulationRunningLive = False
             while not self.simulationTrader.completedLoop:
                 pass
+
             self.simulationTrader.get_simulation_result()
             tempTrader = self.simulationTrader
             if self.simulationLowerIntervalData is not None:
                 self.simulationLowerIntervalData.dump_to_table()
                 self.simulationLowerIntervalData = None
         else:
+            if self.trader:
+                self.trader.dataView.downloadLoop = False
+
             self.runningLive = False
             if self.configuration.chatPass:
                 self.telegramBot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended.")
             if self.telegramBot:
                 self.telegramBot.stop()
+
             while not self.trader.completedLoop:
                 pass
+
             tempTrader = self.trader
             if self.lowerIntervalData is not None:
                 self.lowerIntervalData.dump_to_table()
@@ -405,7 +414,8 @@ class Interface(QMainWindow):
             if self.simulationLowerIntervalData and not self.simulationLowerIntervalData.downloadCompleted:
                 self.progress_update(value=0, message="Lower interval data download failed.", caller=caller)
 
-        if not self.get_trader(caller=caller).dataView.downloadCompleted:
+        trader = self.get_trader(caller=caller)
+        if trader and not trader.dataView.downloadCompleted:
             self.progress_update(value=0, message="Download failed.", caller=caller)
 
         if '-1021' in msg:
@@ -548,7 +558,7 @@ class Interface(QMainWindow):
         if len(optionDetails) == 1:
             self.hide_next_moving_averages(caller)
 
-        if len(lowerOptionDetails) == 0:
+        if len(lowerOptionDetails) == 0 or not lowerData:
             self.hide_lower_interval_averages(caller)
             self.hide_next_lower_interval_averages(caller)
         else:
@@ -1209,6 +1219,7 @@ class Interface(QMainWindow):
         :param message: Message to add to backtest activity log.
         """
         self.add_to_table(self.backtestTable, [message])
+        self.backtestTable.scrollToBottom()
 
     def add_to_simulation_activity_monitor(self, message: str):
         """
@@ -1216,6 +1227,7 @@ class Interface(QMainWindow):
         :param message: Message to add to simulation activity log.
         """
         self.add_to_table(self.simulationActivityMonitor, [message])
+        self.simulationActivityMonitor.scrollToBottom()
 
     def add_to_live_activity_monitor(self, message: str):
         """
@@ -1223,6 +1235,7 @@ class Interface(QMainWindow):
         :param message: Message to add to activity log.
         """
         self.add_to_table(self.activityMonitor, [message])
+        self.activityMonitor.scrollToBottom()
 
     @staticmethod
     def add_to_table(table, data: list):
