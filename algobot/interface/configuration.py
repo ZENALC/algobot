@@ -40,7 +40,7 @@ class Configuration(QDialog):
             chatID = self.telegramChatID.text()
             Updater(telegramApikey, use_context=True)
             tokenPass = True
-            telegram.Bot(token=telegramApikey).send_message(chat_id=chatID, text='TESTING CHAT ID CONNECTION')
+            telegram.Bot(token=telegramApikey).send_message(chat_id=chatID, text='Testing connection with Chat ID.')
             chatPass = True
         except Exception as e:
             error = str(e)
