@@ -46,12 +46,14 @@ class OtherCommands(QDialog):
         self.csvThread = thread
         self.threadPool.start(thread)
 
-    def progress_update(self, progress, message):
+    def progress_update(self, progress, message, caller):
         """
         Updates progress bar and message label with values passed.
+        :param caller: This is not used in this function.
         :param progress: Progress value to set.
         :param message: Message to set in message label.
         """
+        assert caller == -1
         self.csvGenerationProgressBar.setValue(progress)
         self.csvGenerationStatus.setText(message)
 

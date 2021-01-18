@@ -20,7 +20,7 @@ class BotSignals(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(int, str)
     restore = pyqtSignal()
-    progress = pyqtSignal(int, str)
+    progress = pyqtSignal(int, str, int)
 
     # All of these below are for Telegram integration.
     forceLong = pyqtSignal()
@@ -73,9 +73,14 @@ class BotThread(QRunnable):
             intervalString = helpers.convert_interval_to_string(lowerInterval)
             self.signals.activity.emit(caller, f'Retrieving {symbol} data for {intervalString.lower()} intervals...')
             if caller == LIVE:
-                gui.lowerIntervalData = Data(interval=lowerInterval, symbol=symbol)
+                gui.lowerIntervalData = Data(interval=lowerInterval, symbol=symbol, updateData=False)
+                gui.lowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
+                                                          caller=LIVE)
             elif caller == SIMULATION:
-                gui.simulationLowerIntervalData = Data(interval=lowerInterval, symbol=symbol)
+                gui.simulationLowerIntervalData = Data(interval=lowerInterval, symbol=symbol, updateData=False)
+                gui.simulationLowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress,
+                                                                    removeFirst=True,
+                                                                    caller=SIMULATION)
             else:
                 raise TypeError("Invalid type of caller specified.")
             self.signals.activity.emit(caller, "Retrieved lower interval data successfully.")
@@ -98,8 +103,9 @@ class BotThread(QRunnable):
                                                     symbol=symbol,
                                                     interval=interval,
                                                     loadData=True,
-                                                    updateData=True)
-            # gui.simulationTrader.dataView.custom_get_new_data(progress_callback=self.signals.progress)
+                                                    updateData=False)
+            gui.simulationTrader.dataView.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
+                                                              caller=SIMULATION)
         elif caller == LIVE:
             apiSecret = gui.configuration.binanceApiSecret.text()
             apiKey = gui.configuration.binanceApiKey.text()
@@ -114,8 +120,9 @@ class BotThread(QRunnable):
                                     tld=tld,
                                     isIsolated=isIsolated,
                                     loadData=True,
-                                    updateData=True)
-            # gui.trader.dataView.custom_get_new_data(progress_callback=self.signals.progress)
+                                    updateData=False)
+            gui.trader.dataView.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
+                                                    caller=LIVE)
         else:
             raise ValueError("Invalid caller.")
 

@@ -273,9 +273,12 @@ class Data:
             self.output_message("Database is up-to-date.")
 
     # noinspection PyProtectedMember
-    def custom_get_new_data(self, limit: int = 500, progress_callback=None, locked=None):
+    def custom_get_new_data(self, limit: int = 500, progress_callback=None, locked=None, removeFirst=False,
+                            caller=-1):
         """
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
+        :param caller: Caller that called this function. Only used for botThread.
+        :param removeFirst: Boolean whether newest data is removed or not.
         :param locked: Signal to emit back to GUI when storing data. Cannot be canceled once here.
         :param progress_callback: Signal to emit back to GUI to show progress.
         :param limit: Limit per pull.
@@ -305,7 +308,7 @@ class Data:
             start_ts = tempData[-1][0]
             if progress_callback:
                 progress = (start_ts - total_beginning_timestamp) / end_progress * 94
-                progress_callback.emit(int(progress), "Downloading data...")
+                progress_callback.emit(int(progress), "Downloading data...", caller)
 
             idx += 1
             # check if we received less than the required limit and exit the loop
@@ -321,17 +324,25 @@ class Data:
                 time.sleep(1)
 
         if not self.downloadLoop:
-            progress_callback.emit(-1, "Download canceled.")
+            progress_callback.emit(-1, "Download canceled.", caller)
             return []
 
         if locked:
             locked.emit()
 
-        progress_callback.emit(95, "Saving data...")
+        if removeFirst:
+            output_data = output_data[:-1]
+
+        progress_callback.emit(95, "Saving data...", caller)
         self.insert_data(output_data)
-        progress_callback.emit(97, "This may take a while. Dumping data to database...")
-        self.dump_to_table(self.data[-len(output_data):])
-        progress_callback.emit(100, "Downloaded all new data successfully.")
+        progress_callback.emit(97, "This may take a while. Dumping data to database...", caller)
+
+        if removeFirst:  # We don't want current data as it's not the latest data.
+            self.dump_to_table(self.data[:len(output_data)])
+        else:
+            self.dump_to_table(self.data[1:len(output_data)])
+
+        progress_callback.emit(100, "Downloaded all new data successfully.", caller)
         return self.data
 
     def get_new_data(self, timestamp, limit: int = 1000):

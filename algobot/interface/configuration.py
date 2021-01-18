@@ -181,7 +181,7 @@ class Configuration(QDialog):
         self.backtestDownloadDataButton.setEnabled(False)
         self.backtestImportDataButton.setEnabled(False)
         self.backtestStopDownloadButton.setEnabled(True)
-        self.set_download_progress(progress=0, message="Downloading data...")
+        self.set_download_progress(progress=0, message="Downloading data...", caller=-1)
 
         symbol = self.backtestTickerComboBox.currentText()
         interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
@@ -203,12 +203,14 @@ class Configuration(QDialog):
             self.backtestDownloadLabel.setText("Canceling download...")
             self.downloadThread.stop()
 
-    def set_download_progress(self, progress, message):
+    def set_download_progress(self, progress, message, caller):
         """
         Sets download progress and message with parameters passed.
+        :param caller: This is not used in this function.
         :param progress: Progress value to set bar at.
         :param message: Message to display in label.
         """
+        assert caller == -1
         if progress != -1:
             self.backtestDownloadProgressBar.setValue(progress)
         self.backtestDownloadLabel.setText(message)

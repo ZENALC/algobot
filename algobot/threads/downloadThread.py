@@ -12,7 +12,7 @@ class DownloadSignals(QObject):
     finished = pyqtSignal(list)
     error = pyqtSignal(str)
     restore = pyqtSignal()
-    progress = pyqtSignal(int, str)
+    progress = pyqtSignal(int, str, int)
     locked = pyqtSignal()
 
 
@@ -38,7 +38,7 @@ class DownloadThread(QRunnable):
                 if self.descending is None and self.armyTime is None:
                     self.signals.finished.emit(data)
                 else:  # This means the CSV generator called this thread.
-                    self.signals.progress.emit(100, "Creating CSV file...")
+                    self.signals.progress.emit(100, "Creating CSV file...", -1)
                     savedPath = self.client.create_csv_file(descending=self.descending, armyTime=self.armyTime)
                     self.signals.csv_finished.emit(savedPath)
         except Exception as e:

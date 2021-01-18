@@ -326,8 +326,19 @@ class Interface(QMainWindow):
         worker.signals.removeCustomStopLoss.connect(lambda: self.set_custom_stop_loss(LIVE, False))
         self.threadPool.start(worker)
 
-    def progress_update(self, value, message):
-        pass
+    def progress_update(self, value, message, caller):
+        """
+        This will update the GUI with the current download progress.
+        :param value: Percentage completed.
+        :param message: Message regarding what is currently being done.
+        :param caller: Caller that decides which GUI element is updated.
+        """
+        if caller == SIMULATION:
+            self.simulationDownloadProgress.setText(f"Completion: {value}% {message.lower()}")
+        elif caller == LIVE:
+            self.liveDownloadProgress.setText(f"Completion: {value}% {message.lower()}")
+        else:
+            raise ValueError("Invalid type of caller specified.")
 
     def end_bot_thread(self, caller):
         """
@@ -361,7 +372,7 @@ class Interface(QMainWindow):
             tempTrader = self.simulationTrader
             if self.simulationLowerIntervalData is not None:
                 self.simulationLowerIntervalData.dump_to_table()
-                self.simulationLowerIntervalData = None
+                # self.simulationLowerIntervalData = None
         else:
             self.runningLive = False
             self.telegramBot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended.")
@@ -369,7 +380,7 @@ class Interface(QMainWindow):
             tempTrader = self.trader
             if self.lowerIntervalData is not None:
                 self.lowerIntervalData.dump_to_table()
-                self.lowerIntervalData = None
+                # self.lowerIntervalData = None
 
         tempTrader.log_trades_and_daily_net()
         tempTrader.dataView.dump_to_table()
