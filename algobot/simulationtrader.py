@@ -34,6 +34,8 @@ class SimulationTrader:
         self.commissionPaid = 0  # Total commission paid to broker.
         self.dailyChangeNets = []  # Daily change net list. Will contain list of all nets.
 
+        self.completedLoop = True  # Loop that'll keep track of bot. We wait for this to turn False before some action.
+
         self.tradingOptions = []  # List with Option elements. Helps specify what moving averages to trade with.
         self.optionDetails = []  # Current option values. Holds most recent option values.
         self.lowerOptionDetails = []  # Lower option values. Holds lower interval option values (if exist).
@@ -708,6 +710,7 @@ class SimulationTrader:
         """
         Gets end result of simulation.
         """
+        self.output_message('END------------------------------------------------')
         self.endingTime = datetime.utcnow()
         if self.coin > 0:
             self.output_message(f"Selling all {self.coinName}...")

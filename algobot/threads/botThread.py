@@ -344,8 +344,10 @@ class BotThread(QRunnable):
         """
         lowerTrend = None  # This variable is used for lower trend notification logic.
         runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
+        trader: SimulationTrader = self.gui.get_trader(caller=caller)
 
         while runningLoop:
+            trader.completedLoop = False
             self.update_data(caller)
             self.handle_logging(caller=caller)
             self.handle_current_and_trailing_prices(caller=caller)
@@ -355,6 +357,7 @@ class BotThread(QRunnable):
             statDict = self.get_statistics()
             self.signals.updated.emit(caller, statDict)
             runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
+            trader.completedLoop = True
 
     @pyqtSlot()
     def run(self):

@@ -25,6 +25,7 @@ class Data:
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
 
+        self.downloadCompleted = False
         self.downloadLoop = True
 
         symbol = symbol.upper()
@@ -343,6 +344,8 @@ class Data:
             self.dump_to_table(self.data[1:len(output_data)])
 
         progress_callback.emit(100, "Downloaded all new data successfully.", caller)
+        self.downloadLoop = False
+        self.downloadCompleted = True
         return self.data
 
     def get_new_data(self, timestamp, limit: int = 1000):
@@ -353,6 +356,7 @@ class Data:
         :return: A list of dictionaries.
         """
         newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
+        self.downloadCompleted = True
         return newData[:-1]  # Up to -1st index, because we don't want current period data.
 
     def is_latest_date(self, latestDate) -> bool:

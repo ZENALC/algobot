@@ -368,19 +368,23 @@ class Interface(QMainWindow):
     def end_bot_gracefully(self, caller):
         if caller == SIMULATION:
             self.simulationRunningLive = False
+            while not self.simulationTrader.completedLoop:
+                pass
             self.simulationTrader.get_simulation_result()
             tempTrader = self.simulationTrader
             if self.simulationLowerIntervalData is not None:
                 self.simulationLowerIntervalData.dump_to_table()
-                # self.simulationLowerIntervalData = None
+                self.simulationLowerIntervalData = None
         else:
             self.runningLive = False
             self.telegramBot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended.")
             self.telegramBot.stop()
+            while not self.trader.completedLoop:
+                pass
             tempTrader = self.trader
             if self.lowerIntervalData is not None:
                 self.lowerIntervalData.dump_to_table()
-                # self.lowerIntervalData = None
+                self.lowerIntervalData = None
 
         tempTrader.log_trades_and_daily_net()
         tempTrader.dataView.dump_to_table()
@@ -392,8 +396,15 @@ class Interface(QMainWindow):
         """
         if caller == LIVE:
             self.runningLive = False
+            if self.lowerIntervalData and not self.lowerIntervalData.downloadCompleted:
+                self.progress_update(value=0, message="Lower interval data download failed.", caller=caller)
         elif caller == SIMULATION:
             self.simulationRunningLive = False
+            if self.simulationLowerIntervalData and not self.simulationLowerIntervalData.downloadCompleted:
+                self.progress_update(value=0, message="Lower interval data download failed.", caller=caller)
+
+        if not self.get_trader(caller=caller).dataView.downloadCompleted:
+            self.progress_update(value=0, message="Download failed.", caller=caller)
 
         if '-1021' in msg:
             msg = msg + ' Please sync your system time.'
