@@ -303,7 +303,7 @@ class Interface(QMainWindow):
         Main function that initiates bot thread and handles all data-view logic.
         :param caller: Caller that decides whether a live bot or simulation bot is run.
         """
-        self.disable_interface(True, caller, everything=True)
+        self.disable_interface(True, caller, everything=False)
         self.set_previous_trade_count(caller=caller)
 
         worker = botThread.BotThread(gui=self, caller=caller)
@@ -388,6 +388,7 @@ class Interface(QMainWindow):
                 self.telegramBot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended.")
             if self.telegramBot:
                 self.telegramBot.stop()
+                self.telegramBot = None
 
             while not self.trader.completedLoop:
                 pass
