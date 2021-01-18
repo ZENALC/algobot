@@ -710,7 +710,7 @@ class SimulationTrader:
         """
         Gets end result of simulation.
         """
-        self.output_message('END------------------------------------------------')
+        self.output_message('\n---------------------------------------------------\nSimulation has ended')
         self.endingTime = datetime.utcnow()
         if self.coin > 0:
             self.output_message(f"Selling all {self.coinName}...")
