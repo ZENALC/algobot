@@ -376,6 +376,11 @@ class SimulationTrader:
 
     @staticmethod
     def get_trend_string(trend) -> str:
+        """
+        Returns current market trend in a string format.
+        :param trend: Current trend enum.
+        :return: Current trend in a string format.
+        """
         if trend == BULLISH:
             return "Bullish"
         elif trend == BEARISH:
