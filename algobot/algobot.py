@@ -514,6 +514,8 @@ class Interface(QMainWindow):
         statisticsDictionary['stoicInputs'].setText(statDict['stoicInputs'])
         statisticsDictionary['movingAverageTrend'].setText(statDict['movingAverageTrend'])
         statisticsDictionary['intervalValue'].setText(statDict['interval'])
+        statisticsDictionary['smartLossCounter'].setText(statDict['smartStopLossCounter'])
+        statisticsDictionary['initialSmartLossCounter'].setText(statDict['initialSmartStopLossCounter'])
 
         # These are for main interface window.
         mainInterfaceDictionary = interfaceDictionary['mainInterface']
@@ -808,6 +810,7 @@ class Interface(QMainWindow):
         if trader.currentPosition == SHORT:
             trader.buy_short('Exited short because long was forced.', force=True)
         trader.buy_long('Force executed long.', force=True)
+        trader.reset_smart_stop_loss()
         self.inform_telegram("Force executed long from GUI.", caller=caller)
 
     def force_long(self, caller):
@@ -841,6 +844,7 @@ class Interface(QMainWindow):
         if trader.currentPosition == LONG:
             trader.sell_long('Exited long because short was forced.', force=True)
         trader.sell_short('Force executed short.', force=True)
+        trader.reset_smart_stop_loss()
         self.inform_telegram("Force executed short from GUI.", caller=caller)
 
     def force_short(self, caller):
@@ -901,6 +905,8 @@ class Interface(QMainWindow):
         trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
         trader.tradingOptions = self.get_trading_options(caller)
         trader.stoicEnabled = self.interfaceDictionary[caller]['configuration']['stoicCheck'].isChecked()
+        trader.set_smart_stop_loss_counter(
+            self.interfaceDictionary[caller]['configuration']['smartStopLossCounter'].value())
         if trader.stoicEnabled:
             trader.stoicOptions[0] = self.interfaceDictionary[caller]['configuration']['stoicInput1'].value()
             trader.stoicOptions[1] = self.interfaceDictionary[caller]['configuration']['stoicInput2'].value()
@@ -1596,6 +1602,8 @@ class Interface(QMainWindow):
                     'lowerNextInitialValue': self.statistics.simulationLowerNextInitialValue,
                     'lowerNextFinalLabel': self.statistics.simulationLowerNextFinalLabel,
                     'lowerNextFinalValue': self.statistics.simulationLowerNextFinalValue,
+                    'smartLossCounter': self.statistics.simulationSmartLossCounterValue,
+                    'initialSmartLossCounter': self.statistics.simulationInitialSmartLossCounterValue,
                 },
                 'mainInterface': {
                     # Portfolio
@@ -1650,6 +1658,7 @@ class Interface(QMainWindow):
                     'stoicInput1': self.configuration.simulationStoicSpinBox1,
                     'stoicInput2': self.configuration.simulationStoicSpinBox2,
                     'stoicInput3': self.configuration.simulationStoicSpinBox3,
+                    'smartStopLossCounter': self.configuration.simulationSmartStopLossSpinBox,
                 }
             },
             LIVE: {
@@ -1702,6 +1711,8 @@ class Interface(QMainWindow):
                     'lowerNextInitialValue': self.statistics.lowerNextInitialValue,
                     'lowerNextFinalLabel': self.statistics.lowerNextFinalLabel,
                     'lowerNextFinalValue': self.statistics.lowerNextFinalValue,
+                    'smartLossCounter': self.statistics.smartLossCounterValue,
+                    'initialSmartLossCounter': self.statistics.initialSmartLossCounterValue,
                 },
                 'mainInterface': {
                     # Portfolio
@@ -1756,6 +1767,7 @@ class Interface(QMainWindow):
                     'stoicInput1': self.configuration.stoicSpinBox1,
                     'stoicInput2': self.configuration.stoicSpinBox2,
                     'stoicInput3': self.configuration.stoicSpinBox3,
+                    'smartStopLossCounter': self.configuration.smartStopLossSpinBox,
                 }
             },
             BACKTEST: {
@@ -1774,7 +1786,8 @@ class Interface(QMainWindow):
                     'additionalFinalValue': self.configuration.backtestDoubleFinalValueSpinBox,
                     'trailingLossRadio': self.configuration.backtestTrailingLossRadio,
                     'lossPercentage': self.configuration.backtestLossPercentageSpinBox,
-                    'mainConfigurationTabWidget': self.configuration.backtestConfigurationTabWidget
+                    'mainConfigurationTabWidget': self.configuration.backtestConfigurationTabWidget,
+                    'smartStopLossCounter': self.configuration.backtestSmartStopLossSpinBox,
                 },
                 'mainInterface': {
                     'runBotButton': self.runBacktestButton,

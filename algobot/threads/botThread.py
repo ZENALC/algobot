@@ -333,6 +333,8 @@ class BotThread(QRunnable):
             'tickerValue': f'${trader.currentPrice}',
             'currentPrice': trader.currentPrice,
             'optionDetails': self.optionDetails,
+            'initialSmartStopLossCounter': str(trader.smartStopLossInitialCounter),
+            'smartStopLossCounter': str(trader.smartStopLossCounter),
             'lowerOptionDetails': self.lowerOptionDetails,
             'elapsedValue': self.elapsed,
             'dailyPercentageValue': f'{round(self.dailyPercentage, 2)}%',

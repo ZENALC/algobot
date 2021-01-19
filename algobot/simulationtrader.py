@@ -50,6 +50,7 @@ class SimulationTrader:
         self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
         self.previousStopLoss = None  # Previous stop loss for smart stop loss.
+        self.smartStopLossInitialCounter = 0  # Smart stop loss initial counter.
         self.smartStopLossCounter = 0  # Smart stop loss counter.
         self.longTrailingPrice = None  # Price coin has to be above for long position.
         self.shortTrailingPrice = None  # Price coin has to be below for short position.
@@ -62,6 +63,10 @@ class SimulationTrader:
         self.stoicEnabled = False  # Boolean that holds whether stoic trading is enabled or not.
         self.stoicOptions = [None, None, None]  # Stoic options.
         self.stoicDictionary = {}  # Dictionary for stoic strategies.
+
+    def set_smart_stop_loss_counter(self, counter):
+        self.smartStopLossCounter = counter
+        self.smartStopLossInitialCounter = counter
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
@@ -351,14 +356,35 @@ class SimulationTrader:
                     if self.stoicEnabled:
                         if self.stoicTrend == BULLISH:
                             self.buy_long("Bought long because a cross and stoicism were detected.")
+                            self.reset_smart_stop_loss()
                     else:
                         self.buy_long("Bought long because a cross was detected.")
+                        self.reset_smart_stop_loss()
                 elif self.trend == BEARISH:
                     if self.stoicEnabled:
                         if self.stoicTrend == BEARISH:
                             self.sell_short("Sold short because a cross and stoicism were detected.")
+                            self.reset_smart_stop_loss()
                     else:
                         self.sell_short("Sold short because a cross was detected.")
+                        self.reset_smart_stop_loss()
+            else:
+                if self.previousPosition == LONG:
+                    if self.currentPrice > self.previousStopLoss and self.smartStopLossCounter > 0:
+                        self.smartStopLossCounter -= 1
+                        self.buy_long("Reentered long because of smart stop loss.")
+                        self.reset_smart_stop_loss()
+                elif self.previousPosition == SHORT:
+                    if self.currentPrice < self.previousStopLoss and self.smartStopLossCounter > 0:
+                        self.buy_short("Reentered short because of smart stop loss.")
+                        self.smartStopLossCounter -= 1
+                        self.reset_smart_stop_loss()
+
+    def reset_smart_stop_loss(self):
+        """
+        Resets smart stop loss counter.
+        """
+        self.smartStopLossCounter = self.smartStopLossInitialCounter
 
     def get_stop_loss_strategy_string(self) -> str:
         """
