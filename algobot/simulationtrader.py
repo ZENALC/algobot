@@ -49,6 +49,8 @@ class SimulationTrader:
         self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
         self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
+        self.previousStopLoss = None  # Previous stop loss for smart stop loss.
+        self.smartStopLossCounter = 0  # Smart stop loss counter.
         self.longTrailingPrice = None  # Price coin has to be above for long position.
         self.shortTrailingPrice = None  # Price coin has to be below for short position.
         self.currentPrice = None  # Current price of coin.
@@ -507,16 +509,20 @@ class SimulationTrader:
         """
         if self.currentPosition == SHORT:  # If we are in a short position.
             if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
-                return self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
+                self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
             elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
-                return self.sellShortPrice * (1 + self.lossPercentageDecimal)
+                self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
         elif self.currentPosition == LONG:  # If we are in a long position.
             if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
-                return self.longTrailingPrice * (1 - self.lossPercentageDecimal)
+                self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
             elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
-                return self.buyLongPrice * (1 - self.lossPercentageDecimal)
+                self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
         else:  # This means we are not in any position currently.
-            return None
+            self.stopLoss = None
+
+        if self.stopLoss:
+            self.previousStopLoss = self.stopLoss
+        return self.stopLoss
 
     def get_trend(self, dataObject: Data = None, log_data=True) -> int or None:
         """

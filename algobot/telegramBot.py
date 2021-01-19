@@ -234,7 +234,7 @@ class TelegramBot:
             "People will forget what you accomplished, but they will never forget how you made them feel.",
             "If you're going through hell, keep going.",
             "More is lost by indecision than a wrong decision.",
-            "A ship is safe in harbor, but that's not what ships are for."
+            "A ship is safe in harbor, but that's not what ships are for.",
             "You can be the ripest, tastiest peach in the world, and there'll still be someone who hates peaches.",
             "Nothing in the world can take the place of Persistence. Talent will not; nothing is more common than "
             "unsuccessful men with talent. Genius will not; unrewarded genius is almost a proverb. Education will not; "
