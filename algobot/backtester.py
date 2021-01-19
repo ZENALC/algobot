@@ -63,6 +63,13 @@ class Backtester:
         self.shortTrailingPrice = None
         self.currentPeriod = None
 
+        self.previousStopLoss = None
+        self.initialStopLossCounter = 0
+        self.stopLossCounter = 0
+
+    def set_stop_loss_counter(self, counter):
+        self.stopLossCounter = self.initialStopLossCounter = counter
+
     def reset_everything(self):
         """
         Resets all data in backtest object.
@@ -322,9 +329,11 @@ class Backtester:
         :return: Stop loss value.
         """
         if self.inShortPosition:  # If we are in a short position
-            return self.get_short_stop_loss()
+            self.previousStopLoss = self.get_short_stop_loss()
+            return self.previousStopLoss
         elif self.inLongPosition:  # If we are in a long position
-            return self.get_long_stop_loss()
+            self.previousStopLoss = self.get_long_stop_loss()
+            return self.previousStopLoss
         else:  # This means we are not in a position.
             return None
 
@@ -580,20 +589,36 @@ class Backtester:
                         self.go_short('Entered short because a cross was detected.')
 
         else:  # This means we are in neither position
-            if self.trend == BULLISH and self.previousPosition is not LONG:
+            if self.trend == BULLISH and self.previousPosition != LONG:
                 if self.stoicEnabled:
                     if self.stoicTrend == BULLISH:
                         self.go_long('Entered long because a cross and stoicism were detected.')
+                        self.reset_smart_stop_loss()
                 else:
                     self.go_long('Entered long because a cross was detected.')
-            elif self.marginEnabled and self.trend == BEARISH and self.previousPosition is not SHORT:
+                    self.reset_smart_stop_loss()
+            elif self.marginEnabled and self.trend == BEARISH and self.previousPosition != SHORT:
                 if self.stoicEnabled:
                     if self.stoicTrend == BEARISH:
                         self.go_short('Entered short because a cross and stoicism were detected.')
+                        self.reset_smart_stop_loss()
                 else:
                     self.go_short('Entered short because a cross was detected.')
-            elif self.trend == BEARISH:
-                self.previousPosition = None
+                    self.reset_smart_stop_loss()
+            # elif self.trend == BEARISH:
+            #     self.previousPosition = None
+            else:
+                if self.previousPosition == LONG:
+                    if self.currentPrice > self.previousStopLoss and self.stopLossCounter > 0:
+                        self.go_long("Reentered long because of smart stop loss.")
+                        self.stopLossCounter -= 1
+                elif self.previousPosition == SHORT:
+                    if self.currentPrice < self.previousStopLoss and self.stopLossCounter > 0:
+                        self.go_short("Reentered short because of smart stop loss.")
+                        self.stopLossCounter -= 1
+
+    def reset_smart_stop_loss(self):
+        self.stopLossCounter = self.initialStopLossCounter
 
     def moving_average_test(self):
         """
@@ -675,6 +700,7 @@ class Backtester:
             sys.stdout = stdout
 
         print("Backtest configuration:")
+        print(f"\tSmart Stop Loss Counter: {self.initialStopLossCounter}")
         print(f'\tInterval: {self.interval}')
         print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")

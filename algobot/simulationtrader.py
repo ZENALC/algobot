@@ -371,14 +371,12 @@ class SimulationTrader:
             else:
                 if self.previousPosition == LONG:
                     if self.currentPrice > self.previousStopLoss and self.smartStopLossCounter > 0:
-                        self.smartStopLossCounter -= 1
                         self.buy_long("Reentered long because of smart stop loss.")
-                        self.reset_smart_stop_loss()
+                        self.smartStopLossCounter -= 1
                 elif self.previousPosition == SHORT:
                     if self.currentPrice < self.previousStopLoss and self.smartStopLossCounter > 0:
                         self.buy_short("Reentered short because of smart stop loss.")
                         self.smartStopLossCounter -= 1
-                        self.reset_smart_stop_loss()
 
     def reset_smart_stop_loss(self):
         """

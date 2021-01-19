@@ -43,7 +43,8 @@ class BacktestThread(QRunnable):
             'lossPercentage': lossPercentageDecimal * 100,
             'dataType': config.dataType,
             'stoicEnabled': config.backtestStoicCheckMark.isChecked(),
-            'stoicOptions': stoicOptions
+            'stoicOptions': stoicOptions,
+            'smartStopLossCounter': config.backtestSmartStopLossSpinBox.value()
         }
 
     def get_configuration_dictionary_for_gui(self) -> dict:
@@ -108,6 +109,7 @@ class BacktestThread(QRunnable):
                                          startDate=configDetails['startDate'],
                                          endDate=configDetails['endDate'],
                                          stoicOptions=stoicOptions)
+        self.gui.backtester.set_stop_loss_counter(configDetails['smartStopLossCounter'])
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
 
     def backtest(self):
