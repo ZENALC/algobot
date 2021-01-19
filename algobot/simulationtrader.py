@@ -55,11 +55,15 @@ class SimulationTrader:
         self.longTrailingPrice = None  # Price coin has to be above for long position.
         self.shortTrailingPrice = None  # Price coin has to be below for short position.
         self.currentPrice = None  # Current price of coin.
-
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
         self.currentPosition = None  # Current position value.
         self.previousPosition = None  # Previous position to validate for a cross.
-        self.stoicTrend = None  # Current stoic trend is enabled.
+
+        self.shrekTrend = None  # Current shrek trend if enabled.
+        self.shrekEnabled = False  # Boolean that holds whether shrek trading is enabled or not.
+        self.shrekOptions = [None, None, None, None]
+
+        self.stoicTrend = None  # Current stoic trend if enabled.
         self.stoicEnabled = False  # Boolean that holds whether stoic trading is enabled or not.
         self.stoicOptions = [None, None, None]  # Stoic options.
         self.stoicDictionary = {}  # Dictionary for stoic strategies.
@@ -191,7 +195,7 @@ class SimulationTrader:
             coin = self.coinOwed
 
         if coin <= 0:
-            raise ValueError(f"You cannot buy {coin} {self.coinName}.")
+            raise ValueError(f"You cannot buy {coin} {self.coinName}. Did you mean to sell short?")
 
         self.currentPrice = self.dataView.get_current_price()
         self.coinOwed -= coin
@@ -304,6 +308,27 @@ class SimulationTrader:
             self.stoicTrend = None
             return None
 
+    def shrek_strategy(self, one: int, two: int, three: int, four: int):
+        self.dataView.data.insert(0, self.dataView.get_current_data())
+        rsi_two = self.dataView.get_rsi(two)
+        self.dataView.data = self.dataView.data[1:]
+
+        beetle = rsi_two - min(rsi_two, two)
+        carrot = beetle + three
+        apple = max(rsi_two, two) - min(rsi_two, two)
+        donkey = apple + three
+        onion = carrot / donkey * 100
+
+        if one > onion:
+            self.shrekTrend = BULLISH
+            return BULLISH
+        elif onion > four:
+            self.shrekTrend = BEARISH
+            return BEARISH
+        else:
+            self.shrekTrend = None
+            return None
+
     # noinspection PyTypeChecker
     def main_logic(self, log_data=True):
         """
@@ -311,12 +336,17 @@ class SimulationTrader:
         If there is a trend and the previous position did not reflect the trend, the bot enters position.
         :param log_data: Boolean that will determine where data is logged or not.
         """
-        s1, s2, s3 = self.stoicOptions
         if self.stoicEnabled:
             try:
-                self.stoic_strategy(s1, s2, s3)
+                self.stoic_strategy(*self.stoicOptions)
             except Exception as e:
                 raise ValueError(f"Invalid stoic options: {e} occurred.")
+
+        if self.shrekEnabled:
+            try:
+                self.shrek_strategy(*self.shrekOptions)
+            except Exception as e:
+                raise ValueError(f"Invalid shrek options: {e} occurred.")
 
         if self.currentPosition == SHORT:  # This means we are in short position
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
@@ -328,8 +358,16 @@ class SimulationTrader:
             elif not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.stoicEnabled:
                     if self.stoicTrend == BULLISH:
-                        self.buy_short(f'Bought short because a cross and stoicism were detected.')
-                        self.buy_long(f'Bought long because a cross and stoicism were detected.')
+                        if not self.shrekEnabled:
+                            self.buy_short(f'Bought short because a cross and stoicism were detected.')
+                            self.buy_long(f'Bought long because a cross and stoicism were detected.')
+                        elif self.shrekEnabled and self.shrekTrend == BULLISH:
+                            self.buy_short(f'Bought short because a cross, shrek, and stoicism were detected.')
+                            self.buy_long(f'Bought long because a cross, shrek, and stoicism were detected.')
+                elif self.shrekEnabled:
+                    if self.shrekTrend == BULLISH:
+                        self.buy_short(f'Bought short because a cross and shrek were detected.')
+                        self.buy_long(f'Bought long because a cross and shrek were detected.')
                 else:
                     self.buy_short(f'Bought short because a cross was detected.')
                     self.buy_long(f'Bought long because a cross was detected.')
@@ -344,8 +382,16 @@ class SimulationTrader:
             elif not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.stoicEnabled:
                     if self.stoicTrend == BEARISH:
-                        self.sell_long(f'Sold long because a cross and stoicism were detected.')
-                        self.sell_short('Sold short because a cross and stoicism were detected.')
+                        if not self.shrekEnabled:
+                            self.sell_long(f'Sold long because a cross and stoicism were detected.')
+                            self.sell_short('Sold short because a cross and stoicism were detected.')
+                        elif self.shrekEnabled and self.shrekTrend == BEARISH:
+                            self.sell_long(f'Sold long because a cross, shrek, and stoicism were detected.')
+                            self.sell_short('Sold short because a cross, shrek, and stoicism were detected.')
+                elif self.shrekEnabled:
+                    if self.shrekTrend == BEARISH:
+                        self.sell_long(f'Sold long because a cross and shrek were detected.')
+                        self.sell_short('Sold short because a cross and shrek were detected.')
                 else:
                     self.sell_long(f'Sold long because a cross was detected.')
                     self.sell_short('Sold short because a cross was detected.')
@@ -355,7 +401,15 @@ class SimulationTrader:
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
                     if self.stoicEnabled:
                         if self.stoicTrend == BULLISH:
-                            self.buy_long("Bought long because a cross and stoicism were detected.")
+                            if not self.shrekEnabled:
+                                self.buy_long("Bought long because a cross and stoicism were detected.")
+                                self.reset_smart_stop_loss()
+                            elif self.shrekEnabled and self.shrekTrend == BULLISH:
+                                self.buy_long("Bought long because a cross, shrek, and stoicism were detected.")
+                                self.reset_smart_stop_loss()
+                    elif self.shrekEnabled:
+                        if self.shrekTrend == BULLISH:
+                            self.buy_long("Bought long because a cross and shrek were detected.")
                             self.reset_smart_stop_loss()
                     else:
                         self.buy_long("Bought long because a cross was detected.")
@@ -363,7 +417,15 @@ class SimulationTrader:
                 elif self.trend == BEARISH:
                     if self.stoicEnabled:
                         if self.stoicTrend == BEARISH:
-                            self.sell_short("Sold short because a cross and stoicism were detected.")
+                            if not self.shrekEnabled:
+                                self.sell_short("Sold short because a cross and stoicism were detected.")
+                                self.reset_smart_stop_loss()
+                            elif self.shrekEnabled and self.shrekTrend == BEARISH:
+                                self.sell_short("Sold short because a cross, shrek, and stoicism were detected.")
+                                self.reset_smart_stop_loss()
+                    elif self.shrekEnabled:
+                        if self.shrekTrend == BEARISH:
+                            self.sell_short("Sold short because a cross and shrek were detected.")
                             self.reset_smart_stop_loss()
                     else:
                         self.sell_short("Sold short because a cross was detected.")
@@ -375,7 +437,7 @@ class SimulationTrader:
                         self.smartStopLossCounter -= 1
                 elif self.previousPosition == SHORT:
                     if self.currentPrice < self.previousStopLoss and self.smartStopLossCounter > 0:
-                        self.buy_short("Reentered short because of smart stop loss.")
+                        self.sell_short("Reentered short because of smart stop loss.")
                         self.smartStopLossCounter -= 1
 
     def reset_smart_stop_loss(self):
