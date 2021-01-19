@@ -338,6 +338,13 @@ class Configuration(QDialog):
         self.stoicCheckMark.toggled.connect(self.toggle_stoic_groupbox)
         self.simulationStoicCheckMark.toggled.connect(self.toggle_simulation_stoic_groupbox)
         self.backtestStoicCheckMark.toggled.connect(self.toggle_backtest_stoic_groupbox)
+
+        self.shrekCheckMark.toggled.connect(lambda: self.toggle_groupbox(self.shrekCheckMark, self.shrekGroupBox))
+        self.simulationShrekCheckMark.toggled.connect(lambda: self.toggle_groupbox(self.simulationShrekCheckMark,
+                                                                                   self.simulationShrekGroupBox))
+        self.backtestShrekCheckMark.toggled.connect(lambda: self.toggle_groupbox(self.backtestShrekCheckMark,
+                                                                                 self.backtestShrekGroupBox))
+
         self.simulationCopySettingsButton.clicked.connect(self.copy_settings_to_simulation)
 
         self.backtestCopySettingsButton.clicked.connect(self.copy_settings_to_backtest)

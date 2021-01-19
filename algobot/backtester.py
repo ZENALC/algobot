@@ -36,6 +36,10 @@ class Backtester:
         self.minPeriod = self.get_min_option_period()
         self.trend = None
 
+        self.shrekTrend = None
+        self.shrekEnabled = False
+        self.shrekOptions = [None, None, None, None]
+
         self.rsi_dictionary = {}
         self.stoicDictionary = {}
         self.stoicTrend = None
@@ -372,6 +376,33 @@ class Backtester:
 
     def reset_stoic_dictionary(self):
         self.stoicDictionary = {}
+
+    def shrek_strategy(self, data, one: int, two: int, three: int, four: int):
+        """
+        New custom strategy.
+        :param data: Data to use for strategy.
+        :param one: Input 1.
+        :param two: Input 2.
+        :param three: Input 3.
+        :param four: Input 4.
+        :return: Strategy's current trend.
+        """
+        rsi_two = self.get_rsi(data, two)
+        beetle = rsi_two - min(rsi_two, two)
+        carrot = beetle + three
+        apple = max(rsi_two, two) - min(rsi_two, two)
+        donkey = apple + three
+        onion = carrot / donkey * 100
+
+        if one > onion:
+            self.shrekTrend = BULLISH
+            return BULLISH
+        elif onion > four:
+            self.shrekTrend = BEARISH
+            return BEARISH
+        else:
+            self.shrekTrend = None
+            return None
 
     # noinspection DuplicatedCode
     def stoic_strategy(self, data, input1: int, input2: int, input3: int, s: int = 0) -> None or int:

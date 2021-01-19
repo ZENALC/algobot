@@ -905,12 +905,20 @@ class Interface(QMainWindow):
         trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
         trader.tradingOptions = self.get_trading_options(caller)
         trader.stoicEnabled = self.interfaceDictionary[caller]['configuration']['stoicCheck'].isChecked()
+        trader.shrekEnabled = self.interfaceDictionary[caller]['configuration']['shrekCheck'].isChecked()
         trader.set_smart_stop_loss_counter(
             self.interfaceDictionary[caller]['configuration']['smartStopLossCounter'].value())
+
         if trader.stoicEnabled:
             trader.stoicOptions[0] = self.interfaceDictionary[caller]['configuration']['stoicInput1'].value()
             trader.stoicOptions[1] = self.interfaceDictionary[caller]['configuration']['stoicInput2'].value()
             trader.stoicOptions[2] = self.interfaceDictionary[caller]['configuration']['stoicInput3'].value()
+
+        if trader.shrekEnabled:
+            trader.shrekOptions[0] = self.interfaceDictionary[caller]['configuration']['shrekInput1'].value()
+            trader.shrekOptions[1] = self.interfaceDictionary[caller]['configuration']['shrekInput2'].value()
+            trader.shrekOptions[2] = self.interfaceDictionary[caller]['configuration']['shrekInput3'].value()
+            trader.shrekOptions[3] = self.interfaceDictionary[caller]['configuration']['shrekInput4'].value()
 
     def set_custom_stop_loss(self, caller, enable: bool = True, foreignValue: float or None = None):
         """
@@ -1659,6 +1667,10 @@ class Interface(QMainWindow):
                     'stoicInput2': self.configuration.simulationStoicSpinBox2,
                     'stoicInput3': self.configuration.simulationStoicSpinBox3,
                     'smartStopLossCounter': self.configuration.simulationSmartStopLossSpinBox,
+                    'shrekInput1': self.configuration.simulationShrekSpinBox1,
+                    'shrekInput2': self.configuration.simulationShrekSpinBox2,
+                    'shrekInput3': self.configuration.simulationShrekSpinBox3,
+                    'shrekInput4': self.configuration.simulationShrekSpinBox4,
                 }
             },
             LIVE: {
@@ -1768,6 +1780,10 @@ class Interface(QMainWindow):
                     'stoicInput2': self.configuration.stoicSpinBox2,
                     'stoicInput3': self.configuration.stoicSpinBox3,
                     'smartStopLossCounter': self.configuration.smartStopLossSpinBox,
+                    'shrekInput1': self.configuration.shrekSpinBox1,
+                    'shrekInput2': self.configuration.shrekSpinBox2,
+                    'shrekInput3': self.configuration.shrekSpinBox3,
+                    'shrekInput4': self.configuration.shrekSpinBox4,
                 }
             },
             BACKTEST: {
@@ -1788,6 +1804,10 @@ class Interface(QMainWindow):
                     'lossPercentage': self.configuration.backtestLossPercentageSpinBox,
                     'mainConfigurationTabWidget': self.configuration.backtestConfigurationTabWidget,
                     'smartStopLossCounter': self.configuration.backtestSmartStopLossSpinBox,
+                    'shrekInput1': self.configuration.backtestShrekSpinBox1,
+                    'shrekInput2': self.configuration.backtestShrekSpinBox2,
+                    'shrekInput3': self.configuration.backtestShrekSpinBox3,
+                    'shrekInput4': self.configuration.backtestShrekSpinBox4,
                 },
                 'mainInterface': {
                     'runBotButton': self.runBacktestButton,

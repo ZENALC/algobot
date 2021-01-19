@@ -309,25 +309,43 @@ class SimulationTrader:
             return None
 
     def shrek_strategy(self, one: int, two: int, three: int, four: int):
-        self.dataView.data.insert(0, self.dataView.get_current_data())
-        rsi_two = self.dataView.get_rsi(two)
-        self.dataView.data = self.dataView.data[1:]
+        """
+        New custom strategy.
+        :param one: Input 1.
+        :param two: Input 2.
+        :param three: Input 3.
+        :param four: Input 4.
+        :return: Strategy's current trend.
+        """
+        for _ in range(20):
+            # self.dataView.data.insert(0, self.dataView.get_current_data())
+            rsi_two = self.dataView.get_rsi(two, update=False, shift=_)
+            # self.dataView.data = self.dataView.data[1:]
 
-        beetle = rsi_two - min(rsi_two, two)
-        carrot = beetle + three
-        apple = max(rsi_two, two) - min(rsi_two, two)
-        donkey = apple + three
-        onion = carrot / donkey * 100
+            beetle = rsi_two - min(rsi_two, two)
+            apple = max(rsi_two, two) - min(rsi_two, two)
+            donkey = sum([max(x, two) - min(x, two) for x in [self.dataView.get_rsi(two, update=False, shift=x)
+                                                              for x in range(three + 1)]])
+            carrot = sum([x - min(x, two) for x in [self.dataView.get_rsi(two, update=False, shift=x)
+                                                    for x in range(three + 1)]])
+            onion = carrot / donkey * 100
 
-        if one > onion:
-            self.shrekTrend = BULLISH
-            return BULLISH
-        elif onion > four:
-            self.shrekTrend = BEARISH
-            return BEARISH
-        else:
-            self.shrekTrend = None
-            return None
+            print('\nbeetle', beetle)
+            print('rsi', rsi_two)
+            print('carrot', carrot)
+            print('apple', apple)
+            print('donkey', donkey)
+            print('onion', onion)
+
+            if one > onion:
+                self.shrekTrend = BULLISH
+                # return BULLISH
+            elif onion > four:
+                self.shrekTrend = BEARISH
+                # return BEARISH
+            else:
+                self.shrekTrend = None
+                # return None
 
     # noinspection PyTypeChecker
     def main_logic(self, log_data=True):
