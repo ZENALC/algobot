@@ -29,7 +29,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="statisticsTabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="liveTab">
       <attribute name="title">
@@ -1232,7 +1232,7 @@
            </widget>
           </item>
           <item row="30" column="0">
-           <widget class="QLabel" name="simulationRsi1Label">
+           <widget class="QLabel" name="simulationRsi2Label">
             <property name="text">
              <string>RSI 2</string>
             </property>
@@ -1246,7 +1246,7 @@
            </widget>
           </item>
           <item row="29" column="0">
-           <widget class="QLabel" name="simulationRsi2Label">
+           <widget class="QLabel" name="simulationRsi1Label">
             <property name="text">
              <string>RSI 1</string>
             </property>
