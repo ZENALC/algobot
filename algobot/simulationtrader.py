@@ -369,7 +369,7 @@ class SimulationTrader:
 
         if self.currentPosition == SHORT:  # This means we are in short position
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
-                self.buy_short(f'Bought short because of custom stop loss.', stopLossExit=True)
+                self.buy_short(f'Bought short because of custom stop loss.')
 
             elif self.get_stop_loss() is not None and self.currentPrice >= self.get_stop_loss():
                 self.buy_short(f'Bought short because of stop loss.', stopLossExit=True)
@@ -392,7 +392,7 @@ class SimulationTrader:
                     self.buy_long(f'Bought long because a cross was detected.')
         elif self.currentPosition == LONG:  # This means we are in long position
             if self.customStopLoss is not None and self.currentPrice <= self.customStopLoss:
-                self.sell_long(f'Sold long because of custom stop loss.', stopLossExit=True)
+                self.sell_long(f'Sold long because of custom stop loss.')
 
             elif self.get_stop_loss() is not None and self.currentPrice <= self.get_stop_loss():
                 self.sell_long(f'Sold long because of stop loss.', stopLossExit=True)
