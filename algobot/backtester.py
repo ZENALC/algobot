@@ -608,8 +608,8 @@ class Backtester:
             elif self.trend == BULLISH:
                 if self.stoicEnabled:
                     if self.stoicTrend == BULLISH:
-                        self.exit_short(f'Bought short because a cross and stoicism were detected.')
-                        self.go_long(f'Bought long because a cross and stoicism were detected.')
+                        self.exit_short(f'Exited short because a cross and stoicism were detected.')
+                        self.go_long(f'Entered long because a cross and stoicism were detected.')
                 else:
                     self.exit_short('Exited short because a cross was detected.')
                     self.go_long('Entered long because a cross was detected.')

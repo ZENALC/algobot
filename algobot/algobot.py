@@ -1402,9 +1402,33 @@ class Interface(QMainWindow):
         self.openBacktestResultsFolderAction.triggered.connect(lambda: self.open_folder("Backtest Results"))
         self.openLogFolderAction.triggered.connect(lambda: self.open_folder("Logs"))
         self.openCsvFolderAction.triggered.connect(lambda: self.open_folder('CSV'))
-        self.binanceAction.triggered.connect(lambda: webbrowser.open("https://www.binance.com/en"))
-        self.tradingViewAction.triggered.connect(lambda: webbrowser.open("https://www.tradingview.com/"))
+        self.binanceAction.triggered.connect(self.open_binance)
+        self.tradingViewAction.triggered.connect(self.open_trading_view)
         self.sourceCodeAction.triggered.connect(lambda: webbrowser.open("https://github.com/ZENALC/algobot"))
+
+    def get_preferred_symbol(self):
+        if self.trader:
+            return self.trader.symbol
+        elif self.simulationTrader:
+            return self.simulationTrader.symbol
+        elif self.backtester:
+            return self.backtester.symbol
+        else:
+            return None
+
+    def open_binance(self):
+        symbol = self.get_preferred_symbol()
+        if symbol:
+            webbrowser.open(f"https://www.binance.com/en/trade/{symbol}")
+        else:
+            webbrowser.open("https://www.binance.com/en")
+
+    def open_trading_view(self):
+        symbol = self.get_preferred_symbol()
+        if symbol:
+            webbrowser.open(f"https://www.tradingview.com/symbols/{symbol}/?exchange=BINANCE")
+        else:
+            webbrowser.open("https://www.tradingview.com/")
 
     def create_bot_slots(self):
         """
