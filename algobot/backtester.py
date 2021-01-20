@@ -646,8 +646,6 @@ class Backtester:
                 else:
                     self.go_short('Entered short because a cross was detected.')
                     self.reset_smart_stop_loss()
-            # elif self.trend == BEARISH:
-            #     self.previousPosition = None
             else:
                 if self.previousPosition == LONG and self.stopLossExit:
                     if self.currentPrice > self.previousStopLoss and self.stopLossCounter > 0:
