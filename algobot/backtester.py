@@ -73,41 +73,6 @@ class Backtester:
         self.stopLossCounter = 0
         self.stopLossExit = False
 
-    def set_stop_loss_counter(self, counter):
-        """
-        Sets stop loss equal to the counter provided.
-        :param counter: Value to set counter to.
-        """
-        self.stopLossCounter = self.initialStopLossCounter = counter
-
-    def reset_everything(self):
-        """
-        Resets all data in backtest object.
-        """
-        self.balance = self.startingBalance
-        self.coin = 0
-        self.coinOwed = 0
-        self.commissionsPaid = 0
-        self.trades = []
-        self.currentPrice = None
-        self.transactionFeePercentage = 0.001
-        self.profit = 0
-        self.inLongPosition = False
-        self.inShortPosition = False
-        self.previousPosition = None
-        self.buyLongPrice = None
-        self.longTrailingPrice = None
-        self.sellShortPrice = None
-        self.shortTrailingPrice = None
-        self.currentPeriod = None
-
-    def convert_all_date_to_datetime(self):
-        """
-        Converts all available dates to datetime objects.
-        """
-        for data in self.data:
-            data['date_utc'] = parser.parse(data['date_utc'])
-
     def check_data(self):
         """
         Checks data sorting. If descending, it reverses data, so we can mimic backtest as if we are starting from the
@@ -129,6 +94,24 @@ class Backtester:
         for option in self.tradingOptions:
             if type(option) != Option:
                 raise TypeError(f"'{option}' is not a valid option type.")
+
+    def convert_all_date_to_datetime(self):
+        """
+        Converts all available dates to datetime objects.
+        """
+        for data in self.data:
+            data['date_utc'] = parser.parse(data['date_utc'])
+
+    def find_date_index(self, datetimeObject):
+        """
+        Finds index of date from datetimeObject if exists in data loaded.
+        :param datetimeObject: Object to compare date-time with.
+        :return: Index from self.data if found, else -1.
+        """
+        for data in self.data:
+            if data['date_utc'].date() == datetimeObject:
+                return self.data.index(data)
+        return -1
 
     def get_start_date_index(self, startDate):
         """
@@ -222,17 +205,6 @@ class Backtester:
             self.trend = BEARISH
         else:
             self.trend = None
-
-    def find_date_index(self, datetimeObject):
-        """
-        Finds index of date from datetimeObject if exists in data loaded.
-        :param datetimeObject: Object to compare date-time with.
-        :return: Index from self.data if found, else -1.
-        """
-        for data in self.data:
-            if data['date_utc'].date() == datetimeObject:
-                return self.data.index(data)
-        return -1
 
     def go_long(self, msg):
         """
@@ -386,8 +358,39 @@ class Backtester:
             days = seconds / 86400
             return f'{int(days)} Day'
 
+    def set_stop_loss_counter(self, counter):
+        """
+        Sets stop loss equal to the counter provided.
+        :param counter: Value to set counter to.
+        """
+        self.stopLossCounter = self.initialStopLossCounter = counter
+
+    def reset_smart_stop_loss(self):
+        self.stopLossCounter = self.initialStopLossCounter
+
     def reset_stoic_dictionary(self):
         self.stoicDictionary = {}
+
+    def reset_everything(self):
+        """
+        Resets all data in backtest object.
+        """
+        self.balance = self.startingBalance
+        self.coin = 0
+        self.coinOwed = 0
+        self.commissionsPaid = 0
+        self.trades = []
+        self.currentPrice = None
+        self.transactionFeePercentage = 0.001
+        self.profit = 0
+        self.inLongPosition = False
+        self.inShortPosition = False
+        self.previousPosition = None
+        self.buyLongPrice = None
+        self.longTrailingPrice = None
+        self.sellShortPrice = None
+        self.shortTrailingPrice = None
+        self.currentPeriod = None
 
     def shrek_strategy(self, data, one: int, two: int, three: int, four: int):
         """
@@ -655,9 +658,6 @@ class Backtester:
                     if self.currentPrice < self.previousStopLoss and self.stopLossCounter > 0:
                         self.go_short("Reentered short because of smart stop loss.")
                         self.stopLossCounter -= 1
-
-    def reset_smart_stop_loss(self):
-        self.stopLossCounter = self.initialStopLossCounter
 
     def moving_average_test(self):
         """
