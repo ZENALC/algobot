@@ -130,9 +130,6 @@ class RealTrader(SimulationTrader):
         """
         self.binanceClient.transfer_spot_to_margin(asset=self.coinName, amount=self.get_spot_coin())
         self.add_trade(message='Transferred from spot to margin',
-                       initialNet=self.get_net(),
-                       finalNet=self.get_net(),
-                       price=self.currentPrice,
                        force=False,
                        orderID="TRANSFER SPOT TO MARGIN")
 
@@ -142,9 +139,6 @@ class RealTrader(SimulationTrader):
         """
         order = self.binanceClient.transfer_margin_to_spot(asset=self.coinName, amount=self.get_margin_coin())
         self.add_trade(message='Transferred from margin to spot',
-                       initialNet=self.get_net(),
-                       finalNet=self.get_net(),
-                       price=self.currentPrice,
                        force=False,
                        orderID=order['clientOrderId'])
 
@@ -169,9 +163,6 @@ class RealTrader(SimulationTrader):
         )
 
         self.add_trade(message='Bought spot long.',
-                       initialNet=self.get_net(),
-                       finalNet=self.get_net(),
-                       price=self.currentPrice,
                        force=False,
                        orderID=order['clientOrderId'])
 
@@ -186,9 +177,6 @@ class RealTrader(SimulationTrader):
         )
 
         self.add_trade(message='Sold spot long.',
-                       initialNet=self.get_net(),
-                       finalNet=self.get_net(),
-                       price=self.currentPrice,
                        force=False,
                        orderID=order['clientOrderId'])
 
@@ -287,8 +275,6 @@ class RealTrader(SimulationTrader):
         :param amount: Amount to borrow in margin loan.
         :return: Order dictionary.
         """
-        initialNet = self.get_net()
-
         if self.isolated:
             self.binanceClient.create_margin_loan(asset=self.coinName,
                                                   amount=amount,
@@ -299,11 +285,7 @@ class RealTrader(SimulationTrader):
                                                   amount=amount)
 
         self.retrieve_margin_values()
-        finalNet = self.get_net()
         self.add_trade(message='Created margin loan.',
-                       initialNet=initialNet,
-                       finalNet=finalNet,
-                       price=self.currentPrice,
                        force=force,
                        orderID=None)
 
@@ -312,8 +294,6 @@ class RealTrader(SimulationTrader):
         Repays margin loan.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        initialNet = self.get_net()
-
         if self.isolated:
             self.binanceClient.repay_margin_loan(
                 asset=self.coinName,
@@ -328,11 +308,7 @@ class RealTrader(SimulationTrader):
             )
 
         self.retrieve_margin_values()
-        finalNet = self.get_net()
         self.add_trade(message='Repaid margin loan.',
-                       initialNet=initialNet,
-                       finalNet=finalNet,
-                       price=self.currentPrice,
                        force=force,
                        orderID=None)
 
@@ -361,18 +337,14 @@ class RealTrader(SimulationTrader):
         self.currentPosition = LONG
         self.buyLongPrice = self.currentPrice
         self.longTrailingPrice = self.currentPrice
-        finalNet = self.get_net()
         self.add_trade(message=msg,
-                       initialNet=self.previousNet,
-                       finalNet=finalNet,
-                       price=self.currentPrice,
                        force=force,
                        orderID=order['clientOrderId'])
-        self.previousNet = finalNet
 
-    def sell_long(self, msg: str, coin: float or None = None, force: bool = False):
+    def sell_long(self, msg: str, coin: float or None = None, force: bool = False, stopLossExit=False):
         """
         Sells specified amount of coin at current market price. If not specified, assumes bot sells all coin.
+        :param stopLossExit: Boolean for whether last position was exited because of a stop loss.
         :param msg: Message to be used for displaying trade information.
         :param coin: Coin amount to sell to exit long position.
         :param force: Boolean that determines whether bot executed action or human.
@@ -395,19 +367,15 @@ class RealTrader(SimulationTrader):
         self.customStopLoss = None
         self.buyLongPrice = None
         self.longTrailingPrice = None
-        finalNet = self.get_net()
         self.add_trade(message=msg,
-                       initialNet=self.previousNet,
-                       finalNet=finalNet,
-                       price=self.currentPrice,
                        force=force,
-                       orderID=order['clientOrderId'])
-        self.previousNet = finalNet
+                       orderID=order['clientOrderId'], stopLossExit=stopLossExit)
 
-    def buy_short(self, msg: str, coin: float or None = None, force: bool = False):
+    def buy_short(self, msg: str, coin: float or None = None, force: bool = False, stopLossExit=False):
         """
         Returns coin by buying them at current market price.
         If no coin is provided in function, bot will assume we try to pay back everything in return.
+        :param stopLossExit: Boolean for whether last position was exited because of a stop loss.
         :param msg: Message to be used for displaying trade information.
         :param coin: Coin amount to buy back to exit short position.
         :param force: Boolean that determines whether bot executed action or human.
@@ -436,16 +404,12 @@ class RealTrader(SimulationTrader):
 
         time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
         self.retrieve_margin_values()
-        finalNet = self.get_net()
         self.add_trade(message=msg,
-                       initialNet=self.previousNet,
-                       finalNet=finalNet,
-                       price=self.currentPrice,
                        force=force,
-                       orderID=order['clientOrderId'])
+                       orderID=order['clientOrderId'],
+                       stopLossExit=stopLossExit)
 
         # self.repay_margin_loan(force=force)
-        self.previousNet = finalNet
         self.previousPosition = SHORT
         self.currentPosition = None
         self.sellShortPrice = None
@@ -484,11 +448,6 @@ class RealTrader(SimulationTrader):
         self.sellShortPrice = self.currentPrice
         self.shortTrailingPrice = self.currentPrice
         self.retrieve_margin_values()
-        finalNet = self.get_net()
         self.add_trade(message=msg,
-                       initialNet=self.previousNet,
-                       finalNet=finalNet,
-                       price=self.currentPrice,
                        force=force,
                        orderID=order['clientOrderId'])
-        self.previousNet = finalNet

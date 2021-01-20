@@ -10,20 +10,13 @@ class Option:
         self.parameter = parameter
         self.initialBound = initialBound
         self.finalBound = finalBound
-        self.previousInitialAverage = None
-        self.previousFinalAverage = None
 
-    def set_previous_initial_average(self, previousInitialAverage):
+    def get_all_params(self) -> tuple:
         """
-        Sets previous initial average for trading option.
+        Returns all the option's parameters.
+        :return: A tuple of option's parameters.
         """
-        self.previousInitialAverage = previousInitialAverage
-
-    def set_previous_final_average(self, previousFinalAverage):
-        """
-        Sets previous final average for trading option.
-        """
-        self.previousFinalAverage = previousFinalAverage
+        return self.movingAverage, self.parameter, self.initialBound, self.finalBound
 
     def set_moving_average(self, movingAverage):
         """

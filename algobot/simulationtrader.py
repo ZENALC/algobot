@@ -25,7 +25,7 @@ class SimulationTrader:
         # Initialize initial values.
         self.balance = startingBalance  # USDT Balance.
         self.startingBalance = self.balance  # Balance we started bot run with.
-        self.previousNet = self.balance
+        self.previousNet = self.balance  # Our previous net will just be the starting balance in the beginning.
         self.coinName = self.get_coin_name()  # Retrieve primary coin to trade.
         self.coin = 0  # Amount of coin we own.
         self.coinOwed = 0  # Amount of coin we owe.
@@ -39,7 +39,7 @@ class SimulationTrader:
         self.tradingOptions = []  # List with Option elements. Helps specify what moving averages to trade with.
         self.optionDetails = []  # Current option values. Holds most recent option values.
         self.lowerOptionDetails = []  # Lower option values. Holds lower interval option values (if exist).
-        self.trend = None  # 1 is bullish, -1 is bearish; usually handled with enums.
+        self.trend = None  # 1 is bullish, -1 is bearish; fully handled with enums.
         self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
         self.endingTime = None  # Ending time for previous bot run.
@@ -47,11 +47,14 @@ class SimulationTrader:
         self.buyLongPrice = None  # Price we last bought our target coin at in long position.
         self.sellShortPrice = None  # Price we last sold target coin at in short position.
         self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
+
         self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
         self.previousStopLoss = None  # Previous stop loss for smart stop loss.
         self.smartStopLossInitialCounter = 0  # Smart stop loss initial counter.
         self.smartStopLossCounter = 0  # Smart stop loss counter.
+        self.stopLossExit = False  # Boolean that'll determine whether last position was exited from a stop loss.
+
         self.longTrailingPrice = None  # Price coin has to be above for long position.
         self.shortTrailingPrice = None  # Price coin has to be below for short position.
         self.currentPrice = None  # Current price of coin.
@@ -69,8 +72,11 @@ class SimulationTrader:
         self.stoicDictionary = {}  # Dictionary for stoic strategies.
 
     def set_smart_stop_loss_counter(self, counter):
-        self.smartStopLossCounter = counter
-        self.smartStopLossInitialCounter = counter
+        """
+        Sets smart stop loss values.
+        :param counter: Initial value to set counter at. Bot will reenter position counter many times.
+        """
+        self.smartStopLossCounter = self.smartStopLossInitialCounter = counter
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
@@ -90,16 +96,16 @@ class SimulationTrader:
         elif level == 5:
             self.logger.critical(message)
 
-    def add_trade(self, message: str, initialNet: float, finalNet: float, price: float, force: bool, orderID=None):
+    def add_trade(self, message: str, force: bool, orderID=None, stopLossExit=False):
         """
         Adds a trade to list of trades
+        :param stopLossExit: Boolean for whether last position was exited because of a stop loss.
         :param orderID: Order ID returned from Binance API.
-        :param finalNet: Final net balance after trade was conducted.
-        :param initialNet: Initial net balance before trade was conducted.
         :param force: Boolean that determines whether trade was conducted autonomously or by hand.
-        :param price: Price trade was conducted at.
         :param message: Message used for conducting trade.
         """
+        initialNet = self.previousNet
+        finalNet = self.get_net()
         profit = finalNet - initialNet
         profitPercentage = self.get_profit_percentage(initialNet, finalNet)
         method = "Manual" if force else "Automation"
@@ -109,17 +115,20 @@ class SimulationTrader:
             'orderID': orderID,
             'action': message,
             'pair': self.symbol,
-            'price': f'${round(price, 2)}',
+            'price': f'${round(self.currentPrice, 2)}',
             'method': method,
             'percentage': f'{round(profitPercentage, 2)}%',
             'profit': f'${round(profit, 2)}'
         })
 
+        self.previousNet = finalNet
+        self.stopLossExit = stopLossExit
+
         self.output_message(f'\nDatetime in UTC: {datetime.utcnow()}\n'
                             f'Order ID: {orderID}\n'
                             f'Action: {message}\n'
                             f'Pair: {self.symbol}\n'
-                            f'Price: {round(price, 2)}\n'
+                            f'Price: {round(self.currentPrice, 2)}\n'
                             f'Method: {method}\n'
                             f'Percentage: {round(profitPercentage, 2)}%\n'
                             f'Profit: ${round(profit, 2)}\n')
@@ -147,14 +156,13 @@ class SimulationTrader:
         self.buyLongPrice = self.longTrailingPrice = self.currentPrice
         self.coin += (usd - transactionFee) / self.currentPrice
         self.balance -= usd
-        finalNet = self.get_net()
-        self.add_trade(msg, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice, force=force)
-        self.previousNet = finalNet
+        self.add_trade(msg, force=force)
 
-    def sell_long(self, msg: str, coin: float = None, force: bool = False):
+    def sell_long(self, msg: str, coin: float = None, force: bool = False, stopLossExit=False):
         """
         Sells specified amount of coin at current market price. If not specified, assumes bot sells all coin.
         Function also takes into account Binance's 0.1% transaction fee.
+        :param stopLossExit: Boolean for whether last position was exited because of a stop loss.
         :param msg: Message to be used for displaying trade information.
         :param coin: Coin amount to sell to exit long.
         :param force: Boolean that determines whether bot executed action or human.
@@ -169,24 +177,22 @@ class SimulationTrader:
 
         self.currentPrice = self.dataView.get_current_price()
         self.commissionPaid += coin * self.currentPrice * self.transactionFeePercentage
-        earned = coin * self.currentPrice * (1 - self.transactionFeePercentage)
+        self.balance += coin * self.currentPrice * (1 - self.transactionFeePercentage)
         self.currentPosition = None
         self.customStopLoss = None
         self.previousPosition = LONG
         self.coin -= coin
-        self.balance += earned
-        finalNet = self.get_net()
-        self.add_trade(msg, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice, force=force)
-        self.previousNet = finalNet
+        self.add_trade(msg, force=force, stopLossExit=stopLossExit)
 
         if self.coin == 0:
             self.buyLongPrice = self.longTrailingPrice = None
 
-    def buy_short(self, msg: str, coin: float = None, force: bool = False):
+    def buy_short(self, msg: str, coin: float = None, force: bool = False, stopLossExit=False):
         """
         Buys borrowed coin at current market price and returns to market.
         Function also takes into account Binance's 0.1% transaction fee.
         If coin amount is not specified, bot will assume to try to pay back everything in return.
+        :param stopLossExit: Boolean for whether last position was exited because of a stop loss.
         :param msg: Message to be used for displaying trade information.
         :param coin: Coin amount to buy back to exit short position.
         :param force: Boolean that determines whether bot executed action or human.
@@ -204,13 +210,10 @@ class SimulationTrader:
         self.previousPosition = SHORT
         self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
         self.balance -= self.currentPrice * coin * (1 + self.transactionFeePercentage)
-        finalNet = self.get_net()
-        self.add_trade(msg, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice, force=force)
-        self.previousNet = finalNet
+        self.add_trade(msg, force=force, stopLossExit=stopLossExit)
 
         if self.coinOwed == 0:
-            self.sellShortPrice = None
-            self.shortTrailingPrice = None
+            self.sellShortPrice = self.shortTrailingPrice = None
 
     def sell_short(self, msg: str, coin: float = None, force: bool = False):
         """
@@ -236,9 +239,7 @@ class SimulationTrader:
         self.balance += self.currentPrice * coin * (1 - self.transactionFeePercentage)
         self.currentPosition = SHORT
         self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
-        finalNet = self.get_net()
-        self.add_trade(msg, force=force, initialNet=self.previousNet, finalNet=finalNet, price=self.currentPrice)
-        self.previousNet = finalNet
+        self.add_trade(msg, force=force)
 
     # noinspection DuplicatedCode
     def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0) -> None or int:
@@ -368,10 +369,10 @@ class SimulationTrader:
 
         if self.currentPosition == SHORT:  # This means we are in short position
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
-                self.buy_short(f'Bought short because of custom stop loss.')
+                self.buy_short(f'Bought short because of custom stop loss.', stopLossExit=True)
 
             elif self.get_stop_loss() is not None and self.currentPrice >= self.get_stop_loss():
-                self.buy_short(f'Bought short because of stop loss.')
+                self.buy_short(f'Bought short because of stop loss.', stopLossExit=True)
 
             elif not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.stoicEnabled:
@@ -389,13 +390,12 @@ class SimulationTrader:
                 else:
                     self.buy_short(f'Bought short because a cross was detected.')
                     self.buy_long(f'Bought long because a cross was detected.')
-
         elif self.currentPosition == LONG:  # This means we are in long position
             if self.customStopLoss is not None and self.currentPrice <= self.customStopLoss:
-                self.sell_long(f'Sold long because of custom stop loss.')
+                self.sell_long(f'Sold long because of custom stop loss.', stopLossExit=True)
 
             elif self.get_stop_loss() is not None and self.currentPrice <= self.get_stop_loss():
-                self.sell_long(f'Sold long because of stop loss.')
+                self.sell_long(f'Sold long because of stop loss.', stopLossExit=True)
 
             elif not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.stoicEnabled:
@@ -413,7 +413,6 @@ class SimulationTrader:
                 else:
                     self.sell_long(f'Sold long because a cross was detected.')
                     self.sell_short('Sold short because a cross was detected.')
-
         else:  # This means we are in neither position
             if not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
@@ -449,11 +448,11 @@ class SimulationTrader:
                         self.sell_short("Sold short because a cross was detected.")
                         self.reset_smart_stop_loss()
             else:
-                if self.previousPosition == LONG:
+                if self.previousPosition == LONG and self.stopLossExit:
                     if self.currentPrice > self.previousStopLoss and self.smartStopLossCounter > 0:
                         self.buy_long("Reentered long because of smart stop loss.")
                         self.smartStopLossCounter -= 1
-                elif self.previousPosition == SHORT:
+                elif self.previousPosition == SHORT and self.stopLossExit:
                     if self.currentPrice < self.previousStopLoss and self.smartStopLossCounter > 0:
                         self.sell_short("Reentered short because of smart stop loss.")
                         self.smartStopLossCounter -= 1
@@ -531,7 +530,11 @@ class SimulationTrader:
         """
         return "Profit" if profit >= 0 else "Loss"
 
-    def get_stoic_inputs(self):
+    def get_stoic_inputs(self) -> str:
+        """
+        Returns stoic inputs if enabled.
+        :return: A string of inputs if enabled, else None.
+        """
         if not self.stoicEnabled:
             return 'None'
         return f'{self.stoicOptions[0]}, {self.stoicOptions[1]}, {self.stoicOptions[2]}'
@@ -600,8 +603,9 @@ class SimulationTrader:
         :param value: Value for the moving average to use in the moving average.
         :return: A float value representing the moving average.
         """
-        if dataObject is None:
+        if not dataObject:
             dataObject = self.dataView
+
         if movingAverage == 'SMA':
             return dataObject.get_sma(value, parameter, update=update)
         elif movingAverage == 'WMA':
@@ -629,8 +633,9 @@ class SimulationTrader:
         else:  # This means we are not in any position currently.
             self.stopLoss = None
 
-        if self.stopLoss:
+        if self.stopLoss:  # This is for the smart stop loss to reenter position.
             self.previousStopLoss = self.stopLoss
+
         return self.stopLoss
 
     def get_trend(self, dataObject: Data = None, log_data=True) -> int or None:
@@ -644,25 +649,22 @@ class SimulationTrader:
             raise ValueError("No trading options provided.")
 
         trends = []
-
-        if dataObject is None:
+        if not dataObject:
             dataObject = self.dataView
 
         if not dataObject.data_is_updated():
             dataObject.update_data()
 
         dataObject.data.insert(0, dataObject.get_current_data())
-
         if dataObject == self.dataView:
             self.optionDetails = []
         else:
             self.lowerOptionDetails = []
 
         for option in self.tradingOptions:
-            initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound,
-                                              dataObject, update=False)
-            finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound, dataObject,
-                                            update=False)
+            movingAverage, parameter, initialBound, finalBound = option.get_all_params()
+            initialAverage = self.get_average(movingAverage, parameter, initialBound, dataObject, update=False)
+            finalAverage = self.get_average(movingAverage, parameter, finalBound, dataObject, update=False)
             initialName, finalName = option.get_pretty_option()
 
             if dataObject == self.dataView:
@@ -686,7 +688,6 @@ class SimulationTrader:
                 trends.append(None)
 
         dataObject.data = dataObject.data[1:]
-
         if all(trend == BULLISH for trend in trends):
             return BULLISH
         elif all(trend == BEARISH for trend in trends):

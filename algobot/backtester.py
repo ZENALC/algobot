@@ -43,6 +43,7 @@ class Backtester:
         self.rsi_dictionary = {}
         self.stoicDictionary = {}
         self.stoicTrend = None
+
         if stoicOptions is None:
             self.stoicOptions = [None, None, None]
             self.stoicEnabled = False
@@ -70,8 +71,13 @@ class Backtester:
         self.previousStopLoss = None
         self.initialStopLossCounter = 0
         self.stopLossCounter = 0
+        self.stopLossExit = False
 
     def set_stop_loss_counter(self, counter):
+        """
+        Sets stop loss equal to the counter provided.
+        :param counter: Value to set counter to.
+        """
         self.stopLossCounter = self.initialStopLossCounter = counter
 
     def reset_everything(self):
@@ -137,7 +143,7 @@ class Backtester:
             if startDateIndex == -1:
                 raise IndexError("Date not found.")
             elif startDateIndex < self.minPeriod:
-                raise IndexError(f"Start requires more periods than minimum period amount {self.minPeriod}")
+                raise IndexError(f"Start requires more periods than minimum period amount {self.minPeriod}.")
             else:
                 return startDateIndex
         else:
@@ -214,6 +220,8 @@ class Backtester:
             self.trend = BULLISH
         elif all(trend == BEARISH for trend in trends):
             self.trend = BEARISH
+        else:
+            self.trend = None
 
     def find_date_index(self, datetimeObject):
         """
@@ -241,9 +249,10 @@ class Backtester:
         self.balance -= usd
         self.add_trade(msg)
 
-    def exit_long(self, msg):
+    def exit_long(self, msg, stopLossExit=False):
         """
         Exits long position.
+        :param stopLossExit: Boolean that'll determine whether a position was exited from a stop loss.
         :param msg: Message that specifies why it exited long.
         """
         coin = self.coin
@@ -253,7 +262,7 @@ class Backtester:
         self.previousPosition = LONG
         self.balance += coin * self.currentPrice - transactionFee
         self.coin -= coin
-        self.add_trade(msg)
+        self.add_trade(msg, stopLossExit=stopLossExit)
 
         if self.coin == 0:
             self.buyLongPrice = None
@@ -274,9 +283,10 @@ class Backtester:
         self.shortTrailingPrice = self.currentPrice
         self.add_trade(msg)
 
-    def exit_short(self, msg):
+    def exit_short(self, msg, stopLossExit=False):
         """
         Exits short position.
+        :param stopLossExit: Boolean that'll determine whether a position was exited from a stop loss.
         :param msg: Message that specifies why it exited short.
         """
         coin = self.coinOwed
@@ -284,17 +294,19 @@ class Backtester:
         self.inShortPosition = False
         self.previousPosition = SHORT
         self.balance -= self.currentPrice * coin * (1 + self.transactionFeePercentage)
-        self.add_trade(msg)
+        self.add_trade(msg, stopLossExit=stopLossExit)
 
         if self.coinOwed == 0:
             self.sellShortPrice = None
             self.shortTrailingPrice = None
 
-    def add_trade(self, message):
+    def add_trade(self, message, stopLossExit=False):
         """
         Adds a trade to list of trades
+        :param stopLossExit: Boolean that'll determine where this trade occurred from a stop loss.
         :param message: Message used for conducting trade.
         """
+        self.stopLossExit = stopLossExit
         self.trades.append({
             'date': self.currentPeriod['date_utc'],
             'action': message,
@@ -591,8 +603,7 @@ class Backtester:
         """
         if self.inShortPosition:  # This means we are in short position
             if self.currentPrice > self.get_stop_loss():  # If current price is greater, then exit trade.
-                # print(f"{self.currentPeriod['date_utc']}: Stop loss causing exit short.")
-                self.exit_short('Exited short because of a stop loss.')
+                self.exit_short('Exited short because of a stop loss.', stopLossExit=True)
 
             elif self.trend == BULLISH:
                 if self.stoicEnabled:
@@ -605,8 +616,7 @@ class Backtester:
 
         elif self.inLongPosition:  # This means we are in long position
             if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
-                # print(f"{self.currentPeriod['date_utc']}: Stop loss causing exit long.")
-                self.exit_long('Exited long because of a stop loss.')
+                self.exit_long('Exited long because of a stop loss.', stopLossExit=True)
 
             elif self.trend == BEARISH:
                 if self.stoicEnabled:
@@ -639,11 +649,11 @@ class Backtester:
             # elif self.trend == BEARISH:
             #     self.previousPosition = None
             else:
-                if self.previousPosition == LONG:
+                if self.previousPosition == LONG and self.stopLossExit:
                     if self.currentPrice > self.previousStopLoss and self.stopLossCounter > 0:
                         self.go_long("Reentered long because of smart stop loss.")
                         self.stopLossCounter -= 1
-                elif self.previousPosition == SHORT:
+                elif self.previousPosition == SHORT and self.stopLossExit:
                     if self.currentPrice < self.previousStopLoss and self.stopLossCounter > 0:
                         self.go_short("Reentered short because of smart stop loss.")
                         self.stopLossCounter -= 1
