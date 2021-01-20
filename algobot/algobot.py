@@ -590,10 +590,10 @@ class Interface(QMainWindow):
             self.hide_rsi_statistics(caller)
         else:
             self.show_rsi_statistics(caller)
-            interfaceDict['statistics']['rsi1Value'].setText(f'${round(rsiDetails[0][1], 2)}')
-            interfaceDict['statistics']['rsi2Value'].setText(f'${round(rsiDetails[1][1], 2)}')
             interfaceDict['statistics']['rsi1Label'].setText(f'RSI ({rsiDetails[0][0]}) Close')
+            interfaceDict['statistics']['rsi1Value'].setText(f'${round(rsiDetails[0][1], 2)}')
             interfaceDict['statistics']['rsi2Label'].setText(f'RSI ({rsiDetails[1][0]}) Close')
+            interfaceDict['statistics']['rsi2Value'].setText(f'${round(rsiDetails[1][1], 2)}')
 
         for index, optionDetail in enumerate(optionDetails):
             initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail

@@ -325,10 +325,10 @@ class SimulationTrader:
 
             beetle = rsi_two - min(rsi_two, two)
             apple = max(rsi_two, two) - min(rsi_two, two)
-            donkey = sum([max(x, two) - min(x, two) for x in [self.dataView.get_rsi(two, update=False, shift=x)
-                                                              for x in range(three + 1)]])
-            carrot = sum([x - min(x, two) for x in [self.dataView.get_rsi(two, update=False, shift=x)
-                                                    for x in range(three + 1)]])
+            donkey = sum([max(rsi, two) - min(rsi, two) for rsi in [self.dataView.get_rsi(two, update=False, shift=x)
+                                                                    for x in range(three + 1)]])
+            carrot = sum([rsi - min(rsi, two) for rsi in [self.dataView.get_rsi(two, update=False, shift=x)
+                                                          for x in range(three + 1)]])
             onion = carrot / donkey * 100
 
             print('\nbeetle', beetle)
