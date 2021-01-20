@@ -811,6 +811,10 @@ class Backtester:
         sys.stdout = previous_stdout  # revert stdout back to normal
 
     def get_default_result_file_name(self):
+        """
+        Returns a default backtest result file name.
+        :return: String filename.
+        """
         backtestResultsFolder = 'Backtest Results'
         symbol = 'Imported' if not self.symbol else self.symbol
         dateString = datetime.now().strftime("%Y-%m-%d_%H-%M")
@@ -830,7 +834,12 @@ class Backtester:
 
         return resultFile
 
-    def write_results(self, resultFile=None):
+    def write_results(self, resultFile=None) -> str:
+        """
+        Writes backtest results to resultFile provided. If none is provided, it'll write to a default file name.
+        :param resultFile: File to write results in.
+        :return: Path to file.
+        """
         currentPath = os.getcwd()
 
         if not resultFile:
