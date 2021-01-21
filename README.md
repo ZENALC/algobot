@@ -19,7 +19,7 @@ To install requirements and related Python packages, type ```pip install -r requ
 
 # User Interface
 
-![Main Interface](https://i.imgur.com/S9DPoRy.png "Main interface")
+![Main Interface](https://pasteboard.co/JKB1cee.png)
 ![Configuration](https://i.imgur.com/dok3dkr.png "Configuration")
 
 # Disclaimer
