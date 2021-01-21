@@ -1,4 +1,4 @@
-![logo](https://i.imgur.com/JKf07QM.jpg)
+![logo](https://i.imgur.com/YgjcoK1.png)
 
 Cryptocurrency trading bot that allows users to create strategies and then backtest, simulate, or run live bots using them. Telegram integration has been added to support easier and remote trading. 
 
