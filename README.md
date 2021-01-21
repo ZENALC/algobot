@@ -19,8 +19,10 @@ To install requirements and related Python packages, type ```pip install -r requ
 
 # User Interface
 
-![Main Interface](blob:https://pasteboard.co/29ee632c-703d-4248-a7d4-0fa2a8f03ef0)
-![Configuration](https://i.imgur.com/dok3dkr.png "Configuration")
+![Main Interface](https://i.imgur.com/Y6FD5O5.png)
+![Configuration](https://i.imgur.com/JTvHRXf.png)
+![Graphs](https://i.imgur.com/M9Oz3Q6.png)
+![News](https://i.imgur.com/Ec6Tw17.png)
 
 # Disclaimer
 
