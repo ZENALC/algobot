@@ -512,6 +512,9 @@ class Interface(QMainWindow):
         statisticsDictionary['stoicTrend'].setText(statDict['stoicTrend'])
         statisticsDictionary['stoicEnabled'].setText(statDict['stoicEnabled'])
         statisticsDictionary['stoicInputs'].setText(statDict['stoicInputs'])
+        statisticsDictionary['shrekTrend'].setText(statDict['shrekTrend'])
+        statisticsDictionary['shrekEnabled'].setText(statDict['shrekEnabled'])
+        statisticsDictionary['shrekInputs'].setText(statDict['shrekInputs'])
         statisticsDictionary['movingAverageTrend'].setText(statDict['movingAverageTrend'])
         statisticsDictionary['intervalValue'].setText(statDict['interval'])
         statisticsDictionary['smartLossCounter'].setText(statDict['smartStopLossCounter'])
@@ -592,8 +595,9 @@ class Interface(QMainWindow):
             self.show_rsi_statistics(caller)
             interfaceDict['statistics']['rsi1Label'].setText(f'RSI ({rsiDetails[0][0]}) Close')
             interfaceDict['statistics']['rsi1Value'].setText(f'${round(rsiDetails[0][1], 2)}')
-            interfaceDict['statistics']['rsi2Label'].setText(f'RSI ({rsiDetails[1][0]}) Close')
-            interfaceDict['statistics']['rsi2Value'].setText(f'${round(rsiDetails[1][1], 2)}')
+            if len(rsiDetails) > 1:
+                interfaceDict['statistics']['rsi2Label'].setText(f'RSI ({rsiDetails[1][0]}) Close')
+                interfaceDict['statistics']['rsi2Value'].setText(f'${round(rsiDetails[1][1], 2)}')
 
         for index, optionDetail in enumerate(optionDetails):
             initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
@@ -1614,6 +1618,9 @@ class Interface(QMainWindow):
                     'nextFinalMovingAverageValue': self.statistics.simulationNextFinalMovingAverageValue,
                     'elapsedValue': self.statistics.simulationElapsedValue,
                     'dailyPercentageValue': self.statistics.simulationDailyPercentageValue,
+                    'shrekTrend': self.statistics.simulationShrekTrendValue,
+                    'shrekEnabled': self.statistics.simulationShrekEnabledValue,
+                    'shrekInputs': self.statistics.simulationShrekInputsValue,
                     'stoicTrend': self.statistics.simulationStoicTrendValue,
                     'stoicEnabled': self.statistics.simulationStoicEnabledValue,
                     'stoicInputs': self.statistics.simulationStoicInputsValue,
@@ -1728,6 +1735,9 @@ class Interface(QMainWindow):
                     'nextFinalMovingAverageValue': self.statistics.nextFinalMovingAverageValue,
                     'elapsedValue': self.statistics.elapsedValue,
                     'dailyPercentageValue': self.statistics.dailyPercentageValue,
+                    'shrekTrend': self.statistics.shrekTrendValue,
+                    'shrekEnabled': self.statistics.shrekEnabledValue,
+                    'shrekInputs': self.statistics.shrekInputsValue,
                     'stoicTrend': self.statistics.stoicTrendValue,
                     'stoicEnabled': self.statistics.stoicEnabledValue,
                     'stoicInputs': self.statistics.stoicInputsValue,

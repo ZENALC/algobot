@@ -150,6 +150,10 @@ class TelegramBot:
                 f'Stoic Input 1: {trader.stoicOptions[0]}\n'
                 f'Stoic Input 2: {trader.stoicOptions[1]}\n'
                 f'Stoic Input 3: {trader.stoicOptions[2]}\n'
+                f'Shrek Enabled: {trader.shrekEnabled}\n'
+                f'Shrek Trend: {trader.shrekTrend}\n'
+                f'Smart Stop Loss Initial Counter: {trader.smartStopLossInitialCounter}\n'
+                f'Smart Stop Loss Counter: {trader.smartStopLossCounter}\n'
                 f'Moving Averages Trend: {trader.get_trend_string(trader.trend)}\n'
                 f'{optionString}'
                 )

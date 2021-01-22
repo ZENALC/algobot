@@ -65,6 +65,7 @@ class SimulationTrader:
         self.shrekTrend = None  # Current shrek trend if enabled.
         self.shrekEnabled = False  # Boolean that holds whether shrek trading is enabled or not.
         self.shrekOptions = [None, None, None, None]
+        self.shrekDictionary = {}
 
         self.stoicTrend = None  # Current stoic trend if enabled.
         self.stoicEnabled = False  # Boolean that holds whether stoic trading is enabled or not.
@@ -242,7 +243,7 @@ class SimulationTrader:
         self.add_trade(msg, force=force)
 
     # noinspection DuplicatedCode
-    def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0) -> None or int:
+    def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0):
         """
         Custom strategy.
         :param input1: Custom input 1 for the stoic strategy.
@@ -251,10 +252,8 @@ class SimulationTrader:
         :param s: Shift data to get previous values.
         :return: Bullish, bearish, or none values.
         """
-        self.dataView.data.insert(0, self.dataView.get_current_data())
         rsi_values_one = [self.dataView.get_rsi(input1, shift=shift, update=False) for shift in range(s, input1 + s)]
         rsi_values_two = [self.dataView.get_rsi(input2, shift=shift, update=False) for shift in range(s, input2 + s)]
-        self.dataView.data = self.dataView.data[1:]
 
         seneca = max(rsi_values_one) - min(rsi_values_one)
         if 'seneca' in self.stoicDictionary:
@@ -301,14 +300,12 @@ class SimulationTrader:
 
         if marcus > stoic:
             self.stoicTrend = BEARISH
-            return BEARISH
         elif marcus < stoic:
             self.stoicTrend = BULLISH
-            return BULLISH
         else:
             self.stoicTrend = None
-            return None
 
+    # noinspection DuplicatedCode
     def shrek_strategy(self, one: int, two: int, three: int, four: int):
         """
         New custom strategy.
@@ -318,35 +315,37 @@ class SimulationTrader:
         :param four: Input 4.
         :return: Strategy's current trend.
         """
-        for _ in range(20):
-            # self.dataView.data.insert(0, self.dataView.get_current_data())
-            rsi_two = self.dataView.get_rsi(two, update=False, shift=_)
-            # self.dataView.data = self.dataView.data[1:]
+        data = [rsi for rsi in [self.dataView.get_rsi(two, update=False, shift=x) for x in range(two + 1)]]
+        rsi_two = data[0]
 
-            beetle = rsi_two - min(rsi_two, two)
-            apple = max(rsi_two, two) - min(rsi_two, two)
-            donkey = sum([max(rsi, two) - min(rsi, two) for rsi in [self.dataView.get_rsi(two, update=False, shift=x)
-                                                                    for x in range(three + 1)]])
-            carrot = sum([rsi - min(rsi, two) for rsi in [self.dataView.get_rsi(two, update=False, shift=x)
-                                                          for x in range(three + 1)]])
+        apple = max(data) - min(data)
+        beetle = rsi_two - min(data)
+
+        if 'apple' in self.shrekDictionary:
+            self.shrekDictionary['apple'].append(apple)
+        else:
+            self.shrekDictionary['apple'] = [apple]
+
+        if 'beetle' in self.shrekDictionary:
+            self.shrekDictionary['beetle'].append(beetle)
+        else:
+            self.shrekDictionary['beetle'] = [beetle]
+
+        if len(self.shrekDictionary['apple']) < three + 1:
+            return
+        else:
+            carrot = sum(self.shrekDictionary['beetle'][:three + 1])
+            donkey = sum(self.shrekDictionary['apple'][:three + 1])
+            self.shrekDictionary['beetle'] = self.shrekDictionary['beetle'][1:]
+            self.shrekDictionary['apple'] = self.shrekDictionary['apple'][1:]
             onion = carrot / donkey * 100
-
-            print('\nbeetle', beetle)
-            print('rsi', rsi_two)
-            print('carrot', carrot)
-            print('apple', apple)
-            print('donkey', donkey)
-            print('onion', onion)
 
             if one > onion:
                 self.shrekTrend = BULLISH
-                # return BULLISH
             elif onion > four:
                 self.shrekTrend = BEARISH
-                # return BEARISH
             else:
                 self.shrekTrend = None
-                # return None
 
     # noinspection PyTypeChecker
     def main_logic(self, log_data=True):
@@ -355,6 +354,8 @@ class SimulationTrader:
         If there is a trend and the previous position did not reflect the trend, the bot enters position.
         :param log_data: Boolean that will determine where data is logged or not.
         """
+        self.dataView.data.insert(0, self.dataView.get_current_data())
+
         if self.stoicEnabled:
             try:
                 self.stoic_strategy(*self.stoicOptions)
@@ -366,6 +367,8 @@ class SimulationTrader:
                 self.shrek_strategy(*self.shrekOptions)
             except Exception as e:
                 raise ValueError(f"Invalid shrek options: {e} occurred.")
+
+        self.dataView.data = self.dataView.data[1:]
 
         if self.currentPosition == SHORT:  # This means we are in short position
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
@@ -538,6 +541,11 @@ class SimulationTrader:
         if not self.stoicEnabled:
             return 'None'
         return f'{self.stoicOptions[0]}, {self.stoicOptions[1]}, {self.stoicOptions[2]}'
+
+    def get_shrek_inputs(self) -> str:
+        if not self.shrekEnabled:
+            return 'None'
+        return f"{', '.join(map(str, self.shrekOptions))}"
 
     def get_net(self) -> float:
         """

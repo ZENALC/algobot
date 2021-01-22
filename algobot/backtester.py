@@ -12,7 +12,7 @@ from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
 class Backtester:
     def __init__(self, startingBalance: float, data: list, lossStrategy: int, lossPercentage: float, options: list,
                  marginEnabled: bool = True, startDate: datetime = None, endDate: datetime = None, symbol: str = None,
-                 stoicOptions=None):
+                 stoicOptions=None, shrekOptions=None):
         self.startingBalance = startingBalance
         self.symbol = symbol
         self.balance = startingBalance
@@ -36,12 +36,17 @@ class Backtester:
         self.minPeriod = self.get_min_option_period()
         self.trend = None
 
-        self.shrekTrend = None
-        self.shrekEnabled = False
-        self.shrekOptions = [None, None, None, None]
+        if shrekOptions:
+            self.shrekOptions = shrekOptions
+            self.shrekEnabled = True
+        else:
+            self.shrekOptions = [None] * 4
+            self.shrekEnabled = False
 
+        self.shrekDictionary = {}
         self.rsi_dictionary = {}
         self.stoicDictionary = {}
+        self.shrekTrend = None
         self.stoicTrend = None
 
         if stoicOptions is None:
@@ -392,6 +397,7 @@ class Backtester:
         self.shortTrailingPrice = None
         self.currentPeriod = None
 
+    # noinspection DuplicatedCode
     def shrek_strategy(self, data, one: int, two: int, three: int, four: int):
         """
         New custom strategy.
@@ -402,25 +408,40 @@ class Backtester:
         :param four: Input 4.
         :return: Strategy's current trend.
         """
-        rsi_two = self.get_rsi(data, two)
-        beetle = rsi_two - min(rsi_two, two)
-        carrot = beetle + three
-        apple = max(rsi_two, two) - min(rsi_two, two)
-        donkey = apple + three
-        onion = carrot / donkey * 100
+        data = [rsi for rsi in [self.get_rsi(data, two, shift=x) for x in range(two + 1)]]
+        rsi_two = data[0]
 
-        if one > onion:
-            self.shrekTrend = BULLISH
-            return BULLISH
-        elif onion > four:
-            self.shrekTrend = BEARISH
-            return BEARISH
+        apple = max(data) - min(data)
+        beetle = rsi_two - min(data)
+
+        if 'apple' in self.shrekDictionary:
+            self.shrekDictionary['apple'].append(apple)
         else:
-            self.shrekTrend = None
-            return None
+            self.shrekDictionary['apple'] = [apple]
+
+        if 'beetle' in self.shrekDictionary:
+            self.shrekDictionary['beetle'].append(beetle)
+        else:
+            self.shrekDictionary['beetle'] = [beetle]
+
+        if len(self.shrekDictionary['apple']) < three + 1:
+            return
+        else:
+            carrot = sum(self.shrekDictionary['beetle'][:three + 1])
+            donkey = sum(self.shrekDictionary['apple'][:three + 1])
+            self.shrekDictionary['beetle'] = self.shrekDictionary['beetle'][1:]
+            self.shrekDictionary['apple'] = self.shrekDictionary['apple'][1:]
+            onion = carrot / donkey * 100
+
+            if one > onion:
+                self.shrekTrend = BULLISH
+            elif onion > four:
+                self.shrekTrend = BEARISH
+            else:
+                self.shrekTrend = None
 
     # noinspection DuplicatedCode
-    def stoic_strategy(self, data, input1: int, input2: int, input3: int, s: int = 0) -> None or int:
+    def stoic_strategy(self, data, input1: int, input2: int, input3: int, s: int = 0):
         """
         Custom strategy.
         :param data: Data list.
@@ -428,7 +449,6 @@ class Backtester:
         :param input2: Custom input 2 for the stoic strategy.
         :param input3: Custom input 3 for the stoic strategy.
         :param s: Shift data to get previous values.
-        :return: Bullish, bearish, or none values.
         """
         rsi_values_one = [self.get_rsi(data, input1, shift=shift) for shift in range(s, input1 + s)]
         rsi_values_two = [self.get_rsi(data, input2, shift=shift) for shift in range(s, input2 + s)]
@@ -474,13 +494,10 @@ class Backtester:
 
         if marcus > stoic:
             self.stoicTrend = BEARISH
-            return BEARISH
         elif marcus < stoic:
             self.stoicTrend = BULLISH
-            return BULLISH
         else:
             self.stoicTrend = None
-            return None
 
     def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> float:
         """
@@ -611,32 +628,55 @@ class Backtester:
             elif self.trend == BULLISH:
                 if self.stoicEnabled:
                     if self.stoicTrend == BULLISH:
-                        self.exit_short(f'Exited short because a cross and stoicism were detected.')
-                        self.go_long(f'Entered long because a cross and stoicism were detected.')
+                        if not self.shrekEnabled:
+                            self.exit_short(f'Exited short because a cross and stoicism were detected.')
+                            self.go_long(f'Entered long because a cross and stoicism were detected.')
+                        elif self.shrekEnabled and self.shrekTrend == BULLISH:
+                            self.exit_short(f'Exited short because a cross, shrek, and stoicism were detected.')
+                            self.go_long(f'Entered long because a cross, shrek, and stoicism were detected.')
+                elif self.shrekEnabled:
+                    if self.shrekTrend == BULLISH:
+                        self.exit_short('Exited short because a cross and shrek was detected.')
+                        self.go_long('Entered long because a cross and shrek was detected.')
                 else:
                     self.exit_short('Exited short because a cross was detected.')
                     self.go_long('Entered long because a cross was detected.')
-
         elif self.inLongPosition:  # This means we are in long position
             if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
                 self.exit_long('Exited long because of a stop loss.', stopLossExit=True)
-
             elif self.trend == BEARISH:
                 if self.stoicEnabled:
                     if self.stoicTrend == BEARISH:
-                        self.exit_long('Exited long because a cross and stoicism were detected.')
+                        if not self.shrekEnabled:
+                            self.exit_long('Exited long because a cross and stoicism were detected.')
+                            if self.marginEnabled:
+                                self.go_short('Entered short because a cross and stoicism were detected.')
+                        elif self.shrekEnabled and self.shrekTrend == BEARISH:
+                            self.exit_long('Exited long because a cross, shrek, and stoicism were detected.')
+                            if self.marginEnabled:
+                                self.go_short('Entered short because a cross, shrek, and stoicism were detected.')
+                elif self.shrekEnabled:
+                    if self.shrekTrend == BEARISH:
+                        self.exit_long('Exited long because a cross and shrek was detected.')
                         if self.marginEnabled:
-                            self.go_short('Entered short because a cross and stoicism were detected.')
+                            self.go_short('Entered short because a cross and shrek was detected.')
                 else:
                     self.exit_long('Exited long because a cross was detected.')
                     if self.marginEnabled:
                         self.go_short('Entered short because a cross was detected.')
-
         else:  # This means we are in neither position
             if self.trend == BULLISH and self.previousPosition != LONG:
                 if self.stoicEnabled:
                     if self.stoicTrend == BULLISH:
-                        self.go_long('Entered long because a cross and stoicism were detected.')
+                        if not self.shrekEnabled:
+                            self.go_long('Entered long because a cross and stoicism were detected.')
+                            self.reset_smart_stop_loss()
+                        elif self.shrekEnabled and self.shrekTrend == BULLISH:
+                            self.go_long('Entered long because a cross, shrek, and stoicism were detected.')
+                            self.reset_smart_stop_loss()
+                elif self.shrekEnabled:
+                    if self.shrekTrend == BULLISH:
+                        self.go_long('Entered long because a cross and shrek were detected.')
                         self.reset_smart_stop_loss()
                 else:
                     self.go_long('Entered long because a cross was detected.')
@@ -644,7 +684,15 @@ class Backtester:
             elif self.marginEnabled and self.trend == BEARISH and self.previousPosition != SHORT:
                 if self.stoicEnabled:
                     if self.stoicTrend == BEARISH:
-                        self.go_short('Entered short because a cross and stoicism were detected.')
+                        if not self.shrekEnabled:
+                            self.go_short('Entered short because a cross and stoicism were detected.')
+                            self.reset_smart_stop_loss()
+                        elif self.shrekEnabled and self.shrekTrend == BEARISH:
+                            self.go_short('Entered short because a cross, shrek, and stoicism were detected.')
+                            self.reset_smart_stop_loss()
+                elif self.shrekEnabled:
+                    if self.shrekTrend == BEARISH:
+                        self.go_short('Entered short because a cross and shrek were detected.')
                         self.reset_smart_stop_loss()
                 else:
                     self.go_short('Entered short because a cross was detected.')
@@ -764,6 +812,8 @@ class Backtester:
         print("\nBacktest results:")
         print(f'\tSymbol: {"Unknown/Imported Data" if self.symbol is None else self.symbol}')
         print(f'\tElapsed: {round(self.movingAverageTestEndTime - self.movingAverageTestStartTime, 2)} seconds')
+        print(f'\tShrek Enabled: {self.shrekEnabled}')
+        print(f'\tShrek Options: {self.shrekOptions}')
         print(f'\tStoicism enabled: {self.stoicEnabled}')
         print(f'\tStoicism options: {self.stoicOptions}')
         print(f'\tStart Period: {self.data[self.startDateIndex]["date_utc"]}')

@@ -31,6 +31,8 @@ class BacktestThread(QRunnable):
         lossStrategy, lossPercentageDecimal = gui.get_loss_settings(BACKTEST)
         stoicOptions = [config.backtestStoicSpinBox1.value(), config.backtestStoicSpinBox2.value(),
                         config.backtestStoicSpinBox3.value()]
+        shrekOptions = [config.backtestShrekSpinBox1.value(), config.backtestShrekSpinBox2.value(),
+                        config.backtestShrekSpinBox3.value(), config.backtestShrekSpinBox4.value()]
 
         return {
             'startingBalance': config.backtestStartingBalanceSpinBox.value(),
@@ -44,7 +46,9 @@ class BacktestThread(QRunnable):
             'dataType': config.dataType,
             'stoicEnabled': config.backtestStoicCheckMark.isChecked(),
             'stoicOptions': stoicOptions,
-            'smartStopLossCounter': config.backtestSmartStopLossSpinBox.value()
+            'smartStopLossCounter': config.backtestSmartStopLossSpinBox.value(),
+            'shrekEnabled': config.backtestShrekCheckMark.isChecked(),
+            'shrekOptions': shrekOptions,
         }
 
     def get_configuration_dictionary_for_gui(self) -> dict:
@@ -99,6 +103,7 @@ class BacktestThread(QRunnable):
         """
         configDetails = self.get_configuration_details_to_setup_backtest()
         stoicOptions = configDetails['stoicOptions'] if configDetails['stoicEnabled'] else None
+        shrekOptions = configDetails['shrekOptions'] if configDetails['shrekEnabled'] else None
         self.gui.backtester = Backtester(startingBalance=configDetails['startingBalance'],
                                          data=configDetails['data'],
                                          symbol=configDetails['dataType'],
@@ -108,7 +113,8 @@ class BacktestThread(QRunnable):
                                          marginEnabled=configDetails['marginEnabled'],
                                          startDate=configDetails['startDate'],
                                          endDate=configDetails['endDate'],
-                                         stoicOptions=stoicOptions)
+                                         stoicOptions=stoicOptions,
+                                         shrekOptions=shrekOptions)
         self.gui.backtester.set_stop_loss_counter(configDetails['smartStopLossCounter'])
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
 
@@ -117,7 +123,6 @@ class BacktestThread(QRunnable):
         Performs a moving average test with given configurations.
         """
         backtester = self.gui.backtester
-        s1, s2, s3 = backtester.stoicOptions
         backtester.movingAverageTestStartTime = time.time()
         seenData = backtester.data[:backtester.minPeriod][::-1]  # Start from minimum previous period data.
         backtestPeriod = backtester.data[backtester.startDateIndex: backtester.endDateIndex]
@@ -132,8 +137,10 @@ class BacktestThread(QRunnable):
             backtester.currentPrice = period['open']
             backtester.main_logic()
             backtester.check_trend(seenData)
-            if backtester.stoicEnabled and len(seenData) > max((s1, s2, s3)):
-                backtester.stoic_strategy(seenData, s1, s2, s3)
+            if backtester.stoicEnabled and len(seenData) > max(backtester.stoicOptions):
+                backtester.stoic_strategy(seenData, *backtester.stoicOptions)
+            if backtester.shrekEnabled:
+                backtester.shrek_strategy(seenData, *backtester.shrekOptions)
 
             if index % divisor == 0:
                 self.signals.activity.emit(self.get_activity_dictionary(period=period, index=index, length=testLength))
