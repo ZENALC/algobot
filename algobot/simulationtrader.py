@@ -540,9 +540,13 @@ class SimulationTrader:
         """
         if not self.stoicEnabled:
             return 'None'
-        return f'{self.stoicOptions[0]}, {self.stoicOptions[1]}, {self.stoicOptions[2]}'
+        return f"{', '.join(map(str, self.stoicOptions))}"
 
     def get_shrek_inputs(self) -> str:
+        """
+        Returns shrek inputs if enabled.
+        :return: A string of inputs if enabled, else None.
+        """
         if not self.shrekEnabled:
             return 'None'
         return f"{', '.join(map(str, self.shrekOptions))}"
