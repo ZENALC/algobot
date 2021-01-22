@@ -480,6 +480,20 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
+    def create_folders_and_change_path(self, folderName):
+        """
+        Creates appropriate folders for data storage then changes current working directory to it.
+        :param folderName: Folder to create.
+        """
+        os.chdir(ROOT_DIR)
+        if not os.path.exists(folderName):  # Create CSV folder if it doesn't exist
+            os.mkdir(folderName)
+        os.chdir(folderName)  # Go inside the folder.
+
+        if not os.path.exists(self.symbol):  # Create symbol folder inside CSV folder if it doesn't exist.
+            os.mkdir(self.symbol)
+        os.chdir(self.symbol)  # Go inside the folder.
+
     def write_csv_data(self, totalData: list, fileName: str, armyTime: bool = True) -> str:
         """
         Writes CSV data to CSV folder in root directory of application.
@@ -488,17 +502,8 @@ class Data:
         :param fileName: Filename to name CSV in.
         :return: Absolute path to CSV file.
         """
-        folderName = 'CSV'
         currentPath = os.getcwd()
-        os.chdir(ROOT_DIR)
-
-        if not os.path.exists(folderName):  # Create CSV folder if it doesn't exist
-            os.mkdir(folderName)
-        os.chdir(folderName)  # Go inside the folder.
-
-        if not os.path.exists(self.symbol):  # Create symbol folder inside CSV folder if it doesn't exist.
-            os.mkdir(self.symbol)
-        os.chdir(self.symbol)  # Go inside the folder.
+        self.create_folders_and_change_path(folderName="CSV")
 
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
@@ -520,8 +525,8 @@ class Data:
     def create_csv_file(self, descending: bool = True, armyTime: bool = True) -> str:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
-        :param descending: Boolean that decides where values in CSV are in descending format or not.
-        :param armyTime: Boolean that dictates where dates will be written in army-time format or not.
+        :param descending: Boolean that decides whether values in CSV are in descending format or not.
+        :param armyTime: Boolean that dictates whether dates will be written in army-time format or not.
         """
         self.update_database_and_data()  # Update data if updates exist.
         fileName = f'{self.symbol}_data_{self.interval}.csv'
