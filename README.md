@@ -1,4 +1,4 @@
-![logo](https://i.imgur.com/veQgnEX.png "logo")
+![logo](https://i.imgur.com/YgjcoK1.png)
 
 Cryptocurrency trading bot that allows users to create strategies and then backtest, simulate, or run live bots using them. Telegram integration has been added to support easier and remote trading. 
 
@@ -19,8 +19,10 @@ To install requirements and related Python packages, type ```pip install -r requ
 
 # User Interface
 
-![Main Interface](https://i.imgur.com/S9DPoRy.png "Main interface")
-![Configuration](https://i.imgur.com/dok3dkr.png "Configuration")
+![Main Interface](https://i.imgur.com/Y6FD5O5.png)
+![Configuration](https://i.imgur.com/JTvHRXf.png)
+![Graphs](https://i.imgur.com/M9Oz3Q6.png)
+![News](https://i.imgur.com/Ec6Tw17.png)
 
 # Disclaimer
 
