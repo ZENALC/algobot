@@ -39,10 +39,10 @@ class BotThread(QRunnable):
         self.signals = BotSignals()
         self.gui = gui
         self.startingTime = time.time()
-        self.elapsed = '1 second'
-        self.percentage = None
-        self.optionDetails = []
-        self.lowerOptionDetails = []
+        self.elapsed = '1 second'  # Total elapsed run time.
+        self.percentage = None  # Total percentage gain or loss.
+        self.optionDetails = []  # This list will contain all the moving average information.
+        self.lowerOptionDetails = []  # This list will contain all the lower interval's moving average information.
 
         self.dailyIntervalSeconds = 86400  # Every 24 hours
         self.dailyPercentage = 0  # Initial change percentage.
@@ -68,10 +68,12 @@ class BotThread(QRunnable):
         sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
         gui = self.gui
         symbol = self.trader.symbol
+
         if interval != '1m':
             lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
             intervalString = helpers.convert_interval_to_string(lowerInterval)
             self.signals.activity.emit(caller, f'Retrieving {symbol} data for {intervalString.lower()} intervals...')
+
             if caller == LIVE:
                 gui.lowerIntervalData = Data(interval=lowerInterval, symbol=symbol, updateData=False)
                 gui.lowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
@@ -79,14 +81,16 @@ class BotThread(QRunnable):
             elif caller == SIMULATION:
                 gui.simulationLowerIntervalData = Data(interval=lowerInterval, symbol=symbol, updateData=False)
                 gui.simulationLowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress,
-                                                                    removeFirst=True,
-                                                                    caller=SIMULATION)
+                                                                    removeFirst=True, caller=SIMULATION)
             else:
                 raise TypeError("Invalid type of caller specified.")
+
             lowerData = gui.lowerIntervalData if caller == LIVE else gui.simulationLowerIntervalData
             if not lowerData.downloadCompleted:
                 raise RuntimeError("Download failed.")
             self.signals.activity.emit(caller, "Retrieved lower interval data successfully.")
+        else:
+            self.signals.activity.emit(caller, "There is no lower interval than 1 minute intervals.")
 
     def create_trader(self, caller):
         """
