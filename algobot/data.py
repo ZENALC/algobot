@@ -64,7 +64,7 @@ class Data:
         :param logObject: Log object to return if there is one already specified.
         :return: Logger object or None.
         """
-        if logObject is not None:
+        if logObject:
             return logObject
         else:
             if not log:

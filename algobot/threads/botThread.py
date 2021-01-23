@@ -387,6 +387,7 @@ class BotThread(QRunnable):
         """
         failCount = 0
         failLimit = 10
+        sleepTime = 5
         error = ''
 
         success = self.try_setting_up_bot()
@@ -407,14 +408,14 @@ class BotThread(QRunnable):
                     if trader:
                         trader.output_message(error_message, printMessage=True)
                         trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
-                        trader.output_message(f"({failCount})Trying again in 10 seconds..", printMessage=True)
+                        trader.output_message(f"({failCount})Trying again in {sleepTime} seconds..", printMessage=True)
 
                     if self.gui.telegramBot and self.gui.configuration.chatPass:
                         self.gui.telegramBot.send_message(self.telegramChatID, error_message)
                         self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
                         self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in "
-                                                                               f"10 seconds..")
-                    time.sleep(10)
+                                                                               f"{sleepTime} seconds..")
+                    time.sleep(sleepTime)
 
                 runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
                 if not failed or not runningLoop:
