@@ -1,5 +1,5 @@
 from datetime import datetime
-from helpers import get_logger
+from helpers import get_logger, convert_interval_to_string
 from data import Data
 from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
 
@@ -96,6 +96,91 @@ class SimulationTrader:
             self.logger.warning(message)
         elif level == 5:
             self.logger.critical(message)
+
+    def get_grouped_statistics(self) -> dict:
+        groupedDict = {
+            'general': {
+                'currentBalance': f'${round(self.balance, 2)}',
+                'startingBalance': f'${round(self.startingBalance, 2)}',
+                'tradesMade': str(len(self.trades)),
+                'coinOwned': f'{round(self.coin, 6)}',
+                'coinOwed': f'{round(self.coinOwed, 6)}',
+                'ticker': self.symbol,
+                'tickerPrice': f'${self.currentPrice}',
+                'interval': f'{convert_interval_to_string(self.dataView.interval)}',
+                'position': self.get_position_string(),
+                'autonomous': str(not self.inHumanControl),
+            },
+            'stopLoss': {
+                'stopLossType': self.get_stop_loss_strategy_string(),
+                'lossPoint': self.get_safe_rounded_string(self.get_stop_loss()),
+                'customStopPointValue': self.get_safe_rounded_string(self.customStopLoss),
+                'initialSmartStopLossCounter': str(self.smartStopLossInitialCounter),
+                'smartStopLossCounter': str(self.smartStopLossCounter),
+            },
+        }
+
+        if self.dataView.current_values:
+            groupedDict['currentData'] = {
+                'UTC Open Time': self.dataView.current_values['date_utc'].strftime('%Y-%m-%d %H:%M:%S'),
+                'open': '$' + str(round(self.dataView.current_values['open'], 2)),
+                'close': '$' + str(round(self.dataView.current_values['close'], 2)),
+                'high': '$' + str(round(self.dataView.current_values['high'], 2)),
+                'low': '$' + str(round(self.dataView.current_values['low'], 2)),
+                'volume': str(round(self.dataView.current_values['volume'], 2)),
+                'quoteAssetVolume': str(round(self.dataView.current_values['quote_asset_volume'], 2)),
+                'numberOfTrades': str(round(self.dataView.current_values['number_of_trades'], 2)),
+                'takerBuyBaseAsset': str(round(self.dataView.current_values['taker_buy_base_asset'], 2)),
+                'takerBuyQuoteAsset': str(round(self.dataView.current_values['taker_buy_quote_asset'], 2)),
+            }
+
+        if self.optionDetails:
+            groupedDict['movingAverages'] = {
+                'trend': self.get_trend_string(self.trend),
+            }
+
+            for optionDetail in self.optionDetails:
+                initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
+                groupedDict['movingAverages'][initialAverageLabel] = f'${initialAverage}'
+                groupedDict['movingAverages'][finalAverageLabel] = f'${finalAverage}'
+
+            if self.lowerOptionDetails:
+                for optionDetail in self.optionDetails:
+                    initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
+                    groupedDict['movingAverages'][f'Lower {initialAverageLabel}'] = f'${initialAverage}'
+                    groupedDict['movingAverages'][f'Lower {finalAverageLabel}'] = f'${finalAverage}'
+
+        if self.shrekEnabled:
+            groupedDict['shrek'] = {
+                'trend': self.get_trend_string(self.shrekTrend),
+                'enabled': str(self.shrekEnabled),
+                'inputs': self.get_shrek_inputs(),
+            }
+
+            if 'values' in self.shrekDictionary:
+                for key in self.shrekDictionary['values']:
+                    groupedDict['shrek'][key] = self.shrekDictionary['values'][key]
+
+            for x in self.shrekOptions:
+                if x in self.dataView.rsi_data:
+                    groupedDict['shrek'][f'RSI {x}'] = round(self.dataView.rsi_data[x], 2)
+
+        if self.stoicEnabled:
+            groupedDict['stoic'] = {
+                'trend': self.get_trend_string(self.stoicTrend),
+                'enabled': str(self.stoicEnabled),
+                'inputs': self.get_stoic_inputs(),
+            }
+
+            if 'values' in self.stoicDictionary:
+                for key in self.stoicDictionary['values']:
+                    groupedDict['stoic'][key] = self.stoicDictionary['values'][key]
+
+            for x in self.stoicOptions:
+                if x in self.dataView.rsi_data:
+                    groupedDict['stoic'][f'RSI {x}'] = round(self.dataView.rsi_data[x], 2)
+
+        return groupedDict
 
     def add_trade(self, message: str, force: bool, orderID=None, stopLossExit=False):
         """
@@ -298,6 +383,16 @@ class SimulationTrader:
         self.output_message(f'\nMarcus: {marcus}')
         self.output_message(f'Stoic: {stoic}\n')
 
+        self.stoicDictionary['values'] = {
+            'marcus': round(marcus, 2),
+            'stoic': round(stoic, 2),
+            'seneca': round(seneca, 2),
+            'zeno': round(zeno, 2),
+            'gaius': round(gaius, 2),
+            'philo': round(philo, 2),
+            'hadot': round(hadot, 2),
+        }
+
         if marcus > stoic:
             self.stoicTrend = BEARISH
         elif marcus < stoic:
@@ -339,6 +434,14 @@ class SimulationTrader:
             self.shrekDictionary['beetle'] = self.shrekDictionary['beetle'][1:]
             self.shrekDictionary['apple'] = self.shrekDictionary['apple'][1:]
             onion = carrot / donkey * 100
+
+            self.shrekDictionary['values'] = {
+                'apple': round(apple, 2),
+                'beetle': round(beetle, 2),
+                'carrot': round(carrot, 2),
+                'donkey': round(donkey, 2),
+                'onion': round(onion, 2)
+            }
 
             if one > onion:
                 self.shrekTrend = BULLISH

@@ -3,7 +3,7 @@ import sys
 import os
 import webbrowser
 
-from helpers import ROOT_DIR, convert_interval_to_string, open_file_or_folder
+from helpers import ROOT_DIR, open_file_or_folder
 from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
 from datetime import datetime
@@ -446,6 +446,7 @@ class Interface(QMainWindow):
         self.enable_override(caller)
         self.destroy_graph_plots(interfaceDict['graph'])
         self.destroy_graph_plots(interfaceDict['averageGraph'])
+        self.statistics.initialize_tab(trader.get_grouped_statistics(), tabType=self.get_caller_string(caller))
         self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
         self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
 
@@ -469,232 +470,57 @@ class Interface(QMainWindow):
         else:
             self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(disable)
 
-    def update_interface_info(self, caller, statDict: dict):
+    def update_interface_info(self, caller, valueDict: dict, groupedDict: dict):
         """
         Updates interface elements based on caller.
-        :param statDict: Dictionary containing statistics.
+        :param groupedDict: Test dict.
+        :param valueDict: Dictionary containing statistics.
         :param caller: Object that determines which object gets updated.
         """
         interfaceDict = self.interfaceDictionary[caller]
-        self.update_main_interface_and_graphs(interfaceDict, statDict=statDict, caller=caller)
+        self.statistics.modify_tab(groupedDict, tabType=self.get_caller_string(caller))
+        self.update_main_interface_and_graphs(interfaceDict, valueDict=valueDict, caller=caller)
         self.update_trades_table_and_activity_monitor(caller=caller)
         self.handle_position_buttons(caller=caller)
         self.handle_custom_stop_loss_buttons(caller=caller)
 
-    def update_main_interface_and_graphs(self, interfaceDictionary: dict, statDict: dict, caller):
+    def update_main_interface_and_graphs(self, interfaceDictionary: dict, valueDict: dict, caller):
         """
         Updates main interface GUI elements based on caller.
         :param interfaceDictionary: Dictionary to use for which statistics to update.
-        :param statDict: Dictionary with trader values in formatted data types.
+        :param valueDict: Dictionary with trader values in formatted data types.
         :param caller: Caller that decides which main interface gets updated.
         """
-        statisticsDictionary = interfaceDictionary['statistics']
-        statisticsDictionary['startingBalanceValue'].setText(statDict['startingBalanceValue'])
-        statisticsDictionary['currentBalanceValue'].setText(statDict['currentBalanceValue'])
-        statisticsDictionary['netValue'].setText(statDict['netValue'])
-        statisticsDictionary['profitLossLabel'].setText(statDict['profitLossLabel'])
-        statisticsDictionary['profitLossValue'].setText(statDict['profitLossValue'])
-        statisticsDictionary['percentageValue'].setText(statDict['percentageValue'])
-        statisticsDictionary['tradesMadeValue'].setText(statDict['tradesMadeValue'])
-        statisticsDictionary['coinOwnedLabel'].setText(statDict['coinOwnedLabel'])
-        statisticsDictionary['coinOwnedValue'].setText(statDict['coinOwnedValue'])
-        statisticsDictionary['coinOwedLabel'].setText(statDict['coinOwedLabel'])
-        statisticsDictionary['coinOwedValue'].setText(statDict['coinOwedValue'])
-        statisticsDictionary['currentTickerLabel'].setText(statDict['tickerLabel'])
-        statisticsDictionary['currentTickerValue'].setText(statDict['tickerValue'])
-        statisticsDictionary['lossPointLabel'].setText(statDict['lossPointLabel'])
-        statisticsDictionary['lossPointValue'].setText(statDict['lossPointValue'])
-        statisticsDictionary['customStopPointValue'].setText(statDict['customStopPointValue'])
-        statisticsDictionary['currentPositionValue'].setText(statDict['currentPositionValue'])
-        statisticsDictionary['autonomousValue'].setText(statDict['autonomousValue'])
-        statisticsDictionary['elapsedValue'].setText(statDict['elapsedValue'])
-        statisticsDictionary['dailyPercentageValue'].setText(statDict['dailyPercentageValue'])
-        statisticsDictionary['stoicTrend'].setText(statDict['stoicTrend'])
-        statisticsDictionary['stoicEnabled'].setText(statDict['stoicEnabled'])
-        statisticsDictionary['stoicInputs'].setText(statDict['stoicInputs'])
-        statisticsDictionary['shrekTrend'].setText(statDict['shrekTrend'])
-        statisticsDictionary['shrekEnabled'].setText(statDict['shrekEnabled'])
-        statisticsDictionary['shrekInputs'].setText(statDict['shrekInputs'])
-        statisticsDictionary['movingAverageTrend'].setText(statDict['movingAverageTrend'])
-        statisticsDictionary['intervalValue'].setText(statDict['interval'])
-        statisticsDictionary['smartLossCounter'].setText(statDict['smartStopLossCounter'])
-        statisticsDictionary['initialSmartLossCounter'].setText(statDict['initialSmartStopLossCounter'])
-
-        # These are for main interface window.
         mainInterfaceDictionary = interfaceDictionary['mainInterface']
-        mainInterfaceDictionary['profitLabel'].setText(statDict['profitLossLabel'])
-        mainInterfaceDictionary['profitValue'].setText(statDict['profitLossValue'])
-        mainInterfaceDictionary['percentageValue'].setText(statDict['percentageValue'])
-        mainInterfaceDictionary['netTotalValue'].setText(statDict['netValue'])
-        mainInterfaceDictionary['tickerLabel'].setText(statDict['tickerLabel'])
-        mainInterfaceDictionary['tickerValue'].setText(statDict['tickerValue'])
-        mainInterfaceDictionary['positionValue'].setText(statDict['currentPositionValue'])
+        mainInterfaceDictionary['profitLabel'].setText(valueDict['profitLossLabel'])
+        mainInterfaceDictionary['profitValue'].setText(valueDict['profitLossValue'])
+        mainInterfaceDictionary['percentageValue'].setText(valueDict['percentageValue'])
+        mainInterfaceDictionary['netTotalValue'].setText(valueDict['netValue'])
+        mainInterfaceDictionary['tickerLabel'].setText(valueDict['tickerLabel'])
+        mainInterfaceDictionary['tickerValue'].setText(valueDict['tickerValue'])
+        mainInterfaceDictionary['positionValue'].setText(valueDict['currentPositionValue'])
 
-        lowerIntervalTrend = statDict['lowerIntervalTrend']
-        interval = statDict['interval']
-        net = statDict['net']
-        price = statDict['currentPrice']
-        optionDetails = statDict['optionDetails']
-        lowerOptionDetails = statDict['lowerOptionDetails']
-        rsiDetails = statDict['rsiDetails']
-        self.update_graphs_and_moving_averages(net=net, caller=caller, optionDetails=optionDetails,
-                                               price=price, rsiDetails=rsiDetails, interval=interval,
-                                               lowerOptionDetails=lowerOptionDetails,
-                                               lowerIntervalTrend=lowerIntervalTrend)
+        self.update_graphs_and_moving_averages(caller=caller, valueDict=valueDict)
 
-    def update_graphs_and_moving_averages(self, net: float, caller, optionDetails: list, price: float,
-                                          rsiDetails: list, lowerOptionDetails: list = None, interval: str = None,
-                                          lowerIntervalTrend: str = None):
+    def update_graphs_and_moving_averages(self, caller, valueDict):
         """
         Updates graphs and moving averages in statistics based on caller.
-        :param lowerIntervalTrend: Trend for lower interval.
-        :param lowerOptionDetails: Details for the lower interval options.
-        :param interval: Interval being traded at.
-        :param rsiDetails: RSI information (if exists).
-        :param price: Current ticker price.
-        :param net: Net to be added to net graph.
+        :param valueDict: Dictionary with required values.
         :param caller: Caller that decides which graphs get updated.
-        :param optionDetails: List of option details for the average graph.
         """
         interfaceDict = self.interfaceDictionary[caller]
         currentUTC = datetime.utcnow().timestamp()
-        lowerData = self.lowerIntervalData if caller == LIVE else self.simulationLowerIntervalData
+        net = valueDict['net']
+
         self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, currentUTC, net)
 
-        if len(optionDetails) == 1:
-            self.hide_next_moving_averages(caller)
-
-        if len(lowerOptionDetails) == 0 or not lowerData:
-            self.hide_lower_interval_averages(caller)
-            self.hide_next_lower_interval_averages(caller)
-        else:
-            self.show_lower_interval_averages(caller)
-            interfaceDict['statistics']['lowerIntervalTrendValue'].setText(lowerIntervalTrend)
-            if len(lowerOptionDetails) == 1:
-                self.hide_next_lower_interval_averages(caller)
-
-            for index, optionDetail in enumerate(lowerOptionDetails):
-                initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                initialAverageLabel += f' {convert_interval_to_string(lowerData.interval)}'
-                finalAverageLabel += f' {convert_interval_to_string(lowerData.interval)}'
-                if index == 0:
-                    interfaceDict['statistics']['lowerInitialLabel'].setText(initialAverageLabel)
-                    interfaceDict['statistics']['lowerInitialValue'].setText(f'${initialAverage}')
-                    interfaceDict['statistics']['lowerFinalLabel'].setText(finalAverageLabel)
-                    interfaceDict['statistics']['lowerFinalValue'].setText(f'${finalAverage}')
-                elif index == 1:
-                    self.show_next_lower_interval_averages(caller=caller)
-                    interfaceDict['statistics']['lowerNextInitialLabel'].setText(initialAverageLabel)
-                    interfaceDict['statistics']['lowerNextInitialValue'].setText(f'${initialAverage}')
-                    interfaceDict['statistics']['lowerNextFinalLabel'].setText(finalAverageLabel)
-                    interfaceDict['statistics']['lowerNextFinalValue'].setText(f'${finalAverage}')
-
-        if len(rsiDetails) == 0:
-            self.hide_rsi_statistics(caller)
-        else:
-            self.show_rsi_statistics(caller)
-            interfaceDict['statistics']['rsi1Label'].setText(f'RSI ({rsiDetails[0][0]}) Close')
-            interfaceDict['statistics']['rsi1Value'].setText(f'${round(rsiDetails[0][1], 2)}')
-            if len(rsiDetails) > 1:
-                interfaceDict['statistics']['rsi2Label'].setText(f'RSI ({rsiDetails[1][0]}) Close')
-                interfaceDict['statistics']['rsi2Value'].setText(f'${round(rsiDetails[1][1], 2)}')
-
-        for index, optionDetail in enumerate(optionDetails):
-            initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-            initialAverageLabel += f' {interval}'
-            finalAverageLabel += f' {interval}'
+        for index, optionDetail in enumerate(valueDict['optionDetails']):
+            initialAverage, finalAverage = optionDetail[:2]
             self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], index * 2, currentUTC, initialAverage)
             self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], index * 2 + 1, currentUTC,
                                   finalAverage)
 
-            if index == 0:
-                interfaceDict['statistics']['baseInitialMovingAverageLabel'].setText(initialAverageLabel)
-                interfaceDict['statistics']['baseInitialMovingAverageValue'].setText(f'${initialAverage}')
-                interfaceDict['statistics']['baseFinalMovingAverageLabel'].setText(finalAverageLabel)
-                interfaceDict['statistics']['baseFinalMovingAverageValue'].setText(f'${finalAverage}')
-            if index == 1:
-                self.show_next_moving_averages(caller=caller)
-                interfaceDict['statistics']['nextInitialMovingAverageLabel'].setText(initialAverageLabel)
-                interfaceDict['statistics']['nextInitialMovingAverageValue'].setText(f'${initialAverage}')
-                interfaceDict['statistics']['nextFinalMovingAverageLabel'].setText(finalAverageLabel)
-                interfaceDict['statistics']['nextFinalMovingAverageValue'].setText(f'${finalAverage}')
-
-        self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], -1, currentUTC,
-                              price)
-
-    def show_next_moving_averages(self, caller):
-        """
-        :param caller: Caller that will decide which statistics get shown.
-        Shows next moving averages statistics based on caller.
-        """
-        interfaceDict = self.interfaceDictionary[caller]['statistics']
-        interfaceDict['nextInitialMovingAverageLabel'].show()
-        interfaceDict['nextInitialMovingAverageValue'].show()
-        interfaceDict['nextFinalMovingAverageLabel'].show()
-        interfaceDict['nextFinalMovingAverageValue'].show()
-
-    def show_lower_interval_averages(self, caller):
-        interfaceDict = self.interfaceDictionary[caller]['statistics']
-        interfaceDict['lowerIntervalTrendLabel'].show()
-        interfaceDict['lowerIntervalTrendValue'].show()
-        interfaceDict['lowerInitialLabel'].show()
-        interfaceDict['lowerInitialValue'].show()
-        interfaceDict['lowerFinalLabel'].show()
-        interfaceDict['lowerFinalValue'].show()
-
-    def hide_lower_interval_averages(self, caller):
-        interfaceDict = self.interfaceDictionary[caller]['statistics']
-        interfaceDict['lowerIntervalTrendLabel'].hide()
-        interfaceDict['lowerIntervalTrendValue'].hide()
-        interfaceDict['lowerInitialLabel'].hide()
-        interfaceDict['lowerInitialValue'].hide()
-        interfaceDict['lowerFinalLabel'].hide()
-        interfaceDict['lowerFinalValue'].hide()
-
-    def show_next_lower_interval_averages(self, caller):
-        interfaceDict = self.interfaceDictionary[caller]['statistics']
-        interfaceDict['lowerNextInitialLabel'].show()
-        interfaceDict['lowerNextInitialValue'].show()
-        interfaceDict['lowerNextFinalLabel'].show()
-        interfaceDict['lowerNextFinalValue'].show()
-
-    def hide_next_lower_interval_averages(self, caller):
-        interfaceDict = self.interfaceDictionary[caller]['statistics']
-        interfaceDict['lowerNextInitialLabel'].hide()
-        interfaceDict['lowerNextInitialValue'].hide()
-        interfaceDict['lowerNextFinalLabel'].hide()
-        interfaceDict['lowerNextFinalValue'].hide()
-
-    def show_rsi_statistics(self, caller):
-        """
-        Shows RSI stats based on caller.
-        :param caller: Caller that will decide which RSI statistics get shown.
-        """
-        self.interfaceDictionary[caller]['statistics']['rsi1Label'].show()
-        self.interfaceDictionary[caller]['statistics']['rsi2Label'].show()
-        self.interfaceDictionary[caller]['statistics']['rsi1Value'].show()
-        self.interfaceDictionary[caller]['statistics']['rsi2Value'].show()
-
-    def hide_rsi_statistics(self, caller):
-        """
-        Hides RSI stats based on caller.
-        :param caller: Caller that will decide which RSI statistics get hidden.
-        """
-        self.interfaceDictionary[caller]['statistics']['rsi1Label'].hide()
-        self.interfaceDictionary[caller]['statistics']['rsi2Label'].hide()
-        self.interfaceDictionary[caller]['statistics']['rsi1Value'].hide()
-        self.interfaceDictionary[caller]['statistics']['rsi2Value'].hide()
-
-    def hide_next_moving_averages(self, caller):
-        """
-        Hides next moving averages statistics based on caller.
-        :param caller: Caller that will decide which statistics get hidden.
-        """
-        interfaceDict = self.interfaceDictionary[caller]['statistics']
-        interfaceDict['nextInitialMovingAverageLabel'].hide()
-        interfaceDict['nextInitialMovingAverageValue'].hide()
-        interfaceDict['nextFinalMovingAverageLabel'].hide()
-        interfaceDict['nextFinalMovingAverageValue'].hide()
+        self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], -1, currentUTC, valueDict['price'])
 
     def destroy_trader(self, caller):
         """
@@ -1350,6 +1176,17 @@ class Interface(QMainWindow):
         self.configuration.configurationTabWidget.setCurrentIndex(2)
         self.configuration.simulationConfigurationTabWidget.setCurrentIndex(0)
 
+    @staticmethod
+    def get_caller_string(caller):
+        if caller == LIVE:
+            return 'live'
+        elif caller == SIMULATION:
+            return 'simulation'
+        elif caller == BACKTEST:
+            return 'backtest'
+        else:
+            raise ValueError("Invalid type of caller specified.")
+
     def show_statistics(self, index: int):
         """
         Opens statistics window and sets tab index to index provided.
@@ -1589,61 +1426,6 @@ class Interface(QMainWindow):
         """
         interfaceDictionary = {
             SIMULATION: {
-                'statistics': {
-                    'startingBalanceValue': self.statistics.simulationStartingBalanceValue,
-                    'currentBalanceValue': self.statistics.simulationCurrentBalanceValue,
-                    'netValue': self.statistics.simulationNetValue,
-                    'profitLossLabel': self.statistics.simulationProfitLossLabel,
-                    'profitLossValue': self.statistics.simulationProfitLossValue,
-                    'percentageValue': self.statistics.simulationPercentageValue,
-                    'tradesMadeValue': self.statistics.simulationTradesMadeValue,
-                    'coinOwnedLabel': self.statistics.simulationCoinOwnedLabel,
-                    'coinOwnedValue': self.statistics.simulationCoinOwnedValue,
-                    'coinOwedLabel': self.statistics.simulationCoinOwedLabel,
-                    'coinOwedValue': self.statistics.simulationCoinOwedValue,
-                    'currentTickerLabel': self.statistics.simulationCurrentTickerLabel,
-                    'currentTickerValue': self.statistics.simulationCurrentTickerValue,
-                    'lossPointLabel': self.statistics.simulationLossPointLabel,
-                    'lossPointValue': self.statistics.simulationLossPointValue,
-                    'customStopPointValue': self.statistics.simulationCustomStopPointValue,
-                    'currentPositionValue': self.statistics.simulationCurrentPositionValue,
-                    'autonomousValue': self.statistics.simulationAutonomousValue,
-                    'baseInitialMovingAverageLabel': self.statistics.simulationBaseInitialMovingAverageLabel,
-                    'baseInitialMovingAverageValue': self.statistics.simulationBaseInitialMovingAverageValue,
-                    'baseFinalMovingAverageLabel': self.statistics.simulationBaseFinalMovingAverageLabel,
-                    'baseFinalMovingAverageValue': self.statistics.simulationBaseFinalMovingAverageValue,
-                    'nextInitialMovingAverageLabel': self.statistics.simulationNextInitialMovingAverageLabel,
-                    'nextInitialMovingAverageValue': self.statistics.simulationNextInitialMovingAverageValue,
-                    'nextFinalMovingAverageLabel': self.statistics.simulationNextFinalMovingAverageLabel,
-                    'nextFinalMovingAverageValue': self.statistics.simulationNextFinalMovingAverageValue,
-                    'elapsedValue': self.statistics.simulationElapsedValue,
-                    'dailyPercentageValue': self.statistics.simulationDailyPercentageValue,
-                    'shrekTrend': self.statistics.simulationShrekTrendValue,
-                    'shrekEnabled': self.statistics.simulationShrekEnabledValue,
-                    'shrekInputs': self.statistics.simulationShrekInputsValue,
-                    'stoicTrend': self.statistics.simulationStoicTrendValue,
-                    'stoicEnabled': self.statistics.simulationStoicEnabledValue,
-                    'stoicInputs': self.statistics.simulationStoicInputsValue,
-                    'movingAverageTrend': self.statistics.simulationMovingAverageTrendValue,
-                    'rsi1Label': self.statistics.simulationRsi1Label,
-                    'rsi2Label': self.statistics.simulationRsi2Label,
-                    'rsi1Value': self.statistics.simulationRsi1Value,
-                    'rsi2Value': self.statistics.simulationRsi2Value,
-                    'intervalLabel': self.statistics.simulationIntervalLabel,
-                    'intervalValue': self.statistics.simulationIntervalValue,
-                    'lowerIntervalTrendLabel': self.statistics.simulationLowerIntervalTrendLabel,
-                    'lowerIntervalTrendValue': self.statistics.simulationLowerIntervalTrendValue,
-                    'lowerInitialLabel': self.statistics.simulationLowerInitialLabel,
-                    'lowerInitialValue': self.statistics.simulationLowerInitialValue,
-                    'lowerFinalLabel': self.statistics.simulationLowerFinalLabel,
-                    'lowerFinalValue': self.statistics.simulationLowerFinalValue,
-                    'lowerNextInitialLabel': self.statistics.simulationLowerNextInitialLabel,
-                    'lowerNextInitialValue': self.statistics.simulationLowerNextInitialValue,
-                    'lowerNextFinalLabel': self.statistics.simulationLowerNextFinalLabel,
-                    'lowerNextFinalValue': self.statistics.simulationLowerNextFinalValue,
-                    'smartLossCounter': self.statistics.simulationSmartLossCounterValue,
-                    'initialSmartLossCounter': self.statistics.simulationInitialSmartLossCounterValue,
-                },
                 'mainInterface': {
                     # Portfolio
                     'profitLabel': self.simulationProfitLabel,
@@ -1706,61 +1488,6 @@ class Interface(QMainWindow):
                 }
             },
             LIVE: {
-                'statistics': {
-                    'startingBalanceValue': self.statistics.startingBalanceValue,
-                    'currentBalanceValue': self.statistics.currentBalanceValue,
-                    'netValue': self.statistics.netValue,
-                    'profitLossLabel': self.statistics.profitLossLabel,
-                    'profitLossValue': self.statistics.profitLossValue,
-                    'percentageValue': self.statistics.percentageValue,
-                    'tradesMadeValue': self.statistics.tradesMadeValue,
-                    'coinOwnedLabel': self.statistics.coinOwnedLabel,
-                    'coinOwnedValue': self.statistics.coinOwnedValue,
-                    'coinOwedLabel': self.statistics.coinOwedLabel,
-                    'coinOwedValue': self.statistics.coinOwedValue,
-                    'currentTickerLabel': self.statistics.currentTickerLabel,
-                    'currentTickerValue': self.statistics.currentTickerValue,
-                    'lossPointLabel': self.statistics.lossPointLabel,
-                    'lossPointValue': self.statistics.lossPointValue,
-                    'customStopPointValue': self.statistics.customStopPointValue,
-                    'currentPositionValue': self.statistics.currentPositionValue,
-                    'autonomousValue': self.statistics.autonomousValue,
-                    'baseInitialMovingAverageLabel': self.statistics.baseInitialMovingAverageLabel,
-                    'baseInitialMovingAverageValue': self.statistics.baseInitialMovingAverageValue,
-                    'baseFinalMovingAverageLabel': self.statistics.baseFinalMovingAverageLabel,
-                    'baseFinalMovingAverageValue': self.statistics.baseFinalMovingAverageValue,
-                    'nextInitialMovingAverageLabel': self.statistics.nextInitialMovingAverageLabel,
-                    'nextInitialMovingAverageValue': self.statistics.nextInitialMovingAverageValue,
-                    'nextFinalMovingAverageLabel': self.statistics.nextFinalMovingAverageLabel,
-                    'nextFinalMovingAverageValue': self.statistics.nextFinalMovingAverageValue,
-                    'elapsedValue': self.statistics.elapsedValue,
-                    'dailyPercentageValue': self.statistics.dailyPercentageValue,
-                    'shrekTrend': self.statistics.shrekTrendValue,
-                    'shrekEnabled': self.statistics.shrekEnabledValue,
-                    'shrekInputs': self.statistics.shrekInputsValue,
-                    'stoicTrend': self.statistics.stoicTrendValue,
-                    'stoicEnabled': self.statistics.stoicEnabledValue,
-                    'stoicInputs': self.statistics.stoicInputsValue,
-                    'movingAverageTrend': self.statistics.movingAverageTrendValue,
-                    'rsi1Label': self.statistics.rsi1Label,
-                    'rsi2Label': self.statistics.rsi2Label,
-                    'rsi1Value': self.statistics.rsi1Value,
-                    'rsi2Value': self.statistics.rsi2Value,
-                    'intervalLabel': self.statistics.intervalLabel,
-                    'intervalValue': self.statistics.intervalValue,
-                    'lowerIntervalTrendLabel': self.statistics.lowerIntervalTrendLabel,
-                    'lowerIntervalTrendValue': self.statistics.lowerIntervalTrendValue,
-                    'lowerInitialLabel': self.statistics.lowerInitialLabel,
-                    'lowerInitialValue': self.statistics.lowerInitialValue,
-                    'lowerFinalLabel': self.statistics.lowerFinalLabel,
-                    'lowerFinalValue': self.statistics.lowerFinalValue,
-                    'lowerNextInitialLabel': self.statistics.lowerNextInitialLabel,
-                    'lowerNextInitialValue': self.statistics.lowerNextInitialValue,
-                    'lowerNextFinalLabel': self.statistics.lowerNextFinalLabel,
-                    'lowerNextFinalValue': self.statistics.lowerNextFinalValue,
-                    'smartLossCounter': self.statistics.smartLossCounterValue,
-                    'initialSmartLossCounter': self.statistics.initialSmartLossCounterValue,
-                },
                 'mainInterface': {
                     # Portfolio
                     'profitLabel': self.profitLabel,

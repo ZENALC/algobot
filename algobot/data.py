@@ -34,6 +34,18 @@ class Data:
         self.data = []  # Total bot data.
         self.ema_data = {}  # Cached past EMA data for memoization.
         self.rsi_data = {}  # Cached past RSI data for memoization.
+        self.current_values = {  # This dictionary will hold current data values.
+            'date_utc': datetime.now(tz=timezone.utc),
+            'open': 0,
+            'high': 0,
+            'low': 0,
+            'close': 0,
+            'volume': 0,
+            'quote_asset_volume': 0,
+            'number_of_trades': 0,
+            'taker_buy_base_asset': 0,
+            'taker_buy_quote_asset': 0
+        }
 
         self.databaseTable = f'data_{self.interval}'
         self.databaseFile = self.get_database_file()
@@ -434,11 +446,12 @@ class Data:
                                      'high': float(currentData[2]),
                                      'low': float(currentData[3]),
                                      'close': float(currentData[4]),
-                                     'volume:': float(currentData[5]),
-                                     'quote_asset_volume:': float(currentData[6]),
-                                     'number_of_trades:': float(currentData[7]),
-                                     'taker_buy_base_asset:': float(currentData[8]),
-                                     'taker_buy_quote_asset:': float(currentData[9]), }
+                                     'volume': float(currentData[5]),
+                                     'quote_asset_volume': float(currentData[6]),
+                                     'number_of_trades': float(currentData[7]),
+                                     'taker_buy_base_asset': float(currentData[8]),
+                                     'taker_buy_quote_asset': float(currentData[9]), }
+            self.current_values = currentDataDictionary
             return currentDataDictionary
         except Exception as e:
             self.output_message(f"Error: {e}. Retrying in 5 seconds...", 4)

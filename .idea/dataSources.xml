@@ -100,5 +100,16 @@
         </library>
       </libraries>
     </data-source>
+    <data-source source="LOCAL" name="ALPHAUSDT" uuid="59e44a53-7224-4d92-ad64-1defd9ed3312">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\Databases\ALPHAUSDT.db</jdbc-url>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.31.1/sqlite-jdbc-3.31.1.jar</url>
+        </library>
+      </libraries>
+    </data-source>
   </component>
 </project>

@@ -16,7 +16,7 @@ class BotSignals(QObject):
     smallError = pyqtSignal(str)
     started = pyqtSignal(int)
     activity = pyqtSignal(int, str)
-    updated = pyqtSignal(int, dict)
+    updated = pyqtSignal(int, dict, dict)
     finished = pyqtSignal()
     error = pyqtSignal(int, str)
     restore = pyqtSignal()
@@ -279,19 +279,7 @@ class BotThread(QRunnable):
                     self.gui.telegramBot.send_message(message=message, chatID=self.telegramChatID)
                 return lowerTrend
 
-    def get_statistics(self):
-        """
-        Returns current bot statistics in a dictionary.
-        :return: Current statistics in a dictionary.
-        """
-        trader: SimulationTrader = self.trader
-        net = trader.get_net()
-        profit = trader.get_profit()
-        self.percentage = trader.get_profit_percentage(trader.startingBalance, net)
-        self.elapsed = helpers.get_elapsed_time(self.startingTime)
-        self.optionDetails = trader.optionDetails
-        self.lowerOptionDetails = trader.lowerOptionDetails
-
+    def set_daily_percentages(self, trader, net):
         if self.previousDayTime is None:  # This logic is for daily percentage yields.
             if time.time() - self.startingTime >= self.dailyIntervalSeconds:
                 self.previousDayTime = time.time()
@@ -308,45 +296,46 @@ class BotThread(QRunnable):
             else:
                 self.dailyPercentage = trader.get_profit_percentage(self.previousDayNet, net)
 
-        return {
-            # Statistics window
-            'net': net,
-            'interval': helpers.convert_interval_to_string(trader.dataView.interval),
-            'lowerIntervalTrend': self.lowerTrend,
-            'startingBalanceValue': f'${round(trader.startingBalance, 2)}',
-            'currentBalanceValue': f'${round(trader.balance, 2)}',
-            'netValue': f'${round(net, 2)}',
+    def get_statistics(self):
+        """
+        Returns current bot statistics in a dictionary.
+        :return: Current statistics in a dictionary.
+        """
+        trader: SimulationTrader = self.trader
+        net = trader.get_net()
+        profit = trader.get_profit()
+
+        self.percentage = trader.get_profit_percentage(trader.startingBalance, net)
+        self.elapsed = helpers.get_elapsed_time(self.startingTime)
+        self.optionDetails = trader.optionDetails
+        self.lowerOptionDetails = trader.lowerOptionDetails
+        self.set_daily_percentages(trader=trader, net=net)
+
+        groupedDict = trader.get_grouped_statistics()
+        groupedDict['general']['net'] = f'${round(net, 2)}'
+        groupedDict['general']['profit'] = f'${round(profit, 2)}'
+        groupedDict['general']['elapsed'] = self.elapsed
+        groupedDict['general']['totalPercentage'] = f'{round(self.percentage, 2)}%'
+        groupedDict['general']['dailyPercentage'] = f'{round(self.dailyPercentage, 2)}%'
+
+        if trader.lowerOptionDetails:
+            groupedDict['movingAverages']['lowerTrend'] = self.lowerTrend
+
+        valueDict = {
             'profitLossLabel': trader.get_profit_or_loss_string(profit=profit),
             'profitLossValue': f'${abs(round(profit, 2))}',
             'percentageValue': f'{round(self.percentage, 2)}%',
-            'tradesMadeValue': str(len(trader.trades)),
-            'coinOwnedLabel': f'{trader.coinName} Owned',
-            'coinOwnedValue': f'{round(trader.coin, 6)}',
-            'coinOwedLabel': f'{trader.coinName} Owed',
-            'coinOwedValue': f'{round(trader.coinOwed, 6)}',
-            'lossPointLabel': trader.get_stop_loss_strategy_string(),
-            'lossPointValue': trader.get_safe_rounded_string(trader.get_stop_loss()),
-            'customStopPointValue': trader.get_safe_rounded_string(trader.customStopLoss),
+            'netValue': f'${round(net, 2)}',
+            'tickerLabel': f'${round(trader.currentPrice, 2)}',
+            'tickerValue': trader.symbol,
             'currentPositionValue': trader.get_position_string(),
-            'autonomousValue': str(not trader.inHumanControl),
-            'tickerLabel': trader.symbol,
-            'tickerValue': f'${trader.currentPrice}',
-            'currentPrice': trader.currentPrice,
+
+            'net': net,
+            'price': trader.currentPrice,
             'optionDetails': self.optionDetails,
-            'initialSmartStopLossCounter': str(trader.smartStopLossInitialCounter),
-            'smartStopLossCounter': str(trader.smartStopLossCounter),
-            'lowerOptionDetails': self.lowerOptionDetails,
-            'elapsedValue': self.elapsed,
-            'dailyPercentageValue': f'{round(self.dailyPercentage, 2)}%',
-            'shrekTrend': trader.get_trend_string(trader.shrekTrend),
-            'shrekEnabled': str(trader.shrekEnabled),
-            'shrekInputs': trader.get_shrek_inputs(),
-            'stoicTrend': trader.get_trend_string(trader.stoicTrend),
-            'stoicEnabled': str(trader.stoicEnabled),
-            'stoicInputs': trader.get_stoic_inputs(),
-            'movingAverageTrend': trader.get_trend_string(trader.trend),
-            'rsiDetails': [(key, trader.dataView.rsi_data[key]) for key in trader.dataView.rsi_data],
         }
+
+        return valueDict, groupedDict
 
     def trading_loop(self, caller):
         """
@@ -365,8 +354,8 @@ class BotThread(QRunnable):
             self.handle_trading(caller=caller)
             self.handle_scheduler()
             lowerTrend = self.handle_lower_interval_cross(caller, lowerTrend)
-            statDict = self.get_statistics()
-            self.signals.updated.emit(caller, statDict)
+            valueDict, groupedDict = self.get_statistics()
+            self.signals.updated.emit(caller, valueDict, groupedDict)
             runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
             trader.completedLoop = True
 
