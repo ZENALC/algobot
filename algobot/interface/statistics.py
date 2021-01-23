@@ -90,6 +90,18 @@ class Statistics(QDialog):
         innerTabs[categoryKey]['tab'].setLayout(innerLayout)
         tab.addTab(innerTabs[categoryKey]['tab'], self.get_label_string(categoryKey))
 
+    @staticmethod
+    def set_profit_or_loss_label(valueDictionary, innerTabs):
+        if 'general' in valueDictionary and 'profit' in valueDictionary['general']:
+            tab = innerTabs['general']
+            if 'profit' in tab:
+                if valueDictionary['general']['profit'][1] == '-':
+                    label = 'Loss'
+                    valueDictionary['general']['profit'] = "$" + valueDictionary['general']['profit'][2:]
+                else:
+                    label = 'Profit'
+                tab['profit']['label'].setText(label)
+
     def modify_tab(self, valueDictionary, tabType):
         """
         Modifies tab.
@@ -97,6 +109,7 @@ class Statistics(QDialog):
         :param tabType: Tab type to be modified.
         """
         innerTabs = self.tabs[tabType]['innerTabs']  # live/widgets
+        self.set_profit_or_loss_label(valueDictionary=valueDictionary, innerTabs=innerTabs)
 
         for categoryKey in valueDictionary:
             if categoryKey not in innerTabs:

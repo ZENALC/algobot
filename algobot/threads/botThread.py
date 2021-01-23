@@ -330,8 +330,8 @@ class BotThread(QRunnable):
             'profitLossValue': f'${abs(round(profit, 2))}',
             'percentageValue': f'{round(self.percentage, 2)}%',
             'netValue': f'${round(net, 2)}',
-            'tickerLabel': f'${round(trader.currentPrice, 2)}',
-            'tickerValue': trader.symbol,
+            'tickerValue': f'${round(trader.currentPrice, 2)}',
+            'tickerLabel': trader.symbol,
             'currentPositionValue': trader.get_position_string(),
 
             'net': net,
@@ -363,56 +363,63 @@ class BotThread(QRunnable):
             runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
             trader.completedLoop = True
 
-    @pyqtSlot()
-    def run(self):
-        """
-        Initialise the runner function with passed args, kwargs.
-        """
-        caller = self.caller
-        failCount = 0
-        failLimit = 10
-        error = ''
-
+    def try_setting_up_bot(self) -> bool:
         try:
-            self.setup_bot(caller=caller)
-            self.signals.started.emit(caller)
+            self.setup_bot(caller=self.caller)
+            self.signals.started.emit(self.caller)
+            return True
         except Exception as e:
             error_message = traceback.format_exc()
-            trader: SimulationTrader = self.gui.get_trader(caller)
-            if trader is not None:
+            trader: SimulationTrader = self.gui.get_trader(self.caller)
+            if trader:
                 trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
                 trader.output_message(error_message, printMessage=True)
             if self.gui.telegramBot and self.gui.configuration.chatPass:
                 self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
                 self.gui.telegramBot.send_message(self.telegramChatID, error_message)
             self.signals.error.emit(self.caller, str(e))
+            return False
 
-        while failCount < failLimit:
-            try:
-                self.trading_loop(caller)
-                failed = False
-            except Exception as e:
-                failed = True
-                error = e
-                self.signals.smallError.emit(str(e))
-                error_message = traceback.format_exc()
-                trader: SimulationTrader = self.gui.get_trader(caller)
-                if trader is not None:
-                    trader.output_message(error_message, printMessage=True)
-                    trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
-                    trader.output_message(f"({failCount})Trying again in 10 seconds..", printMessage=True)
-                failCount += 1
-                if self.gui.telegramBot and self.gui.configuration.chatPass:
-                    self.gui.telegramBot.send_message(self.telegramChatID, error_message)
-                    self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
-                    self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in 10 seconds..")
-                time.sleep(10)
+    @pyqtSlot()
+    def run(self):
+        """
+        Initialise the runner function with passed args, kwargs.
+        """
+        failCount = 0
+        failLimit = 10
+        error = ''
 
-            runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
-            if not failed or not runningLoop:
-                break
+        success = self.try_setting_up_bot()
+        if success:
+            while failCount < failLimit:
+                try:
+                    self.trading_loop(self.caller)
+                    failed = False
+                except Exception as e:
+                    failed = True
+                    failCount += 1
+                    error = e
+                    error_message = traceback.format_exc()
+                    trader: SimulationTrader = self.gui.get_trader(self.caller)
+
+                    self.signals.smallError.emit(str(e))
+
+                    if trader:
+                        trader.output_message(error_message, printMessage=True)
+                        trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
+                        trader.output_message(f"({failCount})Trying again in 10 seconds..", printMessage=True)
+
+                    if self.gui.telegramBot and self.gui.configuration.chatPass:
+                        self.gui.telegramBot.send_message(self.telegramChatID, error_message)
+                        self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
+                        self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in "
+                                                                               f"10 seconds..")
+                    time.sleep(10)
+
+                runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
+                if not failed or not runningLoop:
+                    break
 
         if failLimit == failCount:
             self.signals.error.emit(self.caller, str(error))
-
         self.signals.restore.emit()
