@@ -944,7 +944,7 @@ class Interface(QMainWindow):
         """
         colors = self.get_graph_colors()
 
-        infiniteLine = InfiniteLine(pos=0, pen=mkPen('r', width=1), movable=False)
+        infiniteLine = InfiniteLine(pos=0, pen=mkPen('m', width=1), movable=False)
         graph.addItem(infiniteLine)
         self.get_graph_dictionary(graph)['line'] = infiniteLine
 
@@ -1008,7 +1008,7 @@ class Interface(QMainWindow):
             graphDict['line'].setPos(p.x())
             xValue = int(p.x())
 
-            if graphDict['plots'][0]['x'][-1] >= xValue:
+            if graphDict['plots'][0]['x'][-1] > xValue:
                 date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][xValue])
                 total = 'Datetime in UTC: ' + date_object.strftime("%m/%d/%Y, %H:%M:%S")
 

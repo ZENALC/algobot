@@ -117,6 +117,14 @@ class SimulationTrader:
                 'customStopPointValue': self.get_safe_rounded_string(self.customStopLoss),
                 'initialSmartStopLossCounter': str(self.smartStopLossInitialCounter),
                 'smartStopLossCounter': str(self.smartStopLossCounter),
+                'stopLossExit': str(self.stopLossExit),
+                'previousStopLoss': self.get_safe_rounded_string(self.previousStopLoss),
+                'longTrailingPrice': self.get_safe_rounded_string(self.longTrailingPrice),
+                'shortTrailingPrice': self.get_safe_rounded_string(self.shortTrailingPrice),
+                'lossPercentage': self.get_safe_rounded_string(self.lossPercentageDecimal, direction='right',
+                                                               multiplier=100, symbol='%'),
+                'buyLongPrice': self.get_safe_rounded_string(self.buyLongPrice),
+                'sellShortPrice': self.get_safe_rounded_string(self.sellShortPrice),
             },
         }
 
@@ -614,9 +622,12 @@ class SimulationTrader:
             raise ValueError("Invalid type of current position.")
 
     @staticmethod
-    def get_safe_rounded_string(value: float, roundDigits: int = 2, symbol: str = '$') -> str:
+    def get_safe_rounded_string(value: float, roundDigits: int = 2, symbol: str = '$', direction: str = 'left',
+                                multiplier: float = 1) -> str:
         """
         Helper function that will, if exists, return value rounded with symbol provided.
+        :param multiplier: Optional value to final value with before return.
+        :param direction: Direction to add the safe rounded string: left or right.
         :param roundDigits: Number of digits to round value.
         :param symbol: Symbol to insert to beginning of return string.
         :param value: Value that will be safety checked.
@@ -625,7 +636,10 @@ class SimulationTrader:
         if value is None:
             return "None"
         else:
-            return f'{symbol}{round(value, roundDigits)}'
+            if direction == 'left':
+                return f'{symbol}{round(value * multiplier, roundDigits)}'
+            else:
+                return f'{round(value * multiplier, roundDigits)}{symbol}'
 
     @staticmethod
     def get_profit_or_loss_string(profit: float) -> str:
