@@ -849,7 +849,7 @@ class Interface(QMainWindow):
         Adds data to plot in provided graph.
         :param targetGraph: Graph to use for plot to add data to.
         :param plotIndex: Index of plot in target graph's list of plots.
-        :param y: X value to add.
+        :param y: Y value to add.
         :param timestamp: Timestamp value to add.
         """
         graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
@@ -916,7 +916,16 @@ class Interface(QMainWindow):
                                                timestamp=currentDateTimestamp)
         self.append_plot_to_graph(graph, [netPlotDict])
 
-    def get_plot_dictionary(self, graph, color, y, name, timestamp):
+    def get_plot_dictionary(self, graph, color, y, name, timestamp) -> dict:
+        """
+        Creates a graph plot and returns a dictionary of it.
+        :param graph: Graph to add plot to.
+        :param color: Color of plot.
+        :param y: Y value to start with for plot.
+        :param name: Name of plot.
+        :param timestamp: First UTC timestamp of plot.
+        :return: Dictionary of plot information.
+        """
         plot = self.create_graph_plot(graph, (0,), (y,), color=color, plotName=name)
         return {
             'plot': plot,
@@ -996,9 +1005,8 @@ class Interface(QMainWindow):
         p = graph.plotItem.vb.mapSceneToView(point)
         if p:
             graphDict = self.get_graph_dictionary(graph)
-            line = graphDict['line']
+            graphDict['line'].setPos(p.x())
             xValue = int(p.x())
-            line.setPos(p.x())
 
             if graphDict['plots'][0]['x'][-1] >= xValue:
                 date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][xValue])
