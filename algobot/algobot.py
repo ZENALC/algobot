@@ -944,7 +944,7 @@ class Interface(QMainWindow):
         """
         colors = self.get_graph_colors()
 
-        infiniteLine = InfiniteLine(pos=0, pen=mkPen('y', width=1), movable=False)
+        infiniteLine = InfiniteLine(pos=0, pen=mkPen(colors[-1], width=1), movable=False)
         graph.addItem(infiniteLine)
         self.get_graph_dictionary(graph)['line'] = infiniteLine
 
@@ -969,7 +969,7 @@ class Interface(QMainWindow):
                      'black': 'k',
                      'white': 'w'}
         colors = [config.balanceColor.currentText(), config.avg1Color.currentText(), config.avg2Color.currentText(),
-                  config.avg3Color.currentText(), config.avg4Color.currentText()]
+                  config.avg3Color.currentText(), config.avg4Color.currentText(), config.hoverLineColor.currentText()]
         return [colorDict[color.lower()] for color in colors]
 
     def create_graph_plot(self, graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):

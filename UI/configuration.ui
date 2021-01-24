@@ -46,7 +46,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -2981,7 +2981,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="tab_10">
           <property name="enabled">
@@ -3337,6 +3337,63 @@
               <string>Graph Colors</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_11">
+              <item row="1" column="1">
+               <widget class="QComboBox" name="avg1Color">
+                <property name="toolTip">
+                 <string>Sets color for graph's first moving average.</string>
+                </property>
+                <property name="currentIndex">
+                 <number>1</number>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Blue</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Green</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Red</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Cyan</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Magenta</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Yellow</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Black</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>White</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="movingAverage2ColorLabel">
+                <property name="text">
+                 <string>Moving Average 2 Color</string>
+                </property>
+               </widget>
+              </item>
               <item row="4" column="1">
                <widget class="QComboBox" name="avg4Color">
                 <property name="toolTip">
@@ -3444,67 +3501,16 @@
                 </item>
                </widget>
               </item>
-              <item row="1" column="1">
-               <widget class="QComboBox" name="avg1Color">
-                <property name="toolTip">
-                 <string>Sets color for graph's first moving average.</string>
+              <item row="0" column="0">
+               <widget class="QLabel" name="balanceColorLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
                 </property>
-                <property name="currentIndex">
-                 <number>1</number>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Blue</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Green</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Red</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Cyan</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Magenta</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Yellow</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Black</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>White</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="movingAverage2ColorLabel">
                 <property name="text">
-                 <string>Moving Average 2 Color</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="movingAverage1ColorLabel">
-                <property name="text">
-                 <string>Moving Average 1 Color</string>
+                 <string>Balance Color</string>
                 </property>
                </widget>
               </item>
@@ -3521,54 +3527,11 @@
                 </property>
                </widget>
               </item>
-              <item row="2" column="1">
-               <widget class="QComboBox" name="avg2Color">
-                <property name="toolTip">
-                 <string>Sets color for graph's second moving average.</string>
+              <item row="1" column="0">
+               <widget class="QLabel" name="movingAverage1ColorLabel">
+                <property name="text">
+                 <string>Moving Average 1 Color</string>
                 </property>
-                <property name="currentIndex">
-                 <number>2</number>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Blue</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Green</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Red</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Cyan</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Magenta</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Yellow</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Black</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>White</string>
-                 </property>
-                </item>
                </widget>
               </item>
               <item row="0" column="1">
@@ -3621,24 +3584,115 @@
                 </item>
                </widget>
               </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="balanceColorLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
+              <item row="2" column="1">
+               <widget class="QComboBox" name="avg2Color">
+                <property name="toolTip">
+                 <string>Sets color for graph's second moving average.</string>
                 </property>
+                <property name="currentIndex">
+                 <number>2</number>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Blue</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Green</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Red</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Cyan</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Magenta</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Yellow</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Black</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>White</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="6" column="0">
+               <widget class="QLabel" name="changesNoticeLabel">
                 <property name="text">
-                 <string>Balance Color</string>
+                 <string>Changes take effect next run.</string>
                 </property>
                </widget>
               </item>
               <item row="5" column="0">
-               <widget class="QLabel" name="label_5">
+               <widget class="QLabel" name="hoverLineColorLabel">
                 <property name="text">
-                 <string>Changes take effect next run.</string>
+                 <string>Hover Line Color</string>
                 </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <widget class="QComboBox" name="hoverLineColor">
+                <property name="currentText">
+                 <string>Blue</string>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Blue</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Green</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Red</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Cyan</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Magenta</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Yellow</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Black</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>White</string>
+                 </property>
+                </item>
                </widget>
               </item>
              </layout>
