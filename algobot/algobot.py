@@ -1012,8 +1012,8 @@ class Interface(QMainWindow):
                 date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][xValue])
                 total = 'Datetime in UTC: ' + date_object.strftime("%m/%d/%Y, %H:%M:%S")
 
-                for plot in graphDict['plots']:
-                    total += f' {plot["name"]}: {round(plot["y"][xValue], 2)}'
+                for plotDict in graphDict['plots']:
+                    total += f' {plotDict["name"]}: {round(plotDict["y"][xValue], 2)}'
 
                 graphDict['label'].setText(total)
 
