@@ -944,7 +944,7 @@ class Interface(QMainWindow):
         """
         colors = self.get_graph_colors()
 
-        infiniteLine = InfiniteLine(pos=0, pen=mkPen('m', width=1), movable=False)
+        infiniteLine = InfiniteLine(pos=0, pen=mkPen('y', width=1), movable=False)
         graph.addItem(infiniteLine)
         self.get_graph_dictionary(graph)['line'] = infiniteLine
 
