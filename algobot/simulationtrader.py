@@ -172,7 +172,7 @@ class SimulationTrader:
 
             for x in self.shrekOptions:
                 if x in self.dataView.rsi_data:
-                    groupedDict['shrek'][f'RSI {x}'] = round(self.dataView.rsi_data[x], 2)
+                    groupedDict['shrek'][f'RSI({x})'] = round(self.dataView.rsi_data[x], 2)
 
         if self.stoicEnabled:
             groupedDict['stoic'] = {
@@ -187,7 +187,7 @@ class SimulationTrader:
 
             for x in self.stoicOptions:
                 if x in self.dataView.rsi_data:
-                    groupedDict['stoic'][f'RSI {x}'] = round(self.dataView.rsi_data[x], 2)
+                    groupedDict['stoic'][f'RSI({x})'] = round(self.dataView.rsi_data[x], 2)
 
         return groupedDict
 
