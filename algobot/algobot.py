@@ -912,9 +912,9 @@ class Interface(QMainWindow):
             colorCounter += 2
             self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
 
-        netPlotDict = self.get_plot_dictionary(graph=graph, color=colors[0], y=currentPrice, name=trader.symbol,
-                                               timestamp=currentDateTimestamp)
-        self.append_plot_to_graph(graph, [netPlotDict])
+        tickerPlotDict = self.get_plot_dictionary(graph=graph, color=colors[0], y=currentPrice, name=trader.symbol,
+                                                  timestamp=currentDateTimestamp)
+        self.append_plot_to_graph(graph, [tickerPlotDict])
 
     def get_plot_dictionary(self, graph, color, y, name, timestamp) -> dict:
         """

@@ -41,15 +41,15 @@
       <bool>true</bool>
      </property>
      <property name="plainText">
-      <string>Algobot Version 2.2b
+      <string>Algobot Version 2.3b
 
 Algobot is an open-source software written in Python that enables users to create automated bots that can trade, simulate, or backtest with strategies implemented.
 
 This program is not responsible for any financial burdens or debt incurred. 
 
-Use at own risk. 
+Use at your own risk. 
 
-For contribution, visit https://github.com/ZENALC/algobot</string>
+For contribution, bug reports, or feature requests, visit https://github.com/ZENALC/algobot</string>
      </property>
     </widget>
    </item>
