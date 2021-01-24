@@ -416,6 +416,8 @@ class BotThread(QRunnable):
                         self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in "
                                                                                f"{sleepTime} seconds..")
                     time.sleep(sleepTime)
+                    trader.retrieve_margin_values()
+                    trader.check_initial_position()
 
                 runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
                 if not failed or not runningLoop:

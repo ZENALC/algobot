@@ -990,3 +990,9 @@ class SimulationTrader:
             self.output_message(f'Day {index}: {round(net, 2)}%')
 
         self.output_message("")
+
+    def retrieve_margin_values(self):
+        pass
+
+    def check_initial_position(self):
+        pass
