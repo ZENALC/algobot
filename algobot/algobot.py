@@ -23,7 +23,7 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem, QFileDialog
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtGui import QIcon, QTextCursor
-from pyqtgraph import DateAxisItem, mkPen, PlotWidget
+from pyqtgraph import mkPen, PlotWidget, InfiniteLine
 
 app = QApplication(sys.argv)
 mainUi = os.path.join('../', 'UI', 'algobot.ui')
@@ -235,7 +235,7 @@ class Interface(QMainWindow):
         self.backtestProfitPercentage.setText(updatedDict['profitPercentage'])
         self.backtestTradesMade.setText(updatedDict['tradesMade'])
         self.backtestCurrentPeriod.setText(updatedDict['currentPeriod'])
-        self.add_data_to_plot(self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, utc, net)
+        self.add_data_to_plot(self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, y=net, timestamp=utc)
 
     def update_backtest_configuration_gui(self, statDict: dict):
         """
@@ -268,17 +268,16 @@ class Interface(QMainWindow):
 
     def set_backtest_graph_limits_and_empty_plots(self):
         """
-        Hacky fix, but resets backtest graph and sets x-axis limits.
+        Resets backtest graph and sets x-axis limits.
         """
-        for graph in self.graphs:  # Super hacky temporary fix.
-            if graph['graph'] == self.backtestGraph:
-                initialTimeStamp = self.backtester.data[0]['date_utc'].timestamp()
-                finalTimeStamp = self.backtester.data[-1]['date_utc'].timestamp() + 300
-                graph['graph'].setLimits(xMin=initialTimeStamp, xMax=finalTimeStamp)
-                plot = graph['plots'][0]
-                plot['x'] = []
-                plot['y'] = []
-                plot['plot'].setData(plot['x'], plot['y'])
+        initialTimeStamp = self.backtester.data[0]['date_utc'].timestamp()
+        graphDict = self.get_graph_dictionary(self.backtestGraph)
+        graphDict['graph'].setLimits(xMin=0, xMax=105)
+        plot = graphDict['plots'][0]
+        plot['x'] = [0]
+        plot['y'] = [self.backtester.startingBalance]
+        plot['z'] = [initialTimeStamp]
+        plot['plot'].setData(plot['x'], plot['y'])
 
     def get_previous_trade_count(self, caller):
         if caller == LIVE:
@@ -511,16 +510,16 @@ class Interface(QMainWindow):
         interfaceDict = self.interfaceDictionary[caller]
         currentUTC = datetime.utcnow().timestamp()
         net = valueDict['net']
+        targetGraph = interfaceDict['mainInterface']['averageGraph']
 
-        self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, currentUTC, net)
+        self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, y=net, timestamp=currentUTC)
 
         for index, optionDetail in enumerate(valueDict['optionDetails']):
             initialAverage, finalAverage = optionDetail[:2]
-            self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], index * 2, currentUTC, initialAverage)
-            self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], index * 2 + 1, currentUTC,
-                                  finalAverage)
+            self.add_data_to_plot(targetGraph, index * 2, y=initialAverage, timestamp=currentUTC)
+            self.add_data_to_plot(targetGraph, index * 2 + 1, y=finalAverage, timestamp=currentUTC)
 
-        self.add_data_to_plot(interfaceDict['mainInterface']['averageGraph'], -1, currentUTC, valueDict['price'])
+        self.add_data_to_plot(targetGraph, -1, y=valueDict['price'], timestamp=currentUTC)
 
     def destroy_trader(self, caller):
         """
@@ -826,18 +825,13 @@ class Interface(QMainWindow):
         """
         Sets up all available graphs in application.
         """
-        currentDate = datetime.utcnow().timestamp()
-        nextDate = currentDate + 3600000
-
-        for graph in self.graphs:
-            graph = graph['graph']
-            graph.setAxisItems({'bottom': DateAxisItem()})
+        for graphDict in self.graphs:
+            graph = graphDict['graph']
+            graph.setLimits(xMin=0)
             graph.setBackground('w')
             graph.setLabel('left', 'USDT')
-            graph.setLabel('bottom', 'Datetime in UTC')
+            graph.setLabel('bottom', 'X')
             graph.addLegend()
-            if graph != self.backtestGraph:
-                graph.setLimits(xMin=currentDate, xMax=nextDate)
 
             if graph == self.backtestGraph:
                 graph.setTitle("Backtest Price Change")
@@ -850,21 +844,19 @@ class Interface(QMainWindow):
             elif graph == self.avgGraph:
                 graph.setTitle("Live Moving Averages")
 
-        # self.graphWidget.setLimits(xMin=currentDate, xMax=nextDate)
-        # self.graphWidget.plotItem.setMouseEnabled(y=False)
-
-    def add_data_to_plot(self, targetGraph: PlotWidget, plotIndex: int, x: float, y: float):
+    def add_data_to_plot(self, targetGraph: PlotWidget, plotIndex: int, y: float, timestamp: float):
         """
         Adds data to plot in provided graph.
         :param targetGraph: Graph to use for plot to add data to.
         :param plotIndex: Index of plot in target graph's list of plots.
-        :param x: X value to add.
-        :param y: Y value to add.
+        :param y: X value to add.
+        :param timestamp: Timestamp value to add.
         """
         graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
         plot = graphDict['plots'][plotIndex]
-        plot['x'].append(x)
+        plot['x'].append(plot['x'][-1] + 1)
         plot['y'].append(y)
+        plot['z'].append(timestamp)
         plot['plot'].setData(plot['x'], plot['y'])
 
     def append_plot_to_graph(self, targetGraph: PlotWidget, toAdd: list):
@@ -894,15 +886,9 @@ class Interface(QMainWindow):
         """
         net = trader.startingBalance
         currentDateTimestamp = datetime.utcnow().timestamp()
-        if graph != self.backtestGraph:  # If backtest, we don't need to start from current UTC. Could be earlier.
-            graph.setLimits(xMin=currentDateTimestamp)
+        plot = self.get_plot_dictionary(graph=graph, color=color, y=net, name='Net', timestamp=currentDateTimestamp)
 
-        self.append_plot_to_graph(graph, [{
-            'plot': self.create_graph_plot(graph, (currentDateTimestamp,), (net,),
-                                           color=color, plotName='Net'),
-            'x': [currentDateTimestamp],
-            'y': [net]
-        }])
+        self.append_plot_to_graph(graph, [plot])
 
     def setup_average_graph_plots(self, graph: PlotWidget, trader, colors: list):
         """
@@ -916,31 +902,29 @@ class Interface(QMainWindow):
 
         currentPrice = trader.currentPrice
         currentDateTimestamp = datetime.utcnow().timestamp()
-        graph.setLimits(xMin=currentDateTimestamp)
         colorCounter = 1
         for option in trader.tradingOptions:
             initialAverage, finalAverage, initialName, finalName = self.get_option_info(option, trader)
-            initialPlotDict = {
-                'plot': self.create_graph_plot(graph, (currentDateTimestamp,), (initialAverage,),
-                                               color=colors[colorCounter], plotName=initialName),
-                'x': [currentDateTimestamp],
-                'y': [initialAverage]
-            }
-            secondaryPlotDict = {
-                'plot': self.create_graph_plot(graph, (currentDateTimestamp,), (finalAverage,),
-                                               color=colors[colorCounter + 1], plotName=finalName),
-                'x': [currentDateTimestamp],
-                'y': [finalAverage]
-            }
+            initialPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter], y=initialAverage,
+                                                       name=initialName, timestamp=currentDateTimestamp)
+            secondaryPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter + 1], y=finalAverage,
+                                                         name=finalName, timestamp=currentDateTimestamp)
             colorCounter += 2
             self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
 
-        self.append_plot_to_graph(graph, [{
-            'plot': self.create_graph_plot(graph, (currentDateTimestamp,), (currentPrice,),
-                                           color=colors[0], plotName=trader.symbol),
-            'x': [currentDateTimestamp],
-            'y': [currentPrice]
-        }])
+        netPlotDict = self.get_plot_dictionary(graph=graph, color=colors[0], y=currentPrice, name=trader.symbol,
+                                               timestamp=currentDateTimestamp)
+        self.append_plot_to_graph(graph, [netPlotDict])
+
+    def get_plot_dictionary(self, graph, color, y, name, timestamp):
+        plot = self.create_graph_plot(graph, (0,), (y,), color=color, plotName=name)
+        return {
+            'plot': plot,
+            'x': [0],
+            'y': [y],
+            'z': [timestamp],
+            'name': name,
+        }
 
     def setup_graph_plots(self, graph: PlotWidget, trader: SimulationTrader, graphType: int):
         """
@@ -950,6 +934,11 @@ class Interface(QMainWindow):
         :param graphType: Graph type; i.e. moving average or net balance.
         """
         colors = self.get_graph_colors()
+
+        infiniteLine = InfiniteLine(pos=0, pen=mkPen('r', width=1), movable=False)
+        graph.addItem(infiniteLine)
+        self.get_graph_dictionary(graph)['line'] = infiniteLine
+
         if graphType == NET_GRAPH:
             self.setup_net_graph_plot(graph=graph, trader=trader, color=colors[0])
         elif graphType == AVG_GRAPH:
@@ -1007,9 +996,18 @@ class Interface(QMainWindow):
         p = graph.plotItem.vb.mapSceneToView(point)
         if p:
             graphDict = self.get_graph_dictionary(graph)
-            date_string = datetime.utcfromtimestamp(int(p.x()))
-            value = round(p.y(), 2)
-            graphDict['label'].setText(f"{date_string} : ${value}")
+            line = graphDict['line']
+            xValue = int(p.x())
+            line.setPos(p.x())
+
+            if graphDict['plots'][0]['x'][-1] >= xValue:
+                date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][xValue])
+                total = 'Datetime in UTC: ' + date_object.strftime("%m/%d/%Y, %H:%M:%S")
+
+                for plot in graphDict['plots']:
+                    total += f' {plot["name"]}: {round(plot["y"][xValue], 2)}'
+
+                graphDict['label'].setText(total)
 
     @staticmethod
     def clear_table(table):
