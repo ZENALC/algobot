@@ -38,6 +38,10 @@ class Statistics(QDialog):
             self.statisticsTabWidget.removeTab(index)
 
     def remove_old_tab(self, tabType):
+        """
+        Removes previous tab of the same tab type.
+        :param tabType: Tab type to remove.
+        """
         index = self.get_index_from_tab_type(tabType)
         self.statisticsTabWidget.removeTab(index)
 
@@ -62,7 +66,12 @@ class Statistics(QDialog):
         self.statisticsTabWidget.insertTab(index, tab, f"{tabType.capitalize()}")
 
     @staticmethod
-    def get_index_from_tab_type(tabType):
+    def get_index_from_tab_type(tabType) -> int:
+        """
+        Returns index of type of tab.
+        :param tabType: Type of tab to get index of.
+        :return: Tab index of given tab type.
+        """
         if 'sim' in tabType:
             return 1
         else:
@@ -92,6 +101,11 @@ class Statistics(QDialog):
 
     @staticmethod
     def set_profit_or_loss_label(valueDictionary, innerTabs):
+        """
+        Sets the profit or loss label appropriately based on the value dictionary provided.
+        :param valueDictionary: Dictionary with values to update profit or loss label.
+        :param innerTabs: Main tab's inner tabs.
+        """
         if 'general' in valueDictionary and 'profit' in valueDictionary['general']:
             tab = innerTabs['general']
             if 'profit' in tab:
