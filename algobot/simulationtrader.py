@@ -54,6 +54,7 @@ class SimulationTrader:
         self.smartStopLossInitialCounter = 0  # Smart stop loss initial counter.
         self.smartStopLossCounter = 0  # Smart stop loss counter.
         self.stopLossExit = False  # Boolean that'll determine whether last position was exited from a stop loss.
+        self.smartStopLossEnter = False  # Boolean that'll determine whether current position is from a smart stop loss.
 
         self.longTrailingPrice = None  # Price coin has to be above for long position.
         self.shortTrailingPrice = None  # Price coin has to be below for short position.
@@ -121,6 +122,7 @@ class SimulationTrader:
                 'initialSmartStopLossCounter': str(self.smartStopLossInitialCounter),
                 'smartStopLossCounter': str(self.smartStopLossCounter),
                 'stopLossExit': str(self.stopLossExit),
+                'smartStopLossEnter': str(self.smartStopLossEnter),
                 'previousStopLossPoint': self.get_safe_rounded_string(self.previousStopLoss),
                 'longTrailingPrice': self.get_safe_rounded_string(self.longTrailingPrice),
                 'shortTrailingPrice': self.get_safe_rounded_string(self.shortTrailingPrice),
@@ -191,9 +193,10 @@ class SimulationTrader:
 
         return groupedDict
 
-    def add_trade(self, message: str, force: bool, orderID=None, stopLossExit=False):
+    def add_trade(self, message: str, force: bool, orderID=None, stopLossExit=False, smartEnter=False):
         """
         Adds a trade to list of trades
+        :param smartEnter: Boolean that'll determine whether current position is entered from a smart enter or not.
         :param stopLossExit: Boolean for whether last position was exited because of a stop loss.
         :param orderID: Order ID returned from Binance API.
         :param force: Boolean that determines whether trade was conducted autonomously or by hand.
@@ -218,6 +221,7 @@ class SimulationTrader:
 
         self.previousNet = finalNet
         self.stopLossExit = stopLossExit
+        self.smartStopLossEnter = smartEnter
 
         self.output_message(f'\nDatetime in UTC: {datetime.utcnow()}\n'
                             f'Order ID: {orderID}\n'
@@ -228,10 +232,11 @@ class SimulationTrader:
                             f'Percentage: {round(profitPercentage, 2)}%\n'
                             f'Profit: ${round(profit, 2)}\n')
 
-    def buy_long(self, msg: str, usd: float = None, force: bool = False):
+    def buy_long(self, msg: str, usd: float = None, force: bool = False, smartEnter=False):
         """
         Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
         Function also takes into account Binance's 0.1% transaction fee.
+        :param smartEnter: Boolean that'll determine whether current position is entered from a smart enter or not.
         :param msg: Message to be used for displaying trade information.
         :param usd: Amount used to enter long.
         :param force: Boolean that determines whether bot executed action or human.
@@ -251,7 +256,7 @@ class SimulationTrader:
         self.buyLongPrice = self.longTrailingPrice = self.currentPrice
         self.coin += (usd - transactionFee) / self.currentPrice
         self.balance -= usd
-        self.add_trade(msg, force=force)
+        self.add_trade(msg, force=force, smartEnter=smartEnter)
 
     def sell_long(self, msg: str, coin: float = None, force: bool = False, stopLossExit=False):
         """
@@ -310,7 +315,7 @@ class SimulationTrader:
         if self.coinOwed == 0:
             self.sellShortPrice = self.shortTrailingPrice = None
 
-    def sell_short(self, msg: str, coin: float = None, force: bool = False):
+    def sell_short(self, msg: str, coin: float = None, force: bool = False, smartEnter=False):
         """
         Borrows coin and sells them at current market price.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -319,6 +324,7 @@ class SimulationTrader:
         :param msg: Message to be used for displaying trade information.
         :param coin: Coin amount to sell to enter short position.
         :param force: Boolean that determines whether bot executed action or human.
+        :param smartEnter: Boolean that'll determine whether current position is entered from a smart enter or not.
         """
         self.currentPrice = self.dataView.get_current_price()
 
@@ -334,7 +340,7 @@ class SimulationTrader:
         self.balance += self.currentPrice * coin * (1 - self.transactionFeePercentage)
         self.currentPosition = SHORT
         self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
-        self.add_trade(msg, force=force)
+        self.add_trade(msg, force=force, smartEnter=smartEnter)
 
     # noinspection DuplicatedCode
     def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0):
@@ -565,11 +571,11 @@ class SimulationTrader:
             else:
                 if self.previousPosition == LONG and self.stopLossExit:
                     if self.currentPrice > self.previousStopLoss and self.smartStopLossCounter > 0:
-                        self.buy_long("Reentered long because of smart stop loss.")
+                        self.buy_long("Reentered long because of smart stop loss.", smartEnter=True)
                         self.smartStopLossCounter -= 1
                 elif self.previousPosition == SHORT and self.stopLossExit:
                     if self.currentPrice < self.previousStopLoss and self.smartStopLossCounter > 0:
-                        self.sell_short("Reentered short because of smart stop loss.")
+                        self.sell_short("Reentered short because of smart stop loss.", smartEnter=True)
                         self.smartStopLossCounter -= 1
 
     def reset_smart_stop_loss(self):
@@ -750,20 +756,31 @@ class SimulationTrader:
         Returns a stop loss for the position.
         :return: Stop loss value.
         """
+        if self.currentPrice is None:
+            self.currentPrice = self.dataView.get_current_price()
+
         if self.currentPosition == SHORT:  # If we are in a short position.
-            if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
-                self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
-            elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
-                self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
+            if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
+                self.stopLoss = self.previousStopLoss
+            else:
+                self.smartStopLossEnter = False
+                if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
+                    self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
+                elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
+                    self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
         elif self.currentPosition == LONG:  # If we are in a long position.
-            if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
-                self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
-            elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
-                self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
+            if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
+                self.stopLoss = self.previousStopLoss
+            else:
+                self.smartStopLossEnter = False
+                if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
+                    self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
+                elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
+                    self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
         else:  # This means we are not in any position currently.
             self.stopLoss = None
 
-        if self.stopLoss:  # This is for the smart stop loss to reenter position.
+        if self.stopLoss is not None:  # This is for the smart stop loss to reenter position.
             self.previousStopLoss = self.stopLoss
 
         return self.stopLoss
