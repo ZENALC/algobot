@@ -763,7 +763,6 @@ class SimulationTrader:
             if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
                 self.stopLoss = self.previousStopLoss
             else:
-                self.smartStopLossEnter = False
                 if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
                     self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
                 elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
@@ -772,7 +771,6 @@ class SimulationTrader:
             if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
                 self.stopLoss = self.previousStopLoss
             else:
-                self.smartStopLossEnter = False
                 if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
                     self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
                 elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
