@@ -1,7 +1,6 @@
 import os
-import re
 
-from helpers import ROOT_DIR
+from helpers import ROOT_DIR, get_label_string
 from PyQt5 import uic, QtCore
 from PyQt5.QtWidgets import QDialog, QLabel, QTabWidget, QFormLayout
 
@@ -13,19 +12,6 @@ class Statistics(QDialog):
         super(Statistics, self).__init__(parent)  # Initializing object
         uic.loadUi(statisticsUi, self)  # Loading the main UI
         self.tabs = {}
-
-    @staticmethod
-    def get_label_string(label: str) -> str:
-        """
-        Returns prettified string from a camel case formatted string.
-        :param label: Potential string in camel case format.
-        :return: Prettified string.
-        """
-        if not label[0].isupper():
-            separated = re.sub('([A-Z][a-z]+)', r' \1', re.sub('([A-Z]+)', r' \1', label)).split()
-            separated = list(map(lambda word: word.capitalize(), separated))
-            label = ' '.join(separated)
-        return label
 
     def remove_tab_if_needed(self, tabType):
         """
@@ -77,7 +63,8 @@ class Statistics(QDialog):
         else:
             return 0
 
-    def add_category_and_children_keys(self, categoryKey, valueDictionary, innerTabs, tab):
+    @staticmethod
+    def add_category_and_children_keys(categoryKey, valueDictionary, innerTabs, tab):
         """
         Modifies instance tabs variable with new values from valueDictionary.
         :param categoryKey: Category to modify.
@@ -89,7 +76,7 @@ class Statistics(QDialog):
         innerTabs[categoryKey] = {'tab': QTabWidget()}
 
         for mainKey in valueDictionary[categoryKey]:
-            label = QLabel(self.get_label_string(str(mainKey)))
+            label = QLabel(get_label_string(str(mainKey)))
             value = QLabel(str(valueDictionary[categoryKey][mainKey]))
             value.setAlignment(QtCore.Qt.AlignRight)
 
@@ -97,7 +84,7 @@ class Statistics(QDialog):
             innerTabs[categoryKey][mainKey] = {'label': label, 'value': value}
 
         innerTabs[categoryKey]['tab'].setLayout(innerLayout)
-        tab.addTab(innerTabs[categoryKey]['tab'], self.get_label_string(categoryKey))
+        tab.addTab(innerTabs[categoryKey]['tab'], get_label_string(categoryKey))
 
     @staticmethod
     def set_profit_or_loss_label(valueDictionary, innerTabs):
@@ -135,7 +122,7 @@ class Statistics(QDialog):
                     if mainKey in innerWidgets:
                         innerWidgets[mainKey]['value'].setText(str(valueDictionary[categoryKey][mainKey]))
                     else:
-                        label = QLabel(self.get_label_string(str(mainKey)))
+                        label = QLabel(get_label_string(str(mainKey)))
                         value = QLabel(str(valueDictionary[categoryKey][mainKey]))
                         value.setAlignment(QtCore.Qt.AlignRight)
 

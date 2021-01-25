@@ -2,6 +2,7 @@ import logging
 import platform
 import subprocess
 import os
+import re
 import json
 import time
 
@@ -138,6 +139,19 @@ def convert_interval(interval) -> str:
         '8 Hours': '8h'
     }
     return intervals[interval]
+
+
+def get_label_string(label: str) -> str:
+    """
+    Returns prettified string from a camel case formatted string.
+    :param label: Potential string in camel case format.
+    :return: Prettified string.
+    """
+    if not label[0].isupper():
+        separated = re.sub('([A-Z][a-z]+)', r' \1', re.sub('([A-Z]+)', r' \1', label)).split()
+        separated = list(map(lambda word: word.capitalize(), separated))
+        label = ' '.join(separated)
+    return label
 
 
 def convert_interval_to_string(interval) -> str:

@@ -4,6 +4,7 @@ from telegram import Bot
 from telegram.ext import Updater, CommandHandler
 from enums import LONG, SHORT, LIVE
 from simulationtrader import SimulationTrader
+from helpers import get_label_string
 
 
 class TelegramBot:
@@ -28,6 +29,7 @@ class TelegramBot:
         dp.add_handler(CommandHandler("forcelong", self.force_long_telegram))
         dp.add_handler(CommandHandler("forceshort", self.force_short_telegram))
         dp.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
+        dp.add_handler(CommandHandler('morestats', self.get_advanced_statistics_telegram))
         dp.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
         dp.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
         dp.add_handler(CommandHandler(("update", 'updatevalues'), self.update_values))
@@ -92,6 +94,7 @@ class TelegramBot:
                                   "/forcelong  -> To force long.\n"
                                   "/forceshort -> To force short.\n"
                                   "/position or /getposition -> To get position.\n"
+                                  "/morestats -> To get more detailed statistics.\n"
                                   "/stats or /statistics -> To get current statistics.\n"
                                   "/override -> To exit trade and wait for next cross.\n"
                                   "/resume -> To resume bot logic.\n"
@@ -101,7 +104,7 @@ class TelegramBot:
                                   "/exitposition -> To exit position.\n"
                                   "/trades -> To get list of trades made.\n"
                                   "/update or /updatevalues -> To update current coin values.\n"
-                                  "/thanks or /thankyou or /thanksbot -> to thank the bot. \n")
+                                  "/thanks or /thankyou or /thanksbot -> to thank the bot.\n")
 
     # noinspection PyUnusedLocal
     def update_values(self, update, context):
@@ -110,6 +113,28 @@ class TelegramBot:
         """
         self.gui.trader.retrieve_margin_values()
         update.message.reply_text("Successfully retrieved new values from Binance.")
+
+    def get_advanced_statistics(self) -> str:
+        """
+        Returns a lot more statistics detail.
+        :return: String of huge statistics.
+        """
+        trader: SimulationTrader = self.gui.trader
+        statDict = trader.get_grouped_statistics()
+
+        total = ''
+
+        for categoryKey in statDict:
+            total += get_label_string(categoryKey) + ':\n'
+            for key in statDict[categoryKey]:
+                value = statDict[categoryKey][key]
+                total += f'\t\t {get_label_string(key)} : {get_label_string(value)} \n'
+        return total
+
+    # noinspection PyUnusedLocal
+    def get_advanced_statistics_telegram(self, update, context):
+        message = "Here are your advanced statistics as requested: \n"
+        update.message.reply_text(message + self.get_advanced_statistics())
 
     def get_statistics(self) -> str:
         """
