@@ -1008,7 +1008,7 @@ class Interface(QMainWindow):
             graphDict['line'].setPos(p.x())
             xValue = int(p.x())
 
-            if graphDict['plots'][0]['x'][-1] > xValue:
+            if graphDict['plots'][0]['x'][-1] > xValue > graphDict['plots'][0]['x'][0]:
                 date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][xValue])
                 total = 'Datetime in UTC: ' + date_object.strftime("%m/%d/%Y, %H:%M:%S")
 
