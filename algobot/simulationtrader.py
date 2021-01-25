@@ -156,7 +156,7 @@ class SimulationTrader:
                 groupedDict['movingAverages'][finalAverageLabel] = f'${finalAverage}'
 
             if self.lowerOptionDetails:
-                for optionDetail in self.optionDetails:
+                for optionDetail in self.lowerOptionDetails:
                     initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
                     groupedDict['movingAverages'][f'Lower {initialAverageLabel}'] = f'${initialAverage}'
                     groupedDict['movingAverages'][f'Lower {finalAverageLabel}'] = f'${finalAverage}'
