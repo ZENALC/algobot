@@ -535,6 +535,17 @@ class SimulationTrader:
                     self.sell_long(f'Sold long because a cross was detected.')
                     self.sell_short('Sold short because a cross was detected.')
         else:  # This means we are in neither position
+            if self.stopLossExit and self.smartStopLossCounter > 0:
+                if self.previousPosition == LONG:
+                    if self.currentPrice > self.previousStopLoss:
+                        self.buy_long("Reentered long because of smart stop loss.", smartEnter=True)
+                        self.smartStopLossCounter -= 1
+                        return
+                elif self.previousPosition == SHORT:
+                    if self.currentPrice < self.previousStopLoss:
+                        self.sell_short("Reentered short because of smart stop loss.", smartEnter=True)
+                        self.smartStopLossCounter -= 1
+                        return
             if not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
                     if self.stoicEnabled:
@@ -568,15 +579,6 @@ class SimulationTrader:
                     else:
                         self.sell_short("Sold short because a cross was detected.")
                         self.reset_smart_stop_loss()
-            else:
-                if self.previousPosition == LONG and self.stopLossExit:
-                    if self.currentPrice > self.previousStopLoss and self.smartStopLossCounter > 0:
-                        self.buy_long("Reentered long because of smart stop loss.", smartEnter=True)
-                        self.smartStopLossCounter -= 1
-                elif self.previousPosition == SHORT and self.stopLossExit:
-                    if self.currentPrice < self.previousStopLoss and self.smartStopLossCounter > 0:
-                        self.sell_short("Reentered short because of smart stop loss.", smartEnter=True)
-                        self.smartStopLossCounter -= 1
 
     def reset_smart_stop_loss(self):
         """
