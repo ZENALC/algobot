@@ -45,7 +45,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-81</y>
+         <y>0</y>
          <width>963</width>
          <height>860</height>
         </rect>
@@ -1907,6 +1907,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="openBacktestResultsFolderAction"/>
     <addaction name="openLogFolderAction"/>
     <addaction name="openCsvFolderAction"/>
+    <addaction name="openDatabasesFolderAction"/>
     <addaction name="binanceAction"/>
     <addaction name="tradingViewAction"/>
     <addaction name="sourceCodeAction"/>
@@ -1975,6 +1976,11 @@ p, li { white-space: pre-wrap; }
   <action name="sourceCodeAction">
    <property name="text">
     <string>Source Code</string>
+   </property>
+  </action>
+  <action name="openDatabasesFolderAction">
+   <property name="text">
+    <string>Databases</string>
    </property>
   </action>
  </widget>

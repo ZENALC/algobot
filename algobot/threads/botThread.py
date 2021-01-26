@@ -234,7 +234,8 @@ class BotThread(QRunnable):
         :param caller: Trailing prices for what caller to be handled for.
         """
         trader = self.gui.get_trader(caller)
-        trader.currentPrice = trader.dataView.get_current_price()
+        trader.dataView.get_current_data()
+        trader.currentPrice = trader.dataView.current_values['close']
         if trader.longTrailingPrice is not None and trader.currentPrice > trader.longTrailingPrice:
             trader.longTrailingPrice = trader.currentPrice
         if trader.shortTrailingPrice is not None and trader.currentPrice < trader.shortTrailingPrice:
@@ -270,6 +271,7 @@ class BotThread(QRunnable):
         if self.lowerIntervalNotification:
             trader: SimulationTrader = self.gui.get_trader(caller)
             lowerData = self.gui.get_lower_interval_data(caller)
+            lowerData.get_current_data()
             lowerTrend = trader.get_trend(dataObject=lowerData, log_data=self.gui.advancedLogging)
             self.lowerTrend = trader.get_trend_string(lowerTrend)
             trend = trader.trend

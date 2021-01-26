@@ -138,7 +138,7 @@ class SimulationTrader:
                 'shortTrailingPrice': self.get_safe_rounded_string(self.shortTrailingPrice),
                 'buyLongPrice': self.get_safe_rounded_string(self.buyLongPrice),
                 'sellShortPrice': self.get_safe_rounded_string(self.sellShortPrice),
-                'safetyTimer': self.get_safe_rounded_string(self.safetyTimer, symbol=''),
+                'safetyTimer': self.get_safe_rounded_string(self.safetyTimer, symbol=' seconds', direction='right'),
                 'scheduledTimerRemaining': self.get_remaining_safety_timer(),
             },
         }
@@ -207,9 +207,9 @@ class SimulationTrader:
 
     def get_remaining_safety_timer(self) -> str:
         if not self.scheduledSafetyTimer:
-            return 'No schedule found.'
+            return 'None found.'
         else:
-            remaining = round(self.scheduledSafetyTimer - time.time(), 2)
+            remaining = int(self.scheduledSafetyTimer - time.time())
             return f'{remaining} seconds'
 
     def add_trade(self, message: str, force: bool, orderID=None, stopLossExit=False, smartEnter=False):
@@ -494,8 +494,6 @@ class SimulationTrader:
         If there is a trend and the previous position did not reflect the trend, the bot enters position.
         :param log_data: Boolean that will determine where data is logged or not.
         """
-        self.dataView.data.insert(0, self.dataView.get_current_data())
-
         if self.stoicEnabled:
             try:
                 self.stoic_strategy(*self.stoicOptions)
@@ -507,8 +505,6 @@ class SimulationTrader:
                 self.shrek_strategy(*self.shrekOptions)
             except Exception as e:
                 raise ValueError(f"Invalid shrek options: {e} occurred.")
-
-        self.dataView.data = self.dataView.data[1:]
 
         if self.currentPosition == SHORT:  # This means we are in short position
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
@@ -837,7 +833,6 @@ class SimulationTrader:
         if not dataObject.data_is_updated():
             dataObject.update_data()
 
-        dataObject.data.insert(0, dataObject.get_current_data())
         if dataObject == self.dataView:
             self.optionDetails = []
         else:
@@ -869,7 +864,6 @@ class SimulationTrader:
             else:
                 trends.append(None)
 
-        dataObject.data = dataObject.data[1:]
         if all(trend == BULLISH for trend in trends):
             return BULLISH
         elif all(trend == BEARISH for trend in trends):

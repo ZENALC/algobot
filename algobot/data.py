@@ -628,6 +628,9 @@ class Data:
         self.output_message("Data has been verified to be correct.")
         return True
 
+    def get_total_non_updated_data(self) -> list:
+        return [self.current_values] + self.data
+
     def get_summation(self, prices: int, parameter: str, round_value: bool = True, update: bool = True) -> float:
         """
         Returns total summation.
@@ -637,7 +640,7 @@ class Data:
         :param round_value: Boolean that determines whether returned output is rounded or not.
         :return: Total summation.
         """
-        data = [self.get_current_data()] + self.data if update else self.data
+        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
         data = data[:prices]
 
         total = 0
@@ -658,7 +661,7 @@ class Data:
         :param round_value: Boolean that determines whether returned output is rounded or not.
         :return: Lowest low value from periods.
         """
-        data = [self.get_current_data()] + self.data if update else self.data
+        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
         data = data[:prices]
 
         lowest = data[0][parameter]
@@ -681,7 +684,7 @@ class Data:
         :param round_value: Boolean that determines whether returned output is rounded or not.
         :return: Highest high value from periods.
         """
-        data = [self.get_current_data()] + self.data if update else self.data
+        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
         data = data[:prices]
 
         highest = data[0][parameter]
@@ -731,7 +734,7 @@ class Data:
             data = self.data
             shift -= 1
         else:
-            data = [self.get_current_data()] + self.data if update else self.data
+            data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
 
         start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
         data = data[shift:start]
@@ -764,7 +767,7 @@ class Data:
         if not self.is_valid_average_input(shift, prices):
             raise ValueError('Invalid average input specified.')
 
-        data = [self.get_current_data()] + self.data if update else self.data
+        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
         data = data[shift: prices + shift]  # Data now starts from shift and goes up to prices + shift
         sma = sum([get_data_from_parameter(data=period, parameter=parameter) for period in data]) / prices
 
@@ -786,7 +789,7 @@ class Data:
         if not self.is_valid_average_input(shift, prices):
             raise ValueError('Invalid average input specified.')
 
-        data = [self.get_current_data()] + self.data if update else self.data
+        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
         total = get_data_from_parameter(data=data[shift], parameter=parameter) * prices
         data = data[shift + 1: prices + shift]  # Data now does not include the first shift period.
 
@@ -861,7 +864,7 @@ class Data:
             if shift > 0:
                 ema = ema_data[prices][parameter][-shift][0]
         else:
-            data = [self.get_current_data()] + self.data if update else self.data
+            data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
             sma_shift = len(data) - sma_prices
             ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False, update=update)
             values = [(round(ema, 2), str(data[sma_shift]['date_utc']))]

@@ -830,7 +830,7 @@ class Interface(QMainWindow):
             graph.setLimits(xMin=0)
             graph.setBackground('w')
             graph.setLabel('left', 'USDT')
-            graph.setLabel('bottom', 'X')
+            graph.setLabel('bottom', 'Data Points')
             graph.addLegend()
 
             if graph == self.backtestGraph:
@@ -1249,6 +1249,7 @@ class Interface(QMainWindow):
         self.openBacktestResultsFolderAction.triggered.connect(lambda: self.open_folder("Backtest Results"))
         self.openLogFolderAction.triggered.connect(lambda: self.open_folder("Logs"))
         self.openCsvFolderAction.triggered.connect(lambda: self.open_folder('CSV'))
+        self.openDatabasesFolderAction.triggered.connect(lambda: self.open_folder('Databases'))
         self.binanceAction.triggered.connect(self.open_binance)
         self.tradingViewAction.triggered.connect(self.open_trading_view)
         self.sourceCodeAction.triggered.connect(lambda: webbrowser.open("https://github.com/ZENALC/algobot"))
