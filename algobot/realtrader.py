@@ -312,9 +312,10 @@ class RealTrader(SimulationTrader):
                        force=force,
                        orderID=None)
 
-    def buy_long(self, msg: str, usd: float or None = None, force: bool = False):
+    def buy_long(self, msg: str, usd: float or None = None, force: bool = False, smartEnter=False):
         """
         Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
+        :param smartEnter: Boolean that'll determine whether current position is entered from a smart enter or not.
         :param msg: Message to be used for displaying trade information.
         :param usd: Amount used to enter long position.
         :param force: Boolean that determines whether bot executed action or human.
@@ -339,7 +340,8 @@ class RealTrader(SimulationTrader):
         self.longTrailingPrice = self.currentPrice
         self.add_trade(message=msg,
                        force=force,
-                       orderID=order['clientOrderId'])
+                       orderID=order['clientOrderId'],
+                       smartEnter=smartEnter)
 
     def sell_long(self, msg: str, coin: float or None = None, force: bool = False, stopLossExit=False):
         """
@@ -416,11 +418,12 @@ class RealTrader(SimulationTrader):
         self.customStopLoss = None
         self.shortTrailingPrice = None
 
-    def sell_short(self, msg: str, coin: float or None = None, force: bool = False):
+    def sell_short(self, msg: str, coin: float or None = None, force: bool = False, smartEnter=False):
         """
         Borrows coin and sells them at current market price.
         If no coin is provided in function, bot will assume we borrow as much as
         bot can buy with current balance and market value.
+        :param smartEnter: Boolean that'll determine whether current position is entered from a smart enter or not.
         :param msg: Message to be used for displaying trade information.
         :param coin: Coin amount to sell to enter short position.
         :param force: Boolean that determines whether bot executed action or human.
@@ -450,4 +453,5 @@ class RealTrader(SimulationTrader):
         self.retrieve_margin_values()
         self.add_trade(message=msg,
                        force=force,
-                       orderID=order['clientOrderId'])
+                       orderID=order['clientOrderId'],
+                       smartEnter=smartEnter)
