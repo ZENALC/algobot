@@ -363,17 +363,18 @@ class SimulationTrader:
         self.add_trade(msg, force=force, smartEnter=smartEnter)
 
     # noinspection DuplicatedCode
-    def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0):
+    def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0, update: bool = False):
         """
         Custom strategy.
+        :param update: Boolean to determine whether data needs to have current values or not.
         :param input1: Custom input 1 for the stoic strategy.
         :param input2: Custom input 2 for the stoic strategy.
         :param input3: Custom input 3 for the stoic strategy.
         :param s: Shift data to get previous values.
         :return: Bullish, bearish, or none values.
         """
-        rsi_values_one = [self.dataView.get_rsi(input1, shift=shift, update=False) for shift in range(s, input1 + s)]
-        rsi_values_two = [self.dataView.get_rsi(input2, shift=shift, update=False) for shift in range(s, input2 + s)]
+        rsi_values_one = [self.dataView.get_rsi(input1, shift=shift, update=update) for shift in range(s, input1 + s)]
+        rsi_values_two = [self.dataView.get_rsi(input2, shift=shift, update=update) for shift in range(s, input2 + s)]
 
         seneca = max(rsi_values_one) - min(rsi_values_one)
         if 'seneca' in self.stoicDictionary:
