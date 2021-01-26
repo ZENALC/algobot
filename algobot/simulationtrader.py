@@ -437,16 +437,17 @@ class SimulationTrader:
             self.stoicTrend = None
 
     # noinspection DuplicatedCode
-    def shrek_strategy(self, one: int, two: int, three: int, four: int):
+    def shrek_strategy(self, one: int, two: int, three: int, four: int, update: bool = False):
         """
         New custom strategy.
+        :param update: Boolean to determine whether data needs to have current values or not.
         :param one: Input 1.
         :param two: Input 2.
         :param three: Input 3.
         :param four: Input 4.
         :return: Strategy's current trend.
         """
-        data = [rsi for rsi in [self.dataView.get_rsi(two, update=False, shift=x) for x in range(two + 1)]]
+        data = [rsi for rsi in [self.dataView.get_rsi(two, update=update, shift=x) for x in range(two + 1)]]
         rsi_two = data[0]
 
         apple = max(data) - min(data)
