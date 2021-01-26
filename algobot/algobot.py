@@ -728,13 +728,13 @@ class Interface(QMainWindow):
         """
         Retrieves moving average options and loss settings based on caller.
         :param caller: Caller that dictates which parameters get set.
-        :return:
         """
         trader = self.get_trader(caller)
         trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
         trader.tradingOptions = self.get_trading_options(caller)
         trader.stoicEnabled = self.interfaceDictionary[caller]['configuration']['stoicCheck'].isChecked()
         trader.shrekEnabled = self.interfaceDictionary[caller]['configuration']['shrekCheck'].isChecked()
+        trader.set_safety_timer(self.interfaceDictionary[caller]['configuration']['safetyTimer'].value())
         trader.set_smart_stop_loss_counter(
             self.interfaceDictionary[caller]['configuration']['smartStopLossCounter'].value())
 
@@ -1491,6 +1491,7 @@ class Interface(QMainWindow):
                     'shrekInput2': self.configuration.simulationShrekSpinBox2,
                     'shrekInput3': self.configuration.simulationShrekSpinBox3,
                     'shrekInput4': self.configuration.simulationShrekSpinBox4,
+                    'safetyTimer': self.configuration.simulationSafetyTimerSpinBox,
                 }
             },
             LIVE: {
@@ -1553,6 +1554,7 @@ class Interface(QMainWindow):
                     'shrekInput2': self.configuration.shrekSpinBox2,
                     'shrekInput3': self.configuration.shrekSpinBox3,
                     'shrekInput4': self.configuration.shrekSpinBox4,
+                    'safetyTimer': self.configuration.safetyTimerSpinBox,
                 }
             },
             BACKTEST: {

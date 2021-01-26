@@ -1,3 +1,5 @@
+import time
+
 from datetime import datetime
 from helpers import get_logger, convert_interval_to_string
 from data import Data
@@ -55,6 +57,8 @@ class SimulationTrader:
         self.smartStopLossCounter = 0  # Smart stop loss counter.
         self.stopLossExit = False  # Boolean that'll determine whether last position was exited from a stop loss.
         self.smartStopLossEnter = False  # Boolean that'll determine whether current position is from a smart stop loss.
+        self.safetyTimer = None  # Timer to check if there's a true trend towards stop loss.
+        self.scheduledSafetyTimer = None  # Next time to check if it's a true stop loss.
 
         self.longTrailingPrice = None  # Price coin has to be above for long position.
         self.shortTrailingPrice = None  # Price coin has to be below for short position.
@@ -72,6 +76,12 @@ class SimulationTrader:
         self.stoicEnabled = False  # Boolean that holds whether stoic trading is enabled or not.
         self.stoicOptions = [None, None, None]  # Stoic options.
         self.stoicDictionary = {}  # Dictionary for stoic strategies.
+
+    def set_safety_timer(self, safetyTimer):
+        if safetyTimer == 0:
+            self.safetyTimer = None
+        else:
+            self.safetyTimer = safetyTimer
 
     def set_smart_stop_loss_counter(self, counter):
         """
@@ -128,6 +138,8 @@ class SimulationTrader:
                 'shortTrailingPrice': self.get_safe_rounded_string(self.shortTrailingPrice),
                 'buyLongPrice': self.get_safe_rounded_string(self.buyLongPrice),
                 'sellShortPrice': self.get_safe_rounded_string(self.sellShortPrice),
+                'safetyTimer': self.get_safe_rounded_string(self.safetyTimer, symbol=''),
+                'scheduledTimerRemaining': self.get_remaining_safety_timer(),
             },
         }
 
@@ -193,6 +205,13 @@ class SimulationTrader:
 
         return groupedDict
 
+    def get_remaining_safety_timer(self) -> str:
+        if not self.scheduledSafetyTimer:
+            return 'No schedule found.'
+        else:
+            remaining = round(self.scheduledSafetyTimer - time.time(), 2)
+            return f'{remaining} seconds'
+
     def add_trade(self, message: str, force: bool, orderID=None, stopLossExit=False, smartEnter=False):
         """
         Adds a trade to list of trades
@@ -222,6 +241,7 @@ class SimulationTrader:
         self.previousNet = finalNet
         self.stopLossExit = stopLossExit
         self.smartStopLossEnter = smartEnter
+        self.scheduledSafetyTimer = None
 
         self.output_message(f'\nDatetime in UTC: {datetime.utcnow()}\n'
                             f'Order ID: {orderID}\n'
@@ -491,9 +511,15 @@ class SimulationTrader:
         if self.currentPosition == SHORT:  # This means we are in short position
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
                 self.buy_short(f'Bought short because of custom stop loss.')
-
             elif self.get_stop_loss() is not None and self.currentPrice >= self.get_stop_loss():
-                self.buy_short(f'Bought short because of stop loss.', stopLossExit=True)
+                if not self.safetyTimer:
+                    self.buy_short(f'Bought short because of stop loss.', stopLossExit=True)
+                else:
+                    if not self.scheduledSafetyTimer:
+                        self.scheduledSafetyTimer = time.time() + self.safetyTimer
+                    else:
+                        if time.time() > self.scheduledSafetyTimer:
+                            self.buy_short(f'Bought short because of stop loss and safety timer.', stopLossExit=True)
 
             elif not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.stoicEnabled:
@@ -516,7 +542,14 @@ class SimulationTrader:
                 self.sell_long(f'Sold long because of custom stop loss.')
 
             elif self.get_stop_loss() is not None and self.currentPrice <= self.get_stop_loss():
-                self.sell_long(f'Sold long because of stop loss.', stopLossExit=True)
+                if not self.safetyTimer:
+                    self.sell_long(f'Sold long because of stop loss.', stopLossExit=True)
+                else:
+                    if not self.scheduledSafetyTimer:
+                        self.scheduledSafetyTimer = time.time() + self.safetyTimer
+                    else:
+                        if time.time() > self.scheduledSafetyTimer:
+                            self.sell_long(f'Sold long because of stop loss and safety timer.', stopLossExit=True)
 
             elif not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.stoicEnabled:
