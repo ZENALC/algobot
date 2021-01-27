@@ -793,7 +793,7 @@ class SimulationTrader:
             self.currentPrice = self.dataView.get_current_price()
 
         if self.currentPosition == SHORT:  # If we are in a short position.
-            if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
+            if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
                 self.stopLoss = self.previousStopLoss
             else:
                 if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
@@ -801,7 +801,7 @@ class SimulationTrader:
                 elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
                     self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
         elif self.currentPosition == LONG:  # If we are in a long position.
-            if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
+            if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
                 self.stopLoss = self.previousStopLoss
             else:
                 if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
