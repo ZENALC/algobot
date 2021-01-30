@@ -39,14 +39,36 @@ class RealTrader(SimulationTrader):
         self.spot_usdt = self.get_spot_usdt()
         self.spot_coin = self.get_spot_coin()
         self.isolated = isIsolated
-        # self.precision = self.binanceClient.get_symbol_info(symbol)['quotePrecision'] - 1
         # self.check_spot_and_transfer()
+        symbolInfo = self.binanceClient.get_symbol_info(self.symbol)
+        self.purchasePrecision = self.get_purchase_precision(symbolInfo)
+        self.minNotional = self.get_min_notional(symbolInfo)
+        self.transactionFeePercentage = 0.002  # Added 0.001 for volatility safety.
+
         self.retrieve_margin_values()
         self.previousNet = self.get_net()
         self.startingBalance = self.get_starting_balance()
         self.check_initial_position()
         self.netWorth = round(self.get_net(), self.precision)
-        self.validate_minimum_funds()
+        # self.validate_minimum_funds()
+
+    @staticmethod
+    def get_min_notional(symbolInfo) -> float:
+        filters = symbolInfo['filters']
+        for filterDict in filters:
+            if 'minNotional' in filterDict:
+                min_notional = float(filterDict['minNotional'])
+                return min_notional
+        return 10
+
+    @staticmethod
+    def get_purchase_precision(symbolInfo) -> int:
+        filters = symbolInfo['filters']
+        for filterDict in filters:
+            if 'stepSize' in filterDict:
+                stepSize = float(filterDict['stepSize'])
+                return int(round(-math.log(stepSize, 10), 0))
+        return 6  # Default value if no step size found.
 
     def check_spot_and_transfer(self):
         """
@@ -81,15 +103,13 @@ class RealTrader(SimulationTrader):
         except IndexError:  # If not found, it most likely means it is not in the cross margin account.
             return True
 
-    @staticmethod
-    def round_down(num: float, digits: int = 6) -> float:
+    def round_down(self, num: float) -> float:
         """
         Rounds down number for trading purposes.
         :param num: Number to be rounded down.
-        :param digits: Number of digits to leave for rounding.
         :return: Rounded down number.
         """
-        factor = 10.0 ** digits
+        factor = 10.0 ** self.precision
         return math.floor(float(num) * factor) / factor
 
     def check_initial_position(self):
@@ -325,6 +345,9 @@ class RealTrader(SimulationTrader):
         self.currentPrice = self.dataView.get_current_price()
         if usd is None:
             usd = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
+
+        if usd < self.minNotional:
+            raise ValueError(f"{usd} only available. ")
 
         order = self.binanceClient.create_margin_order(
             symbol=self.symbol,
