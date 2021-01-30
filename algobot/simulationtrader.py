@@ -1,6 +1,7 @@
 import time
 
 from datetime import datetime
+from threading import Lock
 from helpers import get_logger, convert_interval_to_string
 from data import Data
 from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
@@ -39,6 +40,7 @@ class SimulationTrader:
         self.precision = precision  # Precision to round data to.
 
         self.completedLoop = True  # Loop that'll keep track of bot. We wait for this to turn False before some action.
+        self.lock = Lock()
 
         self.tradingOptions = []  # List with Option elements. Helps specify what moving averages to trade with.
         self.optionDetails = []  # Current option values. Holds most recent option values.
@@ -264,22 +266,26 @@ class SimulationTrader:
         :param usd: Amount used to enter long.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        if usd is None:
-            usd = self.balance
+        with self.lock:
+            if self.currentPosition == LONG:
+                return
 
-        if usd <= 0:
-            raise ValueError(f"You cannot buy with ${usd}.")
-        elif usd > self.balance:
-            raise ValueError(f'You currently have ${self.balance}. You cannot invest ${usd}.')
+            if usd is None:
+                usd = self.balance
 
-        self.currentPrice = self.dataView.get_current_price()
-        transactionFee = usd * self.transactionFeePercentage
-        self.commissionPaid += transactionFee
-        self.currentPosition = LONG
-        self.buyLongPrice = self.longTrailingPrice = self.currentPrice
-        self.coin += (usd - transactionFee) / self.currentPrice
-        self.balance -= usd
-        self.add_trade(msg, force=force, smartEnter=smartEnter)
+            if usd <= 0:
+                raise ValueError(f"You cannot buy with ${usd}.")
+            elif usd > self.balance:
+                raise ValueError(f'You currently have ${self.balance}. You cannot invest ${usd}.')
+
+            self.currentPrice = self.dataView.get_current_price()
+            transactionFee = usd * self.transactionFeePercentage
+            self.commissionPaid += transactionFee
+            self.currentPosition = LONG
+            self.buyLongPrice = self.longTrailingPrice = self.currentPrice
+            self.coin += (usd - transactionFee) / self.currentPrice
+            self.balance -= usd
+            self.add_trade(msg, force=force, smartEnter=smartEnter)
 
     def sell_long(self, msg: str, coin: float = None, force: bool = False, stopLossExit=False):
         """
@@ -290,25 +296,29 @@ class SimulationTrader:
         :param coin: Coin amount to sell to exit long.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        if coin is None:
-            coin = self.coin
+        with self.lock:
+            if self.currentPosition != LONG:
+                return
 
-        if coin <= 0:
-            raise ValueError(f"You cannot sell {coin} {self.coinName}.")
-        elif coin > self.coin:
-            raise ValueError(f'You have {self.coin} {self.coinName}. You cannot sell {coin} {self.coinName}.')
+            if coin is None:
+                coin = self.coin
 
-        self.currentPrice = self.dataView.get_current_price()
-        self.commissionPaid += coin * self.currentPrice * self.transactionFeePercentage
-        self.balance += coin * self.currentPrice * (1 - self.transactionFeePercentage)
-        self.currentPosition = None
-        self.customStopLoss = None
-        self.previousPosition = LONG
-        self.coin -= coin
-        self.add_trade(msg, force=force, stopLossExit=stopLossExit)
+            if coin <= 0:
+                raise ValueError(f"You cannot sell {coin} {self.coinName}.")
+            elif coin > self.coin:
+                raise ValueError(f'You have {self.coin} {self.coinName}. You cannot sell {coin} {self.coinName}.')
 
-        if self.coin == 0:
-            self.buyLongPrice = self.longTrailingPrice = None
+            self.currentPrice = self.dataView.get_current_price()
+            self.commissionPaid += coin * self.currentPrice * self.transactionFeePercentage
+            self.balance += coin * self.currentPrice * (1 - self.transactionFeePercentage)
+            self.currentPosition = None
+            self.customStopLoss = None
+            self.previousPosition = LONG
+            self.coin -= coin
+            self.add_trade(msg, force=force, stopLossExit=stopLossExit)
+
+            if self.coin == 0:
+                self.buyLongPrice = self.longTrailingPrice = None
 
     def buy_short(self, msg: str, coin: float = None, force: bool = False, stopLossExit=False):
         """
@@ -320,23 +330,27 @@ class SimulationTrader:
         :param coin: Coin amount to buy back to exit short position.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        if coin is None:
-            coin = self.coinOwed
+        with self.lock:
+            if self.currentPosition != SHORT:
+                return
 
-        if coin <= 0:
-            raise ValueError(f"You cannot buy {coin} {self.coinName}. Did you mean to sell short?")
+            if coin is None:
+                coin = self.coinOwed
 
-        self.currentPrice = self.dataView.get_current_price()
-        self.coinOwed -= coin
-        self.customStopLoss = None
-        self.currentPosition = None
-        self.previousPosition = SHORT
-        self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
-        self.balance -= self.currentPrice * coin * (1 + self.transactionFeePercentage)
-        self.add_trade(msg, force=force, stopLossExit=stopLossExit)
+            if coin <= 0:
+                raise ValueError(f"You cannot buy {coin} {self.coinName}. Did you mean to sell short?")
 
-        if self.coinOwed == 0:
-            self.sellShortPrice = self.shortTrailingPrice = None
+            self.currentPrice = self.dataView.get_current_price()
+            self.coinOwed -= coin
+            self.customStopLoss = None
+            self.currentPosition = None
+            self.previousPosition = SHORT
+            self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
+            self.balance -= self.currentPrice * coin * (1 + self.transactionFeePercentage)
+            self.add_trade(msg, force=force, stopLossExit=stopLossExit)
+
+            if self.coinOwed == 0:
+                self.sellShortPrice = self.shortTrailingPrice = None
 
     def sell_short(self, msg: str, coin: float = None, force: bool = False, smartEnter=False):
         """
@@ -349,21 +363,25 @@ class SimulationTrader:
         :param force: Boolean that determines whether bot executed action or human.
         :param smartEnter: Boolean that'll determine whether current position is entered from a smart enter or not.
         """
-        self.currentPrice = self.dataView.get_current_price()
+        with self.lock:
+            if self.currentPosition == SHORT:
+                return
 
-        if coin is None:
-            transactionFee = self.balance * self.transactionFeePercentage
-            coin = (self.balance - transactionFee) / self.currentPrice
+            self.currentPrice = self.dataView.get_current_price()
 
-        if coin <= 0:
-            raise ValueError(f"You cannot borrow negative {abs(coin)} {self.coinName}.")
+            if coin is None:
+                transactionFee = self.balance * self.transactionFeePercentage
+                coin = (self.balance - transactionFee) / self.currentPrice
 
-        self.coinOwed += coin
-        self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
-        self.balance += self.currentPrice * coin * (1 - self.transactionFeePercentage)
-        self.currentPosition = SHORT
-        self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
-        self.add_trade(msg, force=force, smartEnter=smartEnter)
+            if coin <= 0:
+                raise ValueError(f"You cannot borrow negative {abs(coin)} {self.coinName}.")
+
+            self.coinOwed += coin
+            self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
+            self.balance += self.currentPrice * coin * (1 - self.transactionFeePercentage)
+            self.currentPosition = SHORT
+            self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
+            self.add_trade(msg, force=force, smartEnter=smartEnter)
 
     # noinspection DuplicatedCode
     def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0, update: bool = False):

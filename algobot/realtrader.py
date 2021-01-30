@@ -341,31 +341,35 @@ class RealTrader(SimulationTrader):
         :param usd: Amount used to enter long position.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        self.balance = self.get_margin_usdt()
-        self.currentPrice = self.dataView.get_current_price()
-        if usd is None:
-            usd = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
+        with self.lock:
+            if self.currentPosition == LONG:
+                return
 
-        if usd < self.minNotional:
-            raise ValueError(f"{usd} only available. ")
+            self.balance = self.get_margin_usdt()
+            self.currentPrice = self.dataView.get_current_price()
+            if usd is None:
+                usd = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
 
-        order = self.binanceClient.create_margin_order(
-            symbol=self.symbol,
-            side=SIDE_BUY,
-            type=ORDER_TYPE_MARKET,
-            quantity=usd,
-            isIsolated=self.isolated
-        )
+            if usd < self.minNotional:
+                raise ValueError(f"{usd} only available. ")
 
-        time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
-        self.retrieve_margin_values()
-        self.currentPosition = LONG
-        self.buyLongPrice = self.currentPrice
-        self.longTrailingPrice = self.currentPrice
-        self.add_trade(message=msg,
-                       force=force,
-                       orderID=order['clientOrderId'],
-                       smartEnter=smartEnter)
+            order = self.binanceClient.create_margin_order(
+                symbol=self.symbol,
+                side=SIDE_BUY,
+                type=ORDER_TYPE_MARKET,
+                quantity=usd,
+                isIsolated=self.isolated
+            )
+
+            time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
+            self.retrieve_margin_values()
+            self.currentPosition = LONG
+            self.buyLongPrice = self.currentPrice
+            self.longTrailingPrice = self.currentPrice
+            self.add_trade(message=msg,
+                           force=force,
+                           orderID=order['clientOrderId'],
+                           smartEnter=smartEnter)
 
     def sell_long(self, msg: str, coin: float or None = None, force: bool = False, stopLossExit=False):
         """
@@ -375,27 +379,31 @@ class RealTrader(SimulationTrader):
         :param coin: Coin amount to sell to exit long position.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        if coin is None:
-            coin = self.get_margin_coin()
+        with self.lock:
+            if self.currentPosition != LONG:
+                return
 
-        order = self.binanceClient.create_margin_order(
-            symbol=self.symbol,
-            side=SIDE_SELL,
-            type=ORDER_TYPE_MARKET,
-            quantity=coin,
-            isIsolated=self.isolated
-        )
+            if coin is None:
+                coin = self.get_margin_coin()
 
-        time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
-        self.retrieve_margin_values()
-        self.previousPosition = LONG
-        self.currentPosition = None
-        self.customStopLoss = None
-        self.buyLongPrice = None
-        self.longTrailingPrice = None
-        self.add_trade(message=msg,
-                       force=force,
-                       orderID=order['clientOrderId'], stopLossExit=stopLossExit)
+            order = self.binanceClient.create_margin_order(
+                symbol=self.symbol,
+                side=SIDE_SELL,
+                type=ORDER_TYPE_MARKET,
+                quantity=coin,
+                isIsolated=self.isolated
+            )
+
+            time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
+            self.retrieve_margin_values()
+            self.previousPosition = LONG
+            self.currentPosition = None
+            self.customStopLoss = None
+            self.buyLongPrice = None
+            self.longTrailingPrice = None
+            self.add_trade(message=msg,
+                           force=force,
+                           orderID=order['clientOrderId'], stopLossExit=stopLossExit)
 
     def buy_short(self, msg: str, coin: float or None = None, force: bool = False, stopLossExit=False):
         """
@@ -406,41 +414,45 @@ class RealTrader(SimulationTrader):
         :param coin: Coin amount to buy back to exit short position.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        # self.coinOwed = self.get_borrowed_margin_coin()
-        # difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
-        asset = self.get_asset(self.coinName)
-        difference = (float(asset['borrowed']) + float(asset['interest'])) * (1 + self.transactionFeePercentage * 2)
+        with self.lock:
+            if self.currentPosition != SHORT:
+                return
 
-        order = self.binanceClient.create_margin_order(
-            side=SIDE_BUY,
-            symbol=self.symbol,
-            quantity=self.round_down(difference),
-            type=ORDER_TYPE_MARKET,
-            isIsolated=self.isolated,
-            sideEffectType="AUTO_REPAY"
-        )
+            # self.coinOwed = self.get_borrowed_margin_coin()
+            # difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
+            asset = self.get_asset(self.coinName)
+            difference = (float(asset['borrowed']) + float(asset['interest'])) * (1 + self.transactionFeePercentage * 2)
 
-        # order = self.binanceClient.create_margin_order(
-        #     symbol=self.symbol,
-        #     side=SIDE_BUY,
-        #     type=ORDER_TYPE_MARKET,
-        #     quantity=self.round_down(difference),
-        #     isIsolated=self.isolated
-        # )
+            order = self.binanceClient.create_margin_order(
+                side=SIDE_BUY,
+                symbol=self.symbol,
+                quantity=self.round_down(difference),
+                type=ORDER_TYPE_MARKET,
+                isIsolated=self.isolated,
+                sideEffectType="AUTO_REPAY"
+            )
 
-        time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
-        self.retrieve_margin_values()
-        self.add_trade(message=msg,
-                       force=force,
-                       orderID=order['clientOrderId'],
-                       stopLossExit=stopLossExit)
+            # order = self.binanceClient.create_margin_order(
+            #     symbol=self.symbol,
+            #     side=SIDE_BUY,
+            #     type=ORDER_TYPE_MARKET,
+            #     quantity=self.round_down(difference),
+            #     isIsolated=self.isolated
+            # )
 
-        # self.repay_margin_loan(force=force)
-        self.previousPosition = SHORT
-        self.currentPosition = None
-        self.sellShortPrice = None
-        self.customStopLoss = None
-        self.shortTrailingPrice = None
+            time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
+            self.retrieve_margin_values()
+            self.add_trade(message=msg,
+                           force=force,
+                           orderID=order['clientOrderId'],
+                           stopLossExit=stopLossExit)
+
+            # self.repay_margin_loan(force=force)
+            self.previousPosition = SHORT
+            self.currentPosition = None
+            self.sellShortPrice = None
+            self.customStopLoss = None
+            self.shortTrailingPrice = None
 
     def sell_short(self, msg: str, coin: float or None = None, force: bool = False, smartEnter=False):
         """
@@ -452,30 +464,34 @@ class RealTrader(SimulationTrader):
         :param coin: Coin amount to sell to enter short position.
         :param force: Boolean that determines whether bot executed action or human.
         """
-        self.currentPrice = self.dataView.get_current_price()
-        self.balance = self.get_margin_usdt()
-        transactionFee = self.balance * self.transactionFeePercentage
+        with self.lock:
+            if self.currentPosition == SHORT:
+                return
 
-        if coin is None:
-            coin = self.round_down((self.balance - transactionFee) / self.currentPrice)
-        # max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
-        # self.create_margin_loan(amount=max_borrow, force=force)
+            self.currentPrice = self.dataView.get_current_price()
+            self.balance = self.get_margin_usdt()
+            transactionFee = self.balance * self.transactionFeePercentage
 
-        order = self.binanceClient.create_margin_order(
-            side=SIDE_SELL,
-            symbol=self.symbol,
-            type=ORDER_TYPE_MARKET,
-            quantity=self.round_down(coin),
-            isIsolated=self.isolated,
-            sideEffectType="MARGIN_BUY"
-        )
+            if coin is None:
+                coin = self.round_down((self.balance - transactionFee) / self.currentPrice)
+            # max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
+            # self.create_margin_loan(amount=max_borrow, force=force)
 
-        time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
-        self.currentPosition = SHORT
-        self.sellShortPrice = self.currentPrice
-        self.shortTrailingPrice = self.currentPrice
-        self.retrieve_margin_values()
-        self.add_trade(message=msg,
-                       force=force,
-                       orderID=order['clientOrderId'],
-                       smartEnter=smartEnter)
+            order = self.binanceClient.create_margin_order(
+                side=SIDE_SELL,
+                symbol=self.symbol,
+                type=ORDER_TYPE_MARKET,
+                quantity=self.round_down(coin),
+                isIsolated=self.isolated,
+                sideEffectType="MARGIN_BUY"
+            )
+
+            time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
+            self.currentPosition = SHORT
+            self.sellShortPrice = self.currentPrice
+            self.shortTrailingPrice = self.currentPrice
+            self.retrieve_margin_values()
+            self.add_trade(message=msg,
+                           force=force,
+                           orderID=order['clientOrderId'],
+                           smartEnter=smartEnter)
