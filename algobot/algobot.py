@@ -513,7 +513,7 @@ class Interface(QMainWindow):
         net = valueDict['net']
         targetGraph = interfaceDict['mainInterface']['averageGraph']
 
-        self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, y=net, timestamp=currentUTC)
+        self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, y=round(net, precision), timestamp=currentUTC)
 
         for index, optionDetail in enumerate(valueDict['optionDetails']):
             initialAverage, finalAverage = optionDetail[:2]

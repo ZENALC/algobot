@@ -141,6 +141,10 @@ class TelegramBot:
         Retrieve available statistics to send using Telegram bot.
         """
         trader: SimulationTrader = self.gui.trader
+
+        if not trader:
+            return 'Something went wrong.'
+
         profit = trader.get_profit()
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
 

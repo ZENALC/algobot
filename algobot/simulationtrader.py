@@ -930,9 +930,9 @@ class SimulationTrader:
         if self.currentPosition == SHORT and self.stopLoss is not None:
             self.output_message(f'\nCurrently in short position.')
             if self.lossStrategy == TRAILING_LOSS:
-                self.output_message(f'Short trailing loss: ${round(self.stopLoss), self.precision}')
+                self.output_message(f'Short trailing loss: ${round(self.stopLoss, self.precision)}')
             elif self.lossStrategy == STOP_LOSS:
-                self.output_message(f'Stop loss: ${round(self.stopLoss), self.precision}')
+                self.output_message(f'Stop loss: ${round(self.stopLoss, self.precision)}')
 
     def output_long_information(self):
         """
@@ -941,9 +941,9 @@ class SimulationTrader:
         if self.currentPosition == LONG and self.stopLoss is not None:
             self.output_message(f'\nCurrently in long position.')
             if self.lossStrategy == TRAILING_LOSS:
-                self.output_message(f'Long trailing loss: ${round(self.stopLoss), self.precision}')
+                self.output_message(f'Long trailing loss: ${round(self.stopLoss, self.precision)}')
             elif self.lossStrategy == STOP_LOSS:
-                self.output_message(f'Stop loss: ${round(self.stopLoss), self.precision}')
+                self.output_message(f'Stop loss: ${round(self.stopLoss, self.precision)}')
 
     def output_control_mode(self):
         """
