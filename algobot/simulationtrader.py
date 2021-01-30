@@ -990,6 +990,7 @@ class SimulationTrader:
             self.output_no_position_information()
 
         self.output_message(f'\nCurrent {self.coinName} price: ${self.currentPrice}')
+        self.output_message(f'Stop Loss Point: ${round(self.stopLoss, 2)}')
         self.output_message(f'Balance: ${round(self.balance, 2)}')
         self.output_profit_information()
         if type(self) == SimulationTrader:
