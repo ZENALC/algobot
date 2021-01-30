@@ -49,6 +49,7 @@ class BacktestThread(QRunnable):
             'smartStopLossCounter': config.backtestSmartStopLossSpinBox.value(),
             'shrekEnabled': config.backtestShrekCheckMark.isChecked(),
             'shrekOptions': shrekOptions,
+            'precision': config.backtestPrecisionSpinBox.value()
         }
 
     def get_configuration_dictionary_for_gui(self) -> dict:
@@ -85,12 +86,12 @@ class BacktestThread(QRunnable):
             profitPercentage = round(net / backtester.startingBalance * 100 - 100, 2)
 
         return {
-            'net': net,
-            'netString': f'${round(net, 2)}',
-            'balance': f'${round(backtester.balance, 2)}',
-            'commissionsPaid': f'${round(backtester.commissionsPaid, 2)}',
+            'net': round(net, backtester.precision),
+            'netString': f'${round(net, backtester.precision)}',
+            'balance': f'${round(backtester.balance, backtester.precision)}',
+            'commissionsPaid': f'${round(backtester.commissionsPaid, backtester.precision)}',
             'tradesMade': str(len(backtester.trades)),
-            'profit': f'${abs(round(profit, 2))}',
+            'profit': f'${abs(round(profit, backtester.precision))}',
             'profitPercentage': f'{profitPercentage}%',
             'currentPeriod': period['date_utc'].strftime("%m/%d/%Y, %H:%M:%S"),
             'utc': period['date_utc'].timestamp(),
@@ -113,6 +114,7 @@ class BacktestThread(QRunnable):
                                          marginEnabled=configDetails['marginEnabled'],
                                          startDate=configDetails['startDate'],
                                          endDate=configDetails['endDate'],
+                                         precision=configDetails['precision'],
                                          stoicOptions=stoicOptions,
                                          shrekOptions=shrekOptions)
         self.gui.backtester.set_stop_loss_counter(configDetails['smartStopLossCounter'])

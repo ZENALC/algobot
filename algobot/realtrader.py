@@ -17,7 +17,8 @@ class RealTrader(SimulationTrader):
             loadData: bool = True,
             updateData: bool = True,
             isIsolated: bool = False,
-            tld: str = 'com'
+            tld: str = 'com',
+            precision: int = 2,
     ):
         """
         :param apiKey: API key to start trading bot with.
@@ -32,19 +33,19 @@ class RealTrader(SimulationTrader):
         if apiKey is None or apiSecret is None:
             raise ValueError('API credentials not provided.')
 
-        super().__init__(interval=interval, symbol=symbol, logFile='live', loadData=loadData, updateData=updateData)
+        super().__init__(interval=interval, symbol=symbol, logFile='live', loadData=loadData, updateData=updateData,
+                         precision=precision)
         self.binanceClient = Client(apiKey, apiSecret, tld=tld)
         self.spot_usdt = self.get_spot_usdt()
         self.spot_coin = self.get_spot_coin()
         self.isolated = isIsolated
         # self.precision = self.binanceClient.get_symbol_info(symbol)['quotePrecision'] - 1
-        self.precision = 6
         # self.check_spot_and_transfer()
         self.retrieve_margin_values()
         self.previousNet = self.get_net()
         self.startingBalance = self.get_starting_balance()
         self.check_initial_position()
-        self.netWorth = round(self.get_net(), 2)
+        self.netWorth = round(self.get_net(), self.precision)
         self.validate_minimum_funds()
 
     def check_spot_and_transfer(self):

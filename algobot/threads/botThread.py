@@ -100,6 +100,7 @@ class BotThread(QRunnable):
         gui = self.gui
         configDict = gui.interfaceDictionary[caller]['configuration']
         symbol = configDict['ticker'].currentText()
+        precision = configDict['precision'].value()
         prettyInterval = configDict['interval'].currentText()
         interval = helpers.convert_interval(prettyInterval)
 
@@ -110,7 +111,8 @@ class BotThread(QRunnable):
                                                     symbol=symbol,
                                                     interval=interval,
                                                     loadData=True,
-                                                    updateData=False)
+                                                    updateData=False,
+                                                    precision=precision)
             gui.simulationTrader.dataView.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
                                                               caller=SIMULATION)
         elif caller == LIVE:
@@ -127,7 +129,8 @@ class BotThread(QRunnable):
                                     tld=tld,
                                     isIsolated=isIsolated,
                                     loadData=True,
-                                    updateData=False)
+                                    updateData=False,
+                                    precision=precision)
             gui.trader.dataView.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
                                                     caller=LIVE)
         else:
@@ -216,9 +219,9 @@ class BotThread(QRunnable):
         """
         trader = self.gui.get_trader(caller)
         if not trader.dataView.data_is_updated():
-            self.signals.activity.emit(caller, 'New data found. Updating...')
+            # self.signals.activity.emit(caller, 'New data found. Updating...')
             trader.dataView.update_data()
-            self.signals.activity.emit(caller, 'Updated data successfully.')
+            # self.signals.activity.emit(caller, 'Updated data successfully.')
 
     def handle_trading(self, caller):
         """
@@ -318,8 +321,8 @@ class BotThread(QRunnable):
         self.set_daily_percentages(trader=trader, net=net)
 
         groupedDict = trader.get_grouped_statistics()
-        groupedDict['general']['net'] = f'${round(net, 2)}'
-        groupedDict['general']['profit'] = f'${round(profit, 2)}'
+        groupedDict['general']['net'] = f'${round(net, trader.precision)}'
+        groupedDict['general']['profit'] = f'${round(profit, trader.precision)}'
         groupedDict['general']['elapsed'] = self.elapsed
         groupedDict['general']['totalPercentage'] = f'{round(self.percentage, 2)}%'
         groupedDict['general']['dailyPercentage'] = f'{round(self.dailyPercentage, 2)}%'
@@ -329,10 +332,10 @@ class BotThread(QRunnable):
 
         valueDict = {
             'profitLossLabel': trader.get_profit_or_loss_string(profit=profit),
-            'profitLossValue': f'${abs(round(profit, 2))}',
+            'profitLossValue': f'${abs(round(profit, trader.precision))}',
             'percentageValue': f'{round(self.percentage, 2)}%',
-            'netValue': f'${round(net, 2)}',
-            'tickerValue': f'${round(trader.currentPrice, 2)}',
+            'netValue': f'${round(net, trader.precision)}',
+            'tickerValue': f'${round(trader.currentPrice, trader.precision)}',
             'tickerLabel': trader.symbol,
             'currentPositionValue': trader.get_position_string(),
 

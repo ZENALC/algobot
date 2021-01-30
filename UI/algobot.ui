@@ -69,7 +69,7 @@
            <enum>QTabWidget::West</enum>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <property name="movable">
            <bool>true</bool>
@@ -277,6 +277,9 @@
                    <widget class="QDoubleSpinBox" name="customStopLossValue">
                     <property name="buttonSymbols">
                      <enum>QAbstractSpinBox::UpDownArrows</enum>
+                    </property>
+                    <property name="decimals">
+                     <number>6</number>
                     </property>
                     <property name="maximum">
                      <double>10000000000.000000000000000</double>
@@ -748,6 +751,9 @@
                  <layout class="QVBoxLayout" name="verticalLayout_9">
                   <item>
                    <widget class="QDoubleSpinBox" name="customSimulationStopLossValue">
+                    <property name="decimals">
+                     <number>6</number>
+                    </property>
                     <property name="maximum">
                      <double>10000000.000000000000000</double>
                     </property>

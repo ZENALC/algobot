@@ -56,7 +56,7 @@ class Interface(QMainWindow):
         self.previousTradesCount = [0, 0]  # Count of previous trades.
 
         self.interfaceDictionary = self.get_interface_dictionary()
-        self.advancedLogging = True
+        self.advancedLogging = False
         self.runningLive = False
         self.simulationRunningLive = False
         self.backtester: Backtester or None = None
@@ -507,6 +507,7 @@ class Interface(QMainWindow):
         :param valueDict: Dictionary with required values.
         :param caller: Caller that decides which graphs get updated.
         """
+        precision = self.get_trader(caller=caller).precision
         interfaceDict = self.interfaceDictionary[caller]
         currentUTC = datetime.utcnow().timestamp()
         net = valueDict['net']
@@ -516,10 +517,10 @@ class Interface(QMainWindow):
 
         for index, optionDetail in enumerate(valueDict['optionDetails']):
             initialAverage, finalAverage = optionDetail[:2]
-            self.add_data_to_plot(targetGraph, index * 2, y=initialAverage, timestamp=currentUTC)
-            self.add_data_to_plot(targetGraph, index * 2 + 1, y=finalAverage, timestamp=currentUTC)
+            self.add_data_to_plot(targetGraph, index * 2, y=round(initialAverage, precision), timestamp=currentUTC)
+            self.add_data_to_plot(targetGraph, index * 2 + 1, y=round(finalAverage, precision), timestamp=currentUTC)
 
-        self.add_data_to_plot(targetGraph, -1, y=valueDict['price'], timestamp=currentUTC)
+        self.add_data_to_plot(targetGraph, -1, y=round(valueDict['price'], precision), timestamp=currentUTC)
 
     def destroy_trader(self, caller):
         """
@@ -721,8 +722,10 @@ class Interface(QMainWindow):
         self.advancedLogging = boolean
         if self.advancedLogging:
             self.add_to_live_activity_monitor(f'Logging method has been changed to advanced.')
+            self.add_to_simulation_activity_monitor(f'Logging method has been changed to advanced.')
         else:
             self.add_to_live_activity_monitor(f'Logging method has been changed to simple.')
+            self.add_to_simulation_activity_monitor(f'Logging method has been changed to simple.')
 
     def set_parameters(self, caller):
         """
@@ -763,7 +766,7 @@ class Interface(QMainWindow):
                 customStopLoss = mainDict['customStopLossValue'].value()
             else:
                 customStopLoss = foreignValue
-                mainDict['customStopLossValue'].setValue(round(foreignValue, 2))
+                mainDict['customStopLossValue'].setValue(round(foreignValue, trader.precision))
             trader.customStopLoss = customStopLoss
             mainDict['enableCustomStopLossButton'].setEnabled(False)
             mainDict['disableCustomStopLossButton'].setEnabled(True)
@@ -1013,7 +1016,7 @@ class Interface(QMainWindow):
                 total = 'Datetime in UTC: ' + date_object.strftime("%m/%d/%Y, %H:%M:%S")
 
                 for plotDict in graphDict['plots']:
-                    total += f' {plotDict["name"]}: {round(plotDict["y"][xValue], 2)}'
+                    total += f' {plotDict["name"]}: {plotDict["y"][xValue]}'
 
                 graphDict['label'].setText(total)
 
@@ -1493,6 +1496,7 @@ class Interface(QMainWindow):
                     'shrekInput3': self.configuration.simulationShrekSpinBox3,
                     'shrekInput4': self.configuration.simulationShrekSpinBox4,
                     'safetyTimer': self.configuration.simulationSafetyTimerSpinBox,
+                    'precision': self.configuration.simulationPrecisionSpinBox,
                 }
             },
             LIVE: {
@@ -1556,6 +1560,7 @@ class Interface(QMainWindow):
                     'shrekInput3': self.configuration.shrekSpinBox3,
                     'shrekInput4': self.configuration.shrekSpinBox4,
                     'safetyTimer': self.configuration.safetyTimerSpinBox,
+                    'precision': self.configuration.precisionSpinBox,
                 }
             },
             BACKTEST: {
@@ -1580,6 +1585,7 @@ class Interface(QMainWindow):
                     'shrekInput2': self.configuration.backtestShrekSpinBox2,
                     'shrekInput3': self.configuration.backtestShrekSpinBox3,
                     'shrekInput4': self.configuration.backtestShrekSpinBox4,
+                    'precision': self.configuration.backtestPrecisionSpinBox,
                 },
                 'mainInterface': {
                     'runBotButton': self.runBacktestButton,

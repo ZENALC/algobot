@@ -46,7 +46,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -67,7 +67,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="mainMainTab">
           <attribute name="title">
@@ -86,7 +86,39 @@
               <string>Live Main Options</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_13">
-              <item row="4" column="0" colspan="5">
+              <item row="6" column="0" colspan="5">
+               <widget class="QGroupBox" name="accountTypeGroupBox">
+                <property name="title">
+                 <string>Account Type</string>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_2">
+                 <item>
+                  <widget class="QRadioButton" name="isolatedMarginAccountRadio">
+                   <property name="toolTip">
+                    <string>Select this if the asset you are trading is isolated.</string>
+                   </property>
+                   <property name="text">
+                    <string>Isolated Margin</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QRadioButton" name="crossMarginAccountRadio">
+                   <property name="toolTip">
+                    <string>Select this if the asset you are trading is not isolated.</string>
+                   </property>
+                   <property name="text">
+                    <string>Cross Margin</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item row="5" column="0" colspan="5">
                <widget class="QGroupBox" name="regionGroupBox">
                 <property name="title">
                  <string>Region</string>
@@ -118,36 +150,20 @@
                 </layout>
                </widget>
               </item>
-              <item row="5" column="0" colspan="5">
-               <widget class="QGroupBox" name="accountTypeGroupBox">
-                <property name="title">
-                 <string>Account Type</string>
+              <item row="9" column="0">
+               <widget class="QPushButton" name="saveCredentialsButton">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
                 </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_2">
-                 <item>
-                  <widget class="QRadioButton" name="isolatedMarginAccountRadio">
-                   <property name="toolTip">
-                    <string>Select this if the asset you are trading is isolated.</string>
-                   </property>
-                   <property name="text">
-                    <string>Isolated Margin</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="crossMarginAccountRadio">
-                   <property name="toolTip">
-                    <string>Select this if the asset you are trading is not isolated.</string>
-                   </property>
-                   <property name="text">
-                    <string>Cross Margin</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                <property name="toolTip">
+                 <string>Saves Binance and Telegram credentials.</string>
+                </property>
+                <property name="text">
+                 <string>Save Credentials</string>
+                </property>
                </widget>
               </item>
               <item row="1" column="2" colspan="3">
@@ -225,7 +241,7 @@
                 </item>
                </widget>
               </item>
-              <item row="3" column="2" colspan="3">
+              <item row="4" column="2" colspan="3">
                <widget class="QLineEdit" name="binanceApiSecret">
                 <property name="toolTip">
                  <string>Enter your Binance secret key here.</string>
@@ -235,30 +251,14 @@
                 </property>
                </widget>
               </item>
-              <item row="8" column="0">
-               <widget class="QPushButton" name="saveCredentialsButton">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="toolTip">
-                 <string>Saves Binance and Telegram credentials.</string>
-                </property>
-                <property name="text">
-                 <string>Save Credentials</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0" colspan="2">
+              <item row="3" column="0" colspan="2">
                <widget class="QLabel" name="binanceApiKeyLabel">
                 <property name="text">
                  <string>Binance API Key</string>
                 </property>
                </widget>
               </item>
-              <item row="8" column="2">
+              <item row="9" column="2">
                <widget class="QPushButton" name="testCredentialsButton">
                 <property name="toolTip">
                  <string>Test Binance API credentials.</string>
@@ -268,14 +268,14 @@
                 </property>
                </widget>
               </item>
-              <item row="9" column="0" colspan="5">
+              <item row="10" column="0" colspan="5">
                <widget class="QLabel" name="credentialResult">
                 <property name="text">
                  <string>Successfully connected.</string>
                 </property>
                </widget>
               </item>
-              <item row="8" column="1">
+              <item row="9" column="1">
                <widget class="QPushButton" name="loadCredentialsButton">
                 <property name="toolTip">
                  <string>Load Binance and Telegram credentials.</string>
@@ -285,13 +285,26 @@
                 </property>
                </widget>
               </item>
-              <item row="8" column="4">
+              <item row="9" column="4">
                <widget class="QPushButton" name="updateBinanceValues">
                 <property name="toolTip">
                  <string>Update and retrieve latest bot values from Binance.</string>
                 </property>
                 <property name="text">
                  <string>Update Binance Values</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="intervalLabel">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Interval</string>
                 </property>
                </widget>
               </item>
@@ -326,27 +339,7 @@
                 </item>
                </widget>
               </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="intervalLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Interval</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0" colspan="2">
-               <widget class="QLabel" name="binanceSecretKeyLabel">
-                <property name="text">
-                 <string>Binance Secret Key</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2" colspan="3">
+              <item row="3" column="2" colspan="3">
                <widget class="QLineEdit" name="binanceApiKey">
                 <property name="toolTip">
                  <string>Enter your Binance API key here.</string>
@@ -356,7 +349,14 @@
                 </property>
                </widget>
               </item>
-              <item row="8" column="3">
+              <item row="4" column="0" colspan="2">
+               <widget class="QLabel" name="binanceSecretKeyLabel">
+                <property name="text">
+                 <string>Binance Secret Key</string>
+                </property>
+               </widget>
+              </item>
+              <item row="9" column="3">
                <widget class="QPushButton" name="updateTickers">
                 <property name="toolTip">
                  <string>Update tickers available.</string>
@@ -366,7 +366,7 @@
                 </property>
                </widget>
               </item>
-              <item row="7" column="0" colspan="5">
+              <item row="8" column="0" colspan="5">
                <widget class="QCheckBox" name="lowerIntervalCheck">
                 <property name="toolTip">
                  <string>Select this if you'd like to view the lower interval's moving averages trends.</string>
@@ -376,6 +376,26 @@
                 </property>
                 <property name="checked">
                  <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="precisionLabel">
+                <property name="text">
+                 <string>Data Precision</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2" colspan="3">
+               <widget class="QSpinBox" name="precisionSpinBox">
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>10</number>
+                </property>
+                <property name="value">
+                 <number>2</number>
                 </property>
                </widget>
               </item>
@@ -1096,7 +1116,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="backtestMainTab">
           <attribute name="title">
@@ -1189,19 +1209,6 @@
                 </property>
                </widget>
               </item>
-              <item row="3" column="1" colspan="2">
-               <widget class="QDoubleSpinBox" name="backtestStartingBalanceSpinBox">
-                <property name="minimum">
-                 <double>1.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>10000000.000000000000000</double>
-                </property>
-                <property name="value">
-                 <double>1000.000000000000000</double>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="1" colspan="2">
                <widget class="QComboBox" name="backtestTickerComboBox">
                 <property name="sizePolicy">
@@ -1220,6 +1227,19 @@
                   <string>BTCUSDT</string>
                  </property>
                 </item>
+               </widget>
+              </item>
+              <item row="3" column="1" colspan="2">
+               <widget class="QDoubleSpinBox" name="backtestStartingBalanceSpinBox">
+                <property name="minimum">
+                 <double>1.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>10000000.000000000000000</double>
+                </property>
+                <property name="value">
+                 <double>1000.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="2" column="1" colspan="2">
@@ -1306,7 +1326,7 @@
                 </property>
                </widget>
               </item>
-              <item row="5" column="0">
+              <item row="6" column="0">
                <widget class="QPushButton" name="backtestCopySettingsButton">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1319,14 +1339,14 @@
                 </property>
                </widget>
               </item>
-              <item row="5" column="1">
+              <item row="6" column="1">
                <widget class="QLabel" name="backtestCopyLabel">
                 <property name="text">
                  <string/>
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
+              <item row="5" column="0">
                <widget class="QCheckBox" name="backtestMarginTradingCheckBox">
                 <property name="text">
                  <string>Enable Margin Trading?</string>
@@ -1336,7 +1356,24 @@
                 </property>
                </widget>
               </item>
-              <item row="7" column="0">
+              <item row="12" column="0">
+               <widget class="QPushButton" name="backtestStopDownloadButton">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Stop Download </string>
+                </property>
+               </widget>
+              </item>
+              <item row="13" column="0" colspan="3">
+               <widget class="QProgressBar" name="backtestDownloadProgressBar">
+                <property name="value">
+                 <number>0</number>
+                </property>
+               </widget>
+              </item>
+              <item row="8" column="0">
                <widget class="QPushButton" name="backtestDownloadDataButton">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1354,21 +1391,14 @@
                 </property>
                </widget>
               </item>
-              <item row="12" column="0" colspan="3">
-               <widget class="QProgressBar" name="backtestDownloadProgressBar">
-                <property name="value">
-                 <number>0</number>
-                </property>
-               </widget>
-              </item>
-              <item row="11" column="1">
+              <item row="12" column="1">
                <widget class="QLabel" name="backtestDownloadLabel">
                 <property name="text">
                  <string/>
                 </property>
                </widget>
               </item>
-              <item row="6" column="0">
+              <item row="7" column="0">
                <widget class="QPushButton" name="backtestImportDataButton">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1389,13 +1419,23 @@
                 </property>
                </widget>
               </item>
-              <item row="11" column="0">
-               <widget class="QPushButton" name="backtestStopDownloadButton">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
+              <item row="4" column="0">
+               <widget class="QLabel" name="backtestPrecisionLabel">
                 <property name="text">
-                 <string>Stop Download </string>
+                 <string>Data Precision</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1" colspan="2">
+               <widget class="QSpinBox" name="backtestPrecisionSpinBox">
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>10</number>
+                </property>
+                <property name="value">
+                 <number>2</number>
                 </property>
                </widget>
               </item>
@@ -2125,7 +2165,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="simulationMainTab">
           <attribute name="title">
@@ -2144,8 +2184,8 @@
               <string>Simulation Main Options</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_32">
-              <item row="0" column="0">
-               <widget class="QLabel" name="simulationTickerLabel">
+              <item row="1" column="0">
+               <widget class="QLabel" name="simulationIntervalLabel">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                   <horstretch>0</horstretch>
@@ -2153,9 +2193,22 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Ticker</string>
+                 <string>Interval</string>
                 </property>
                </widget>
+              </item>
+              <item row="6" column="2">
+               <spacer name="verticalSpacer_9">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
               <item row="2" column="0">
                <widget class="QLabel" name="simulationStartingBalance">
@@ -2170,50 +2223,49 @@
                 </property>
                </widget>
               </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="simulationIntervalLabel">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
+              <item row="5" column="1">
+               <widget class="QLabel" name="simulationCopyLabel">
                 <property name="text">
-                 <string>Interval</string>
+                 <string/>
                 </property>
                </widget>
               </item>
-              <item row="5" column="2">
-               <spacer name="verticalSpacer_9">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item row="3" column="0">
-               <widget class="QCheckBox" name="lowerIntervalSimulationCheck">
-                <property name="text">
-                 <string>Lower Interval Notification?</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0">
+              <item row="5" column="0">
                <widget class="QPushButton" name="simulationCopySettingsButton">
                 <property name="text">
                  <string>Copy Main Settings</string>
                 </property>
                </widget>
               </item>
-              <item row="4" column="1">
-               <widget class="QLabel" name="simulationCopyLabel">
+              <item row="4" column="0">
+               <widget class="QCheckBox" name="lowerIntervalSimulationCheck">
                 <property name="text">
-                 <string/>
+                 <string>Lower Interval Notification?</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1" colspan="2">
+               <widget class="QSpinBox" name="simulationStartingBalanceSpinBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="toolTip">
+                 <string>Starting balance for simulation. Minimum possible value is $100.</string>
+                </property>
+                <property name="minimum">
+                 <number>100</number>
+                </property>
+                <property name="maximum">
+                 <number>99999999</number>
+                </property>
+                <property name="singleStep">
+                 <number>25</number>
+                </property>
+                <property name="value">
+                 <number>1000</number>
                 </property>
                </widget>
               </item>
@@ -2304,28 +2356,36 @@
                 </item>
                </widget>
               </item>
-              <item row="2" column="1" colspan="2">
-               <widget class="QSpinBox" name="simulationStartingBalanceSpinBox">
+              <item row="0" column="0">
+               <widget class="QLabel" name="simulationTickerLabel">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="toolTip">
-                 <string>Starting balance for simulation. Minimum possible value is $100.</string>
+                <property name="text">
+                 <string>Ticker</string>
                 </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="simulationPrecisionLabel">
+                <property name="text">
+                 <string>Data Precision</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1" colspan="2">
+               <widget class="QSpinBox" name="simulationPrecisionSpinBox">
                 <property name="minimum">
-                 <number>100</number>
+                 <number>1</number>
                 </property>
                 <property name="maximum">
-                 <number>99999999</number>
-                </property>
-                <property name="singleStep">
-                 <number>25</number>
+                 <number>10</number>
                 </property>
                 <property name="value">
-                 <number>1000</number>
+                 <number>2</number>
                 </property>
                </widget>
               </item>
@@ -3036,7 +3096,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tab_10">
           <property name="enabled">
@@ -3164,6 +3224,9 @@
                 <property name="text">
                  <string>Simple Logging</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item row="0" column="0">
@@ -3172,10 +3235,10 @@
                  <string>Enables advanced logging.</string>
                 </property>
                 <property name="text">
-                 <string>Advanced Logging</string>
+                 <string>Advanced Logging (Only use this for debugging)</string>
                 </property>
                 <property name="checked">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>

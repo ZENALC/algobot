@@ -157,10 +157,10 @@ class TelegramBot:
                 f'Total trades made: {len(trader.trades)}\n'
                 f"Coin owned: {trader.coin}\n"
                 f"Coin owed: {trader.coinOwed}\n"
-                f"Starting balance: ${round(trader.startingBalance, 2)}\n"
-                f"Balance: ${round(trader.balance, 2)}\n"
-                f'Net: ${round(trader.get_net(), 2)}\n'
-                f"{profitLabel}: ${round(abs(profit), 2)}\n"
+                f"Starting balance: ${round(trader.startingBalance, trader.precision)}\n"
+                f"Balance: ${round(trader.balance, trader.precision)}\n"
+                f'Net: ${round(trader.get_net(), trader.precision)}\n'
+                f"{profitLabel}: ${round(abs(profit), trader.precision)}\n"
                 f'{profitLabel} Percentage: {round(self.botThread.percentage, 2)}%\n'
                 f'Daily Percentage: {round(self.botThread.dailyPercentage, 2)}%\n'
                 f'Autonomous Mode: {not trader.inHumanControl}\n'
@@ -385,7 +385,7 @@ class TelegramBot:
         elif stopLoss > 10_000_000:
             update.message.reply_text("Please make sure you specify a number that is less than 10,000,000.")
         else:
-            stopLoss = round(stopLoss, 2)
+            stopLoss = round(stopLoss, 6)
             self.botThread.signals.setCustomStopLoss.emit(LIVE, True, stopLoss)
             update.message.reply_text(f"Stop loss has been successfully set to ${stopLoss}.")
 

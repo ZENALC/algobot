@@ -12,7 +12,7 @@ from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
 class Backtester:
     def __init__(self, startingBalance: float, data: list, lossStrategy: int, lossPercentage: float, options: list,
                  marginEnabled: bool = True, startDate: datetime = None, endDate: datetime = None, symbol: str = None,
-                 stoicOptions=None, shrekOptions=None):
+                 stoicOptions=None, shrekOptions=None, precision: int = 2):
         self.startingBalance = startingBalance
         self.symbol = symbol
         self.balance = startingBalance
@@ -24,6 +24,7 @@ class Backtester:
         self.transactionFeePercentage = 0.001
         self.profit = 0
         self.marginEnabled = marginEnabled
+        self.precision = precision
 
         self.data = data
         self.check_data()
@@ -287,7 +288,7 @@ class Backtester:
         self.trades.append({
             'date': self.currentPeriod['date_utc'],
             'action': message,
-            'net': round(self.get_net(), 2)
+            'net': round(self.get_net(), self.precision)
         })
 
     def get_short_stop_loss(self) -> float:
@@ -550,7 +551,7 @@ class Backtester:
                 down = -difference * alpha + self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
 
             rsi = 100 if down == 0 else 100 - 100 / (1 + up / down)
-            self.rsi_dictionary[prices]['close'].append((round(rsi, 2), up, down))
+            self.rsi_dictionary[prices]['close'].append((round(rsi, self.precision), up, down))
             return rsi
 
         data = data
@@ -563,20 +564,18 @@ class Backtester:
         rsi = self.helper_get_ema(ups, downs, prices)
 
         if round_value:
-            return round(rsi, 2)
+            return round(rsi, self.precision)
         return rsi
 
-    @staticmethod
-    def get_sma(data: list, prices: int, parameter: str, round_value=True) -> float:
+    def get_sma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
         data = data[0: prices]
         sma = sum([get_data_from_parameter(data=period, parameter=parameter) for period in data]) / prices
 
         if round_value:
-            return round(sma, 2)
+            return round(sma, self.precision)
         return sma
 
-    @staticmethod
-    def get_wma(data: list, prices: int, parameter: str, round_value=True) -> float:
+    def get_wma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
         total = get_data_from_parameter(data=data[0], parameter=parameter) * prices
         data = data[1: prices]  # Data now does not include the first shift period.
 
@@ -588,7 +587,7 @@ class Backtester:
         divisor = prices * (prices + 1) / 2
         wma = total / divisor
         if round_value:
-            return round(wma, 2)
+            return round(wma, self.precision)
         return wma
 
     def get_ema(self, data: list, prices: int, parameter: str, sma_prices: int = 5, round_value=True) -> float:
@@ -613,7 +612,7 @@ class Backtester:
             self.ema_values[prices] = ema
 
         if round_value:
-            return round(ema, 2)
+            return round(ema, self.precision)
         return ema
 
     def main_logic(self):
@@ -762,7 +761,7 @@ class Backtester:
                         self.moving_average_test()
                         results.append((self.profit, options))
                         done += 1
-                print(f'Done {round(done / total * 100,2)}%')
+                print(f'Done {round(done / total * 100, 2)}%')
 
         print(time.time() - t1)
 
@@ -818,12 +817,12 @@ class Backtester:
         print(f'\tStoicism options: {self.stoicOptions}')
         print(f'\tStart Period: {self.data[self.startDateIndex]["date_utc"]}')
         print(f"\tEnd Period: {self.currentPeriod['date_utc']}")
-        print(f'\tStarting balance: ${round(self.startingBalance, 2)}')
-        print(f'\tNet: ${round(self.get_net(), 2)}')
-        print(f'\tCommissions paid: ${round(self.commissionsPaid, 2)}')
+        print(f'\tStarting balance: ${round(self.startingBalance, self.precision)}')
+        print(f'\tNet: ${round(self.get_net(), self.precision)}')
+        print(f'\tCommissions paid: ${round(self.commissionsPaid, self.precision)}')
         print(f'\tTrades made: {len(self.trades)}')
         net = self.get_net()
-        difference = round(net - self.startingBalance, 2)
+        difference = round(net - self.startingBalance, self.precision)
         if difference > 0:
             print(f'\tProfit: ${difference}')
             print(f'\tProfit Percentage: {round(net / self.startingBalance * 100 - 100, 2)}%')

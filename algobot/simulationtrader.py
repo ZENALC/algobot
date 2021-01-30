@@ -8,7 +8,7 @@ from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
 
 class SimulationTrader:
     def __init__(self, startingBalance: float = 1000, interval: str = '1h', symbol: str = 'BTCUSDT',
-                 loadData: bool = True, updateData: bool = True, logFile: str = 'simulation'):
+                 loadData: bool = True, updateData: bool = True, logFile: str = 'simulation', precision: int = 2):
         """
         SimulationTrader object that will mimic real live market trades.
         :param startingBalance: Balance to start simulation trader with.
@@ -17,10 +17,11 @@ class SimulationTrader:
         :param loadData: Boolean whether we load data from data object or not.
         :param updateData: Boolean for whether data will be updated if it is loaded.
         :param logFile: Filename that logger will log to.
+        :param precision: Precision to round data to.
         """
         self.logger = get_logger(logFile=logFile, loggerName=logFile)  # Get logger.
         self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData,
-                                   updateData=updateData, logObject=self.logger)
+                                   updateData=updateData, logObject=self.logger, precision=precision)
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
 
@@ -35,6 +36,7 @@ class SimulationTrader:
         self.trades = []  # All trades performed.
         self.commissionPaid = 0  # Total commission paid to broker.
         self.dailyChangeNets = []  # Daily change net list. Will contain list of all nets.
+        self.precision = precision  # Precision to round data to.
 
         self.completedLoop = True  # Loop that'll keep track of bot. We wait for this to turn False before some action.
 
@@ -111,8 +113,8 @@ class SimulationTrader:
     def get_grouped_statistics(self) -> dict:
         groupedDict = {
             'general': {
-                'currentBalance': f'${round(self.balance, 2)}',
-                'startingBalance': f'${round(self.startingBalance, 2)}',
+                'currentBalance': f'${round(self.balance, self.precision)}',
+                'startingBalance': f'${round(self.startingBalance, self.precision)}',
                 'tradesMade': str(len(self.trades)),
                 'coinOwned': f'{round(self.coin, 6)}',
                 'coinOwed': f'{round(self.coinOwed, 6)}',
@@ -121,6 +123,7 @@ class SimulationTrader:
                 'interval': f'{convert_interval_to_string(self.dataView.interval)}',
                 'position': self.get_position_string(),
                 'autonomous': str(not self.inHumanControl),
+                'precision': str(self.precision),
             },
             'stopLoss': {
                 'lossPercentage': self.get_safe_rounded_string(self.lossPercentageDecimal, direction='right',
@@ -146,15 +149,15 @@ class SimulationTrader:
         if self.dataView.current_values:
             groupedDict['currentData'] = {
                 'UTC Open Time': self.dataView.current_values['date_utc'].strftime('%Y-%m-%d %H:%M:%S'),
-                'open': '$' + str(round(self.dataView.current_values['open'], 2)),
-                'close': '$' + str(round(self.dataView.current_values['close'], 2)),
-                'high': '$' + str(round(self.dataView.current_values['high'], 2)),
-                'low': '$' + str(round(self.dataView.current_values['low'], 2)),
-                'volume': str(round(self.dataView.current_values['volume'], 2)),
-                'quoteAssetVolume': str(round(self.dataView.current_values['quote_asset_volume'], 2)),
-                'numberOfTrades': str(round(self.dataView.current_values['number_of_trades'], 2)),
-                'takerBuyBaseAsset': str(round(self.dataView.current_values['taker_buy_base_asset'], 2)),
-                'takerBuyQuoteAsset': str(round(self.dataView.current_values['taker_buy_quote_asset'], 2)),
+                'open': '$' + str(round(self.dataView.current_values['open'], self.precision)),
+                'close': '$' + str(round(self.dataView.current_values['close'], self.precision)),
+                'high': '$' + str(round(self.dataView.current_values['high'], self.precision)),
+                'low': '$' + str(round(self.dataView.current_values['low'], self.precision)),
+                'volume': str(round(self.dataView.current_values['volume'], self.precision)),
+                'quoteAssetVolume': str(round(self.dataView.current_values['quote_asset_volume'], self.precision)),
+                'numberOfTrades': str(round(self.dataView.current_values['number_of_trades'], self.precision)),
+                'takerBuyBaseAsset': str(round(self.dataView.current_values['taker_buy_base_asset'], self.precision)),
+                'takerBuyQuoteAsset': str(round(self.dataView.current_values['taker_buy_quote_asset'], self.precision)),
             }
 
         if self.optionDetails:
@@ -186,7 +189,7 @@ class SimulationTrader:
 
             for x in self.shrekOptions:
                 if x in self.dataView.rsi_data:
-                    groupedDict['shrek'][f'RSI({x})'] = round(self.dataView.rsi_data[x], 2)
+                    groupedDict['shrek'][f'RSI({x})'] = round(self.dataView.rsi_data[x], self.precision)
 
         if self.stoicEnabled:
             groupedDict['stoic'] = {
@@ -201,7 +204,7 @@ class SimulationTrader:
 
             for x in self.stoicOptions:
                 if x in self.dataView.rsi_data:
-                    groupedDict['stoic'][f'RSI({x})'] = round(self.dataView.rsi_data[x], 2)
+                    groupedDict['stoic'][f'RSI({x})'] = round(self.dataView.rsi_data[x], self.precision)
 
         return groupedDict
 
@@ -232,10 +235,10 @@ class SimulationTrader:
             'orderID': orderID,
             'action': message,
             'pair': self.symbol,
-            'price': f'${round(self.currentPrice, 2)}',
+            'price': f'${round(self.currentPrice, self.precision)}',
             'method': method,
             'percentage': f'{round(profitPercentage, 2)}%',
-            'profit': f'${round(profit, 2)}'
+            'profit': f'${round(profit, self.precision)}'
         })
 
         self.previousNet = finalNet
@@ -247,10 +250,10 @@ class SimulationTrader:
                             f'Order ID: {orderID}\n'
                             f'Action: {message}\n'
                             f'Pair: {self.symbol}\n'
-                            f'Price: {round(self.currentPrice, 2)}\n'
+                            f'Price: {round(self.currentPrice, self.precision)}\n'
                             f'Method: {method}\n'
                             f'Percentage: {round(profitPercentage, 2)}%\n'
-                            f'Profit: ${round(profit, 2)}\n')
+                            f'Profit: ${round(profit, self.precision)}\n')
 
     def buy_long(self, msg: str, usd: float = None, force: bool = False, smartEnter=False):
         """
@@ -420,13 +423,13 @@ class SimulationTrader:
         self.output_message(f'Stoic: {stoic}\n')
 
         self.stoicDictionary['values'] = {
-            'marcus': round(marcus, 2),
-            'stoic': round(stoic, 2),
-            'seneca': round(seneca, 2),
-            'zeno': round(zeno, 2),
-            'gaius': round(gaius, 2),
-            'philo': round(philo, 2),
-            'hadot': round(hadot, 2),
+            'marcus': round(marcus, self.precision),
+            'stoic': round(stoic, self.precision),
+            'seneca': round(seneca, self.precision),
+            'zeno': round(zeno, self.precision),
+            'gaius': round(gaius, self.precision),
+            'philo': round(philo, self.precision),
+            'hadot': round(hadot, self.precision),
         }
 
         if marcus > stoic:
@@ -473,11 +476,11 @@ class SimulationTrader:
             onion = carrot / donkey * 100
 
             self.shrekDictionary['values'] = {
-                'apple': round(apple, 2),
-                'beetle': round(beetle, 2),
-                'carrot': round(carrot, 2),
-                'donkey': round(donkey, 2),
-                'onion': round(onion, 2)
+                'apple': round(apple, self.precision),
+                'beetle': round(beetle, self.precision),
+                'carrot': round(carrot, self.precision),
+                'donkey': round(donkey, self.precision),
+                'onion': round(onion, self.precision)
             }
 
             if one > onion:
@@ -661,8 +664,7 @@ class SimulationTrader:
         else:
             raise ValueError("Invalid type of current position.")
 
-    @staticmethod
-    def get_safe_rounded_string(value: float, roundDigits: int = 2, symbol: str = '$', direction: str = 'left',
+    def get_safe_rounded_string(self, value: float, roundDigits: int = None, symbol: str = '$', direction: str = 'left',
                                 multiplier: float = 1) -> str:
         """
         Helper function that will, if exists, return value rounded with symbol provided.
@@ -673,6 +675,9 @@ class SimulationTrader:
         :param value: Value that will be safety checked.
         :return: Rounded value (if not none) in string format.
         """
+        if roundDigits is None:
+            roundDigits = self.precision
+
         if value is None:
             return "None"
         else:
@@ -922,25 +927,23 @@ class SimulationTrader:
         """
         Outputs general information about status of trade when in a short position.
         """
-        if self.currentPosition == SHORT:
+        if self.currentPosition == SHORT and self.stopLoss is not None:
             self.output_message(f'\nCurrently in short position.')
             if self.lossStrategy == TRAILING_LOSS:
-                shortTrailingLossValue = round(self.shortTrailingPrice * (1 + self.lossPercentageDecimal), 2)
-                self.output_message(f'Short trailing loss: ${shortTrailingLossValue}')
+                self.output_message(f'Short trailing loss: ${round(self.stopLoss), self.precision}')
             elif self.lossStrategy == STOP_LOSS:
-                self.output_message(f'Stop loss: {round(self.sellShortPrice * (1 + self.lossPercentageDecimal), 2)}')
+                self.output_message(f'Stop loss: ${round(self.stopLoss), self.precision}')
 
     def output_long_information(self):
         """
         Outputs general information about status of trade when in a long position.
         """
-        if self.currentPosition == LONG:
+        if self.currentPosition == LONG and self.stopLoss is not None:
             self.output_message(f'\nCurrently in long position.')
             if self.lossStrategy == TRAILING_LOSS:
-                longTrailingLossValue = round(self.longTrailingPrice * (1 - self.lossPercentageDecimal), 2)
-                self.output_message(f'Long trailing loss: ${longTrailingLossValue}')
+                self.output_message(f'Long trailing loss: ${round(self.stopLoss), self.precision}')
             elif self.lossStrategy == STOP_LOSS:
-                self.output_message(f'Stop loss: {round(self.buyLongPrice * (1 - self.lossPercentageDecimal), 2)}')
+                self.output_message(f'Stop loss: ${round(self.stopLoss), self.precision}')
 
     def output_control_mode(self):
         """
@@ -955,7 +958,7 @@ class SimulationTrader:
         """
         Outputs general information about profit.
         """
-        profit = round(self.get_profit(), 2)
+        profit = round(self.get_profit(), self.precision)
         if profit > 0:
             self.output_message(f'Profit: ${profit}')
         elif profit < 0:
@@ -990,8 +993,7 @@ class SimulationTrader:
             self.output_no_position_information()
 
         self.output_message(f'\nCurrent {self.coinName} price: ${self.currentPrice}')
-        self.output_message(f'Stop Loss Point: ${round(self.stopLoss, 2)}')
-        self.output_message(f'Balance: ${round(self.balance, 2)}')
+        self.output_message(f'Balance: ${round(self.balance, self.precision)}')
         self.output_profit_information()
         if type(self) == SimulationTrader:
             self.output_message(f'\nTrades conducted this simulation: {len(self.trades)}')
@@ -1018,7 +1020,7 @@ class SimulationTrader:
         self.output_message(f'End time: {self.endingTime.strftime("%Y-%m-%d %H:%M:%S")}')
         self.output_message(f'Elapsed time: {self.endingTime - self.startingTime}')
         self.output_message(f'Starting balance: ${self.startingBalance}')
-        self.output_message(f'Ending balance: ${round(self.balance, 2)}')
+        self.output_message(f'Ending balance: ${round(self.balance, self.precision)}')
         self.output_message(f'Trades conducted: {len(self.trades)}')
         self.output_profit_information()
 

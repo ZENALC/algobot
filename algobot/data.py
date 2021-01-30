@@ -11,19 +11,21 @@ from binance.helpers import interval_to_milliseconds
 
 class Data:
     def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True,
-                 updateData: bool = True, log: bool = False, logFile: str = 'data', logObject=None):
+                 updateData: bool = True, log: bool = False, logFile: str = 'data', logObject=None, precision: int = 2):
         """
         Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
         :param interval: Interval for which the data object will track prices.
         :param symbol: Symbol for which the data object will track prices.
         :param: loadData: Boolean for whether data will be loaded or not.
         :param: updateData: Boolean for whether data will be updated if it is loaded.
+        :param precision: Precision to round data to.
         """
         self.binanceClient = Client()  # Initialize Binance client
         self.logger = self.get_logging_object(log=log, logFile=logFile, logObject=logObject)
         self.validate_interval(interval)
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
+        self.precision = precision
 
         self.downloadCompleted = False
         self.downloadLoop = True
@@ -648,7 +650,7 @@ class Data:
             total += period[parameter]
 
         if round_value:
-            return round(total, 0)
+            return round(total, self.precision)
         return total
 
     def get_lowest_low_value(self, prices: int, parameter: str = 'low', round_value: bool = True,
@@ -671,7 +673,7 @@ class Data:
                 lowest = period[parameter]
 
         if round_value:
-            return round(lowest, 2)
+            return round(lowest, self.precision)
         return lowest
 
     def get_highest_high_value(self, prices: int, parameter: str = 'high', round_value: bool = True,
@@ -694,7 +696,7 @@ class Data:
                 highest = period[parameter]
 
         if round_value:
-            return round(highest, 2)
+            return round(highest, self.precision)
         return highest
 
     @staticmethod
@@ -750,7 +752,7 @@ class Data:
             self.rsi_data[prices] = rsi
 
         if round_value:
-            return round(rsi, 2)
+            return round(rsi, self.precision)
         return rsi
 
     def get_sma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True,
@@ -772,7 +774,7 @@ class Data:
         sma = sum([get_data_from_parameter(data=period, parameter=parameter) for period in data]) / prices
 
         if round_value:
-            return round(sma, 2)
+            return round(sma, self.precision)
         return sma
 
     def get_wma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True,
@@ -801,7 +803,7 @@ class Data:
         divisor = prices * (prices + 1) / 2
         wma = total / divisor
         if round_value:
-            return round(wma, 2)
+            return round(wma, self.precision)
         return wma
 
     def get_ema(self, prices: int, parameter: str, shift: int = 0, sma_prices: int = 5,
@@ -829,7 +831,7 @@ class Data:
                     shift += 1
                     ema = ema_data[prices][parameter][-shift][0]
                     if round_value:
-                        return round(ema, 2)
+                        return round(ema, self.precision)
                     return ema
 
         multiplier = 2 / (prices + 1)
@@ -841,7 +843,7 @@ class Data:
                 current_price = get_data_from_parameter(data=current_data, parameter=parameter)
                 previous_ema = ema_data[prices][parameter][-2][0]
                 ema = current_price * multiplier + previous_ema * (1 - multiplier)
-                ema_data[prices][parameter][-1] = (round(ema, 2), latestDate)
+                ema_data[prices][parameter][-1] = (round(ema, self.precision), latestDate)
             else:
                 current_data = self.get_current_data() if update else self.data[0]
                 current_price = current_data[parameter]
@@ -855,11 +857,11 @@ class Data:
                 for period in self.data[-counter:]:
                     previous_ema = ema_data[prices][parameter][-1][0]
                     ema = period[parameter] * multiplier + previous_ema * (1 - multiplier)
-                    ema_data[prices][parameter].append((round(ema, 2), period['date_utc']))
+                    ema_data[prices][parameter].append((round(ema, self.precision), period['date_utc']))
 
                 previous_ema = ema_data[prices][parameter][-1][0]
                 ema = current_price * multiplier * previous_ema * (1 - multiplier)  # Set current EMA.
-                ema_data[prices][parameter].append((round(ema, 2), current_data['date_utc']))
+                ema_data[prices][parameter].append((round(ema, self.precision), current_data['date_utc']))
 
             if shift > 0:
                 ema = ema_data[prices][parameter][-shift][0]
@@ -867,17 +869,17 @@ class Data:
             data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
             sma_shift = len(data) - sma_prices
             ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False, update=update)
-            values = [(round(ema, 2), str(data[sma_shift]['date_utc']))]
+            values = [(round(ema, self.precision), str(data[sma_shift]['date_utc']))]
 
             for day in range(len(data) - sma_prices - shift):
                 current_index = len(data) - sma_prices - day - 1
                 current_price = get_data_from_parameter(data=data[current_index], parameter=parameter)
                 ema = current_price * multiplier + ema * (1 - multiplier)
-                values.append((round(ema, 2), data[current_index]['date_utc']))
+                values.append((round(ema, self.precision), data[current_index]['date_utc']))
 
             ema_data[prices] = {parameter: values}
 
         self.ema_data = ema_data
         if round_value:
-            return round(ema, 2)
+            return round(ema, self.precision)
         return ema
