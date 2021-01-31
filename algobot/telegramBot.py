@@ -137,8 +137,13 @@ class TelegramBot:
 
     # noinspection PyUnusedLocal
     def get_advanced_statistics_telegram(self, update, context):
-        message = "Here are your advanced statistics as requested: \n"
-        update.message.reply_text(message + self.get_advanced_statistics())
+        limit = constants.MAX_MESSAGE_LENGTH
+
+        message = "Here are your advanced statistics as requested: \n" + self.get_advanced_statistics()
+        messageParts = [message[i:i + limit] for i in range(0, len(message), limit)]
+
+        for part in messageParts:
+            update.message.reply_text(part)
 
     def get_statistics(self) -> str:
         """
