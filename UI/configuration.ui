@@ -46,7 +46,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="mainTab">
       <attribute name="title">
@@ -375,7 +375,7 @@
                  <string>Lower Interval Notification?</string>
                 </property>
                 <property name="checked">
-                 <bool>true</bool>
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>

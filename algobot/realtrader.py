@@ -336,12 +336,12 @@ class RealTrader(SimulationTrader):
                        force=force,
                        orderID=None)
 
-    def buy_long(self, msg: str, usd: float or None = None, force: bool = False, smartEnter=False):
+    def buy_long(self, msg: str, coin: float or None = None, force: bool = False, smartEnter=False):
         """
-        Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
+        Buys coin at current market price with amount of coin specified. If not specified, assumes bot goes all in.
         :param smartEnter: Boolean that'll determine whether current position is entered from a smart enter or not.
         :param msg: Message to be used for displaying trade information.
-        :param usd: Amount used to enter long position.
+        :param coin: Amount used to enter long position.
         :param force: Boolean that determines whether bot executed action or human.
         """
         with self.lock:
@@ -350,17 +350,14 @@ class RealTrader(SimulationTrader):
 
             self.balance = self.get_margin_usdt()
             self.currentPrice = self.dataView.get_current_price()
-            if usd is None:
-                usd = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
-
-            if usd < self.minNotional:
-                raise ValueError(f"{usd} only available. ")
+            if coin is None:
+                coin = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
 
             order = self.binanceClient.create_margin_order(
                 symbol=self.symbol,
                 side=SIDE_BUY,
                 type=ORDER_TYPE_MARKET,
-                quantity=usd,
+                quantity=coin,
                 isIsolated=self.isolated
             )
 

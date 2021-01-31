@@ -59,6 +59,12 @@ class BotThread(QRunnable):
         self.caller = caller
         self.trader = None
 
+        self.failed = False
+        self.failCount = 0
+        self.failLimit = 10
+        self.failSleep = 3
+        self.failError = ''
+
     def initialize_lower_interval_trading(self, caller, interval: str):
         """
         Initializes lower interval trading data object.
@@ -385,54 +391,53 @@ class BotThread(QRunnable):
             self.signals.error.emit(self.caller, str(e))
             return False
 
+    def handle_exception(self, e, trader):
+        self.failed = True
+        self.failCount += 1
+        self.failError = e
+        error_message = traceback.format_exc()
+
+        self.signals.activity.emit(str(e))
+
+        if trader:
+            trader.output_message(error_message, printMessage=True)
+            trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
+            trader.output_message(f"({self.failCount})Trying again in {self.failSleep} seconds..", printMessage=True)
+
+        if self.gui.telegramBot and self.gui.configuration.chatPass:
+            self.gui.telegramBot.send_message(self.telegramChatID, error_message)
+            self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
+            self.gui.telegramBot.send_message(self.telegramChatID, f"({self.failCount})Trying again in "
+                                                                   f"{self.failSleep} seconds..")
+
+        time.sleep(self.failSleep)
+        trader.retrieve_margin_values()
+        trader.check_initial_position()
+
     @pyqtSlot()
     def run(self):
         """
         Initialise the runner function with passed args, kwargs.
         """
-        failed = False
-        failCount = 0
-        failLimit = 10
-        sleepTime = 5
-        error = ''
-
         success = self.try_setting_up_bot()
+        trader: SimulationTrader = self.gui.get_trader(self.caller)
         if success:
-            while failCount < failLimit:
+            while self.failCount < self.failLimit:
                 try:
                     self.trading_loop(self.caller)
-                    failed = False
+                    self.failed = False
                 except Exception as e:
-                    failed = True
-                    failCount += 1
-                    error = e
-                    error_message = traceback.format_exc()
-                    trader: SimulationTrader = self.gui.get_trader(self.caller)
-
-                    self.signals.smallError.emit(str(e))
-
-                    if trader:
-                        trader.output_message(error_message, printMessage=True)
-                        trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
-                        trader.output_message(f"({failCount})Trying again in {sleepTime} seconds..", printMessage=True)
-
-                    if self.gui.telegramBot and self.gui.configuration.chatPass:
-                        self.gui.telegramBot.send_message(self.telegramChatID, error_message)
-                        self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
-                        self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in "
-                                                                               f"{sleepTime} seconds..")
-
                     runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
                     if not runningLoop:
                         break
-                    time.sleep(sleepTime)
-                    trader.retrieve_margin_values()
-                    trader.check_initial_position()
+                    else:
+                        self.handle_exception(e, trader)
 
                 runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
-                if not failed or not runningLoop:
+                if not self.failed or not runningLoop:
                     break
 
-        if failLimit == failCount or failed:
-            self.signals.error.emit(self.caller, str(error))
+        trader.completedLoop = True  # If false, this will cause an infinite loop.
+        if self.failLimit == self.failCount or self.failed:
+            self.signals.error.emit(self.caller, str(self.failError))
         self.signals.restore.emit()

@@ -1,6 +1,6 @@
 import random
 
-from telegram import Bot
+from telegram import Bot, constants
 from telegram.ext import Updater, CommandHandler
 from enums import LONG, SHORT, LIVE
 from simulationtrader import SimulationTrader
@@ -80,8 +80,12 @@ class TelegramBot:
 
         if message == '':
             message = "No trades made yet."
-
-        update.message.reply_text(message)
+            update.message.reply_text(message)
+        else:
+            limit = constants.MAX_MESSAGE_LENGTH
+            messageParts = [message[i:i + limit] for i in range(0, len(message), limit)]
+            for part in messageParts:
+                update.message.reply_text(part)
 
     # noinspection PyUnusedLocal
     @staticmethod
