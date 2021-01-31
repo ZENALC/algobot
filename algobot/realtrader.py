@@ -35,15 +35,18 @@ class RealTrader(SimulationTrader):
 
         super().__init__(interval=interval, symbol=symbol, logFile='live', loadData=loadData, updateData=updateData,
                          precision=precision)
+
         self.binanceClient = Client(apiKey, apiSecret, tld=tld)
-        self.spot_usdt = self.get_spot_usdt()
-        self.spot_coin = self.get_spot_coin()
+        self.transactionFeePercentage = 0.002  # Added 0.001 for volatility safety.
         self.isolated = isIsolated
-        # self.check_spot_and_transfer()
+
         symbolInfo = self.binanceClient.get_symbol_info(self.symbol)
         self.purchasePrecision = self.get_purchase_precision(symbolInfo)
         self.minNotional = self.get_min_notional(symbolInfo)
-        self.transactionFeePercentage = 0.002  # Added 0.001 for volatility safety.
+
+        self.spot_usdt = self.get_spot_usdt()
+        self.spot_coin = self.get_spot_coin()
+        # self.check_spot_and_transfer()
 
         self.retrieve_margin_values()
         self.previousNet = self.get_net()
@@ -109,7 +112,7 @@ class RealTrader(SimulationTrader):
         :param num: Number to be rounded down.
         :return: Rounded down number.
         """
-        factor = 10.0 ** self.precision
+        factor = 10.0 ** self.purchasePrecision
         return math.floor(float(num) * factor) / factor
 
     def check_initial_position(self):
@@ -470,7 +473,7 @@ class RealTrader(SimulationTrader):
 
             self.currentPrice = self.dataView.get_current_price()
             self.balance = self.get_margin_usdt()
-            transactionFee = self.balance * self.transactionFeePercentage
+            transactionFee = self.balance * self.transactionFeePercentage * 2
 
             if coin is None:
                 coin = self.round_down((self.balance - transactionFee) / self.currentPrice)

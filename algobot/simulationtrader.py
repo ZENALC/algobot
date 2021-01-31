@@ -115,8 +115,8 @@ class SimulationTrader:
     def get_grouped_statistics(self) -> dict:
         groupedDict = {
             'general': {
-                'currentBalance': f'${round(self.balance, self.precision)}',
-                'startingBalance': f'${round(self.startingBalance, self.precision)}',
+                'currentBalance': f'${round(self.balance, 2)}',
+                'startingBalance': f'${round(self.startingBalance, 2)}',
                 'tradesMade': str(len(self.trades)),
                 'coinOwned': f'{round(self.coin, 6)}',
                 'coinOwed': f'{round(self.coinOwed, 6)}',

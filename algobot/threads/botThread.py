@@ -321,8 +321,8 @@ class BotThread(QRunnable):
         self.set_daily_percentages(trader=trader, net=net)
 
         groupedDict = trader.get_grouped_statistics()
-        groupedDict['general']['net'] = f'${round(net, trader.precision)}'
-        groupedDict['general']['profit'] = f'${round(profit, trader.precision)}'
+        groupedDict['general']['net'] = f'${round(net, 2)}'
+        groupedDict['general']['profit'] = f'${round(profit, 2)}'
         groupedDict['general']['elapsed'] = self.elapsed
         groupedDict['general']['totalPercentage'] = f'{round(self.percentage, 2)}%'
         groupedDict['general']['dailyPercentage'] = f'{round(self.dailyPercentage, 2)}%'
@@ -332,9 +332,9 @@ class BotThread(QRunnable):
 
         valueDict = {
             'profitLossLabel': trader.get_profit_or_loss_string(profit=profit),
-            'profitLossValue': f'${abs(round(profit, trader.precision))}',
+            'profitLossValue': f'${abs(round(profit, 2))}',
             'percentageValue': f'{round(self.percentage, 2)}%',
-            'netValue': f'${round(net, trader.precision)}',
+            'netValue': f'${round(net, 2)}',
             'tickerValue': f'${round(trader.currentPrice, trader.precision)}',
             'tickerLabel': trader.symbol,
             'currentPositionValue': trader.get_position_string(),
@@ -390,6 +390,7 @@ class BotThread(QRunnable):
         """
         Initialise the runner function with passed args, kwargs.
         """
+        failed = False
         failCount = 0
         failLimit = 10
         sleepTime = 5
@@ -420,6 +421,10 @@ class BotThread(QRunnable):
                         self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
                         self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in "
                                                                                f"{sleepTime} seconds..")
+
+                    runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
+                    if not runningLoop:
+                        break
                     time.sleep(sleepTime)
                     trader.retrieve_margin_values()
                     trader.check_initial_position()
@@ -428,6 +433,6 @@ class BotThread(QRunnable):
                 if not failed or not runningLoop:
                     break
 
-        if failLimit == failCount:
+        if failLimit == failCount or failed:
             self.signals.error.emit(self.caller, str(error))
         self.signals.restore.emit()
