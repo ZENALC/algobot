@@ -161,10 +161,10 @@ class TelegramBot:
                 f'Total trades made: {len(trader.trades)}\n'
                 f"Coin owned: {trader.coin}\n"
                 f"Coin owed: {trader.coinOwed}\n"
-                f"Starting balance: ${round(trader.startingBalance, trader.precision)}\n"
-                f"Balance: ${round(trader.balance, trader.precision)}\n"
-                f'Net: ${round(trader.get_net(), trader.precision)}\n'
-                f"{profitLabel}: ${round(abs(profit), trader.precision)}\n"
+                f"Starting balance: ${round(trader.startingBalance, 2)}\n"
+                f"Balance: ${round(trader.balance, 2)}\n"
+                f'Net: ${round(trader.get_net(), 2)}\n'
+                f"{profitLabel}: ${round(abs(profit), 2)}\n"
                 f'{profitLabel} Percentage: {round(self.botThread.percentage, 2)}%\n'
                 f'Daily Percentage: {round(self.botThread.dailyPercentage, 2)}%\n'
                 f'Autonomous Mode: {not trader.inHumanControl}\n'
