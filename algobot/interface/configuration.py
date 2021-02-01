@@ -102,7 +102,7 @@ class Configuration(QDialog):
             self.binanceApiSecret.setText(credentials['apiSecret'])
             self.telegramApiKey.setText(credentials['telegramApiKey'])
             self.telegramChatID.setText(credentials['chatID'])
-            self.credentialResult.setText('Credentials have been loaded successfully.')
+            self.credentialResult.setText(f'Credentials loaded successfully from {os.path.basename(filePath)}.')
         except FileNotFoundError:
             self.credentialResult.setText('Could not load credentials.')
         except Exception as e:
@@ -123,7 +123,7 @@ class Configuration(QDialog):
         if filePath:
             helpers.write_credentials(filePath=filePath, apiKey=apiKey, apiSecret=apiSecret,
                                       telegramApiKey=telegramApiKey, chatID=telegramChatId)
-            self.credentialResult.setText('Credentials have been saved successfully.')
+            self.credentialResult.setText(f'Credentials saved successfully to {os.path.basename(filePath)}.')
             # QMessageBox.about(self, 'Info', 'Credentials have successfully been overwritten.')
         else:
             self.credentialResult.setText('Credentials could not be saved.')
