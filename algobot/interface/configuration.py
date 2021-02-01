@@ -18,13 +18,15 @@ class Configuration(QDialog):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
         self.threadPool = QThreadPool()
-        self.load_slots()
-        self.load_credentials()
         self.data = None
         self.dataType = None
         self.downloadThread = None
         self.tokenPass = False
         self.chatPass = False
+        self.credentialsFolder = "Credentials"
+
+        self.load_slots()
+        self.load_credentials()
 
     def test_telegram(self):
         """
@@ -87,14 +89,28 @@ class Configuration(QDialog):
             else:
                 self.credentialResult.setText(stringError)
 
+    def create_credentials_folder_if_needed(self, targetFolder):
+        if not os.path.exists(targetFolder):
+            cur_path = os.getcwd()
+            os.chdir(helpers.ROOT_DIR)
+            os.mkdir(self.credentialsFolder)
+            os.chdir(cur_path)
+            return True
+        return False
+
     def load_credentials(self, auto=True):
         """
-        Attempts to load credentials automatically from path program regularly stores credentials in.
+        Attempts to load credentials automatically from path program regularly stores credentials in if auto is True.
         """
+        targetFolder = os.path.join(helpers.ROOT_DIR, self.credentialsFolder)
+        if self.create_credentials_folder_if_needed(targetFolder):
+            self.credentialResult.setText('No credentials found.')
+            return
+
         if not auto:
-            filePath, _ = QFileDialog.getOpenFileName(self, 'Open Credentials', helpers.BASE_DIR, "JSON (*.json)")
+            filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetFolder, "JSON (*.json)")
         else:
-            filePath = 'default.json'
+            filePath = os.path.join(targetFolder, 'default.json')
 
         try:
             credentials = helpers.load_credentials(jsonfile=filePath)
@@ -112,12 +128,16 @@ class Configuration(QDialog):
         """
         Function that saves credentials to base path in a JSON format. Obviously not very secure, but temp fix.
         """
+        targetFolder = os.path.join(helpers.ROOT_DIR, self.credentialsFolder)
+        self.create_credentials_folder_if_needed(targetFolder)
+
         apiKey = self.binanceApiKey.text()
         apiSecret = self.binanceApiSecret.text()
         telegramApiKey = self.telegramApiKey.text()
         telegramChatId = self.telegramChatID.text()
 
-        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Credentials', 'default.json', 'JSON (*.json)')
+        defaultPath = os.path.join(targetFolder, 'default.json')
+        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Credentials', defaultPath, 'JSON (*.json)')
         filePath = filePath.strip()
 
         if filePath:
