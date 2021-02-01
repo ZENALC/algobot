@@ -436,10 +436,6 @@ class SimulationTrader:
         stoic = sum(self.stoicDictionary['zeno'][:3]) / sum(self.stoicDictionary['seneca'][:3]) * 100
         marcus = sum(self.stoicDictionary['hadot'][:input3]) / input3
 
-        self.output_message(f'Inputs: {input1}, {input2}, {input3}')
-        self.output_message(f'\nMarcus: {marcus}')
-        self.output_message(f'Stoic: {stoic}\n')
-
         self.stoicDictionary['values'] = {
             'marcus': round(marcus, self.precision),
             'stoic': round(stoic, self.precision),
