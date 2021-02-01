@@ -1054,6 +1054,36 @@ class SimulationTrader:
 
         self.output_message("")
 
+    def output_configuration(self):
+        self.output_message('\n---------------------------------------------------')
+        self.output_message('Bot Configuration:')
+        self.output_message(f'Starting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')
+        self.output_message(f'Starting balance: ${self.startingBalance}')
+        self.output_message(f'Symbol: {self.symbol}')
+        self.output_message(f'Interval: {convert_interval_to_string(self.dataView.interval)}')
+        self.output_message(f'Precision: {self.precision}')
+        self.output_message(f'Transaction fee percentage: {self.transactionFeePercentage}%')
+        self.output_message(f'Starting coin: {self.coin}')
+        self.output_message(f'Starting borrowed coin: {self.coinOwed}')
+        self.output_message(f'Starting net: ${self.get_net()}')
+        self.output_message(f'Stop loss type: {self.get_stop_loss_strategy_string()}')
+        self.output_message(f'Loss percentage: {self.lossPercentageDecimal * 100}%')
+        self.output_message(f'Smart stop loss counter: {self.smartStopLossInitialCounter}')
+        self.output_message(f'Safety timer: {self.safetyTimer}')
+
+        if self.shrekEnabled:
+            self.output_message(f'\nShrek Inputs: {self.get_shrek_inputs()}')
+
+        if self.stoicEnabled:
+            self.output_message(f'Stoic Inputs: {self.get_stoic_inputs()}')
+
+        self.output_message("\nMoving Average Info:")
+        for option in self.tradingOptions:
+            self.output_message("\t" + ', '.join(option.get_pretty_option()))
+
+        self.output_message('\nEnd of Configuration')
+        self.output_message('---------------------------------------------------')
+
     def retrieve_margin_values(self):
         pass
 

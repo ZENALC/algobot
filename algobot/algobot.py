@@ -752,6 +752,8 @@ class Interface(QMainWindow):
             trader.shrekOptions[2] = self.interfaceDictionary[caller]['configuration']['shrekInput3'].value()
             trader.shrekOptions[3] = self.interfaceDictionary[caller]['configuration']['shrekInput4'].value()
 
+        trader.output_configuration()
+
     def set_custom_stop_loss(self, caller, enable: bool = True, foreignValue: float or None = None):
         """
         Enables or disables custom stop loss.
