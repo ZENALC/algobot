@@ -361,7 +361,7 @@ class RealTrader(SimulationTrader):
                 isIsolated=self.isolated
             )
 
-            time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
+            time.sleep(2)  # Sleep for a second so that the bot registers new margin values.
             self.retrieve_margin_values()
             self.currentPosition = LONG
             self.buyLongPrice = self.currentPrice
@@ -394,7 +394,7 @@ class RealTrader(SimulationTrader):
                 isIsolated=self.isolated
             )
 
-            time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
+            time.sleep(2)  # Sleep for a second so that the bot registers new margin values.
             self.retrieve_margin_values()
             self.previousPosition = LONG
             self.currentPosition = None
@@ -440,7 +440,7 @@ class RealTrader(SimulationTrader):
             #     isIsolated=self.isolated
             # )
 
-            time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
+            time.sleep(2)  # Sleep for a second so that the bot registers new margin values.
             self.retrieve_margin_values()
             self.add_trade(message=msg,
                            force=force,
@@ -486,7 +486,7 @@ class RealTrader(SimulationTrader):
                 sideEffectType="MARGIN_BUY"
             )
 
-            time.sleep(1)  # Sleep for a second so that the bot registers new margin values.
+            time.sleep(2)  # Sleep for a second so that the bot registers new margin values.
             self.currentPosition = SHORT
             self.sellShortPrice = self.currentPrice
             self.shortTrailingPrice = self.currentPrice
