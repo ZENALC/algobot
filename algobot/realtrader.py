@@ -53,7 +53,7 @@ class RealTrader(SimulationTrader):
         self.startingBalance = self.get_starting_balance()
         self.check_initial_position()
         self.netWorth = round(self.get_net(), self.precision)
-        # self.validate_minimum_funds()
+        self.validate_minimum_funds()
 
     @staticmethod
     def get_min_notional(symbolInfo) -> float:
