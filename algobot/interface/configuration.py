@@ -4,7 +4,7 @@ import helpers
 
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QFileDialog
 from binance.client import Client
 from telegram.ext import Updater
 from dateutil import parser
@@ -87,19 +87,24 @@ class Configuration(QDialog):
             else:
                 self.credentialResult.setText(stringError)
 
-    def load_credentials(self):
+    def load_credentials(self, auto=True):
         """
         Attempts to load credentials automatically from path program regularly stores credentials in.
         """
+        if not auto:
+            filePath, _ = QFileDialog.getOpenFileName(self, 'Open Credentials', helpers.BASE_DIR, "JSON (*.json)")
+        else:
+            filePath = 'default.json'
+
         try:
-            credentials = helpers.load_credentials()
+            credentials = helpers.load_credentials(jsonfile=filePath)
             self.binanceApiKey.setText(credentials['apiKey'])
             self.binanceApiSecret.setText(credentials['apiSecret'])
             self.telegramApiKey.setText(credentials['telegramApiKey'])
             self.telegramChatID.setText(credentials['chatID'])
             self.credentialResult.setText('Credentials have been loaded successfully.')
         except FileNotFoundError:
-            self.credentialResult.setText('Credentials not found. Please first save credentials to load them.')
+            self.credentialResult.setText('Could not load credentials.')
         except Exception as e:
             self.credentialResult.setText(str(e))
 
@@ -112,18 +117,16 @@ class Configuration(QDialog):
         telegramApiKey = self.telegramApiKey.text()
         telegramChatId = self.telegramChatID.text()
 
-        qm = QMessageBox
-        warn = qm.warning(self, 'Close?',
-                          f"Are you sure you want to save these credentials? All previous values will be overwritten!",
-                          qm.Yes | qm.No)
+        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Credentials', 'default.json', 'JSON (*.json)')
+        filePath = filePath.strip()
 
-        if warn == qm.Yes:
-            helpers.write_credentials(apiKey=apiKey, apiSecret=apiSecret,
+        if filePath:
+            helpers.write_credentials(filePath=filePath, apiKey=apiKey, apiSecret=apiSecret,
                                       telegramApiKey=telegramApiKey, chatID=telegramChatId)
             self.credentialResult.setText('Credentials have been saved successfully.')
-            QMessageBox.about(self, 'Info', 'Credentials have successfully been overwritten.')
+            # QMessageBox.about(self, 'Info', 'Credentials have successfully been overwritten.')
         else:
-            self.credentialResult.setText('Credentials have not been saved.')
+            self.credentialResult.setText('Credentials could not be saved.')
 
     def get_calendar_dates(self):
         """
@@ -354,7 +357,7 @@ class Configuration(QDialog):
 
         self.testCredentialsButton.clicked.connect(self.test_binance_credentials)
         self.saveCredentialsButton.clicked.connect(self.save_credentials)
-        self.loadCredentialsButton.clicked.connect(self.load_credentials)
+        self.loadCredentialsButton.clicked.connect(lambda: self.load_credentials(auto=False))
         self.testTelegramButton.clicked.connect(self.test_telegram)
 
         self.telegramApiKey.textChanged.connect(self.reset_telegram_state)
