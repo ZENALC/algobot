@@ -397,7 +397,7 @@ class BotThread(QRunnable):
         self.failError = e
         error_message = traceback.format_exc()
 
-        self.signals.activity.emit(str(e))
+        self.signals.activity.emit(self.caller, str(e))
 
         if trader:
             trader.output_message(error_message, printMessage=True)
