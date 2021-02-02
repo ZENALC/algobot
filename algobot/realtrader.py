@@ -351,15 +351,15 @@ class RealTrader(SimulationTrader):
             self.balance = self.get_margin_usdt()
             self.currentPrice = self.dataView.get_current_price()
             if coin is None:
-                coin = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
+                coin = self.balance / self.currentPrice * (1 - self.transactionFeePercentage)
 
-            self.output_message(f'Attempting to enter long by buying {coin} coins.')
+            self.output_message(f'Attempting to enter long by buying {coin} coins...')
 
             order = self.binanceClient.create_margin_order(
                 symbol=self.symbol,
                 side=SIDE_BUY,
                 type=ORDER_TYPE_MARKET,
-                quantity=coin,
+                quantity=self.round_down(coin),
                 isIsolated=self.isolated
             )
 
@@ -388,7 +388,7 @@ class RealTrader(SimulationTrader):
             if coin is None:
                 coin = self.get_margin_coin()
 
-            self.output_message(f"Attempting to exit long by selling {coin} coins.")
+            self.output_message(f"Attempting to exit long by selling {coin} coins...")
 
             order = self.binanceClient.create_margin_order(
                 symbol=self.symbol,
@@ -427,7 +427,7 @@ class RealTrader(SimulationTrader):
             asset = self.get_asset(self.coinName)
             coin = (float(asset['borrowed']) + float(asset['interest'])) * (1 + self.transactionFeePercentage)
 
-            self.output_message(f'Attempting to exit short by returning {coin} coins.')
+            self.output_message(f'Attempting to exit short by returning {coin} coins...')
 
             order = self.binanceClient.create_margin_order(
                 side=SIDE_BUY,
@@ -482,7 +482,7 @@ class RealTrader(SimulationTrader):
                 coin = (self.balance - transactionFee) / self.currentPrice
             # max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
             # self.create_margin_loan(amount=max_borrow, force=force)
-            self.output_message(f'Attempting to enter short by selling {coin} coins.')
+            self.output_message(f'Attempting to enter short by selling {coin} coins...')
 
             order = self.binanceClient.create_margin_order(
                 side=SIDE_SELL,

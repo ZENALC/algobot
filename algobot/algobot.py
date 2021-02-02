@@ -346,8 +346,7 @@ class Interface(QMainWindow):
         """
         self.disable_interface(True, caller=caller, everything=True)  # Disable everything until everything is done.
         self.enable_override(caller, False)  # Disable overrides.
-        thread = workerThread.Worker(lambda **kwargs: self.end_bot_gracefully(caller=caller, **kwargs))
-        thread.signals.activity.connect(lambda msg: self.add_to_monitor(message=msg, caller=caller))
+        thread = workerThread.Worker(lambda: self.end_bot_gracefully(caller=caller))
         thread.signals.error.connect(self.create_popup)
         thread.signals.finished.connect(lambda: self.end_bot_monitoring(caller=caller))
         thread.signals.restore.connect(lambda: self.reset_bot_interface(caller=caller))
@@ -357,7 +356,6 @@ class Interface(QMainWindow):
         if caller == SIMULATION:
             self.add_to_monitor(caller, "Killed simulation bot.")
         else:
-            self.add_to_monitor(caller, 'Killed Telegram bot.')
             self.add_to_monitor(caller, "Killed bot.")
 
     def reset_bot_interface(self, caller):
@@ -606,7 +604,7 @@ class Interface(QMainWindow):
                 trader.buy_short('Force exited short.', force=True)
             else:
                 trader.buy_short('Exited short because of override and resumed autonomous logic.', force=True)
-        self.inform_telegram("Force exited position from GUI.", caller=caller)
+        # self.inform_telegram("Force exited position from GUI.", caller=caller)
 
     def set_exit_position_gui(self, caller, humanControl):
         """
@@ -652,7 +650,7 @@ class Interface(QMainWindow):
             trader.buy_short('Exited short because long was forced.', force=True)
         trader.buy_long('Force executed long.', force=True)
         trader.reset_smart_stop_loss()
-        self.inform_telegram("Force executed long from GUI.", caller=caller)
+        # self.inform_telegram("Force executed long from GUI.", caller=caller)
 
     def force_long(self, caller):
         """
@@ -686,7 +684,7 @@ class Interface(QMainWindow):
             trader.sell_long('Exited long because short was forced.', force=True)
         trader.sell_short('Force executed short.', force=True)
         trader.reset_smart_stop_loss()
-        self.inform_telegram("Force executed short from GUI.", caller=caller)
+        # self.inform_telegram("Force executed short from GUI.", caller=caller)
 
     def force_short(self, caller):
         """
