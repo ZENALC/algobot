@@ -353,6 +353,8 @@ class RealTrader(SimulationTrader):
             if coin is None:
                 coin = self.round_down(self.balance / self.currentPrice * (1 - self.transactionFeePercentage))
 
+            self.output_message(f'Attempting to enter long by buying {coin} coins.')
+
             order = self.binanceClient.create_margin_order(
                 symbol=self.symbol,
                 side=SIDE_BUY,
@@ -385,6 +387,8 @@ class RealTrader(SimulationTrader):
 
             if coin is None:
                 coin = self.get_margin_coin()
+
+            self.output_message(f"Attempting to sell {coin} to exit long.")
 
             order = self.binanceClient.create_margin_order(
                 symbol=self.symbol,
@@ -422,6 +426,8 @@ class RealTrader(SimulationTrader):
             # difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
             asset = self.get_asset(self.coinName)
             difference = (float(asset['borrowed']) + float(asset['interest'])) * (1 + self.transactionFeePercentage)
+
+            self.output_message(f'Attempting to exit short by returning {difference} coins.')
 
             order = self.binanceClient.create_margin_order(
                 side=SIDE_BUY,
@@ -473,9 +479,10 @@ class RealTrader(SimulationTrader):
             transactionFee = self.balance * self.transactionFeePercentage * 2
 
             if coin is None:
-                coin = self.round_down((self.balance - transactionFee) / self.currentPrice)
+                coin = (self.balance - transactionFee) / self.currentPrice
             # max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
             # self.create_margin_loan(amount=max_borrow, force=force)
+            self.output_message(f'Attempting to enter short by selling {coin} coins.')
 
             order = self.binanceClient.create_margin_order(
                 side=SIDE_SELL,

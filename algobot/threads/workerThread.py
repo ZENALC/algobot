@@ -6,6 +6,7 @@ class WorkerSignals(QObject):
     """
     Defines the signals available from a running worker thread.
     """
+    activity = pyqtSignal(str)
     restore = pyqtSignal()
     started = pyqtSignal()
     finished = pyqtSignal()
@@ -46,6 +47,7 @@ class Worker(QRunnable):
         # Retrieve args/kwargs here; and fire processing using them
         try:
             self.signals.started.emit()
+            self.kwargs['callback'] = self.signals.activity
             self.fn(*self.args, **self.kwargs)
             self.signals.finished.emit()
         except Exception as e:

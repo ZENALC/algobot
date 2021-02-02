@@ -345,7 +345,9 @@ class Interface(QMainWindow):
         :param caller: Caller that decides which bot will be ended.
         """
         self.disable_interface(True, caller=caller, everything=True)  # Disable everything until everything is done.
-        thread = workerThread.Worker(lambda: self.end_bot_gracefully(caller=caller))
+        self.enable_override(caller, False)  # Disable overrides.
+        thread = workerThread.Worker(lambda **kwargs: self.end_bot_gracefully(caller=caller, **kwargs))
+        thread.signals.activity.connect(lambda msg: self.add_to_monitor(message=msg, caller=caller))
         thread.signals.error.connect(self.create_popup)
         thread.signals.finished.connect(lambda: self.end_bot_monitoring(caller=caller))
         thread.signals.restore.connect(lambda: self.reset_bot_interface(caller=caller))
@@ -364,7 +366,7 @@ class Interface(QMainWindow):
         self.update_trades_table_and_activity_monitor(caller)
         # self.destroy_trader(caller)
 
-    def end_bot_gracefully(self, caller):
+    def end_bot_gracefully(self, caller, callback=None):
         if caller == SIMULATION:
             if self.simulationTrader:
                 self.simulationTrader.dataView.downloadLoop = False
@@ -389,6 +391,9 @@ class Interface(QMainWindow):
                 self.telegramBot.stop()
                 self.telegramBot = None
 
+                if callback:
+                    callback.emit("Killed Telegram bot.")
+
             while not self.trader.completedLoop:
                 pass
 
@@ -397,8 +402,14 @@ class Interface(QMainWindow):
                 self.lowerIntervalData.dump_to_table()
                 self.lowerIntervalData = None
 
+        if callback:
+            callback.emit("Dumping data to database...")
+
         tempTrader.log_trades_and_daily_net()
         tempTrader.dataView.dump_to_table()
+
+        if callback:
+            callback.emit("Dumped all new data to database.")
         # self.destroy_trader(caller)
 
     def end_crash_bot_and_create_popup(self, caller: int, msg: str):
@@ -1150,7 +1161,7 @@ class Interface(QMainWindow):
         elif self.simulationRunningLive:
             message = "There is a simulation running."
         elif self.runningLive:
-            message = "There is live bot running."
+            message = "There is a live bot running."
         ret = qm.question(self, 'Close?', f"{message} Are you sure you want to end Algobot?",
                           qm.Yes | qm.No)
 
