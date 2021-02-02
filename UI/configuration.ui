@@ -159,7 +159,7 @@
                  </sizepolicy>
                 </property>
                 <property name="toolTip">
-                 <string>Saves Binance and Telegram credentials.</string>
+                 <string>Saves Binance and Telegram credentials. By default, they will save to default.json.</string>
                 </property>
                 <property name="text">
                  <string>Save Credentials</string>
@@ -278,7 +278,7 @@
               <item row="9" column="1">
                <widget class="QPushButton" name="loadCredentialsButton">
                 <property name="toolTip">
-                 <string>Load Binance and Telegram credentials.</string>
+                 <string>Load Binance and Telegram credentials. Program will try to load credentials automatically from default.json.</string>
                 </property>
                 <property name="text">
                  <string>Load Credentials</string>
