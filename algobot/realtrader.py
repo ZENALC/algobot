@@ -388,7 +388,7 @@ class RealTrader(SimulationTrader):
             if coin is None:
                 coin = self.get_margin_coin()
 
-            self.output_message(f"Attempting to sell {coin} to exit long.")
+            self.output_message(f"Attempting to exit long by selling {coin} coins.")
 
             order = self.binanceClient.create_margin_order(
                 symbol=self.symbol,
@@ -425,14 +425,14 @@ class RealTrader(SimulationTrader):
             # self.coinOwed = self.get_borrowed_margin_coin()
             # difference = (self.coinOwed + self.get_borrowed_margin_interest()) * (1 + self.transactionFeePercentage)
             asset = self.get_asset(self.coinName)
-            difference = (float(asset['borrowed']) + float(asset['interest'])) * (1 + self.transactionFeePercentage)
+            coin = (float(asset['borrowed']) + float(asset['interest'])) * (1 + self.transactionFeePercentage)
 
-            self.output_message(f'Attempting to exit short by returning {difference} coins.')
+            self.output_message(f'Attempting to exit short by returning {coin} coins.')
 
             order = self.binanceClient.create_margin_order(
                 side=SIDE_BUY,
                 symbol=self.symbol,
-                quantity=self.round_down(difference),
+                quantity=self.round_down(coin),
                 type=ORDER_TYPE_MARKET,
                 isIsolated=self.isolated,
                 sideEffectType="AUTO_REPAY"
