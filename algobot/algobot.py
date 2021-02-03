@@ -18,6 +18,7 @@ from interface.otherCommands import OtherCommands
 from interface.about import About
 from interface.statistics import Statistics
 from scrapeNews import scrape_news
+from algodict import get_interface_dictionary
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem, QFileDialog
@@ -55,7 +56,7 @@ class Interface(QMainWindow):
         self.initiate_slots()  # Initiating slots
         self.previousTradesCount = [0, 0]  # Count of previous trades.
 
-        self.interfaceDictionary = self.get_interface_dictionary()
+        self.interfaceDictionary = get_interface_dictionary(self)
         self.advancedLogging = False
         self.runningLive = False
         self.simulationRunningLive = False
@@ -1437,180 +1438,6 @@ class Interface(QMainWindow):
             return self.backtester
         else:
             raise TypeError("Invalid type of caller specified.")
-
-    # noinspection DuplicatedCode
-    def get_interface_dictionary(self, caller: int = None):
-        """
-        Returns dictionary of objects from QT. Used for DRY principles.
-        :param caller: Caller that will determine which sub dictionary gets returned.
-        :return: Dictionary of objects.
-        """
-        interfaceDictionary = {
-            SIMULATION: {
-                'mainInterface': {
-                    # Portfolio
-                    'profitLabel': self.simulationProfitLabel,
-                    'profitValue': self.simulationProfitValue,
-                    'percentageValue': self.simulationPercentageValue,
-                    'netTotalValue': self.simulationNetTotalValue,
-                    'tickerLabel': self.simulationTickerLabel,
-                    'tickerValue': self.simulationTickerValue,
-                    'customStopLossValue': self.customSimulationStopLossValue,
-                    'positionValue': self.simulationPositionValue,
-                    # Buttons
-                    'pauseBotButton': self.pauseBotSimulationButton,
-                    'runBotButton': self.runSimulationButton,
-                    'endBotButton': self.endSimulationButton,
-                    'forceShortButton': self.forceShortSimulationButton,
-                    'forceLongButton': self.forceLongSimulationButton,
-                    'exitPositionButton': self.exitPositionSimulationButton,
-                    'waitOverrideButton': self.waitOverrideSimulationButton,
-                    'enableCustomStopLossButton': self.enableSimulationCustomStopLossButton,
-                    'disableCustomStopLossButton': self.disableSimulationCustomStopLossButton,
-                    # Groupboxes
-                    'overrideGroupBox': self.simulationOverrideGroupBox,
-                    'customStopLossGroupBox': self.customSimulationStopLossGroupBox,
-                    # Graphs
-                    'graph': self.simulationGraph,
-                    'averageGraph': self.simulationAvgGraph,
-                    # Table
-                    'historyTable': self.simulationHistoryTable,
-                    'activityTable': self.simulationActivityMonitor,
-                },
-                'configuration': {
-                    'mainTab': self.configuration.simulationMainTab,
-                    'averageTab': self.configuration.simulationAverageTab,
-                    'lossTab': self.configuration.simulationLossTab,
-                    'baseAverageType': self.configuration.simulationAverageTypeComboBox,
-                    'baseParameter': self.configuration.simulationParameterComboBox,
-                    'baseInitialValue': self.configuration.simulationInitialValueSpinBox,
-                    'baseFinalValue': self.configuration.simulationFinalValueSpinBox,
-                    'doubleCrossCheck': self.configuration.simulationDoubleCrossCheckMark,
-                    'additionalAverageType': self.configuration.simulationDoubleAverageComboBox,
-                    'additionalParameter': self.configuration.simulationDoubleParameterComboBox,
-                    'additionalInitialValue': self.configuration.simulationDoubleInitialValueSpinBox,
-                    'additionalFinalValue': self.configuration.simulationDoubleFinalValueSpinBox,
-                    'trailingLossRadio': self.configuration.simulationTrailingLossRadio,
-                    'lossPercentage': self.configuration.simulationLossPercentageSpinBox,
-                    'mainConfigurationTabWidget': self.configuration.simulationConfigurationTabWidget,
-                    'ticker': self.configuration.simulationTickerComboBox,
-                    'interval': self.configuration.simulationIntervalComboBox,
-                    'lowerIntervalCheck': self.configuration.lowerIntervalSimulationCheck,
-                    'stoicCheck': self.configuration.simulationStoicCheckMark,
-                    'stoicInput1': self.configuration.simulationStoicSpinBox1,
-                    'stoicInput2': self.configuration.simulationStoicSpinBox2,
-                    'stoicInput3': self.configuration.simulationStoicSpinBox3,
-                    'smartStopLossCounter': self.configuration.simulationSmartStopLossSpinBox,
-                    'shrekCheck': self.configuration.simulationShrekCheckMark,
-                    'shrekInput1': self.configuration.simulationShrekSpinBox1,
-                    'shrekInput2': self.configuration.simulationShrekSpinBox2,
-                    'shrekInput3': self.configuration.simulationShrekSpinBox3,
-                    'shrekInput4': self.configuration.simulationShrekSpinBox4,
-                    'safetyTimer': self.configuration.simulationSafetyTimerSpinBox,
-                    'precision': self.configuration.simulationPrecisionSpinBox,
-                }
-            },
-            LIVE: {
-                'mainInterface': {
-                    # Portfolio
-                    'profitLabel': self.profitLabel,
-                    'profitValue': self.profitValue,
-                    'percentageValue': self.percentageValue,
-                    'netTotalValue': self.netTotalValue,
-                    'tickerLabel': self.tickerLabel,
-                    'tickerValue': self.tickerValue,
-                    'customStopLossValue': self.customStopLossValue,
-                    'positionValue': self.positionValue,
-                    # Buttons
-                    'pauseBotButton': self.pauseBotButton,
-                    'runBotButton': self.runBotButton,
-                    'endBotButton': self.endBotButton,
-                    'forceShortButton': self.forceShortButton,
-                    'forceLongButton': self.forceLongButton,
-                    'exitPositionButton': self.exitPositionButton,
-                    'waitOverrideButton': self.waitOverrideButton,
-                    'enableCustomStopLossButton': self.enableCustomStopLossButton,
-                    'disableCustomStopLossButton': self.disableCustomStopLossButton,
-                    # Groupboxes
-                    'overrideGroupBox': self.overrideGroupBox,
-                    'customStopLossGroupBox': self.customStopLossGroupBox,
-                    # Graphs
-                    'graph': self.liveGraph,
-                    'averageGraph': self.avgGraph,
-                    # Table
-                    'historyTable': self.historyTable,
-                    'activityTable': self.activityMonitor,
-                },
-                'configuration': {
-                    'mainTab': self.configuration.mainMainTab,
-                    'averageTab': self.configuration.mainAverageTab,
-                    'lossTab': self.configuration.mainLossTab,
-                    'baseAverageType': self.configuration.averageTypeComboBox,
-                    'baseParameter': self.configuration.parameterComboBox,
-                    'baseInitialValue': self.configuration.initialValueSpinBox,
-                    'baseFinalValue': self.configuration.finalValueSpinBox,
-                    'doubleCrossCheck': self.configuration.doubleCrossCheckMark,
-                    'additionalAverageType': self.configuration.doubleAverageComboBox,
-                    'additionalParameter': self.configuration.doubleParameterComboBox,
-                    'additionalInitialValue': self.configuration.doubleInitialValueSpinBox,
-                    'additionalFinalValue': self.configuration.doubleFinalValueSpinBox,
-                    'trailingLossRadio': self.configuration.trailingLossRadio,
-                    'lossPercentage': self.configuration.lossPercentageSpinBox,
-                    'mainConfigurationTabWidget': self.configuration.mainConfigurationTabWidget,
-                    'ticker': self.configuration.tickerComboBox,
-                    'interval': self.configuration.intervalComboBox,
-                    'lowerIntervalCheck': self.configuration.lowerIntervalCheck,
-                    'stoicCheck': self.configuration.stoicCheckMark,
-                    'stoicInput1': self.configuration.stoicSpinBox1,
-                    'stoicInput2': self.configuration.stoicSpinBox2,
-                    'stoicInput3': self.configuration.stoicSpinBox3,
-                    'smartStopLossCounter': self.configuration.smartStopLossSpinBox,
-                    'shrekCheck': self.configuration.shrekCheckMark,
-                    'shrekInput1': self.configuration.shrekSpinBox1,
-                    'shrekInput2': self.configuration.shrekSpinBox2,
-                    'shrekInput3': self.configuration.shrekSpinBox3,
-                    'shrekInput4': self.configuration.shrekSpinBox4,
-                    'safetyTimer': self.configuration.safetyTimerSpinBox,
-                    'precision': self.configuration.precisionSpinBox,
-                }
-            },
-            BACKTEST: {
-                'configuration': {
-                    'mainTab': self.configuration.backtestMainTab,
-                    'averageTab': self.configuration.backtestAverageTab,
-                    'lossTab': self.configuration.backtestLossTab,
-                    'baseAverageType': self.configuration.backtestAverageTypeComboBox,
-                    'baseParameter': self.configuration.backtestParameterComboBox,
-                    'baseInitialValue': self.configuration.backtestInitialValueSpinBox,
-                    'baseFinalValue': self.configuration.backtestFinalValueSpinBox,
-                    'doubleCrossCheck': self.configuration.backtestDoubleCrossCheckMark,
-                    'additionalAverageType': self.configuration.backtestDoubleAverageComboBox,
-                    'additionalParameter': self.configuration.backtestDoubleParameterComboBox,
-                    'additionalInitialValue': self.configuration.backtestDoubleInitialValueSpinBox,
-                    'additionalFinalValue': self.configuration.backtestDoubleFinalValueSpinBox,
-                    'trailingLossRadio': self.configuration.backtestTrailingLossRadio,
-                    'lossPercentage': self.configuration.backtestLossPercentageSpinBox,
-                    'mainConfigurationTabWidget': self.configuration.backtestConfigurationTabWidget,
-                    'smartStopLossCounter': self.configuration.backtestSmartStopLossSpinBox,
-                    'shrekInput1': self.configuration.backtestShrekSpinBox1,
-                    'shrekInput2': self.configuration.backtestShrekSpinBox2,
-                    'shrekInput3': self.configuration.backtestShrekSpinBox3,
-                    'shrekInput4': self.configuration.backtestShrekSpinBox4,
-                    'precision': self.configuration.backtestPrecisionSpinBox,
-                },
-                'mainInterface': {
-                    'runBotButton': self.runBacktestButton,
-                    'endBotButton': self.endBacktestButton,
-                    # Graphs
-                    'graph': self.backtestGraph,
-                    # Table
-                    'historyTable': self.backtestTable,
-                }
-            }
-        }
-        if caller is not None:
-            return interfaceDictionary[caller]
-        return interfaceDictionary
 
 
 def main():
