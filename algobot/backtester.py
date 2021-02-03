@@ -7,6 +7,7 @@ from datetime import datetime
 from helpers import load_from_csv, get_ups_and_downs, get_data_from_parameter
 from option import Option
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
+from algorithms import get_sma, get_wma
 
 
 class Backtester:
@@ -569,23 +570,16 @@ class Backtester:
 
     def get_sma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
         data = data[0: prices]
-        sma = sum([get_data_from_parameter(data=period, parameter=parameter) for period in data]) / prices
+        sma = get_sma(data, prices, parameter)
 
         if round_value:
             return round(sma, self.precision)
         return sma
 
     def get_wma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
-        total = get_data_from_parameter(data=data[0], parameter=parameter) * prices
-        data = data[1: prices]  # Data now does not include the first shift period.
+        data = data[0: prices]
+        wma = get_wma(data, prices, parameter)
 
-        index = 0
-        for x in range(prices - 1, 0, -1):
-            total += x * get_data_from_parameter(data=data[index], parameter=parameter)
-            index += 1
-
-        divisor = prices * (prices + 1) / 2
-        wma = total / divisor
         if round_value:
             return round(wma, self.precision)
         return wma

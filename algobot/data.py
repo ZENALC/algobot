@@ -7,6 +7,7 @@ from helpers import get_logger, ROOT_DIR, get_ups_and_downs, get_data_from_param
 from contextlib import closing
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
+from algorithms import get_sma, get_wma
 
 
 class Data:
@@ -260,7 +261,7 @@ class Data:
             return self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
         else:
             latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            return int(latestDate.timestamp()) * 1000  # Converting timestamp to milliseconds
+            return int(latestDate.timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
 
     # noinspection PyProtectedMember
     def update_database_and_data(self):
@@ -380,7 +381,7 @@ class Data:
         :return: True or false whether date is latest period or not.
         """
         minutes = self.get_interval_minutes()
-        current_date = latestDate + timedelta(minutes=minutes) + timedelta(seconds=5)  # 5 second leeway for server.
+        current_date = latestDate + timedelta(minutes=minutes) + timedelta(seconds=5)  # 5s leeway for server update
         return current_date >= datetime.now(timezone.utc) - timedelta(minutes=minutes)
 
     def data_is_updated(self) -> bool:
@@ -775,7 +776,7 @@ class Data:
 
         data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
         data = data[shift: prices + shift]  # Data now starts from shift and goes up to prices + shift
-        sma = sum([get_data_from_parameter(data=period, parameter=parameter) for period in data]) / prices
+        sma = get_sma(data, prices, parameter)
 
         if round_value:
             return round(sma, self.precision)
@@ -796,16 +797,9 @@ class Data:
             raise ValueError('Invalid average input specified.')
 
         data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
-        total = get_data_from_parameter(data=data[shift], parameter=parameter) * prices
-        data = data[shift + 1: prices + shift]  # Data now does not include the first shift period.
+        data = data[shift: prices + shift]
+        wma = get_wma(data, prices, parameter)
 
-        index = 0
-        for x in range(prices - 1, 0, -1):
-            total += x * get_data_from_parameter(data=data[index], parameter=parameter)
-            index += 1
-
-        divisor = prices * (prices + 1) / 2
-        wma = total / divisor
         if round_value:
             return round(wma, self.precision)
         return wma
