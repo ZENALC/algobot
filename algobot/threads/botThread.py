@@ -225,9 +225,7 @@ class BotThread(QRunnable):
         """
         trader = self.gui.get_trader(caller)
         if not trader.dataView.data_is_updated():
-            # self.signals.activity.emit(caller, 'New data found. Updating...')
             trader.dataView.update_data()
-            # self.signals.activity.emit(caller, 'Updated data successfully.')
 
     def handle_trading(self, caller):
         """

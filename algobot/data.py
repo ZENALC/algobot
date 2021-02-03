@@ -380,7 +380,8 @@ class Data:
         :return: True or false whether date is latest period or not.
         """
         minutes = self.get_interval_minutes()
-        return latestDate + timedelta(minutes=minutes) >= datetime.now(timezone.utc) - timedelta(minutes=minutes)
+        current_date = latestDate + timedelta(minutes=minutes) + timedelta(seconds=5)  # 5 second leeway for server.
+        return current_date >= datetime.now(timezone.utc) - timedelta(minutes=minutes)
 
     def data_is_updated(self) -> bool:
         """
@@ -418,11 +419,14 @@ class Data:
         dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
         self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
         if not self.data_is_updated():
-            newData = self.get_new_data(timestamp)
+            newData = []
+            while len(newData) == 0:
+                time.sleep(0.5)  # Sleep half a second for server to refresh new values.
+                newData = self.get_new_data(timestamp)
             self.insert_data(newData)
-            self.output_message("Data has been updated successfully.")
+            self.output_message("Data has been updated successfully.\n")
         else:
-            self.output_message("Data is up-to-date.")
+            self.output_message("Data is up-to-date.\n")
 
     def get_current_data(self) -> dict:
         """
