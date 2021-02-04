@@ -52,6 +52,7 @@ class Interface(QMainWindow):
             {'graph': self.avgGraph, 'plots': [], 'label': self.liveAvgCoordinates},
             {'graph': self.simulationAvgGraph, 'plots': [], 'label': self.simulationAvgCoordinates},
         )
+        self.graphLeeway = 10  # Amount of points to set extra for graph limits.
         self.setup_graphs()  # Setting up graphs
         self.initiate_slots()  # Initiating slots
         self.previousTradesCount = [0, 0]  # Count of previous trades.
@@ -521,9 +522,16 @@ class Interface(QMainWindow):
         interfaceDict = self.interfaceDictionary[caller]
         currentUTC = datetime.utcnow().timestamp()
         net = valueDict['net']
+
+        netGraph = interfaceDict['mainInterface']['graph']
         targetGraph = interfaceDict['mainInterface']['averageGraph']
 
-        self.add_data_to_plot(interfaceDict['mainInterface']['graph'], 0, y=round(net, 2), timestamp=currentUTC)
+        graphDict = self.get_graph_dictionary(targetGraph)
+        graphXSize = len(graphDict['plots'][0]['x']) + self.graphLeeway
+        netGraph.setLimits(xMin=0, xMax=graphXSize)
+        targetGraph.setLimits(xMin=0, xMax=graphXSize)
+
+        self.add_data_to_plot(netGraph, 0, y=round(net, 2), timestamp=currentUTC)
 
         for index, optionDetail in enumerate(valueDict['optionDetails']):
             initialAverage, finalAverage = optionDetail[:2]
@@ -815,7 +823,7 @@ class Interface(QMainWindow):
         """
         for graphDict in self.graphs:
             graph = graphDict['graph']
-            graph.setLimits(xMin=0)
+            graph.setLimits(xMin=0, xMax=self.graphLeeway, yMin=-10)
             graph.setBackground('w')
             graph.setLabel('left', 'USDT')
             graph.setLabel('bottom', 'Data Points')
