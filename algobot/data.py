@@ -462,6 +462,7 @@ class Data:
             return currentDataDictionary
         except Exception as e:
             self.output_message(f"Error: {e}. Retrying in 5 seconds...", 4)
+            self.ema_dict = {}
             time.sleep(5)
             return self.get_current_data()
 
@@ -820,6 +821,10 @@ class Data:
             raise ValueError('Invalid average input specified.')
         elif sma_prices <= 0:
             raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
+
+        if not self.data_is_updated():  # Check if data is valid. If not, memoized data will be corrupted.
+            self.ema_dict = {}
+            self.update_data()
 
         data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
         data = data[shift:]
