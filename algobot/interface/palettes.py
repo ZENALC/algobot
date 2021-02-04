@@ -19,7 +19,7 @@ def get_bloomberg_palette():
     palette.setColor(QPalette.Disabled, QPalette.Button, QColor(35, 35, 35))
     palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(200, 120, 0))
     palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor(35, 35, 35))
-    palette.setColor(QPalette.Disabled, QPalette.Text, QColor(35, 35, 35))
+    palette.setColor(QPalette.Disabled, QPalette.Text, QColor(200, 120, 0))
     palette.setColor(QPalette.Disabled, QPalette.Light, QColor(25, 25, 25))
     return palette
 
@@ -42,7 +42,7 @@ def get_green_palette():
     palette.setColor(QPalette.Disabled, QPalette.Button, QColor(35, 35, 35))
     palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(35, 155, 35))
     palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor(35, 35, 35))
-    palette.setColor(QPalette.Disabled, QPalette.Text, QColor(35, 35, 35))
+    palette.setColor(QPalette.Disabled, QPalette.Text, QColor(35, 155, 35))
     palette.setColor(QPalette.Disabled, QPalette.Light, QColor(25, 25, 25))
     return palette
 
@@ -65,7 +65,7 @@ def get_red_palette():
     palette.setColor(QPalette.Disabled, QPalette.Button, QColor(35, 35, 35))
     palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(155, 35, 35))
     palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor(35, 35, 35))
-    palette.setColor(QPalette.Disabled, QPalette.Text, QColor(35, 35, 35))
+    palette.setColor(QPalette.Disabled, QPalette.Text, QColor(155, 35, 35))
     palette.setColor(QPalette.Disabled, QPalette.Light, QColor(25, 25, 25))
     return palette
 
@@ -88,7 +88,7 @@ def get_dark_palette():
     palette.setColor(QPalette.Disabled, QPalette.Button, QColor(35, 35, 35))
     palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(150, 150, 150))
     palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor(35, 35, 35))
-    palette.setColor(QPalette.Disabled, QPalette.Text, QColor(35, 35, 35))
+    palette.setColor(QPalette.Disabled, QPalette.Text, QColor(150, 150, 150))
     palette.setColor(QPalette.Disabled, QPalette.Light, QColor(25, 25, 25))
     return palette
 
