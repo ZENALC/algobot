@@ -47,11 +47,11 @@ class Interface(QMainWindow):
         self.statistics = Statistics(self)  # Loading statistics
         self.threadPool = QThreadPool(self)  # Initiating threading pool
         self.graphs = (
-            {'graph': self.simulationGraph, 'plots': [], 'label': self.simulationCoordinates},
-            {'graph': self.backtestGraph, 'plots': [], 'label': self.backtestCoordinates},
-            {'graph': self.liveGraph, 'plots': [], 'label': self.liveCoordinates},
-            {'graph': self.avgGraph, 'plots': [], 'label': self.liveAvgCoordinates},
-            {'graph': self.simulationAvgGraph, 'plots': [], 'label': self.simulationAvgCoordinates},
+            {'graph': self.simulationGraph, 'plots': [], 'label': self.simulationCoordinates, 'enable': True},
+            {'graph': self.backtestGraph, 'plots': [], 'label': self.backtestCoordinates, 'enable': True},
+            {'graph': self.liveGraph, 'plots': [], 'label': self.liveCoordinates, 'enable': True},
+            {'graph': self.avgGraph, 'plots': [], 'label': self.liveAvgCoordinates, 'enable': True},
+            {'graph': self.simulationAvgGraph, 'plots': [], 'label': self.simulationAvgCoordinates, 'enable': True},
         )
         self.graphLeeway = 10  # Amount of points to set extra for graph limits.
         self.setup_graphs()  # Setting up graphs
@@ -465,7 +465,13 @@ class Interface(QMainWindow):
         self.destroy_graph_plots(interfaceDict['averageGraph'])
         self.statistics.initialize_tab(trader.get_grouped_statistics(), tabType=self.get_caller_string(caller))
         self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
-        self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
+
+        averageGraphDict = self.get_graph_dictionary(interfaceDict['averageGraph'])
+        if self.configuration.graphIndicatorsCheckBox.isChecked():
+            averageGraphDict['enable'] = True
+            self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
+        else:
+            averageGraphDict['enable'] = False
 
     def disable_interface(self, disable: bool, caller, everything=False):
         """
@@ -530,21 +536,22 @@ class Interface(QMainWindow):
         net = valueDict['net']
 
         netGraph = interfaceDict['mainInterface']['graph']
-        targetGraph = interfaceDict['mainInterface']['averageGraph']
+        averageGraph = interfaceDict['mainInterface']['averageGraph']
 
-        graphDict = self.get_graph_dictionary(targetGraph)
+        graphDict = self.get_graph_dictionary(netGraph)
         graphXSize = len(graphDict['plots'][0]['x']) + self.graphLeeway
         netGraph.setLimits(xMin=0, xMax=graphXSize)
-        targetGraph.setLimits(xMin=0, xMax=graphXSize)
-
         self.add_data_to_plot(netGraph, 0, y=round(net, 2), timestamp=currentUTC)
 
-        for index, optionDetail in enumerate(valueDict['optionDetails']):
-            initialAverage, finalAverage = optionDetail[:2]
-            self.add_data_to_plot(targetGraph, index * 2, y=round(initialAverage, precision), timestamp=currentUTC)
-            self.add_data_to_plot(targetGraph, index * 2 + 1, y=round(finalAverage, precision), timestamp=currentUTC)
+        averageGraphDict = self.get_graph_dictionary(averageGraph)
+        if averageGraphDict['enable']:
+            averageGraph.setLimits(xMin=0, xMax=graphXSize)
+            for index, optionDetail in enumerate(valueDict['optionDetails']):
+                initialAverage, finalAverage = optionDetail[:2]
+                self.add_data_to_plot(averageGraph, index * 2, round(initialAverage, precision), currentUTC)
+                self.add_data_to_plot(averageGraph, index * 2 + 1, round(finalAverage, precision), currentUTC)
 
-        self.add_data_to_plot(targetGraph, -1, y=round(valueDict['price'], precision), timestamp=currentUTC)
+            self.add_data_to_plot(averageGraph, -1, y=round(valueDict['price'], precision), timestamp=currentUTC)
 
     def destroy_trader(self, caller):
         """

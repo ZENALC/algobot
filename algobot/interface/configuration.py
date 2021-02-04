@@ -268,6 +268,24 @@ class Configuration(QDialog):
         self.backtestDataLabel.setText(f'Currently using {symbol} in {interval} intervals to conduct backtest.')
         self.setup_calendar()
 
+    def save_simulation_settings(self):
+        pass
+
+    def save_backtest_settings(self):
+        pass
+
+    def save_live_settings(self):
+        pass
+
+    def load_simulation_settings(self):
+        pass
+
+    def load_backtest_settings(self):
+        pass
+
+    def load_live_settings(self):
+        pass
+
     # noinspection DuplicatedCode
     def copy_settings_to_simulation(self):
         """
