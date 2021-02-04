@@ -355,6 +355,7 @@ class Interface(QMainWindow):
         self.threadPool.start(thread)
 
     def end_bot_monitoring(self, caller):
+        self.update_trades_table_and_activity_monitor(caller)
         if caller == SIMULATION:
             self.add_to_monitor(caller, "Killed simulation bot.")
         else:
@@ -363,7 +364,6 @@ class Interface(QMainWindow):
     def reset_bot_interface(self, caller):
         self.enable_override(caller, False)
         self.disable_interface(disable=False, caller=caller)
-        self.update_trades_table_and_activity_monitor(caller)
         # self.destroy_trader(caller)
 
     def end_bot_gracefully(self, caller, callback=None):
