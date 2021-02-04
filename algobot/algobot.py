@@ -1234,7 +1234,6 @@ class Interface(QMainWindow):
         self.configuration.bloombergModeRadioButton.toggled.connect(lambda: self.set_bloomberg_mode())
         self.configuration.bullModeRadioButton.toggled.connect(lambda: self.set_bull_mode())
         self.configuration.bearModeRadioButton.toggled.connect(lambda: self.set_bear_mode())
-        self.configuration.printingModeRadioButton.toggled.connect(lambda: self.set_printing_mode())
         self.configuration.simpleLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(False))
         self.configuration.advancedLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(True))
 
@@ -1401,15 +1400,6 @@ class Interface(QMainWindow):
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('k')
-
-    def set_printing_mode(self):
-        """
-        Sets printing mode color theme. Theme is dark green and white mimicking dollars.
-        """
-        app.setPalette(get_light_green_palette())
-        for graph in self.graphs:
-            graph = graph['graph']
-            graph.setBackground('w')
 
     def get_lower_interval_data(self, caller: int) -> Data:
         """

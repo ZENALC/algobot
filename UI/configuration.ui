@@ -61,7 +61,7 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="mainTab">
           <attribute name="title">
@@ -3160,16 +3160,6 @@
                     </property>
                     <property name="text">
                      <string>Bloomberg Theme</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="printingModeRadioButton">
-                    <property name="toolTip">
-                     <string>Sets printing theme.</string>
-                    </property>
-                    <property name="text">
-                     <string>Printing Theme</string>
                     </property>
                    </widget>
                   </item>
