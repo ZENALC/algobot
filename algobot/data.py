@@ -477,6 +477,10 @@ class Data:
             return self.get_current_data(counter=counter + 1)
 
     def try_callback(self, message):
+        """
+        Attempts to emit a signal to the GUI that called this data object (if it was called by a GUI).
+        :param message: Message to send back.
+        """
         if self.callback and self.caller is not None:
             self.callback.emit(self.caller, message)
 
