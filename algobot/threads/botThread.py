@@ -34,9 +34,10 @@ class BotSignals(QObject):
 
 
 class BotThread(QRunnable):
-    def __init__(self, caller: int, gui):
+    def __init__(self, caller: int, gui, logger):
         super(BotThread, self).__init__()
         self.signals = BotSignals()
+        self.logger = logger
         self.gui = gui
         self.startingTime = time.time()
         self.elapsed = '1 second'  # Total elapsed run time.
@@ -415,13 +416,18 @@ class BotThread(QRunnable):
         except Exception as e:
             error_message = traceback.format_exc()
             trader: SimulationTrader = self.gui.get_trader(self.caller)
+
+            self.signals.activity.emit(self.caller, str(e))  # Emit this message to GUI.
+            self.logger.critical(error_message)
+
             if trader:
                 trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
                 trader.output_message(error_message, printMessage=True)
             if self.gui.telegramBot and self.gui.configuration.chatPass:
                 self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
                 self.gui.telegramBot.send_message(self.telegramChatID, error_message)
-            self.signals.error.emit(self.caller, str(e))
+
+            self.failError = str(e)
             return False
 
     def handle_exception(self, e, trader):
@@ -432,10 +438,11 @@ class BotThread(QRunnable):
         """
         self.failed = True  # Boolean that'll let the bot know it failed.
         self.failCount += 1  # Increment failCount by 1. There's a default limit of 10 fails.
-        self.failError = e  # This is the fail error that led to the crash.
+        self.failError = str(e)  # This is the fail error that led to the crash.
         error_message = traceback.format_exc()  # Get error message.
 
         self.signals.activity.emit(self.caller, str(e))  # Emit this message to GUI.
+        self.logger.critical(error_message)
 
         if trader:  # Log this message to the trader's log.
             trader.output_message(error_message, printMessage=True)
@@ -458,16 +465,15 @@ class BotThread(QRunnable):
         :param trader: Trader trading in the current loop.
         """
         while self.failCount < self.failLimit:
+            runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
+            if not runningLoop:
+                return
             try:
                 self.trading_loop(self.caller)
                 self.failed = False
                 return
             except Exception as e:
-                runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
-                if not runningLoop:
-                    return
-                else:
-                    self.handle_exception(e, trader)
+                self.handle_exception(e, trader)
 
     @pyqtSlot()
     def run(self):
@@ -479,7 +485,9 @@ class BotThread(QRunnable):
         if success:
             self.run_loop(trader)
 
-        trader.completedLoop = True  # If false, this will cause an infinite loop.
-        if self.failLimit == self.failCount or self.failed:
+        if trader:
+            trader.completedLoop = True  # If false, this will cause an infinite loop.
+
+        if self.failLimit == self.failCount or self.failed or not success:
             self.signals.error.emit(self.caller, str(self.failError))
             self.signals.restore.emit()

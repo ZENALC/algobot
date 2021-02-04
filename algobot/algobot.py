@@ -314,7 +314,7 @@ class Interface(QMainWindow):
         self.disable_interface(True, caller)
         self.set_previous_trade_count(caller=caller)
 
-        worker = botThread.BotThread(gui=self, caller=caller)
+        worker = botThread.BotThread(gui=self, caller=caller, logger=self.logger)
         worker.signals.smallError.connect(self.create_popup)
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.activity.connect(self.add_to_monitor)
