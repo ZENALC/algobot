@@ -61,7 +61,7 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="mainTab">
           <attribute name="title">
@@ -3533,7 +3533,7 @@
                <item row="4" column="0">
                 <widget class="QCheckBox" name="graphIndicatorsCheckBox">
                  <property name="text">
-                  <string>Graph moving averages and other indicators? (This will consume more RAM).</string>
+                  <string>Plot moving averages and other indicators? (This will consume more RAM).</string>
                  </property>
                  <property name="checked">
                   <bool>true</bool>
