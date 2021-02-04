@@ -117,7 +117,7 @@ class RealTrader(SimulationTrader):
 
     def check_current_position(self):
         """
-        Checks initial position to check if bot is in a long, short, or neither position.
+        Checks current position to check if bot is in a long, short, or neither position.
         """
         self.currentPrice = self.dataView.get_current_price()
         if self.get_margin_coin() * self.currentPrice >= 10:
