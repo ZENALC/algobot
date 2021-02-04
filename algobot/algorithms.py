@@ -82,3 +82,7 @@ def get_ema(data: List[dict], prices: int, parameter: str, sma_prices: int, memo
             memo[prices][parameter] = values
 
     return ema, memo
+
+
+def get_rsi():
+    pass
