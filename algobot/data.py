@@ -3,11 +3,11 @@ import time
 import os
 
 from datetime import timedelta, timezone, datetime
-from helpers import get_logger, ROOT_DIR, get_ups_and_downs, get_data_from_parameter
+from helpers import get_logger, ROOT_DIR, get_ups_and_downs
 from contextlib import closing
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
-from algorithms import get_sma, get_wma
+from algorithms import get_sma, get_wma, get_ema
 
 
 class Data:
@@ -35,7 +35,7 @@ class Data:
         self.validate_symbol(symbol)
         self.symbol = symbol  # Symbol of data being used.
         self.data = []  # Total bot data.
-        self.ema_data = {}  # Cached past EMA data for memoization.
+        self.ema_dict = {}  # Cached past EMA data for memoization.
         self.rsi_data = {}  # Cached past RSI data for memoization.
         self.current_values = {  # This dictionary will hold current data values.
             'date_utc': datetime.now(tz=timezone.utc),
@@ -821,63 +821,68 @@ class Data:
         elif sma_prices <= 0:
             raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
 
-        ema_data = self.ema_data
-        if shift > 0:
-            if prices in ema_data and parameter in ema_data[prices] and len(ema_data[prices][parameter]) > 0:
-                latestDate = ema_data[prices][parameter][-1][1]
-                if self.is_latest_date(latestDate):
-                    shift += 1
-                    ema = ema_data[prices][parameter][-shift][0]
-                    if round_value:
-                        return round(ema, self.precision)
-                    return ema
+        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
+        data = data[shift:]
+        ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict)
 
-        multiplier = 2 / (prices + 1)
-
-        if prices in ema_data and parameter in ema_data[prices] and len(ema_data[prices][parameter]) > 0:
-            latestDate = ema_data[prices][parameter][-1][1]
-            if self.is_latest_date(latestDate):
-                current_data = self.get_current_data() if update else self.data[0]
-                current_price = get_data_from_parameter(data=current_data, parameter=parameter)
-                previous_ema = ema_data[prices][parameter][-2][0]
-                ema = current_price * multiplier + previous_ema * (1 - multiplier)
-                ema_data[prices][parameter][-1] = (round(ema, self.precision), latestDate)
-            else:
-                current_data = self.get_current_data() if update else self.data[0]
-                current_price = current_data[parameter]
-                counter = 1
-                for period in self.data[::-1]:
-                    if period['date_utc'] == latestDate:
-                        break
-                    counter += 1
-
-                ema_data[prices][parameter].pop()  # Remove last EMA as it could be invalid.
-                for period in self.data[-counter:]:
-                    previous_ema = ema_data[prices][parameter][-1][0]
-                    ema = period[parameter] * multiplier + previous_ema * (1 - multiplier)
-                    ema_data[prices][parameter].append((round(ema, self.precision), period['date_utc']))
-
-                previous_ema = ema_data[prices][parameter][-1][0]
-                ema = current_price * multiplier * previous_ema * (1 - multiplier)  # Set current EMA.
-                ema_data[prices][parameter].append((round(ema, self.precision), current_data['date_utc']))
-
-            if shift > 0:
-                ema = ema_data[prices][parameter][-shift][0]
-        else:
-            data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
-            sma_shift = len(data) - sma_prices
-            ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False, update=update)
-            values = [(round(ema, self.precision), str(data[sma_shift]['date_utc']))]
-
-            for day in range(len(data) - sma_prices - shift):
-                current_index = len(data) - sma_prices - day - 1
-                current_price = get_data_from_parameter(data=data[current_index], parameter=parameter)
-                ema = current_price * multiplier + ema * (1 - multiplier)
-                values.append((round(ema, self.precision), data[current_index]['date_utc']))
-
-            ema_data[prices] = {parameter: values}
-
-        self.ema_data = ema_data
         if round_value:
             return round(ema, self.precision)
         return ema
+
+        # ema_data = self.ema_data
+        # if shift > 0:
+        #     if prices in ema_data and parameter in ema_data[prices] and len(ema_data[prices][parameter]) > 0:
+        #         latestDate = ema_data[prices][parameter][-1][1]
+        #         if self.is_latest_date(latestDate):
+        #             shift += 1
+        #             ema = ema_data[prices][parameter][-shift][0]
+        #             if round_value:
+        #                 return round(ema, self.precision)
+        #             return ema
+        #
+        # multiplier = 2 / (prices + 1)
+        #
+        # if prices in ema_data and parameter in ema_data[prices] and len(ema_data[prices][parameter]) > 0:
+        #     latestDate = ema_data[prices][parameter][-1][1]
+        #     if self.is_latest_date(latestDate):
+        #         current_data = self.get_current_data() if update else self.data[0]
+        #         current_price = get_data_from_parameter(data=current_data, parameter=parameter)
+        #         previous_ema = ema_data[prices][parameter][-2][0]
+        #         ema = current_price * multiplier + previous_ema * (1 - multiplier)
+        #         ema_data[prices][parameter][-1] = (round(ema, self.precision), latestDate)
+        #     else:
+        #         current_data = self.get_current_data() if update else self.data[0]
+        #         current_price = current_data[parameter]
+        #         counter = 1
+        #         for period in self.data[::-1]:
+        #             if period['date_utc'] == latestDate:
+        #                 break
+        #             counter += 1
+        #
+        #         ema_data[prices][parameter].pop()  # Remove last EMA as it could be invalid.
+        #         for period in self.data[-counter:]:
+        #             previous_ema = ema_data[prices][parameter][-1][0]
+        #             ema = period[parameter] * multiplier + previous_ema * (1 - multiplier)
+        #             ema_data[prices][parameter].append((round(ema, self.precision), period['date_utc']))
+        #
+        #         previous_ema = ema_data[prices][parameter][-1][0]
+        #         ema = current_price * multiplier * previous_ema * (1 - multiplier)  # Set current EMA.
+        #         ema_data[prices][parameter].append((round(ema, self.precision), current_data['date_utc']))
+        #
+        #     if shift > 0:
+        #         ema = ema_data[prices][parameter][-shift][0]
+        # else:
+        #     data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
+        #     sma_shift = len(data) - sma_prices
+        #     ema = self.get_sma(sma_prices, parameter, shift=sma_shift, round_value=False, update=update)
+        #     values = [(round(ema, self.precision), str(data[sma_shift]['date_utc']))]
+        #
+        #     for day in range(len(data) - sma_prices - shift):
+        #         current_index = len(data) - sma_prices - day - 1
+        #         current_price = get_data_from_parameter(data=data[current_index], parameter=parameter)
+        #         ema = current_price * multiplier + ema * (1 - multiplier)
+        #         values.append((round(ema, self.precision), data[current_index]['date_utc']))
+        #
+        #     ema_data[prices] = {parameter: values}
+        #
+        # self.ema_data = ema_data
