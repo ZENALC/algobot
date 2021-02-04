@@ -1086,12 +1086,12 @@ class SimulationTrader:
 
     def retrieve_margin_values(self):
         """
-        This is used in the real trader.
+        This is used in the real trader to retrieve margin values from Binance.
         """
         pass
 
     def check_current_position(self):
         """
-        This is used in the real trader.
+        This is used in the real trader to check its current position reflective of Binance.
         """
         pass
