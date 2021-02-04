@@ -3,6 +3,13 @@ from helpers import get_data_from_parameter
 
 
 def get_wma(data: List[dict], prices: int, parameter: str) -> float:
+    """
+    Calculates the weighted moving average from data provided.
+    :param data: Data to calculate weighted moving average.
+    :param prices: Periods of data to get weighted moving average.
+    :param parameter: Parameter from data dictionary with which to get the weighted moving average.
+    :return: Weighted moving average.
+    """
     total = get_data_from_parameter(data=data[0], parameter=parameter) * prices
     data = data[1:]
 
@@ -17,11 +24,27 @@ def get_wma(data: List[dict], prices: int, parameter: str) -> float:
 
 
 def get_sma(data: List[dict], prices: int, parameter: str) -> float:
+    """
+    Calculates the simple moving average from data provided.
+    :param data: Data to calculate simple moving average.
+    :param prices: Periods of data to get simple moving average.
+    :param parameter: Parameter from data dictionary with which to get the simple moving average.
+    :return: Simple moving average.
+    """
     sma = sum([get_data_from_parameter(data=period, parameter=parameter) for period in data]) / prices
     return sma
 
 
 def get_ema(data: List[dict], prices: int, parameter: str, sma_prices: int, memo: dict = None) -> Tuple[float, dict]:
+    """
+    Calculates the exponential moving average from data provided.
+    :param data: Data to calculate exponential moving average.
+    :param prices: Periods to data to get exponential moving average.
+    :param parameter: Parameter from data dictionary with which to get the exponential moving average.
+    :param sma_prices: Initial SMA periods to use to calculate first exponential moving average.
+    :param memo: Memoized dictionary containing past exponential moving averages data.
+    :return: A tuple containing the exponential moving average and memoized dictionary.
+    """
     multiplier = 2 / (prices + 1)
 
     if memo and prices in memo and parameter in memo[prices]:
