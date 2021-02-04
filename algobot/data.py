@@ -12,15 +12,20 @@ from algorithms import get_sma, get_wma, get_ema
 
 class Data:
     def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True,
-                 updateData: bool = True, log: bool = False, logFile: str = 'data', logObject=None, precision: int = 2):
+                 updateData: bool = True, log: bool = False, logFile: str = 'data', logObject=None,
+                 precision: int = 2, callback=None, caller=None):
         """
         Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
-        :param interval: Interval for which the data object will track prices.
-        :param symbol: Symbol for which the data object will track prices.
+        :param: interval: Interval for which the data object will track prices.
+        :param: symbol: Symbol for which the data object will track prices.
         :param: loadData: Boolean for whether data will be loaded or not.
         :param: updateData: Boolean for whether data will be updated if it is loaded.
-        :param precision: Precision to round data to.
+        :param: precision: Precision to round data to.
+        :param: callback: Signal for GUI to emit back to (if passed).
+        :param: caller: Caller of callback (if passed).
         """
+        self.callback = callback  # Used to emit signals to GUI.
+        self.caller = caller  # Used to specify which caller emitted signals.
         self.binanceClient = Client()  # Initialize Binance client
         self.logger = self.get_logging_object(log=log, logFile=logFile, logObject=logObject)
         self.validate_interval(interval)
@@ -420,12 +425,14 @@ class Data:
         dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
         self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
         if not self.data_is_updated():
+            self.try_callback("Found new data. Attempting to update...")
             newData = []
             while len(newData) == 0:
                 time.sleep(0.5)  # Sleep half a second for server to refresh new values.
                 newData = self.get_new_data(timestamp)
             self.insert_data(newData)
             self.output_message("Data has been updated successfully.\n")
+            self.try_callback("Updated data successfully.")
         else:
             self.output_message("Data is up-to-date.\n")
 
@@ -462,10 +469,16 @@ class Data:
             self.current_values = currentDataDictionary
             return currentDataDictionary
         except Exception as e:
-            self.output_message(f"Error: {e}. Retrying in 5 seconds...", 4)
+            error_message = f"Error: {e}. Retrying in 5 seconds..."
+            self.output_message(error_message, 4)
+            self.try_callback(message=error_message)
             self.ema_dict = {}
             time.sleep(5)
             return self.get_current_data(counter=counter + 1)
+
+    def try_callback(self, message):
+        if self.callback and self.caller is not None:
+            self.callback.emit(self.caller, message)
 
     def get_current_price(self) -> float:
         """
@@ -475,7 +488,9 @@ class Data:
         try:
             return float(self.binanceClient.get_symbol_ticker(symbol=self.symbol)['price'])
         except Exception as e:
-            self.output_message(f'Error: {e}. Retrying in 15 seconds...', 4)
+            error_message = f'Error: {e}. Retrying in 15 seconds...'
+            self.output_message(error_message, 4)
+            self.try_callback(message=error_message)
             time.sleep(15)
             return self.get_current_price()
 

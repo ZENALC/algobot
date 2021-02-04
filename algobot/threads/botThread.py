@@ -144,6 +144,8 @@ class BotThread(QRunnable):
             raise ValueError("Invalid caller.")
 
         self.trader: SimulationTrader = self.gui.get_trader(caller)
+        self.trader.dataView.callback = self.signals.activity
+        self.trader.dataView.caller = caller
         if not self.trader.dataView.downloadCompleted:
             raise RuntimeError("Download failed.")
 

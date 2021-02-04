@@ -313,7 +313,7 @@ class Interface(QMainWindow):
         worker.signals.activity.connect(self.add_to_monitor)
         worker.signals.started.connect(self.initial_bot_ui_setup)
         worker.signals.updated.connect(self.update_interface_info)
-        worker.signals.progress.connect(self.progress_update)
+        worker.signals.progress.connect(self.download_progress_update)
         worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=caller))
 
         # All these below are for Telegram.
@@ -327,7 +327,7 @@ class Interface(QMainWindow):
         worker.signals.removeCustomStopLoss.connect(lambda: self.set_custom_stop_loss(LIVE, False))
         self.threadPool.start(worker)
 
-    def progress_update(self, value, message, caller):
+    def download_progress_update(self, value, message, caller):
         """
         This will update the GUI with the current download progress.
         :param value: Percentage completed.
@@ -419,15 +419,15 @@ class Interface(QMainWindow):
         if caller == LIVE:
             self.runningLive = False
             if self.lowerIntervalData and not self.lowerIntervalData.downloadCompleted:
-                self.progress_update(value=0, message="Lower interval data download failed.", caller=caller)
+                self.download_progress_update(value=0, message="Lower interval data download failed.", caller=caller)
         elif caller == SIMULATION:
             self.simulationRunningLive = False
             if self.simulationLowerIntervalData and not self.simulationLowerIntervalData.downloadCompleted:
-                self.progress_update(value=0, message="Lower interval data download failed.", caller=caller)
+                self.download_progress_update(value=0, message="Lower interval data download failed.", caller=caller)
 
         trader = self.get_trader(caller=caller)
         if trader and not trader.dataView.downloadCompleted:
-            self.progress_update(value=0, message="Download failed.", caller=caller)
+            self.download_progress_update(value=0, message="Download failed.", caller=caller)
 
         if '-1021' in msg:
             msg = msg + ' Please sync your system time.'
