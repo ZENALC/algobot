@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>732</width>
+    <width>952</width>
     <height>776</height>
    </rect>
   </property>
@@ -36,8 +36,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>850</width>
-        <height>739</height>
+        <width>932</width>
+        <height>756</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_35">
@@ -61,7 +61,7 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="mainTab">
           <attribute name="title">
@@ -1244,19 +1244,6 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="3" column="1" colspan="2">
-                   <widget class="QDoubleSpinBox" name="backtestStartingBalanceSpinBox">
-                    <property name="minimum">
-                     <double>1.000000000000000</double>
-                    </property>
-                    <property name="maximum">
-                     <double>10000000.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>1000.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="2" column="1" colspan="2">
                    <widget class="QComboBox" name="backtestIntervalComboBox">
                     <property name="font">
@@ -1451,6 +1438,16 @@
                     </property>
                     <property name="value">
                      <number>2</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1" colspan="2">
+                   <widget class="QSpinBox" name="backtestStartingBalanceSpinBox">
+                    <property name="minimum">
+                     <number>10</number>
+                    </property>
+                    <property name="maximum">
+                     <number>999999999</number>
                     </property>
                    </widget>
                   </item>
@@ -2271,7 +2268,7 @@
                      <string>Starting balance for simulation. Minimum possible value is $100.</string>
                     </property>
                     <property name="minimum">
-                     <number>100</number>
+                     <number>10</number>
                     </property>
                     <property name="maximum">
                      <number>99999999</number>

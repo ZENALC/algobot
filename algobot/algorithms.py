@@ -5,6 +5,7 @@ from helpers import get_data_from_parameter
 def get_wma(data: List[dict], prices: int, parameter: str) -> float:
     """
     Calculates the weighted moving average from data provided.
+    The data is assumed to be in descending order - meaning newer dates are in the front of the list.
     :param data: Data to calculate weighted moving average.
     :param prices: Periods of data to get weighted moving average.
     :param parameter: Parameter from data dictionary with which to get the weighted moving average.
@@ -26,6 +27,7 @@ def get_wma(data: List[dict], prices: int, parameter: str) -> float:
 def get_sma(data: List[dict], prices: int, parameter: str) -> float:
     """
     Calculates the simple moving average from data provided.
+    The data is assumed to be in descending order - meaning newer dates are in the front of the list.
     :param data: Data to calculate simple moving average.
     :param prices: Periods of data to get simple moving average.
     :param parameter: Parameter from data dictionary with which to get the simple moving average.
@@ -38,6 +40,7 @@ def get_sma(data: List[dict], prices: int, parameter: str) -> float:
 def get_ema(data: List[dict], prices: int, parameter: str, sma_prices: int, memo: dict = None) -> Tuple[float, dict]:
     """
     Calculates the exponential moving average from data provided.
+    The data is assumed to be in descending order - meaning newer dates are in the front of the list.
     :param data: Data to calculate exponential moving average.
     :param prices: Periods to data to get exponential moving average.
     :param parameter: Parameter from data dictionary with which to get the exponential moving average.

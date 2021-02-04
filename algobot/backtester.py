@@ -4,10 +4,10 @@ import time
 
 from dateutil import parser
 from datetime import datetime
-from helpers import load_from_csv, get_ups_and_downs, get_data_from_parameter
+from helpers import load_from_csv, get_ups_and_downs
 from option import Option
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
-from algorithms import get_sma, get_wma
+from algorithms import get_sma, get_wma, get_ema
 
 
 class Backtester:
@@ -57,7 +57,7 @@ class Backtester:
         else:
             self.stoicOptions = stoicOptions
             self.stoicEnabled = True
-        self.ema_values = {}
+        self.ema_dict = {}
 
         self.movingAverageTestStartTime = None
         self.movingAverageTestEndTime = None
@@ -590,20 +590,7 @@ class Backtester:
         elif sma_prices > len(data):
             sma_prices = len(data) - 1
 
-        multiplier = 2 / (prices + 1)
-
-        if prices in self.ema_values:
-            price = get_data_from_parameter(data=data[-1], parameter=parameter)
-            ema = price * multiplier + self.ema_values[prices] * (1 - multiplier)
-            self.ema_values[prices] = ema
-        else:
-            ema = self.get_sma(data, sma_prices, parameter, round_value=False)
-            for day in range(len(data) - sma_prices):
-                current_index = len(data) - sma_prices - day - 1
-                current_price = get_data_from_parameter(data=data[current_index], parameter=parameter)
-                ema = current_price * multiplier + ema * (1 - multiplier)
-
-            self.ema_values[prices] = ema
+        ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict)
 
         if round_value:
             return round(ema, self.precision)
