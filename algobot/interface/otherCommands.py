@@ -53,7 +53,7 @@ class OtherCommands(QDialog):
         :param progress: Progress value to set.
         :param message: Message to set in message label.
         """
-        assert caller == -1
+        assert caller == -1  # Dummy assertion text to make sure caller is equal to -1.
         self.csvGenerationProgressBar.setValue(progress)
         self.csvGenerationStatus.setText(message)
 

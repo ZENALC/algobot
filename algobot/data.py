@@ -295,7 +295,7 @@ class Data:
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
         :param caller: Caller that called this function. Only used for botThread.
         :param removeFirst: Boolean whether newest data is removed or not.
-        :param locked: Signal to emit back to GUI when storing data. Cannot be canceled once here.
+        :param locked: Signal to emit back to GUI when storing data. Cannot be canceled once here. Used for databases.
         :param progress_callback: Signal to emit back to GUI to show progress.
         :param limit: Limit per pull.
         :return: A list of dictionaries.
