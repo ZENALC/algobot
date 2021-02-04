@@ -51,7 +51,7 @@ class RealTrader(SimulationTrader):
         self.retrieve_margin_values()
         self.previousNet = self.get_net()
         self.startingBalance = self.get_starting_balance()
-        self.check_initial_position()
+        self.check_current_position()
         self.netWorth = round(self.get_net(), self.precision)
         self.validate_minimum_funds()
 
@@ -115,7 +115,7 @@ class RealTrader(SimulationTrader):
         factor = 10.0 ** self.purchasePrecision
         return math.floor(float(num) * factor) / factor
 
-    def check_initial_position(self):
+    def check_current_position(self):
         """
         Checks initial position to check if bot is in a long, short, or neither position.
         """

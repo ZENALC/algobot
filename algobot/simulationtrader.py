@@ -1085,7 +1085,13 @@ class SimulationTrader:
         self.output_message('---------------------------------------------------')
 
     def retrieve_margin_values(self):
+        """
+        This is used in the real trader.
+        """
         pass
 
-    def check_initial_position(self):
+    def check_current_position(self):
+        """
+        This is used in the real trader.
+        """
         pass

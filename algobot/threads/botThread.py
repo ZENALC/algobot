@@ -13,24 +13,24 @@ from telegramBot import TelegramBot
 
 
 class BotSignals(QObject):
-    smallError = pyqtSignal(str)
-    started = pyqtSignal(int)
-    activity = pyqtSignal(int, str)
-    updated = pyqtSignal(int, dict, dict)
-    finished = pyqtSignal()
-    error = pyqtSignal(int, str)
-    restore = pyqtSignal()
-    progress = pyqtSignal(int, str, int)
+    smallError = pyqtSignal(str)  # Signal emitted when small errors such as internet losses occur.
+    started = pyqtSignal(int)  # Signal emitted when bot first starts.
+    activity = pyqtSignal(int, str)  # Signal emitted to broadcast current activity.
+    updated = pyqtSignal(int, dict, dict)  # Signal emitted when bot is updated.
+    finished = pyqtSignal()  # Signal emitted when bot is ended.
+    error = pyqtSignal(int, str)  # Signal emitted when a critical error occurs.
+    restore = pyqtSignal()  # Signal emitted to restore GUI.
+    progress = pyqtSignal(int, str, int)  # Signal emitted to broadcast progress.
 
     # All of these below are for Telegram integration.
-    forceLong = pyqtSignal()
-    forceShort = pyqtSignal()
-    exitPosition = pyqtSignal()
-    waitOverride = pyqtSignal()
-    resume = pyqtSignal()
-    pause = pyqtSignal()
-    removeCustomStopLoss = pyqtSignal()
-    setCustomStopLoss = pyqtSignal(int, bool, float)
+    forceLong = pyqtSignal()  # Signal emitted to force a long position.
+    forceShort = pyqtSignal()  # Signal emitted to force a short position.
+    exitPosition = pyqtSignal()  # Signal emitted to force exit a position.
+    waitOverride = pyqtSignal()  # Signal emitted to wait override a position.
+    resume = pyqtSignal()  # Signal emitted to resume bot logic.
+    pause = pyqtSignal()  # Signal emitted to pause bot logic.
+    removeCustomStopLoss = pyqtSignal()  # Signal emitted to remove custom stop loss.
+    setCustomStopLoss = pyqtSignal(int, bool, float)  # Signal emitted to set a custom stop loss.
 
 
 class BotThread(QRunnable):
@@ -41,15 +41,15 @@ class BotThread(QRunnable):
         self.startingTime = time.time()
         self.elapsed = '1 second'  # Total elapsed run time.
         self.percentage = None  # Total percentage gain or loss.
-        self.optionDetails = []  # This list will contain all the moving average information.
+        self.optionDetails = []  # This list will contain all the moving averages' information.
         self.lowerOptionDetails = []  # This list will contain all the lower interval's moving average information.
 
-        self.dailyIntervalSeconds = 86400  # Every 24 hours
+        self.dailyIntervalSeconds = 86400  # Interval for daily percentage.
         self.dailyPercentage = 0  # Initial change percentage.
         self.previousDayTime = None  # Previous day net time to compare to.
         self.previousDayNet = None  # Previous day net value to compare to.
 
-        self.schedulePeriod = None  # Next period schedule in string format.
+        self.schedulePeriod = None  # Next schedule period in string format.
         self.nextScheduledEvent = None  # These are for periodic scheduling. This variable holds next schedule event.
         self.scheduleSeconds = None  # Amount of seconds to schedule in.
 
@@ -59,7 +59,7 @@ class BotThread(QRunnable):
         self.caller = caller
         self.trader = None
 
-        self.failed = False
+        self.failed = False  # All these variables pertain to bot failures.
         self.failCount = 0
         self.failLimit = 10
         self.failSleep = 3
@@ -199,13 +199,40 @@ class BotThread(QRunnable):
             self.gui.telegramBot.send_statistics_telegram(self.telegramChatID, self.schedulePeriod)
             self.nextScheduledEvent = datetime.now() + timedelta(seconds=self.scheduleSeconds)
 
+    def set_parameters(self, caller):
+        """
+        Retrieves moving average options and loss settings based on caller.
+        :param caller: Caller that dictates which parameters get set.
+        """
+        trader: SimulationTrader = self.gui.get_trader(caller)
+        configDict = self.gui.interfaceDictionary[caller]['configuration']
+        trader.lossStrategy, trader.lossPercentageDecimal = self.gui.get_loss_settings(caller)
+        trader.tradingOptions = self.gui.get_trading_options(caller)
+        trader.stoicEnabled = configDict['stoicCheck'].isChecked()
+        trader.shrekEnabled = configDict['shrekCheck'].isChecked()
+        trader.set_safety_timer(configDict['safetyTimer'].value())
+        trader.set_smart_stop_loss_counter(configDict['smartStopLossCounter'].value())
+
+        if trader.stoicEnabled:
+            trader.stoicOptions[0] = configDict['stoicInput1'].value()
+            trader.stoicOptions[1] = configDict['stoicInput2'].value()
+            trader.stoicOptions[2] = configDict['stoicInput3'].value()
+
+        if trader.shrekEnabled:
+            trader.shrekOptions[0] = configDict['shrekInput1'].value()
+            trader.shrekOptions[1] = configDict['shrekInput2'].value()
+            trader.shrekOptions[2] = configDict['shrekInput3'].value()
+            trader.shrekOptions[3] = configDict['shrekInput4'].value()
+
+        trader.output_configuration()
+
     def setup_bot(self, caller):
         """
         Initial full bot setup based on caller.
         :param caller: Caller that will determine what type of trader will be instantiated.
         """
         self.create_trader(caller)
-        self.gui.set_parameters(caller)
+        self.set_parameters(caller)
 
         if caller == LIVE:
             if self.gui.configuration.enableTelegramTrading.isChecked():
@@ -281,18 +308,20 @@ class BotThread(QRunnable):
             lowerData.get_current_data()
             lowerTrend = trader.get_trend(dataObject=lowerData, log_data=self.gui.advancedLogging)
             self.lowerTrend = trader.get_trend_string(lowerTrend)
-            trend = trader.trend
-            if previousLowerTrend == lowerTrend or lowerTrend == trend:
-                return lowerTrend
-            else:
+            if previousLowerTrend != lowerTrend:
                 trends = {BEARISH: 'Bearish', BULLISH: 'Bullish', None: 'No'}
                 message = f'{trends[lowerTrend]} trend detected on lower interval data.'
                 self.signals.activity.emit(caller, message)
                 if self.gui.configuration.enableTelegramNotification.isChecked() and caller == LIVE:
                     self.gui.telegramBot.send_message(message=message, chatID=self.telegramChatID)
-                return lowerTrend
+            return lowerTrend
 
     def set_daily_percentages(self, trader, net):
+        """
+        Sets daily percentage gain or loss percentage values.
+        :param trader: Trader object.
+        :param net: Current new value.
+        """
         if self.previousDayTime is None:  # This logic is for daily percentage yields.
             if time.time() - self.startingTime >= self.dailyIntervalSeconds:
                 self.previousDayTime = time.time()
@@ -342,7 +371,6 @@ class BotThread(QRunnable):
             'tickerValue': f'${round(trader.currentPrice, trader.precision)}',
             'tickerLabel': trader.symbol,
             'currentPositionValue': trader.get_position_string(),
-
             'net': net,
             'price': trader.currentPrice,
             'optionDetails': self.optionDetails,
@@ -360,19 +388,24 @@ class BotThread(QRunnable):
         trader: SimulationTrader = self.gui.get_trader(caller=caller)
 
         while runningLoop:
-            trader.completedLoop = False
-            self.update_data(caller)
-            self.handle_logging(caller=caller)
-            self.handle_current_and_trailing_prices(caller=caller)
-            self.handle_trading(caller=caller)
-            self.handle_scheduler()
-            lowerTrend = self.handle_lower_interval_cross(caller, lowerTrend)
-            valueDict, groupedDict = self.get_statistics()
+            trader.completedLoop = False  # This boolean is checked when bot is ended to ensure it finishes its loop.
+            self.update_data(caller)  # Check for new updates.
+            self.handle_logging(caller=caller)  # Handle logging.
+            self.handle_current_and_trailing_prices(caller=caller)  # Handle trailing prices.
+            self.handle_trading(caller=caller)  # Main logic function.
+            self.handle_scheduler()  # Handle periodic statistics scheduler.
+            lowerTrend = self.handle_lower_interval_cross(caller, lowerTrend)  # Check lower trend.
+            valueDict, groupedDict = self.get_statistics()  # Basic statistics of bot to update GUI.
             self.signals.updated.emit(caller, valueDict, groupedDict)
             runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
-            trader.completedLoop = True
+            self.failCount = 0  # Reset fail count as bot fixed itself.
+            trader.completedLoop = True  # Set completedLoop to True. Or else, there'll be an infinite loop in the GUI.
 
     def try_setting_up_bot(self) -> bool:
+        """
+        This function will try to setup the main bot for trading.
+        :return: Boolean whether setup was successful or not.
+        """
         try:
             self.setup_bot(caller=self.caller)
             self.signals.started.emit(self.caller)
@@ -390,27 +423,49 @@ class BotThread(QRunnable):
             return False
 
     def handle_exception(self, e, trader):
-        self.failed = True
-        self.failCount += 1
-        self.failError = e
-        error_message = traceback.format_exc()
+        """
+        This function will try to handle any exceptions that occur during bot run.
+        :param e: Exception or error.
+        :param trader: Trader object that faced the bug.
+        """
+        self.failed = True  # Boolean that'll let the bot know it failed.
+        self.failCount += 1  # Increment failCount by 1. There's a default limit of 10 fails.
+        self.failError = e  # This is the fail error that led to the crash.
+        error_message = traceback.format_exc()  # Get error message.
 
-        self.signals.activity.emit(self.caller, str(e))
+        self.signals.activity.emit(self.caller, str(e))  # Emit this message to GUI.
 
-        if trader:
+        if trader:  # Log this message to the trader's log.
             trader.output_message(error_message, printMessage=True)
             trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
             trader.output_message(f"({self.failCount})Trying again in {self.failSleep} seconds..", printMessage=True)
 
-        if self.gui.telegramBot and self.gui.configuration.chatPass:
+        if self.gui.telegramBot and self.gui.configuration.chatPass:  # Send crash information through Telegram.
             self.gui.telegramBot.send_message(self.telegramChatID, error_message)
             self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
             self.gui.telegramBot.send_message(self.telegramChatID, f"({self.failCount})Trying again in "
                                                                    f"{self.failSleep} seconds..")
 
-        time.sleep(self.failSleep)
-        trader.retrieve_margin_values()
-        trader.check_initial_position()
+        time.sleep(self.failSleep)  # Sleep for some seconds before reattempting a fix.
+        trader.retrieve_margin_values()  # Update bot margin values.
+        trader.check_current_position()  # Check position it's in.
+
+    def run_loop(self, trader):
+        """
+        Main function that'll handle exceptions and keep the loop running.
+        :param trader: Trader trading in the current loop.
+        """
+        while self.failCount < self.failLimit:
+            try:
+                self.trading_loop(self.caller)
+                self.failed = False
+                return
+            except Exception as e:
+                runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
+                if not runningLoop:
+                    return
+                else:
+                    self.handle_exception(e, trader)
 
     @pyqtSlot()
     def run(self):
@@ -420,20 +475,7 @@ class BotThread(QRunnable):
         success = self.try_setting_up_bot()
         trader: SimulationTrader = self.gui.get_trader(self.caller)
         if success:
-            while self.failCount < self.failLimit:
-                try:
-                    self.trading_loop(self.caller)
-                    self.failed = False
-                except Exception as e:
-                    runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
-                    if not runningLoop:
-                        break
-                    else:
-                        self.handle_exception(e, trader)
-
-                runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
-                if not self.failed or not runningLoop:
-                    break
+            self.run_loop(trader)
 
         trader.completedLoop = True  # If false, this will cause an infinite loop.
         if self.failLimit == self.failCount or self.failed:

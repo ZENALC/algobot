@@ -737,33 +737,6 @@ class Interface(QMainWindow):
             self.add_to_live_activity_monitor(f'Logging method has been changed to simple.')
             self.add_to_simulation_activity_monitor(f'Logging method has been changed to simple.')
 
-    def set_parameters(self, caller):
-        """
-        Retrieves moving average options and loss settings based on caller.
-        :param caller: Caller that dictates which parameters get set.
-        """
-        trader = self.get_trader(caller)
-        trader.lossStrategy, trader.lossPercentageDecimal = self.get_loss_settings(caller)
-        trader.tradingOptions = self.get_trading_options(caller)
-        trader.stoicEnabled = self.interfaceDictionary[caller]['configuration']['stoicCheck'].isChecked()
-        trader.shrekEnabled = self.interfaceDictionary[caller]['configuration']['shrekCheck'].isChecked()
-        trader.set_safety_timer(self.interfaceDictionary[caller]['configuration']['safetyTimer'].value())
-        trader.set_smart_stop_loss_counter(
-            self.interfaceDictionary[caller]['configuration']['smartStopLossCounter'].value())
-
-        if trader.stoicEnabled:
-            trader.stoicOptions[0] = self.interfaceDictionary[caller]['configuration']['stoicInput1'].value()
-            trader.stoicOptions[1] = self.interfaceDictionary[caller]['configuration']['stoicInput2'].value()
-            trader.stoicOptions[2] = self.interfaceDictionary[caller]['configuration']['stoicInput3'].value()
-
-        if trader.shrekEnabled:
-            trader.shrekOptions[0] = self.interfaceDictionary[caller]['configuration']['shrekInput1'].value()
-            trader.shrekOptions[1] = self.interfaceDictionary[caller]['configuration']['shrekInput2'].value()
-            trader.shrekOptions[2] = self.interfaceDictionary[caller]['configuration']['shrekInput3'].value()
-            trader.shrekOptions[3] = self.interfaceDictionary[caller]['configuration']['shrekInput4'].value()
-
-        trader.output_configuration()
-
     def set_custom_stop_loss(self, caller, enable: bool = True, foreignValue: float or None = None):
         """
         Enables or disables custom stop loss.
