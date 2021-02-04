@@ -429,9 +429,10 @@ class Data:
         else:
             self.output_message("Data is up-to-date.\n")
 
-    def get_current_data(self) -> dict:
+    def get_current_data(self, counter: int = 0) -> dict:
         """
         Retrieves current market dictionary with open, high, low, close prices.
+        :param counter: Counter to check how many times bot is trying to retrieve current data.
         :return: A dictionary with current open, high, low, and close prices.
         """
         try:
@@ -464,7 +465,7 @@ class Data:
             self.output_message(f"Error: {e}. Retrying in 5 seconds...", 4)
             self.ema_dict = {}
             time.sleep(5)
-            return self.get_current_data()
+            return self.get_current_data(counter=counter + 1)
 
     def get_current_price(self) -> float:
         """
