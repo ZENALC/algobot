@@ -3,7 +3,7 @@ import sys
 import os
 import webbrowser
 
-from helpers import ROOT_DIR, open_file_or_folder
+from helpers import ROOT_DIR, open_file_or_folder, get_logger
 from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
 from datetime import datetime
@@ -40,6 +40,7 @@ class Interface(QMainWindow):
         assets.qInitResources()
         super(Interface, self).__init__(parent)  # Initializing object
         uic.loadUi(mainUi, self)  # Loading the main UI
+        self.logger = get_logger(logFile='algobot', loggerName='algobot')
         self.configuration = Configuration(self)  # Loading configuration
         self.otherCommands = OtherCommands(self)  # Loading other commands
         self.about = About(self)  # Loading about information
@@ -71,11 +72,17 @@ class Interface(QMainWindow):
         self.load_tickers_and_news()
         self.homeTab.setCurrentIndex(0)
 
-    def inform_telegram(self, message, caller):
-        if caller == LIVE:
+    def inform_telegram(self, message):
+        """
+        Sends a notification to Telegram if some action is taken by the bot.
+        :param message: Message to send.
+        """
+        try:
             chatID = self.configuration.telegramChatID.text()
-            if self.telegramBot and self.configuration.chatPass:
+            if self.configuration.chatPass:
                 self.telegramBot.send_message(chatID, message)
+        except Exception as e:
+            self.logger.exception(str(e))
 
     def load_tickers_and_news(self):
         """
@@ -1105,7 +1112,8 @@ class Interface(QMainWindow):
 
     def update_trades_table_and_activity_monitor(self, caller):
         """
-        Updates trade table and activity based on caller.
+        Updates trade table and activity based on caller and sends message to Telegram if live bot is trading and
+        feature is enabled.
         :param caller: Caller object that will rule which tables get updated.
         """
         table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
@@ -1124,6 +1132,9 @@ class Interface(QMainWindow):
                              trade['action']]
                 self.add_to_table(table, tradeData)
                 self.add_to_monitor(caller, trade['action'])
+
+                if caller == LIVE and self.telegramBot and self.configuration.enableTelegramSendMessage.isChecked():
+                    self.inform_telegram(message=trade['action'])
 
             monitor = self.get_activity_table(caller=caller)
             monitor.scrollToBottom()

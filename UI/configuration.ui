@@ -3444,7 +3444,7 @@
                   <item row="3" column="0" colspan="4">
                    <widget class="QCheckBox" name="enableTelegramSendMessage">
                     <property name="text">
-                     <string>Send Telegram message whenever bot enters a position? Telegram chat ID is required for this function.</string>
+                     <string>Send Telegram notification whenever bot performs an action? Telegram chat ID is required for this function.</string>
                     </property>
                     <property name="checked">
                      <bool>true</bool>
