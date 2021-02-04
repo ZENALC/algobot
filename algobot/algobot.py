@@ -304,7 +304,7 @@ class Interface(QMainWindow):
         Main function that initiates bot thread and handles all data-view logic.
         :param caller: Caller that decides whether a live bot or simulation bot is run.
         """
-        self.disable_interface(True, caller, everything=False)
+        self.disable_interface(True, caller)
         self.set_previous_trade_count(caller=caller)
 
         worker = botThread.BotThread(gui=self, caller=caller)
@@ -473,12 +473,11 @@ class Interface(QMainWindow):
         self.interfaceDictionary[caller]['configuration']['averageTab'].setEnabled(disable)
         self.interfaceDictionary[caller]['configuration']['lossTab'].setEnabled(disable)
         self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(disable)
-        if caller != BACKTEST:
-            self.interfaceDictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(not disable)
-        if not everything:
-            self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(not disable)
-        else:
+
+        if everything:
             self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(disable)
+        else:
+            self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(not disable)
 
     def update_interface_info(self, caller, valueDict: dict, groupedDict: dict):
         """
@@ -594,6 +593,7 @@ class Interface(QMainWindow):
         :param caller: Caller that will specify which interface will have its override interface enabled.
         """
         self.interfaceDictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(enabled)
+        self.interfaceDictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(enabled)
 
     def exit_position_thread(self, caller, humanControl):
         """
