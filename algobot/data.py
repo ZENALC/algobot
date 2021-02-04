@@ -32,6 +32,7 @@ class Data:
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
         self.precision = precision
+        self.dataLimit = 5000  # Max amount of data to contain.
 
         self.downloadCompleted = False
         self.downloadLoop = True
@@ -443,6 +444,10 @@ class Data:
         :return: A dictionary with current open, high, low, and close prices.
         """
         try:
+            if len(self.data) > self.dataLimit // 2:
+                self.dump_to_table()
+                self.data = self.data[:self.dataLimit // 2]
+
             if not self.data_is_updated():
                 self.update_data()
 
