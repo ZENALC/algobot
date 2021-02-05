@@ -1124,7 +1124,12 @@ class Interface(QMainWindow):
         :param caller: Caller object that will rule which tables get updated.
         """
         table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
-        trades = self.get_trader(caller).trades
+        trader = self.get_trader(caller)
+
+        if not trader:
+            return
+
+        trades = trader.trades
         previousTrades = self.get_previous_trade_count(caller=caller)
 
         if len(trades) + previousTrades > table.rowCount():  # Only update when row count is not equal to trades count.
