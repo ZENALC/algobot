@@ -383,7 +383,6 @@ class Configuration(QDialog):
                 file = os.path.basename(filePath)
                 self.backtestConfigurationResult.setText(f"Loaded backtest configuration successfully from {file}.")
         except Exception as e:
-            print(str(e))
             self.logger.exception(str(e))
             self.backtestConfigurationResult.setText("Could not load backtest configuration.")
 
@@ -487,7 +486,6 @@ class Configuration(QDialog):
                 file = os.path.basename(filePath)
                 self.simulationConfigurationResult.setText(f"Loaded simulation configuration successfully from {file}.")
         except Exception as e:
-            print(str(e))
             self.logger.exception(str(e))
             self.simulationConfigurationResult.setText("Could not load simulation configuration.")
 
