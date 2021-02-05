@@ -24,21 +24,21 @@ class Data:
         :param: callback: Signal for GUI to emit back to (if passed).
         :param: caller: Caller of callback (if passed).
         """
-        self.callback = callback  # Used to emit signals to GUI.
+        self.callback = callback  # Used to emit signals to GUI if provided.
         self.caller = caller  # Used to specify which caller emitted signals.
-        self.binanceClient = Client()  # Initialize Binance client
+        self.binanceClient = Client()  # Initialize Binance client.
         self.logger = self.get_logging_object(log=log, logFile=logFile, logObject=logObject)
-        self.validate_interval(interval)
-        self.interval = interval
+        self.validate_interval(interval)  # Validate the interval provided.
+        self.interval = interval  # Interval to trade in.
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
-        self.precision = precision
+        self.precision = precision  # Decimal precision with which to show data.
         self.dataLimit = 2000  # Max amount of data to contain.
 
-        self.downloadCompleted = False
-        self.downloadLoop = True
+        self.downloadCompleted = False  # Boolean to determine whether data download is completed or not.
+        self.downloadLoop = True  # Boolean to determine whether data is being downloaded or not.
 
         symbol = symbol.upper()
-        self.validate_symbol(symbol)
+        self.validate_symbol(symbol)  # Validate symbol.
         self.symbol = symbol  # Symbol of data being used.
         self.data = []  # Total bot data.
         self.ema_dict = {}  # Cached past EMA data for memoization.
