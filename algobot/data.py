@@ -8,6 +8,7 @@ from contextlib import closing
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
 from algorithms import get_sma, get_wma, get_ema
+from typing import List
 
 
 class Data:
@@ -203,7 +204,7 @@ class Data:
         self.output_message("Successfully stored all new data to database.")
         return True
 
-    def get_latest_database_row(self):
+    def get_latest_database_row(self) -> list:
         """
         Returns the latest row from database table.
         :return: Row data or None depending on if value exists.
@@ -296,7 +297,7 @@ class Data:
 
     # noinspection PyProtectedMember
     def custom_get_new_data(self, limit: int = 500, progress_callback=None, locked=None, removeFirst=False,
-                            caller=-1):
+                            caller=-1) -> List[dict]:
         """
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
         :param caller: Caller that called this function. Only used for botThread.
@@ -369,7 +370,7 @@ class Data:
         self.downloadCompleted = True
         return self.data
 
-    def get_new_data(self, timestamp, limit: int = 1000):
+    def get_new_data(self, timestamp, limit: int = 1000) -> list:
         """
         Returns new data from Binance API from timestamp specified.
         :param timestamp: Initial timestamp.
