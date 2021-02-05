@@ -120,7 +120,7 @@ class TelegramBot:
 
     def get_advanced_statistics(self) -> str:
         """
-        Returns a lot more statistics detail.
+        Returns a lot more statistics from trader object.
         :return: String of huge statistics.
         """
         trader: SimulationTrader = self.gui.trader
@@ -137,6 +137,9 @@ class TelegramBot:
 
     # noinspection PyUnusedLocal
     def get_advanced_statistics_telegram(self, update, context):
+        """
+        Sends advanced statistics.
+        """
         limit = constants.MAX_MESSAGE_LENGTH
 
         message = "Here are your advanced statistics as requested: \n" + self.get_advanced_statistics()
