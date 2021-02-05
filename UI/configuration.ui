@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1019</width>
+    <width>1044</width>
     <height>776</height>
    </rect>
   </property>
@@ -36,7 +36,7 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>999</width>
+        <width>1024</width>
         <height>756</height>
        </rect>
       </property>
@@ -101,64 +101,36 @@
                   <string>Live Main Options</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_13">
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="intervalLabel">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
+                  <item row="6" column="0" colspan="4">
+                   <widget class="QGroupBox" name="accountTypeGroupBox">
+                    <property name="title">
+                     <string>Account Type</string>
                     </property>
-                    <property name="text">
-                     <string>Interval</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="11" column="0" colspan="4">
-                   <widget class="QLabel" name="credentialResult">
-                    <property name="text">
-                     <string>Successfully connected.</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QLabel" name="binanceSecretKeyLabel">
-                    <property name="text">
-                     <string>Binance Secret Key</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="tickerLabel">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Ticker</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="8" column="0" colspan="4">
-                   <widget class="QCheckBox" name="lowerIntervalCheck">
-                    <property name="toolTip">
-                     <string>Select this if you'd like to view the lower interval's moving averages trends.</string>
-                    </property>
-                    <property name="text">
-                     <string>Lower Interval Notification?</string>
-                    </property>
-                    <property name="checked">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="precisionLabel">
-                    <property name="text">
-                     <string>Data Precision</string>
-                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_2">
+                     <item>
+                      <widget class="QRadioButton" name="isolatedMarginAccountRadio">
+                       <property name="toolTip">
+                        <string>Select this if the asset you are trading is isolated.</string>
+                       </property>
+                       <property name="text">
+                        <string>Isolated Margin</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="crossMarginAccountRadio">
+                       <property name="toolTip">
+                        <string>Select this if the asset you are trading is not isolated.</string>
+                       </property>
+                       <property name="text">
+                        <string>Cross Margin</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
                    </widget>
                   </item>
                   <item row="5" column="0" colspan="4">
@@ -193,36 +165,57 @@
                     </layout>
                    </widget>
                   </item>
-                  <item row="6" column="0" colspan="4">
-                   <widget class="QGroupBox" name="accountTypeGroupBox">
-                    <property name="title">
-                     <string>Account Type</string>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="intervalLabel">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
                     </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_2">
-                     <item>
-                      <widget class="QRadioButton" name="isolatedMarginAccountRadio">
-                       <property name="toolTip">
-                        <string>Select this if the asset you are trading is isolated.</string>
-                       </property>
-                       <property name="text">
-                        <string>Isolated Margin</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="crossMarginAccountRadio">
-                       <property name="toolTip">
-                        <string>Select this if the asset you are trading is not isolated.</string>
-                       </property>
-                       <property name="text">
-                        <string>Cross Margin</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
+                    <property name="text">
+                     <string>Interval</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="tickerLabel">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Ticker</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="0" colspan="4">
+                   <widget class="QCheckBox" name="lowerIntervalCheck">
+                    <property name="toolTip">
+                     <string>Select this if you'd like to view the lower interval's moving averages trends.</string>
+                    </property>
+                    <property name="text">
+                     <string>Lower Interval Notification?</string>
+                    </property>
+                    <property name="checked">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="binanceSecretKeyLabel">
+                    <property name="text">
+                     <string>Binance Secret Key</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="precisionLabel">
+                    <property name="text">
+                     <string>Data Precision</string>
+                    </property>
                    </widget>
                   </item>
                   <item row="2" column="1" colspan="3">
@@ -238,13 +231,10 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="1" colspan="3">
-                   <widget class="QLineEdit" name="binanceApiSecret">
-                    <property name="toolTip">
-                     <string>Enter your Binance secret key here.</string>
-                    </property>
-                    <property name="echoMode">
-                     <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="binanceApiKeyLabel">
+                    <property name="text">
+                     <string>Binance API Key</string>
                     </property>
                    </widget>
                   </item>
@@ -252,6 +242,34 @@
                    <widget class="QLineEdit" name="binanceApiKey">
                     <property name="toolTip">
                      <string>Enter your Binance API key here.</string>
+                    </property>
+                    <property name="echoMode">
+                     <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1" colspan="3">
+                   <widget class="QComboBox" name="tickerComboBox">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="toolTip">
+                     <string>Select ticker to trade with here.</string>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>BTCUSDT</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="4" column="1" colspan="3">
+                   <widget class="QLineEdit" name="binanceApiSecret">
+                    <property name="toolTip">
+                     <string>Enter your Binance secret key here.</string>
                     </property>
                     <property name="echoMode">
                      <enum>QLineEdit::PasswordEchoOnEdit</enum>
@@ -333,61 +351,7 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="binanceApiKeyLabel">
-                    <property name="text">
-                     <string>Binance API Key</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1" colspan="3">
-                   <widget class="QComboBox" name="tickerComboBox">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="toolTip">
-                     <string>Select ticker to trade with here.</string>
-                    </property>
-                    <item>
-                     <property name="text">
-                      <string>BTCUSDT</string>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
-                  <item row="9" column="3">
-                   <widget class="QGroupBox" name="serverGroupBox">
-                    <property name="title">
-                     <string>Server</string>
-                    </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_4">
-                     <item>
-                      <widget class="QPushButton" name="updateTickers">
-                       <property name="toolTip">
-                        <string>Update tickers available.</string>
-                       </property>
-                       <property name="text">
-                        <string>Update Tickers</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="updateBinanceValues">
-                       <property name="toolTip">
-                        <string>Update and retrieve latest bot values from Binance.</string>
-                       </property>
-                       <property name="text">
-                        <string>Update Binance Values</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item row="9" column="0">
+                  <item row="9" column="0" colspan="4">
                    <widget class="QGroupBox" name="credentialsGroupBox">
                     <property name="title">
                      <string>Credentials</string>
@@ -429,10 +393,79 @@
                        </property>
                       </widget>
                      </item>
+                     <item>
+                      <widget class="QLabel" name="credentialResult">
+                       <property name="text">
+                        <string>No action taken yet.</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_3">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
                     </layout>
                    </widget>
                   </item>
-                  <item row="9" column="1" colspan="2">
+                  <item row="11" column="0" colspan="4">
+                   <widget class="QGroupBox" name="serverGroupBox">
+                    <property name="title">
+                     <string>Server</string>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_4">
+                     <item>
+                      <widget class="QPushButton" name="updateTickers">
+                       <property name="toolTip">
+                        <string>Update tickers available.</string>
+                       </property>
+                       <property name="text">
+                        <string>Update Tickers</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="updateBinanceValues">
+                       <property name="toolTip">
+                        <string>Update and retrieve latest bot values from Binance.</string>
+                       </property>
+                       <property name="text">
+                        <string>Update Binance Values</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="serverResult">
+                       <property name="text">
+                        <string>Update tickers or bot values from Binance</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_6">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item row="10" column="0" colspan="4">
                    <widget class="QGroupBox" name="configurationGroupBox">
                     <property name="title">
                      <string>Configuration</string>
@@ -451,6 +484,26 @@
                         <string>Load Configuration</string>
                        </property>
                       </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="configurationResult">
+                       <property name="text">
+                        <string>Save or load your bot configuration.</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_5">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
                      </item>
                     </layout>
                    </widget>
@@ -891,7 +944,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Average</string>
+                     <string>Average Type</string>
                     </property>
                    </widget>
                   </item>
@@ -1229,17 +1282,7 @@
                   <string>Backtest Main Options</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_8">
-                  <item row="15" column="0">
-                   <widget class="QPushButton" name="backtestStopDownloadButton">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Stop Download </string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="11" column="0">
+                  <item row="12" column="0">
                    <widget class="QPushButton" name="backtestDownloadDataButton">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1257,6 +1300,73 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="backtestPrecisionLabel">
+                    <property name="text">
+                     <string>Data Precision</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="16" column="0">
+                   <widget class="QPushButton" name="backtestStopDownloadButton">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Stop Download </string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0" colspan="3">
+                   <widget class="QGroupBox" name="groupBox_2">
+                    <property name="title">
+                     <string>Configuration</string>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_6">
+                     <item>
+                      <widget class="QPushButton" name="backtestSaveConfigurationButton">
+                       <property name="text">
+                        <string>Save Configuration</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="backtestLoadConfigurationButton">
+                       <property name="text">
+                        <string>Load Configuration</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="backtestConfigurationResult">
+                       <property name="text">
+                        <string>Save or load backtest configuration here.</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_7">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item row="17" column="0" colspan="3">
+                   <widget class="QProgressBar" name="backtestDownloadProgressBar">
+                    <property name="value">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="5" column="0">
                    <widget class="QCheckBox" name="backtestMarginTradingCheckBox">
                     <property name="text">
@@ -1267,86 +1377,10 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="16" column="0" colspan="3">
-                   <widget class="QProgressBar" name="backtestDownloadProgressBar">
-                    <property name="value">
-                     <number>0</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="15" column="1">
+                  <item row="16" column="1">
                    <widget class="QLabel" name="backtestDownloadLabel">
                     <property name="text">
                      <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="10" column="0">
-                   <widget class="QPushButton" name="backtestImportDataButton">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="whatsThis">
-                     <string>Import CSV data here.</string>
-                    </property>
-                    <property name="text">
-                     <string>Import Data</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QLabel" name="backtestPrecisionLabel">
-                    <property name="text">
-                     <string>Data Precision</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1" colspan="2">
-                   <widget class="QSpinBox" name="backtestStartingBalanceSpinBox">
-                    <property name="minimum">
-                     <number>10</number>
-                    </property>
-                    <property name="maximum">
-                     <number>999999999</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="1" colspan="2">
-                   <widget class="QSpinBox" name="backtestPrecisionSpinBox">
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>10</number>
-                    </property>
-                    <property name="value">
-                     <number>2</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="backtestTickerLabel">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>Ticker</string>
                     </property>
                    </widget>
                   </item>
@@ -1368,8 +1402,8 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1" colspan="2">
-                   <widget class="QComboBox" name="backtestTickerComboBox">
+                  <item row="11" column="0">
+                   <widget class="QPushButton" name="backtestImportDataButton">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -1381,11 +1415,30 @@
                       <pointsize>10</pointsize>
                      </font>
                     </property>
-                    <item>
-                     <property name="text">
-                      <string>BTCUSDT</string>
-                     </property>
-                    </item>
+                    <property name="whatsThis">
+                     <string>Import CSV data here.</string>
+                    </property>
+                    <property name="text">
+                     <string>Import Data</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="backtestTickerLabel">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Ticker</string>
+                    </property>
                    </widget>
                   </item>
                   <item row="2" column="1" colspan="2">
@@ -1465,20 +1518,30 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="9" column="0">
-                   <widget class="QPushButton" name="backtestCopySettingsButton">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
+                  <item row="3" column="1" colspan="2">
+                   <widget class="QSpinBox" name="backtestStartingBalanceSpinBox">
+                    <property name="minimum">
+                     <number>10</number>
                     </property>
-                    <property name="text">
-                     <string>Copy Main Settings</string>
+                    <property name="maximum">
+                     <number>999999999</number>
                     </property>
                    </widget>
                   </item>
-                  <item row="9" column="1">
+                  <item row="4" column="1" colspan="2">
+                   <widget class="QSpinBox" name="backtestPrecisionSpinBox">
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>10</number>
+                    </property>
+                    <property name="value">
+                     <number>2</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="10" column="1">
                    <widget class="QLabel" name="backtestCopyLabel">
                     <property name="text">
                      <string/>
@@ -1492,17 +1555,36 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="7" column="0">
-                   <widget class="QPushButton" name="backtestLoadConfigurationButton">
-                    <property name="text">
-                     <string>Load Configuration</string>
+                  <item row="1" column="1" colspan="2">
+                   <widget class="QComboBox" name="backtestTickerComboBox">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
                     </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>BTCUSDT</string>
+                     </property>
+                    </item>
                    </widget>
                   </item>
-                  <item row="6" column="0">
-                   <widget class="QPushButton" name="backtestSaveConfigurationButton">
+                  <item row="10" column="0">
+                   <widget class="QPushButton" name="backtestCopySettingsButton">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
                     <property name="text">
-                     <string>Save Configuration</string>
+                     <string>Copy Main Settings</string>
                     </property>
                    </widget>
                   </item>
@@ -1886,7 +1968,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Average</string>
+                     <string>Average Type</string>
                     </property>
                    </widget>
                   </item>
@@ -2251,6 +2333,26 @@
                   <string>Simulation Main Options</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_32">
+                  <item row="5" column="1">
+                   <widget class="QLabel" name="simulationCopyLabel">
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="9" column="2">
+                   <spacer name="verticalSpacer_9">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>40</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
                   <item row="1" column="0">
                    <widget class="QLabel" name="simulationIntervalLabel">
                     <property name="sizePolicy">
@@ -2277,25 +2379,12 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="5" column="1">
-                   <widget class="QLabel" name="simulationCopyLabel">
+                  <item row="4" column="0">
+                   <widget class="QCheckBox" name="lowerIntervalSimulationCheck">
                     <property name="text">
-                     <string/>
+                     <string>Lower Interval Notification?</string>
                     </property>
                    </widget>
-                  </item>
-                  <item row="8" column="2">
-                   <spacer name="verticalSpacer_9">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
                   </item>
                   <item row="2" column="1" colspan="2">
                    <widget class="QSpinBox" name="simulationStartingBalanceSpinBox">
@@ -2319,20 +2408,6 @@
                     </property>
                     <property name="value">
                      <number>1000</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="0">
-                   <widget class="QPushButton" name="simulationCopySettingsButton">
-                    <property name="text">
-                     <string>Copy Main Settings</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QCheckBox" name="lowerIntervalSimulationCheck">
-                    <property name="text">
-                     <string>Lower Interval Notification?</string>
                     </property>
                    </widget>
                   </item>
@@ -2423,6 +2498,27 @@
                     </item>
                    </widget>
                   </item>
+                  <item row="5" column="0">
+                   <widget class="QPushButton" name="simulationCopySettingsButton">
+                    <property name="text">
+                     <string>Copy Main Settings</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="simulationPrecisionLabel">
+                    <property name="text">
+                     <string>Data Precision</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="QPushButton" name="simulationSaveConfigurationButton">
+                    <property name="text">
+                     <string>Save Configuration</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="0" column="0">
                    <widget class="QLabel" name="simulationTickerLabel">
                     <property name="sizePolicy">
@@ -2449,24 +2545,23 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="simulationPrecisionLabel">
-                    <property name="text">
-                     <string>Data Precision</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="0">
-                   <widget class="QPushButton" name="simulationSaveConfigurationButton">
-                    <property name="text">
-                     <string>Save Configuration</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="7" column="0">
                    <widget class="QPushButton" name="simulationLoadConfigurationButton">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
                     <property name="text">
                      <string>Load Configuration</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="0" colspan="3">
+                   <widget class="QLabel" name="simulationConfigurationResult">
+                    <property name="text">
+                     <string>Save or load simulation configuration here.</string>
                     </property>
                    </widget>
                   </item>
@@ -2896,7 +2991,7 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Average</string>
+                     <string>Average Type</string>
                     </property>
                    </widget>
                   </item>
@@ -3530,30 +3625,7 @@
                <string>Graphs</string>
               </attribute>
               <layout class="QGridLayout" name="gridLayout_23">
-               <item row="4" column="0">
-                <widget class="QCheckBox" name="graphIndicatorsCheckBox">
-                 <property name="text">
-                  <string>Plot moving averages and other indicators? (This will consume more RAM).</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="0">
-                <spacer name="verticalSpacer_3">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>637</width>
-                   <height>508</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item row="2" column="0">
+               <item row="1" column="0">
                 <widget class="QGroupBox" name="groupBox">
                  <property name="title">
                   <string>Graph Colors</string>
@@ -3919,23 +3991,42 @@
                  </layout>
                 </widget>
                </item>
+               <item row="4" column="0">
+                <spacer name="verticalSpacer_3">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>637</width>
+                   <height>508</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item row="3" column="0">
+                <widget class="QCheckBox" name="graphIndicatorsCheckBox">
+                 <property name="text">
+                  <string>Plot moving averages and other indicators? (This will consume more RAM).</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
                <item row="0" column="0">
                 <widget class="QLabel" name="takeEffectNextRunLabel">
                  <property name="font">
                   <font>
                    <weight>50</weight>
+                   <italic>true</italic>
                    <bold>false</bold>
+                   <underline>false</underline>
+                   <strikeout>false</strikeout>
                   </font>
                  </property>
                  <property name="text">
-                  <string>All changes below will take effect next run.</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="Line" name="line">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+                  <string>Note: All changes below will will only take effect next run.</string>
                  </property>
                 </widget>
                </item>

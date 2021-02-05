@@ -417,7 +417,6 @@ class BotThread(QRunnable):
             error_message = traceback.format_exc()
             trader: SimulationTrader = self.gui.get_trader(self.caller)
 
-            self.signals.activity.emit(self.caller, str(e))  # Emit this message to GUI.
             self.logger.critical(error_message)
 
             if trader:

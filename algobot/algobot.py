@@ -41,7 +41,7 @@ class Interface(QMainWindow):
         super(Interface, self).__init__(parent)  # Initializing object
         uic.loadUi(mainUi, self)  # Loading the main UI
         self.logger = get_logger(logFile='algobot', loggerName='algobot')
-        self.configuration = Configuration(self)  # Loading configuration
+        self.configuration = Configuration(self, logger=self.logger)  # Loading configuration
         self.otherCommands = OtherCommands(self)  # Loading other commands
         self.about = About(self)  # Loading about information
         self.statistics = Statistics(self)  # Loading statistics
@@ -114,7 +114,7 @@ class Interface(QMainWindow):
         """
         Runs ticker thread and sets tickers to GUI.
         """
-        self.configuration.credentialResult.setText("Updating tickers...")
+        self.configuration.serverResult.setText("Updating tickers...")
         self.configuration.updateTickers.setEnabled(False)
         tickerThread = listThread.Worker(self.get_tickers)
         tickerThread.signals.error.connect(self.tickers_thread_error)
@@ -158,7 +158,7 @@ class Interface(QMainWindow):
 
         self.otherCommands.csvGenerationTicker.clear()
         self.otherCommands.csvGenerationTicker.addItems(tickers)
-        self.configuration.credentialResult.setText("Updated tickers successfully.")
+        self.configuration.serverResult.setText("Updated tickers successfully.")
 
     def setup_news(self, news):
         """

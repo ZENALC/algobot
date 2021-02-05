@@ -250,19 +250,19 @@ def load_from_csv(path, descending=True) -> list:
             return data
 
 
-def write_credentials(filePath: str = 'secret.json', **kwargs):
+def write_json_file(filePath: str = 'secret.json', **kwargs):
     """
-    Writes credentials to secret.json file.
-    :param filePath: Path to write credentials to.
-    :param kwargs: Dictionary to convert to JSON then write to file.
+    Writes JSON file with **kwargs provided.
+    :param filePath: Path to write **kwargs data to.
+    :param kwargs: Dictionary to dump to JSON file.
     """
     with open(filePath, 'w') as f:
         json.dump(kwargs, f)
 
 
-def load_credentials(jsonfile) -> dict:
+def load_json_file(jsonfile) -> dict:
     """
-    Loads credentials from secret.json file and returns dictionary.
+    Loads JSON file passed and returns dictionary.
     :param jsonfile: File to read dictionary from.
     :return: Dictionary with credentials.
     """

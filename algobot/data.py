@@ -32,7 +32,7 @@ class Data:
         self.interval = interval
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
         self.precision = precision
-        self.dataLimit = 5000  # Max amount of data to contain.
+        self.dataLimit = 2000  # Max amount of data to contain.
 
         self.downloadCompleted = False
         self.downloadLoop = True
@@ -426,14 +426,14 @@ class Data:
         dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
         self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
         if not self.data_is_updated():
-            self.try_callback("Found new data. Attempting to update...")
+            # self.try_callback("Found new data. Attempting to update...")
             newData = []
             while len(newData) == 0:
                 time.sleep(0.5)  # Sleep half a second for server to refresh new values.
                 newData = self.get_new_data(timestamp)
             self.insert_data(newData)
             self.output_message("Data has been updated successfully.\n")
-            self.try_callback("Updated data successfully.")
+            # self.try_callback("Updated data successfully.")
         else:
             self.output_message("Data is up-to-date.\n")
 
@@ -444,7 +444,7 @@ class Data:
         :return: A dictionary with current open, high, low, and close prices.
         """
         try:
-            if len(self.data) > self.dataLimit // 2:
+            if len(self.data) > self.dataLimit:
                 self.dump_to_table()
                 self.data = self.data[:self.dataLimit // 2]
 
