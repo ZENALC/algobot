@@ -61,7 +61,7 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="mainTab">
           <attribute name="title">
@@ -4026,7 +4026,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>Note: All changes below will will only take effect next run.</string>
+                  <string>Note: All changes below will only take effect next run.</string>
                  </property>
                 </widget>
                </item>
