@@ -1263,6 +1263,8 @@ class Interface(QMainWindow):
         self.openLogFolderAction.triggered.connect(lambda: self.open_folder("Logs"))
         self.openCsvFolderAction.triggered.connect(lambda: self.open_folder('CSV'))
         self.openDatabasesFolderAction.triggered.connect(lambda: self.open_folder('Databases'))
+        self.openCredentialsFolderAction.triggered.connect(lambda: self.open_folder('Credentials'))
+        self.openConfigurationsFolderAction.triggered.connect(lambda: self.open_folder('Configuration'))
         self.binanceAction.triggered.connect(self.open_binance)
         self.tradingViewAction.triggered.connect(self.open_trading_view)
         self.sourceCodeAction.triggered.connect(lambda: webbrowser.open("https://github.com/ZENALC/algobot"))

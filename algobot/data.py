@@ -437,6 +437,14 @@ class Data:
         else:
             self.output_message("Data is up-to-date.\n")
 
+    def remove_past_data_if_needed(self):
+        """
+        Remove past data past data limit.
+        """
+        if len(self.data) > self.dataLimit:  # Remove past data.
+            self.dump_to_table()
+            self.data = self.data[:self.dataLimit // 2]
+
     def get_current_data(self, counter: int = 0) -> dict:
         """
         Retrieves current market dictionary with open, high, low, close prices.
@@ -444,10 +452,7 @@ class Data:
         :return: A dictionary with current open, high, low, and close prices.
         """
         try:
-            if len(self.data) > self.dataLimit:
-                self.dump_to_table()
-                self.data = self.data[:self.dataLimit // 2]
-
+            self.remove_past_data_if_needed()
             if not self.data_is_updated():
                 self.update_data()
 

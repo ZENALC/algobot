@@ -1917,6 +1917,8 @@ p, li { white-space: pre-wrap; }
     <addaction name="binanceAction"/>
     <addaction name="tradingViewAction"/>
     <addaction name="sourceCodeAction"/>
+    <addaction name="openConfigurationsFolderAction"/>
+    <addaction name="openCredentialsFolderAction"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuStatistics"/>
@@ -1987,6 +1989,16 @@ p, li { white-space: pre-wrap; }
   <action name="openDatabasesFolderAction">
    <property name="text">
     <string>Databases</string>
+   </property>
+  </action>
+  <action name="openConfigurationsFolderAction">
+   <property name="text">
+    <string>Configuration Files</string>
+   </property>
+  </action>
+  <action name="openCredentialsFolderAction">
+   <property name="text">
+    <string>Credential Files</string>
    </property>
   </action>
  </widget>
