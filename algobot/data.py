@@ -403,19 +403,24 @@ class Data:
         Inserts data from newData to run-time data.
         :param newData: List with new data values.
         """
-        for data in newData:
+        temp_data = []
+
+        for data in newData[::-1]:
             parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
-            self.data.insert(0, {'date_utc': parsedDate,
-                                 'open': float(data[1]),
-                                 'high': float(data[2]),
-                                 'low': float(data[3]),
-                                 'close': float(data[4]),
-                                 'volume': float(data[5]),
-                                 'quote_asset_volume': float(data[6]),
-                                 'number_of_trades': float(data[7]),
-                                 'taker_buy_base_asset': float(data[8]),
-                                 'taker_buy_quote_asset': float(data[9]),
-                                 })
+            current_dict = {'date_utc': parsedDate,
+                            'open': float(data[1]),
+                            'high': float(data[2]),
+                            'low': float(data[3]),
+                            'close': float(data[4]),
+                            'volume': float(data[5]),
+                            'quote_asset_volume': float(data[6]),
+                            'number_of_trades': float(data[7]),
+                            'taker_buy_base_asset': float(data[8]),
+                            'taker_buy_quote_asset': float(data[9]),
+                            }
+            temp_data.append(current_dict)
+
+        self.data = temp_data + self.data
 
     def update_data(self):
         """
