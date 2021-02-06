@@ -61,7 +61,10 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>3</number>
+         </property>
+         <property name="movable">
+          <bool>true</bool>
          </property>
          <widget class="QWidget" name="mainTab">
           <attribute name="title">
@@ -3272,7 +3275,13 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>3</number>
+              <number>0</number>
+             </property>
+             <property name="tabsClosable">
+              <bool>false</bool>
+             </property>
+             <property name="movable">
+              <bool>true</bool>
              </property>
              <widget class="QWidget" name="tab_10">
               <property name="enabled">
