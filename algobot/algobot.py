@@ -371,7 +371,6 @@ class Interface(QMainWindow):
     def reset_bot_interface(self, caller):
         self.enable_override(caller, False)
         self.disable_interface(disable=False, caller=caller)
-        # self.destroy_trader(caller)
 
     def end_bot_gracefully(self, caller, callback=None):
         tempTrader = None
