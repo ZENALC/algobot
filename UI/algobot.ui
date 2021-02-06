@@ -69,7 +69,7 @@
            <enum>QTabWidget::West</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>5</number>
           </property>
           <property name="movable">
            <bool>true</bool>
@@ -481,6 +481,9 @@
               </property>
               <property name="frameShadow">
                <enum>QFrame::Sunken</enum>
+              </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
               </property>
               <property name="showGrid">
                <bool>true</bool>
@@ -989,6 +992,9 @@
               <property name="frameShadow">
                <enum>QFrame::Sunken</enum>
               </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
               <property name="showGrid">
                <bool>true</bool>
               </property>
@@ -1103,6 +1109,9 @@
               <property name="frameShadow">
                <enum>QFrame::Sunken</enum>
               </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
               <property name="showGrid">
                <bool>true</bool>
               </property>
@@ -1209,6 +1218,9 @@
               </property>
               <property name="frameShadow">
                <enum>QFrame::Sunken</enum>
+              </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
               </property>
               <property name="showGrid">
                <bool>true</bool>
@@ -1644,6 +1656,9 @@
               </property>
               <property name="frameShadow">
                <enum>QFrame::Sunken</enum>
+              </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
               </property>
               <property name="showGrid">
                <bool>true</bool>

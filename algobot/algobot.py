@@ -1053,7 +1053,8 @@ class Interface(QMainWindow):
 
         table.insertRow(rowPosition)
         for column in range(columns):
-            table.setItem(rowPosition, column, QTableWidgetItem(str(trade[column])))
+            cell = QTableWidgetItem(str(trade[column]))
+            table.setItem(rowPosition, column, cell)
 
     def get_activity_table(self, caller):
         if caller == LIVE:
