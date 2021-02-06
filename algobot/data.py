@@ -483,13 +483,16 @@ class Data:
                                      'taker_buy_base_asset': float(currentData[8]),
                                      'taker_buy_quote_asset': float(currentData[9]), }
             self.current_values = currentDataDictionary
+            if counter > 0:
+                self.try_callback(f"Successfully reconnected.")
             return currentDataDictionary
         except Exception as e:
-            error_message = f"Error: {e}. Retrying in 5 seconds..."
+            sleepTime = 5 + counter * 2
+            error_message = f"Error: {e}. Retrying in {sleepTime} seconds..."
             self.output_message(error_message, 4)
-            self.try_callback("Internet connectivity issue detected. Trying again in 5 seconds.")
-            self.ema_dict = {}
-            time.sleep(5)
+            self.try_callback(f"Internet connectivity issue detected. Trying again in {sleepTime} seconds.")
+            self.ema_dict = {}  # Reset EMA cache as it could be corrupted.
+            time.sleep(sleepTime)
             return self.get_current_data(counter=counter + 1)
 
     def try_callback(self, message):
