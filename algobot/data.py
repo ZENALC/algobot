@@ -487,7 +487,7 @@ class Data:
         except Exception as e:
             error_message = f"Error: {e}. Retrying in 5 seconds..."
             self.output_message(error_message, 4)
-            self.try_callback(message=error_message)
+            self.try_callback("Internet connectivity issue detected. Trying again in 5 seconds.")
             self.ema_dict = {}
             time.sleep(5)
             return self.get_current_data(counter=counter + 1)
