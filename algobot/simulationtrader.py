@@ -9,7 +9,8 @@ from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
 
 class SimulationTrader:
     def __init__(self, startingBalance: float = 1000, interval: str = '1h', symbol: str = 'BTCUSDT',
-                 loadData: bool = True, updateData: bool = True, logFile: str = 'simulation', precision: int = 2):
+                 loadData: bool = True, updateData: bool = True, logFile: str = 'simulation', precision: int = 2,
+                 addTradeCallback=None):
         """
         SimulationTrader object that will mimic real live market trades.
         :param startingBalance: Balance to start simulation trader with.
@@ -19,6 +20,7 @@ class SimulationTrader:
         :param updateData: Boolean for whether data will be updated if it is loaded.
         :param logFile: Filename that logger will log to.
         :param precision: Precision to round data to.
+        :param addTradeCallback: Callback signal to emit to (if provided) to reflect a new transaction.
         """
         self.logger = get_logger(logFile=logFile, loggerName=logFile)  # Get logger.
         self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData,
@@ -41,6 +43,7 @@ class SimulationTrader:
 
         self.completedLoop = True  # Loop that'll keep track of bot. We wait for this to turn False before some action.
         self.lock = Lock()
+        self.addTradeCallback = addTradeCallback
 
         self.tradingOptions = []  # List with Option elements. Helps specify what moving averages to trade with.
         self.optionDetails = []  # Current option values. Holds most recent option values.
@@ -232,7 +235,7 @@ class SimulationTrader:
         profitPercentage = self.get_profit_percentage(initialNet, finalNet)
         method = "Manual" if force else "Automation"
 
-        self.trades.append({
+        trade = {
             'date': datetime.utcnow(),
             'orderID': orderID,
             'action': message,
@@ -241,8 +244,12 @@ class SimulationTrader:
             'method': method,
             'percentage': f'{round(profitPercentage, 2)}%',
             'profit': f'${round(profit, self.precision)}'
-        })
+        }
 
+        if self.addTradeCallback:
+            self.addTradeCallback.emit(trade)
+
+        self.trades.append(trade)
         self.previousNet = finalNet
         self.stopLossExit = stopLossExit
         self.smartStopLossEnter = smartEnter

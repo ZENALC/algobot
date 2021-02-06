@@ -56,7 +56,6 @@ class Interface(QMainWindow):
         self.graphLeeway = 10  # Amount of points to set extra for graph limits.
         self.setup_graphs()  # Setting up graphs
         self.initiate_slots()  # Initiating slots
-        self.previousTradesCount = [0, 0]  # Count of previous trades.
 
         self.interfaceDictionary = get_interface_dictionary(self)
         self.advancedLogging = False
@@ -288,31 +287,12 @@ class Interface(QMainWindow):
         plot['z'] = [initialTimeStamp]
         plot['plot'].setData(plot['x'], plot['y'])
 
-    def get_previous_trade_count(self, caller):
-        if caller == LIVE:
-            return self.previousTradesCount[1]
-        elif caller == SIMULATION:
-            return self.previousTradesCount[0]
-        else:
-            raise ValueError("Invalid type of caller specified.")
-
-    def set_previous_trade_count(self, caller):
-        trader = self.get_trader(caller=caller)
-        if trader is not None:
-            if caller == LIVE:
-                self.previousTradesCount[1] += len(trader.trades)
-            elif caller == SIMULATION:
-                self.previousTradesCount[0] += len(trader.trades)
-            else:
-                raise ValueError("Invalid type of caller specified.")
-
     def initiate_bot_thread(self, caller: int):
         """
         Main function that initiates bot thread and handles all data-view logic.
         :param caller: Caller that decides whether a live bot or simulation bot is run.
         """
         self.disable_interface(True, caller)
-        self.set_previous_trade_count(caller=caller)
 
         worker = botThread.BotThread(gui=self, caller=caller, logger=self.logger)
         worker.signals.smallError.connect(self.create_popup)
@@ -321,6 +301,7 @@ class Interface(QMainWindow):
         worker.signals.started.connect(self.initial_bot_ui_setup)
         worker.signals.updated.connect(self.update_interface_info)
         worker.signals.progress.connect(self.download_progress_update)
+        worker.signals.addTrade.connect(lambda trade: self.update_trades_table_and_activity_monitor(trade, caller))
         worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=caller))
 
         # All these below are for Telegram.
@@ -362,7 +343,6 @@ class Interface(QMainWindow):
         self.threadPool.start(thread)
 
     def end_bot_monitoring(self, caller):
-        self.update_trades_table_and_activity_monitor(caller)
         if caller == SIMULATION:
             self.add_to_monitor(caller, "Killed simulation bot.")
         else:
@@ -385,7 +365,6 @@ class Interface(QMainWindow):
                 while not self.simulationTrader.completedLoop:
                     self.simulationRunningLive = False
 
-                self.simulationTrader.get_simulation_result()
                 tempTrader = self.simulationTrader
                 if self.simulationLowerIntervalData:
                     self.simulationLowerIntervalData.dump_to_table()
@@ -508,7 +487,6 @@ class Interface(QMainWindow):
         interfaceDict = self.interfaceDictionary[caller]
         self.statistics.modify_tab(groupedDict, tabType=self.get_caller_string(caller))
         self.update_main_interface_and_graphs(interfaceDict, valueDict=valueDict, caller=caller)
-        self.update_trades_table_and_activity_monitor(caller=caller)
         self.handle_position_buttons(caller=caller)
         self.handle_custom_stop_loss_buttons(caller=caller)
 
@@ -1124,10 +1102,11 @@ class Interface(QMainWindow):
         for column in range(0, columns):
             table.setItem(rowPosition, column, QTableWidgetItem(str(data[column])))
 
-    def update_trades_table_and_activity_monitor(self, caller):
+    def update_trades_table_and_activity_monitor(self, trade, caller):
         """
         Updates trade table and activity based on caller and sends message to Telegram if live bot is trading and
-        feature is enabled.
+        Telegram feature is enabled.
+        :param trade: Trade information to add to activity monitor and trades table.
         :param caller: Caller object that will rule which tables get updated.
         """
         table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
@@ -1136,28 +1115,23 @@ class Interface(QMainWindow):
         if not trader:
             return
 
-        trades = trader.trades
-        previousTrades = self.get_previous_trade_count(caller=caller)
+        tradeData = [trade['orderID'],
+                     trade['pair'],
+                     trade['price'],
+                     trade['percentage'],
+                     trade['profit'],
+                     trade['method'],
+                     trade['action']]
 
-        if len(trades) + previousTrades > table.rowCount():  # Only update when row count is not equal to trades count.
-            remaining = len(trades) + previousTrades - table.rowCount()
-            for trade in trades[-remaining:]:
-                tradeData = [trade['orderID'],
-                             trade['pair'],
-                             trade['price'],
-                             trade['percentage'],
-                             trade['profit'],
-                             trade['method'],
-                             trade['action']]
-                self.add_to_table(table, tradeData)
-                self.add_to_monitor(caller, trade['action'])
+        self.add_to_table(table, tradeData)
+        self.add_to_monitor(caller, trade['action'])
 
-                if caller == LIVE and self.telegramBot and self.configuration.enableTelegramSendMessage.isChecked():
-                    self.inform_telegram(message=trade['action'])
+        if caller == LIVE and self.telegramBot and self.configuration.enableTelegramSendMessage.isChecked():
+            self.inform_telegram(message=trade['action'])
 
-            monitor = self.get_activity_table(caller=caller)
-            monitor.scrollToBottom()
-            table.scrollToBottom()
+        monitor = self.get_activity_table(caller=caller)
+        monitor.scrollToBottom()
+        table.scrollToBottom()
 
     def closeEvent(self, event):
         """
@@ -1319,6 +1293,7 @@ class Interface(QMainWindow):
         self.waitOverrideButton.clicked.connect(lambda: self.exit_position(LIVE, False))
         self.enableCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(LIVE, True))
         self.disableCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(LIVE, False))
+        self.clearSimulationTableButton.clicked.connect(lambda: self.clear_table(self.simulationActivityMonitor))
 
     def create_simulation_slots(self):
         """
@@ -1334,6 +1309,7 @@ class Interface(QMainWindow):
         self.waitOverrideSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, False))
         self.enableSimulationCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(SIMULATION, True))
         self.disableSimulationCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(SIMULATION, False))
+        self.clearTableButton.clicked.connect(lambda: self.clear_table(self.activityMonitor))
 
     def create_backtest_slots(self):
         """
@@ -1342,6 +1318,7 @@ class Interface(QMainWindow):
         self.configureBacktestButton.clicked.connect(self.show_backtest_settings)
         self.runBacktestButton.clicked.connect(self.initiate_backtest)
         self.endBacktestButton.clicked.connect(self.end_backtest)
+        self.clearBacktestTableButton.clicked.connect(lambda: self.clear_table(self.backtestTable))
 
     def create_interface_slots(self):
         """

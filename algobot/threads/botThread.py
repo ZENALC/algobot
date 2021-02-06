@@ -21,6 +21,7 @@ class BotSignals(QObject):
     error = pyqtSignal(int, str)  # Signal emitted when a critical error occurs.
     restore = pyqtSignal()  # Signal emitted to restore GUI.
     progress = pyqtSignal(int, str, int)  # Signal emitted to broadcast progress.
+    addTrade = pyqtSignal(dict)  # Signal emitted when a transaction occurs.
 
     # All of these below are for Telegram integration.
     forceLong = pyqtSignal()  # Signal emitted to force a long position.
@@ -145,6 +146,7 @@ class BotThread(QRunnable):
             raise ValueError("Invalid caller.")
 
         self.trader: SimulationTrader = self.gui.get_trader(caller)
+        self.trader.addTradeCallback = self.signals.addTrade  # Passing an add trade call black.
         self.trader.dataView.callback = self.signals.activity  # Passing activity signal to data object.
         self.trader.dataView.caller = caller  # Passing caller to data object.
         if not self.trader.dataView.downloadCompleted:
@@ -486,6 +488,8 @@ class BotThread(QRunnable):
 
         if trader:
             trader.completedLoop = True  # If false, this will cause an infinite loop.
+            if trader == self.gui.simulationTrader:
+                trader.get_simulation_result()
 
         if self.failLimit == self.failCount or self.failed or not success:
             self.signals.error.emit(self.caller, str(self.failError))
