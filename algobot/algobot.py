@@ -1084,16 +1084,18 @@ class Interface(QMainWindow):
         self.activityMonitor.scrollToBottom()
 
     @staticmethod
-    def add_to_table(table, data: list):
+    def add_to_table(table, data: list, insertDate=True):
         """
         Function that will add specified data to a provided table.
+        :param insertDate: Boolean to add date to 0th index of data or not.
         :param table: Table we will add data to.
         :param data: Data we will add to table.
         """
         rowPosition = table.rowCount()
         columns = table.columnCount()
 
-        data.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        if insertDate:
+            data.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         if len(data) != columns:
             raise ValueError('Data needs to have the same amount of columns as table.')
@@ -1226,7 +1228,7 @@ class Interface(QMainWindow):
         self.configuration.updateTickers.clicked.connect(self.tickers_thread)
 
     @staticmethod
-    def open_folder(folder):
+    def create_folder(folder):
         targetPath = os.path.join(ROOT_DIR, folder)
         if not os.path.exists(targetPath):
             cwd = os.getcwd()
@@ -1234,6 +1236,10 @@ class Interface(QMainWindow):
             os.mkdir(folder)
             os.chdir(cwd)
 
+        return targetPath
+
+    def open_folder(self, folder):
+        targetPath = self.create_folder(folder)
         open_file_or_folder(targetPath)
 
     def create_action_slots(self):
@@ -1279,6 +1285,59 @@ class Interface(QMainWindow):
         else:
             webbrowser.open("https://www.tradingview.com/")
 
+    def export_trades(self, caller):
+        table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
+        label = self.interfaceDictionary[caller]['mainInterface']['historyLabel']
+        columns = table.columnCount()
+        rows = table.rowCount()
+        trades = []
+
+        if rows == 0:
+            label.setText("No data in table currently.")
+            return
+
+        for row in range(rows):
+            trade = []
+            for column in range(columns):
+                item = table.item(row, column)
+                trade.append(item.text())
+            trades.append(trade)
+
+        path = self.create_folder("Trade History")
+
+        if caller == SIMULATION:
+            defaultFile = os.path.join(path, 'live_trades.csv')
+        else:
+            defaultFile = os.path.join(path, 'simulation_trades.csv')
+
+        path, _ = QFileDialog.getSaveFileName(self, 'Export Trades', defaultFile, 'CSV (*.csv)')
+
+        if path:
+            with open(path, 'w') as f:
+                for trade in trades:
+                    f.write(','.join(trade) + '\n')
+            label.setText(f"Exported trade history successfully to {path}.")
+        else:
+            label.setText("Could not save trade history.")
+
+    def import_trades(self, caller):
+        table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
+        label = self.interfaceDictionary[caller]['mainInterface']['historyLabel']
+        path = self.create_folder("Trade History")
+        path, _ = QFileDialog.getOpenFileName(self, 'Import Trades', path, "CSV (*.csv)")
+
+        try:
+            with open(path, 'r') as f:
+                rows = f.readlines()
+                for row in rows:
+                    row = row.split(',')
+                    self.add_to_table(table, row, insertDate=False)
+            label.setText("Imported trade history successfully.")
+        except Exception as e:
+            label.setText("Could not import trade history due to data corruption.")
+            self.logger.exception(str(e))
+
+    # noinspection DuplicatedCode
     def create_bot_slots(self):
         """
         Creates bot slots.
@@ -1293,8 +1352,12 @@ class Interface(QMainWindow):
         self.waitOverrideButton.clicked.connect(lambda: self.exit_position(LIVE, False))
         self.enableCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(LIVE, True))
         self.disableCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(LIVE, False))
-        self.clearSimulationTableButton.clicked.connect(lambda: self.clear_table(self.simulationActivityMonitor))
+        self.clearTableButton.clicked.connect(lambda: self.clear_table(self.activityMonitor))
+        self.clearLiveTradesButton.clicked.connect(lambda: self.clear_table(self.historyTable))
+        self.exportLiveTradesButton.clicked.connect(lambda: self.export_trades(caller=LIVE))
+        self.importLiveTradesButton.clicked.connect(lambda: self.import_trades(caller=LIVE))
 
+    # noinspection DuplicatedCode
     def create_simulation_slots(self):
         """
         Creates simulation slots.
@@ -1309,7 +1372,10 @@ class Interface(QMainWindow):
         self.waitOverrideSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, False))
         self.enableSimulationCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(SIMULATION, True))
         self.disableSimulationCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(SIMULATION, False))
-        self.clearTableButton.clicked.connect(lambda: self.clear_table(self.activityMonitor))
+        self.clearSimulationTableButton.clicked.connect(lambda: self.clear_table(self.simulationActivityMonitor))
+        self.clearSimulationTradesButton.clicked.connect(lambda: self.clear_table(self.simulationHistoryTable))
+        self.exportSimulationTradesButton.clicked.connect(lambda: self.export_trades(caller=SIMULATION))
+        self.importSimulationTradesButton.clicked.connect(lambda: self.import_trades(caller=SIMULATION))
 
     def create_backtest_slots(self):
         """

@@ -40,6 +40,7 @@ def get_interface_dictionary(parent, caller: int = None):
                 # Table
                 'historyTable': parent.simulationHistoryTable,
                 'activityTable': parent.simulationActivityMonitor,
+                'historyLabel': parent.simulationTradesHistoryLabel,
             },
             'configuration': {
                 'mainTab': parent.configuration.simulationMainTab,
@@ -104,6 +105,7 @@ def get_interface_dictionary(parent, caller: int = None):
                 # Table
                 'historyTable': parent.historyTable,
                 'activityTable': parent.activityMonitor,
+                'historyLabel': parent.liveTradesHistoryLabel,
             },
             'configuration': {
                 'mainTab': parent.configuration.mainMainTab,
