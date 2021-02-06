@@ -1330,7 +1330,7 @@ class Interface(QMainWindow):
             with open(path, 'r') as f:
                 rows = f.readlines()
                 for row in rows:
-                    row = row.split(',')
+                    row = row.strip().split(',')
                     self.add_to_table(table, row, insertDate=False)
             label.setText("Imported trade history successfully.")
         except Exception as e:
