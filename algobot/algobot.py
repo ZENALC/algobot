@@ -380,6 +380,9 @@ class Interface(QMainWindow):
             if self.simulationTrader:
                 self.simulationTrader.dataView.downloadLoop = False
 
+                if self.simulationLowerIntervalData:
+                    self.simulationLowerIntervalData.downloadLoop = False
+
                 while not self.simulationTrader.completedLoop:
                     self.simulationRunningLive = False
 
@@ -392,6 +395,9 @@ class Interface(QMainWindow):
             self.runningLive = False
             if self.trader:
                 self.trader.dataView.downloadLoop = False
+
+                if self.lowerIntervalData:
+                    self.lowerIntervalData.downloadLoop = False
 
                 if self.configuration.chatPass:
                     self.telegramBot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended.")

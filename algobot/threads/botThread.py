@@ -94,8 +94,8 @@ class BotThread(QRunnable):
                 raise TypeError("Invalid type of caller specified.")
 
             lowerData = gui.lowerIntervalData if caller == LIVE else gui.simulationLowerIntervalData
-            if not lowerData.downloadCompleted:
-                raise RuntimeError("Download failed.")
+            if not lowerData or not lowerData.downloadCompleted:
+                raise RuntimeError("Lower interval download failed.")
             self.signals.activity.emit(caller, "Retrieved lower interval data successfully.")
         else:
             self.signals.activity.emit(caller, "There is no lower interval than 1 minute intervals.")
