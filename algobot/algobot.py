@@ -374,46 +374,47 @@ class Interface(QMainWindow):
         # self.destroy_trader(caller)
 
     def end_bot_gracefully(self, caller, callback=None):
+        tempTrader = None
         if caller == SIMULATION:
+            self.simulationRunningLive = False
             if self.simulationTrader:
                 self.simulationTrader.dataView.downloadLoop = False
 
-            self.simulationRunningLive = False
-            while not self.simulationTrader.completedLoop:
-                pass
+                while not self.simulationTrader.completedLoop:
+                    self.simulationRunningLive = False
 
-            self.simulationTrader.get_simulation_result()
-            tempTrader = self.simulationTrader
-            if self.simulationLowerIntervalData is not None:
-                self.simulationLowerIntervalData.dump_to_table()
-                self.simulationLowerIntervalData = None
-        else:
+                self.simulationTrader.get_simulation_result()
+                tempTrader = self.simulationTrader
+                if self.simulationLowerIntervalData:
+                    self.simulationLowerIntervalData.dump_to_table()
+                    self.simulationLowerIntervalData = None
+        elif caller == LIVE:
+            self.runningLive = False
             if self.trader:
                 self.trader.dataView.downloadLoop = False
 
-            self.runningLive = False
-            if self.configuration.chatPass:
-                self.telegramBot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended.")
-            if self.telegramBot:
-                self.telegramBot.stop()
-                self.telegramBot = None
+                if self.configuration.chatPass:
+                    self.telegramBot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended.")
+                if self.telegramBot:
+                    self.telegramBot.stop()
+                    self.telegramBot = None
 
-                if callback:
-                    callback.emit("Killed Telegram bot.")
+                while not self.trader.completedLoop:
+                    self.runningLive = False
 
-            while not self.trader.completedLoop:
-                pass
-
-            tempTrader = self.trader
-            if self.lowerIntervalData is not None:
-                self.lowerIntervalData.dump_to_table()
-                self.lowerIntervalData = None
+                tempTrader = self.trader
+                if self.lowerIntervalData:
+                    self.lowerIntervalData.dump_to_table()
+                    self.lowerIntervalData = None
+        else:
+            raise ValueError("Invalid type of caller provided.")
 
         if callback:
             callback.emit("Dumping data to database...")
 
-        tempTrader.log_trades_and_daily_net()
-        tempTrader.dataView.dump_to_table()
+        if tempTrader:
+            tempTrader.log_trades_and_daily_net()
+            tempTrader.dataView.dump_to_table()
 
         if callback:
             callback.emit("Dumped all new data to database.")
