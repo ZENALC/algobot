@@ -5,7 +5,7 @@ from typing import Dict
 
 from dateutil import parser
 from datetime import datetime
-from helpers import load_from_csv, get_ups_and_downs
+from helpers import get_ups_and_downs
 from option import Option
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
 from strategies import StoicStrategy, Strategy, ShrekStrategy
