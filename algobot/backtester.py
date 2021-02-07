@@ -92,14 +92,6 @@ class Backtester:
         if firstDate > lastDate:
             self.data = self.data[::-1]
 
-    def validate_options(self):
-        """
-        Validates options provided. If the list of options provided does not contain all options, an error is raised.
-        """
-        for option in self.tradingOptions:
-            if type(option) != Option:
-                raise TypeError(f"'{option}' is not a valid option type.")
-
     def convert_all_date_to_datetime(self):
         """
         Converts all available dates to datetime objects.
@@ -168,6 +160,14 @@ class Backtester:
         for option in self.tradingOptions:
             minimum = max(minimum, option.finalBound, option.initialBound)
         return minimum
+
+    def validate_options(self):
+        """
+        Validates options provided. If the list of options provided does not contain all options, an error is raised.
+        """
+        for option in self.tradingOptions:
+            if type(option) != Option:
+                raise TypeError(f"'{option}' is not a valid option type.")
 
     def get_moving_average(self, data: list, average: str, prices: int, parameter: str) -> float:
         """
