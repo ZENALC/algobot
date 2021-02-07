@@ -186,14 +186,9 @@ class TelegramBot:
                 f"Custom Stop Loss: {trader.get_safe_rounded_string(trader.customStopLoss)}\n"
                 f"Current {trader.coinName} price: ${trader.currentPrice}\n"
                 f'Elapsed time: {self.botThread.elapsed}\n'
-                f'Stoic Enabled: {trader.stoicEnabled}\n'
-                f'Stoic Trend: {trader.get_trend_string(trader.stoicTrend)}\n'
-                f'Stoic Inputs: {trader.get_stoic_inputs()}\n'
-                f'Shrek Enabled: {trader.shrekEnabled}\n'
-                f'Shrek Trend: {trader.get_trend_string(trader.shrekTrend)}\n'
-                f'Shrek Inputs: {trader.get_shrek_inputs()}\n'
                 f'Smart Stop Loss Initial Counter: {trader.smartStopLossInitialCounter}\n'
                 f'Smart Stop Loss Counter: {trader.smartStopLossCounter}\n'
+                f'Stop Loss Safety Timer: {trader.safetyTimer}\n'
                 f'Moving Averages Trend: {trader.get_trend_string(trader.trend)}\n'
                 f'{optionString}'
                 )

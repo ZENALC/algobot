@@ -213,21 +213,25 @@ class BotThread(QRunnable):
         configDict = self.gui.interfaceDictionary[caller]['configuration']
         trader.lossStrategy, trader.lossPercentageDecimal = self.gui.get_loss_settings(caller)
         trader.tradingOptions = self.gui.get_trading_options(caller)
-        trader.stoicEnabled = configDict['stoicCheck'].isChecked()
-        trader.shrekEnabled = configDict['shrekCheck'].isChecked()
         trader.set_safety_timer(configDict['safetyTimer'].value())
         trader.set_smart_stop_loss_counter(configDict['smartStopLossCounter'].value())
 
-        if trader.stoicEnabled:
-            trader.stoicOptions[0] = configDict['stoicInput1'].value()
-            trader.stoicOptions[1] = configDict['stoicInput2'].value()
-            trader.stoicOptions[2] = configDict['stoicInput3'].value()
+        if configDict['stoicCheck'].isChecked():
+            options = [
+                configDict['stoicInput1'].value(),
+                configDict['stoicInput2'].value(),
+                configDict['stoicInput3'].value()
+            ]
+            trader.set_strategy('stoic', options)
 
-        if trader.shrekEnabled:
-            trader.shrekOptions[0] = configDict['shrekInput1'].value()
-            trader.shrekOptions[1] = configDict['shrekInput2'].value()
-            trader.shrekOptions[2] = configDict['shrekInput3'].value()
-            trader.shrekOptions[3] = configDict['shrekInput4'].value()
+        if configDict['shrekCheck'].isChecked():
+            options = [
+                configDict['shrekInput1'].value(),
+                configDict['shrekInput2'].value(),
+                configDict['shrekInput3'].value(),
+                configDict['shrekInput4'].value()
+            ]
+            trader.set_strategy('shrek', options)
 
         trader.output_configuration()
 

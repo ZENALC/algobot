@@ -1,11 +1,12 @@
 from typing import List
 from enums import BEARISH, BULLISH
 
+
 # Create your strategies here.
 
 
 class Strategy:
-    def __init__(self, name: str, parent):
+    def __init__(self, name: str, parent, precision: int = 2):
         """
         Create all your strategies from this parent strategy class.
         :param name: Name of strategy.
@@ -13,10 +14,11 @@ class Strategy:
         """
         self.name = name
         self.parent = parent
+        self.precision = precision
         self.trend = None
         self.strategyDict = {}
 
-    def get_trend(self, data: List[dict]) -> int:
+    def get_trend(self, data: List[dict] = None) -> int:
         """
         Implement your strategy here. Based on the strategy's algorithm, this should return a trend.
         A trend can be either bullish, bearish, or neither.
@@ -35,17 +37,18 @@ class Strategy:
 
 
 class StoicStrategy(Strategy):
-    def __init__(self, parent, input1: int, input2: int, input3: int):
-        super().__init__(name='Stoic', parent=parent)
+    def __init__(self, parent, input1: int, input2: int, input3: int, precision: int = 2):
+        super().__init__(name='Stoic', parent=parent, precision=precision)
 
         self.stoicInput1: int = input1
         self.stoicInput2: int = input2
         self.stoicInput3: int = input3
 
     # noinspection DuplicatedCode
-    def get_trend(self, data: List[dict], shift: int = 0):
+    def get_trend(self, data: List[dict] = None, shift: int = 0, update: bool = False):
         """
         Returns trend using the stoic strategy.
+        :param update: Boolean to determine whether data needs to be updated or not.
         :param data: Data to use to determine the trend.
         :param shift: Shift period to go to previous data periods.
         :return: Stoic trend.
@@ -55,11 +58,16 @@ class StoicStrategy(Strategy):
         input2 = self.stoicInput2
         input3 = self.stoicInput3
 
-        if len(data) <= max((input1, input2, input3)):
-            return None
-
-        rsi_values_one = [parent.get_rsi(data, input1, shift=shift) for shift in range(shift, input1 + shift)]
-        rsi_values_two = [parent.get_rsi(data, input2, shift=shift) for shift in range(shift, input2 + shift)]
+        if data:  # Backtester called this function.
+            if len(data) <= max((input1, input2, input3)):
+                return None
+            else:
+                rsi_values_one = [parent.get_rsi(data, input1, shift=s) for s in range(shift, input1 + shift)]
+                rsi_values_two = [parent.get_rsi(data, input2, shift=s) for s in range(shift, input2 + shift)]
+        else:  # Simulation Trader called this function.
+            d = parent.dataView
+            rsi_values_one = [d.get_rsi(input1, shift=s, update=update) for s in range(shift, input1 + shift)]
+            rsi_values_two = [d.get_rsi(input2, shift=s, update=update) for s in range(shift, input2 + shift)]
 
         seneca = max(rsi_values_one) - min(rsi_values_one)
         if 'seneca' in self.strategyDict:
@@ -102,6 +110,16 @@ class StoicStrategy(Strategy):
         stoic = sum(self.strategyDict['zeno'][:3]) / sum(self.strategyDict['seneca'][:3]) * 100
         marcus = sum(self.strategyDict['hadot'][:input3]) / input3
 
+        self.strategyDict['values'] = {
+            'marcus': round(marcus, self.precision),
+            'stoic': round(stoic, self.precision),
+            'seneca': round(seneca, self.precision),
+            'zeno': round(zeno, self.precision),
+            'gaius': round(gaius, self.precision),
+            'philo': round(philo, self.precision),
+            'hadot': round(hadot, self.precision),
+        }
+
         if marcus > stoic:
             self.trend = BEARISH
         elif marcus < stoic:
@@ -116,8 +134,8 @@ class StoicStrategy(Strategy):
 
 
 class ShrekStrategy(Strategy):
-    def __init__(self, parent, one: int, two: int, three: int, four: int):
-        super().__init__(name='Shrek', parent=parent)
+    def __init__(self, parent, one: int, two: int, three: int, four: int, precision: int = 2):
+        super().__init__(name='Shrek', parent=parent, precision=precision)
 
         self.one: int = one
         self.two: int = two
@@ -127,14 +145,22 @@ class ShrekStrategy(Strategy):
     def get_params(self) -> list:
         return [self.one, self.two, self.three, self.four]
 
-    def get_trend(self, data: List[dict]):
+    def get_trend(self, data: List[dict] = None, shift: int = 0, update: bool = False):
         """
         Returns trend using the Shrek strategy.
         :param data: Data to use to determine the trend.
+        :param update: Boolean to determine whether data needs to be updated or not.
+        :param shift: Shift period to go to previous data periods.
         :return: Shrek trend.
         """
         parent = self.parent
-        data = [rsi for rsi in [parent.get_rsi(data, self.two, shift=x) for x in range(self.two + 1)]]
+
+        if data:
+            data = [rsi for rsi in [parent.get_rsi(data, self.two, shift=x) for x in range(self.two + 1)]]
+        else:
+            d = parent.dataView
+            data = [rsi for rsi in [d.get_rsi(self.two, update=update, shift=x) for x in range(self.two + 1)]]
+
         rsi_two = data[0]
 
         apple = max(data) - min(data)
@@ -158,6 +184,14 @@ class ShrekStrategy(Strategy):
             self.strategyDict['beetle'] = self.strategyDict['beetle'][1:]
             self.strategyDict['apple'] = self.strategyDict['apple'][1:]
             onion = carrot / donkey * 100
+
+            self.strategyDict['values'] = {
+                'apple': round(apple, self.precision),
+                'beetle': round(beetle, self.precision),
+                'carrot': round(carrot, self.precision),
+                'donkey': round(donkey, self.precision),
+                'onion': round(onion, self.precision)
+            }
 
             if self.one > onion:
                 self.trend = BULLISH

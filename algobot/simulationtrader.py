@@ -2,9 +2,12 @@ import time
 
 from datetime import datetime
 from threading import Lock
+from typing import Dict
+
 from helpers import get_logger, convert_interval_to_string
 from data import Data
 from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
+from strategies import Strategy, ShrekStrategy, StoicStrategy
 
 
 class SimulationTrader:
@@ -74,15 +77,20 @@ class SimulationTrader:
         self.currentPosition = None  # Current position value.
         self.previousPosition = None  # Previous position to validate for a cross.
 
-        self.shrekTrend = None  # Current shrek trend if enabled.
-        self.shrekEnabled = False  # Boolean that holds whether shrek trading is enabled or not.
-        self.shrekOptions = [None, None, None, None]
-        self.shrekDictionary = {}
+        self.strategies: Dict[str, Strategy] = {}
 
-        self.stoicTrend = None  # Current stoic trend if enabled.
+        self.shrekEnabled = False  # Boolean that holds whether shrek trading is enabled or not.
         self.stoicEnabled = False  # Boolean that holds whether stoic trading is enabled or not.
-        self.stoicOptions = [None, None, None]  # Stoic options.
-        self.stoicDictionary = {}  # Dictionary for stoic strategies.
+
+    def set_strategy(self, name: str, options: list):
+        if name == 'shrek':
+            self.shrekEnabled = True
+            self.strategies['shrek'] = ShrekStrategy(self, *options)
+        elif name == 'stoic':
+            self.stoicEnabled = True
+            self.strategies['stoic'] = StoicStrategy(self, *options)
+        else:
+            raise ValueError("Unknown strategy.")
 
     def set_safety_timer(self, safetyTimer):
         if safetyTimer == 0:
@@ -182,32 +190,34 @@ class SimulationTrader:
                     groupedDict['movingAverages'][f'Lower {finalAverageLabel}'] = f'${finalAverage}'
 
         if self.shrekEnabled:
+            strategy = self.strategies['shrek']
             groupedDict['shrek'] = {
-                'trend': self.get_trend_string(self.shrekTrend),
+                'trend': self.get_trend_string(strategy.trend),
                 'enabled': str(self.shrekEnabled),
                 'inputs': self.get_shrek_inputs(),
             }
 
-            if 'values' in self.shrekDictionary:
-                for key in self.shrekDictionary['values']:
-                    groupedDict['shrek'][key] = self.shrekDictionary['values'][key]
+            if 'values' in strategy.strategyDict:
+                for key in strategy.strategyDict['values']:
+                    groupedDict['shrek'][key] = strategy.strategyDict['values'][key]
 
-            for x in self.shrekOptions:
+            for x in strategy.get_params():
                 if x in self.dataView.rsi_data:
                     groupedDict['shrek'][f'RSI({x})'] = round(self.dataView.rsi_data[x], self.precision)
 
         if self.stoicEnabled:
+            strategy = self.strategies['stoic']
             groupedDict['stoic'] = {
-                'trend': self.get_trend_string(self.stoicTrend),
+                'trend': self.get_trend_string(strategy.trend),
                 'enabled': str(self.stoicEnabled),
                 'inputs': self.get_stoic_inputs(),
             }
 
-            if 'values' in self.stoicDictionary:
-                for key in self.stoicDictionary['values']:
-                    groupedDict['stoic'][key] = self.stoicDictionary['values'][key]
+            if 'values' in strategy.strategyDict:
+                for key in strategy.strategyDict['values']:
+                    groupedDict['stoic'][key] = strategy.strategyDict['values'][key]
 
-            for x in self.stoicOptions:
+            for x in strategy.get_params():
                 if x in self.dataView.rsi_data:
                     groupedDict['stoic'][f'RSI({x})'] = round(self.dataView.rsi_data[x], self.precision)
 
@@ -393,127 +403,6 @@ class SimulationTrader:
             self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
             self.add_trade(msg, force=force, smartEnter=smartEnter)
 
-    # noinspection DuplicatedCode
-    def stoic_strategy(self, input1: int, input2: int, input3: int, s: int = 0, update: bool = False):
-        """
-        Custom strategy.
-        :param update: Boolean to determine whether data needs to have current values or not.
-        :param input1: Custom input 1 for the stoic strategy.
-        :param input2: Custom input 2 for the stoic strategy.
-        :param input3: Custom input 3 for the stoic strategy.
-        :param s: Shift data to get previous values.
-        :return: Bullish, bearish, or none values.
-        """
-        rsi_values_one = [self.dataView.get_rsi(input1, shift=shift, update=update) for shift in range(s, input1 + s)]
-        rsi_values_two = [self.dataView.get_rsi(input2, shift=shift, update=update) for shift in range(s, input2 + s)]
-
-        seneca = max(rsi_values_one) - min(rsi_values_one)
-        if 'seneca' in self.stoicDictionary:
-            self.stoicDictionary['seneca'].insert(0, seneca)
-        else:
-            self.stoicDictionary['seneca'] = [seneca]
-
-        zeno = rsi_values_one[0] - min(rsi_values_one)
-        if 'zeno' in self.stoicDictionary:
-            self.stoicDictionary['zeno'].insert(0, zeno)
-        else:
-            self.stoicDictionary['zeno'] = [zeno]
-
-        gaius = rsi_values_two[0] - min(rsi_values_two)
-        if 'gaius' in self.stoicDictionary:
-            self.stoicDictionary['gaius'].insert(0, gaius)
-        else:
-            self.stoicDictionary['gaius'] = [gaius]
-
-        philo = max(rsi_values_two) - min(rsi_values_two)
-        if 'philo' in self.stoicDictionary:
-            self.stoicDictionary['philo'].insert(0, philo)
-        else:
-            self.stoicDictionary['philo'] = [philo]
-
-        if len(self.stoicDictionary['gaius']) < 3:
-            return None
-
-        hadot = sum(self.stoicDictionary['gaius'][:3]) / sum(self.stoicDictionary['philo'][:3]) * 100
-        if 'hadot' in self.stoicDictionary:
-            self.stoicDictionary['hadot'].insert(0, hadot)
-        else:
-            self.stoicDictionary['hadot'] = [hadot]
-
-        if len(self.stoicDictionary['hadot']) < 3:
-            return None
-
-        stoic = sum(self.stoicDictionary['zeno'][:3]) / sum(self.stoicDictionary['seneca'][:3]) * 100
-        marcus = sum(self.stoicDictionary['hadot'][:input3]) / input3
-
-        self.stoicDictionary['values'] = {
-            'marcus': round(marcus, self.precision),
-            'stoic': round(stoic, self.precision),
-            'seneca': round(seneca, self.precision),
-            'zeno': round(zeno, self.precision),
-            'gaius': round(gaius, self.precision),
-            'philo': round(philo, self.precision),
-            'hadot': round(hadot, self.precision),
-        }
-
-        if marcus > stoic:
-            self.stoicTrend = BEARISH
-        elif marcus < stoic:
-            self.stoicTrend = BULLISH
-        else:
-            self.stoicTrend = None
-
-    # noinspection DuplicatedCode
-    def shrek_strategy(self, one: int, two: int, three: int, four: int, update: bool = False):
-        """
-        New custom strategy.
-        :param update: Boolean to determine whether data needs to have current values or not.
-        :param one: Input 1.
-        :param two: Input 2.
-        :param three: Input 3.
-        :param four: Input 4.
-        :return: Strategy's current trend.
-        """
-        data = [rsi for rsi in [self.dataView.get_rsi(two, update=update, shift=x) for x in range(two + 1)]]
-        rsi_two = data[0]
-
-        apple = max(data) - min(data)
-        beetle = rsi_two - min(data)
-
-        if 'apple' in self.shrekDictionary:
-            self.shrekDictionary['apple'].append(apple)
-        else:
-            self.shrekDictionary['apple'] = [apple]
-
-        if 'beetle' in self.shrekDictionary:
-            self.shrekDictionary['beetle'].append(beetle)
-        else:
-            self.shrekDictionary['beetle'] = [beetle]
-
-        if len(self.shrekDictionary['apple']) < three + 1:
-            return
-        else:
-            carrot = sum(self.shrekDictionary['beetle'][:three + 1])
-            donkey = sum(self.shrekDictionary['apple'][:three + 1])
-            self.shrekDictionary['beetle'] = self.shrekDictionary['beetle'][1:]
-            self.shrekDictionary['apple'] = self.shrekDictionary['apple'][1:]
-            onion = carrot / donkey * 100
-
-            self.shrekDictionary['values'] = {
-                'apple': round(apple, self.precision),
-                'beetle': round(beetle, self.precision),
-                'carrot': round(carrot, self.precision),
-                'donkey': round(donkey, self.precision),
-                'onion': round(onion, self.precision)
-            }
-
-            if one > onion:
-                self.shrekTrend = BULLISH
-            elif onion > four:
-                self.shrekTrend = BEARISH
-            else:
-                self.shrekTrend = None
-
     # noinspection PyTypeChecker
     def main_logic(self, log_data=True):
         """
@@ -523,13 +412,13 @@ class SimulationTrader:
         """
         if self.stoicEnabled:
             try:
-                self.stoic_strategy(*self.stoicOptions)
+                self.strategies['stoic'].get_trend()
             except Exception as e:
                 raise ValueError(f"Invalid stoic options: {e} occurred.")
 
         if self.shrekEnabled:
             try:
-                self.shrek_strategy(*self.shrekOptions)
+                self.strategies['shrek'].get_trend()
             except Exception as e:
                 raise ValueError(f"Invalid shrek options: {e} occurred.")
 
@@ -548,15 +437,15 @@ class SimulationTrader:
 
             elif not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.stoicEnabled:
-                    if self.stoicTrend == BULLISH:
+                    if self.strategies['stoic'].trend == BULLISH:
                         if not self.shrekEnabled:
                             self.buy_short(f'Bought short because a cross and stoicism were detected.')
                             self.buy_long(f'Bought long because a cross and stoicism were detected.')
-                        elif self.shrekEnabled and self.shrekTrend == BULLISH:
+                        elif self.shrekEnabled and self.strategies['shrek'].trend == BULLISH:
                             self.buy_short(f'Bought short because a cross, shrek, and stoicism were detected.')
                             self.buy_long(f'Bought long because a cross, shrek, and stoicism were detected.')
                 elif self.shrekEnabled:
-                    if self.shrekTrend == BULLISH:
+                    if self.strategies['shrek'].trend == BULLISH:
                         self.buy_short(f'Bought short because a cross and shrek were detected.')
                         self.buy_long(f'Bought long because a cross and shrek were detected.')
                 else:
@@ -578,15 +467,15 @@ class SimulationTrader:
 
             elif not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.stoicEnabled:
-                    if self.stoicTrend == BEARISH:
+                    if self.strategies['stoic'].trend == BEARISH:
                         if not self.shrekEnabled:
                             self.sell_long(f'Sold long because a cross and stoicism were detected.')
                             self.sell_short('Sold short because a cross and stoicism were detected.')
-                        elif self.shrekEnabled and self.shrekTrend == BEARISH:
+                        elif self.shrekEnabled and self.strategies['shrek'].trend == BEARISH:
                             self.sell_long(f'Sold long because a cross, shrek, and stoicism were detected.')
                             self.sell_short('Sold short because a cross, shrek, and stoicism were detected.')
                 elif self.shrekEnabled:
-                    if self.shrekTrend == BEARISH:
+                    if self.strategies['shrek'].trend == BEARISH:
                         self.sell_long(f'Sold long because a cross and shrek were detected.')
                         self.sell_short('Sold short because a cross and shrek were detected.')
                 else:
@@ -607,15 +496,15 @@ class SimulationTrader:
             if not self.inHumanControl and self.check_cross(log_data=log_data):
                 if self.trend == BULLISH:  # This checks if we are bullish or bearish
                     if self.stoicEnabled:
-                        if self.stoicTrend == BULLISH:
+                        if self.strategies['stoic'].trend == BULLISH:
                             if not self.shrekEnabled:
                                 self.buy_long("Bought long because a cross and stoicism were detected.")
                                 self.reset_smart_stop_loss()
-                            elif self.shrekEnabled and self.shrekTrend == BULLISH:
+                            elif self.shrekEnabled and self.strategies['shrek'].trend == BULLISH:
                                 self.buy_long("Bought long because a cross, shrek, and stoicism were detected.")
                                 self.reset_smart_stop_loss()
                     elif self.shrekEnabled:
-                        if self.shrekTrend == BULLISH:
+                        if self.strategies['shrek'].trend == BULLISH:
                             self.buy_long("Bought long because a cross and shrek were detected.")
                             self.reset_smart_stop_loss()
                     else:
@@ -623,15 +512,15 @@ class SimulationTrader:
                         self.reset_smart_stop_loss()
                 elif self.trend == BEARISH:
                     if self.stoicEnabled:
-                        if self.stoicTrend == BEARISH:
+                        if self.strategies['stoic'].trend == BEARISH:
                             if not self.shrekEnabled:
                                 self.sell_short("Sold short because a cross and stoicism were detected.")
                                 self.reset_smart_stop_loss()
-                            elif self.shrekEnabled and self.shrekTrend == BEARISH:
+                            elif self.shrekEnabled and self.strategies['shrek'].trend == BEARISH:
                                 self.sell_short("Sold short because a cross, shrek, and stoicism were detected.")
                                 self.reset_smart_stop_loss()
                     elif self.shrekEnabled:
-                        if self.shrekTrend == BEARISH:
+                        if self.strategies['shrek'].trend == BEARISH:
                             self.sell_short("Sold short because a cross and shrek were detected.")
                             self.reset_smart_stop_loss()
                     else:
@@ -726,7 +615,7 @@ class SimulationTrader:
         """
         if not self.stoicEnabled:
             return 'None'
-        return f"{', '.join(map(str, self.stoicOptions))}"
+        return f"{', '.join(map(str, self.strategies['stoic'].get_params()))}"
 
     def get_shrek_inputs(self) -> str:
         """
@@ -735,7 +624,7 @@ class SimulationTrader:
         """
         if not self.shrekEnabled:
             return 'None'
-        return f"{', '.join(map(str, self.shrekOptions))}"
+        return f"{', '.join(map(str, self.strategies['shrek'].get_params()))}"
 
     def get_net(self) -> float:
         """
