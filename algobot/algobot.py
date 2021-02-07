@@ -848,9 +848,16 @@ class Interface(QMainWindow):
         """
         graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
         plot = graphDict['plots'][plotIndex]
-        plot['x'].append(plot['x'][-1] + 1)
-        plot['y'].append(y)
-        plot['z'].append(timestamp)
+
+        secondsInDay = 28800  # Reset graph every 8 hours.
+        if len(plot['x']) >= secondsInDay:
+            plot['x'] = [0]
+            plot['y'] = [y]
+            plot['z'] = [timestamp]
+        else:
+            plot['x'].append(plot['x'][-1] + 1)
+            plot['y'].append(y)
+            plot['z'].append(timestamp)
         plot['plot'].setData(plot['x'], plot['y'])
 
     def append_plot_to_graph(self, targetGraph: PlotWidget, toAdd: list):
