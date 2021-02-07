@@ -976,7 +976,7 @@ class Interface(QMainWindow):
         :param color: Color graph will be drawn in.
         """
         pen = mkPen(color=color)
-        plot = graph.plot(x, y, name=plotName, pen=pen)
+        plot = graph.plot(x, y, name=plotName, pen=pen, autoDownsample=True, downsampleMethod='subsample')
         plot.curve.scene().sigMouseMoved.connect(lambda point: self.onMouseMoved(point=point, graph=graph))
         return plot
 
