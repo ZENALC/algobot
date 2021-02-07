@@ -3275,7 +3275,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>3</number>
              </property>
              <property name="tabsClosable">
               <bool>false</bool>
@@ -4019,7 +4019,7 @@
                   <string>Plot moving averages and other indicators? (This will consume more RAM).</string>
                  </property>
                  <property name="checked">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>

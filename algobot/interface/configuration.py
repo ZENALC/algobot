@@ -18,6 +18,7 @@ class Configuration(QDialog):
     def __init__(self, parent=None, logger=None):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
+        self.parent = parent
         self.threadPool = QThreadPool()
         self.logger = logger
         self.data = None
@@ -27,6 +28,7 @@ class Configuration(QDialog):
         self.chatPass = False
         self.credentialsFolder = "Credentials"
         self.configFolder = 'Configuration'
+        self.basicFilePath = os.path.join(helpers.ROOT_DIR, 'state.json')
 
         self.load_slots()
         self.load_credentials()
@@ -105,6 +107,46 @@ class Configuration(QDialog):
             os.chdir(cur_path)
             return True
         return False
+
+    def load_state(self):
+        if os.path.exists(self.basicFilePath):
+            config = helpers.load_json_file(self.basicFilePath)
+
+            self.lightModeRadioButton.setChecked(config['lightTheme'])
+            self.darkModeRadioButton.setChecked(config['darkTheme'])
+            self.bloombergModeRadioButton.setChecked(config['bloombergTheme'])
+            self.bullModeRadioButton.setChecked(config['bullTheme'])
+            self.bearModeRadioButton.setChecked(config['bearTheme'])
+
+            self.balanceColor.setCurrentIndex(config['balanceColor'])
+            self.avg1Color.setCurrentIndex(config['avg1Color'])
+            self.avg2Color.setCurrentIndex(config['avg2Color'])
+            self.avg3Color.setCurrentIndex(config['avg3Color'])
+            self.avg4Color.setCurrentIndex(config['avg4Color'])
+            self.hoverLineColor.setCurrentIndex(config['lineColor'])
+
+            self.graphIndicatorsCheckBox.setChecked(config['averagePlot'])
+
+            if self.parent:
+                self.parent.add_to_live_activity_monitor('Loaded previous state successfully.')
+
+    def save_state(self):
+        config = {
+            'lightTheme': self.lightModeRadioButton.isChecked(),
+            'darkTheme': self.darkModeRadioButton.isChecked(),
+            'bloombergTheme': self.bloombergModeRadioButton.isChecked(),
+            'bullTheme': self.bullModeRadioButton.isChecked(),
+            'bearTheme': self.bearModeRadioButton.isChecked(),
+            'balanceColor': self.balanceColor.currentIndex(),
+            'avg1Color': self.avg1Color.currentIndex(),
+            'avg2Color': self.avg2Color.currentIndex(),
+            'avg3Color': self.avg3Color.currentIndex(),
+            'avg4Color': self.avg4Color.currentIndex(),
+            'lineColor': self.hoverLineColor.currentIndex(),
+            'averagePlot': self.graphIndicatorsCheckBox.isChecked(),
+        }
+
+        helpers.write_json_file(self.basicFilePath, **config)
 
     def load_credentials(self, auto=True):
         """

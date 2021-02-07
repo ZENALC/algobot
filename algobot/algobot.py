@@ -70,6 +70,7 @@ class Interface(QMainWindow):
         self.add_to_live_activity_monitor('Initialized interface.')
         self.load_tickers_and_news()
         self.homeTab.setCurrentIndex(0)
+        self.configuration.load_state()
 
     def inform_telegram(self, message):
         """
@@ -1147,6 +1148,7 @@ class Interface(QMainWindow):
         Close event override. Makes user confirm they want to end program if something is running live.
         :param event: close event
         """
+        self.configuration.save_state()
         qm = QMessageBox
         message = ""
         if self.simulationRunningLive and self.runningLive:
