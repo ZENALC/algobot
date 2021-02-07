@@ -247,7 +247,10 @@ class SimulationTrader:
         }
 
         if self.addTradeCallback:
-            self.addTradeCallback.emit(trade)
+            try:
+                self.addTradeCallback.emit(trade)
+            except AttributeError:  # This means bots was closed with closeEvent()
+                pass
 
         self.trades.append(trade)
         self.previousNet = finalNet
