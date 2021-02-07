@@ -1012,7 +1012,7 @@ class Interface(QMainWindow):
 
             if graphDict['plots'][0]['x'][-1] > xValue > graphDict['plots'][0]['x'][0]:
                 date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][xValue])
-                total = 'Datetime in UTC: ' + date_object.strftime("%m/%d/%Y, %H:%M:%S")
+                total = f'X: {xValue} Datetime in UTC: {date_object.strftime("%m/%d/%Y, %H:%M:%S")}'
 
                 for plotDict in graphDict['plots']:
                     total += f' {plotDict["name"]}: {plotDict["y"][xValue]}'

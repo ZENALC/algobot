@@ -139,10 +139,10 @@ class BacktestThread(QRunnable):
             backtester.currentPrice = period['open']
             backtester.main_logic()
             backtester.check_trend(seenData)
-            if backtester.stoicEnabled and len(seenData) > max(backtester.stoicOptions):
-                backtester.stoic_strategy(seenData, *backtester.stoicOptions)
+            if backtester.stoicEnabled:
+                backtester.strategies['stoic'].get_trend(seenData)
             if backtester.shrekEnabled:
-                backtester.shrek_strategy(seenData, *backtester.shrekOptions)
+                backtester.strategies['shrek'].get_trend(seenData)
 
             if index % divisor == 0:
                 self.signals.activity.emit(self.get_activity_dictionary(period=period, index=index, length=testLength))
