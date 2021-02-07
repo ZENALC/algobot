@@ -110,25 +110,31 @@ class Configuration(QDialog):
 
     def load_state(self):
         if os.path.exists(self.basicFilePath):
-            config = helpers.load_json_file(self.basicFilePath)
+            try:
+                config = helpers.load_json_file(self.basicFilePath)
 
-            self.lightModeRadioButton.setChecked(config['lightTheme'])
-            self.darkModeRadioButton.setChecked(config['darkTheme'])
-            self.bloombergModeRadioButton.setChecked(config['bloombergTheme'])
-            self.bullModeRadioButton.setChecked(config['bullTheme'])
-            self.bearModeRadioButton.setChecked(config['bearTheme'])
+                self.lightModeRadioButton.setChecked(config['lightTheme'])
+                self.darkModeRadioButton.setChecked(config['darkTheme'])
+                self.bloombergModeRadioButton.setChecked(config['bloombergTheme'])
+                self.bullModeRadioButton.setChecked(config['bullTheme'])
+                self.bearModeRadioButton.setChecked(config['bearTheme'])
 
-            self.balanceColor.setCurrentIndex(config['balanceColor'])
-            self.avg1Color.setCurrentIndex(config['avg1Color'])
-            self.avg2Color.setCurrentIndex(config['avg2Color'])
-            self.avg3Color.setCurrentIndex(config['avg3Color'])
-            self.avg4Color.setCurrentIndex(config['avg4Color'])
-            self.hoverLineColor.setCurrentIndex(config['lineColor'])
+                self.balanceColor.setCurrentIndex(config['balanceColor'])
+                self.avg1Color.setCurrentIndex(config['avg1Color'])
+                self.avg2Color.setCurrentIndex(config['avg2Color'])
+                self.avg3Color.setCurrentIndex(config['avg3Color'])
+                self.avg4Color.setCurrentIndex(config['avg4Color'])
+                self.hoverLineColor.setCurrentIndex(config['lineColor'])
 
-            self.graphIndicatorsCheckBox.setChecked(config['averagePlot'])
+                self.graphIndicatorsCheckBox.setChecked(config['averagePlot'])
 
-            if self.parent:
-                self.parent.add_to_live_activity_monitor('Loaded previous state successfully.')
+                if self.parent:
+                    self.parent.add_to_live_activity_monitor('Loaded previous state successfully.')
+            except Exception as e:
+                self.logger.exception(str(e))
+
+                if self.parent:
+                    self.parent.add_to_live_activity_monitor('Failed to load previous state.')
 
     def save_state(self):
         config = {
