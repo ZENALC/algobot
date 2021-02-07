@@ -778,16 +778,3 @@ class Backtester:
 
         os.chdir(currentPath)
         return filePath
-
-
-if __name__ == '__main__':
-    path = r'C:\Users\Mihir Shrestha\PycharmProjects\CryptoAlgo\CSV\BTCUSDT\BTCUSDT_data_1d.csv'
-    testData = load_from_csv(path)
-    opt = [Option('sma', 'high', 18, 24), Option('wma', 'low', 19, 23)]
-    a = Backtester(data=testData, startingBalance=1000, lossStrategy=STOP_LOSS, lossPercentage=99, options=opt,
-                   marginEnabled=True, startDate=datetime(2018, 1, 1), symbol="BTCUSDT")
-    # a.find_optimal_moving_average(15, 20)
-    a.moving_average_test()
-    a.print_trades()
-    # # a.print_stats()
-    a.write_results()
