@@ -390,8 +390,11 @@ class Interface(QMainWindow):
                     self.telegramBot.stop()
                     self.telegramBot = None
 
+                elapsed = time.time()
                 while not self.trader.completedLoop:
                     self.runningLive = False
+                    if time.time() + 15 > elapsed:
+                        break
 
                 tempTrader = self.trader
                 if self.lowerIntervalData:
