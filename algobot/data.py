@@ -423,14 +423,15 @@ class Data:
 
         self.data = temp_data + self.data
 
-    def update_data(self):
+    def update_data(self, verbose=False):
         """
         Updates run-time data with Binance API values.
         """
         latestDate = self.data[0]['date_utc']
         timestamp = int(latestDate.timestamp()) * 1000
         dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
-        self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
+        if verbose:
+            self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
         if not self.data_is_updated():
             # self.try_callback("Found new data. Attempting to update...")
             newData = []
@@ -438,7 +439,8 @@ class Data:
                 time.sleep(0.5)  # Sleep half a second for server to refresh new values.
                 newData = self.get_new_data(timestamp)
             self.insert_data(newData)
-            self.output_message("Data has been updated successfully.\n")
+            if verbose:
+                self.output_message("Data has been updated successfully.\n")
             # self.try_callback("Updated data successfully.")
         else:
             self.output_message("Data is up-to-date.\n")
