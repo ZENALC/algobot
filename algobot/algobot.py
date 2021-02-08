@@ -361,6 +361,8 @@ class Interface(QMainWindow):
 
     def end_bot_gracefully(self, caller, callback=None):
         tempTrader = None
+        elapsed = time.time()
+
         if caller == SIMULATION:
             self.simulationRunningLive = False
             if self.simulationTrader:
@@ -371,6 +373,8 @@ class Interface(QMainWindow):
 
                 while not self.simulationTrader.completedLoop:
                     self.simulationRunningLive = False
+                    if time.time() + 15 > elapsed:
+                        break
 
                 tempTrader = self.simulationTrader
                 if self.simulationLowerIntervalData:
@@ -390,7 +394,6 @@ class Interface(QMainWindow):
                     self.telegramBot.stop()
                     self.telegramBot = None
 
-                elapsed = time.time()
                 while not self.trader.completedLoop:
                     self.runningLive = False
                     if time.time() + 15 > elapsed:
