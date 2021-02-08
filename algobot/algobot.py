@@ -258,11 +258,12 @@ class Interface(QMainWindow):
         self.backtestLossStrategy.setText(statDict['stopLossStrategy'])
         self.backtestStartPeriod.setText(statDict['startPeriod'])
         self.backtestEndPeriod.setText(statDict['endPeriod'])
-        self.backtestMovingAverage1.setText(statDict['options'][0][0])
-        self.backtestMovingAverage2.setText(statDict['options'][0][1])
-        if len(statDict['options']) > 1:
-            self.backtestMovingAverage3.setText(statDict['options'][1][0])
-            self.backtestMovingAverage4.setText(statDict['options'][1][1])
+        if 'options' in statDict:
+            self.backtestMovingAverage1.setText(statDict['options'][0][0])
+            self.backtestMovingAverage2.setText(statDict['options'][0][1])
+            if len(statDict['options']) > 1:
+                self.backtestMovingAverage3.setText(statDict['options'][1][0])
+                self.backtestMovingAverage4.setText(statDict['options'][1][1])
 
     def setup_backtester(self, configurationDictionary: dict):
         """
@@ -419,7 +420,7 @@ class Interface(QMainWindow):
                 self.download_progress_update(value=0, message="Lower interval data download failed.", caller=caller)
 
         trader = self.get_trader(caller=caller)
-        if trader and not trader.dataView.downloadCompleted:
+        if trader and caller != BACKTEST and not trader.dataView.downloadCompleted:
             self.download_progress_update(value=0, message="Download failed.", caller=caller)
 
         if '-1021' in msg:

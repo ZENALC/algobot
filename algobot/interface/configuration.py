@@ -741,6 +741,15 @@ class Configuration(QDialog):
     def toggle_stoic_groupbox(self):
         self.toggle_groupbox(self.stoicCheckMark, self.stoicGroupBox)
 
+    def toggle_backtest_moving_average_groupbox(self):
+        self.toggle_groupbox(self.backtestMovingAverageCheckMark, self.backtestMovingAverageGroupBox)
+
+    def toggle_simulation_moving_average_groupbox(self):
+        self.toggle_groupbox(self.simulationMovingAverageCheckMark, self.simulationMovingAverageGroupBox)
+
+    def toggle_moving_average_groupbox(self):
+        self.toggle_groupbox(self.movingAverageCheckMark, self.movingAverageGroupBox)
+
     @staticmethod
     def toggle_groupbox(checkMark, groupBox):
         groupBox.setEnabled(checkMark.isChecked())
@@ -749,6 +758,10 @@ class Configuration(QDialog):
         """
         Loads all configuration interface slots.
         """
+        self.backtestMovingAverageCheckMark.toggled.connect(self.toggle_backtest_moving_average_groupbox)
+        self.simulationMovingAverageCheckMark.toggled.connect(self.toggle_simulation_moving_average_groupbox)
+        self.movingAverageCheckMark.toggled.connect(self.toggle_moving_average_groupbox)
+
         self.doubleCrossCheckMark.toggled.connect(self.toggle_double_cross_groupbox)
         self.simulationDoubleCrossCheckMark.toggled.connect(self.toggle_simulation_double_cross_groupbox)
         self.backtestDoubleCrossCheckMark.toggled.connect(self.toggle_backtest_double_cross_groupbox)

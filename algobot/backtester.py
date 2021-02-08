@@ -6,9 +6,8 @@ from typing import Dict
 from dateutil import parser
 from datetime import datetime
 from helpers import get_ups_and_downs
-from option import Option
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
-from strategies import StoicStrategy, Strategy, ShrekStrategy
+from strategies import StoicStrategy, Strategy, ShrekStrategy, MovingAverageStrategy
 from algorithms import get_sma, get_wma, get_ema
 
 
@@ -28,28 +27,31 @@ class Backtester:
         self.profit = 0
         self.marginEnabled = marginEnabled
         self.precision = precision
+        self.strategies: Dict[str, Strategy] = {}
 
         self.data = data
         self.check_data()
         self.interval = self.get_interval()
         self.lossStrategy = lossStrategy
         self.lossPercentageDecimal = lossPercentage / 100
-        self.tradingOptions = options
-        self.validate_options()
 
-        self.minPeriod = self.get_min_option_period()
-        self.trend = None
-
-        self.strategies: Dict[str, Strategy] = {}
+        if options:
+            strategy = MovingAverageStrategy(self, options, precision=precision)
+            self.strategies['movingAverage'] = strategy
+            self.minPeriod = strategy.get_min_option_period()
+            self.movingAverageEnabled = True
+        else:
+            self.minPeriod = 1
+            self.movingAverageEnabled = False
 
         if shrekOptions:
-            self.strategies['shrek'] = ShrekStrategy(self, *shrekOptions)
+            self.strategies['shrek'] = ShrekStrategy(self, *shrekOptions, precision=precision)
             self.shrekEnabled = True
         else:
             self.shrekEnabled = False
 
         if stoicOptions:
-            self.strategies['stoic'] = StoicStrategy(self, *stoicOptions)
+            self.strategies['stoic'] = StoicStrategy(self, *stoicOptions, precision=precision)
             self.stoicEnabled = True
         else:
             self.stoicEnabled = False
@@ -150,25 +152,6 @@ class Backtester:
         else:
             return -1
 
-    def get_min_option_period(self) -> int:
-        """
-        Returns the minimum period required to perform moving average calculations. For instance, if we needed to
-        calculate SMA(25), we need at least 25 periods of data, and we'll only be able to start from the 26th period.
-        :return: Minimum period of days required.
-        """
-        minimum = 0
-        for option in self.tradingOptions:
-            minimum = max(minimum, option.finalBound, option.initialBound)
-        return minimum
-
-    def validate_options(self):
-        """
-        Validates options provided. If the list of options provided does not contain all options, an error is raised.
-        """
-        for option in self.tradingOptions:
-            if type(option) != Option:
-                raise TypeError(f"'{option}' is not a valid option type.")
-
     def get_moving_average(self, data: list, average: str, prices: int, parameter: str) -> float:
         """
         Returns moving average of given parameters.
@@ -186,30 +169,6 @@ class Backtester:
             return self.get_wma(data, prices, parameter)
         else:
             raise ValueError('Invalid average provided.')
-
-    def check_trend(self, seenData):
-        """
-        Checks if there is a bullish or bearish trend with data provided and then sets object variable trend variable
-        respectively.
-        :param seenData: Data to use to check for trend.
-        """
-        trends = []  # trends seen so far; can be either BULLISH or BEARISH; they all have to be the same for a trend
-        for option in self.tradingOptions:
-            avg1 = self.get_moving_average(seenData, option.movingAverage, option.initialBound, option.parameter)
-            avg2 = self.get_moving_average(seenData, option.movingAverage, option.finalBound, option.parameter)
-            if avg1 > avg2:
-                trends.append(BULLISH)
-            elif avg1 < avg2:
-                trends.append(BEARISH)
-            else:  # this assumes they're equal
-                trends.append(None)
-
-        if all(trend == BULLISH for trend in trends):
-            self.trend = BULLISH
-        elif all(trend == BEARISH for trend in trends):
-            self.trend = BEARISH
-        else:
-            self.trend = None
 
     def go_long(self, msg):
         """
@@ -373,27 +332,6 @@ class Backtester:
     def reset_smart_stop_loss(self):
         self.stopLossCounter = self.initialStopLossCounter
 
-    def reset_everything(self):
-        """
-        Resets all data in backtest object.
-        """
-        self.balance = self.startingBalance
-        self.coin = 0
-        self.coinOwed = 0
-        self.commissionsPaid = 0
-        self.trades = []
-        self.currentPrice = None
-        self.transactionFeePercentage = 0.001
-        self.profit = 0
-        self.inLongPosition = False
-        self.inShortPosition = False
-        self.previousPosition = None
-        self.buyLongPrice = None
-        self.longTrailingPrice = None
-        self.sellShortPrice = None
-        self.shortTrailingPrice = None
-        self.currentPeriod = None
-
     def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> float:
         """
         Helper function to get the EMA for relative strength index and return the RSI.
@@ -494,82 +432,34 @@ class Backtester:
         Main logic that dictates how backtest works. It checks for stop losses and then moving averages to check for
         upcoming trends.
         """
-        if self.inShortPosition:  # This means we are in short position
-            if self.currentPrice > self.get_stop_loss():  # If current price is greater, then exit trade.
-                self.exit_short('Exited short because of a stop loss.', stopLossExit=True)
+        trends = [strategy.trend for strategy in self.strategies.values()]
+        if all(trend == BEARISH for trend in trends):
+            trend = BEARISH
+        elif all(trend == BULLISH for trend in trends):
+            trend = BULLISH
+        else:
+            trend = None
 
-            elif self.trend == BULLISH:
-                if self.stoicEnabled:
-                    if self.strategies['stoic'].trend == BULLISH:
-                        if not self.shrekEnabled:
-                            self.exit_short(f'Exited short because a cross and stoicism were detected.')
-                            self.go_long(f'Entered long because a cross and stoicism were detected.')
-                        elif self.shrekEnabled and self.strategies['shrek'].trend == BULLISH:
-                            self.exit_short(f'Exited short because a cross, shrek, and stoicism were detected.')
-                            self.go_long(f'Entered long because a cross, shrek, and stoicism were detected.')
-                elif self.shrekEnabled:
-                    if self.strategies['shrek'].trend == BULLISH:
-                        self.exit_short('Exited short because a cross and shrek was detected.')
-                        self.go_long('Entered long because a cross and shrek was detected.')
-                else:
-                    self.exit_short('Exited short because a cross was detected.')
-                    self.go_long('Entered long because a cross was detected.')
-        elif self.inLongPosition:  # This means we are in long position
-            if self.currentPrice < self.get_stop_loss():  # If current price is lower, then exit trade.
-                self.exit_long('Exited long because of a stop loss.', stopLossExit=True)
-            elif self.trend == BEARISH:
-                if self.stoicEnabled:
-                    if self.strategies['stoic'].trend == BEARISH:
-                        if not self.shrekEnabled:
-                            self.exit_long('Exited long because a cross and stoicism were detected.')
-                            if self.marginEnabled:
-                                self.go_short('Entered short because a cross and stoicism were detected.')
-                        elif self.shrekEnabled and self.strategies['shrek'].trend == BEARISH:
-                            self.exit_long('Exited long because a cross, shrek, and stoicism were detected.')
-                            if self.marginEnabled:
-                                self.go_short('Entered short because a cross, shrek, and stoicism were detected.')
-                elif self.shrekEnabled:
-                    if self.strategies['shrek'].trend == BEARISH:
-                        self.exit_long('Exited long because a cross and shrek was detected.')
-                        if self.marginEnabled:
-                            self.go_short('Entered short because a cross and shrek was detected.')
-                else:
-                    self.exit_long('Exited long because a cross was detected.')
-                    if self.marginEnabled:
-                        self.go_short('Entered short because a cross was detected.')
-        else:  # This means we are in neither position
-            if self.trend == BULLISH and self.previousPosition != LONG:
-                if self.stoicEnabled:
-                    if self.strategies['stoic'].trend == BULLISH:
-                        if not self.shrekEnabled:
-                            self.go_long('Entered long because a cross and stoicism were detected.')
-                            self.reset_smart_stop_loss()
-                        elif self.shrekEnabled and self.strategies['shrek'].trend == BULLISH:
-                            self.go_long('Entered long because a cross, shrek, and stoicism were detected.')
-                            self.reset_smart_stop_loss()
-                elif self.shrekEnabled:
-                    if self.strategies['shrek'].trend == BULLISH:
-                        self.go_long('Entered long because a cross and shrek were detected.')
-                        self.reset_smart_stop_loss()
-                else:
-                    self.go_long('Entered long because a cross was detected.')
-                    self.reset_smart_stop_loss()
-            elif self.marginEnabled and self.trend == BEARISH and self.previousPosition != SHORT:
-                if self.stoicEnabled:
-                    if self.strategies['stoic'].trend == BEARISH:
-                        if not self.shrekEnabled:
-                            self.go_short('Entered short because a cross and stoicism were detected.')
-                            self.reset_smart_stop_loss()
-                        elif self.shrekEnabled and self.strategies['shrek'].trend == BEARISH:
-                            self.go_short('Entered short because a cross, shrek, and stoicism were detected.')
-                            self.reset_smart_stop_loss()
-                elif self.shrekEnabled:
-                    if self.strategies['shrek'].trend == BEARISH:
-                        self.go_short('Entered short because a cross and shrek were detected.')
-                        self.reset_smart_stop_loss()
-                else:
-                    self.go_short('Entered short because a cross was detected.')
-                    self.reset_smart_stop_loss()
+        if self.inShortPosition:
+            if self.currentPrice > self.get_stop_loss():
+                self.exit_short('Exited short because a stop loss was triggered.', stopLossExit=True)
+            elif trend == BULLISH:
+                self.exit_short(f'Exited short because a bullish trend was detected.')
+                self.go_long(f'Entered long because a bullish trend was detected.')
+        elif self.inLongPosition:
+            if self.currentPrice < self.get_stop_loss():
+                self.exit_long('Exited long because a stop loss was triggered.', stopLossExit=True)
+            elif trend == BEARISH:
+                self.exit_long('Exited long because a bearish trend was detected,')
+                if self.marginEnabled:
+                    self.go_short('Entered short because a bearish trend was detected.')
+        else:
+            if trend == BULLISH and self.previousPosition != LONG:
+                self.go_long('Entered long because a bullish trend was were detected.')
+                self.reset_smart_stop_loss()
+            elif self.marginEnabled and trend == BEARISH and self.previousPosition != SHORT:
+                self.go_short('Entered short because a bearish trend was detected.')
+                self.reset_smart_stop_loss()
             else:
                 if self.previousPosition == LONG and self.stopLossExit:
                     if self.currentPrice > self.previousStopLoss and self.stopLossCounter > 0:
@@ -591,9 +481,12 @@ class Backtester:
             self.currentPeriod = period
             self.currentPrice = period['open']
             self.main_logic()
-            self.check_trend(seenData)
+            if self.movingAverageEnabled:
+                self.strategies['movingAverage'].get_trend(seenData)
             if self.stoicEnabled:
                 self.strategies['stoic'].get_trend(seenData)
+            if self.shrekEnabled:
+                self.strategies['shrek'].get_trend(seenData)
 
         if self.inShortPosition:
             self.exit_short('Exited short because of end of backtest.')
@@ -610,44 +503,16 @@ class Backtester:
         #     avg2 = self.get_wma(seenData, 5, 'open')
         #     print(avg1)
 
-    def find_optimal_moving_average(self, averageStart: int, averageLimit: int):
-        """
-        Runs extensive moving average tests and returns the one with best return percentages.
-        :return: A dictionary of values for the test.
-        """
-        self.balance = 0
-        results = []
-        movingAverages = ('wma', 'sma', 'ema')
-        params = ('high', 'low', 'open', 'close')
-        total = (averageLimit - averageStart + 1) ** 2 * 4 * 3
-        done = 0
-
-        t1 = time.time()
-
-        for limit1 in range(averageStart, averageLimit + 1):
-            for limit2 in range(averageStart, averageLimit + 1):
-                for movingAverage in movingAverages:
-                    for param in params:
-                        options = [Option(movingAverage, param, limit1, limit2)]
-                        self.reset_everything()
-                        self.tradingOptions = options
-                        self.moving_average_test()
-                        results.append((self.profit, options))
-                        done += 1
-                print(f'Done {round(done / total * 100, 2)}%')
-
-        print(time.time() - t1)
-
-        results.sort(key=lambda x: x[0], reverse=True)
-        print(results[:20])
-
     def print_options(self):
         """
         Prints out options provided in configuration.
         """
-        # print("Options:")
-        for index, option in enumerate(self.tradingOptions):
-            print(f'\tOption {index + 1}) {option.movingAverage.upper()}{option.initialBound, option.finalBound}'
+        if not self.movingAverageEnabled:
+            return
+
+        print("\tMoving Averages Options:")
+        for index, option in enumerate(self.strategies['movingAverage'].get_params()):
+            print(f'\t\tOption {index + 1}) {option.movingAverage.upper()}{option.initialBound, option.finalBound}'
                   f' - {option.parameter}')
 
     def print_configuration_parameters(self, stdout=None):

@@ -1,5 +1,6 @@
 from typing import List
 from enums import BEARISH, BULLISH
+from option import Option
 
 
 # Create your strategies here.
@@ -156,6 +157,8 @@ class ShrekStrategy(Strategy):
         parent = self.parent
 
         if data:
+            if len(data) <= self.two + 1:
+                return None
             data = [rsi for rsi in [parent.get_rsi(data, self.two, shift=x) for x in range(self.two + 1)]]
         else:
             d = parent.dataView
@@ -201,3 +204,55 @@ class ShrekStrategy(Strategy):
                 self.trend = None
 
             return self.trend
+
+
+class MovingAverageStrategy(Strategy):
+    def __init__(self, parent, tradingOptions, precision: int = 2):
+        super().__init__(name='movingAverage', parent=parent, precision=precision)
+        self.tradingOptions: List[Option] = tradingOptions
+        self.validate_options()
+
+    def get_min_option_period(self) -> int:
+        """
+        Returns the minimum period required to perform moving average calculations. For instance, if we needed to
+        calculate SMA(25), we need at least 25 periods of data, and we'll only be able to start from the 26th period.
+        :return: Minimum period of days required.
+        """
+        minimum = 0
+        for option in self.tradingOptions:
+            minimum = max(minimum, option.finalBound, option.initialBound)
+        return minimum
+
+    def get_params(self) -> list:
+        return self.tradingOptions
+
+    def get_trend(self, data: List[dict] = None) -> int:
+        parent = self.parent
+        trends = []  # Current option trends. They all have to be the same to register a trend.
+
+        for option in self.tradingOptions:
+            avg1 = parent.get_moving_average(data, option.movingAverage, option.initialBound, option.parameter)
+            avg2 = parent.get_moving_average(data, option.movingAverage, option.finalBound, option.parameter)
+            if avg1 > avg2:
+                trends.append(BULLISH)
+            elif avg1 < avg2:
+                trends.append(BEARISH)
+            else:  # If they're the same, that mean's no trend.
+                trends.append(None)
+
+        if all(trend == BULLISH for trend in trends):
+            self.trend = BULLISH
+        elif all(trend == BEARISH for trend in trends):
+            self.trend = BEARISH
+        else:
+            self.trend = None
+
+        return self.trend
+
+    def validate_options(self):
+        """
+        Validates options provided. If the list of options provided does not contain all options, an error is raised.
+        """
+        for option in self.tradingOptions:
+            if type(option) != Option:
+                raise TypeError(f"'{option}' is not a valid option type.")
