@@ -64,7 +64,7 @@ class BotThread(QRunnable):
         self.failed = False  # All these variables pertain to bot failures.
         self.failCount = 0
         self.failLimit = 10
-        self.failSleep = 3
+        self.failSleep = 6
         self.failError = ''
 
     def initialize_lower_interval_trading(self, caller, interval: str):
@@ -449,19 +449,27 @@ class BotThread(QRunnable):
         self.failError = str(e)  # This is the fail error that led to the crash.
         error_message = traceback.format_exc()  # Get error message.
 
-        self.signals.activity.emit(self.caller, str(e))  # Emit this message to GUI.
+        attemptsLeft = self.failLimit - self.failCount
+        s = self.failSleep
+        self.signals.activity.emit(self.caller, f'{e} {attemptsLeft} attempts left. Retrying in {s} seconds.')
         self.logger.critical(error_message)
 
         if trader:  # Log this message to the trader's log.
             trader.output_message(error_message, printMessage=True)
             trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
-            trader.output_message(f"({self.failCount})Trying again in {self.failSleep} seconds..", printMessage=True)
+            trader.output_message(f"({self.failCount})Trying again in {self.failSleep} seconds.", printMessage=True)
 
-        if self.gui.telegramBot and self.gui.configuration.chatPass:  # Send crash information through Telegram.
-            self.gui.telegramBot.send_message(self.telegramChatID, error_message)
-            self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
-            self.gui.telegramBot.send_message(self.telegramChatID, f"({self.failCount})Trying again in "
-                                                                   f"{self.failSleep} seconds..")
+        try:
+            if self.gui.telegramBot and self.gui.configuration.chatPass:  # Send crash information through Telegram.
+                self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
+                if self.failCount == self.failLimit:
+                    self.gui.telegramBot.send_message(self.telegramChatID, error_message)
+                    self.gui.telegramBot.send_message(self.telegramChatID, "Bot has died.")
+                else:
+                    failCount = self.failCount
+                    self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in {s} seconds.")
+        except Exception as e:
+            self.logger.critical(str(e))
 
         time.sleep(self.failSleep)  # Sleep for some seconds before reattempting a fix.
         trader.retrieve_margin_values()  # Update bot margin values.

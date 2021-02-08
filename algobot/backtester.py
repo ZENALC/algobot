@@ -152,9 +152,10 @@ class Backtester:
         else:
             return -1
 
-    def get_moving_average(self, data: list, average: str, prices: int, parameter: str) -> float:
+    def get_moving_average(self, data: list, average: str, prices: int, parameter: str, round_value=False) -> float:
         """
         Returns moving average of given parameters.
+        :param round_value: Boolean to round final value or not.
         :param data: Data to get moving averages from.
         :param average: Type of average to retrieve, i.e. -> SMA, WMA, EMA
         :param prices: Amount of prices to get moving averages of.
@@ -162,11 +163,11 @@ class Backtester:
         :return: Moving average.
         """
         if average.lower() == 'sma':
-            return self.get_sma(data, prices, parameter)
+            return self.get_sma(data, prices, parameter, round_value=round_value)
         elif average.lower() == 'ema':
-            return self.get_ema(data, prices, parameter)
+            return self.get_ema(data, prices, parameter, round_value=round_value)
         elif average.lower() == 'wma':
-            return self.get_wma(data, prices, parameter)
+            return self.get_wma(data, prices, parameter, round_value=round_value)
         else:
             raise ValueError('Invalid average provided.')
 

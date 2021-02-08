@@ -180,6 +180,7 @@ class SimulationTrader:
 
         if self.movingAverageEnabled:
             strategy = self.strategies['movingAverage']
+            precise = self.precision
             groupedDict['movingAverages'] = {
                 'trend': self.get_trend_string(strategy.trend),
                 'enabled': 'True',
@@ -187,14 +188,14 @@ class SimulationTrader:
 
             for optionDetail in self.optionDetails:
                 initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                groupedDict['movingAverages'][initialAverageLabel] = f'${initialAverage}'
-                groupedDict['movingAverages'][finalAverageLabel] = f'${finalAverage}'
+                groupedDict['movingAverages'][initialAverageLabel] = f'${round(initialAverage, precise)}'
+                groupedDict['movingAverages'][finalAverageLabel] = f'${round(finalAverage, precise)}'
 
             if self.lowerOptionDetails:
                 for optionDetail in self.lowerOptionDetails:
                     initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                    groupedDict['movingAverages'][f'Lower {initialAverageLabel}'] = f'${initialAverage}'
-                    groupedDict['movingAverages'][f'Lower {finalAverageLabel}'] = f'${finalAverage}'
+                    groupedDict['movingAverages'][f'Lower {initialAverageLabel}'] = f'${round(initialAverage, precise)}'
+                    groupedDict['movingAverages'][f'Lower {finalAverageLabel}'] = f'${round(finalAverage, precise)}'
 
         if self.shrekEnabled:
             strategy = self.strategies['shrek']
@@ -643,9 +644,10 @@ class SimulationTrader:
         return self.currentPosition
 
     def get_average(self, movingAverage: str, parameter: str, value: int, dataObject: Data = None,
-                    update: bool = True) -> float:
+                    update: bool = True, round_value=False) -> float:
         """
         Returns the moving average with parameter and value provided
+        :param round_value: Boolean for whether returned value should be rounded or not.
         :param update: Boolean for whether average will call the API to get latest values or not.
         :param dataObject: Data object to be used to get moving averages.
         :param movingAverage: Moving average to get the average from the data view.
@@ -657,11 +659,11 @@ class SimulationTrader:
             dataObject = self.dataView
 
         if movingAverage == 'SMA':
-            return dataObject.get_sma(value, parameter, update=update)
+            return dataObject.get_sma(value, parameter, update=update, round_value=round_value)
         elif movingAverage == 'WMA':
-            return dataObject.get_wma(value, parameter, update=update)
+            return dataObject.get_wma(value, parameter, update=update, round_value=round_value)
         elif movingAverage == 'EMA':
-            return dataObject.get_ema(value, parameter, update=update)
+            return dataObject.get_ema(value, parameter, update=update, round_value=round_value)
         else:
             raise ValueError(f'Unknown moving average {movingAverage}.')
 
