@@ -1,8 +1,10 @@
+import time
 import assets
 import sys
 import os
 import webbrowser
 
+from typing import List
 from helpers import ROOT_DIR, open_file_or_folder, get_logger
 from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
@@ -71,6 +73,9 @@ class Interface(QMainWindow):
         self.load_tickers_and_news()
         self.homeTab.setCurrentIndex(0)
         self.configuration.load_state()
+
+        self.graphUpdateSeconds = 1
+        self.graphUpdateSchedule: List[float or None] = [None, None]  # LIVE, SIM
 
     def inform_telegram(self, message):
         """
@@ -508,11 +513,14 @@ class Interface(QMainWindow):
         mainInterfaceDictionary['tickerValue'].setText(valueDict['tickerValue'])
         mainInterfaceDictionary['positionValue'].setText(valueDict['currentPositionValue'])
 
-        self.update_graphs_and_moving_averages(caller=caller, valueDict=valueDict)
+        index = 0 if caller == LIVE else 1
+        if self.graphUpdateSchedule[index] is None or time.time() > self.graphUpdateSchedule[index]:
+            self.update_main_graphs(caller=caller, valueDict=valueDict)
+            self.graphUpdateSchedule[index] = time.time() + self.graphUpdateSeconds
 
-    def update_graphs_and_moving_averages(self, caller, valueDict):
+    def update_main_graphs(self, caller, valueDict):
         """
-        Updates graphs and moving averages in statistics based on caller.
+        Updates graphs and moving averages from statistics based on caller.
         :param valueDict: Dictionary with required values.
         :param caller: Caller that decides which graphs get updated.
         """
@@ -851,7 +859,7 @@ class Interface(QMainWindow):
         graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
         plot = graphDict['plots'][plotIndex]
 
-        secondsInDay = 28800  # Reset graph every 8 hours.
+        secondsInDay = 86400  # Reset graph every 24 hours (assuming data is updated only once a second).
         if len(plot['x']) >= secondsInDay:
             plot['x'] = [0]
             plot['y'] = [y]

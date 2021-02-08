@@ -754,6 +754,11 @@ class Configuration(QDialog):
     def toggle_groupbox(checkMark, groupBox):
         groupBox.setEnabled(checkMark.isChecked())
 
+    def update_graph_speed(self):
+        graphSpeed = self.graphPlotSpeedSpinBox.value()
+        self.parent.graphUpdateSeconds = graphSpeed
+        self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graphSpeed} seconds.")
+
     def load_slots(self):
         """
         Loads all configuration interface slots.
@@ -797,3 +802,5 @@ class Configuration(QDialog):
         self.loadConfigurationButton.clicked.connect(self.load_live_settings)
         self.backtestSaveConfigurationButton.clicked.connect(self.save_backtest_settings)
         self.backtestLoadConfigurationButton.clicked.connect(self.load_backtest_settings)
+
+        self.graphPlotSpeedSpinBox.valueChanged.connect(self.update_graph_speed)
