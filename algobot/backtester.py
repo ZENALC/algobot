@@ -455,7 +455,7 @@ class Backtester:
                     self.go_short('Entered short because a bearish trend was detected.')
         else:
             if trend == BULLISH and self.previousPosition != LONG:
-                self.go_long('Entered long because a bullish trend was were detected.')
+                self.go_long('Entered long because a bullish trend was detected.')
                 self.reset_smart_stop_loss()
             elif self.marginEnabled and trend == BEARISH and self.previousPosition != SHORT:
                 self.go_short('Entered short because a bearish trend was detected.')
