@@ -189,7 +189,6 @@ class TelegramBot:
                 f'Smart Stop Loss Initial Counter: {trader.smartStopLossInitialCounter}\n'
                 f'Smart Stop Loss Counter: {trader.smartStopLossCounter}\n'
                 f'Stop Loss Safety Timer: {trader.safetyTimer}\n'
-                f'Moving Averages Trend: {trader.get_trend_string(trader.trend)}\n'
                 f'{optionString}'
                 )
 

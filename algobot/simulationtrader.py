@@ -7,7 +7,7 @@ from typing import Dict
 from helpers import get_logger, convert_interval_to_string
 from data import Data
 from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
-from strategies import Strategy, ShrekStrategy, StoicStrategy
+from strategies import Strategy, ShrekStrategy, StoicStrategy, MovingAverageStrategy
 
 
 class SimulationTrader:
@@ -48,10 +48,6 @@ class SimulationTrader:
         self.lock = Lock()
         self.addTradeCallback = addTradeCallback
 
-        self.tradingOptions = []  # List with Option elements. Helps specify what moving averages to trade with.
-        self.optionDetails = []  # Current option values. Holds most recent option values.
-        self.lowerOptionDetails = []  # Lower option values. Holds lower interval option values (if exist).
-        self.trend = None  # 1 is bullish, -1 is bearish; fully handled with enums.
         self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
         self.endingTime = None  # Ending time for previous bot run.
@@ -78,7 +74,12 @@ class SimulationTrader:
         self.previousPosition = None  # Previous position to validate for a cross.
 
         self.strategies: Dict[str, Strategy] = {}
+        self.trend = None
 
+        self.optionDetails = []  # Current option values. Holds most recent option values.
+        self.lowerOptionDetails = []  # Lower option values. Holds lower interval option values (if exist).
+
+        self.movingAverageEnabled = False
         self.shrekEnabled = False  # Boolean that holds whether shrek trading is enabled or not.
         self.stoicEnabled = False  # Boolean that holds whether stoic trading is enabled or not.
 
@@ -89,6 +90,9 @@ class SimulationTrader:
         elif name == 'stoic':
             self.stoicEnabled = True
             self.strategies['stoic'] = StoicStrategy(self, *options)
+        elif name == 'movingAverage':
+            self.movingAverageEnabled = True
+            self.strategies['movingAverage'] = MovingAverageStrategy(self, options)
         else:
             raise ValueError("Unknown strategy.")
 
@@ -137,6 +141,7 @@ class SimulationTrader:
                 'position': self.get_position_string(),
                 'autonomous': str(not self.inHumanControl),
                 'precision': str(self.precision),
+                'trend': self.get_trend_string(self.trend)
             },
             'stopLoss': {
                 'lossPercentage': self.get_safe_rounded_string(self.lossPercentageDecimal, direction='right',
@@ -173,9 +178,11 @@ class SimulationTrader:
                 'takerBuyQuoteAsset': str(round(self.dataView.current_values['taker_buy_quote_asset'], self.precision)),
             }
 
-        if self.optionDetails:
+        if self.movingAverageEnabled:
+            strategy = self.strategies['movingAverage']
             groupedDict['movingAverages'] = {
-                'trend': self.get_trend_string(self.trend),
+                'trend': self.get_trend_string(strategy.trend),
+                'enabled': 'True',
             }
 
             for optionDetail in self.optionDetails:
@@ -403,6 +410,24 @@ class SimulationTrader:
             self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
             self.add_trade(msg, force=force, smartEnter=smartEnter)
 
+    def get_trend(self, dataObject=None, log_data=False):
+        if not dataObject:
+            dataObject = self.dataView
+
+        trends = [strategy.get_trend(data=dataObject, log_data=log_data) for strategy in self.strategies.values()]
+
+        if len(trends) == 0:
+            return None
+
+        if all(trend == BEARISH for trend in trends):
+            trend = BEARISH
+        elif all(trend == BULLISH for trend in trends):
+            trend = BULLISH
+        else:
+            trend = None
+
+        return trend
+
     # noinspection PyTypeChecker
     def main_logic(self, log_data=True):
         """
@@ -410,19 +435,9 @@ class SimulationTrader:
         If there is a trend and the previous position did not reflect the trend, the bot enters position.
         :param log_data: Boolean that will determine where data is logged or not.
         """
-        if self.stoicEnabled:
-            try:
-                self.strategies['stoic'].get_trend()
-            except Exception as e:
-                raise ValueError(f"Invalid stoic options: {e} occurred.")
+        self.trend = trend = self.get_trend(log_data=log_data)
 
-        if self.shrekEnabled:
-            try:
-                self.strategies['shrek'].get_trend()
-            except Exception as e:
-                raise ValueError(f"Invalid shrek options: {e} occurred.")
-
-        if self.currentPosition == SHORT:  # This means we are in short position
+        if self.currentPosition == SHORT:
             if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
                 self.buy_short(f'Bought short because of custom stop loss.')
             elif self.get_stop_loss() is not None and self.currentPrice >= self.get_stop_loss():
@@ -434,27 +449,13 @@ class SimulationTrader:
                     else:
                         if time.time() > self.scheduledSafetyTimer:
                             self.buy_short(f'Bought short because of stop loss and safety timer.', stopLossExit=True)
+            elif not self.inHumanControl and trend == BULLISH:
+                self.buy_short(f'Bought short because a bullish trend was detected.')
+                self.buy_long(f'Bought long because a bullish trend was detected.')
 
-            elif not self.inHumanControl and self.check_cross(log_data=log_data):
-                if self.stoicEnabled:
-                    if self.strategies['stoic'].trend == BULLISH:
-                        if not self.shrekEnabled:
-                            self.buy_short(f'Bought short because a cross and stoicism were detected.')
-                            self.buy_long(f'Bought long because a cross and stoicism were detected.')
-                        elif self.shrekEnabled and self.strategies['shrek'].trend == BULLISH:
-                            self.buy_short(f'Bought short because a cross, shrek, and stoicism were detected.')
-                            self.buy_long(f'Bought long because a cross, shrek, and stoicism were detected.')
-                elif self.shrekEnabled:
-                    if self.strategies['shrek'].trend == BULLISH:
-                        self.buy_short(f'Bought short because a cross and shrek were detected.')
-                        self.buy_long(f'Bought long because a cross and shrek were detected.')
-                else:
-                    self.buy_short(f'Bought short because a cross was detected.')
-                    self.buy_long(f'Bought long because a cross was detected.')
         elif self.currentPosition == LONG:  # This means we are in long position
             if self.customStopLoss is not None and self.currentPrice <= self.customStopLoss:
                 self.sell_long(f'Sold long because of custom stop loss.')
-
             elif self.get_stop_loss() is not None and self.currentPrice <= self.get_stop_loss():
                 if not self.safetyTimer:
                     self.sell_long(f'Sold long because of stop loss.', stopLossExit=True)
@@ -464,24 +465,11 @@ class SimulationTrader:
                     else:
                         if time.time() > self.scheduledSafetyTimer:
                             self.sell_long(f'Sold long because of stop loss and safety timer.', stopLossExit=True)
+            elif not self.inHumanControl and trend == BEARISH:
+                self.sell_long(f'Sold long because a cross was detected.')
+                self.sell_short('Sold short because a cross was detected.')
 
-            elif not self.inHumanControl and self.check_cross(log_data=log_data):
-                if self.stoicEnabled:
-                    if self.strategies['stoic'].trend == BEARISH:
-                        if not self.shrekEnabled:
-                            self.sell_long(f'Sold long because a cross and stoicism were detected.')
-                            self.sell_short('Sold short because a cross and stoicism were detected.')
-                        elif self.shrekEnabled and self.strategies['shrek'].trend == BEARISH:
-                            self.sell_long(f'Sold long because a cross, shrek, and stoicism were detected.')
-                            self.sell_short('Sold short because a cross, shrek, and stoicism were detected.')
-                elif self.shrekEnabled:
-                    if self.strategies['shrek'].trend == BEARISH:
-                        self.sell_long(f'Sold long because a cross and shrek were detected.')
-                        self.sell_short('Sold short because a cross and shrek were detected.')
-                else:
-                    self.sell_long(f'Sold long because a cross was detected.')
-                    self.sell_short('Sold short because a cross was detected.')
-        else:  # This means we are in neither position
+        else:  # This means we are in neither position.
             if self.stopLossExit and self.smartStopLossCounter > 0:
                 if self.previousPosition == LONG:
                     if self.currentPrice > self.previousStopLoss:
@@ -493,39 +481,14 @@ class SimulationTrader:
                         self.sell_short("Reentered short because of smart stop loss.", smartEnter=True)
                         self.smartStopLossCounter -= 1
                         return
-            if not self.inHumanControl and self.check_cross(log_data=log_data):
-                if self.trend == BULLISH:  # This checks if we are bullish or bearish
-                    if self.stoicEnabled:
-                        if self.strategies['stoic'].trend == BULLISH:
-                            if not self.shrekEnabled:
-                                self.buy_long("Bought long because a cross and stoicism were detected.")
-                                self.reset_smart_stop_loss()
-                            elif self.shrekEnabled and self.strategies['shrek'].trend == BULLISH:
-                                self.buy_long("Bought long because a cross, shrek, and stoicism were detected.")
-                                self.reset_smart_stop_loss()
-                    elif self.shrekEnabled:
-                        if self.strategies['shrek'].trend == BULLISH:
-                            self.buy_long("Bought long because a cross and shrek were detected.")
-                            self.reset_smart_stop_loss()
-                    else:
-                        self.buy_long("Bought long because a cross was detected.")
-                        self.reset_smart_stop_loss()
-                elif self.trend == BEARISH:
-                    if self.stoicEnabled:
-                        if self.strategies['stoic'].trend == BEARISH:
-                            if not self.shrekEnabled:
-                                self.sell_short("Sold short because a cross and stoicism were detected.")
-                                self.reset_smart_stop_loss()
-                            elif self.shrekEnabled and self.strategies['shrek'].trend == BEARISH:
-                                self.sell_short("Sold short because a cross, shrek, and stoicism were detected.")
-                                self.reset_smart_stop_loss()
-                    elif self.shrekEnabled:
-                        if self.strategies['shrek'].trend == BEARISH:
-                            self.sell_short("Sold short because a cross and shrek were detected.")
-                            self.reset_smart_stop_loss()
-                    else:
-                        self.sell_short("Sold short because a cross was detected.")
-                        self.reset_smart_stop_loss()
+
+            if not self.inHumanControl:
+                if trend == BULLISH and self.previousPosition != LONG:
+                    self.buy_long("Bought long because a bullish trend was detected.")
+                    self.reset_smart_stop_loss()
+                elif trend == BEARISH and self.previousPosition != SHORT:
+                    self.sell_short("Sold short because a bearish trend was detected.")
+                    self.reset_smart_stop_loss()
 
     def reset_smart_stop_loss(self):
         """
@@ -734,97 +697,18 @@ class SimulationTrader:
 
         return self.stopLoss
 
-    def get_trend(self, dataObject: Data = None, log_data=True) -> int or None:
-        """
-        Checks whether there is a trend or not.
-        :param log_data: Boolean that will determine if data will be logged or not.
-        :param dataObject: Data object to be used to check if there is a trend or not.
-        :return: Integer specifying trend.
-        """
-        if len(self.tradingOptions) == 0:  # Checking whether options exist.
-            raise ValueError("No trading options provided.")
-
-        trends = []
-        if not dataObject:
-            dataObject = self.dataView
-
-        if not dataObject.data_is_updated():
-            dataObject.update_data()
-
-        if dataObject == self.dataView:
-            self.optionDetails = []
-        else:
-            self.lowerOptionDetails = []
-
-        for option in self.tradingOptions:
-            movingAverage, parameter, initialBound, finalBound = option.get_all_params()
-            initialAverage = self.get_average(movingAverage, parameter, initialBound, dataObject, update=False)
-            finalAverage = self.get_average(movingAverage, parameter, finalBound, dataObject, update=False)
-            initialName, finalName = option.get_pretty_option()
-
-            if dataObject == self.dataView:
-                if log_data:
-                    self.output_message(f'Regular interval ({dataObject.interval}) data:')
-                self.optionDetails.append((initialAverage, finalAverage, initialName, finalName))
-            else:
-                if log_data:
-                    self.output_message(f'Lower interval ({dataObject.interval}) data:')
-                self.lowerOptionDetails.append((initialAverage, finalAverage, initialName, finalName))
-
-            if log_data:
-                self.output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
-                self.output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
-
-            if initialAverage > finalAverage:
-                trends.append(BULLISH)
-            elif initialAverage < finalAverage:
-                trends.append(BEARISH)
-            else:
-                trends.append(None)
-
-        if all(trend == BULLISH for trend in trends):
-            return BULLISH
-        elif all(trend == BEARISH for trend in trends):
-            return BEARISH
-        else:
-            return None
-
-    def check_cross(self, dataObject: Data = None, log_data=True) -> bool:
-        """
-        Checks whether there is a true cross or not. If there is a trend, but the same trend was in the previous
-        position, no action is taken.
-        :param log_data: Boolean that will determine whether data is logged or not.
-        :param dataObject: Data object to be used to check if there is a trend or not.
-        :return: Boolean whether there is a cross or not.
-        """
-        self.trend = self.get_trend(dataObject, log_data=log_data)  # Get the trend.
-        if self.trend == BULLISH:  # If the sign is bullish; meaning enter long.
-            if self.currentPosition == LONG:  # We are already in a long position.
-                return False
-            elif self.currentPosition is None and self.previousPosition == LONG:  # This means stop loss occurred.
-                return False
-            else:  # We were not in a long position before, so this is a sign to enter.
-                return True
-        elif self.trend == BEARISH:  # If the sign is bearish; meaning enter short.
-            if self.currentPosition == SHORT:  # We are already in a short position.
-                return False
-            elif self.currentPosition is None and self.previousPosition == SHORT:  # This means stop loss occurred.
-                return False
-            else:  # We were not in a short position before, so this is a sign to enter.
-                return True
-        return False  # There is no trend, so don't do anything.
-
     def output_trade_options(self):
         """
         Outputs general information about current trade options.
         """
-        for option in self.tradingOptions:
-            initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound)
-            finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound)
+        if self.movingAverageEnabled:
+            for option in self.strategies['movingAverage'].get_params():
+                initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound)
+                finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound)
 
-            self.output_message(f'Parameter: {option.parameter}')
-            self.output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
-            self.output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
+                self.output_message(f'Parameter: {option.parameter}')
+                self.output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
+                self.output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
 
     def output_no_position_information(self):
         """
@@ -976,9 +860,10 @@ class SimulationTrader:
         if self.stoicEnabled:
             self.output_message(f'Stoic Inputs: {self.get_stoic_inputs()}')
 
-        self.output_message("\nMoving Average Info:")
-        for option in self.tradingOptions:
-            self.output_message("\t" + ', '.join(option.get_pretty_option()))
+        if self.movingAverageEnabled:
+            self.output_message("\nMoving Average Info:")
+            for option in self.strategies['movingAverage'].get_params():
+                self.output_message("\t" + ', '.join(option.get_pretty_option()))
 
         self.output_message('\nEnd of Configuration')
         self.output_message('---------------------------------------------------')

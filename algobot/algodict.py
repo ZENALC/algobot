@@ -73,6 +73,7 @@ def get_interface_dictionary(parent, caller: int = None):
                 'shrekInput4': parent.configuration.simulationShrekSpinBox4,
                 'safetyTimer': parent.configuration.simulationSafetyTimerSpinBox,
                 'precision': parent.configuration.simulationPrecisionSpinBox,
+                'movingAverageCheck': parent.configuration.simulationMovingAverageCheckMark,
             }
         },
         LIVE: {
@@ -138,6 +139,7 @@ def get_interface_dictionary(parent, caller: int = None):
                 'shrekInput4': parent.configuration.shrekSpinBox4,
                 'safetyTimer': parent.configuration.safetyTimerSpinBox,
                 'precision': parent.configuration.precisionSpinBox,
+                'movingAverageCheck': parent.configuration.movingAverageCheckMark,
             }
         },
         BACKTEST: {

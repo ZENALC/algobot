@@ -212,9 +212,12 @@ class BotThread(QRunnable):
         trader: SimulationTrader = self.gui.get_trader(caller)
         configDict = self.gui.interfaceDictionary[caller]['configuration']
         trader.lossStrategy, trader.lossPercentageDecimal = self.gui.get_loss_settings(caller)
-        trader.tradingOptions = self.gui.get_trading_options(caller)
         trader.set_safety_timer(configDict['safetyTimer'].value())
         trader.set_smart_stop_loss_counter(configDict['smartStopLossCounter'].value())
+
+        if configDict['movingAverageCheck'].isChecked():
+            options = self.gui.get_trading_options(caller)
+            trader.set_strategy('movingAverage', options)
 
         if configDict['stoicCheck'].isChecked():
             options = [
@@ -370,7 +373,7 @@ class BotThread(QRunnable):
         groupedDict['general']['dailyPercentage'] = f'{round(self.dailyPercentage, 2)}%'
 
         if trader.lowerOptionDetails:
-            groupedDict['movingAverages']['lowerTrend'] = self.lowerTrend
+            groupedDict['general']['lowerTrend'] = self.lowerTrend
 
         valueDict = {
             'profitLossLabel': trader.get_profit_or_loss_string(profit=profit),

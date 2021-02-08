@@ -906,14 +906,17 @@ class Interface(QMainWindow):
         currentPrice = trader.currentPrice
         currentDateTimestamp = datetime.utcnow().timestamp()
         colorCounter = 1
-        for option in trader.tradingOptions:
-            initialAverage, finalAverage, initialName, finalName = self.get_option_info(option, trader)
-            initialPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter], y=initialAverage,
-                                                       name=initialName, timestamp=currentDateTimestamp)
-            secondaryPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter + 1], y=finalAverage,
-                                                         name=finalName, timestamp=currentDateTimestamp)
-            colorCounter += 2
-            self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
+
+        if trader.movingAverageEnabled:
+            for option in trader.strategies['movingAverage'].get_params():
+                initialAverage, finalAverage, initialName, finalName = self.get_option_info(option, trader)
+                initialPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter], y=initialAverage,
+                                                           name=initialName, timestamp=currentDateTimestamp)
+                secondaryPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter + 1],
+                                                             y=finalAverage,
+                                                             name=finalName, timestamp=currentDateTimestamp)
+                colorCounter += 2
+                self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
 
         tickerPlotDict = self.get_plot_dictionary(graph=graph, color=colors[0], y=currentPrice, name=trader.symbol,
                                                   timestamp=currentDateTimestamp)

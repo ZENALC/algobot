@@ -427,12 +427,12 @@ class Backtester:
             return round(ema, self.precision)
         return ema
 
-    def main_logic(self):
-        """
-        Main logic that dictates how backtest works. It checks for stop losses and then moving averages to check for
-        upcoming trends.
-        """
+    def get_trend(self):
         trends = [strategy.trend for strategy in self.strategies.values()]
+
+        if len(trends) == 0:
+            return None
+
         if all(trend == BEARISH for trend in trends):
             trend = BEARISH
         elif all(trend == BULLISH for trend in trends):
@@ -440,6 +440,14 @@ class Backtester:
         else:
             trend = None
 
+        return trend
+
+    def main_logic(self):
+        """
+        Main logic that dictates how backtest works. It checks for stop losses and then moving averages to check for
+        upcoming trends.
+        """
+        trend = self.get_trend()
         if self.inShortPosition:
             if self.currentPrice > self.get_stop_loss():
                 self.exit_short('Exited short because a stop loss was triggered.', stopLossExit=True)
