@@ -130,6 +130,7 @@ class BacktestThread(QRunnable):
         """
         Performs a moving average test with given configurations.
         """
+        limit = 1000  # Data limit.
         backtester = self.gui.backtester
         backtester.movingAverageTestStartTime = time.time()
         seenData = backtester.data[:backtester.minPeriod][::-1]  # Start from minimum previous period data.
@@ -140,6 +141,9 @@ class BacktestThread(QRunnable):
             divisor += 1
 
         for index, period in enumerate(backtestPeriod):
+            if len(seenData) >= limit:
+                seenData = seenData[:limit // 2]
+
             seenData.insert(0, period)
             backtester.currentPeriod = period
             backtester.currentPrice = period['open']
