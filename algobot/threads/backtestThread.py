@@ -1,5 +1,4 @@
 import time
-import traceback
 
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 from backtester import Backtester
@@ -15,9 +14,11 @@ class BacktestSignals(QObject):
 
 
 class BacktestThread(QRunnable):
-    def __init__(self, gui):
+    def __init__(self, gui, logger):
         super(BacktestThread, self).__init__()
         self.gui = gui
+        self.logger = logger
+        self.running = True
         self.signals = BacktestSignals()
 
     def get_configuration_details_to_setup_backtest(self) -> dict:
@@ -50,6 +51,7 @@ class BacktestThread(QRunnable):
             'shrekEnabled': config.backtestShrekCheckMark.isChecked(),
             'shrekOptions': shrekOptions,
             'precision': config.backtestPrecisionSpinBox.value(),
+            'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
             'movingAverageEnabled': config.backtestMovingAverageCheckMark.isChecked(),
         }
 
@@ -122,9 +124,13 @@ class BacktestThread(QRunnable):
                                          precision=configDetails['precision'],
                                          options=options,
                                          stoicOptions=stoicOptions,
-                                         shrekOptions=shrekOptions)
+                                         shrekOptions=shrekOptions,
+                                         outputTrades=configDetails['outputTrades'])
         self.gui.backtester.set_stop_loss_counter(configDetails['smartStopLossCounter'])
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
+
+    def stop(self):
+        self.running = False
 
     def backtest(self):
         """
@@ -141,6 +147,9 @@ class BacktestThread(QRunnable):
             divisor += 1
 
         for index, period in enumerate(backtestPeriod):
+            if not self.running:
+                raise RuntimeError("Backtest was canceled.")
+
             if len(seenData) >= limit:
                 seenData = seenData[:limit // 2]
 
@@ -148,6 +157,9 @@ class BacktestThread(QRunnable):
             backtester.currentPeriod = period
             backtester.currentPrice = period['open']
             backtester.main_logic()
+
+            if backtester.get_net() <= 1:
+                raise RuntimeError("Backtester ran out of money. Try changing your strategy or date interval.")
 
             if backtester.movingAverageEnabled:
                 backtester.strategies['movingAverage'].get_trend(seenData)
@@ -181,8 +193,7 @@ class BacktestThread(QRunnable):
             self.backtest()
             self.signals.finished.emit()
         except Exception as e:
-            print(f'Error: {e}')
-            traceback.print_exc()
+            self.logger.exception(str(e))
             self.signals.error.emit(BACKTEST, str(e))
         finally:
             self.signals.restore.emit()

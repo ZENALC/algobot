@@ -4,7 +4,7 @@ import sys
 import os
 import webbrowser
 
-from typing import List
+from typing import List, Dict
 from helpers import ROOT_DIR, open_file_or_folder, get_logger
 from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
@@ -24,7 +24,7 @@ from algodict import get_interface_dictionary
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem, QFileDialog
-from PyQt5.QtCore import QThreadPool
+from PyQt5.QtCore import QThreadPool, QRunnable
 from PyQt5.QtGui import QIcon, QTextCursor
 from pyqtgraph import mkPen, PlotWidget, InfiniteLine
 
@@ -48,6 +48,7 @@ class Interface(QMainWindow):
         self.about = About(self)  # Loading about information
         self.statistics = Statistics(self)  # Loading statistics
         self.threadPool = QThreadPool(self)  # Initiating threading pool
+        self.threads: Dict[int, QRunnable or None] = {BACKTEST: None, SIMULATION: None, LIVE: None}
         self.graphs = (
             {'graph': self.simulationGraph, 'plots': [], 'label': self.simulationCoordinates, 'enable': True},
             {'graph': self.backtestGraph, 'plots': [], 'label': self.backtestCoordinates, 'enable': True},
@@ -189,13 +190,19 @@ class Interface(QMainWindow):
         self.add_to_backtest_monitor("Starting backtest.")
         self.disable_interface(disable=True, caller=BACKTEST)
 
-        worker = backtestThread.BacktestThread(gui=self)
+        self.threads[BACKTEST] = backtestThread.BacktestThread(gui=self, logger=self.logger)
+        worker = self.threads[BACKTEST]
         worker.signals.started.connect(self.setup_backtester)
         worker.signals.activity.connect(self.update_backtest_gui)
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.finished.connect(self.end_backtest)
         worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=BACKTEST))
         self.threadPool.start(worker)
+
+    def end_backtest_thread(self):
+        thread = self.threads[BACKTEST]
+        if thread:
+            thread.stop()
 
     def end_backtest(self):
         """
@@ -1410,7 +1417,7 @@ class Interface(QMainWindow):
         """
         self.configureBacktestButton.clicked.connect(self.show_backtest_settings)
         self.runBacktestButton.clicked.connect(self.initiate_backtest)
-        self.endBacktestButton.clicked.connect(self.end_backtest)
+        self.endBacktestButton.clicked.connect(self.end_backtest_thread)
         self.clearBacktestTableButton.clicked.connect(lambda: self.clear_table(self.backtestTable))
 
     def create_interface_slots(self):

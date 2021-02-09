@@ -14,7 +14,7 @@ from algorithms import get_sma, get_wma, get_ema
 class Backtester:
     def __init__(self, startingBalance: float, data: list, lossStrategy: int, lossPercentage: float, options: list,
                  marginEnabled: bool = True, startDate: datetime = None, endDate: datetime = None, symbol: str = None,
-                 stoicOptions=None, shrekOptions=None, precision: int = 2):
+                 stoicOptions=None, shrekOptions=None, precision: int = 2, outputTrades: bool = True):
         self.startingBalance = startingBalance
         self.symbol = symbol
         self.balance = startingBalance
@@ -34,6 +34,8 @@ class Backtester:
         self.interval = self.get_interval()
         self.lossStrategy = lossStrategy
         self.lossPercentageDecimal = lossPercentage / 100
+
+        self.outputTrades = outputTrades
 
         if options:
             strategy = MovingAverageStrategy(self, options, precision=precision)
@@ -459,7 +461,7 @@ class Backtester:
             if self.currentPrice < self.get_stop_loss():
                 self.exit_long('Exited long because a stop loss was triggered.', stopLossExit=True)
             elif trend == BEARISH:
-                self.exit_long('Exited long because a bearish trend was detected,')
+                self.exit_long('Exited long because a bearish trend was detected.')
                 if self.marginEnabled:
                     self.go_short('Entered short because a bearish trend was detected.')
         else:
@@ -646,7 +648,9 @@ class Backtester:
         with open(resultFile, 'w') as f:
             self.print_configuration_parameters(f)
             self.print_backtest_results(f)
-            self.print_trades(f)
+
+            if self.outputTrades:
+                self.print_trades(f)
 
         filePath = os.path.join(os.getcwd(), resultFile)
 

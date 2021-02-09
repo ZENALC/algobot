@@ -61,7 +61,7 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>0</number>
          </property>
          <property name="movable">
           <bool>false</bool>
@@ -85,7 +85,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="mainMainTab">
               <attribute name="title">
@@ -1247,7 +1247,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="backtestMainTab">
               <attribute name="title">
@@ -1304,42 +1304,7 @@
                   <string>Backtest Main Options</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_8">
-                  <item row="12" column="0">
-                   <widget class="QPushButton" name="backtestDownloadDataButton">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>Download Data</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QLabel" name="backtestPrecisionLabel">
-                    <property name="text">
-                     <string>Data Precision</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="16" column="0">
-                   <widget class="QPushButton" name="backtestStopDownloadButton">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Stop Download </string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="0" colspan="3">
+                  <item row="7" column="0" colspan="3">
                    <widget class="QGroupBox" name="groupBox_2">
                     <property name="title">
                      <string>Configuration</string>
@@ -1382,50 +1347,15 @@
                     </layout>
                    </widget>
                   </item>
-                  <item row="17" column="0" colspan="3">
-                   <widget class="QProgressBar" name="backtestDownloadProgressBar">
-                    <property name="value">
-                     <number>0</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="0">
-                   <widget class="QCheckBox" name="backtestMarginTradingCheckBox">
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="backtestPrecisionLabel">
                     <property name="text">
-                     <string>Enable Margin Trading?</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
+                     <string>Data Precision</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="16" column="1">
-                   <widget class="QLabel" name="backtestDownloadLabel">
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="backtestIntervalLabel">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>Interval</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="11" column="0">
-                   <widget class="QPushButton" name="backtestImportDataButton">
+                  <item row="13" column="0">
+                   <widget class="QPushButton" name="backtestDownloadDataButton">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -1437,29 +1367,45 @@
                       <pointsize>10</pointsize>
                      </font>
                     </property>
-                    <property name="whatsThis">
-                     <string>Import CSV data here.</string>
-                    </property>
                     <property name="text">
-                     <string>Import Data</string>
+                     <string>Download Data</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="backtestTickerLabel">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
+                  <item row="17" column="0">
+                   <widget class="QPushButton" name="backtestStopDownloadButton">
+                    <property name="enabled">
+                     <bool>false</bool>
                     </property>
                     <property name="text">
-                     <string>Ticker</string>
+                     <string>Stop Download </string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="17" column="1">
+                   <widget class="QLabel" name="backtestDownloadLabel">
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="18" column="0" colspan="3">
+                   <widget class="QProgressBar" name="backtestDownloadProgressBar">
+                    <property name="value">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="QCheckBox" name="backtestMarginTradingCheckBox">
+                    <property name="toolTip">
+                     <string>If you don't want to simulate margin trading, untick this.</string>
+                    </property>
+                    <property name="text">
+                     <string>Enable Margin Trading?</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -1540,13 +1486,60 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="3" column="1" colspan="2">
-                   <widget class="QSpinBox" name="backtestStartingBalanceSpinBox">
-                    <property name="minimum">
-                     <number>10</number>
+                  <item row="12" column="0">
+                   <widget class="QPushButton" name="backtestImportDataButton">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
                     </property>
-                    <property name="maximum">
-                     <number>1000000</number>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
+                    <property name="whatsThis">
+                     <string>Import CSV data here.</string>
+                    </property>
+                    <property name="text">
+                     <string>Import Data</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="backtestIntervalLabel">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Interval</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="backtestTickerLabel">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Ticker</string>
                     </property>
                    </widget>
                   </item>
@@ -1563,17 +1556,27 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="10" column="1">
-                   <widget class="QLabel" name="backtestCopyLabel">
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="3" column="0">
                    <widget class="QLabel" name="backtestStartingBalance">
                     <property name="text">
                      <string>Starting Balance</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1" colspan="2">
+                   <widget class="QSpinBox" name="backtestStartingBalanceSpinBox">
+                    <property name="minimum">
+                     <number>10</number>
+                    </property>
+                    <property name="maximum">
+                     <number>1000000</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="11" column="1">
+                   <widget class="QLabel" name="backtestCopyLabel">
+                    <property name="text">
+                     <string/>
                     </property>
                    </widget>
                   </item>
@@ -1597,7 +1600,7 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="10" column="0">
+                  <item row="11" column="0">
                    <widget class="QPushButton" name="backtestCopySettingsButton">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1607,6 +1610,19 @@
                     </property>
                     <property name="text">
                      <string>Copy Main Settings</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QCheckBox" name="backtestOutputTradesCheckBox">
+                    <property name="toolTip">
+                     <string>If a backtest has a lot of trades, it can take a while to open the file. If you're just interested in the results and not the trades, untick this.</string>
+                    </property>
+                    <property name="text">
+                     <string>Output Trades?</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -2355,7 +2371,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="simulationMainTab">
               <attribute name="title">
@@ -3332,7 +3348,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>3</number>
+              <number>0</number>
              </property>
              <property name="tabsClosable">
               <bool>false</bool>
@@ -3728,6 +3744,9 @@
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
+                    <property name="toolTip">
+                     <string>Tick this if you want to view more data on the graphs tab.</string>
+                    </property>
                     <property name="text">
                      <string>Plot moving averages and other indicators? (This will consume more RAM).</string>
                     </property>
@@ -4083,6 +4102,9 @@
                   </item>
                   <item row="5" column="1">
                    <widget class="QComboBox" name="hoverLineColor">
+                    <property name="toolTip">
+                     <string>Sets the color of  the vertical line on the graph.</string>
+                    </property>
                     <property name="currentText">
                      <string>Yellow</string>
                     </property>
