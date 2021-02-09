@@ -465,7 +465,11 @@ class Backtester:
                 if self.marginEnabled:
                     self.go_short('Entered short because a bearish trend was detected.')
         else:
-            if trend == BULLISH and self.previousPosition != LONG:
+            if not self.marginEnabled and self.previousStopLoss is not None and self.currentPrice is not None:
+                if self.previousStopLoss < self.currentPrice:
+                    self.stopLossExit = False  # Hotfix for margin-disabled backtests.
+
+            if trend == BULLISH and (self.previousPosition != LONG or not self.stopLossExit):
                 self.go_long('Entered long because a bullish trend was detected.')
                 self.reset_smart_stop_loss()
             elif self.marginEnabled and trend == BEARISH and self.previousPosition != SHORT:

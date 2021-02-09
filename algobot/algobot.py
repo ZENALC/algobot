@@ -844,7 +844,7 @@ class Interface(QMainWindow):
         """
         for graphDict in self.graphs:
             graph = graphDict['graph']
-            graph.setLimits(xMin=0, xMax=self.graphLeeway, yMin=-10, yMax=1000_000_000_000_000)
+            graph.setLimits(xMin=0, xMax=self.graphLeeway, yMin=-1, yMax=1000_000_000_000_000)
             graph.setBackground('w')
             graph.setLabel('left', 'USDT')
             graph.setLabel('bottom', 'Data Points')
