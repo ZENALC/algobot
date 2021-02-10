@@ -154,8 +154,8 @@ class TelegramBot:
         """
         trader: SimulationTrader = self.gui.trader
 
-        if not trader:
-            return 'Something went wrong.'
+        if not trader or not self.botThread:
+            return 'Something went wrong. Try again in a few minutes.'
 
         profit = trader.get_profit()
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
@@ -164,8 +164,8 @@ class TelegramBot:
 
         for option in self.botThread.optionDetails:  # previously trader.tradingOptions
             avg1, avg2, name1, name2 = option
-            optionString += f'{name1}: ${avg1}\n'
-            optionString += f'{name2}: ${avg2}\n'
+            optionString += f'{name1}: ${round(avg1, trader.precision)}\n'
+            optionString += f'{name2}: ${round(avg2, trader.precision)}\n'
 
         return (f'Symbol: {trader.symbol}\n'
                 f'Position: {trader.get_position_string()}\n'
