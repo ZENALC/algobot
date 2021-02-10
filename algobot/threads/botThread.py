@@ -430,7 +430,7 @@ class BotThread(QRunnable):
 
             if trader:
                 trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
-                trader.output_message(error_message, printMessage=True)
+                trader.output_message(error_message, printMessage=False)
             if self.gui.telegramBot and self.gui.configuration.chatPass:
                 self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
                 self.gui.telegramBot.send_message(self.telegramChatID, error_message)
