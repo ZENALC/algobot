@@ -187,7 +187,6 @@ class Interface(QMainWindow):
             self.create_popup("No data setup yet for backtesting. Please configure them in settings first.")
             return
 
-        self.add_to_backtest_monitor("Starting backtest.")
         self.disable_interface(disable=True, caller=BACKTEST)
 
         self.threads[BACKTEST] = backtestThread.BacktestThread(gui=self, logger=self.logger)
@@ -263,6 +262,7 @@ class Interface(QMainWindow):
         Updates backtest interface initial configuration details.
         :param statDict: Dictionary containing configuration details.
         """
+        self.backtestSymbol.setText(statDict['symbol'])
         self.backtestStartingBalance.setText(statDict['startingBalance'])
         self.backtestInterval.setText(statDict['interval'])
         self.backtestMarginEnabled.setText(statDict['marginEnabled'])
@@ -283,10 +283,13 @@ class Interface(QMainWindow):
         :param configurationDictionary: Dictionary with configuration details.
         """
         interfaceDict = self.interfaceDictionary[BACKTEST]['mainInterface']
+        symbol = configurationDictionary['symbol']
+        interval = configurationDictionary['interval']
         self.destroy_graph_plots(interfaceDict['graph'])
         self.setup_graph_plots(interfaceDict['graph'], self.backtester, NET_GRAPH)
         self.set_backtest_graph_limits_and_empty_plots()
         self.update_backtest_configuration_gui(configurationDictionary)
+        self.add_to_backtest_monitor(f"Started backtest with {symbol} data and {interval.lower()} interval periods.")
 
     def set_backtest_graph_limits_and_empty_plots(self):
         """

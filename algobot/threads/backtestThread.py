@@ -69,6 +69,7 @@ class BacktestThread(QRunnable):
             'stopLossStrategy': f'{"Trailing Loss" if backtester.lossStrategy == 2 else "Stop Loss"}',
             'startPeriod': f'{backtester.data[backtester.startDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
             'endPeriod': f'{backtester.data[backtester.endDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
+            'symbol': f'{backtester.symbol}'
         }
 
         if backtester.movingAverageEnabled:
@@ -156,17 +157,18 @@ class BacktestThread(QRunnable):
             seenData.insert(0, period)
             backtester.currentPeriod = period
             backtester.currentPrice = period['open']
-            backtester.main_logic()
+
+            if len(backtester.strategies) > 0:
+                backtester.main_logic()
+            else:
+                if not backtester.inLongPosition:
+                    backtester.go_long('Entered long because no strategies were found.')
 
             if backtester.get_net() <= 1:
                 raise RuntimeError("Backtester ran out of money. Try changing your strategy or date interval.")
 
-            if backtester.movingAverageEnabled:
-                backtester.strategies['movingAverage'].get_trend(seenData)
-            if backtester.stoicEnabled:
-                backtester.strategies['stoic'].get_trend(seenData)
-            if backtester.shrekEnabled:
-                backtester.strategies['shrek'].get_trend(seenData)
+            for strategy in backtester.strategies.values():
+                strategy.get_trend(seenData)
 
             if index % divisor == 0:
                 self.signals.activity.emit(self.get_activity_dictionary(period=period, index=index, length=testLength))
