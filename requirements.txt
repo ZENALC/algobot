@@ -8,7 +8,7 @@ cffi==1.14.0
 chardet==3.0.4
 colorama==0.4.3
 constantly==15.1.0
-cryptography==3.2
+cryptography==3.3.2
 dateparser==0.7.6
 decorator==4.4.2
 hyperlink==19.0.0
