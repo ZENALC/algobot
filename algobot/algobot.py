@@ -1323,6 +1323,10 @@ class Interface(QMainWindow):
             webbrowser.open("https://www.tradingview.com/")
 
     def export_trades(self, caller):
+        """
+        Export trade history to a CSV file.
+        :param caller: Caller that'll determine which trades get exported.
+        """
         table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
         label = self.interfaceDictionary[caller]['mainInterface']['historyLabel']
         columns = table.columnCount()
@@ -1358,6 +1362,10 @@ class Interface(QMainWindow):
             label.setText("Could not save trade history.")
 
     def import_trades(self, caller):
+        """
+        Import trade histories from a file.
+        :param caller: Caller that will determine which trade table gets updated.
+        """
         table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
         label = self.interfaceDictionary[caller]['mainInterface']['historyLabel']
         path = self.create_folder("Trade History")
