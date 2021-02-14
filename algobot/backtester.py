@@ -47,20 +47,6 @@ class Backtester:
         self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
         self.startTime = None
         self.endTime = None
-        self.startDateIndex = self.get_start_date_index(startDate)
-        self.endDateIndex = self.get_end_date_index(endDate)
-        self.inLongPosition = False
-        self.inShortPosition = False
-        self.previousPosition = None
-        self.buyLongPrice = None
-        self.longTrailingPrice = None
-        self.sellShortPrice = None
-        self.shortTrailingPrice = None
-        self.currentPeriod = None
-        self.previousStopLoss = None
-        self.initialStopLossCounter = 0
-        self.stopLossCounter = 0
-        self.stopLossExit = False
 
         if averageOptions:
             strategy = MovingAverageStrategy(self, averageOptions, precision=precision)
@@ -75,6 +61,20 @@ class Backtester:
         if stoicOptions:
             self.strategies['stoic'] = StoicStrategy(self, *stoicOptions, precision=precision)
 
+        self.startDateIndex = self.get_start_date_index(startDate)
+        self.endDateIndex = self.get_end_date_index(endDate)
+        self.inLongPosition = False
+        self.inShortPosition = False
+        self.previousPosition = None
+        self.buyLongPrice = None
+        self.longTrailingPrice = None
+        self.sellShortPrice = None
+        self.shortTrailingPrice = None
+        self.currentPeriod = None
+        self.previousStopLoss = None
+        self.initialStopLossCounter = 0
+        self.stopLossCounter = 0
+        self.stopLossExit = False
         self.ema_dict = {}
         self.rsi_dictionary = {}
 

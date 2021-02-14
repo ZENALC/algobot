@@ -49,6 +49,15 @@ class Configuration(QDialog):
         self.load_credentials()
         self.load_strategy_slots()
 
+    def get_strategies(self, caller):
+        strategies = {}
+        for strategyName, strategy in self.strategies.items():
+            if self.strategy_enabled(strategyName, caller):
+                strategies[strategyName] = strategy
+                strategies[strategyName, 'values'] = self.get_strategy_values(strategyName, caller, verbose=True)
+
+        return strategies
+
     def get_category_tab(self, caller: int) -> QTabWidget:
         """
         This will return the category tab (main, simulation, or live) based on the caller provided.
