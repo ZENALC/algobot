@@ -209,8 +209,10 @@ class Interface(QMainWindow):
         """
         Ends backtest and prompts user if they want to see the results.
         """
-        backtestPath = self.create_folder('Backtest Results')
-        defaultFile = os.path.join(backtestPath, self.backtester.get_default_result_file_name())
+        backtestFolderPath = self.create_folder('Backtest Results')
+        innerPath = os.path.join(backtestFolderPath, self.backtester.symbol)
+        create_folder_if_needed(innerPath, backtestFolderPath)
+        defaultFile = os.path.join(innerPath, self.backtester.get_default_result_file_name())
         fileName, _ = QFileDialog.getSaveFileName(self, 'Save Result', defaultFile, 'TXT (*.txt)')
         fileName = fileName.strip()
         fileName = fileName if fileName != '' else None
