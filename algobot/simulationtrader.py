@@ -45,7 +45,7 @@ class SimulationTrader:
         self.precision = precision  # Precision to round data to.
 
         self.completedLoop = True  # Loop that'll keep track of bot. We wait for this to turn False before some action.
-        self.lock = Lock()
+        self.lock = Lock()  # Lock to ensure a transaction doesn't occur when another one is taking place.
         self.addTradeCallback = addTradeCallback
 
         self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
