@@ -1,6 +1,6 @@
 from typing import List
 
-from strategy import Strategy
+from strategies.strategy import Strategy
 from data import Data
 from enums import BEARISH, BULLISH
 from option import Option

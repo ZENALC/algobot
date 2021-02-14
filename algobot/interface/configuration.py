@@ -7,13 +7,17 @@ from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox, QTabWidget, QForm
     QGroupBox, QVBoxLayout, QDoubleSpinBox, QLineEdit, QComboBox, QPushButton, QHBoxLayout, QFrame, QScrollArea
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
+
 from binance.client import Client
 from telegram.ext import Updater
 from dateutil import parser
 from threads import downloadThread
 from typing import List, Tuple
 from enums import SIMULATION, LIVE, BACKTEST
+
 from strategies.movingAverage import MovingAverageStrategy
+# from strategies.stoic import StoicStrategy
+# from strategies.shrek import ShrekStrategy
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
@@ -40,6 +44,8 @@ class Configuration(QDialog):
                              ]
         self.strategies = {  # Add your strategies to this dictionary of strategies.
             'Moving Average': MovingAverageStrategy,
+            # 'Stoic': StoicStrategy,
+            # 'Shrek': ShrekStrategy
         }
         self.strategyDict = {}  # We will store all the strategy slot information in this dictionary.
 
