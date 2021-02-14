@@ -13,7 +13,7 @@ from dateutil import parser
 from threads import downloadThread
 from typing import List, Tuple
 from enums import SIMULATION, LIVE, BACKTEST
-from strategies import StoicStrategy, ShrekStrategy, MovingAverageStrategy
+from strategies.movingAverage import MovingAverageStrategy
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
@@ -38,9 +38,7 @@ class Configuration(QDialog):
                              self.simulationConfigurationTabWidget,
                              self.backtestConfigurationTabWidget,
                              ]
-        self.strategies = {  # Add your strategy to this dictionary of strategies.
-            'Stoic': StoicStrategy,
-            'Shrek': ShrekStrategy,
+        self.strategies = {  # Add your strategies to this dictionary of strategies.
             'Moving Average': MovingAverageStrategy,
         }
         self.strategyDict = {}  # We will store all the strategy slot information in this dictionary.

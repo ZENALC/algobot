@@ -917,7 +917,7 @@ class Interface(QMainWindow):
         currentDateTimestamp = datetime.utcnow().timestamp()
         colorCounter = 1
 
-        if trader.movingAverageEnabled:
+        if 'movingAverage' in trader.strategies:
             for option in trader.strategies['movingAverage'].get_params():
                 initialAverage, finalAverage, initialName, finalName = self.get_option_info(option, trader)
                 initialPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter % len(colors)],

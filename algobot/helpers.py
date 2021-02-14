@@ -10,6 +10,8 @@ from datetime import datetime
 from dateutil import parser
 from typing import Tuple
 
+from option import Option
+
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
 LOG_FOLDER = 'Logs'
@@ -139,6 +141,31 @@ def convert_interval(interval) -> str:
         '8 Hours': '8h'
     }
     return intervals[interval]
+
+
+def parse_strategy_name(name):
+    nameList = name.split()
+    remainingList = nameList[1:]
+
+    nameList = [nameList[0].lower()]
+    for name in remainingList:
+        nameList.append(name.capitalize())
+
+    return ''.join(nameList)
+
+
+def set_up_strategies(trader, strategies):
+    for strategyTuple in strategies:
+        strategyClass = strategyTuple[0]
+        values = strategyTuple[1]
+        name = parse_strategy_name(strategyTuple[2])
+
+        if name != 'movingAverage':
+            trader.strategies[name] = strategyClass(trader, inputs=values, precision=trader.precision)
+        else:
+            values = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
+            trader.strategies[name] = strategyClass(trader, inputs=values, precision=trader.precision)
+            trader.minPeriod = trader.strategies[name].get_min_option_period()
 
 
 def get_label_string(label: str) -> str:

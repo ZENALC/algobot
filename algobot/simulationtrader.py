@@ -4,15 +4,21 @@ from datetime import datetime
 from threading import Lock
 from typing import Dict
 
-from helpers import get_logger, convert_interval_to_string
+from helpers import get_logger, convert_interval_to_string, set_up_strategies
 from data import Data
 from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
-from strategies import Strategy, ShrekStrategy, StoicStrategy, MovingAverageStrategy
+from strategies.strategy import Strategy
 
 
 class SimulationTrader:
-    def __init__(self, startingBalance: float = 1000, interval: str = '1h', symbol: str = 'BTCUSDT',
-                 loadData: bool = True, updateData: bool = True, logFile: str = 'simulation', precision: int = 2,
+    def __init__(self,
+                 startingBalance: float = 1000,
+                 interval: str = '1h',
+                 symbol: str = 'BTCUSDT',
+                 loadData: bool = True,
+                 updateData: bool = True,
+                 logFile: str = 'simulation',
+                 precision: int = 2,
                  addTradeCallback=None):
         """
         SimulationTrader object that will mimic real live market trades.
@@ -79,22 +85,8 @@ class SimulationTrader:
         self.optionDetails = []  # Current option values. Holds most recent option values.
         self.lowerOptionDetails = []  # Lower option values. Holds lower interval option values (if exist).
 
-        self.movingAverageEnabled = False
-        self.shrekEnabled = False  # Boolean that holds whether shrek trading is enabled or not.
-        self.stoicEnabled = False  # Boolean that holds whether stoic trading is enabled or not.
-
-    def set_strategy(self, name: str, options: list):
-        if name == 'shrek':
-            self.shrekEnabled = True
-            self.strategies['shrek'] = ShrekStrategy(self, options, precision=self.precision)
-        elif name == 'stoic':
-            self.stoicEnabled = True
-            self.strategies['stoic'] = StoicStrategy(self, options, precision=self.precision)
-        elif name == 'movingAverage':
-            self.movingAverageEnabled = True
-            self.strategies['movingAverage'] = MovingAverageStrategy(self, options, precision=self.precision)
-        else:
-            raise ValueError("Unknown strategy.")
+    def setup_strategies(self, strategies):
+        set_up_strategies(self, strategies)
 
     def set_safety_timer(self, safetyTimer):
         if safetyTimer == 0:
@@ -178,7 +170,7 @@ class SimulationTrader:
                 'takerBuyQuoteAsset': str(round(self.dataView.current_values['taker_buy_quote_asset'], self.precision)),
             }
 
-        if self.movingAverageEnabled:
+        if 'movingAverage' in self.strategies:
             strategy = self.strategies['movingAverage']
             precise = self.precision
             groupedDict['movingAverages'] = {
@@ -197,11 +189,11 @@ class SimulationTrader:
                     groupedDict['movingAverages'][f'Lower {initialAverageLabel}'] = f'${round(initialAverage, precise)}'
                     groupedDict['movingAverages'][f'Lower {finalAverageLabel}'] = f'${round(finalAverage, precise)}'
 
-        if self.shrekEnabled:
+        if 'shrek' in self.strategies:
             strategy = self.strategies['shrek']
             groupedDict['shrek'] = {
                 'trend': self.get_trend_string(strategy.trend),
-                'enabled': str(self.shrekEnabled),
+                'enabled': str(True),
                 'inputs': self.get_shrek_inputs(),
             }
 
@@ -213,11 +205,11 @@ class SimulationTrader:
                 if x in self.dataView.rsi_data:
                     groupedDict['shrek'][f'RSI({x})'] = round(self.dataView.rsi_data[x], self.precision)
 
-        if self.stoicEnabled:
+        if 'stoic' in self.strategies:
             strategy = self.strategies['stoic']
             groupedDict['stoic'] = {
                 'trend': self.get_trend_string(strategy.trend),
-                'enabled': str(self.stoicEnabled),
+                'enabled': str(True),
                 'inputs': self.get_stoic_inputs(),
             }
 
@@ -577,7 +569,7 @@ class SimulationTrader:
         Returns stoic inputs if enabled.
         :return: A string of inputs if enabled, else None.
         """
-        if not self.stoicEnabled:
+        if 'stoic' not in self.strategies:
             return 'None'
         return f"{', '.join(map(str, self.strategies['stoic'].get_params()))}"
 
@@ -586,7 +578,7 @@ class SimulationTrader:
         Returns shrek inputs if enabled.
         :return: A string of inputs if enabled, else None.
         """
-        if not self.shrekEnabled:
+        if 'shrek' not in self.strategies:
             return 'None'
         return f"{', '.join(map(str, self.strategies['shrek'].get_params()))}"
 
@@ -703,7 +695,7 @@ class SimulationTrader:
         """
         Outputs general information about current trade options.
         """
-        if self.movingAverageEnabled:
+        if 'movingAverage' in self.strategies:
             for option in self.strategies['movingAverage'].get_params():
                 initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound)
                 finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound)
@@ -856,13 +848,13 @@ class SimulationTrader:
         self.output_message(f'Smart stop loss counter: {self.smartStopLossInitialCounter}')
         self.output_message(f'Safety timer: {self.safetyTimer}')
 
-        if self.shrekEnabled:
+        if 'shrek' in self.strategies:
             self.output_message(f'\nShrek Inputs: {self.get_shrek_inputs()}')
 
-        if self.stoicEnabled:
+        if 'stoic' in self.strategies:
             self.output_message(f'Stoic Inputs: {self.get_stoic_inputs()}')
 
-        if self.movingAverageEnabled:
+        if 'movingAverage' in self.strategies:
             self.output_message("\nMoving Average Info:")
             for option in self.strategies['movingAverage'].get_params():
                 self.output_message("\t" + ', '.join(option.get_pretty_option()))

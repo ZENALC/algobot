@@ -5,10 +5,9 @@ from typing import Dict
 
 from dateutil import parser
 from datetime import datetime
-from helpers import get_ups_and_downs, get_label_string
+from helpers import get_ups_and_downs, get_label_string, set_up_strategies
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
-from option import Option
-from strategies import Strategy
+from strategies.strategy import Strategy
 from algorithms import get_sma, get_wma, get_ema
 
 
@@ -61,37 +60,13 @@ class Backtester:
         self.interval = self.get_interval()
 
         self.strategies: Dict[str, Strategy] = {}
-        self.set_up_strategies(strategies)
+        set_up_strategies(self, strategies)
 
         self.startDateIndex = self.get_start_date_index(startDate)
         self.endDateIndex = self.get_end_date_index(endDate)
 
         self.ema_dict = {}
         self.rsi_dictionary = {}
-
-    @staticmethod
-    def parse_strategy_name(name):
-        nameList = name.split()
-        remainingList = nameList[1:]
-
-        nameList = [nameList[0].lower()]
-        for name in remainingList:
-            nameList.append(name.capitalize())
-
-        return ''.join(nameList)
-
-    def set_up_strategies(self, strategies):
-        for strategyTuple in strategies:
-            strategyClass = strategyTuple[0]
-            values = strategyTuple[1]
-            name = self.parse_strategy_name(strategyTuple[2])
-
-            if name != 'movingAverage':
-                self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
-            else:
-                values = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
-                self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
-                self.minPeriod = self.strategies[name].get_min_option_period()
 
     def check_data(self):
         """
