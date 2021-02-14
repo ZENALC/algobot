@@ -49,12 +49,13 @@ class Configuration(QDialog):
         self.load_credentials()
         self.load_strategy_slots()
 
-    def get_strategies(self, caller):
-        strategies = {}
+    def get_strategies(self, caller) -> List[tuple]:
+        strategies = []
         for strategyName, strategy in self.strategies.items():
             if self.strategy_enabled(strategyName, caller):
-                strategies[strategyName] = strategy
-                strategies[strategyName, 'values'] = self.get_strategy_values(strategyName, caller, verbose=True)
+                values = self.get_strategy_values(strategyName, caller, verbose=True)
+                strategyTuple = (strategy, values, strategyName)
+                strategies.append(strategyTuple)
 
         return strategies
 

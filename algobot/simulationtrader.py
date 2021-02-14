@@ -86,13 +86,13 @@ class SimulationTrader:
     def set_strategy(self, name: str, options: list):
         if name == 'shrek':
             self.shrekEnabled = True
-            self.strategies['shrek'] = ShrekStrategy(self, *options)
+            self.strategies['shrek'] = ShrekStrategy(self, options, precision=self.precision)
         elif name == 'stoic':
             self.stoicEnabled = True
-            self.strategies['stoic'] = StoicStrategy(self, *options)
+            self.strategies['stoic'] = StoicStrategy(self, options, precision=self.precision)
         elif name == 'movingAverage':
             self.movingAverageEnabled = True
-            self.strategies['movingAverage'] = MovingAverageStrategy(self, options)
+            self.strategies['movingAverage'] = MovingAverageStrategy(self, options, precision=self.precision)
         else:
             raise ValueError("Unknown strategy.")
 

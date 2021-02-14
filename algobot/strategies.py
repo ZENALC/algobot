@@ -58,15 +58,18 @@ class Strategy:
         else:
             raise ValueError("invalid type of data object.")
 
+    def get_min_option_period(self):
+        pass
+
 
 class StoicStrategy(Strategy):
-    def __init__(self, parent=None, input1: int = -1, input2: int = -1, input3: int = -1, precision: int = 2):
+    def __init__(self, parent=None, inputs: list = (0, 0, 0), precision: int = 2):
         super().__init__(name='Stoic', parent=parent, precision=precision)
 
         self.description = "Custom strategy based off of RSI values with three inputs developed by Peter Motin."
-        self.stoicInput1: int = input1
-        self.stoicInput2: int = input2
-        self.stoicInput3: int = input3
+        self.stoicInput1: int = inputs[0]
+        self.stoicInput2: int = inputs[1]
+        self.stoicInput3: int = inputs[2]
 
     # noinspection DuplicatedCode
     def get_trend(self, data: Data or List[dict] = None, shift: int = 0, update: bool = False, log_data=False):
@@ -175,14 +178,14 @@ class StoicStrategy(Strategy):
 
 
 class ShrekStrategy(Strategy):
-    def __init__(self, parent=None, one: int = -1, two: int = -1, three: int = -1, four: int = -1, precision: int = 2):
+    def __init__(self, parent=None, inputs: list = (0, 0, 0, 0), precision: int = 2):
         super().__init__(name='Shrek', parent=parent, precision=precision)
 
         self.description = "Custom strategy based off of RSI values with four inputs developed by Peter Motin."
-        self.one: int = one
-        self.two: int = two
-        self.three: int = three
-        self.four: int = four
+        self.one: int = inputs[0]
+        self.two: int = inputs[1]
+        self.three: int = inputs[2]
+        self.four: int = inputs[3]
 
     def get_params(self) -> list:
         return [self.one, self.two, self.three, self.four]
@@ -260,9 +263,9 @@ class ShrekStrategy(Strategy):
 
 
 class MovingAverageStrategy(Strategy):
-    def __init__(self, parent=None, tradingOptions=None, precision: int = 2):
+    def __init__(self, parent=None, inputs=None, precision: int = 2):
         super().__init__(name='Moving Average', parent=parent, precision=precision)
-        self.tradingOptions: List[Option] = tradingOptions
+        self.tradingOptions: List[Option] = inputs
         self.dynamic = True
         self.description = "Basic trading strategy using moving averages. If the moving average of initial is greater" \
                            " than final, a bullish trend is determined. If the moving average of final is greater, a " \

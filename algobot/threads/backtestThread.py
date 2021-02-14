@@ -3,7 +3,6 @@ import time
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 from backtester import Backtester
 from enums import BACKTEST
-from option import Option
 
 
 class BacktestSignals(QObject):
@@ -31,22 +30,7 @@ class BacktestThread(QRunnable):
         config = gui.configuration
         startDate, endDate = config.get_calendar_dates()
         lossStrategy, lossPercentageDecimal = gui.get_loss_settings(BACKTEST)
-
-        if config.strategy_enabled('Stoic', BACKTEST):
-            stoicOptions = config.get_strategy_values('Stoic', BACKTEST)
-        else:
-            stoicOptions = None
-
-        if config.strategy_enabled('Shrek', BACKTEST):
-            shrekOptions = config.get_strategy_values('Shrek', BACKTEST)
-        else:
-            shrekOptions = None
-
-        if config.strategy_enabled('Moving Average', BACKTEST):
-            values = config.get_strategy_values('Moving Average', BACKTEST, verbose=True)
-            averageOptions = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
-        else:
-            averageOptions = None
+        strategies = config.get_strategies(BACKTEST)
 
         return {
             'startingBalance': config.backtestStartingBalanceSpinBox.value(),
@@ -60,9 +44,7 @@ class BacktestThread(QRunnable):
             'precision': config.backtestPrecisionSpinBox.value(),
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
             'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
-            'options': averageOptions,
-            'stoicOptions': stoicOptions,
-            'shrekOptions': shrekOptions,
+            'strategies': strategies,
         }
 
     def get_configuration_dictionary_for_gui(self) -> dict:
@@ -130,10 +112,8 @@ class BacktestThread(QRunnable):
                                          startDate=configDetails['startDate'],
                                          endDate=configDetails['endDate'],
                                          precision=configDetails['precision'],
-                                         averageOptions=configDetails['options'],
-                                         stoicOptions=configDetails['stoicOptions'],
-                                         shrekOptions=configDetails['shrekOptions'],
-                                         outputTrades=configDetails['outputTrades'])
+                                         outputTrades=configDetails['outputTrades'],
+                                         strategies=configDetails['strategies'])
         self.gui.backtester.set_stop_loss_counter(configDetails['smartStopLossCounter'])
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
 

@@ -5,9 +5,10 @@ from typing import Dict
 
 from dateutil import parser
 from datetime import datetime
-from helpers import get_ups_and_downs
+from helpers import get_ups_and_downs, get_label_string
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
-from strategies import StoicStrategy, Strategy, ShrekStrategy, MovingAverageStrategy
+from option import Option
+from strategies import Strategy
 from algorithms import get_sma, get_wma, get_ema
 
 
@@ -17,13 +18,11 @@ class Backtester:
                  data: list,
                  lossStrategy: int,
                  lossPercentage: float,
+                 strategies: list,
                  symbol: str = None,
                  marginEnabled: bool = True,
                  startDate: datetime = None,
                  endDate: datetime = None,
-                 averageOptions: list = None,
-                 stoicOptions: list = None,
-                 shrekOptions: list = None,
                  precision: int = 2,
                  outputTrades: bool = True):
         self.startingBalance = startingBalance
@@ -38,31 +37,11 @@ class Backtester:
         self.profit = 0
         self.marginEnabled = marginEnabled
         self.precision = precision
-        self.strategies: Dict[str, Strategy] = {}
-        self.data = data
-        self.check_data()
-        self.interval = self.get_interval()
         self.lossStrategy = lossStrategy
         self.lossPercentageDecimal = lossPercentage / 100
         self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
         self.startTime = None
         self.endTime = None
-
-        if averageOptions:
-            strategy = MovingAverageStrategy(self, averageOptions, precision=precision)
-            self.strategies['movingAverage'] = strategy
-            self.minPeriod = strategy.get_min_option_period()
-        else:
-            self.minPeriod = 1
-
-        if shrekOptions:
-            self.strategies['shrek'] = ShrekStrategy(self, *shrekOptions, precision=precision)
-
-        if stoicOptions:
-            self.strategies['stoic'] = StoicStrategy(self, *stoicOptions, precision=precision)
-
-        self.startDateIndex = self.get_start_date_index(startDate)
-        self.endDateIndex = self.get_end_date_index(endDate)
         self.inLongPosition = False
         self.inShortPosition = False
         self.previousPosition = None
@@ -75,8 +54,44 @@ class Backtester:
         self.initialStopLossCounter = 0
         self.stopLossCounter = 0
         self.stopLossExit = False
+        self.minPeriod = 1
+
+        self.data = data
+        self.check_data()
+        self.interval = self.get_interval()
+
+        self.strategies: Dict[str, Strategy] = {}
+        self.set_up_strategies(strategies)
+
+        self.startDateIndex = self.get_start_date_index(startDate)
+        self.endDateIndex = self.get_end_date_index(endDate)
+
         self.ema_dict = {}
         self.rsi_dictionary = {}
+
+    @staticmethod
+    def parse_strategy_name(name):
+        nameList = name.split()
+        remainingList = nameList[1:]
+
+        nameList = [nameList[0].lower()]
+        for name in remainingList:
+            nameList.append(name.capitalize())
+
+        return ''.join(nameList)
+
+    def set_up_strategies(self, strategies):
+        for strategyTuple in strategies:
+            strategyClass = strategyTuple[0]
+            values = strategyTuple[1]
+            name = self.parse_strategy_name(strategyTuple[2])
+
+            if name != 'movingAverage':
+                self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
+            else:
+                values = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
+                self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
+                self.minPeriod = self.strategies[name].get_min_option_period()
 
     def check_data(self):
         """
@@ -526,6 +541,10 @@ class Backtester:
             print(f'\t\tOption {index + 1}) {option.movingAverage.upper()}{option.initialBound, option.finalBound}'
                   f' - {option.parameter}')
 
+    def print_strategies(self):
+        for strategyName, strategy in self.strategies.items():
+            print(f'\t{get_label_string(strategyName)}: {strategy.get_params()}')
+
     def print_configuration_parameters(self, stdout=None):
         """
         Prints out configuration parameters.
@@ -539,13 +558,12 @@ class Backtester:
         print(f'\tInterval: {self.interval}')
         print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")
-        self.print_options()
-        # print("Loss options:")
         print(f'\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%')
         if self.lossStrategy == TRAILING_LOSS:
             print(f"\tLoss Strategy: Trailing")
         else:
             print("\tLoss Strategy: Stop")
+        self.print_strategies()
 
         sys.stdout = previous_stdout  # revert stdout back to normal
 
@@ -560,10 +578,6 @@ class Backtester:
         print("\nBacktest results:")
         print(f'\tSymbol: {"Unknown/Imported Data" if self.symbol is None else self.symbol}')
         print(f'\tElapsed: {round(self.endTime - self.startTime, 2)} seconds')
-        if "shrek" in self.strategies:
-            print(f'\tShrek Options: {self.strategies["shrek"].get_params()}')
-        if "stoic" in self.strategies:
-            print(f'\tStoicism options: {self.strategies["stoic"].get_params()}')
         print(f'\tStart Period: {self.data[self.startDateIndex]["date_utc"]}')
         print(f"\tEnd Period: {self.currentPeriod['date_utc']}")
         print(f'\tStarting balance: ${round(self.startingBalance, self.precision)}')
