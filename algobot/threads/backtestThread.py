@@ -82,7 +82,7 @@ class BacktestThread(QRunnable):
             'symbol': f'{backtester.symbol}'
         }
 
-        if backtester.movingAverageEnabled:
+        if 'movingAverage' in backtester.strategies:
             d['options'] = [opt.get_pretty_option() for opt in backtester.strategies['movingAverage'].get_params()]
 
         return d
