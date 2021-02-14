@@ -12,9 +12,20 @@ from algorithms import get_sma, get_wma, get_ema
 
 
 class Backtester:
-    def __init__(self, startingBalance: float, data: list, lossStrategy: int, lossPercentage: float, options: list,
-                 marginEnabled: bool = True, startDate: datetime = None, endDate: datetime = None, symbol: str = None,
-                 stoicOptions=None, shrekOptions=None, precision: int = 2, outputTrades: bool = True):
+    def __init__(self,
+                 startingBalance: float,
+                 data: list,
+                 lossStrategy: int,
+                 lossPercentage: float,
+                 symbol: str = None,
+                 marginEnabled: bool = True,
+                 startDate: datetime = None,
+                 endDate: datetime = None,
+                 averageOptions: list = None,
+                 stoicOptions: list = None,
+                 shrekOptions: list = None,
+                 precision: int = 2,
+                 outputTrades: bool = True):
         self.startingBalance = startingBalance
         self.symbol = symbol
         self.balance = startingBalance
@@ -34,51 +45,38 @@ class Backtester:
         self.lossStrategy = lossStrategy
         self.lossPercentageDecimal = lossPercentage / 100
         self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
-
-        if options:
-            strategy = MovingAverageStrategy(self, options, precision=precision)
-            self.strategies['movingAverage'] = strategy
-            self.minPeriod = strategy.get_min_option_period()
-            self.movingAverageEnabled = True
-        else:
-            self.minPeriod = 1
-            self.movingAverageEnabled = False
-
-        if shrekOptions:
-            self.strategies['shrek'] = ShrekStrategy(self, *shrekOptions, precision=precision)
-            self.shrekEnabled = True
-        else:
-            self.shrekEnabled = False
-
-        if stoicOptions:
-            self.strategies['stoic'] = StoicStrategy(self, *stoicOptions, precision=precision)
-            self.stoicEnabled = True
-        else:
-            self.stoicEnabled = False
-
-        self.ema_dict = {}
-        self.rsi_dictionary = {}
-
         self.startTime = None
         self.endTime = None
         self.startDateIndex = self.get_start_date_index(startDate)
         self.endDateIndex = self.get_end_date_index(endDate)
-
         self.inLongPosition = False
         self.inShortPosition = False
         self.previousPosition = None
-
         self.buyLongPrice = None
         self.longTrailingPrice = None
-
         self.sellShortPrice = None
         self.shortTrailingPrice = None
-
         self.currentPeriod = None
         self.previousStopLoss = None
         self.initialStopLossCounter = 0
         self.stopLossCounter = 0
         self.stopLossExit = False
+
+        if averageOptions:
+            strategy = MovingAverageStrategy(self, averageOptions, precision=precision)
+            self.strategies['movingAverage'] = strategy
+            self.minPeriod = strategy.get_min_option_period()
+        else:
+            self.minPeriod = 1
+
+        if shrekOptions:
+            self.strategies['shrek'] = ShrekStrategy(self, *shrekOptions, precision=precision)
+
+        if stoicOptions:
+            self.strategies['stoic'] = StoicStrategy(self, *stoicOptions, precision=precision)
+
+        self.ema_dict = {}
+        self.rsi_dictionary = {}
 
     def check_data(self):
         """
@@ -494,11 +492,11 @@ class Backtester:
             self.currentPeriod = period
             self.currentPrice = period['open']
             self.main_logic()
-            if self.movingAverageEnabled:
+            if 'movingAverage' in self.strategies:
                 self.strategies['movingAverage'].get_trend(seenData)
-            if self.stoicEnabled:
+            if 'stoic' in self.strategies:
                 self.strategies['stoic'].get_trend(seenData)
-            if self.shrekEnabled:
+            if 'shrek' in self.strategies:
                 self.strategies['shrek'].get_trend(seenData)
 
         if self.inShortPosition:
@@ -520,7 +518,7 @@ class Backtester:
         """
         Prints out options provided in configuration.
         """
-        if not self.movingAverageEnabled:
+        if 'movingAverage' not in self.strategies:
             return
 
         print("\tMoving Averages Options:")
@@ -562,11 +560,9 @@ class Backtester:
         print("\nBacktest results:")
         print(f'\tSymbol: {"Unknown/Imported Data" if self.symbol is None else self.symbol}')
         print(f'\tElapsed: {round(self.endTime - self.startTime, 2)} seconds')
-        print(f'\tShrek Enabled: {self.shrekEnabled}')
-        if self.shrekEnabled:
+        if "shrek" in self.strategies:
             print(f'\tShrek Options: {self.strategies["shrek"].get_params()}')
-        print(f'\tStoicism enabled: {self.stoicEnabled}')
-        if self.stoicEnabled:
+        if "stoic" in self.strategies:
             print(f'\tStoicism options: {self.strategies["stoic"].get_params()}')
         print(f'\tStart Period: {self.data[self.startDateIndex]["date_utc"]}')
         print(f"\tEnd Period: {self.currentPeriod['date_utc']}")

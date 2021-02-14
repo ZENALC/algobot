@@ -120,7 +120,7 @@ class Configuration(QDialog):
 
         return values
 
-    def delete_strategy_inputs(self, parameters, strategyName, tab):
+    def delete_strategy_inputs(self, parameters: list, strategyName: str, tab: QTabWidget):
         """
         Dynamically deletes strategy inputs.
         :param parameters: Parameters of the strategy.
@@ -143,7 +143,7 @@ class Configuration(QDialog):
             labels.pop().setParent(None)  # Pop off the horizontal line from labels.
             self.strategyDict[tab, strategyName, 'status'].setText("Deleted additional slots.")
 
-    def create_strategy_inputs(self, parameters, strategyName, groupBoxLayout) -> Tuple[list, list]:
+    def create_strategy_inputs(self, parameters: list, strategyName: str, groupBoxLayout) -> Tuple[list, list]:
         """
         This function will create strategy slots and labels based on the parameters provided to the layout.
         :param parameters: Parameters to add to strategy GUI slots.
@@ -187,7 +187,7 @@ class Configuration(QDialog):
 
         return values, labels
 
-    def add_strategy_inputs(self, parameters, strategyName, groupBoxLayout, tab):
+    def add_strategy_inputs(self, parameters: list, strategyName: str, groupBoxLayout, tab: QTabWidget):
         """
         Adds strategy parameters to the layout provided.
         :param parameters: Parameters to add to the group box layout.

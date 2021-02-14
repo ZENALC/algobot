@@ -130,7 +130,7 @@ class BacktestThread(QRunnable):
                                          startDate=configDetails['startDate'],
                                          endDate=configDetails['endDate'],
                                          precision=configDetails['precision'],
-                                         options=configDetails['options'],
+                                         averageOptions=configDetails['options'],
                                          stoicOptions=configDetails['stoicOptions'],
                                          shrekOptions=configDetails['shrekOptions'],
                                          outputTrades=configDetails['outputTrades'])
