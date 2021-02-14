@@ -31,11 +31,22 @@ class BacktestThread(QRunnable):
         config = gui.configuration
         startDate, endDate = config.get_calendar_dates()
         lossStrategy, lossPercentageDecimal = gui.get_loss_settings(BACKTEST)
-        stoicOptions = config.get_strategy_values('Stoic', BACKTEST)
-        shrekOptions = config.get_strategy_values('Shrek', BACKTEST)
 
-        values = config.get_strategy_values('Moving Average', BACKTEST, verbose=True)
-        averageOptions = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
+        if config.strategy_enabled('Stoic', BACKTEST):
+            stoicOptions = config.get_strategy_values('Stoic', BACKTEST)
+        else:
+            stoicOptions = None
+
+        if config.strategy_enabled('Shrek', BACKTEST):
+            shrekOptions = config.get_strategy_values('Shrek', BACKTEST)
+        else:
+            shrekOptions = None
+
+        if config.strategy_enabled('Moving Average', BACKTEST):
+            values = config.get_strategy_values('Moving Average', BACKTEST, verbose=True)
+            averageOptions = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
+        else:
+            averageOptions = None
 
         return {
             'startingBalance': config.backtestStartingBalanceSpinBox.value(),
@@ -49,11 +60,8 @@ class BacktestThread(QRunnable):
             'precision': config.backtestPrecisionSpinBox.value(),
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
             'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
-            'movingAverageEnabled': config.strategy_enabled('Moving Average', BACKTEST),
             'options': averageOptions,
-            'stoicEnabled': config.strategy_enabled('Stoic', BACKTEST),
             'stoicOptions': stoicOptions,
-            'shrekEnabled': config.strategy_enabled('Shrek', BACKTEST),
             'shrekOptions': shrekOptions,
         }
 
@@ -113,9 +121,6 @@ class BacktestThread(QRunnable):
         Sets up initial backtester and then emits parameters to GUI.
         """
         configDetails = self.get_configuration_details_to_setup_backtest()
-        stoicOptions = configDetails['stoicOptions'] if configDetails['stoicEnabled'] else None
-        shrekOptions = configDetails['shrekOptions'] if configDetails['shrekEnabled'] else None
-        options = configDetails['options'] if configDetails['movingAverageEnabled'] else None
         self.gui.backtester = Backtester(startingBalance=configDetails['startingBalance'],
                                          data=configDetails['data'],
                                          symbol=configDetails['dataType'],
@@ -125,19 +130,22 @@ class BacktestThread(QRunnable):
                                          startDate=configDetails['startDate'],
                                          endDate=configDetails['endDate'],
                                          precision=configDetails['precision'],
-                                         options=options,
-                                         stoicOptions=stoicOptions,
-                                         shrekOptions=shrekOptions,
+                                         options=configDetails['options'],
+                                         stoicOptions=configDetails['stoicOptions'],
+                                         shrekOptions=configDetails['shrekOptions'],
                                          outputTrades=configDetails['outputTrades'])
         self.gui.backtester.set_stop_loss_counter(configDetails['smartStopLossCounter'])
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
 
     def stop(self):
+        """
+        Stops the backtest by setting the running flag to False.
+        """
         self.running = False
 
     def backtest(self):
         """
-        Performs a moving average test with given configurations.
+        Performs a backtest with given configurations.
         """
         limit = 1000  # Data limit.
         backtester = self.gui.backtester
@@ -191,13 +199,12 @@ class BacktestThread(QRunnable):
         Runs the backtest thread. It first sets up the bot, then it backtests. During the backtest, it also emits
         several signals for GUI to update itself.
         """
-        # Retrieve args/kwargs here; and fire processing using them
         try:
             self.setup_bot()
             self.backtest()
             self.signals.finished.emit()
         except Exception as e:
-            self.logger.exception(str(e))
-            self.signals.error.emit(BACKTEST, str(e))
+            self.logger.exception(repr(e))
+            self.signals.error.emit(BACKTEST, repr(e))
         finally:
             self.signals.restore.emit()
