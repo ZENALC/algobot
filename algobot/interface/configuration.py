@@ -330,26 +330,6 @@ class Configuration(QDialog):
             else:
                 self.credentialResult.setText(stringError)
 
-    @staticmethod
-    def create_folder_if_needed(targetPath: str, basePath=None) -> bool:
-        """
-        This function will create the appropriate folders in the root folder if needed.
-        :param targetPath: Target path to have exist.
-        :param basePath: Base path to start from. If none, it'll be the root directory.
-        :return: Boolean whether folder was created or not.
-        """
-        if not basePath:
-            basePath = helpers.ROOT_DIR
-
-        if not os.path.exists(targetPath):
-            folder = os.path.basename(targetPath)
-            cur_path = os.getcwd()
-            os.chdir(basePath)
-            os.mkdir(folder)
-            os.chdir(cur_path)
-            return True
-        return False
-
     def create_appropriate_config_folders(self, folder: str) -> str:
         """
         Creates appropriate configuration folders. If a configuration folder doesn't exist, it'll create that. Next,
@@ -359,10 +339,10 @@ class Configuration(QDialog):
         :return: Absolute path to new folder.
         """
         basePath = os.path.join(helpers.ROOT_DIR, self.configFolder)
-        self.create_folder_if_needed(basePath)
+        helpers.create_folder_if_needed(basePath)
 
         targetPath = os.path.join(basePath, folder)
-        self.create_folder_if_needed(targetPath, basePath=basePath)
+        helpers.create_folder_if_needed(targetPath, basePath=basePath)
 
         return targetPath
 
@@ -424,7 +404,7 @@ class Configuration(QDialog):
         Attempts to load credentials automatically from path program regularly stores credentials in if auto is True.
         """
         targetFolder = os.path.join(helpers.ROOT_DIR, self.credentialsFolder)
-        if self.create_folder_if_needed(targetFolder):
+        if helpers.create_folder_if_needed(targetFolder):
             self.credentialResult.setText('No credentials found.')
             return
 
@@ -450,7 +430,7 @@ class Configuration(QDialog):
         Function that saves credentials to base path in a JSON format. Obviously not very secure, but temp fix.
         """
         targetFolder = os.path.join(helpers.ROOT_DIR, self.credentialsFolder)
-        self.create_folder_if_needed(targetFolder)
+        helpers.create_folder_if_needed(targetFolder)
 
         apiKey = self.binanceApiKey.text()
         apiSecret = self.binanceApiSecret.text()

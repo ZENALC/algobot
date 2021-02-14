@@ -5,7 +5,7 @@ import os
 import webbrowser
 
 from typing import List, Dict
-from helpers import ROOT_DIR, open_file_or_folder, get_logger
+from helpers import ROOT_DIR, open_file_or_folder, get_logger, create_folder_if_needed
 from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
 from datetime import datetime
@@ -209,11 +209,8 @@ class Interface(QMainWindow):
         """
         Ends backtest and prompts user if they want to see the results.
         """
-        backtestFolder = os.path.join(ROOT_DIR, 'Backtest Results')
-        if not os.path.exists(backtestFolder):
-            os.mkdir(backtestFolder)
-
-        defaultFile = os.path.join(backtestFolder, self.backtester.get_default_result_file_name())
+        backtestPath = self.create_folder('Backtest Results')
+        defaultFile = os.path.join(backtestPath, self.backtester.get_default_result_file_name())
         fileName, _ = QFileDialog.getSaveFileName(self, 'Save Result', defaultFile, 'TXT (*.txt)')
         fileName = fileName.strip()
         fileName = fileName if fileName != '' else None
@@ -1256,11 +1253,7 @@ class Interface(QMainWindow):
     @staticmethod
     def create_folder(folder):
         targetPath = os.path.join(ROOT_DIR, folder)
-        if not os.path.exists(targetPath):
-            cwd = os.getcwd()
-            os.chdir(ROOT_DIR)
-            os.mkdir(folder)
-            os.chdir(cwd)
+        create_folder_if_needed(targetPath)
 
         return targetPath
 

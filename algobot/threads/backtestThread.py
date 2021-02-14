@@ -149,7 +149,7 @@ class BacktestThread(QRunnable):
         """
         limit = 1000  # Data limit.
         backtester = self.gui.backtester
-        backtester.movingAverageTestStartTime = time.time()
+        backtester.startTime = time.time()
         seenData = backtester.data[:backtester.minPeriod][::-1]  # Start from minimum previous period data.
         backtestPeriod = backtester.data[backtester.startDateIndex: backtester.endDateIndex]
         testLength = len(backtestPeriod)
@@ -191,7 +191,7 @@ class BacktestThread(QRunnable):
         self.signals.activity.emit(self.get_activity_dictionary(period=backtestPeriod[-1],  # Final backtest data.
                                                                 index=testLength,
                                                                 length=testLength))
-        backtester.movingAverageTestEndTime = time.time()
+        backtester.endTime = time.time()
 
     @pyqtSlot()
     def run(self):

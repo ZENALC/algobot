@@ -28,14 +28,12 @@ class Backtester:
         self.marginEnabled = marginEnabled
         self.precision = precision
         self.strategies: Dict[str, Strategy] = {}
-
         self.data = data
         self.check_data()
         self.interval = self.get_interval()
         self.lossStrategy = lossStrategy
         self.lossPercentageDecimal = lossPercentage / 100
-
-        self.outputTrades = outputTrades
+        self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
 
         if options:
             strategy = MovingAverageStrategy(self, options, precision=precision)
@@ -61,8 +59,8 @@ class Backtester:
         self.ema_dict = {}
         self.rsi_dictionary = {}
 
-        self.movingAverageTestStartTime = None
-        self.movingAverageTestEndTime = None
+        self.startTime = None
+        self.endTime = None
         self.startDateIndex = self.get_start_date_index(startDate)
         self.endDateIndex = self.get_end_date_index(endDate)
 
@@ -75,8 +73,8 @@ class Backtester:
 
         self.sellShortPrice = None
         self.shortTrailingPrice = None
-        self.currentPeriod = None
 
+        self.currentPeriod = None
         self.previousStopLoss = None
         self.initialStopLossCounter = 0
         self.stopLossCounter = 0
@@ -103,7 +101,7 @@ class Backtester:
         for data in self.data:
             data['date_utc'] = parser.parse(data['date_utc'])
 
-    def find_date_index(self, datetimeObject):
+    def find_date_index(self, datetimeObject) -> int:
         """
         Finds index of date from datetimeObject if exists in data loaded.
         :param datetimeObject: Object to compare date-time with.
@@ -114,7 +112,7 @@ class Backtester:
                 return self.data.index(data)
         return -1
 
-    def get_start_date_index(self, startDate):
+    def get_start_date_index(self, startDate) -> int:
         """
         Returns index of start date based on startDate argument.
         :param startDate: Datetime object to compare index with.
@@ -127,7 +125,7 @@ class Backtester:
             if startDateIndex == -1:
                 raise IndexError("Date not found.")
             elif startDateIndex < self.minPeriod:
-                raise IndexError(f"Start requires more periods than minimum period amount {self.minPeriod}.")
+                raise IndexError(f"Invalid start date. Please select a date that's {self.minPeriod} periods away.")
             else:
                 return startDateIndex
         else:
@@ -489,7 +487,7 @@ class Backtester:
         """
         Performs a moving average test with given configurations.
         """
-        self.movingAverageTestStartTime = time.time()
+        self.startTime = time.time()
         seenData = self.data[:self.minPeriod][::-1]  # Start from minimum previous period data.
         for period in self.data[self.startDateIndex:self.endDateIndex]:
             seenData.insert(0, period)
@@ -508,7 +506,7 @@ class Backtester:
         elif self.inLongPosition:
             self.exit_long('Exiting long because of end of backtest.')
 
-        self.movingAverageTestEndTime = time.time()
+        self.endTime = time.time()
         # self.print_stats()
         # self.print_trades()
 
@@ -563,7 +561,7 @@ class Backtester:
 
         print("\nBacktest results:")
         print(f'\tSymbol: {"Unknown/Imported Data" if self.symbol is None else self.symbol}')
-        print(f'\tElapsed: {round(self.movingAverageTestEndTime - self.movingAverageTestStartTime, 2)} seconds')
+        print(f'\tElapsed: {round(self.endTime - self.startTime, 2)} seconds')
         print(f'\tShrek Enabled: {self.shrekEnabled}')
         if self.shrekEnabled:
             print(f'\tShrek Options: {self.strategies["shrek"].get_params()}')

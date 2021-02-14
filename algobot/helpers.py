@@ -145,7 +145,7 @@ def get_label_string(label: str) -> str:
     """
     Returns prettified string from a camel case formatted string.
     :param label: Potential string in camel case format.
-    :return: Prettified string.
+    :return: Camel-case string.
     """
     label = str(label)
     if not label[0].isupper():
@@ -198,6 +198,26 @@ def get_elapsed_time(startingTime) -> str:
         minutes = seconds // 60
         seconds = seconds % 60
         return f'{hours}h {minutes}m {seconds}s'
+
+
+def create_folder_if_needed(targetPath: str, basePath=None) -> bool:
+    """
+    This function will create the appropriate folders in the root folder if needed.
+    :param targetPath: Target path to have exist.
+    :param basePath: Base path to start from. If none, it'll be the root directory.
+    :return: Boolean whether folder was created or not.
+    """
+    if not basePath:
+        basePath = ROOT_DIR
+
+    if not os.path.exists(targetPath):
+        folder = os.path.basename(targetPath)
+        cur_path = os.getcwd()
+        os.chdir(basePath)
+        os.mkdir(folder)
+        os.chdir(cur_path)
+        return True
+    return False
 
 
 def get_data_from_parameter(data, parameter) -> float:
