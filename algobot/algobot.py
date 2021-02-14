@@ -145,8 +145,8 @@ class Interface(QMainWindow):
                    if 'USDT' in ticker['symbol']]
 
         tickers.sort()
-        tickers.remove("BTCUSDT")
-        tickers.insert(0, 'BTCUSDT')
+        # tickers.remove("BTCUSDT")
+        # tickers.insert(0, 'BTCUSDT')
 
         return tickers
 
@@ -154,16 +154,14 @@ class Interface(QMainWindow):
         """
         Sets up all available tickers from Binance API and displays them on appropriate combo boxes in application.
         """
-        self.configuration.tickerComboBox.clear()  # Clear all existing live tickers.
-        self.configuration.backtestTickerComboBox.clear()  # Clear all existing backtest tickers.
-        self.configuration.simulationTickerComboBox.clear()  # Clear all existing simulation tickers.
+        config = self.configuration
+        tickerWidgets = [config.tickerComboBox, config.backtestTickerComboBox, config.simulationTickerComboBox,
+                         self.otherCommands.csvGenerationTicker]
 
-        self.configuration.tickerComboBox.addItems(tickers)
-        self.configuration.backtestTickerComboBox.addItems(tickers)
-        self.configuration.simulationTickerComboBox.addItems(tickers)
+        for widget in tickerWidgets:
+            widget.clear()
+            widget.addItems(tickers)
 
-        self.otherCommands.csvGenerationTicker.clear()
-        self.otherCommands.csvGenerationTicker.addItems(tickers)
         self.configuration.serverResult.setText("Updated tickers successfully.")
 
     def setup_news(self, news):
@@ -199,6 +197,10 @@ class Interface(QMainWindow):
         self.threadPool.start(worker)
 
     def end_backtest_thread(self):
+        """
+        Ends backtest thread if it is running,
+        :return: None
+        """
         thread = self.threads[BACKTEST]
         if thread:
             thread.stop()
@@ -355,17 +357,26 @@ class Interface(QMainWindow):
         self.enable_override(caller, False)  # Disable overrides.
         thread = workerThread.Worker(lambda: self.end_bot_gracefully(caller=caller))
         thread.signals.error.connect(self.create_popup)
-        thread.signals.finished.connect(lambda: self.end_bot_monitoring(caller=caller))
+        thread.signals.finished.connect(lambda: self.add_end_bot_status(caller=caller))
         thread.signals.restore.connect(lambda: self.reset_bot_interface(caller=caller))
         self.threadPool.start(thread)
 
-    def end_bot_monitoring(self, caller):
+    def add_end_bot_status(self, caller):
+        """
+        Adds a status update to let user know that bot has been ended.
+        :param caller: Caller that'll determine which monitor gets updated.
+        """
         if caller == SIMULATION:
             self.add_to_monitor(caller, "Killed simulation bot.")
         else:
             self.add_to_monitor(caller, "Killed bot.")
 
     def reset_bot_interface(self, caller):
+        """
+        Resets bot interface based on
+        :param caller:
+        :return:
+        """
         self.enable_override(caller, False)
         self.disable_interface(disable=False, caller=caller)
 
@@ -491,7 +502,6 @@ class Interface(QMainWindow):
         disable = not disable
         # self.interfaceDictionary[caller]['configuration']['mainConfigurationTabWidget'].setEnabled(disable)
         self.interfaceDictionary[caller]['configuration']['mainTab'].setEnabled(disable)
-        self.interfaceDictionary[caller]['configuration']['averageTab'].setEnabled(disable)
         self.interfaceDictionary[caller]['configuration']['lossTab'].setEnabled(disable)
         self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(disable)
 
@@ -794,29 +804,6 @@ class Interface(QMainWindow):
             mainDict['disableCustomStopLossButton'].setEnabled(False)
             self.add_to_monitor(caller, f'Removed custom stop loss.')
 
-    def get_trading_options(self, caller) -> list:
-        """
-        Returns trading options based on caller specified.
-        :param caller: Caller object that will determine which trading options are returned.
-        :return: Trading options based on caller.
-        """
-        configDictionary = self.interfaceDictionary[caller]['configuration']
-        baseAverageType = configDictionary['baseAverageType'].currentText()
-        baseParameter = configDictionary['baseParameter'].currentText().lower()
-        baseInitialValue = configDictionary['baseInitialValue'].value()
-        baseFinalValue = configDictionary['baseFinalValue'].value()
-        options = [Option(baseAverageType, baseParameter, baseInitialValue, baseFinalValue)]
-
-        if configDictionary['doubleCrossCheck'].isChecked():
-            additionalAverageType = configDictionary['additionalAverageType'].currentText()
-            additionalParameter = configDictionary['additionalParameter'].currentText().lower()
-            additionalInitialValue = configDictionary['additionalInitialValue'].value()
-            additionalFinalValue = configDictionary['additionalFinalValue'].value()
-            option = Option(additionalAverageType, additionalParameter, additionalInitialValue, additionalFinalValue)
-            options.append(option)
-
-        return options
-
     def get_loss_settings(self, caller) -> tuple:
         """
         Returns loss settings for caller specified.
@@ -934,9 +921,11 @@ class Interface(QMainWindow):
         if trader.movingAverageEnabled:
             for option in trader.strategies['movingAverage'].get_params():
                 initialAverage, finalAverage, initialName, finalName = self.get_option_info(option, trader)
-                initialPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter], y=initialAverage,
+                initialPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter % len(colors)],
+                                                           y=initialAverage,
                                                            name=initialName, timestamp=currentDateTimestamp)
-                secondaryPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter + 1],
+                secondaryPlotDict = self.get_plot_dictionary(graph=graph,
+                                                             color=colors[(colorCounter + 1) % len(colors)],
                                                              y=finalAverage,
                                                              name=finalName, timestamp=currentDateTimestamp)
                 colorCounter += 2
@@ -1430,6 +1419,7 @@ class Interface(QMainWindow):
         self.runBacktestButton.clicked.connect(self.initiate_backtest)
         self.endBacktestButton.clicked.connect(self.end_backtest_thread)
         self.clearBacktestTableButton.clicked.connect(lambda: self.clear_table(self.backtestTable))
+        self.viewBacktestsButton.clicked.connect(lambda: self.open_folder("Backtest Results"))
 
     def create_interface_slots(self):
         """

@@ -4,8 +4,10 @@ from data import Data
 from enums import BEARISH, BULLISH
 from option import Option
 
-
-# Create your strategies here.
+"""
+Create your strategies here then import them to configuration.py to load them to the GUI. Please make sure
+that they have some default values for the GUI to initialize them.
+"""
 
 
 class Strategy:
@@ -19,6 +21,8 @@ class Strategy:
         self.parent = parent
         self.precision = precision
         self.trend = None
+        self.dynamic = False  # Set this to true if you want to have additional slots.
+        self.description = "No strategy description found. You can setup your strategy description in strategies.py."
         self.strategyDict = {}
         self.lowerIntervalDict = {}
 
@@ -32,6 +36,10 @@ class Strategy:
 
     def get_params(self) -> list:
         raise NotImplementedError("Implement a function to return parameters.")
+
+    @staticmethod
+    def get_param_types():
+        raise NotImplementedError("Implement a function return input types.")
 
     def reset_strategy_dictionary(self):
         """
@@ -52,9 +60,10 @@ class Strategy:
 
 
 class StoicStrategy(Strategy):
-    def __init__(self, parent, input1: int, input2: int, input3: int, precision: int = 2):
+    def __init__(self, parent=None, input1: int = -1, input2: int = -1, input3: int = -1, precision: int = 2):
         super().__init__(name='Stoic', parent=parent, precision=precision)
 
+        self.description = "Custom strategy based off of RSI values with three inputs developed by Peter Motin."
         self.stoicInput1: int = input1
         self.stoicInput2: int = input2
         self.stoicInput3: int = input3
@@ -160,11 +169,16 @@ class StoicStrategy(Strategy):
     def get_params(self) -> list:
         return [self.stoicInput1, self.stoicInput2, self.stoicInput3]
 
+    @staticmethod
+    def get_param_types() -> list:
+        return [int, int, int]
+
 
 class ShrekStrategy(Strategy):
-    def __init__(self, parent, one: int, two: int, three: int, four: int, precision: int = 2):
+    def __init__(self, parent=None, one: int = -1, two: int = -1, three: int = -1, four: int = -1, precision: int = 2):
         super().__init__(name='Shrek', parent=parent, precision=precision)
 
+        self.description = "Custom strategy based off of RSI values with four inputs developed by Peter Motin."
         self.one: int = one
         self.two: int = two
         self.three: int = three
@@ -172,6 +186,10 @@ class ShrekStrategy(Strategy):
 
     def get_params(self) -> list:
         return [self.one, self.two, self.three, self.four]
+
+    @staticmethod
+    def get_param_types() -> list:
+        return [int, int, int, int]
 
     def get_trend(self, data: List[dict] or Data = None, shift: int = 0, update: bool = False, log_data=False):
         """
@@ -242,10 +260,16 @@ class ShrekStrategy(Strategy):
 
 
 class MovingAverageStrategy(Strategy):
-    def __init__(self, parent, tradingOptions, precision: int = 2):
-        super().__init__(name='movingAverage', parent=parent, precision=precision)
+    def __init__(self, parent=None, tradingOptions=None, precision: int = 2):
+        super().__init__(name='Moving Average', parent=parent, precision=precision)
         self.tradingOptions: List[Option] = tradingOptions
-        self.validate_options()
+        self.dynamic = True
+        self.description = "Basic trading strategy using moving averages. If the moving average of initial is greater" \
+                           " than final, a bullish trend is determined. If the moving average of final is greater, a " \
+                           "bearish trend is determined."
+
+        if parent:  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
+            self.validate_options()
 
     def get_min_option_period(self) -> int:
         """
@@ -257,6 +281,16 @@ class MovingAverageStrategy(Strategy):
         for option in self.tradingOptions:
             minimum = max(minimum, option.finalBound, option.initialBound)
         return minimum
+
+    @staticmethod
+    def get_param_types() -> list:
+        movingAverages = ['SMA', 'EMA', 'WMA']
+        parameters = ['High', 'Low', 'Open', 'Close', 'High/Low', 'Open/Close']
+        return [('Moving Average', tuple, movingAverages),
+                ('Parameter', tuple, parameters),
+                ('Initial', int),
+                ('Final', int)
+                ]
 
     def get_params(self) -> list:
         return self.tradingOptions

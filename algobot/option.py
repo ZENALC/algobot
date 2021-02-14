@@ -5,9 +5,9 @@ class Option:
     """
     Helper class object for trading options.
     """
-    def __init__(self, movingAverage, parameter, initialBound, finalBound):
-        self.movingAverage = movingAverage
-        self.parameter = parameter
+    def __init__(self, movingAverage: str, parameter: str, initialBound: int, finalBound: int):
+        self.movingAverage = movingAverage.upper()
+        self.parameter = parameter.lower()
         self.initialBound = initialBound
         self.finalBound = finalBound
 
@@ -42,25 +42,25 @@ class Option:
         """
         self.initialBound = initialBound
 
-    def get_moving_average(self):
+    def get_moving_average(self) -> str:
         """
         Returns current trading option's moving average.
         """
         return self.movingAverage
 
-    def get_parameter(self):
+    def get_parameter(self) -> str:
         """
         Returns current trading option's parameter.
         """
         return self.parameter
 
-    def get_initial_bound(self):
+    def get_initial_bound(self) -> int:
         """
         Returns current trading option's initial bound.
         """
         return self.initialBound
 
-    def get_final_bound(self):
+    def get_final_bound(self) -> int:
         """
         Returns current trading option's final bound.
         """
@@ -76,7 +76,7 @@ class Option:
             f'{self.movingAverage}({self.finalBound}) {self.parameter.capitalize()}',
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Returns class representation of object.
         """

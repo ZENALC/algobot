@@ -1,15 +1,19 @@
+import datetime
 import os
 import telegram
 import helpers
 
+from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox, QTabWidget, QFormLayout, QLabel, QSpinBox, \
+    QGroupBox, QVBoxLayout, QDoubleSpinBox, QLineEdit, QComboBox, QPushButton, QHBoxLayout, QFrame, QScrollArea
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 from binance.client import Client
 from telegram.ext import Updater
 from dateutil import parser
 from threads import downloadThread
+from typing import List, Tuple
 from enums import SIMULATION, LIVE, BACKTEST
+from strategies import StoicStrategy, ShrekStrategy, MovingAverageStrategy
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
@@ -30,17 +34,246 @@ class Configuration(QDialog):
         self.configFolder = 'Configuration'
         self.basicFilePath = os.path.join(helpers.ROOT_DIR, 'state.json')
 
+        self.categoryTabs = [self.mainConfigurationTabWidget,
+                             self.simulationConfigurationTabWidget,
+                             self.backtestConfigurationTabWidget,
+                             ]
+        self.strategies = {  # Add your strategy to this dictionary of strategies.
+            'Stoic': StoicStrategy,
+            'Shrek': ShrekStrategy,
+            'Moving Average': MovingAverageStrategy,
+        }
+        self.strategyDict = {}  # We will store all the strategy slot information in this dictionary.
+
         self.load_slots()
         self.load_credentials()
+        self.load_strategy_slots()
+
+    def get_category_tab(self, caller: int) -> QTabWidget:
+        """
+        This will return the category tab (main, simulation, or live) based on the caller provided.
+        :param caller: Caller argument to return the appropriate category tab.
+        :return: Category tab widget object.
+        """
+        if caller == BACKTEST:
+            return self.categoryTabs[2]
+        elif caller == SIMULATION:
+            return self.categoryTabs[1]
+        elif caller == LIVE:
+            return self.categoryTabs[0]
+        else:
+            raise ValueError("Invalid type of caller provided.")
+
+    def strategy_enabled(self, strategyName: str, caller: int) -> bool:
+        """
+        Returns a boolean whether a strategy is enabled or not.
+        :param strategyName: Name of strategy to check if enabled.
+        :param caller: Caller of the strategy.
+        :return: Boolean whether strategy is enabled or not.
+        """
+        tab = self.get_category_tab(caller)
+        return self.strategyDict[tab, strategyName, 'groupBox'].isChecked()
+
+    @staticmethod
+    def get_input_widget_value(inputWidget, verbose: bool = False):
+        """
+        This function will attempt to get the value of the inputWidget and return it.
+        :param verbose: If verbose, return value of widget when possible.
+        :param inputWidget: Input widget to try to get the value of.
+        :return: Value of inputWidget object.
+        """
+        if isinstance(inputWidget, QSpinBox) or isinstance(inputWidget, QDoubleSpinBox):
+            return inputWidget.value()
+        elif isinstance(inputWidget, QLineEdit):
+            return inputWidget.text()
+        elif isinstance(inputWidget, QComboBox):
+            if verbose:
+                return inputWidget.currentText()
+            else:
+                return inputWidget.currentIndex()
+        else:
+            raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
+
+    @staticmethod
+    def get_h_line() -> QFrame:
+        """
+        Returns a horizontal line object made using a QFrame object.
+        :return: Horizontal line using a QFrame.
+        """
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        return line
+
+    def get_strategy_values(self, strategyName: str, caller: int, verbose: bool = False) -> List[int]:
+        """
+        This will return values from the strategy provided.
+        :param verbose: If verbose, return value of widget when possible.
+        :param strategyName: Name of strategy to get values from.
+        :param caller: Caller that'll determine which tab object is used to get the strategy values.
+        :return: List of strategy values.
+        """
+        tab = self.get_category_tab(caller)
+        values = []
+        for inputWidget in self.strategyDict[tab, strategyName, 'values']:
+            values.append(self.get_input_widget_value(inputWidget, verbose=verbose))
+
+        return values
+
+    def delete_strategy_inputs(self, parameters, strategyName, tab):
+        """
+        Dynamically deletes strategy inputs.
+        :param parameters: Parameters of the strategy.
+        :param strategyName: Name of strategy to determine the dictionary.
+        :param tab: Tab in which to delete strategy inputs.
+        :return: None
+        """
+        values = self.strategyDict[tab, strategyName, 'values']
+        labels = self.strategyDict[tab, strategyName, 'labels']
+        if len(values) <= len(parameters):
+            self.strategyDict[tab, strategyName, 'status'].setText("Can't delete additional slots.")
+        else:
+            for _ in range(len(parameters)):
+                value = values.pop()
+                value.setParent(None)
+
+                label = labels.pop()
+                label.setParent(None)
+
+            labels.pop().setParent(None)  # Pop off the horizontal line from labels.
+            self.strategyDict[tab, strategyName, 'status'].setText("Deleted additional slots.")
+
+    def create_strategy_inputs(self, parameters, strategyName, groupBoxLayout) -> Tuple[list, list]:
+        """
+        This function will create strategy slots and labels based on the parameters provided to the layout.
+        :param parameters: Parameters to add to strategy GUI slots.
+        :param strategyName: Name of strategy.
+        :param groupBoxLayout: Layout to add the slots to.
+        :return: Tuple of labels and values lists.
+        """
+        labels = []
+        values = []
+        for paramIndex, parameter in enumerate(parameters):
+            if type(parameter) == tuple:
+                label = QLabel(parameter[0])
+                parameter = parameter[1:]  # Set parameter to just the last element so we can use this later.
+            elif parameter == int:
+                label = QLabel(f'{strategyName} input {paramIndex + 1}')
+                parameter = [parameter]
+            else:
+                raise TypeError("Please make sure your function get_param_types() only has ints or tuples.")
+
+            if parameter[0] == int:
+                value = QSpinBox()
+                value.setRange(1, 500)
+            elif parameter[0] == float:
+                value = QDoubleSpinBox()
+            elif parameter[0] == str:
+                value = QLineEdit()
+            elif parameter[0] == tuple:
+                elements = parameter[1]
+                value = QComboBox()
+                value.addItems(elements)
+            else:
+                raise TypeError("Invalid type of parameter provided.")
+
+            labels.append(label)
+            values.append(value)
+            groupBoxLayout.addRow(label, value)
+
+        line = self.get_h_line()
+        labels.append(line)
+        groupBoxLayout.addWidget(line)
+
+        return values, labels
+
+    def add_strategy_inputs(self, parameters, strategyName, groupBoxLayout, tab):
+        """
+        Adds strategy parameters to the layout provided.
+        :param parameters: Parameters to add to the group box layout.
+        :param strategyName: Name of strategy.
+        :param groupBoxLayout: Layout to add parameters to.
+        :param tab: Add which group box layout is in.
+        :return: None
+        """
+        values, labels = self.create_strategy_inputs(parameters, strategyName, groupBoxLayout)
+        self.strategyDict[tab, strategyName, 'labels'] += labels
+        self.strategyDict[tab, strategyName, 'values'] += values
+        self.strategyDict[tab, strategyName, 'status'].setText("Added additional slots.")
+
+    def add_strategy_buttons(self, parameters, strategyName, groupBoxLayout, tab) -> Tuple[QPushButton, QPushButton]:
+        """
+        Adds add and delete buttons to strategy GUI.
+        :param parameters: Parameters to pass to strategy inputs function.
+        :param strategyName: Name of strategy.
+        :param groupBoxLayout: Layout to add strategy buttons to.
+        :param tab: Tab to modify GUI.
+        :return: Tuple of add and delete buttons.
+        """
+        addButton = QPushButton("Add Extra")
+        addButton.clicked.connect(lambda: self.add_strategy_inputs(parameters, strategyName, groupBoxLayout, tab))
+        deleteButton = (QPushButton("Delete Extra"))
+        deleteButton.clicked.connect(lambda: self.delete_strategy_inputs(parameters, strategyName, tab))
+
+        return addButton, deleteButton
+
+    def load_strategy_slots(self):
+        """
+        This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
+        are loaded from the self.strategies dictionary. Make sure you add your strategy to that dictionary with the key
+        as the strategy name and the value as the strategy class.
+        :return: None
+        """
+        for strategy in self.strategies.values():
+            temp = strategy()
+            strategyName = temp.name
+            parameters = temp.get_param_types()
+            for tab in self.categoryTabs:
+                self.strategyDict[tab, strategyName] = tabWidget = QTabWidget()
+                self.strategyDict[tab, strategyName, 'groupBox'] = groupBox = QGroupBox(f"Enable {strategyName}?")
+
+                layout = QVBoxLayout()
+                descriptionLabel = QLabel(f'Strategy description: {temp.description}')
+                descriptionLabel.setWordWrap(True)
+                layout.addWidget(descriptionLabel)
+
+                scroll = QScrollArea()  # Added a scroll area so user can scroll when additional slots are added.
+                scroll.setWidget(groupBox)
+                scroll.setWidgetResizable(True)
+
+                groupBox.setCheckable(True)
+                groupBox.setChecked(False)
+                groupBoxLayout = QFormLayout()
+                groupBox.setLayout(groupBoxLayout)
+
+                status = QLabel()
+                if temp.dynamic:
+                    addButton, deleteButton = self.add_strategy_buttons(parameters, strategyName, groupBoxLayout, tab)
+                    horizontalLayout = QHBoxLayout()
+                    horizontalLayout.addWidget(addButton)
+                    horizontalLayout.addWidget(deleteButton)
+                    horizontalLayout.addWidget(status)
+                    horizontalLayout.addStretch()
+                    layout.addLayout(horizontalLayout)
+
+                layout.addWidget(scroll)
+
+                values, labels = self.create_strategy_inputs(parameters, strategyName, groupBoxLayout)
+                self.strategyDict[tab, strategyName, 'values'] = values
+                self.strategyDict[tab, strategyName, 'labels'] = labels
+                self.strategyDict[tab, strategyName, 'parameters'] = parameters
+                self.strategyDict[tab, strategyName, 'layout'] = groupBoxLayout
+                self.strategyDict[tab, strategyName, 'status'] = status
+
+                tabWidget.setLayout(layout)
+                tab.addTab(tabWidget, strategyName)
 
     def test_telegram(self):
         """
         Tests Telegram connection and updates respective GUI elements.
         """
-        tokenPass = False
-        chatPass = False
-        message = ""
-        error = ''
+        tokenPass = chatPass = False
+        message = error = ''
 
         try:
             telegramApikey = self.telegramApiKey.text()
@@ -50,7 +283,7 @@ class Configuration(QDialog):
             telegram.Bot(token=telegramApikey).send_message(chat_id=chatID, text='Testing connection with Chat ID.')
             chatPass = True
         except Exception as e:
-            error = str(e)
+            error = repr(e)
             if 'ConnectionError' in error:
                 error = 'There was a connection error. Please check your connection.'
 
@@ -74,6 +307,9 @@ class Configuration(QDialog):
         self.tokenPass = tokenPass
 
     def reset_telegram_state(self):
+        """
+        Resets telegram state once something is changed in the Telegram configuration GUI.
+        """
         self.chatPass = False
         self.tokenPass = False
         self.telegrationConnectionResult.setText("Telegram credentials not yet tested.")
@@ -88,14 +324,20 @@ class Configuration(QDialog):
             Client(apiKey, apiSecret).get_account()
             self.credentialResult.setText('Connected successfully.')
         except Exception as e:
-            stringError = str(e)
+            stringError = repr(e)
             if '1000ms' in stringError:
                 self.credentialResult.setText('Time not synchronized. Please synchronize your time.')
             else:
                 self.credentialResult.setText(stringError)
 
     @staticmethod
-    def create_folder_if_needed(targetPath, basePath=None):
+    def create_folder_if_needed(targetPath: str, basePath=None) -> bool:
+        """
+        This function will create the appropriate folders in the root folder if needed.
+        :param targetPath: Target path to have exist.
+        :param basePath: Base path to start from. If none, it'll be the root directory.
+        :return: Boolean whether folder was created or not.
+        """
         if not basePath:
             basePath = helpers.ROOT_DIR
 
@@ -108,7 +350,27 @@ class Configuration(QDialog):
             return True
         return False
 
+    def create_appropriate_config_folders(self, folder: str) -> str:
+        """
+        Creates appropriate configuration folders. If a configuration folder doesn't exist, it'll create that. Next,
+        it'll try to check if a type of configuration folder exists (e.g. Live, Simulation, Backtest). If it exists,
+        it'll just return the path to it. If not, it'll create the folder then return the path to it.
+        :param folder: Folder to create inside configuration folder.
+        :return: Absolute path to new folder.
+        """
+        basePath = os.path.join(helpers.ROOT_DIR, self.configFolder)
+        self.create_folder_if_needed(basePath)
+
+        targetPath = os.path.join(basePath, folder)
+        self.create_folder_if_needed(targetPath, basePath=basePath)
+
+        return targetPath
+
     def load_state(self):
+        """
+        This function will attempt to load previous basic configuration settings from self.basicFilePath.
+        :return: None
+        """
         if os.path.exists(self.basicFilePath):
             try:
                 config = helpers.load_json_file(self.basicFilePath)
@@ -137,6 +399,9 @@ class Configuration(QDialog):
                     self.parent.add_to_live_activity_monitor('Failed to load previous state.')
 
     def save_state(self):
+        """
+        Saves bot configuration to a JSON file for next application run.
+        """
         config = {
             'lightTheme': self.lightModeRadioButton.isChecked(),
             'darkTheme': self.darkModeRadioButton.isChecked(),
@@ -200,11 +465,10 @@ class Configuration(QDialog):
             helpers.write_json_file(filePath=filePath, apiKey=apiKey, apiSecret=apiSecret,
                                     telegramApiKey=telegramApiKey, chatID=telegramChatId)
             self.credentialResult.setText(f'Credentials saved successfully to {os.path.basename(filePath)}.')
-            # QMessageBox.about(self, 'Info', 'Credentials have successfully been overwritten.')
         else:
             self.credentialResult.setText('Credentials could not be saved.')
 
-    def get_calendar_dates(self):
+    def get_calendar_dates(self) -> Tuple[datetime.date or None, datetime.date or None]:
         """
         Returns start end end dates for backtest. If both are the same, returns None.
         :return: Start and end dates for backtest.
@@ -324,17 +588,10 @@ class Configuration(QDialog):
         self.backtestDataLabel.setText(f'Currently using {symbol} in {interval} intervals to conduct backtest.')
         self.setup_calendar()
 
-    def create_appropriate_config_folders(self, folder):
-        basePath = os.path.join(helpers.ROOT_DIR, self.configFolder)
-        self.create_folder_if_needed(basePath)
-
-        targetPath = os.path.join(basePath, folder)
-        self.create_folder_if_needed(targetPath, basePath=basePath)
-
-        return targetPath
-
-    # noinspection DuplicatedCode
     def save_backtest_settings(self):
+        """
+        Saves backtest settings to JSON file.
+        """
         config = {
             # General
             'type': BACKTEST,
@@ -344,36 +601,15 @@ class Configuration(QDialog):
             'precision': self.backtestPrecisionSpinBox.value(),
             'marginTrading': self.backtestMarginTradingCheckBox.isChecked(),
 
-            # Averages
-            'averageType': self.backtestAverageTypeComboBox.currentIndex(),
-            'parameter': self.backtestParameterComboBox.currentIndex(),
-            'initialValue': self.backtestInitialValueSpinBox.value(),
-            'finalValue': self.backtestFinalValueSpinBox.value(),
-            'doubleCross': self.backtestDoubleCrossCheckMark.isChecked(),
-            'averageType2': self.backtestDoubleAverageComboBox.currentIndex(),
-            'parameter2': self.backtestDoubleParameterComboBox.currentIndex(),
-            'initialValue2': self.backtestDoubleInitialValueSpinBox.value(),
-            'finalValue2': self.backtestDoubleFinalValueSpinBox.value(),
-
-            # Stoics
-            'stoic': self.backtestStoicCheckMark.isChecked(),
-            'stoic1': self.backtestStoicSpinBox1.value(),
-            'stoic2': self.backtestStoicSpinBox2.value(),
-            'stoic3': self.backtestStoicSpinBox3.value(),
-
-            # Shrek
-            'shrek': self.backtestShrekCheckMark.isChecked(),
-            'shrek1': self.backtestShrekSpinBox1.value(),
-            'shrek2': self.backtestShrekSpinBox2.value(),
-            'shrek3': self.backtestShrekSpinBox3.value(),
-            'shrek4': self.backtestShrekSpinBox4.value(),
-
             # Loss
             'trailingLoss': self.backtestTrailingLossRadio.isChecked(),
             'stopLoss': self.backtestStopLossRadio.isChecked(),
             'lossPercentage': self.backtestLossPercentageSpinBox.value(),
             'smartStopLossCounter': self.backtestSmartStopLossSpinBox.value(),
         }
+
+        for strategyName in self.strategies.keys():
+            self.add_strategy_to_config(BACKTEST, strategyName, config)
 
         targetPath = self.create_appropriate_config_folders('Backtest')
         defaultPath = os.path.join(targetPath, 'backtest_configuration.json')
@@ -387,8 +623,10 @@ class Configuration(QDialog):
         else:
             self.backtestConfigurationResult.setText("Could not save backtest configuration.")
 
-    # noinspection DuplicatedCode
     def load_backtest_settings(self):
+        """
+        Loads backtest settings from JSON file and sets them to backtest settings.
+        """
         targetPath = self.create_appropriate_config_folders('Backtest')
         filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetPath, "JSON (*.json)")
         try:
@@ -402,31 +640,13 @@ class Configuration(QDialog):
                 self.backtestPrecisionSpinBox.setValue(config['precision'])
                 self.backtestMarginTradingCheckBox.setChecked(config['marginTrading'])
 
-                self.backtestAverageTypeComboBox.setCurrentIndex(config['averageType'])
-                self.backtestParameterComboBox.setCurrentIndex(config['parameter'])
-                self.backtestInitialValueSpinBox.setValue(config['initialValue'])
-                self.backtestFinalValueSpinBox.setValue(config['finalValue'])
-                self.backtestDoubleCrossCheckMark.setChecked(config['doubleCross'])
-                self.backtestDoubleAverageComboBox.setCurrentIndex(config['averageType2'])
-                self.backtestDoubleParameterComboBox.setCurrentIndex(config['parameter2'])
-                self.backtestDoubleInitialValueSpinBox.setValue(config['initialValue2'])
-                self.backtestDoubleFinalValueSpinBox.setValue(config['finalValue2'])
-
-                self.backtestStoicCheckMark.setChecked(config['stoic'])
-                self.backtestStoicSpinBox1.setValue(config['stoic1'])
-                self.backtestStoicSpinBox2.setValue(config['stoic2'])
-                self.backtestStoicSpinBox3.setValue(config['stoic3'])
-
-                self.backtestShrekCheckMark.setChecked(config['shrek'])
-                self.backtestShrekSpinBox1.setValue(config['shrek1'])
-                self.backtestShrekSpinBox2.setValue(config['shrek2'])
-                self.backtestShrekSpinBox3.setValue(config['shrek3'])
-                self.backtestShrekSpinBox4.setValue(config['shrek4'])
-
                 self.backtestTrailingLossRadio.setChecked(config['trailingLoss'])
                 self.backtestStopLossRadio.setChecked(config['stopLoss'])
                 self.backtestLossPercentageSpinBox.setValue(config['lossPercentage'])
                 self.backtestSmartStopLossSpinBox.setValue(config['smartStopLossCounter'])
+
+                for strategyName in self.strategies.keys():
+                    self.load_strategy_from_config(BACKTEST, strategyName, config)
 
                 file = os.path.basename(filePath)
                 self.backtestConfigurationResult.setText(f"Loaded backtest configuration successfully from {file}.")
@@ -434,8 +654,10 @@ class Configuration(QDialog):
             self.logger.exception(str(e))
             self.backtestConfigurationResult.setText("Could not load backtest configuration.")
 
-    # noinspection DuplicatedCode
     def save_simulation_settings(self):
+        """
+        Saves simulation settings to JSON file.
+        """
         config = {
             # General
             'type': SIMULATION,
@@ -445,30 +667,6 @@ class Configuration(QDialog):
             'precision': self.simulationPrecisionSpinBox.value(),
             'lowerInterval': self.lowerIntervalSimulationCheck.isChecked(),
 
-            # Averages
-            'averageType': self.simulationAverageTypeComboBox.currentIndex(),
-            'parameter': self.simulationParameterComboBox.currentIndex(),
-            'initialValue': self.simulationInitialValueSpinBox.value(),
-            'finalValue': self.simulationFinalValueSpinBox.value(),
-            'doubleCross': self.simulationDoubleCrossCheckMark.isChecked(),
-            'averageType2': self.simulationDoubleAverageComboBox.currentIndex(),
-            'parameter2': self.simulationDoubleParameterComboBox.currentIndex(),
-            'initialValue2': self.simulationDoubleInitialValueSpinBox.value(),
-            'finalValue2': self.simulationDoubleFinalValueSpinBox.value(),
-
-            # Stoics
-            'stoic': self.simulationStoicCheckMark.isChecked(),
-            'stoic1': self.simulationStoicSpinBox1.value(),
-            'stoic2': self.simulationStoicSpinBox2.value(),
-            'stoic3': self.simulationStoicSpinBox3.value(),
-
-            # Shrek
-            'shrek': self.simulationShrekCheckMark.isChecked(),
-            'shrek1': self.simulationShrekSpinBox1.value(),
-            'shrek2': self.simulationShrekSpinBox2.value(),
-            'shrek3': self.simulationShrekSpinBox3.value(),
-            'shrek4': self.simulationShrekSpinBox4.value(),
-
             # Loss
             'trailingLoss': self.simulationTrailingLossRadio.isChecked(),
             'stopLoss': self.simulationStopLossRadio.isChecked(),
@@ -476,6 +674,9 @@ class Configuration(QDialog):
             'smartStopLossCounter': self.simulationSmartStopLossSpinBox.value(),
             'safetyTimer': self.simulationSafetyTimerSpinBox.value(),
         }
+
+        for strategyName in self.strategies.keys():
+            self.add_strategy_to_config(SIMULATION, strategyName, config)
 
         targetPath = self.create_appropriate_config_folders('Simulation')
         defaultPath = os.path.join(targetPath, 'simulation.json')
@@ -489,8 +690,10 @@ class Configuration(QDialog):
         else:
             self.simulationConfigurationResult.setText("Could not save simulation configuration.")
 
-    # noinspection DuplicatedCode
     def load_simulation_settings(self):
+        """
+        Loads simulation settings from JSON file and sets it to simulation settings.
+        """
         targetPath = self.create_appropriate_config_folders('Simulation')
         filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetPath, "JSON (*.json)")
         try:
@@ -504,32 +707,14 @@ class Configuration(QDialog):
                 self.simulationPrecisionSpinBox.setValue(config['precision'])
                 self.lowerIntervalSimulationCheck.setChecked(config['lowerInterval'])
 
-                self.simulationAverageTypeComboBox.setCurrentIndex(config['averageType'])
-                self.simulationParameterComboBox.setCurrentIndex(config['parameter'])
-                self.simulationInitialValueSpinBox.setValue(config['initialValue'])
-                self.simulationFinalValueSpinBox.setValue(config['finalValue'])
-                self.simulationDoubleCrossCheckMark.setChecked(config['doubleCross'])
-                self.simulationDoubleAverageComboBox.setCurrentIndex(config['averageType2'])
-                self.simulationDoubleParameterComboBox.setCurrentIndex(config['parameter2'])
-                self.simulationDoubleInitialValueSpinBox.setValue(config['initialValue2'])
-                self.simulationDoubleFinalValueSpinBox.setValue(config['finalValue2'])
-
-                self.simulationStoicCheckMark.setChecked(config['stoic'])
-                self.simulationStoicSpinBox1.setValue(config['stoic1'])
-                self.simulationStoicSpinBox2.setValue(config['stoic2'])
-                self.simulationStoicSpinBox3.setValue(config['stoic3'])
-
-                self.simulationShrekCheckMark.setChecked(config['shrek'])
-                self.simulationShrekSpinBox1.setValue(config['shrek1'])
-                self.simulationShrekSpinBox2.setValue(config['shrek2'])
-                self.simulationShrekSpinBox3.setValue(config['shrek3'])
-                self.simulationShrekSpinBox4.setValue(config['shrek4'])
-
                 self.simulationTrailingLossRadio.setChecked(config['trailingLoss'])
                 self.simulationStopLossRadio.setChecked(config['stopLoss'])
                 self.simulationLossPercentageSpinBox.setValue(config['lossPercentage'])
                 self.simulationSmartStopLossSpinBox.setValue(config['smartStopLossCounter'])
                 self.simulationSafetyTimerSpinBox.setValue(config['safetyTimer'])
+
+                for strategyName in self.strategies.keys():
+                    self.load_strategy_from_config(SIMULATION, strategyName, config)
 
                 file = os.path.basename(filePath)
                 self.simulationConfigurationResult.setText(f"Loaded simulation configuration successfully from {file}.")
@@ -537,8 +722,10 @@ class Configuration(QDialog):
             self.logger.exception(str(e))
             self.simulationConfigurationResult.setText("Could not load simulation configuration.")
 
-    # noinspection DuplicatedCode
     def save_live_settings(self):
+        """
+        Saves live settings to JSON file.
+        """
         config = {
             # General
             'type': LIVE,
@@ -551,30 +738,6 @@ class Configuration(QDialog):
             'crossMargin': self.crossMarginAccountRadio.isChecked(),
             'lowerInterval': self.lowerIntervalCheck.isChecked(),
 
-            # Averages
-            'averageType': self.averageTypeComboBox.currentIndex(),
-            'parameter': self.parameterComboBox.currentIndex(),
-            'initialValue': self.initialValueSpinBox.value(),
-            'finalValue': self.finalValueSpinBox.value(),
-            'doubleCross': self.doubleCrossCheckMark.isChecked(),
-            'averageType2': self.doubleAverageComboBox.currentIndex(),
-            'parameter2': self.doubleParameterComboBox.currentIndex(),
-            'initialValue2': self.doubleInitialValueSpinBox.value(),
-            'finalValue2': self.doubleFinalValueSpinBox.value(),
-
-            # Stoics
-            'stoic': self.stoicCheckMark.isChecked(),
-            'stoic1': self.stoicSpinBox1.value(),
-            'stoic2': self.stoicSpinBox2.value(),
-            'stoic3': self.stoicSpinBox3.value(),
-
-            # Shrek
-            'shrek': self.shrekCheckMark.isChecked(),
-            'shrek1': self.shrekSpinBox1.value(),
-            'shrek2': self.shrekSpinBox2.value(),
-            'shrek3': self.shrekSpinBox3.value(),
-            'shrek4': self.shrekSpinBox4.value(),
-
             # Loss
             'trailingLoss': self.trailingLossRadio.isChecked(),
             'stopLoss': self.stopLossRadio.isChecked(),
@@ -582,6 +745,9 @@ class Configuration(QDialog):
             'smartStopLossCounter': self.smartStopLossSpinBox.value(),
             'safetyTimer': self.safetyTimerSpinBox.value(),
         }
+
+        for strategyName in self.strategies.keys():
+            self.add_strategy_to_config(LIVE, strategyName, config)
 
         targetPath = self.create_appropriate_config_folders('Live')
         defaultPath = os.path.join(targetPath, 'live_configuration.json')
@@ -595,8 +761,10 @@ class Configuration(QDialog):
         else:
             self.configurationResult.setText("Could not save live configuration.")
 
-    # noinspection DuplicatedCode
     def load_live_settings(self):
+        """
+        Loads live settings from JSON file and sets it to live settings.
+        """
         targetPath = self.create_appropriate_config_folders('Live')
         filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetPath, "JSON (*.json)")
         try:
@@ -613,32 +781,14 @@ class Configuration(QDialog):
                 self.crossMarginAccountRadio.setChecked(config['crossMargin'])
                 self.lowerIntervalCheck.setChecked(config['lowerInterval'])
 
-                self.averageTypeComboBox.setCurrentIndex(config['averageType'])
-                self.parameterComboBox.setCurrentIndex(config['parameter'])
-                self.initialValueSpinBox.setValue(config['initialValue'])
-                self.finalValueSpinBox.setValue(config['finalValue'])
-                self.doubleCrossCheckMark.setChecked(config['doubleCross'])
-                self.doubleAverageComboBox.setCurrentIndex(config['averageType2'])
-                self.doubleParameterComboBox.setCurrentIndex(config['parameter2'])
-                self.doubleInitialValueSpinBox.setValue(config['initialValue2'])
-                self.doubleFinalValueSpinBox.setValue(config['finalValue2'])
-
-                self.stoicCheckMark.setChecked(config['stoic'])
-                self.stoicSpinBox1.setValue(config['stoic1'])
-                self.stoicSpinBox2.setValue(config['stoic2'])
-                self.stoicSpinBox3.setValue(config['stoic3'])
-
-                self.shrekCheckMark.setChecked(config['shrek'])
-                self.shrekSpinBox1.setValue(config['shrek1'])
-                self.shrekSpinBox2.setValue(config['shrek2'])
-                self.shrekSpinBox3.setValue(config['shrek3'])
-                self.shrekSpinBox4.setValue(config['shrek4'])
-
                 self.trailingLossRadio.setChecked(config['trailingLoss'])
                 self.stopLossRadio.setChecked(config['stopLoss'])
                 self.lossPercentageSpinBox.setValue(config['lossPercentage'])
                 self.smartStopLossSpinBox.setValue(config['smartStopLossCounter'])
                 self.safetyTimerSpinBox.setValue(config['safetyTimer'])
+
+                for strategyName in self.strategies.keys():
+                    self.load_strategy_from_config(LIVE, strategyName, config)
 
                 file = os.path.basename(filePath)
                 self.configurationResult.setText(f"Loaded live configuration successfully from {file}.")
@@ -646,25 +796,107 @@ class Configuration(QDialog):
             self.logger.exception(str(e))
             self.configurationResult.setText("Could not load live configuration.")
 
-    # noinspection DuplicatedCode
+    def add_strategy_to_config(self, caller: int, strategyName: str, config: dict):
+        """
+        Adds strategy configuration to config dictionary provided.
+        :param caller: Caller that'll determine which trader's strategy settings get added to the config dictionary.
+        :param strategyName: Name of strategy to add.
+        :param config: Dictionary to add strategy information to.
+        :return: None
+        """
+        values = self.get_strategy_values(strategyName, caller)
+        config[strategyName.lower()] = self.strategy_enabled(strategyName, caller)
+        config[f'{strategyName.lower()}Length'] = len(values)
+        for index, value in enumerate(values, start=1):
+            config[f'{strategyName.lower()}{index}'] = value
+
+    def load_strategy_from_config(self, caller: int, strategyName: str, config: dict):
+        """
+        This function will load the strategy from the config dictionary provided.
+        :param caller: Caller to manipulate.
+        :param strategyName: Name of strategy to load.
+        :param config: Configuration dictionary to load.
+        :return: None
+        """
+        valueCount = config[f'{strategyName.lower()}Length']
+        tab = self.get_category_tab(caller)
+        valueWidgets = self.strategyDict[tab, strategyName, 'values']
+        parameters = self.strategyDict[tab, strategyName, 'parameters']
+        groupBoxLayout = self.strategyDict[tab, strategyName, 'layout']
+
+        self.strategyDict[tab, strategyName, 'groupBox'].setChecked(config[f'{strategyName.lower()}'])
+
+        while valueCount > len(valueWidgets):
+            self.add_strategy_inputs(parameters, strategyName, groupBoxLayout, tab)
+        while valueCount < len(valueWidgets):
+            self.delete_strategy_inputs(parameters, strategyName, tab)
+
+        for index, widget in enumerate(valueWidgets, start=1):
+            value = config[f'{strategyName.lower()}{index}']
+            self.set_value(widget, value)
+
+    @staticmethod
+    def set_value(widget, value):
+        """
+        Sets appropriate value to a widget depending on what it is.
+        :param widget: Widget to alter.
+        :param value: Value to modify widget with.
+        :return: None
+        """
+        if isinstance(widget, QSpinBox) or isinstance(widget, QDoubleSpinBox):
+            widget.setValue(value)
+        elif isinstance(widget, QLineEdit):
+            widget.setText(value)
+        elif isinstance(widget, QComboBox):
+            widget.setCurrentIndex(value)
+        else:
+            raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
+
+    def set_strategy_values(self, strategyName: str, caller: int, values):
+        """
+        Set GUI values for a strategy based on values passed.
+        :param strategyName: Name of the strategy that'll have its values set.
+        :param caller: Caller that'll determine which tab object gets returned.
+        :param values: List of values to populate GUI with.
+        :return: None
+        """
+        tab = self.get_category_tab(caller)
+        targetValues = self.strategyDict[tab, strategyName, 'values']
+        parameters = self.strategyDict[tab, strategyName, 'parameters']
+        layout = self.strategyDict[tab, strategyName, 'layout']
+
+        while len(values) < len(targetValues):
+            self.delete_strategy_inputs(parameters, strategyName, tab)
+        while len(values) > len(targetValues):
+            self.add_strategy_inputs(parameters, strategyName, layout, tab)
+
+        for index, widget in enumerate(targetValues):
+            value = values[index]
+            self.set_value(widget, value)
+
+    def copy_strategy_settings(self, fromCaller, toCaller, strategyName):
+        """
+        Copies strategy settings from caller provided and sets it to caller provided based on strategy name.
+        :param fromCaller: Function will copy settings from this caller.
+        :param toCaller: Function will copy settings to this caller.
+        :param strategyName: This strategy's settings will be copied.
+        :return: None
+        """
+        fromCallerTab = self.get_category_tab(fromCaller)
+        toCallerTab = self.get_category_tab(toCaller)
+
+        fromCallerGroupBox = self.strategyDict[fromCallerTab, strategyName, 'groupBox']
+        self.strategyDict[toCallerTab, strategyName, 'groupBox'].setChecked(fromCallerGroupBox.isChecked())
+        self.set_strategy_values(strategyName, toCaller, self.get_strategy_values(strategyName, fromCaller))
+
     def copy_settings_to_simulation(self):
         """
         Copies parameters from main configuration to simulation configuration.
+        :return: None
         """
         self.simulationIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
         self.simulationTickerComboBox.setCurrentIndex(self.tickerComboBox.currentIndex())
         self.simulationPrecisionSpinBox.setValue(self.precisionSpinBox.value())
-
-        self.simulationAverageTypeComboBox.setCurrentIndex(self.averageTypeComboBox.currentIndex())
-        self.simulationParameterComboBox.setCurrentIndex(self.parameterComboBox.currentIndex())
-        self.simulationInitialValueSpinBox.setValue(self.initialValueSpinBox.value())
-        self.simulationFinalValueSpinBox.setValue(self.finalValueSpinBox.value())
-
-        self.simulationDoubleCrossCheckMark.setChecked(self.doubleCrossCheckMark.isChecked())
-        self.simulationDoubleAverageComboBox.setCurrentIndex(self.doubleAverageComboBox.currentIndex())
-        self.simulationDoubleParameterComboBox.setCurrentIndex(self.doubleParameterComboBox.currentIndex())
-        self.simulationDoubleInitialValueSpinBox.setValue(self.doubleInitialValueSpinBox.value())
-        self.simulationDoubleFinalValueSpinBox.setValue(self.doubleFinalValueSpinBox.value())
 
         self.simulationLossPercentageSpinBox.setValue(self.lossPercentageSpinBox.value())
         self.simulationStopLossRadio.setChecked(self.stopLossRadio.isChecked())
@@ -672,89 +904,35 @@ class Configuration(QDialog):
         self.simulationSmartStopLossSpinBox.setValue(self.smartStopLossSpinBox.value())
         self.simulationSafetyTimerSpinBox.setValue(self.safetyTimerSpinBox.value())
 
-        self.simulationStoicCheckMark.setChecked(self.stoicCheckMark.isChecked())
-        self.simulationStoicSpinBox1.setValue(self.stoicSpinBox1.value())
-        self.simulationStoicSpinBox2.setValue(self.stoicSpinBox2.value())
-        self.simulationStoicSpinBox3.setValue(self.stoicSpinBox3.value())
-
-        self.simulationShrekCheckMark.setChecked(self.shrekCheckMark.isChecked())
-        self.simulationShrekSpinBox1.setValue(self.shrekSpinBox1.value())
-        self.simulationShrekSpinBox2.setValue(self.shrekSpinBox2.value())
-        self.simulationShrekSpinBox3.setValue(self.shrekSpinBox3.value())
-        self.simulationShrekSpinBox4.setValue(self.shrekSpinBox4.value())
+        for strategyName in self.strategies.keys():
+            self.copy_strategy_settings(LIVE, SIMULATION, strategyName)
 
         self.simulationCopyLabel.setText("Copied all viable settings from main to simulation settings successfully.")
 
-    # noinspection DuplicatedCode
     def copy_settings_to_backtest(self):
         """
         Copies parameters from main configuration to backtest configuration.
+        :return: None
         """
         self.backtestIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
         self.backtestTickerComboBox.setCurrentIndex(self.tickerComboBox.currentIndex())
         self.backtestPrecisionSpinBox.setValue(self.precisionSpinBox.value())
-
-        self.backtestAverageTypeComboBox.setCurrentIndex(self.averageTypeComboBox.currentIndex())
-        self.backtestParameterComboBox.setCurrentIndex(self.parameterComboBox.currentIndex())
-        self.backtestInitialValueSpinBox.setValue(self.initialValueSpinBox.value())
-        self.backtestFinalValueSpinBox.setValue(self.finalValueSpinBox.value())
-
-        self.backtestDoubleCrossCheckMark.setChecked(self.doubleCrossCheckMark.isChecked())
-        self.backtestDoubleAverageComboBox.setCurrentIndex(self.doubleAverageComboBox.currentIndex())
-        self.backtestDoubleParameterComboBox.setCurrentIndex(self.doubleParameterComboBox.currentIndex())
-        self.backtestDoubleInitialValueSpinBox.setValue(self.doubleInitialValueSpinBox.value())
-        self.backtestDoubleFinalValueSpinBox.setValue(self.doubleFinalValueSpinBox.value())
 
         self.backtestLossPercentageSpinBox.setValue(self.lossPercentageSpinBox.value())
         self.backtestStopLossRadio.setChecked(self.stopLossRadio.isChecked())
         self.backtestTrailingLossRadio.setChecked(self.trailingLossRadio.isChecked())
         self.backtestSmartStopLossSpinBox.setValue(self.smartStopLossSpinBox.value())
 
-        self.backtestStoicCheckMark.setChecked(self.stoicCheckMark.isChecked())
-        self.backtestStoicSpinBox1.setValue(self.stoicSpinBox1.value())
-        self.backtestStoicSpinBox2.setValue(self.stoicSpinBox2.value())
-        self.backtestStoicSpinBox3.setValue(self.stoicSpinBox3.value())
-
-        self.backtestShrekCheckMark.setChecked(self.shrekCheckMark.isChecked())
-        self.backtestShrekSpinBox1.setValue(self.shrekSpinBox1.value())
-        self.backtestShrekSpinBox2.setValue(self.shrekSpinBox2.value())
-        self.backtestShrekSpinBox3.setValue(self.shrekSpinBox3.value())
-        self.backtestShrekSpinBox4.setValue(self.shrekSpinBox4.value())
+        for strategyName in self.strategies.keys():
+            self.copy_strategy_settings(LIVE, BACKTEST, strategyName)
 
         self.backtestCopyLabel.setText("Copied all viable settings from main to backtest settings successfully.")
 
-    def toggle_double_cross_groupbox(self):
-        self.toggle_groupbox(self.doubleCrossCheckMark, self.doubleCrossGroupBox)
-
-    def toggle_simulation_double_cross_groupbox(self):
-        self.toggle_groupbox(self.simulationDoubleCrossCheckMark, self.simulationDoubleCrossGroupBox)
-
-    def toggle_backtest_double_cross_groupbox(self):
-        self.toggle_groupbox(self.backtestDoubleCrossCheckMark, self.backtestDoubleCrossGroupBox)
-
-    def toggle_backtest_stoic_groupbox(self):
-        self.toggle_groupbox(self.backtestStoicCheckMark, self.backtestStoicGroupBox)
-
-    def toggle_simulation_stoic_groupbox(self):
-        self.toggle_groupbox(self.simulationStoicCheckMark, self.simulationStoicGroupBox)
-
-    def toggle_stoic_groupbox(self):
-        self.toggle_groupbox(self.stoicCheckMark, self.stoicGroupBox)
-
-    def toggle_backtest_moving_average_groupbox(self):
-        self.toggle_groupbox(self.backtestMovingAverageCheckMark, self.backtestMovingAverageGroupBox)
-
-    def toggle_simulation_moving_average_groupbox(self):
-        self.toggle_groupbox(self.simulationMovingAverageCheckMark, self.simulationMovingAverageGroupBox)
-
-    def toggle_moving_average_groupbox(self):
-        self.toggle_groupbox(self.movingAverageCheckMark, self.movingAverageGroupBox)
-
-    @staticmethod
-    def toggle_groupbox(checkMark, groupBox):
-        groupBox.setEnabled(checkMark.isChecked())
-
     def update_graph_speed(self):
+        """
+        Updates graph speed on main Algobot interface.
+        :return: None
+        """
         graphSpeed = self.graphPlotSpeedSpinBox.value()
         self.parent.graphUpdateSeconds = graphSpeed
         self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graphSpeed} seconds.")
@@ -762,25 +940,8 @@ class Configuration(QDialog):
     def load_slots(self):
         """
         Loads all configuration interface slots.
+        :return: None
         """
-        self.backtestMovingAverageCheckMark.toggled.connect(self.toggle_backtest_moving_average_groupbox)
-        self.simulationMovingAverageCheckMark.toggled.connect(self.toggle_simulation_moving_average_groupbox)
-        self.movingAverageCheckMark.toggled.connect(self.toggle_moving_average_groupbox)
-
-        self.doubleCrossCheckMark.toggled.connect(self.toggle_double_cross_groupbox)
-        self.simulationDoubleCrossCheckMark.toggled.connect(self.toggle_simulation_double_cross_groupbox)
-        self.backtestDoubleCrossCheckMark.toggled.connect(self.toggle_backtest_double_cross_groupbox)
-
-        self.stoicCheckMark.toggled.connect(self.toggle_stoic_groupbox)
-        self.simulationStoicCheckMark.toggled.connect(self.toggle_simulation_stoic_groupbox)
-        self.backtestStoicCheckMark.toggled.connect(self.toggle_backtest_stoic_groupbox)
-
-        self.shrekCheckMark.toggled.connect(lambda: self.toggle_groupbox(self.shrekCheckMark, self.shrekGroupBox))
-        self.simulationShrekCheckMark.toggled.connect(lambda: self.toggle_groupbox(self.simulationShrekCheckMark,
-                                                                                   self.simulationShrekGroupBox))
-        self.backtestShrekCheckMark.toggled.connect(lambda: self.toggle_groupbox(self.backtestShrekCheckMark,
-                                                                                 self.backtestShrekGroupBox))
-
         self.simulationCopySettingsButton.clicked.connect(self.copy_settings_to_simulation)
 
         self.backtestCopySettingsButton.clicked.connect(self.copy_settings_to_backtest)

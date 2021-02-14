@@ -7,6 +7,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 from data import Data
 from datetime import datetime, timedelta
 from enums import LIVE, SIMULATION, BEARISH, BULLISH
+from option import Option
 from realtrader import RealTrader
 from simulationtrader import SimulationTrader
 from telegramBot import TelegramBot
@@ -215,25 +216,17 @@ class BotThread(QRunnable):
         trader.set_safety_timer(configDict['safetyTimer'].value())
         trader.set_smart_stop_loss_counter(configDict['smartStopLossCounter'].value())
 
-        if configDict['movingAverageCheck'].isChecked():
-            options = self.gui.get_trading_options(caller)
+        if self.gui.configuration.strategy_enabled('Moving Average', caller):
+            values = self.gui.configuration.get_strategy_values('Moving Average', caller, verbose=True)
+            options = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
             trader.set_strategy('movingAverage', options)
 
-        if configDict['stoicCheck'].isChecked():
-            options = [
-                configDict['stoicInput1'].value(),
-                configDict['stoicInput2'].value(),
-                configDict['stoicInput3'].value()
-            ]
+        if self.gui.configuration.strategy_enabled('Stoic', caller):
+            options = self.gui.configuration.get_strategy_values('Stoic', caller)
             trader.set_strategy('stoic', options)
 
-        if configDict['shrekCheck'].isChecked():
-            options = [
-                configDict['shrekInput1'].value(),
-                configDict['shrekInput2'].value(),
-                configDict['shrekInput3'].value(),
-                configDict['shrekInput4'].value()
-            ]
+        if self.gui.configuration.strategy_enabled('Shrek', caller):
+            options = self.gui.configuration.get_strategy_values('Shrek', caller)
             trader.set_strategy('shrek', options)
 
         trader.output_configuration()

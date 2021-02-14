@@ -41,7 +41,7 @@
       <bool>true</bool>
      </property>
      <property name="plainText">
-      <string>Algobot Version 2.3b
+      <string>Algobot Version 2.4f
 
 Algobot is an open-source software written in Python that enables users to create automated bots that can trade, simulate, or backtest with strategies implemented.
 

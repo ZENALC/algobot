@@ -3,6 +3,7 @@ import time
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 from backtester import Backtester
 from enums import BACKTEST
+from option import Option
 
 
 class BacktestSignals(QObject):
@@ -30,29 +31,30 @@ class BacktestThread(QRunnable):
         config = gui.configuration
         startDate, endDate = config.get_calendar_dates()
         lossStrategy, lossPercentageDecimal = gui.get_loss_settings(BACKTEST)
-        stoicOptions = [config.backtestStoicSpinBox1.value(), config.backtestStoicSpinBox2.value(),
-                        config.backtestStoicSpinBox3.value()]
-        shrekOptions = [config.backtestShrekSpinBox1.value(), config.backtestShrekSpinBox2.value(),
-                        config.backtestShrekSpinBox3.value(), config.backtestShrekSpinBox4.value()]
+        stoicOptions = config.get_strategy_values('Stoic', BACKTEST)
+        shrekOptions = config.get_strategy_values('Shrek', BACKTEST)
+
+        values = config.get_strategy_values('Moving Average', BACKTEST, verbose=True)
+        averageOptions = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
 
         return {
             'startingBalance': config.backtestStartingBalanceSpinBox.value(),
             'data': config.data,
             'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
-            'options': gui.get_trading_options(BACKTEST),
+            'options': averageOptions,
             'startDate': startDate,
             'endDate': endDate,
             'lossStrategy': lossStrategy,
             'lossPercentage': lossPercentageDecimal * 100,
             'dataType': config.dataType,
-            'stoicEnabled': config.backtestStoicCheckMark.isChecked(),
+            'stoicEnabled': config.strategy_enabled('Stoic', BACKTEST),
             'stoicOptions': stoicOptions,
             'smartStopLossCounter': config.backtestSmartStopLossSpinBox.value(),
-            'shrekEnabled': config.backtestShrekCheckMark.isChecked(),
+            'shrekEnabled': config.strategy_enabled('Shrek', BACKTEST),
             'shrekOptions': shrekOptions,
             'precision': config.backtestPrecisionSpinBox.value(),
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
-            'movingAverageEnabled': config.backtestMovingAverageCheckMark.isChecked(),
+            'movingAverageEnabled': config.strategy_enabled('Moving Average', BACKTEST),
         }
 
     def get_configuration_dictionary_for_gui(self) -> dict:

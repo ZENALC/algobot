@@ -1900,10 +1900,17 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0" colspan="2">
+            <item row="2" column="0">
              <widget class="QPushButton" name="clearBacktestTableButton">
               <property name="text">
                <string>Clear Table</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QPushButton" name="viewBacktestsButton">
+              <property name="text">
+               <string>View Backtests</string>
               </property>
              </widget>
             </item>
