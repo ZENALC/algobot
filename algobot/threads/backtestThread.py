@@ -40,21 +40,21 @@ class BacktestThread(QRunnable):
         return {
             'startingBalance': config.backtestStartingBalanceSpinBox.value(),
             'data': config.data,
-            'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
-            'options': averageOptions,
             'startDate': startDate,
             'endDate': endDate,
             'lossStrategy': lossStrategy,
             'lossPercentage': lossPercentageDecimal * 100,
-            'dataType': config.dataType,
-            'stoicEnabled': config.strategy_enabled('Stoic', BACKTEST),
-            'stoicOptions': stoicOptions,
             'smartStopLossCounter': config.backtestSmartStopLossSpinBox.value(),
-            'shrekEnabled': config.strategy_enabled('Shrek', BACKTEST),
-            'shrekOptions': shrekOptions,
+            'dataType': config.dataType,
             'precision': config.backtestPrecisionSpinBox.value(),
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
+            'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
             'movingAverageEnabled': config.strategy_enabled('Moving Average', BACKTEST),
+            'options': averageOptions,
+            'stoicEnabled': config.strategy_enabled('Stoic', BACKTEST),
+            'stoicOptions': stoicOptions,
+            'shrekEnabled': config.strategy_enabled('Shrek', BACKTEST),
+            'shrekOptions': shrekOptions,
         }
 
     def get_configuration_dictionary_for_gui(self) -> dict:
