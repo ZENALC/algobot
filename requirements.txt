@@ -16,9 +16,9 @@ idna==2.9
 incremental==17.5.0
 iniconfig==1.0.1
 more-itertools==8.4.0
-numpy==1.19.0
+numpy
 packaging==20.4
-pandas==1.0.5
+pandas
 pluggy==0.13.1
 py==1.9.0
 pyasn1==0.4.8
@@ -44,7 +44,6 @@ six==1.15.0
 soupsieve==2.0.1
 toml==0.10.1
 tornado==6.0.4
-twilio==6.44.2
 Twisted==20.3.0
 txaio==20.4.1
 tzlocal==2.1

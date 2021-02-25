@@ -167,12 +167,12 @@ class Data:
                                 );''')
                 connection.commit()
 
-    def dump_to_table(self, totalData=None) -> bool:
+    def dump_to_table(self, totalData: list = None) -> bool:
         """
         Dumps date and price information to database.
         :return: A boolean whether data entry was successful or not.
         """
-        if totalData is None:
+        if not totalData:
             totalData = self.data
 
         query = f'''INSERT INTO {self.databaseTable} (date_utc, open_price, high_price, low_price, close_price,
