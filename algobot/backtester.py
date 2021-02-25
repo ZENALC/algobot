@@ -374,19 +374,18 @@ class Backtester:
             rsi = 100 if down == 0 else 100 - 100 / (1 + up / down)
             self.rsi_dictionary[prices]['close'].append((round(rsi, self.precision), up, down))
             return rsi
+        else:
+            start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
+            data = data[shift:start]
+            data = data[:]
+            data.reverse()
 
-        data = data
-        start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
-        data = data[shift:start]
-        data = data[:]
-        data.reverse()
+            ups, downs = get_ups_and_downs(data=data, parameter=parameter)
+            rsi = self.helper_get_ema(ups, downs, prices)
 
-        ups, downs = get_ups_and_downs(data=data, parameter=parameter)
-        rsi = self.helper_get_ema(ups, downs, prices)
-
-        if round_value:
-            return round(rsi, self.precision)
-        return rsi
+            if round_value:
+                return round(rsi, self.precision)
+            return rsi
 
     def get_sma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
         data = data[0: prices]
