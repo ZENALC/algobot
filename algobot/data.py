@@ -584,18 +584,27 @@ class Data:
 
         return path
 
-    def create_csv_file(self, descending: bool = True, armyTime: bool = True) -> str:
+    def create_csv_file(self, descending: bool = True, armyTime: bool = True, startDate=None) -> str:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
+        :param startDate: Date to have CSV data from.
         :param descending: Boolean that decides whether values in CSV are in descending format or not.
         :param armyTime: Boolean that dictates whether dates will be written in army-time format or not.
         """
         self.update_database_and_data()  # Update data if updates exist.
         fileName = f'{self.symbol}_data_{self.interval}.csv'
+
+        data = self.data
+        if startDate is not None:
+            for index, period in enumerate(data):
+                if period['date_utc'].date() < startDate:
+                    data = self.data[:index]
+                    break
+
         if descending:
-            path = self.write_csv_data(self.data, fileName=fileName, armyTime=armyTime)
+            path = self.write_csv_data(data, fileName=fileName, armyTime=armyTime)
         else:
-            path = self.write_csv_data(self.data[::-1], fileName=fileName, armyTime=armyTime)
+            path = self.write_csv_data(data[::-1], fileName=fileName, armyTime=armyTime)
 
         self.output_message(f'Data saved to {path}.')
         return path

@@ -1,10 +1,14 @@
 import os
 import helpers
 
+from datetime import datetime, timezone
 from PyQt5 import uic
-from PyQt5.QtCore import QThreadPool
+from PyQt5.QtCore import QThreadPool, QDate
 from PyQt5.QtWidgets import QDialog, QMessageBox
+
 from threads.downloadThread import DownloadThread
+from threads.listThread import Worker
+from data import Data
 
 otherCommandsUi = os.path.join(helpers.ROOT_DIR, 'UI', 'otherCommands.ui')
 
@@ -16,6 +20,7 @@ class OtherCommands(QDialog):
         self.threadPool = QThreadPool()
         self.load_slots()
         self.csvThread = None
+        self.setDateThread = None
 
     def load_slots(self):
         """
@@ -23,26 +28,58 @@ class OtherCommands(QDialog):
         """
         self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
         self.stopButton.clicked.connect(self.stop_csv_generation)
+        self.csvGenerationTicker.currentTextChanged.connect(self.start_date_thread)
+
+    def start_date_thread(self):
+        self.csvGenerationStatus.setText("Searching for earliest start date..")
+        self.setDateThread = Worker(self.get_start_date_for_csv)
+        self.setDateThread.signals.finished.connect(self.set_start_date_for_csv)
+        self.setDateThread.signals.started.connect(self.disable_csv_state)
+        self.setDateThread.signals.restore.connect(self.restore_csv_state)
+        self.threadPool.start(self.setDateThread)
+
+    # noinspection PyProtectedMember
+    def get_start_date_for_csv(self):
+        symbol = self.csvGenerationTicker.currentText()
+        interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
+
+        if not symbol or not interval:
+            return
+
+        ts = Data(loadData=False, log=False).binanceClient._get_earliest_valid_timestamp(symbol, interval)
+        startDate = datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
+        qStart = QDate(startDate.year, startDate.month, startDate.day)
+
+        endDate = datetime.now(tz=timezone.utc)
+        qEnd = QDate(endDate.year, endDate.month, endDate.day)
+
+        return [qStart, qEnd]
+
+    def set_start_date_for_csv(self, startEndList):
+        self.startDateCalendar.setDateRange(*startEndList)
+        self.startDateCalendar.setSelectedDate(startEndList[0])
+        self.csvGenerationStatus.setText("Setup filtered date successfully.")
 
     def initiate_csv_generation(self):
         """
         Starts download of data and CSV generation.
         """
-        self.generateCSVButton.setEnabled(False)
-        self.stopButton.setEnabled(True)
-        self.csvGenerationStatus.setText("Downloading data...")
-
         symbol = self.csvGenerationTicker.currentText()
         descending = self.descendingDateRadio.isChecked()
         armyTime = self.armyDateRadio.isChecked()
         interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
+        startDate = self.startDateCalendar.selectedDate().toPyDate()
 
-        thread = DownloadThread(symbol=symbol, interval=interval, descending=descending, armyTime=armyTime)
-        thread.signals.progress.connect(self.progress_update)
+        self.csvGenerationStatus.setText("Downloading data...")
+
+        thread = DownloadThread(symbol=symbol, interval=interval, descending=descending, armyTime=armyTime,
+                                startDate=startDate)
+        thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
         thread.signals.csv_finished.connect(self.end_csv_generation)
         thread.signals.error.connect(self.handle_csv_generation_error)
         thread.signals.restore.connect(self.restore_csv_state)
-        thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
+        thread.signals.progress.connect(self.progress_update)
+        thread.signals.started.connect(self.disable_csv_state)
         self.csvThread = thread
         self.threadPool.start(thread)
 
@@ -76,6 +113,10 @@ class OtherCommands(QDialog):
         msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
         if msgBox.exec_() == QMessageBox.Open:
             helpers.open_file_or_folder(savedPath)
+
+    def disable_csv_state(self):
+        self.generateCSVButton.setEnabled(False)
+        self.stopButton.setEnabled(True)
 
     def restore_csv_state(self):
         """

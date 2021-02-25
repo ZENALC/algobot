@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>617</width>
-    <height>486</height>
+    <width>823</width>
+    <height>781</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,80 +42,11 @@
           <string>CSV Generation</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_3">
-          <item row="4" column="0" colspan="5">
-           <widget class="QGroupBox" name="dateFormatGroupBox">
-            <property name="title">
-             <string>Date Format</string>
+          <item row="0" column="0" colspan="2">
+           <widget class="QLabel" name="csvGenerationDataLabel">
+            <property name="text">
+             <string>Data Interval</string>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_2">
-             <item>
-              <widget class="QRadioButton" name="standardDateRadio">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="toolTip">
-                <string>Select this for data's time in standard time format.</string>
-               </property>
-               <property name="text">
-                <string>Standard Time</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QRadioButton" name="armyDateRadio">
-               <property name="toolTip">
-                <string>Select this for data's time in army time format.</string>
-               </property>
-               <property name="text">
-                <string>Army Time</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="2" column="0" colspan="5">
-           <widget class="QGroupBox" name="dateSortGroupBox">
-            <property name="title">
-             <string>Sort Date</string>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout">
-             <item>
-              <widget class="QRadioButton" name="ascendingDateRadio">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="toolTip">
-                <string>Select this for data in ascending order.</string>
-               </property>
-               <property name="text">
-                <string>Ascending</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QRadioButton" name="descendingDateRadio">
-               <property name="toolTip">
-                <string>Select this for data in descending order.</string>
-               </property>
-               <property name="text">
-                <string>Descending</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
            </widget>
           </item>
           <item row="0" column="4">
@@ -196,14 +127,7 @@
             </item>
            </widget>
           </item>
-          <item row="0" column="0" colspan="2">
-           <widget class="QLabel" name="csvGenerationDataLabel">
-            <property name="text">
-             <string>Data Interval</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0" colspan="2">
+          <item row="6" column="0" colspan="2">
            <widget class="QPushButton" name="generateCSVButton">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -232,7 +156,7 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="1">
+          <item row="8" column="1">
            <spacer name="verticalSpacer_2">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -245,7 +169,7 @@
             </property>
            </spacer>
           </item>
-          <item row="6" column="0" colspan="5">
+          <item row="7" column="0" colspan="5">
            <widget class="QLabel" name="csvGenerationStatus">
             <property name="text">
              <string/>
@@ -270,7 +194,7 @@
             </item>
            </widget>
           </item>
-          <item row="5" column="3" colspan="2">
+          <item row="6" column="3" colspan="2">
            <widget class="QProgressBar" name="csvGenerationProgressBar">
             <property name="toolTip">
              <string>CSV generation progress bar.</string>
@@ -280,7 +204,7 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="2">
+          <item row="6" column="2">
            <widget class="QPushButton" name="stopButton">
             <property name="enabled">
              <bool>false</bool>
@@ -291,6 +215,94 @@
             <property name="text">
              <string>Stop</string>
             </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="5">
+           <widget class="QGroupBox" name="dateFormatGroupBox">
+            <property name="title">
+             <string>Date Format</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QRadioButton" name="standardDateRadio">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>Select this for data's time in standard time format.</string>
+               </property>
+               <property name="text">
+                <string>Standard Time</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="armyDateRadio">
+               <property name="toolTip">
+                <string>Select this for data's time in army time format.</string>
+               </property>
+               <property name="text">
+                <string>Army Time</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="5">
+           <widget class="QGroupBox" name="dateSortGroupBox">
+            <property name="title">
+             <string>Sort Date</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QRadioButton" name="ascendingDateRadio">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>Select this for data in ascending order.</string>
+               </property>
+               <property name="text">
+                <string>Ascending</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="descendingDateRadio">
+               <property name="toolTip">
+                <string>Select this for data in descending order.</string>
+               </property>
+               <property name="text">
+                <string>Descending</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="5">
+           <widget class="QGroupBox" name="calendarGroupBox">
+            <property name="title">
+             <string>Start Date</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <item>
+              <widget class="QCalendarWidget" name="startDateCalendar"/>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
