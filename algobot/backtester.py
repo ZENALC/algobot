@@ -388,17 +388,13 @@ class Backtester:
         data = data[0: prices]
         sma = get_sma(data, prices, parameter)
 
-        if round_value:
-            return round(sma, self.precision)
-        return sma
+        return round(sma, self.precision) if round_value else sma
 
     def get_wma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
         data = data[0: prices]
         wma = get_wma(data, prices, parameter)
 
-        if round_value:
-            return round(wma, self.precision)
-        return wma
+        return round(wma, self.precision) if round_value else wma
 
     def get_ema(self, data: list, prices: int, parameter: str, sma_prices: int = 5, round_value=True) -> float:
         if sma_prices <= 0:
@@ -407,10 +403,7 @@ class Backtester:
             sma_prices = len(data) - 1
 
         ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict)
-
-        if round_value:
-            return round(ema, self.precision)
-        return ema
+        return round(ema, self.precision) if round_value else ema
 
     def get_trend(self):
         trends = [strategy.trend for strategy in self.strategies.values()]
