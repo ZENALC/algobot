@@ -185,6 +185,13 @@ class Interface(QMainWindow):
             self.create_popup("No data setup yet for backtesting. Please configure them in settings first.")
             return
 
+        if not self.configuration.get_strategies(BACKTEST):
+            qm = QMessageBox
+            ret = qm.question(self, 'Warning', f"No strategies found. Would you like to backtest a hold?",
+                              qm.Yes | qm.No)
+            if ret != qm.Yes:
+                return
+
         self.disable_interface(disable=True, caller=BACKTEST)
 
         self.threads[BACKTEST] = backtestThread.BacktestThread(gui=self, logger=self.logger)
