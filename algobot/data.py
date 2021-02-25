@@ -172,7 +172,7 @@ class Data:
         Dumps date and price information to database.
         :return: A boolean whether data entry was successful or not.
         """
-        if not totalData:
+        if totalData is None:
             totalData = self.data
 
         query = f'''INSERT INTO {self.databaseTable} (date_utc, open_price, high_price, low_price, close_price,

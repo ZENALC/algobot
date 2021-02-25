@@ -185,16 +185,12 @@ class Interface(QMainWindow):
             self.create_popup("No data setup yet for backtesting. Please configure them in settings first.")
             return
 
-        if not self.configuration.get_strategies(BACKTEST):
-            qm = QMessageBox
-            ret = qm.question(self, 'Warning', f"No strategies found. Would you like to backtest a hold?",
-                              qm.Yes | qm.No)
-            if ret != qm.Yes:
-                return
+        if not self.check_strategies(BACKTEST):
+            return
 
         self.disable_interface(disable=True, caller=BACKTEST)
-
         self.threads[BACKTEST] = backtestThread.BacktestThread(gui=self, logger=self.logger)
+
         worker = self.threads[BACKTEST]
         worker.signals.started.connect(self.setup_backtester)
         worker.signals.activity.connect(self.update_backtest_gui)
@@ -312,11 +308,30 @@ class Interface(QMainWindow):
         plot['z'] = [initialTimeStamp]
         plot['plot'].setData(plot['x'], plot['y'])
 
+    def check_strategies(self, caller: int) -> float:
+        if not self.configuration.get_strategies(caller):
+            qm = QMessageBox
+            if caller == BACKTEST:
+                message = "No strategies found. Would you like to backtest a hold?"
+            elif caller == SIMULATION:
+                message = "No strategies found. Did you want to day-trade this simulation?"
+            elif caller == LIVE:
+                message = "No strategies found. Did you want to day-trade this live bot?"
+            else:
+                raise ValueError("Invalid type of caller specified.")
+
+            ret = qm.question(self, 'Warning', message, qm.Yes | qm.No)
+            return ret == qm.Yes
+        return True
+
     def initiate_bot_thread(self, caller: int):
         """
         Main function that initiates bot thread and handles all data-view logic.
         :param caller: Caller that decides whether a live bot or simulation bot is run.
         """
+        if not self.check_strategies(caller):
+            return
+
         self.disable_interface(True, caller)
 
         worker = botThread.BotThread(gui=self, caller=caller, logger=self.logger)
