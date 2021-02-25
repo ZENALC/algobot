@@ -360,7 +360,7 @@ class Backtester:
         :return: Final relative strength index.
         """
         if shift > 0 and prices in self.rsi_dictionary:
-            return self.rsi_dictionary[prices]['close'][-shift][0]
+            rsi = self.rsi_dictionary[prices]['close'][-shift][0]
         elif prices in self.rsi_dictionary:
             alpha = 1 / prices
             difference = data[0][parameter] - data[1][parameter]
@@ -372,8 +372,7 @@ class Backtester:
                 down = -difference * alpha + self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
 
             rsi = 100 if down == 0 else 100 - 100 / (1 + up / down)
-            self.rsi_dictionary[prices]['close'].append((round(rsi, self.precision), up, down))
-            return rsi
+            self.rsi_dictionary[prices]['close'].append(rsi, up, down)
         else:
             start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
             data = data[shift:start]
@@ -383,9 +382,7 @@ class Backtester:
             ups, downs = get_ups_and_downs(data=data, parameter=parameter)
             rsi = self.helper_get_ema(ups, downs, prices)
 
-            if round_value:
-                return round(rsi, self.precision)
-            return rsi
+        return round(rsi, self.precision) if round_value else rsi
 
     def get_sma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
         data = data[0: prices]
