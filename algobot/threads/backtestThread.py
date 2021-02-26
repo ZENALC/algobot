@@ -29,7 +29,7 @@ class BacktestThread(QRunnable):
         gui = self.gui
         config = gui.configuration
         startDate, endDate = config.get_calendar_dates()
-        lossStrategy, lossPercentageDecimal = gui.get_loss_settings(BACKTEST)
+        lossDict = gui.get_loss_settings(BACKTEST)
         strategies = config.get_strategies(BACKTEST)
 
         return {
@@ -37,9 +37,9 @@ class BacktestThread(QRunnable):
             'data': config.data,
             'startDate': startDate,
             'endDate': endDate,
-            'lossStrategy': lossStrategy,
-            'lossPercentage': lossPercentageDecimal * 100,
-            'smartStopLossCounter': config.backtestSmartStopLossSpinBox.value(),
+            'lossStrategy': lossDict["lossType"],
+            'lossPercentage': lossDict["lossPercentage"],
+            'smartStopLossCounter': lossDict["smartStopLossCounter"],
             'dataType': config.dataType,
             'precision': config.backtestPrecisionSpinBox.value(),
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),

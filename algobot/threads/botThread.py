@@ -210,10 +210,12 @@ class BotThread(QRunnable):
         :param caller: Caller that dictates which parameters get set.
         """
         trader: SimulationTrader = self.gui.get_trader(caller)
-        configDict = self.gui.interfaceDictionary[caller]['configuration']
-        trader.lossStrategy, trader.lossPercentageDecimal = self.gui.get_loss_settings(caller)
-        trader.set_safety_timer(configDict['safetyTimer'].value())
-        trader.set_smart_stop_loss_counter(configDict['smartStopLossCounter'].value())
+        lossDict = self.gui.get_loss_settings(caller)
+
+        trader.lossStrategy = lossDict["lossType"]
+        trader.lossPercentageDecimal = lossDict["lossPercentage"] / 100
+        trader.set_safety_timer(lossDict['safetyTimer'])
+        trader.set_smart_stop_loss_counter(lossDict['smartStopLossCounter'])
         trader.setup_strategies(self.gui.configuration.get_strategies(caller))
         trader.output_configuration()
 

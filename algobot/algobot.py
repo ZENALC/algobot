@@ -521,9 +521,7 @@ class Interface(QMainWindow):
         :param caller: Caller that determines which configuration settings get disabled.
         """
         disable = not disable
-        # self.interfaceDictionary[caller]['configuration']['mainConfigurationTabWidget'].setEnabled(disable)
         self.interfaceDictionary[caller]['configuration']['mainTab'].setEnabled(disable)
-        self.interfaceDictionary[caller]['configuration']['lossTab'].setEnabled(disable)
         self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(disable)
 
         if everything:
@@ -831,10 +829,7 @@ class Interface(QMainWindow):
         :param caller: Caller for which loss settings will be returned.
         :return: Tuple with stop loss type and loss percentage.
         """
-        configDictionary = self.interfaceDictionary[caller]['configuration']
-        if configDictionary['trailingLossRadio'].isChecked():
-            return TRAILING_LOSS, configDictionary['lossPercentage'].value() / 100
-        return STOP_LOSS, configDictionary['lossPercentage'].value() / 100
+        return self.configuration.get_loss_settings(caller)
 
     @staticmethod
     def get_option_info(option: Option, trader: SimulationTrader) -> tuple:

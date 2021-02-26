@@ -304,7 +304,7 @@ def write_json_file(filePath: str = 'secret.json', **kwargs):
     :param kwargs: Dictionary to dump to JSON file.
     """
     with open(filePath, 'w') as f:
-        json.dump(kwargs, f)
+        json.dump(kwargs, f, indent=4)
 
 
 def load_json_file(jsonfile) -> dict:

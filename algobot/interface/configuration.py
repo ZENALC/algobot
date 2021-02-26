@@ -4,7 +4,7 @@ import telegram
 import helpers
 
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox, QTabWidget, QFormLayout, QLabel, QSpinBox, \
-    QGroupBox, QVBoxLayout, QDoubleSpinBox, QLineEdit, QComboBox, QPushButton, QHBoxLayout, QFrame, QScrollArea
+    QGroupBox, QVBoxLayout, QDoubleSpinBox, QLineEdit, QComboBox, QPushButton, QHBoxLayout, QFrame, QScrollArea, QWidget
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
 
@@ -13,11 +13,9 @@ from telegram.ext import Updater
 from dateutil import parser
 from threads import downloadThread
 from typing import List, Tuple
-from enums import SIMULATION, LIVE, BACKTEST
+from enums import SIMULATION, LIVE, BACKTEST, TRAILING_LOSS, STOP_LOSS
 
 from strategies.movingAverage import MovingAverageStrategy
-# from strategies.stoic import StoicStrategy
-# from strategies.shrek import ShrekStrategy
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
@@ -44,14 +42,78 @@ class Configuration(QDialog):
                              ]
         self.strategies = {  # Add your strategies to this dictionary of strategies.
             'Moving Average': MovingAverageStrategy,
-            # 'Stoic': StoicStrategy,
-            # 'Shrek': ShrekStrategy
         }
         self.strategyDict = {}  # We will store all the strategy slot information in this dictionary.
+        self.lossDict = {}  # We will store stop loss settings here.
 
         self.load_slots()
         self.load_credentials()
         self.load_strategy_slots()
+        self.load_loss_slots()
+
+    def load_loss_slots(self):
+        for tab in self.categoryTabs:
+            tabWidget = QTabWidget()
+            layout = QVBoxLayout()
+
+            descriptionLabel = QLabel("Configure your stop loss settings here.")
+            descriptionLabel.setWordWrap(True)
+            layout.addWidget(descriptionLabel)
+
+            innerLayout = QFormLayout()
+            innerWidget = QWidget()
+            innerWidget.setLayout(innerLayout)
+
+            scroll = QScrollArea()
+            scroll.setWidget(innerWidget)
+            scroll.setWidgetResizable(True)
+            layout.addWidget(scroll)
+
+            self.create_loss_inputs(tab, innerLayout)
+
+            tabWidget.setLayout(layout)
+            tab.addTab(tabWidget, "Loss Settings")
+
+    def create_loss_inputs(self, tab, innerLayout):
+        self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
+        lossTypeComboBox.addItems(("Trailing", "Stop"))
+        innerLayout.addRow(QLabel("Loss Type"), lossTypeComboBox)
+
+        self.lossDict[tab, "lossPercentage"] = lossPercentage = QDoubleSpinBox()
+        lossPercentage.setValue(5)
+        innerLayout.addRow(QLabel("Loss Percentage"), lossPercentage)
+
+        self.lossDict[tab, "smartStopLossCounter"] = smartStopLossCounter = QSpinBox()
+        innerLayout.addRow(QLabel("Smart Stop Loss Counter"), smartStopLossCounter)
+
+        if tab != self.backtestConfigurationTabWidget:
+            self.lossDict[tab, "safetyTimer"] = safetyTimer = QSpinBox()
+            innerLayout.addRow(QLabel("Safety Timer"), safetyTimer)
+
+    def set_loss_settings(self, caller, config):
+        tab = self.get_category_tab(caller)
+        self.lossDict[tab, "lossType"].setCurrentIndex(config["lossTypeIndex"])
+        self.lossDict[tab, "lossPercentage"].setValue(config["lossPercentage"])
+        self.lossDict[tab, "smartStopLossCounter"].setValue(config["smartStopLossCounter"])
+
+        if tab != self.backtestConfigurationTabWidget:
+            self.lossDict[tab, 'safetyTimer'].setValue(config["safetyTimer"])
+
+    def get_loss_settings(self, caller):
+        tab = self.get_category_tab(caller)
+        lossType = TRAILING_LOSS if self.lossDict[tab, "lossType"].currentText() == "Trailing" else STOP_LOSS
+
+        lossSettings = {
+            'lossType': lossType,
+            'lossTypeIndex': self.lossDict[tab, "lossType"].currentIndex(),
+            'lossPercentage': self.lossDict[tab, 'lossPercentage'].value(),
+            'smartStopLossCounter': self.lossDict[tab, 'smartStopLossCounter'].value()
+        }
+
+        if tab != self.backtestConfigurationTabWidget:
+            lossSettings['safetyTimer'] = self.lossDict[tab, 'safetyTimer'].value()
+
+        return lossSettings
 
     def get_strategies(self, caller) -> List[tuple]:
         strategies = []
@@ -594,14 +656,9 @@ class Configuration(QDialog):
             'startingBalance': self.backtestStartingBalanceSpinBox.value(),
             'precision': self.backtestPrecisionSpinBox.value(),
             'marginTrading': self.backtestMarginTradingCheckBox.isChecked(),
-
-            # Loss
-            'trailingLoss': self.backtestTrailingLossRadio.isChecked(),
-            'stopLoss': self.backtestStopLossRadio.isChecked(),
-            'lossPercentage': self.backtestLossPercentageSpinBox.value(),
-            'smartStopLossCounter': self.backtestSmartStopLossSpinBox.value(),
         }
 
+        config.update(self.get_loss_settings(BACKTEST))
         for strategyName in self.strategies.keys():
             self.add_strategy_to_config(BACKTEST, strategyName, config)
 
@@ -616,6 +673,69 @@ class Configuration(QDialog):
             self.backtestConfigurationResult.setText(f"Saved backtest configuration successfully to {file}.")
         else:
             self.backtestConfigurationResult.setText("Could not save backtest configuration.")
+
+    def save_simulation_settings(self):
+        """
+        Saves simulation settings to JSON file.
+        """
+        config = {
+            # General
+            'type': SIMULATION,
+            'ticker': self.simulationTickerComboBox.currentIndex(),
+            'interval': self.simulationIntervalComboBox.currentIndex(),
+            'startingBalance': self.simulationStartingBalanceSpinBox.value(),
+            'precision': self.simulationPrecisionSpinBox.value(),
+            'lowerInterval': self.lowerIntervalSimulationCheck.isChecked(),
+        }
+
+        config.update(self.get_loss_settings(SIMULATION))
+        for strategyName in self.strategies.keys():
+            self.add_strategy_to_config(SIMULATION, strategyName, config)
+
+        targetPath = self.create_appropriate_config_folders('Simulation')
+        defaultPath = os.path.join(targetPath, 'simulation.json')
+        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Simulation Configuration', defaultPath, 'JSON (*.json)')
+        filePath = filePath.strip()
+
+        if filePath:
+            helpers.write_json_file(filePath, **config)
+            file = os.path.basename(filePath)
+            self.simulationConfigurationResult.setText(f"Saved simulation configuration successfully to {file}.")
+        else:
+            self.simulationConfigurationResult.setText("Could not save simulation configuration.")
+
+    def save_live_settings(self):
+        """
+        Saves live settings to JSON file.
+        """
+        config = {
+            # General
+            'type': LIVE,
+            'ticker': self.tickerComboBox.currentIndex(),
+            'interval': self.intervalComboBox.currentIndex(),
+            'precision': self.precisionSpinBox.value(),
+            'usRegion': self.usRegionRadio.isChecked(),
+            'otherRegion': self.otherRegionRadio.isChecked(),
+            'isolatedMargin': self.isolatedMarginAccountRadio.isChecked(),
+            'crossMargin': self.crossMarginAccountRadio.isChecked(),
+            'lowerInterval': self.lowerIntervalCheck.isChecked(),
+        }
+
+        config.update(self.get_loss_settings(LIVE))
+        for strategyName in self.strategies.keys():
+            self.add_strategy_to_config(LIVE, strategyName, config)
+
+        targetPath = self.create_appropriate_config_folders('Live')
+        defaultPath = os.path.join(targetPath, 'live_configuration.json')
+        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Live Configuration', defaultPath, 'JSON (*.json)')
+        filePath = filePath.strip()
+
+        if filePath:
+            helpers.write_json_file(filePath, **config)
+            file = os.path.basename(filePath)
+            self.configurationResult.setText(f"Saved live configuration successfully to {file}.")
+        else:
+            self.configurationResult.setText("Could not save live configuration.")
 
     def load_backtest_settings(self):
         """
@@ -634,11 +754,7 @@ class Configuration(QDialog):
                 self.backtestPrecisionSpinBox.setValue(config['precision'])
                 self.backtestMarginTradingCheckBox.setChecked(config['marginTrading'])
 
-                self.backtestTrailingLossRadio.setChecked(config['trailingLoss'])
-                self.backtestStopLossRadio.setChecked(config['stopLoss'])
-                self.backtestLossPercentageSpinBox.setValue(config['lossPercentage'])
-                self.backtestSmartStopLossSpinBox.setValue(config['smartStopLossCounter'])
-
+                self.set_loss_settings(BACKTEST, config)
                 for strategyName in self.strategies.keys():
                     self.load_strategy_from_config(BACKTEST, strategyName, config)
 
@@ -647,42 +763,6 @@ class Configuration(QDialog):
         except Exception as e:
             self.logger.exception(str(e))
             self.backtestConfigurationResult.setText("Could not load backtest configuration.")
-
-    def save_simulation_settings(self):
-        """
-        Saves simulation settings to JSON file.
-        """
-        config = {
-            # General
-            'type': SIMULATION,
-            'ticker': self.simulationTickerComboBox.currentIndex(),
-            'interval': self.simulationIntervalComboBox.currentIndex(),
-            'startingBalance': self.simulationStartingBalanceSpinBox.value(),
-            'precision': self.simulationPrecisionSpinBox.value(),
-            'lowerInterval': self.lowerIntervalSimulationCheck.isChecked(),
-
-            # Loss
-            'trailingLoss': self.simulationTrailingLossRadio.isChecked(),
-            'stopLoss': self.simulationStopLossRadio.isChecked(),
-            'lossPercentage': self.simulationLossPercentageSpinBox.value(),
-            'smartStopLossCounter': self.simulationSmartStopLossSpinBox.value(),
-            'safetyTimer': self.simulationSafetyTimerSpinBox.value(),
-        }
-
-        for strategyName in self.strategies.keys():
-            self.add_strategy_to_config(SIMULATION, strategyName, config)
-
-        targetPath = self.create_appropriate_config_folders('Simulation')
-        defaultPath = os.path.join(targetPath, 'simulation.json')
-        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Simulation Configuration', defaultPath, 'JSON (*.json)')
-        filePath = filePath.strip()
-
-        if filePath:
-            helpers.write_json_file(filePath, **config)
-            file = os.path.basename(filePath)
-            self.simulationConfigurationResult.setText(f"Saved simulation configuration successfully to {file}.")
-        else:
-            self.simulationConfigurationResult.setText("Could not save simulation configuration.")
 
     def load_simulation_settings(self):
         """
@@ -701,12 +781,7 @@ class Configuration(QDialog):
                 self.simulationPrecisionSpinBox.setValue(config['precision'])
                 self.lowerIntervalSimulationCheck.setChecked(config['lowerInterval'])
 
-                self.simulationTrailingLossRadio.setChecked(config['trailingLoss'])
-                self.simulationStopLossRadio.setChecked(config['stopLoss'])
-                self.simulationLossPercentageSpinBox.setValue(config['lossPercentage'])
-                self.simulationSmartStopLossSpinBox.setValue(config['smartStopLossCounter'])
-                self.simulationSafetyTimerSpinBox.setValue(config['safetyTimer'])
-
+                self.set_loss_settings(SIMULATION, config)
                 for strategyName in self.strategies.keys():
                     self.load_strategy_from_config(SIMULATION, strategyName, config)
 
@@ -715,45 +790,6 @@ class Configuration(QDialog):
         except Exception as e:
             self.logger.exception(str(e))
             self.simulationConfigurationResult.setText("Could not load simulation configuration.")
-
-    def save_live_settings(self):
-        """
-        Saves live settings to JSON file.
-        """
-        config = {
-            # General
-            'type': LIVE,
-            'ticker': self.tickerComboBox.currentIndex(),
-            'interval': self.intervalComboBox.currentIndex(),
-            'precision': self.precisionSpinBox.value(),
-            'usRegion': self.usRegionRadio.isChecked(),
-            'otherRegion': self.otherRegionRadio.isChecked(),
-            'isolatedMargin': self.isolatedMarginAccountRadio.isChecked(),
-            'crossMargin': self.crossMarginAccountRadio.isChecked(),
-            'lowerInterval': self.lowerIntervalCheck.isChecked(),
-
-            # Loss
-            'trailingLoss': self.trailingLossRadio.isChecked(),
-            'stopLoss': self.stopLossRadio.isChecked(),
-            'lossPercentage': self.lossPercentageSpinBox.value(),
-            'smartStopLossCounter': self.smartStopLossSpinBox.value(),
-            'safetyTimer': self.safetyTimerSpinBox.value(),
-        }
-
-        for strategyName in self.strategies.keys():
-            self.add_strategy_to_config(LIVE, strategyName, config)
-
-        targetPath = self.create_appropriate_config_folders('Live')
-        defaultPath = os.path.join(targetPath, 'live_configuration.json')
-        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Live Configuration', defaultPath, 'JSON (*.json)')
-        filePath = filePath.strip()
-
-        if filePath:
-            helpers.write_json_file(filePath, **config)
-            file = os.path.basename(filePath)
-            self.configurationResult.setText(f"Saved live configuration successfully to {file}.")
-        else:
-            self.configurationResult.setText("Could not save live configuration.")
 
     def load_live_settings(self):
         """
@@ -775,12 +811,7 @@ class Configuration(QDialog):
                 self.crossMarginAccountRadio.setChecked(config['crossMargin'])
                 self.lowerIntervalCheck.setChecked(config['lowerInterval'])
 
-                self.trailingLossRadio.setChecked(config['trailingLoss'])
-                self.stopLossRadio.setChecked(config['stopLoss'])
-                self.lossPercentageSpinBox.setValue(config['lossPercentage'])
-                self.smartStopLossSpinBox.setValue(config['smartStopLossCounter'])
-                self.safetyTimerSpinBox.setValue(config['safetyTimer'])
-
+                self.set_loss_settings(LIVE, config)
                 for strategyName in self.strategies.keys():
                     self.load_strategy_from_config(LIVE, strategyName, config)
 
@@ -883,6 +914,17 @@ class Configuration(QDialog):
         self.strategyDict[toCallerTab, strategyName, 'groupBox'].setChecked(fromCallerGroupBox.isChecked())
         self.set_strategy_values(strategyName, toCaller, self.get_strategy_values(strategyName, fromCaller))
 
+    def copy_loss_settings(self, fromCaller, toCaller):
+        fromTab = self.get_category_tab(fromCaller)
+        toTab = self.get_category_tab(toCaller)
+
+        self.lossDict[toTab, "lossType"].setCurrentIndex(self.lossDict[fromTab, "lossType"].currentIndex())
+        self.lossDict[toTab, "lossPercentage"].setValue(self.lossDict[fromTab, "lossPercentage"].value())
+        self.lossDict[toTab, "smartStopLossCounter"].setValue(self.lossDict[fromTab, "smartStopLossCounter"].value())
+
+        if toTab != self.backtestConfigurationTabWidget:
+            self.lossDict[toTab, "safetyTimer"].setValue(self.lossDict[fromTab, "safetyTimer"].value())
+
     def copy_settings_to_simulation(self):
         """
         Copies parameters from main configuration to simulation configuration.
@@ -891,12 +933,7 @@ class Configuration(QDialog):
         self.simulationIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
         self.simulationTickerComboBox.setCurrentIndex(self.tickerComboBox.currentIndex())
         self.simulationPrecisionSpinBox.setValue(self.precisionSpinBox.value())
-
-        self.simulationLossPercentageSpinBox.setValue(self.lossPercentageSpinBox.value())
-        self.simulationStopLossRadio.setChecked(self.stopLossRadio.isChecked())
-        self.simulationTrailingLossRadio.setChecked(self.trailingLossRadio.isChecked())
-        self.simulationSmartStopLossSpinBox.setValue(self.smartStopLossSpinBox.value())
-        self.simulationSafetyTimerSpinBox.setValue(self.safetyTimerSpinBox.value())
+        self.copy_loss_settings(LIVE, SIMULATION)
 
         for strategyName in self.strategies.keys():
             self.copy_strategy_settings(LIVE, SIMULATION, strategyName)
@@ -911,11 +948,7 @@ class Configuration(QDialog):
         self.backtestIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
         self.backtestTickerComboBox.setCurrentIndex(self.tickerComboBox.currentIndex())
         self.backtestPrecisionSpinBox.setValue(self.precisionSpinBox.value())
-
-        self.backtestLossPercentageSpinBox.setValue(self.lossPercentageSpinBox.value())
-        self.backtestStopLossRadio.setChecked(self.stopLossRadio.isChecked())
-        self.backtestTrailingLossRadio.setChecked(self.trailingLossRadio.isChecked())
-        self.backtestSmartStopLossSpinBox.setValue(self.smartStopLossSpinBox.value())
+        self.copy_loss_settings(LIVE, BACKTEST)
 
         for strategyName in self.strategies.keys():
             self.copy_strategy_settings(LIVE, BACKTEST, strategyName)

@@ -44,15 +44,10 @@ def get_interface_dictionary(parent, caller: int = None):
             },
             'configuration': {
                 'mainTab': parent.configuration.simulationMainTab,
-                'lossTab': parent.configuration.simulationLossTab,
-                'trailingLossRadio': parent.configuration.simulationTrailingLossRadio,
-                'lossPercentage': parent.configuration.simulationLossPercentageSpinBox,
                 'mainConfigurationTabWidget': parent.configuration.simulationConfigurationTabWidget,
                 'ticker': parent.configuration.simulationTickerComboBox,
                 'interval': parent.configuration.simulationIntervalComboBox,
                 'lowerIntervalCheck': parent.configuration.lowerIntervalSimulationCheck,
-                'smartStopLossCounter': parent.configuration.simulationSmartStopLossSpinBox,
-                'safetyTimer': parent.configuration.simulationSafetyTimerSpinBox,
                 'precision': parent.configuration.simulationPrecisionSpinBox,
             }
         },
@@ -90,26 +85,17 @@ def get_interface_dictionary(parent, caller: int = None):
             },
             'configuration': {
                 'mainTab': parent.configuration.mainMainTab,
-                'lossTab': parent.configuration.mainLossTab,
-                'trailingLossRadio': parent.configuration.trailingLossRadio,
-                'lossPercentage': parent.configuration.lossPercentageSpinBox,
                 'mainConfigurationTabWidget': parent.configuration.mainConfigurationTabWidget,
                 'ticker': parent.configuration.tickerComboBox,
                 'interval': parent.configuration.intervalComboBox,
                 'lowerIntervalCheck': parent.configuration.lowerIntervalCheck,
-                'smartStopLossCounter': parent.configuration.smartStopLossSpinBox,
-                'safetyTimer': parent.configuration.safetyTimerSpinBox,
                 'precision': parent.configuration.precisionSpinBox,
             }
         },
         BACKTEST: {
             'configuration': {
                 'mainTab': parent.configuration.backtestMainTab,
-                'lossTab': parent.configuration.backtestLossTab,
-                'trailingLossRadio': parent.configuration.backtestTrailingLossRadio,
-                'lossPercentage': parent.configuration.backtestLossPercentageSpinBox,
                 'mainConfigurationTabWidget': parent.configuration.backtestConfigurationTabWidget,
-                'smartStopLossCounter': parent.configuration.backtestSmartStopLossSpinBox,
                 'precision': parent.configuration.backtestPrecisionSpinBox,
             },
             'mainInterface': {
