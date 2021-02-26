@@ -21,6 +21,7 @@ class OtherCommands(QDialog):
         self.load_slots()
         self.csvThread = None
         self.setDateThread = None
+        self.currentDateList = None
 
     def load_slots(self):
         """
@@ -34,7 +35,7 @@ class OtherCommands(QDialog):
         self.csvGenerationStatus.setText("Searching for earliest start date..")
         self.setDateThread = Worker(self.get_start_date_for_csv)
         self.setDateThread.signals.finished.connect(self.set_start_date_for_csv)
-        self.setDateThread.signals.started.connect(self.disable_csv_state)
+        self.setDateThread.signals.started.connect(lambda: self.generateCSVButton.setEnabled(False))
         self.setDateThread.signals.restore.connect(self.restore_csv_state)
         self.threadPool.start(self.setDateThread)
 
@@ -53,6 +54,7 @@ class OtherCommands(QDialog):
         return [qStart, qEnd]
 
     def set_start_date_for_csv(self, startEndList):
+        self.currentDateList = startEndList
         self.startDateCalendar.setDateRange(*startEndList)
         self.startDateCalendar.setSelectedDate(startEndList[0])
         self.csvGenerationStatus.setText("Setup filtered date successfully.")
@@ -65,12 +67,12 @@ class OtherCommands(QDialog):
         descending = self.descendingDateRadio.isChecked()
         armyTime = self.armyDateRadio.isChecked()
         interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
-        startDate = self.startDateCalendar.selectedDate().toPyDate()
+
+        selectedDate = self.startDateCalendar.selectedDate().toPyDate()
+        startDate = None if selectedDate == self.currentDateList[0] else selectedDate
 
         self.csvGenerationStatus.setText("Downloading data...")
-
-        thread = DownloadThread(symbol=symbol, interval=interval, descending=descending, armyTime=armyTime,
-                                startDate=startDate)
+        thread = DownloadThread(interval, symbol, descending, armyTime, startDate)
         thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
         thread.signals.csv_finished.connect(self.end_csv_generation)
         thread.signals.error.connect(self.handle_csv_generation_error)
