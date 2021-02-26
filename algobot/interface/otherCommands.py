@@ -43,9 +43,6 @@ class OtherCommands(QDialog):
         symbol = self.csvGenerationTicker.currentText()
         interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
 
-        if not symbol or not interval:
-            return
-
         ts = Data(loadData=False, log=False).binanceClient._get_earliest_valid_timestamp(symbol, interval)
         startDate = datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
         qStart = QDate(startDate.year, startDate.month, startDate.day)
