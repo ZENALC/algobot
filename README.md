@@ -34,7 +34,11 @@ GNU General Public License v3.0
 
 # Contributors
 
-Mihir Shrestha, koutsie
+Mihir Shrestha, Peter Motin, koutsie
+
+# Special Contributors
+
+Peter Motin for being the founder and head of strategic development throughout the entirety of this project.
 
 # Contribution
 
