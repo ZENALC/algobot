@@ -36,13 +36,13 @@ GNU General Public License v3.0
 
 Mihir Shrestha, Peter Motin, koutsie
 
-# Contribution
-
-The project is open-source. Please feel free to support it. Supporters are always welcome.
-
 # Special Contributors
 
 Peter Motin for being the founder and head of strategic development throughout the entirety of this project.
+
+# Contribution
+
+The project is open-source. Please feel free to support it. Supporters are always welcome.
 
 # Feature Requests
 
