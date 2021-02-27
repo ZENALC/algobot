@@ -6,7 +6,7 @@ from typing import Dict
 
 from helpers import get_logger, convert_interval_to_string, set_up_strategies
 from data import Data
-from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING_LOSS, STOP_LOSS
+from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING, STOP
 from strategies.strategy import Strategy
 
 
@@ -60,8 +60,15 @@ class SimulationTrader:
 
         self.buyLongPrice = None  # Price we last bought our target coin at in long position.
         self.sellShortPrice = None  # Price we last sold target coin at in short position.
-        self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
+        self.longTrailingPrice = None  # Price coin has to be above for long position.
+        self.shortTrailingPrice = None  # Price coin has to be below for short position.
+        self.currentPrice = None  # Current price of coin.
+        self.takeProfitType = None  # Type of take profit: trailing or stop.
+        self.takeProfitPercentageDecimal = None  # Percentage of profit to exit trade at.
+        self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
+        self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.
 
+        self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
         self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
         self.previousStopLoss = None  # Previous stop loss for smart stop loss.
@@ -72,9 +79,6 @@ class SimulationTrader:
         self.safetyTimer = None  # Timer to check if there's a true trend towards stop loss.
         self.scheduledSafetyTimer = None  # Next time to check if it's a true stop loss.
 
-        self.longTrailingPrice = None  # Price coin has to be above for long position.
-        self.shortTrailingPrice = None  # Price coin has to be below for short position.
-        self.currentPrice = None  # Current price of coin.
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
         self.currentPosition = None  # Current position value.
         self.previousPosition = None  # Previous position to validate for a cross.
@@ -85,10 +89,18 @@ class SimulationTrader:
         self.optionDetails = []  # Current option values. Holds most recent option values.
         self.lowerOptionDetails = []  # Lower option values. Holds lower interval option values (if exist).
 
-    def setup_strategies(self, strategies):
+    def setup_strategies(self, strategies: list):
+        """
+        Sets up strategies from list of strategies provided.
+        :param strategies: List of strategies to set up and apply to bot.
+        """
         set_up_strategies(self, strategies)
 
-    def set_safety_timer(self, safetyTimer):
+    def set_safety_timer(self, safetyTimer: int):
+        """
+        Sets safety timer for bot to evaluate whether a stop loss is still apparent after the safety timer.
+        :param safetyTimer: Amount of seconds to wait after a stop loss is reached before exiting position.
+        """
         if safetyTimer == 0:
             self.safetyTimer = None
         else:
@@ -154,6 +166,14 @@ class SimulationTrader:
                 'safetyTimer': self.get_safe_rounded_string(self.safetyTimer, symbol=' seconds', direction='right'),
                 'scheduledTimerRemaining': self.get_remaining_safety_timer(),
             },
+            'takeProfit': {
+                self.symbol: f'${self.currentPrice}',
+                'takeProfitType': self.get_trailing_or_stop_loss_string(self.takeProfitType),
+                'takeProfitPoint': self.get_safe_rounded_string(self.takeProfitPoint),
+                'trailingTakeProfitActivated': str(self.trailingTakeProfitActivated),
+                'takeProfitPercentage': self.get_safe_rounded_string(self.takeProfitPercentageDecimal,
+                                                                     direction="right", multiplier=100, symbol='%')
+            }
         }
 
         if self.dataView.current_values:
@@ -430,6 +450,8 @@ class SimulationTrader:
                     else:
                         if time.time() > self.scheduledSafetyTimer:
                             self.buy_short(f'Bought short because of stop loss and safety timer.', stopLossExit=True)
+            elif self.get_take_profit() is not None and self.currentPrice <= self.get_take_profit():
+                self.buy_short("Bought short because of take profit.")
             elif not self.inHumanControl and trend == BULLISH:
                 self.buy_short(f'Bought short because a bullish trend was detected.')
                 self.buy_long(f'Bought long because a bullish trend was detected.')
@@ -446,6 +468,8 @@ class SimulationTrader:
                     else:
                         if time.time() > self.scheduledSafetyTimer:
                             self.sell_long(f'Sold long because of stop loss and safety timer.', stopLossExit=True)
+            elif self.get_take_profit() is not None and self.currentPrice >= self.get_take_profit():
+                self.sell_long("Sold long because of take profit.")
             elif not self.inHumanControl and trend == BEARISH:
                 self.sell_long(f'Sold long because a cross was detected.')
                 self.sell_short('Sold short because a cross was detected.')
@@ -477,14 +501,29 @@ class SimulationTrader:
         """
         self.smartStopLossCounter = self.smartStopLossInitialCounter
 
+    @staticmethod
+    def get_trailing_or_stop_loss_string(exitPositionType: int) -> str:
+        """
+        Returns exit position type in string format instead of integer enum.
+        :return: Exit position type in string format.
+        """
+        if exitPositionType == STOP:
+            return "Stop"
+        elif exitPositionType == TRAILING:
+            return "Trailing"
+        elif exitPositionType is None:
+            return "None"
+        else:
+            raise ValueError("Unknown type of exit position type.")
+
     def get_stop_loss_strategy_string(self) -> str:
         """
         Returns stop loss strategy in string format, instead of integer enum.
         :return: Stop loss strategy in string format.
         """
-        if self.lossStrategy == STOP_LOSS:
+        if self.lossStrategy == STOP:
             return 'Stop Loss'
-        elif self.lossStrategy == TRAILING_LOSS:
+        elif self.lossStrategy == TRAILING:
             return 'Trailing Loss'
         elif self.lossStrategy is None:
             return 'None'
@@ -647,6 +686,25 @@ class SimulationTrader:
         else:
             raise ValueError(f'Unknown moving average {movingAverage}.')
 
+    def get_take_profit(self) -> None or float:
+        if self.currentPrice is None:
+            self.currentPrice = self.dataView.get_current_price()
+
+        if self.currentPosition == SHORT:
+            if self.takeProfitType == STOP:
+                self.takeProfitPoint = self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
+            else:
+                raise ValueError("Invalid type of take profit type provided.")
+        elif self.currentPosition == LONG:
+            if self.takeProfitType == STOP:
+                self.takeProfitPoint = self.buyLongPrice * (1 + self.takeProfitPercentageDecimal)
+            else:
+                raise ValueError("Invalid type of take profit type provided.")
+        else:
+            self.takeProfitPoint = None
+
+        return self.takeProfitPoint
+
     def get_stop_loss(self) -> None or float:
         """
         Returns a stop loss for the position.
@@ -659,17 +717,17 @@ class SimulationTrader:
             if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
                 self.stopLoss = self.previousStopLoss
             else:
-                if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
+                if self.lossStrategy == TRAILING:  # This means we use trailing loss.
                     self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
-                elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
+                elif self.lossStrategy == STOP:  # This means we use the basic stop loss.
                     self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
         elif self.currentPosition == LONG:  # If we are in a long position.
             if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
                 self.stopLoss = self.previousStopLoss
             else:
-                if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
+                if self.lossStrategy == TRAILING:  # This means we use trailing loss.
                     self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
-                elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
+                elif self.lossStrategy == STOP:  # This means we use the basic stop loss.
                     self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
         else:  # This means we are not in any position currently.
             self.stopLoss = None
@@ -708,9 +766,9 @@ class SimulationTrader:
         """
         if self.currentPosition == SHORT and self.stopLoss is not None:
             self.output_message(f'\nCurrently in short position.')
-            if self.lossStrategy == TRAILING_LOSS:
+            if self.lossStrategy == TRAILING:
                 self.output_message(f'Short trailing loss: ${round(self.stopLoss, self.precision)}')
-            elif self.lossStrategy == STOP_LOSS:
+            elif self.lossStrategy == STOP:
                 self.output_message(f'Stop loss: ${round(self.stopLoss, self.precision)}')
 
     def output_long_information(self):
@@ -719,9 +777,9 @@ class SimulationTrader:
         """
         if self.currentPosition == LONG and self.stopLoss is not None:
             self.output_message(f'\nCurrently in long position.')
-            if self.lossStrategy == TRAILING_LOSS:
+            if self.lossStrategy == TRAILING:
                 self.output_message(f'Long trailing loss: ${round(self.stopLoss, self.precision)}')
-            elif self.lossStrategy == STOP_LOSS:
+            elif self.lossStrategy == STOP:
                 self.output_message(f'Stop loss: ${round(self.stopLoss, self.precision)}')
 
     def output_control_mode(self):

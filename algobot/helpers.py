@@ -175,6 +175,10 @@ def get_label_string(label: str) -> str:
     :return: Camel-case string.
     """
     label = str(label)
+
+    if label.isupper():
+        return label
+
     if not label[0].isupper():
         separated = re.sub('([A-Z][a-z]+)', r' \1', re.sub('([A-Z]+)', r' \1', label)).split()
         separated = list(map(lambda word: word.capitalize(), separated))

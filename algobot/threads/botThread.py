@@ -209,8 +209,12 @@ class BotThread(QRunnable):
         Retrieves moving average options and loss settings based on caller.
         :param caller: Caller that dictates which parameters get set.
         """
-        trader: SimulationTrader = self.gui.get_trader(caller)
         lossDict = self.gui.get_loss_settings(caller)
+        takeProfitDict = self.gui.configuration.get_take_profit_settings(caller)
+
+        trader: SimulationTrader = self.gui.get_trader(caller)
+        trader.takeProfitPercentageDecimal = takeProfitDict["takeProfitPercentage"] / 100
+        trader.takeProfitType = takeProfitDict["takeProfitType"]
 
         trader.lossStrategy = lossDict["lossType"]
         trader.lossPercentageDecimal = lossDict["lossPercentage"] / 100
@@ -260,7 +264,7 @@ class BotThread(QRunnable):
         Handles trailing prices for caller object.
         :param caller: Trailing prices for what caller to be handled for.
         """
-        trader = self.gui.get_trader(caller)
+        trader: SimulationTrader = self.gui.get_trader(caller)
         trader.dataView.get_current_data()
         trader.currentPrice = trader.dataView.current_values['close']
         if trader.longTrailingPrice is not None and trader.currentPrice > trader.longTrailingPrice:

@@ -4,7 +4,8 @@ import telegram
 import helpers
 
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox, QTabWidget, QFormLayout, QLabel, QSpinBox, \
-    QGroupBox, QVBoxLayout, QDoubleSpinBox, QLineEdit, QComboBox, QPushButton, QHBoxLayout, QFrame, QScrollArea, QWidget
+    QGroupBox, QVBoxLayout, QDoubleSpinBox, QLineEdit, QComboBox, QPushButton, QHBoxLayout, QFrame, QScrollArea, \
+    QWidget, QLayout
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
 
@@ -12,9 +13,10 @@ from binance.client import Client
 from telegram.ext import Updater
 from dateutil import parser
 from threads import downloadThread
-from typing import List, Tuple
-from enums import SIMULATION, LIVE, BACKTEST, TRAILING_LOSS, STOP_LOSS
+from typing import List, Tuple, Callable
+from enums import SIMULATION, LIVE, BACKTEST, TRAILING, STOP
 
+# Import your custom strategies here.
 from strategies.movingAverage import MovingAverageStrategy
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
@@ -35,95 +37,31 @@ class Configuration(QDialog):
         self.credentialsFolder = "Credentials"
         self.configFolder = 'Configuration'
         self.basicFilePath = os.path.join(helpers.ROOT_DIR, 'state.json')
-
         self.categoryTabs = [self.mainConfigurationTabWidget,
                              self.simulationConfigurationTabWidget,
                              self.backtestConfigurationTabWidget,
                              ]
-        self.strategies = {  # Add your strategies to this dictionary of strategies.
+
+        self.strategies = {  # Add your strategies to this dictionary of strategies. Make sure key name is exactly same!
             'Moving Average': MovingAverageStrategy,
         }
         self.strategyDict = {}  # We will store all the strategy slot information in this dictionary.
         self.lossDict = {}  # We will store stop loss settings here.
+        self.takeProfitDict = {}  # We will store take profit settings here.
 
         self.load_slots()
         self.load_credentials()
-        self.load_strategy_slots()
-        self.load_loss_slots()
 
-    def load_loss_slots(self):
-        for tab in self.categoryTabs:
-            tabWidget = QTabWidget()
-            layout = QVBoxLayout()
-
-            descriptionLabel = QLabel("Configure your stop loss settings here.")
-            descriptionLabel.setWordWrap(True)
-            layout.addWidget(descriptionLabel)
-
-            innerLayout = QFormLayout()
-            innerWidget = QWidget()
-            innerWidget.setLayout(innerLayout)
-
-            scroll = QScrollArea()
-            scroll.setWidget(innerWidget)
-            scroll.setWidgetResizable(True)
-            layout.addWidget(scroll)
-
-            self.create_loss_inputs(tab, innerLayout)
-
-            tabWidget.setLayout(layout)
-            tab.addTab(tabWidget, "Loss Settings")
-
-    def create_loss_inputs(self, tab, innerLayout):
-        self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
-        lossTypeComboBox.addItems(("Trailing", "Stop"))
-        innerLayout.addRow(QLabel("Loss Type"), lossTypeComboBox)
-
-        self.lossDict[tab, "lossPercentage"] = lossPercentage = QDoubleSpinBox()
-        lossPercentage.setValue(5)
-        innerLayout.addRow(QLabel("Loss Percentage"), lossPercentage)
-
-        self.lossDict[tab, "smartStopLossCounter"] = smartStopLossCounter = QSpinBox()
-        innerLayout.addRow(QLabel("Smart Stop Loss Counter"), smartStopLossCounter)
-
-        if tab != self.backtestConfigurationTabWidget:
-            self.lossDict[tab, "safetyTimer"] = safetyTimer = QSpinBox()
-            innerLayout.addRow(QLabel("Safety Timer"), safetyTimer)
-
-    def set_loss_settings(self, caller, config):
-        tab = self.get_category_tab(caller)
-        self.lossDict[tab, "lossType"].setCurrentIndex(config["lossTypeIndex"])
-        self.lossDict[tab, "lossPercentage"].setValue(config["lossPercentage"])
-        self.lossDict[tab, "smartStopLossCounter"].setValue(config["smartStopLossCounter"])
-
-        if tab != self.backtestConfigurationTabWidget:
-            self.lossDict[tab, 'safetyTimer'].setValue(config["safetyTimer"])
-
-    def get_loss_settings(self, caller):
-        tab = self.get_category_tab(caller)
-        lossType = TRAILING_LOSS if self.lossDict[tab, "lossType"].currentText() == "Trailing" else STOP_LOSS
-
-        lossSettings = {
-            'lossType': lossType,
-            'lossTypeIndex': self.lossDict[tab, "lossType"].currentIndex(),
-            'lossPercentage': self.lossDict[tab, 'lossPercentage'].value(),
-            'smartStopLossCounter': self.lossDict[tab, 'smartStopLossCounter'].value()
-        }
-
-        if tab != self.backtestConfigurationTabWidget:
-            lossSettings['safetyTimer'] = self.lossDict[tab, 'safetyTimer'].value()
-
-        return lossSettings
-
-    def get_strategies(self, caller) -> List[tuple]:
-        strategies = []
-        for strategyName, strategy in self.strategies.items():
-            if self.strategy_enabled(strategyName, caller):
-                values = self.get_strategy_values(strategyName, caller, verbose=True)
-                strategyTuple = (strategy, values, strategyName)
-                strategies.append(strategyTuple)
-
-        return strategies
+    @staticmethod
+    def get_h_line() -> QFrame:
+        """
+        Returns a horizontal line object made using a QFrame object.
+        :return: Horizontal line using a QFrame.
+        """
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        return line
 
     def get_category_tab(self, caller: int) -> QTabWidget:
         """
@@ -140,6 +78,112 @@ class Configuration(QDialog):
         else:
             raise ValueError("Invalid type of caller provided.")
 
+    def create_inner_tab(self, description: str, tabName: str, input_creator: Callable):
+        for tab in self.categoryTabs:
+            tabWidget = QTabWidget()
+            layout = QVBoxLayout()
+
+            descriptionLabel = QLabel(description)
+            descriptionLabel.setWordWrap(True)
+            layout.addWidget(descriptionLabel)
+
+            innerLayout = QFormLayout()
+            innerWidget = QWidget()
+            innerWidget.setLayout(innerLayout)
+
+            scroll = QScrollArea()
+            scroll.setWidget(innerWidget)
+            scroll.setWidgetResizable(True)
+            layout.addWidget(scroll)
+
+            input_creator(tab, innerLayout)
+
+            tabWidget.setLayout(layout)
+            tab.addTab(tabWidget, tabName)
+
+    def load_take_profit_slots(self):
+        self.create_inner_tab(
+            description="Configure your take profit settings here.",
+            tabName="Take Profit",
+            input_creator=self.create_take_profit_inputs
+        )
+
+    def create_take_profit_inputs(self, tab: QTabWidget, innerLayout: QLayout):
+        self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
+        takeProfitTypeComboBox.addItems(('Stop',))
+        innerLayout.addRow(QLabel("Take Profit Type"), takeProfitTypeComboBox)
+
+        self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
+        takeProfitPercentage.setValue(5)
+        innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
+
+    def get_take_profit_settings(self, caller) -> dict:
+        tab = self.get_category_tab(caller)
+        takeProfitType = TRAILING if self.takeProfitDict[tab, 'takeProfitType'].currentText() == "Trailing" else STOP
+
+        return {
+            'takeProfitType': takeProfitType,
+            'takeProfitPercentage': self.takeProfitDict[tab, 'takeProfitPercentage'].value()
+        }
+
+    def load_loss_slots(self):
+        self.create_inner_tab(
+            description="Configure your stop loss settings here.",
+            tabName="Stop Loss",
+            input_creator=self.create_loss_inputs
+        )
+
+    def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout):
+        self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
+        lossTypeComboBox.addItems(("Trailing", "Stop"))
+        innerLayout.addRow(QLabel("Loss Type"), lossTypeComboBox)
+
+        self.lossDict[tab, "lossPercentage"] = lossPercentage = QDoubleSpinBox()
+        lossPercentage.setValue(5)
+        innerLayout.addRow(QLabel("Loss Percentage"), lossPercentage)
+
+        self.lossDict[tab, "smartStopLossCounter"] = smartStopLossCounter = QSpinBox()
+        innerLayout.addRow(QLabel("Smart Stop Loss Counter"), smartStopLossCounter)
+
+        if tab != self.backtestConfigurationTabWidget:
+            self.lossDict[tab, "safetyTimer"] = safetyTimer = QSpinBox()
+            innerLayout.addRow(QLabel("Safety Timer"), safetyTimer)
+
+    def set_loss_settings(self, caller: int, config: dict):
+        tab = self.get_category_tab(caller)
+        self.lossDict[tab, "lossType"].setCurrentIndex(config["lossTypeIndex"])
+        self.lossDict[tab, "lossPercentage"].setValue(config["lossPercentage"])
+        self.lossDict[tab, "smartStopLossCounter"].setValue(config["smartStopLossCounter"])
+
+        if tab != self.backtestConfigurationTabWidget:
+            self.lossDict[tab, 'safetyTimer'].setValue(config["safetyTimer"])
+
+    def get_loss_settings(self, caller: int):
+        tab = self.get_category_tab(caller)
+        lossType = TRAILING if self.lossDict[tab, "lossType"].currentText() == "Trailing" else STOP
+
+        lossSettings = {
+            'lossType': lossType,
+            'lossTypeIndex': self.lossDict[tab, "lossType"].currentIndex(),
+            'lossPercentage': self.lossDict[tab, 'lossPercentage'].value(),
+            'smartStopLossCounter': self.lossDict[tab, 'smartStopLossCounter'].value()
+        }
+
+        if tab != self.backtestConfigurationTabWidget:
+            lossSettings['safetyTimer'] = self.lossDict[tab, 'safetyTimer'].value()
+
+        return lossSettings
+
+    def get_strategies(self, caller: int) -> List[tuple]:
+        strategies = []
+        for strategyName, strategy in self.strategies.items():
+            if self.strategy_enabled(strategyName, caller):
+                values = self.get_strategy_values(strategyName, caller, verbose=True)
+                strategyTuple = (strategy, values, strategyName)
+                strategies.append(strategyTuple)
+
+        return strategies
+
     def strategy_enabled(self, strategyName: str, caller: int) -> bool:
         """
         Returns a boolean whether a strategy is enabled or not.
@@ -151,7 +195,7 @@ class Configuration(QDialog):
         return self.strategyDict[tab, strategyName, 'groupBox'].isChecked()
 
     @staticmethod
-    def get_input_widget_value(inputWidget, verbose: bool = False):
+    def get_input_widget_value(inputWidget: QWidget, verbose: bool = False):
         """
         This function will attempt to get the value of the inputWidget and return it.
         :param verbose: If verbose, return value of widget when possible.
@@ -169,17 +213,6 @@ class Configuration(QDialog):
                 return inputWidget.currentIndex()
         else:
             raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
-
-    @staticmethod
-    def get_h_line() -> QFrame:
-        """
-        Returns a horizontal line object made using a QFrame object.
-        :return: Horizontal line using a QFrame.
-        """
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-        return line
 
     def get_strategy_values(self, strategyName: str, caller: int, verbose: bool = False) -> List[int]:
         """
@@ -602,7 +635,7 @@ class Configuration(QDialog):
             self.backtestDownloadLabel.setText("Canceling download...")
             self.downloadThread.stop()
 
-    def set_download_progress(self, progress, message, caller):
+    def set_download_progress(self, progress: int, message: str, caller: int):
         """
         Sets download progress and message with parameters passed.
         :param caller: This is not used in this function.
@@ -861,7 +894,7 @@ class Configuration(QDialog):
             self.set_value(widget, value)
 
     @staticmethod
-    def set_value(widget, value):
+    def set_value(widget: QWidget, value):
         """
         Sets appropriate value to a widget depending on what it is.
         :param widget: Widget to alter.
@@ -899,7 +932,7 @@ class Configuration(QDialog):
             value = values[index]
             self.set_value(widget, value)
 
-    def copy_strategy_settings(self, fromCaller, toCaller, strategyName):
+    def copy_strategy_settings(self, fromCaller: int, toCaller: int, strategyName: str):
         """
         Copies strategy settings from caller provided and sets it to caller provided based on strategy name.
         :param fromCaller: Function will copy settings from this caller.
@@ -914,7 +947,7 @@ class Configuration(QDialog):
         self.strategyDict[toCallerTab, strategyName, 'groupBox'].setChecked(fromCallerGroupBox.isChecked())
         self.set_strategy_values(strategyName, toCaller, self.get_strategy_values(strategyName, fromCaller))
 
-    def copy_loss_settings(self, fromCaller, toCaller):
+    def copy_loss_settings(self, fromCaller: int, toCaller: int):
         fromTab = self.get_category_tab(fromCaller)
         toTab = self.get_category_tab(toCaller)
 
@@ -970,25 +1003,28 @@ class Configuration(QDialog):
         :return: None
         """
         self.simulationCopySettingsButton.clicked.connect(self.copy_settings_to_simulation)
+        self.simulationSaveConfigurationButton.clicked.connect(self.save_simulation_settings)
+        self.simulationLoadConfigurationButton.clicked.connect(self.load_simulation_settings)
 
         self.backtestCopySettingsButton.clicked.connect(self.copy_settings_to_backtest)
         self.backtestImportDataButton.clicked.connect(self.import_data)
         self.backtestDownloadDataButton.clicked.connect(self.download_data)
         self.backtestStopDownloadButton.clicked.connect(self.stop_download)
+        self.backtestSaveConfigurationButton.clicked.connect(self.save_backtest_settings)
+        self.backtestLoadConfigurationButton.clicked.connect(self.load_backtest_settings)
 
         self.testCredentialsButton.clicked.connect(self.test_binance_credentials)
         self.saveCredentialsButton.clicked.connect(self.save_credentials)
         self.loadCredentialsButton.clicked.connect(lambda: self.load_credentials(auto=False))
-        self.testTelegramButton.clicked.connect(self.test_telegram)
 
+        self.testTelegramButton.clicked.connect(self.test_telegram)
         self.telegramApiKey.textChanged.connect(self.reset_telegram_state)
         self.telegramChatID.textChanged.connect(self.reset_telegram_state)
 
-        self.simulationSaveConfigurationButton.clicked.connect(self.save_simulation_settings)
-        self.simulationLoadConfigurationButton.clicked.connect(self.load_simulation_settings)
         self.saveConfigurationButton.clicked.connect(self.save_live_settings)
         self.loadConfigurationButton.clicked.connect(self.load_live_settings)
-        self.backtestSaveConfigurationButton.clicked.connect(self.save_backtest_settings)
-        self.backtestLoadConfigurationButton.clicked.connect(self.load_backtest_settings)
-
         self.graphPlotSpeedSpinBox.valueChanged.connect(self.update_graph_speed)
+
+        self.load_loss_slots()  # These slots are based on the ordering.
+        self.load_take_profit_slots()
+        self.load_strategy_slots()

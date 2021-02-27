@@ -6,7 +6,7 @@ from typing import Dict
 from dateutil import parser
 from datetime import datetime
 from helpers import get_ups_and_downs, get_label_string, set_up_strategies
-from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING_LOSS, STOP_LOSS
+from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING, STOP
 from strategies.strategy import Strategy
 from algorithms import get_sma, get_wma, get_ema
 
@@ -30,30 +30,34 @@ class Backtester:
         self.coin = 0
         self.coinOwed = 0
         self.commissionsPaid = 0
-        self.trades = []
-        self.currentPrice = None
         self.transactionFeePercentage = 0.001
-        self.profit = 0
+        self.trades = []
+
         self.marginEnabled = marginEnabled
         self.precision = precision
         self.lossStrategy = lossStrategy
         self.lossPercentageDecimal = lossPercentage / 100
         self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
+
+        self.currentPrice = None
+        self.buyLongPrice = None
+        self.longTrailingPrice = None
+        self.sellShortPrice = None
+        self.shortTrailingPrice = None
+        self.profit = 0
+
         self.startTime = None
         self.endTime = None
         self.inLongPosition = False
         self.inShortPosition = False
         self.previousPosition = None
-        self.buyLongPrice = None
-        self.longTrailingPrice = None
-        self.sellShortPrice = None
-        self.shortTrailingPrice = None
         self.currentPeriod = None
+        self.minPeriod = 1
+
         self.previousStopLoss = None
         self.initialStopLossCounter = 0
         self.stopLossCounter = 0
         self.stopLossExit = False
-        self.minPeriod = 1
 
         self.data = data
         self.check_data()
@@ -246,9 +250,9 @@ class Backtester:
         if self.shortTrailingPrice is None:
             self.shortTrailingPrice = self.currentPrice
             self.sellShortPrice = self.shortTrailingPrice
-        if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
+        if self.lossStrategy == TRAILING:  # This means we use trailing loss.
             return self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
-        elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
+        elif self.lossStrategy == STOP:  # This means we use the basic stop loss.
             return self.sellShortPrice * (1 + self.lossPercentageDecimal)
 
     def get_long_stop_loss(self) -> float:
@@ -259,9 +263,9 @@ class Backtester:
         if self.longTrailingPrice is None:
             self.longTrailingPrice = self.currentPrice
             self.buyLongPrice = self.longTrailingPrice
-        if self.lossStrategy == TRAILING_LOSS:  # This means we use trailing loss.
+        if self.lossStrategy == TRAILING:  # This means we use trailing loss.
             return self.longTrailingPrice * (1 - self.lossPercentageDecimal)
-        elif self.lossStrategy == STOP_LOSS:  # This means we use the basic stop loss.
+        elif self.lossStrategy == STOP:  # This means we use the basic stop loss.
             return self.buyLongPrice * (1 - self.lossPercentageDecimal)
 
     def get_stop_loss(self) -> float or None:
@@ -523,7 +527,7 @@ class Backtester:
         print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")
         print(f'\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%')
-        if self.lossStrategy == TRAILING_LOSS:
+        if self.lossStrategy == TRAILING:
             print(f"\tLoss Strategy: Trailing")
         else:
             print("\tLoss Strategy: Stop")
