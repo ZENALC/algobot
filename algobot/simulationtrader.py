@@ -558,8 +558,13 @@ class SimulationTrader:
         else:
             raise ValueError("Invalid type of current position.")
 
-    def get_safe_rounded_percentage(self, value):
-        return self.get_safe_rounded_string(value, direction='right', multiplier=100, symbol='%')
+    def get_safe_rounded_percentage(self, decimalValue: float) -> str:
+        """
+        Converts decimal value provided to a percentage.
+        :param decimalValue: Percentage in decimal format.
+        :return: Rounded percentage value in a string format.
+        """
+        return self.get_safe_rounded_string(decimalValue, direction='right', multiplier=100, symbol='%')
 
     def get_safe_rounded_string(self, value: float, roundDigits: int = None, symbol: str = '$', direction: str = 'left',
                                 multiplier: float = 1) -> str:
