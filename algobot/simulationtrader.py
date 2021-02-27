@@ -148,9 +148,8 @@ class SimulationTrader:
                 'trend': self.get_trend_string(self.trend)
             },
             'stopLoss': {
-                'lossPercentage': self.get_safe_rounded_string(self.lossPercentageDecimal, direction='right',
-                                                               multiplier=100, symbol='%'),
                 'stopLossType': self.get_stop_loss_strategy_string(),
+                'stopLossPercentage': self.get_safe_rounded_percentage(self.lossPercentageDecimal),
                 'stopLossPoint': self.get_safe_rounded_string(self.get_stop_loss()),
                 self.symbol: f'${self.currentPrice}',
                 'customStopPointValue': self.get_safe_rounded_string(self.customStopLoss),
@@ -167,12 +166,11 @@ class SimulationTrader:
                 'scheduledTimerRemaining': self.get_remaining_safety_timer(),
             },
             'takeProfit': {
-                self.symbol: f'${self.currentPrice}',
                 'takeProfitType': self.get_trailing_or_stop_loss_string(self.takeProfitType),
-                'takeProfitPoint': self.get_safe_rounded_string(self.takeProfitPoint),
+                'takeProfitPercentage': self.get_safe_rounded_percentage(self.takeProfitPercentageDecimal),
                 'trailingTakeProfitActivated': str(self.trailingTakeProfitActivated),
-                'takeProfitPercentage': self.get_safe_rounded_string(self.takeProfitPercentageDecimal,
-                                                                     direction="right", multiplier=100, symbol='%')
+                'takeProfitPoint': self.get_safe_rounded_string(self.takeProfitPoint),
+                self.symbol: f'${self.currentPrice}',
             }
         }
 
@@ -559,6 +557,9 @@ class SimulationTrader:
             return 'None'
         else:
             raise ValueError("Invalid type of current position.")
+
+    def get_safe_rounded_percentage(self, value):
+        return self.get_safe_rounded_string(value, direction='right', multiplier=100, symbol='%')
 
     def get_safe_rounded_string(self, value: float, roundDigits: int = None, symbol: str = '$', direction: str = 'left',
                                 multiplier: float = 1) -> str:

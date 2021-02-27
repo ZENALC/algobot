@@ -17,6 +17,8 @@ class Backtester:
                  data: list,
                  lossStrategy: int,
                  lossPercentage: float,
+                 takeProfitType: int,
+                 takeProfitPercentage: float,
                  strategies: list,
                  symbol: str = None,
                  marginEnabled: bool = True,
@@ -58,6 +60,9 @@ class Backtester:
         self.initialStopLossCounter = 0
         self.stopLossCounter = 0
         self.stopLossExit = False
+
+        self.takeProfitType = takeProfitType
+        self.takeProfitPercentageDecimal = takeProfitPercentage / 100
 
         self.data = data
         self.check_data()
@@ -282,6 +287,14 @@ class Backtester:
         else:  # This means we are not in a position.
             return None
 
+    def get_take_profit(self):
+        if self.inShortPosition:
+            return self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
+        elif self.inLongPosition:
+            return self.buyLongPrice * (1 + self.takeProfitPercentageDecimal)
+        else:
+            return None
+
     def get_net(self) -> float:
         """
         Returns net balance with current price of coin being traded. It factors in the current balance, the amount
@@ -433,12 +446,16 @@ class Backtester:
         if self.inShortPosition:
             if self.currentPrice > self.get_stop_loss():
                 self.exit_short('Exited short because a stop loss was triggered.', stopLossExit=True)
+            elif self.currentPrice <= self.get_take_profit():
+                self.exit_short("Exited short because of take profit.")
             elif trend == BULLISH:
                 self.exit_short(f'Exited short because a bullish trend was detected.')
                 self.go_long(f'Entered long because a bullish trend was detected.')
         elif self.inLongPosition:
             if self.currentPrice < self.get_stop_loss():
                 self.exit_long('Exited long because a stop loss was triggered.', stopLossExit=True)
+            elif self.currentPrice >= self.get_take_profit():
+                self.exit_long("Exited long because of take profit.")
             elif trend == BEARISH:
                 self.exit_long('Exited long because a bearish trend was detected.')
                 if self.marginEnabled:
@@ -526,6 +543,7 @@ class Backtester:
         print(f'\tInterval: {self.interval}')
         print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")
+        print(f'\tTake Profit Percentage: {round(self.takeProfitPercentageDecimal * 100, 2)}%')
         print(f'\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%')
         if self.lossStrategy == TRAILING:
             print(f"\tLoss Strategy: Trailing")

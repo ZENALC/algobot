@@ -30,6 +30,7 @@ class BacktestThread(QRunnable):
         config = gui.configuration
         startDate, endDate = config.get_calendar_dates()
         lossDict = gui.get_loss_settings(BACKTEST)
+        takeProfitDict = gui.configuration.get_take_profit_settings(BACKTEST)
         strategies = config.get_strategies(BACKTEST)
 
         return {
@@ -37,6 +38,8 @@ class BacktestThread(QRunnable):
             'data': config.data,
             'startDate': startDate,
             'endDate': endDate,
+            'takeProfitType': takeProfitDict['takeProfitType'],
+            'takeProfitPercentage': takeProfitDict['takeProfitPercentage'],
             'lossStrategy': lossDict["lossType"],
             'lossPercentage': lossDict["lossPercentage"],
             'smartStopLossCounter': lossDict["smartStopLossCounter"],
@@ -113,7 +116,9 @@ class BacktestThread(QRunnable):
                                          endDate=configDetails['endDate'],
                                          precision=configDetails['precision'],
                                          outputTrades=configDetails['outputTrades'],
-                                         strategies=configDetails['strategies'])
+                                         strategies=configDetails['strategies'],
+                                         takeProfitType=configDetails['takeProfitType'],
+                                         takeProfitPercentage=configDetails['takeProfitPercentage'])
         self.gui.backtester.set_stop_loss_counter(configDetails['smartStopLossCounter'])
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
 
