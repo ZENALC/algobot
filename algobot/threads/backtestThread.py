@@ -1,5 +1,6 @@
 import time
 
+from datetime import timedelta
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 from backtester import Backtester
 from enums import BACKTEST
@@ -48,6 +49,7 @@ class BacktestThread(QRunnable):
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
             'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
             'strategies': strategies,
+            'strategyInterval': config.backtestStrategyIntervalCombobox.currentText()
         }
 
     def get_configuration_dictionary_for_gui(self) -> dict:
@@ -118,7 +120,8 @@ class BacktestThread(QRunnable):
                                          outputTrades=configDetails['outputTrades'],
                                          strategies=configDetails['strategies'],
                                          takeProfitType=configDetails['takeProfitType'],
-                                         takeProfitPercentage=configDetails['takeProfitPercentage'])
+                                         takeProfitPercentage=configDetails['takeProfitPercentage'],
+                                         strategyInterval=configDetails['strategyInterval'])
         self.gui.backtester.set_stop_loss_counter(configDetails['smartStopLossCounter'])
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
 
@@ -136,6 +139,8 @@ class BacktestThread(QRunnable):
         backtester = self.gui.backtester
         backtester.startTime = time.time()
         seenData = backtester.data[:backtester.minPeriod][::-1]  # Start from minimum previous period data.
+        strategyData = seenData if backtester.strategyIntervalMinutes == backtester.intervalMinutes else []
+        nextInsertion = None
         backtestPeriod = backtester.data[backtester.startDateIndex: backtester.endDateIndex]
         testLength = len(backtestPeriod)
         divisor = testLength // 100
@@ -148,10 +153,18 @@ class BacktestThread(QRunnable):
 
             if len(seenData) >= limit:
                 seenData = seenData[:limit // 2]
+            if len(strategyData) >= limit:
+                strategyData = strategyData[:limit // 2]
 
             seenData.insert(0, period)
             backtester.currentPeriod = period
             backtester.currentPrice = period['open']
+            periodDate = period['date_utc']
+
+            if len(seenData) > backtester.intervalGapMinutes and (nextInsertion is None or periodDate >= nextInsertion):
+                nextInsertion = seenData[0]['date_utc'] + timedelta(minutes=backtester.strategyIntervalMinutes)
+                gapData = backtester.get_gap_data(seenData, backtester.intervalGapMinutes)
+                strategyData.insert(0, gapData)
 
             if len(backtester.strategies) > 0:
                 backtester.main_logic()
@@ -159,11 +172,13 @@ class BacktestThread(QRunnable):
                 if not backtester.inLongPosition:
                     backtester.go_long('Entered long because no strategies were found.')
 
-            if backtester.get_net() <= 1:
+            if backtester.get_net() <= 0:
                 raise RuntimeError("Backtester ran out of money. Try changing your strategy or date interval.")
 
-            for strategy in backtester.strategies.values():
-                strategy.get_trend(seenData)
+            if len(strategyData) >= backtester.minPeriod:
+                tempData = [period] + strategyData
+                for strategy in backtester.strategies.values():
+                    strategy.get_trend(tempData)
 
             if index % divisor == 0:
                 self.signals.activity.emit(self.get_activity_dictionary(period=period, index=index, length=testLength))

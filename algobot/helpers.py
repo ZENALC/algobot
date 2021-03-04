@@ -119,30 +119,6 @@ def initialize_logger():
     os.chdir(curPath)
 
 
-def convert_interval(interval) -> str:
-    """
-    Converts longer interval string to smaller interval string.
-    :param interval: Long interval string.
-    :return: Smaller interval string.
-    """
-    intervals = {
-        '12 Hours': '12h',
-        '15 Minutes': '15m',
-        '1 Day': '1d',
-        '1 Hour': '1h',
-        '1 Minute': '1m',
-        '2 Hours': '2h',
-        '30 Minutes': '30m',
-        '3 Days': '3d',
-        '3 Minutes': '3m',
-        '4 Hours': '4h',
-        '5 Minutes': '5m',
-        '6 Hours': '6h',
-        '8 Hours': '8h'
-    }
-    return intervals[interval]
-
-
 def parse_strategy_name(name):
     nameList = name.split()
     remainingList = nameList[1:]
@@ -186,6 +162,46 @@ def get_label_string(label: str) -> str:
     return label
 
 
+def get_interval_minutes(interval) -> int:
+    intervals = {
+        '12 Hours': 720,
+        '15 Minutes': 15,
+        '1 Day': 1440,
+        '1 Hour': 60,
+        '1 Minute': 1,
+        '2 Hours': 120,
+        '30 Minutes': 30,
+        '3 Days': 4320,
+        '3 Minutes': 3,
+        '4 Hours': 240,
+        '5 Minutes': 5,
+        '6 Hours': 360,
+        '8 Hours': 480
+    }
+    return intervals[interval]
+
+
+def get_interval_strings(startingIndex: int = 0) -> list:
+    """
+    Returns interval strings in a sorted format.
+    :param startingIndex: Index to start getting interval strings from.
+    :return: Strings in descending format.
+    """
+    return ['1 Minute',
+            '3 Minutes',
+            '5 Minutes',
+            '15 Minutes',
+            '30 Minutes',
+            '1 Hour',
+            '2 Hours',
+            '4 Hours',
+            '6 Hours',
+            '8 Hours',
+            '12 Hours',
+            '1 Day',
+            '3 Days'][startingIndex:]
+
+
 def convert_interval_to_string(interval) -> str:
     """
     Converts smaller interval string to longer interval string.
@@ -206,6 +222,30 @@ def convert_interval_to_string(interval) -> str:
         '5m': '5 Minutes',
         '6h': '6 Hours',
         '8h': '8 Hours'
+    }
+    return intervals[interval]
+
+
+def convert_interval(interval) -> str:
+    """
+    Converts longer interval string to smaller interval string.
+    :param interval: Long interval string.
+    :return: Smaller interval string.
+    """
+    intervals = {
+        '12 Hours': '12h',
+        '15 Minutes': '15m',
+        '1 Day': '1d',
+        '1 Hour': '1h',
+        '1 Minute': '1m',
+        '2 Hours': '2h',
+        '30 Minutes': '30m',
+        '3 Days': '3d',
+        '3 Minutes': '3m',
+        '4 Hours': '4h',
+        '5 Minutes': '5m',
+        '6 Hours': '6h',
+        '8 Hours': '8h'
     }
     return intervals[interval]
 

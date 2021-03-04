@@ -49,8 +49,26 @@ class Configuration(QDialog):
         self.lossDict = {}  # We will store stop loss settings here.
         self.takeProfitDict = {}  # We will store take profit settings here.
 
+        self.load_comboBoxes()
         self.load_slots()
         self.load_credentials()
+
+    def load_comboBoxes(self):
+        intervals = helpers.get_interval_strings(startingIndex=0)
+        self.backtestIntervalComboBox.addItems(intervals)
+        self.backtestIntervalComboBox.currentTextChanged.connect(self.reset_strategy_interval_comboBox)
+        self.backtestStrategyIntervalCombobox.addItems(intervals)
+
+    def reset_strategy_interval_comboBox(self):
+        childText = self.backtestStrategyIntervalCombobox.currentText()
+        parentIndex = self.backtestIntervalComboBox.currentIndex()
+        intervals = helpers.get_interval_strings(startingIndex=parentIndex)
+        self.backtestStrategyIntervalCombobox.clear()
+        self.backtestStrategyIntervalCombobox.addItems(intervals)
+
+        previousChildIndex = self.backtestStrategyIntervalCombobox.findText(childText)
+        if previousChildIndex != -1:
+            self.backtestStrategyIntervalCombobox.setCurrentIndex(previousChildIndex)
 
     @staticmethod
     def get_h_line() -> QFrame:

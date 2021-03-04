@@ -4,7 +4,7 @@ import sys
 import os
 import webbrowser
 
-from typing import List, Dict
+from typing import List, Dict, Union
 from helpers import ROOT_DIR, open_file_or_folder, get_logger, create_folder_if_needed
 from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
@@ -57,18 +57,18 @@ class Interface(QMainWindow):
             {'graph': self.simulationAvgGraph, 'plots': [], 'label': self.simulationAvgCoordinates, 'enable': True},
         )
         self.graphLeeway = 10  # Amount of points to set extra for graph limits.
-        self.setup_graphs()  # Setting up graphs
-        self.initiate_slots()  # Initiating slots
+        self.setup_graphs()  # Setting up graphs.
+        self.initiate_slots()  # Initiating slots.
 
         self.interfaceDictionary = get_interface_dictionary(self)
         self.advancedLogging = False
         self.runningLive = False
         self.simulationRunningLive = False
-        self.backtester: Backtester or None = None
-        self.trader: RealTrader or None = None
-        self.simulationTrader: SimulationTrader or None = None
-        self.simulationLowerIntervalData: Data or None = None
-        self.lowerIntervalData: Data or None = None
+        self.backtester: Union[Backtester, None] = None
+        self.trader: Union[RealTrader, None] = None
+        self.simulationTrader: Union[SimulationTrader, None] = None
+        self.simulationLowerIntervalData: Union[Data, None] = None
+        self.lowerIntervalData: Union[Data, None] = None
         self.telegramBot = None
         self.add_to_live_activity_monitor('Initialized interface.')
         self.load_tickers_and_news()
@@ -970,7 +970,7 @@ class Interface(QMainWindow):
             'name': name,
         }
 
-    def setup_graph_plots(self, graph: PlotWidget, trader: SimulationTrader, graphType: int):
+    def setup_graph_plots(self, graph: PlotWidget, trader: Union[SimulationTrader, Backtester], graphType: int):
         """
         Setups graph plots for graph, trade, and graphType specified.
         :param graph: Graph that will be setup.
@@ -1517,7 +1517,7 @@ class Interface(QMainWindow):
         else:
             raise TypeError("Invalid type of caller specified.")
 
-    def get_trader(self, caller: int) -> SimulationTrader:
+    def get_trader(self, caller: int) -> Union[SimulationTrader, Backtester]:
         """
         Returns a trader object.
         :param caller: Caller that decides which trader object gets returned.

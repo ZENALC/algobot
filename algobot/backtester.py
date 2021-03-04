@@ -1,11 +1,10 @@
 import os
 import sys
-import time
-from typing import Dict
+from typing import Dict, Union
 
 from dateutil import parser
-from datetime import datetime
-from helpers import get_ups_and_downs, get_label_string, set_up_strategies
+from datetime import datetime, timedelta
+from helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING, STOP
 from strategies.strategy import Strategy
 from algorithms import get_sma, get_wma, get_ema
@@ -20,6 +19,7 @@ class Backtester:
                  takeProfitType: int,
                  takeProfitPercentage: float,
                  strategies: list,
+                 strategyInterval: Union[str, None] = None,
                  symbol: str = None,
                  marginEnabled: bool = True,
                  startDate: datetime = None,
@@ -34,7 +34,6 @@ class Backtester:
         self.commissionsPaid = 0
         self.transactionFeePercentage = 0.001
         self.trades = []
-
         self.marginEnabled = marginEnabled
         self.precision = precision
         self.lossStrategy = lossStrategy
@@ -67,6 +66,18 @@ class Backtester:
         self.data = data
         self.check_data()
         self.interval = self.get_interval()
+        self.intervalMinutes = get_interval_minutes(self.interval)
+
+        if strategyInterval is None:
+            self.strategyInterval = self.interval
+        else:
+            self.strategyInterval = strategyInterval
+
+        self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
+        self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
+        self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
+        if self.intervalMinutes > self.strategyIntervalMinutes:
+            raise RuntimeError("Your strategy interval can't be smaller than the data interval.")
 
         self.strategies: Dict[str, Strategy] = {}
         set_up_strategies(self, strategies)
@@ -76,6 +87,16 @@ class Backtester:
 
         self.ema_dict = {}
         self.rsi_dictionary = {}
+
+    @staticmethod
+    def get_gap_data(data: list, gap: int) -> dict:
+        return {
+            'date_utc': data[0]['date_utc'] + timedelta(minutes=1),
+            'open': data[-gap + 1]['open'],
+            'high': max([d['high'] for d in data]),
+            'low': min([d['low'] for d in data]),
+            'close': data[0]['close'],
+        }
 
     def check_data(self):
         """
@@ -273,7 +294,7 @@ class Backtester:
         elif self.lossStrategy == STOP:  # This means we use the basic stop loss.
             return self.buyLongPrice * (1 - self.lossPercentageDecimal)
 
-    def get_stop_loss(self) -> float or None:
+    def get_stop_loss(self) -> Union[float, None]:
         """
         Returns stop loss value.
         :return: Stop loss value.
@@ -320,13 +341,20 @@ class Backtester:
         seconds = difference.total_seconds()
         if seconds < 3600:  # this is 60 minutes
             minutes = seconds / 60
-            return f'{int(minutes)} Minute'
+            result = f'{int(minutes)} Minute'
+            if minutes > 1:
+                result += 's'
         elif seconds < 86400:  # this is 24 hours
             hours = seconds / 3600
-            return f'{int(hours)} Hour'
+            result = f'{int(hours)} Hour'
+            if hours > 1:
+                result += 's'
         else:  # this assumes it's day
             days = seconds / 86400
-            return f'{int(days)} Day'
+            result = f'{int(days)} Day'
+            if days > 1:
+                result += 's'
+        return result
 
     def set_stop_loss_counter(self, counter):
         """
@@ -389,7 +417,7 @@ class Backtester:
                 down = -difference * alpha + self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
 
             rsi = 100 if down == 0 else 100 - 100 / (1 + up / down)
-            self.rsi_dictionary[prices]['close'].append(rsi, up, down)
+            self.rsi_dictionary[prices]['close'].append((rsi, up, down))
         else:
             start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
             data = data[shift:start]
@@ -480,39 +508,6 @@ class Backtester:
                     if self.currentPrice < self.previousStopLoss and self.stopLossCounter > 0:
                         self.go_short("Reentered short because of smart stop loss.")
                         self.stopLossCounter -= 1
-
-    def moving_average_test(self):
-        """
-        Performs a moving average test with given configurations.
-        """
-        self.startTime = time.time()
-        seenData = self.data[:self.minPeriod][::-1]  # Start from minimum previous period data.
-        for period in self.data[self.startDateIndex:self.endDateIndex]:
-            seenData.insert(0, period)
-            self.currentPeriod = period
-            self.currentPrice = period['open']
-            self.main_logic()
-            if 'movingAverage' in self.strategies:
-                self.strategies['movingAverage'].get_trend(seenData)
-            if 'stoic' in self.strategies:
-                self.strategies['stoic'].get_trend(seenData)
-            if 'shrek' in self.strategies:
-                self.strategies['shrek'].get_trend(seenData)
-
-        if self.inShortPosition:
-            self.exit_short('Exited short because of end of backtest.')
-        elif self.inLongPosition:
-            self.exit_long('Exiting long because of end of backtest.')
-
-        self.endTime = time.time()
-        # self.print_stats()
-        # self.print_trades()
-
-        # for period in self.data[5:]:
-        #     seenData.append(period)
-        #     avg1 = self.get_sma(seenData, 2, 'close')
-        #     avg2 = self.get_wma(seenData, 5, 'open')
-        #     print(avg1)
 
     def print_options(self):
         """
