@@ -170,7 +170,7 @@ class BacktestThread(QRunnable):
                 backtester.main_logic()
             else:
                 if not backtester.inLongPosition:
-                    backtester.go_long('Entered long because no strategies were found.')
+                    backtester.buy_long('Entered long because no strategies were found.')
 
             if backtester.get_net() <= 0:
                 raise RuntimeError("Backtester ran out of money. Try changing your strategy or date interval.")
@@ -184,9 +184,9 @@ class BacktestThread(QRunnable):
                 self.signals.activity.emit(self.get_activity_dictionary(period=period, index=index, length=testLength))
 
         if backtester.inShortPosition:
-            backtester.exit_short('Exited short because of end of backtest.')
+            backtester.buy_short('Exited short because of end of backtest.')
         elif backtester.inLongPosition:
-            backtester.exit_long('Exiting long because of end of backtest.')
+            backtester.sell_long('Exiting long because of end of backtest.')
 
         self.signals.activity.emit(self.get_activity_dictionary(period=backtestPeriod[-1],  # Final backtest data.
                                                                 index=testLength,

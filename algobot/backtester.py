@@ -1,7 +1,7 @@
 import os
 import sys
-from typing import Dict, Union
 
+from typing import Dict, Union, List, Any
 from dateutil import parser
 from datetime import datetime, timedelta
 from helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes
@@ -40,10 +40,23 @@ class Backtester:
         self.lossPercentageDecimal = lossPercentage / 100
         self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
 
+        self.data = data
+        self.check_data()
+        self.interval = self.get_interval()
+        self.intervalMinutes = get_interval_minutes(self.interval)
+
+        self.previousStopLoss = None
+        self.initialStopLossCounter = 0
+        self.stopLossCounter = 0
+        self.stopLossExit = False
+
+        self.takeProfitType = takeProfitType
+        self.takeProfitPercentageDecimal = takeProfitPercentage / 100
+
         self.currentPrice = None
         self.buyLongPrice = None
-        self.longTrailingPrice = None
         self.sellShortPrice = None
+        self.longTrailingPrice = None
         self.shortTrailingPrice = None
         self.profit = 0
 
@@ -54,42 +67,29 @@ class Backtester:
         self.previousPosition = None
         self.currentPeriod = None
         self.minPeriod = 1
+        self.startDateIndex = self.get_start_date_index(startDate)
+        self.endDateIndex = self.get_end_date_index(endDate)
 
-        self.previousStopLoss = None
-        self.initialStopLossCounter = 0
-        self.stopLossCounter = 0
-        self.stopLossExit = False
-
-        self.takeProfitType = takeProfitType
-        self.takeProfitPercentageDecimal = takeProfitPercentage / 100
-
-        self.data = data
-        self.check_data()
-        self.interval = self.get_interval()
-        self.intervalMinutes = get_interval_minutes(self.interval)
-
-        if strategyInterval is None:
-            self.strategyInterval = self.interval
-        else:
-            self.strategyInterval = strategyInterval
-
+        self.strategyInterval = self.interval if strategyInterval is None else strategyInterval
         self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
         self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
         self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
         if self.intervalMinutes > self.strategyIntervalMinutes:
             raise RuntimeError("Your strategy interval can't be smaller than the data interval.")
 
+        self.ema_dict = {}
+        self.rsi_dictionary = {}
         self.strategies: Dict[str, Strategy] = {}
         set_up_strategies(self, strategies)
 
-        self.startDateIndex = self.get_start_date_index(startDate)
-        self.endDateIndex = self.get_end_date_index(endDate)
-
-        self.ema_dict = {}
-        self.rsi_dictionary = {}
-
     @staticmethod
-    def get_gap_data(data: list, gap: int) -> dict:
+    def get_gap_data(data: List[dict], gap: int) -> Dict[str, Any]:
+        """
+        Returns gap interval data from data list provided.
+        :param data: Data to get total interval data from.
+        :param gap: Amount of minutes to collect data of and merge to one in a dictionary.
+        :return: Dictionary of interval data of gap minutes.
+        """
         return {
             'date_utc': data[0]['date_utc'] + timedelta(minutes=1),
             'open': data[-gap + 1]['open'],
@@ -119,18 +119,18 @@ class Backtester:
         for data in self.data:
             data['date_utc'] = parser.parse(data['date_utc'])
 
-    def find_date_index(self, datetimeObject) -> int:
+    def find_date_index(self, targetDate: datetime) -> int:
         """
-        Finds index of date from datetimeObject if exists in data loaded.
-        :param datetimeObject: Object to compare date-time with.
+        Finds index of date from targetDate if it exists in data loaded.
+        :param targetDate: Object to compare date-time with.
         :return: Index from self.data if found, else -1.
         """
         for data in self.data:
-            if data['date_utc'].date() == datetimeObject:
+            if data['date_utc'].date() == targetDate:
                 return self.data.index(data)
         return -1
 
-    def get_start_date_index(self, startDate) -> int:
+    def get_start_date_index(self, startDate: datetime) -> int:
         """
         Returns index of start date based on startDate argument.
         :param startDate: Datetime object to compare index with.
@@ -149,7 +149,7 @@ class Backtester:
         else:
             return self.minPeriod
 
-    def get_end_date_index(self, endDate):
+    def get_end_date_index(self, endDate: datetime):
         """
         Returns index of end date based on endDate argument.
         :param endDate: Datetime object to compare index with.
@@ -162,100 +162,75 @@ class Backtester:
             if endDateIndex == -1:
                 raise IndexError("Date not found.")
             if endDateIndex < self.minPeriod:
-                raise IndexError(f"End date requires more periods than minimum period amount {self.minPeriod}")
-            if endDateIndex <= self.startDateIndex:
-                raise IndexError("End date cannot be equal to or less than start date.")
+                raise IndexError(f"Invalid end date. Please make sure you have at least {self.minPeriod} periods.")
+            if endDateIndex < self.startDateIndex:
+                raise IndexError("End date cannot be earlier than start date.")
             else:
                 return endDateIndex
         else:
             return -1
 
-    def get_moving_average(self, data: list, average: str, prices: int, parameter: str, round_value=False) -> float:
-        """
-        Returns moving average of given parameters.
-        :param round_value: Boolean to round final value or not.
-        :param data: Data to get moving averages from.
-        :param average: Type of average to retrieve, i.e. -> SMA, WMA, EMA
-        :param prices: Amount of prices to get moving averages of.
-        :param parameter: Parameter to use to get moving average, i.e. - HIGH, LOW, CLOSE, OPEN
-        :return: Moving average.
-        """
-        if average.lower() == 'sma':
-            return self.get_sma(data, prices, parameter, round_value=round_value)
-        elif average.lower() == 'ema':
-            return self.get_ema(data, prices, parameter, round_value=round_value)
-        elif average.lower() == 'wma':
-            return self.get_wma(data, prices, parameter, round_value=round_value)
-        else:
-            raise ValueError('Invalid average provided.')
-
-    def go_long(self, msg):
+    def buy_long(self, message: str):
         """
         Executes long position.
-        :param msg: Message that specifies why it entered long.
+        :param message: Message that specifies why it entered long.
         """
-        usd = self.balance  # current balance
-        transactionFee = usd * self.transactionFeePercentage  # get commission fee
-        self.commissionsPaid += transactionFee  # add commission fee to commissions paid total
+        usd = self.balance
+        transactionFee = self.transactionFeePercentage * usd
+        self.commissionsPaid += transactionFee
         self.inLongPosition = True
-        self.buyLongPrice = self.currentPrice
-        self.longTrailingPrice = self.currentPrice
         self.coin += (usd - transactionFee) / self.currentPrice
         self.balance -= usd
-        self.add_trade(msg)
+        self.buyLongPrice = self.longTrailingPrice = self.currentPrice
+        self.add_trade(message)
 
-    def exit_long(self, msg, stopLossExit=False):
+    def sell_long(self, message: str, stopLossExit: bool = False):
         """
         Exits long position.
         :param stopLossExit: Boolean that'll determine whether a position was exited from a stop loss.
-        :param msg: Message that specifies why it exited long.
+        :param message: Message that specifies why it exited long.
         """
         coin = self.coin
         transactionFee = self.currentPrice * coin * self.transactionFeePercentage
         self.commissionsPaid += transactionFee
         self.inLongPosition = False
         self.previousPosition = LONG
-        self.balance += coin * self.currentPrice - transactionFee
         self.coin -= coin
-        self.add_trade(msg, stopLossExit=stopLossExit)
+        self.balance += coin * self.currentPrice - transactionFee
+        self.buyLongPrice = self.longTrailingPrice = None
+        self.add_trade(message, stopLossExit=stopLossExit)
 
-        if self.coin == 0:
-            self.buyLongPrice = None
-            self.longTrailingPrice = None
-
-    def go_short(self, msg):
+    def sell_short(self, message: str):
         """
         Executes short position.
-        :param msg: Message that specifies why it entered short.
+        :param message: Message that specifies why it entered short.
         """
         transactionFee = self.balance * self.transactionFeePercentage
         coin = (self.balance - transactionFee) / self.currentPrice
         self.commissionsPaid += transactionFee
+        self.inShortPosition = True
         self.coinOwed += coin
         self.balance += self.currentPrice * coin - transactionFee
-        self.inShortPosition = True
-        self.sellShortPrice = self.currentPrice
-        self.shortTrailingPrice = self.currentPrice
-        self.add_trade(msg)
+        self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
+        self.add_trade(message)
 
-    def exit_short(self, msg, stopLossExit=False):
+    def buy_short(self, message: str, stopLossExit: bool = False):
         """
         Exits short position.
         :param stopLossExit: Boolean that'll determine whether a position was exited from a stop loss.
-        :param msg: Message that specifies why it exited short.
+        :param message: Message that specifies why it exited short.
         """
+        transactionFee = self.coinOwed * self.currentPrice * self.transactionFeePercentage
         coin = self.coinOwed
-        self.coinOwed -= coin
+        self.commissionsPaid += transactionFee
         self.inShortPosition = False
         self.previousPosition = SHORT
-        self.balance -= self.currentPrice * coin * (1 + self.transactionFeePercentage)
-        self.add_trade(msg, stopLossExit=stopLossExit)
+        self.coinOwed -= coin
+        self.balance -= self.currentPrice * coin + transactionFee
+        self.sellShortPrice = self.shortTrailingPrice = None
+        self.add_trade(message, stopLossExit=stopLossExit)
 
-        if self.coinOwed == 0:
-            self.sellShortPrice = None
-            self.shortTrailingPrice = None
-
-    def add_trade(self, message, stopLossExit=False):
+    def add_trade(self, message: str, stopLossExit: bool = False):
         """
         Adds a trade to list of trades
         :param stopLossExit: Boolean that'll determine where this trade occurred from a stop loss.
@@ -268,47 +243,62 @@ class Backtester:
             'net': round(self.get_net(), self.precision)
         })
 
+    def set_stop_loss_counter(self, counter: int):
+        """
+        Sets stop loss equal to the counter provided.
+        :param counter: Value to set counter to.
+        """
+        self.stopLossCounter = self.initialStopLossCounter = counter
+
+    def reset_smart_stop_loss(self):
+        """
+        Resets smart stop loss and sets it equal to initial stop loss counter.
+        """
+        self.stopLossCounter = self.initialStopLossCounter
+
     def get_short_stop_loss(self) -> float:
         """
         Returns stop loss for short position.
         :return: Stop loss for short position.
         """
-        if self.shortTrailingPrice is None:
-            self.shortTrailingPrice = self.currentPrice
-            self.sellShortPrice = self.shortTrailingPrice
-        if self.lossStrategy == TRAILING:  # This means we use trailing loss.
+        if self.lossStrategy == TRAILING:
             return self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
-        elif self.lossStrategy == STOP:  # This means we use the basic stop loss.
+        elif self.lossStrategy == STOP:
             return self.sellShortPrice * (1 + self.lossPercentageDecimal)
+        else:
+            raise ValueError("Invalid type of loss strategy provided.")
 
     def get_long_stop_loss(self) -> float:
         """
         Returns stop loss for long position.
         :return: Stop loss for long position.
         """
-        if self.longTrailingPrice is None:
-            self.longTrailingPrice = self.currentPrice
-            self.buyLongPrice = self.longTrailingPrice
-        if self.lossStrategy == TRAILING:  # This means we use trailing loss.
+        if self.lossStrategy == TRAILING:
             return self.longTrailingPrice * (1 - self.lossPercentageDecimal)
-        elif self.lossStrategy == STOP:  # This means we use the basic stop loss.
+        elif self.lossStrategy == STOP:
             return self.buyLongPrice * (1 - self.lossPercentageDecimal)
+        else:
+            raise ValueError("Invalid type of loss strategy provided.")
 
     def get_stop_loss(self) -> Union[float, None]:
         """
         Returns stop loss value.
         :return: Stop loss value.
         """
-        if self.inShortPosition:  # If we are in a short position
+        if self.inShortPosition:
             self.previousStopLoss = self.get_short_stop_loss()
             return self.previousStopLoss
-        elif self.inLongPosition:  # If we are in a long position
+        elif self.inLongPosition:
             self.previousStopLoss = self.get_long_stop_loss()
             return self.previousStopLoss
-        else:  # This means we are not in a position.
+        else:
             return None
 
-    def get_take_profit(self):
+    def get_take_profit(self) -> Union[float, None]:
+        """
+        Returns price at which position will be exited to secure profits.
+        :return: Price at which to exit position.
+        """
         if self.inShortPosition:
             return self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
         elif self.inLongPosition:
@@ -339,32 +329,79 @@ class Backtester:
 
         difference = period2 - period1
         seconds = difference.total_seconds()
-        if seconds < 3600:  # this is 60 minutes
+        if seconds < 3600:  # This will assume the interval is in minutes.
             minutes = seconds / 60
             result = f'{int(minutes)} Minute'
             if minutes > 1:
                 result += 's'
-        elif seconds < 86400:  # this is 24 hours
+        elif seconds < 86400:  # This will assume the interval is in hours.
             hours = seconds / 3600
             result = f'{int(hours)} Hour'
             if hours > 1:
                 result += 's'
-        else:  # this assumes it's day
+        else:  # This will assume the interval is in days.
             days = seconds / 86400
             result = f'{int(days)} Day'
             if days > 1:
                 result += 's'
         return result
 
-    def set_stop_loss_counter(self, counter):
+    def get_trend(self) -> Union[int, None]:
         """
-        Sets stop loss equal to the counter provided.
-        :param counter: Value to set counter to.
+        Returns trend based on the strategies provided.
+        :return: Integer in the form of an enum.
         """
-        self.stopLossCounter = self.initialStopLossCounter = counter
+        trends = [strategy.trend for strategy in self.strategies.values()]
 
-    def reset_smart_stop_loss(self):
-        self.stopLossCounter = self.initialStopLossCounter
+        if len(trends) == 0:
+            return None
+
+        if all(trend == BEARISH for trend in trends):
+            return BEARISH
+        elif all(trend == BULLISH for trend in trends):
+            return BULLISH
+        else:
+            return None
+
+    def get_moving_average(self, data: list, average: str, prices: int, parameter: str, round_value=False) -> float:
+        """
+        Returns moving average of given parameters.
+        :param round_value: Boolean to round final value or not.
+        :param data: Data to get moving averages from.
+        :param average: Type of average to retrieve, i.e. -> SMA, WMA, EMA
+        :param prices: Amount of prices to get moving averages of.
+        :param parameter: Parameter to use to get moving average, i.e. - HIGH, LOW, CLOSE, OPEN
+        :return: Moving average.
+        """
+        if average.lower() == 'sma':
+            return self.get_sma(data, prices, parameter, round_value=round_value)
+        elif average.lower() == 'ema':
+            return self.get_ema(data, prices, parameter, round_value=round_value)
+        elif average.lower() == 'wma':
+            return self.get_wma(data, prices, parameter, round_value=round_value)
+        else:
+            raise ValueError('Invalid average provided.')
+
+    def get_sma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
+        data = data[0: prices]
+        sma = get_sma(data, prices, parameter)
+
+        return round(sma, self.precision) if round_value else sma
+
+    def get_wma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
+        data = data[0: prices]
+        wma = get_wma(data, prices, parameter)
+
+        return round(wma, self.precision) if round_value else wma
+
+    def get_ema(self, data: list, prices: int, parameter: str, sma_prices: int = 5, round_value=True) -> float:
+        if sma_prices <= 0:
+            raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
+        elif sma_prices > len(data):
+            sma_prices = len(data) - 1
+
+        ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict)
+        return round(ema, self.precision) if round_value else ema
 
     def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> float:
         """
@@ -429,42 +466,6 @@ class Backtester:
 
         return round(rsi, self.precision) if round_value else rsi
 
-    def get_sma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
-        data = data[0: prices]
-        sma = get_sma(data, prices, parameter)
-
-        return round(sma, self.precision) if round_value else sma
-
-    def get_wma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
-        data = data[0: prices]
-        wma = get_wma(data, prices, parameter)
-
-        return round(wma, self.precision) if round_value else wma
-
-    def get_ema(self, data: list, prices: int, parameter: str, sma_prices: int = 5, round_value=True) -> float:
-        if sma_prices <= 0:
-            raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
-        elif sma_prices > len(data):
-            sma_prices = len(data) - 1
-
-        ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict)
-        return round(ema, self.precision) if round_value else ema
-
-    def get_trend(self):
-        trends = [strategy.trend for strategy in self.strategies.values()]
-
-        if len(trends) == 0:
-            return None
-
-        if all(trend == BEARISH for trend in trends):
-            trend = BEARISH
-        elif all(trend == BULLISH for trend in trends):
-            trend = BULLISH
-        else:
-            trend = None
-
-        return trend
-
     def main_logic(self):
         """
         Main logic that dictates how backtest works. It checks for stop losses and then moving averages to check for
@@ -473,40 +474,40 @@ class Backtester:
         trend = self.get_trend()
         if self.inShortPosition:
             if self.currentPrice > self.get_stop_loss():
-                self.exit_short('Exited short because a stop loss was triggered.', stopLossExit=True)
+                self.buy_short('Exited short because a stop loss was triggered.', stopLossExit=True)
             elif self.currentPrice <= self.get_take_profit():
-                self.exit_short("Exited short because of take profit.")
+                self.buy_short("Exited short because of take profit.")
             elif trend == BULLISH:
-                self.exit_short(f'Exited short because a bullish trend was detected.')
-                self.go_long(f'Entered long because a bullish trend was detected.')
+                self.buy_short(f'Exited short because a bullish trend was detected.')
+                self.buy_long(f'Entered long because a bullish trend was detected.')
         elif self.inLongPosition:
             if self.currentPrice < self.get_stop_loss():
-                self.exit_long('Exited long because a stop loss was triggered.', stopLossExit=True)
+                self.sell_long('Exited long because a stop loss was triggered.', stopLossExit=True)
             elif self.currentPrice >= self.get_take_profit():
-                self.exit_long("Exited long because of take profit.")
+                self.sell_long("Exited long because of take profit.")
             elif trend == BEARISH:
-                self.exit_long('Exited long because a bearish trend was detected.')
+                self.sell_long('Exited long because a bearish trend was detected.')
                 if self.marginEnabled:
-                    self.go_short('Entered short because a bearish trend was detected.')
+                    self.sell_short('Entered short because a bearish trend was detected.')
         else:
             if not self.marginEnabled and self.previousStopLoss is not None and self.currentPrice is not None:
                 if self.previousStopLoss < self.currentPrice:
                     self.stopLossExit = False  # Hotfix for margin-disabled backtests.
 
             if trend == BULLISH and (self.previousPosition != LONG or not self.stopLossExit):
-                self.go_long('Entered long because a bullish trend was detected.')
+                self.buy_long('Entered long because a bullish trend was detected.')
                 self.reset_smart_stop_loss()
             elif self.marginEnabled and trend == BEARISH and self.previousPosition != SHORT:
-                self.go_short('Entered short because a bearish trend was detected.')
+                self.sell_short('Entered short because a bearish trend was detected.')
                 self.reset_smart_stop_loss()
             else:
                 if self.previousPosition == LONG and self.stopLossExit:
                     if self.currentPrice > self.previousStopLoss and self.stopLossCounter > 0:
-                        self.go_long("Reentered long because of smart stop loss.")
+                        self.buy_long("Reentered long because of smart stop loss.")
                         self.stopLossCounter -= 1
                 elif self.previousPosition == SHORT and self.stopLossExit:
                     if self.currentPrice < self.previousStopLoss and self.stopLossCounter > 0:
-                        self.go_short("Reentered short because of smart stop loss.")
+                        self.sell_short("Reentered short because of smart stop loss.")
                         self.stopLossCounter -= 1
 
     def print_options(self):
