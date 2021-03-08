@@ -1,13 +1,18 @@
 import os
 import sys
+import time
 
-from typing import Dict, Union, List, Any
+from typing import Dict, Union, List
 from dateutil import parser
 from datetime import datetime, timedelta
-from helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes
+from helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes, \
+    convert_small_interval, convert_all_dates_to_datetime
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING, STOP
 from strategies.strategy import Strategy
 from algorithms import get_sma, get_wma, get_ema
+
+DICT_TYPE = Dict[str, Union[datetime, float]]
+DATA_TYPE = List[DICT_TYPE]
 
 
 class Backtester:
@@ -24,7 +29,7 @@ class Backtester:
                  marginEnabled: bool = True,
                  startDate: datetime = None,
                  endDate: datetime = None,
-                 precision: int = 2,
+                 precision: int = 4,
                  outputTrades: bool = True):
         self.startingBalance = startingBalance
         self.symbol = symbol
@@ -40,6 +45,7 @@ class Backtester:
         self.lossPercentageDecimal = lossPercentage / 100
         self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
 
+        convert_all_dates_to_datetime(data)
         self.data = data
         self.check_data()
         self.interval = self.get_interval()
@@ -66,9 +72,10 @@ class Backtester:
         self.inShortPosition = False
         self.previousPosition = None
         self.currentPeriod = None
-        self.minPeriod = 1
-        self.startDateIndex = self.get_start_date_index(startDate)
-        self.endDateIndex = self.get_end_date_index(endDate)
+        self.minPeriod = 0
+
+        if len(strategyInterval.split()) == 1:
+            strategyInterval = convert_small_interval(strategyInterval)
 
         self.strategyInterval = self.interval if strategyInterval is None else strategyInterval
         self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
@@ -82,20 +89,25 @@ class Backtester:
         self.strategies: Dict[str, Strategy] = {}
         set_up_strategies(self, strategies)
 
-    @staticmethod
-    def get_gap_data(data: List[dict], gap: int) -> Dict[str, Any]:
+        self.startDateIndex = self.get_start_index(startDate)
+        self.endDateIndex = self.get_end_index(endDate)
+
+    def get_gap_data(self, data: DATA_TYPE, check: bool = True) -> DICT_TYPE:
         """
         Returns gap interval data from data list provided.
+        :param check: Check values to match with strategy interval minutes.
         :param data: Data to get total interval data from.
-        :param gap: Amount of minutes to collect data of and merge to one in a dictionary.
         :return: Dictionary of interval data of gap minutes.
         """
+        if check and len(data) != self.strategyIntervalMinutes:
+            raise AssertionError(f"Expected {self.strategyIntervalMinutes} data length. Received {len(data)} data.")
+
         return {
-            'date_utc': data[0]['date_utc'] + timedelta(minutes=1),
-            'open': data[-gap + 1]['open'],
+            'date_utc': data[0]['date_utc'],
+            'open': data[0]['open'],
             'high': max([d['high'] for d in data]),
             'low': min([d['low'] for d in data]),
-            'close': data[0]['close'],
+            'close': data[-1]['close'],
         }
 
     def check_data(self):
@@ -103,72 +115,65 @@ class Backtester:
         Checks data sorting. If descending, it reverses data, so we can mimic backtest as if we are starting from the
         beginning.
         """
-        if type(self.data[0]['date_utc']) == str:
-            self.convert_all_date_to_datetime()
-
         firstDate = self.data[0]['date_utc']
         lastDate = self.data[-1]['date_utc']
 
         if firstDate > lastDate:
             self.data = self.data[::-1]
 
-    def convert_all_date_to_datetime(self):
+    def find_date_index(self, targetDate: datetime.date, starting: bool = True) -> int:
         """
-        Converts all available dates to datetime objects.
-        """
-        for data in self.data:
-            data['date_utc'] = parser.parse(data['date_utc'])
-
-    def find_date_index(self, targetDate: datetime) -> int:
-        """
-        Finds index of date from targetDate if it exists in data loaded.
+        Finds starting or ending index of date from targetDate if it exists in data loaded.
+        :param starting: Boolean if true will find the first found index. If used for end index, set to False.
         :param targetDate: Object to compare date-time with.
         :return: Index from self.data if found, else -1.
         """
-        for data in self.data:
+        if type(targetDate) == datetime:
+            targetDate = targetDate.date()
+
+        if starting:
+            iterator = list(enumerate(self.data))
+        else:
+            iterator = reversed(list(enumerate(self.data)))
+
+        for index, data in iterator:
             if data['date_utc'].date() == targetDate:
-                return self.data.index(data)
+                return index
         return -1
 
-    def get_start_date_index(self, startDate: datetime) -> int:
+    def get_start_index(self, startDate: datetime.date) -> int:
         """
         Returns index of start date based on startDate argument.
         :param startDate: Datetime object to compare index with.
         :return: Index of start date.
         """
         if startDate:
-            if type(startDate) == datetime:
-                startDate = startDate.date()
             startDateIndex = self.find_date_index(startDate)
             if startDateIndex == -1:
                 raise IndexError("Date not found.")
-            elif startDateIndex < self.minPeriod:
-                raise IndexError(f"Invalid start date. Please select a date that's {self.minPeriod} periods away.")
             else:
                 return startDateIndex
         else:
             return self.minPeriod
 
-    def get_end_date_index(self, endDate: datetime):
+    def get_end_index(self, endDate: datetime.date) -> int:
         """
         Returns index of end date based on endDate argument.
         :param endDate: Datetime object to compare index with.
         :return: Index of end date.
         """
         if endDate:
-            if type(endDate) == datetime:
-                endDate = endDate.date()
-            endDateIndex = self.find_date_index(endDate)
+            endDateIndex = self.find_date_index(endDate, starting=False)
             if endDateIndex == -1:
                 raise IndexError("Date not found.")
-            if endDateIndex < self.minPeriod:
-                raise IndexError(f"Invalid end date. Please make sure you have at least {self.minPeriod} periods.")
-            if endDateIndex < self.startDateIndex:
-                raise IndexError("End date cannot be earlier than start date.")
+            elif endDateIndex < 1:
+                raise IndexError("You need at least one data period.")
+            elif endDateIndex <= self.startDateIndex:
+                raise IndexError("Ending date index cannot be less than or equal to start date index.")
             else:
                 return endDateIndex
         else:
-            return -1
+            return len(self.data) - 1
 
     def buy_long(self, message: str):
         """
@@ -243,6 +248,34 @@ class Backtester:
             'net': round(self.get_net(), self.precision)
         })
 
+    def reset_trades(self):
+        """
+        Clears trades list.
+        """
+        self.trades = []
+
+    def set_indexed_current_price_and_period(self, index: int):
+        """
+        Sets the current backtester price and period based on index provided.
+        :param index: Index of data to set as current period.
+        """
+        self.currentPeriod = self.data[index]
+        self.currentPrice = self.data[index]['open']
+
+    def set_priced_current_price_and_period(self, price):
+        """
+        Auxiliary function to set current period and price to price provided.
+        :param price: Price to set to current period and price.
+        """
+        self.currentPeriod = {
+            'date_utc': None,
+            'open': price,
+            'close': price,
+            'high': price,
+            'low': price
+        }
+        self.currentPrice = price
+
     def set_stop_loss_counter(self, counter: int):
         """
         Sets stop loss equal to the counter provided.
@@ -256,7 +289,118 @@ class Backtester:
         """
         self.stopLossCounter = self.initialStopLossCounter
 
-    def get_short_stop_loss(self) -> float:
+    def start_backtest(self, thread=None):
+        """
+        Main function to start a backtest.
+        :param thread: Thread to pass to other functions to emit signals to.
+        """
+        testLength = self.endDateIndex - self.startDateIndex
+        divisor = testLength // 100
+        if divisor < 1:
+            divisor = 1
+
+        if thread:
+            thread.signals.updateGraphLimits.emit(testLength // divisor + 1)
+
+        self.startTime = time.time()
+        if len(self.strategies) == 0:
+            self.simulate_hold(testLength, divisor, thread)
+        else:
+            self.strategy_backtest(testLength, divisor, thread)
+        self.endTime = time.time()
+
+    def exit_backtest(self, index: int = None):
+        """
+        Ends a backtest by exiting out of a position if needed.
+        """
+        if index is None:
+            index = self.endDateIndex
+
+        self.currentPeriod = self.data[index]
+        self.currentPrice = self.currentPeriod['close']
+
+        if self.inShortPosition:
+            self.buy_short("Exited short position because backtest ended.")
+        elif self.inLongPosition:
+            self.sell_long("Exited long position because backtest ended.")
+
+    def simulate_hold(self, testLength: int, divisor: int, thread=None):
+        """
+        Simulate a long hold position if no strategies are provided.
+        :param divisor: Divisor where when remainder of test length and divisor is 0, a signal is emitted to GUI.
+        :param testLength: Length of backtest.
+        :param thread: Thread to emit signals back to if provided.
+        """
+        for index in range(self.startDateIndex, self.endDateIndex, divisor):
+            if thread and not thread.running:
+                raise RuntimeError("Backtest was canceled.")
+
+            self.currentPeriod = self.data[index]
+            self.currentPrice = self.currentPeriod['open']
+
+            if not self.inLongPosition:
+                self.buy_long("Entered long to simulate a hold.")
+
+            thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
+
+        self.exit_backtest()
+
+    def strategy_backtest(self, testLength: int, divisor: int, thread=None):
+        """
+        Perform a backtest with provided strategies to backtester object.
+        :param divisor: Divisor where when remainder of test length and divisor is 0, a signal is emitted to GUI.
+        :param testLength: Length of backtest.
+        :param thread: Optional thread that called this function that'll be used for emitting signals.
+        """
+        seenData = self.data[:self.startDateIndex]
+        strategyData = seenData if self.strategyIntervalMinutes == self.intervalMinutes else []
+        nextInsertion = self.data[self.startDateIndex]['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
+        index = None
+
+        for index in range(self.startDateIndex, self.endDateIndex + 1):
+            if thread and not thread.running:
+                raise RuntimeError("Backtest was canceled.")
+
+            self.set_indexed_current_price_and_period(index)
+            seenData.append(self.currentPeriod)
+
+            self.main_logic()
+            if self.get_net() < 0.5:
+                thread.signals.updateGraphLimits.emit(index // divisor + 1)
+                thread.signals.message.emit("Backtester ran out of money. Try changing your strategy or date interval.")
+                break
+
+            if strategyData is seenData:
+                if len(strategyData) >= self.minPeriod:
+                    for strategy in self.strategies.values():
+                        strategy.get_trend(strategyData)
+            else:
+                if len(strategyData) + 1 >= self.minPeriod:
+                    strategyData.append(self.currentPeriod)
+                    for strategy in self.strategies.values():
+                        strategy.get_trend(strategyData)
+                    strategyData.pop()
+
+            if seenData is not strategyData and self.currentPeriod['date_utc'] >= nextInsertion:
+                nextInsertion = self.currentPeriod['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
+                gapData = self.get_gap_data(seenData[-self.intervalGapMultiplier - 1: -1])
+                strategyData.append(gapData)
+
+            if thread and index % divisor == 0:
+                thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
+
+        self.exit_backtest(index)
+
+    def handle_trailing_prices(self):
+        """
+        Handles trailing prices based on the current price.
+        """
+        if self.longTrailingPrice is not None and self.currentPrice > self.longTrailingPrice:
+            self.longTrailingPrice = self.currentPrice
+        if self.shortTrailingPrice is not None and self.currentPrice < self.shortTrailingPrice:
+            self.shortTrailingPrice = self.currentPrice
+
+    def _get_short_stop_loss(self) -> float:
         """
         Returns stop loss for short position.
         :return: Stop loss for short position.
@@ -268,7 +412,7 @@ class Backtester:
         else:
             raise ValueError("Invalid type of loss strategy provided.")
 
-    def get_long_stop_loss(self) -> float:
+    def _get_long_stop_loss(self) -> float:
         """
         Returns stop loss for long position.
         :return: Stop loss for long position.
@@ -285,11 +429,12 @@ class Backtester:
         Returns stop loss value.
         :return: Stop loss value.
         """
+        self.handle_trailing_prices()
         if self.inShortPosition:
-            self.previousStopLoss = self.get_short_stop_loss()
+            self.previousStopLoss = self._get_short_stop_loss()
             return self.previousStopLoss
         elif self.inLongPosition:
-            self.previousStopLoss = self.get_long_stop_loss()
+            self.previousStopLoss = self._get_long_stop_loss()
             return self.previousStopLoss
         else:
             return None
@@ -382,25 +527,23 @@ class Backtester:
         else:
             raise ValueError('Invalid average provided.')
 
-    def get_sma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
-        data = data[0: prices]
+    def get_sma(self, data: list, prices: int, parameter: str, round_value: bool = True) -> float:
+        data = data[len(data) - prices:]
         sma = get_sma(data, prices, parameter)
-
         return round(sma, self.precision) if round_value else sma
 
-    def get_wma(self, data: list, prices: int, parameter: str, round_value=True) -> float:
-        data = data[0: prices]
-        wma = get_wma(data, prices, parameter)
-
+    def get_wma(self, data: list, prices: int, parameter: str, round_value: bool = True) -> float:
+        data = data[len(data) - prices:]
+        wma = get_wma(data, prices, parameter, desc=False)
         return round(wma, self.precision) if round_value else wma
 
-    def get_ema(self, data: list, prices: int, parameter: str, sma_prices: int = 5, round_value=True) -> float:
+    def get_ema(self, data: list, prices: int, parameter: str, sma_prices: int = 5, round_value: bool = True) -> float:
         if sma_prices <= 0:
             raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
         elif sma_prices > len(data):
             sma_prices = len(data) - 1
 
-        ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict)
+        ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict, desc=False)
         return round(ema, self.precision) if round_value else ema
 
     def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> float:
@@ -522,6 +665,9 @@ class Backtester:
                   f' - {option.parameter}')
 
     def print_strategies(self):
+        """
+        Prints out strategies provided in configuration.
+        """
         for strategyName, strategy in self.strategies.items():
             print(f'\t{get_label_string(strategyName)}: {strategy.get_params()}')
 

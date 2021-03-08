@@ -1,38 +1,39 @@
-import time
-
-from datetime import timedelta
-from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 from backtester import Backtester
-from enums import BACKTEST
+from enums import BACKTEST, TRAILING
+from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 
 
 class BacktestSignals(QObject):
+    """
+    Possible signals to emit in backtest thread.
+    """
     finished = pyqtSignal()
+    message = pyqtSignal(str)
     activity = pyqtSignal(dict)
     started = pyqtSignal(dict)
     error = pyqtSignal(int, str)
     restore = pyqtSignal()
+    updateGraphLimits = pyqtSignal(int)
 
 
 class BacktestThread(QRunnable):
     def __init__(self, gui, logger):
         super(BacktestThread, self).__init__()
+        self.signals = BacktestSignals()
         self.gui = gui
         self.logger = logger
         self.running = True
-        self.signals = BacktestSignals()
 
     def get_configuration_details_to_setup_backtest(self) -> dict:
         """
         Returns configuration details from GUI in a dictionary to setup backtest.
         :return: GUI configuration details in a dictionary.
         """
+        config = self.gui.configuration
         gui = self.gui
-        config = gui.configuration
         startDate, endDate = config.get_calendar_dates()
         lossDict = gui.get_loss_settings(BACKTEST)
         takeProfitDict = gui.configuration.get_take_profit_settings(BACKTEST)
-        strategies = config.get_strategies(BACKTEST)
 
         return {
             'startingBalance': config.backtestStartingBalanceSpinBox.value(),
@@ -48,7 +49,7 @@ class BacktestThread(QRunnable):
             'precision': config.backtestPrecisionSpinBox.value(),
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
             'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
-            'strategies': strategies,
+            'strategies': config.get_strategies(BACKTEST),
             'strategyInterval': config.backtestStrategyIntervalCombobox.currentText()
         }
 
@@ -63,7 +64,7 @@ class BacktestThread(QRunnable):
             'interval': backtester.interval,
             'marginEnabled': f'{backtester.marginEnabled}',
             'stopLossPercentage': f'{backtester.lossPercentageDecimal * 100}%',
-            'stopLossStrategy': f'{"Trailing Loss" if backtester.lossStrategy == 2 else "Stop Loss"}',
+            'stopLossStrategy': f'{"Trailing Loss" if backtester.lossStrategy == TRAILING else "Stop Loss"}',
             'startPeriod': f'{backtester.data[backtester.startDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
             'endPeriod': f'{backtester.data[backtester.endDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
             'symbol': f'{backtester.symbol}'
@@ -131,67 +132,15 @@ class BacktestThread(QRunnable):
         """
         self.running = False
 
-    def backtest(self):
+    def run_backtest(self):
         """
         Performs a backtest with given configurations.
         """
-        limit = 1000  # Data limit.
         backtester = self.gui.backtester
-        backtester.startTime = time.time()
-        seenData = backtester.data[:backtester.minPeriod][::-1]  # Start from minimum previous period data.
-        strategyData = seenData if backtester.strategyIntervalMinutes == backtester.intervalMinutes else []
-        nextInsertion = None
-        backtestPeriod = backtester.data[backtester.startDateIndex: backtester.endDateIndex]
-        testLength = len(backtestPeriod)
-        divisor = testLength // 100
-        if testLength % 100 != 0:
-            divisor += 1
-
-        for index, period in enumerate(backtestPeriod):
-            if not self.running:
-                raise RuntimeError("Backtest was canceled.")
-
-            if len(seenData) >= limit:
-                seenData = seenData[:limit // 2]
-            if len(strategyData) >= limit:
-                strategyData = strategyData[:limit // 2]
-
-            seenData.insert(0, period)
-            backtester.currentPeriod = period
-            backtester.currentPrice = period['open']
-            periodDate = period['date_utc']
-
-            if len(seenData) > backtester.intervalGapMinutes and (nextInsertion is None or periodDate >= nextInsertion):
-                nextInsertion = seenData[0]['date_utc'] + timedelta(minutes=backtester.strategyIntervalMinutes)
-                gapData = backtester.get_gap_data(seenData, backtester.intervalGapMinutes)
-                strategyData.insert(0, gapData)
-
-            if len(backtester.strategies) > 0:
-                backtester.main_logic()
-            else:
-                if not backtester.inLongPosition:
-                    backtester.buy_long('Entered long because no strategies were found.')
-
-            if backtester.get_net() <= 0:
-                raise RuntimeError("Backtester ran out of money. Try changing your strategy or date interval.")
-
-            if len(strategyData) >= backtester.minPeriod:
-                tempData = [period] + strategyData
-                for strategy in backtester.strategies.values():
-                    strategy.get_trend(tempData)
-
-            if index % divisor == 0:
-                self.signals.activity.emit(self.get_activity_dictionary(period=period, index=index, length=testLength))
-
-        if backtester.inShortPosition:
-            backtester.buy_short('Exited short because of end of backtest.')
-        elif backtester.inLongPosition:
-            backtester.sell_long('Exiting long because of end of backtest.')
-
-        self.signals.activity.emit(self.get_activity_dictionary(period=backtestPeriod[-1],  # Final backtest data.
-                                                                index=testLength,
-                                                                length=testLength))
-        backtester.endTime = time.time()
+        backtester.start_backtest(thread=self)
+        self.signals.activity.emit(self.get_activity_dictionary(period=backtester.data[backtester.endDateIndex],
+                                                                index=1,
+                                                                length=1))
 
     @pyqtSlot()
     def run(self):
@@ -201,10 +150,10 @@ class BacktestThread(QRunnable):
         """
         try:
             self.setup_bot()
-            self.backtest()
+            self.run_backtest()
             self.signals.finished.emit()
         except Exception as e:
             self.logger.exception(repr(e))
-            self.signals.error.emit(BACKTEST, repr(e))
+            self.signals.error.emit(BACKTEST, str(e))
         finally:
             self.signals.restore.emit()
