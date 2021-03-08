@@ -93,11 +93,6 @@ def get_interface_dictionary(parent, caller: int = None):
             }
         },
         BACKTEST: {
-            'configuration': {
-                'mainTab': parent.configuration.backtestMainTab,
-                'mainConfigurationTabWidget': parent.configuration.backtestConfigurationTabWidget,
-                'precision': parent.configuration.backtestPrecisionSpinBox,
-            },
             'mainInterface': {
                 'runBotButton': parent.runBacktestButton,
                 'endBotButton': parent.endBacktestButton,
@@ -105,7 +100,13 @@ def get_interface_dictionary(parent, caller: int = None):
                 'graph': parent.backtestGraph,
                 # Table
                 'historyTable': parent.backtestTable,
-            }
+            },
+            'configuration': {
+                'mainTab': parent.configuration.backtestMainTab,
+                'mainConfigurationTabWidget': parent.configuration.backtestConfigurationTabWidget,
+                'precision': parent.configuration.backtestPrecisionSpinBox,
+                'ticker': parent.configuration.backtestTickerComboBox,
+            },
         }
     }
     if caller is not None:
