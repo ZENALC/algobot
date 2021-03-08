@@ -196,7 +196,9 @@ class Interface(QMainWindow):
         worker.signals.activity.connect(self.update_backtest_gui)
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.finished.connect(self.end_backtest)
+        worker.signals.message.connect(lambda message: self.add_to_monitor(BACKTEST, message))
         worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=BACKTEST))
+        worker.signals.updateGraphLimits.connect(self.update_backtest_graph_limits)
         self.threadPool.start(worker)
 
     def end_backtest_thread(self):
@@ -295,13 +297,17 @@ class Interface(QMainWindow):
         self.update_backtest_configuration_gui(configurationDictionary)
         self.add_to_backtest_monitor(f"Started backtest with {symbol} data and {interval.lower()} interval periods.")
 
-    def set_backtest_graph_limits_and_empty_plots(self):
+    def update_backtest_graph_limits(self, limit: int = 105):
+        graphDict = self.get_graph_dictionary(self.backtestGraph)
+        graphDict['graph'].setLimits(xMin=0, xMax=limit)
+
+    def set_backtest_graph_limits_and_empty_plots(self, limit: int = 105):
         """
         Resets backtest graph and sets x-axis limits.
         """
         initialTimeStamp = self.backtester.data[0]['date_utc'].timestamp()
         graphDict = self.get_graph_dictionary(self.backtestGraph)
-        graphDict['graph'].setLimits(xMin=0, xMax=105)
+        graphDict['graph'].setLimits(xMin=0, xMax=limit)
         plot = graphDict['plots'][0]
         plot['x'] = [0]
         plot['y'] = [self.backtester.startingBalance]
@@ -457,7 +463,6 @@ class Interface(QMainWindow):
 
         if callback:
             callback.emit("Dumped all new data to database.")
-        # self.destroy_trader(caller)
 
     def end_crash_bot_and_create_popup(self, caller: int, msg: str):
         """
@@ -486,8 +491,7 @@ class Interface(QMainWindow):
         if "Invalid token" in msg:
             msg = "Please check your Telegram bot token or turn off Telegram integration to get rid of this error."
 
-        self.add_to_monitor(caller=caller, message=msg)
-        self.create_popup(msg)
+        self.create_popup_and_emit_message(caller, msg)
 
     def initial_bot_ui_setup(self, caller):
         """
@@ -1295,11 +1299,21 @@ class Interface(QMainWindow):
         self.openDatabasesFolderAction.triggered.connect(lambda: self.open_folder('Databases'))
         self.openCredentialsFolderAction.triggered.connect(lambda: self.open_folder('Credentials'))
         self.openConfigurationsFolderAction.triggered.connect(lambda: self.open_folder('Configuration'))
-        self.binanceAction.triggered.connect(self.open_binance)
-        self.tradingViewAction.triggered.connect(self.open_trading_view)
         self.sourceCodeAction.triggered.connect(lambda: webbrowser.open("https://github.com/ZENALC/algobot"))
+        self.tradingViewLiveAction.triggered.connect(lambda: self.open_trading_view(LIVE))
+        self.tradingViewSimulationAction.triggered.connect(lambda: self.open_trading_view(SIMULATION))
+        self.tradingViewBacktestAction.triggered.connect(lambda: self.open_trading_view(BACKTEST))
+        self.tradingViewHomepageAction.triggered.connect(lambda: self.open_trading_view(None))
+        self.binanceHomepageAction.triggered.connect(lambda: self.open_binance(None))
+        self.binanceLiveAction.triggered.connect(lambda: self.open_binance(LIVE))
+        self.binanceSimulationAction.triggered.connect(lambda: self.open_binance(SIMULATION))
+        self.binanceBacktestAction.triggered.connect(lambda: self.open_binance(BACKTEST))
 
-    def get_preferred_symbol(self):
+    def get_preferred_symbol(self) -> Union[None, str]:
+        """
+        Get preferred symbol on precedence of live bot, simulation bot, then finally backtest bot.
+        :return: Preferred symbol.
+        """
         if self.trader:
             return self.trader.symbol
         elif self.simulationTrader:
@@ -1309,15 +1323,36 @@ class Interface(QMainWindow):
         else:
             return None
 
-    def open_binance(self):
-        symbol = self.get_preferred_symbol()
+    def open_binance(self, caller: int = None):
+        """
+        Opens Binance hyperlink.
+        :param caller: If provided, it'll open the link to the caller's symbol's link on Binance.
+        """
+        if caller is None:
+            symbol = None
+        else:
+            symbol = self.interfaceDictionary[caller]['configuration']['ticker'].currentText()
+            index = symbol.index("USDT")
+            if index == 0:
+                symbol = f"USDT_{symbol[4:]}"
+            else:
+                symbol = f"{symbol[:index]}_USDT"
+
         if symbol:
             webbrowser.open(f"https://www.binance.com/en/trade/{symbol}")
         else:
             webbrowser.open("https://www.binance.com/en")
 
-    def open_trading_view(self):
-        symbol = self.get_preferred_symbol()
+    def open_trading_view(self, caller: int = None):
+        """
+        Opens TradingView hyperlink.
+        :param caller: If provided, it'll open the link to the caller's symbol's link on TradingView.
+        """
+        if caller is None:
+            symbol = None
+        else:
+            symbol = self.interfaceDictionary[caller]['configuration']['ticker'].currentText()
+
         if symbol:
             webbrowser.open(f"https://www.tradingview.com/symbols/{symbol}/?exchange=BINANCE")
         else:
@@ -1451,6 +1486,15 @@ class Interface(QMainWindow):
         self.create_action_slots()
         self.create_configuration_slots()
         self.create_interface_slots()
+
+    def create_popup_and_emit_message(self, caller: int, message: str):
+        """
+        Creates a popup and emits message simultaneously with caller and messages provided.
+        :param caller: Caller activity monitor to add message to.
+        :param message: Message to create popup of emit to activity monitor.
+        """
+        self.add_to_monitor(caller, message)
+        self.create_popup(message)
 
     def create_popup(self, msg: str):
         """
