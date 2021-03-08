@@ -154,7 +154,7 @@ class Backtester:
             else:
                 return startDateIndex
         else:
-            return self.minPeriod
+            return 0
 
     def get_end_index(self, endDate: datetime.date) -> int:
         """
