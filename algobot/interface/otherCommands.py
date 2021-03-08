@@ -42,7 +42,7 @@ class OtherCommands(QDialog):
     # noinspection PyProtectedMember
     def get_start_date_for_csv(self):
         symbol = self.csvGenerationTicker.currentText()
-        interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
+        interval = helpers.convert_long_interval(self.csvGenerationDataInterval.currentText())
 
         ts = Data(loadData=False, log=False).binanceClient._get_earliest_valid_timestamp(symbol, interval)
         startDate = datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
@@ -66,7 +66,7 @@ class OtherCommands(QDialog):
         symbol = self.csvGenerationTicker.currentText()
         descending = self.descendingDateRadio.isChecked()
         armyTime = self.armyDateRadio.isChecked()
-        interval = helpers.convert_interval(self.csvGenerationDataInterval.currentText())
+        interval = helpers.convert_long_interval(self.csvGenerationDataInterval.currentText())
 
         selectedDate = self.startDateCalendar.selectedDate().toPyDate()
         startDate = None if selectedDate == self.currentDateList[0] else selectedDate

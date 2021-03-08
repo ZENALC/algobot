@@ -8,7 +8,7 @@ import time
 
 from datetime import datetime
 from dateutil import parser
-from typing import Tuple
+from typing import Tuple, List, Dict, Union
 
 from option import Option
 
@@ -17,7 +17,7 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 LOG_FOLDER = 'Logs'
 
 
-def open_file_or_folder(targetPath):
+def open_file_or_folder(targetPath: str):
     """
     Opens a file or folder based on targetPath.
     :param targetPath: File or folder to open with system defaults.
@@ -30,7 +30,7 @@ def open_file_or_folder(targetPath):
         subprocess.Popen(["xdg-open", targetPath])
 
 
-def get_ups_and_downs(data, parameter) -> Tuple[list, list]:
+def get_ups_and_downs(data: List[Dict[str, float]], parameter: str) -> Tuple[list, list]:
     """
     Returns lists of ups and downs from given data and parameter.
     :param data: List of dictionaries from which we get the ups and downs.
@@ -53,7 +53,7 @@ def get_ups_and_downs(data, parameter) -> Tuple[list, list]:
     return ups, downs
 
 
-def setup_and_return_log_path(fileName) -> str:
+def setup_and_return_log_path(fileName: str) -> str:
     """
     Creates folders (if needed) and returns default log path.
     :param fileName: Log filename to be created.
@@ -78,7 +78,7 @@ def setup_and_return_log_path(fileName) -> str:
     return fullPath
 
 
-def get_logger(logFile, loggerName):
+def get_logger(logFile: str, loggerName: str):
     """
     Returns a logger object with loggerName provided and that'll log to logFile.
     :param logFile: File to log to.
@@ -119,7 +119,12 @@ def initialize_logger():
     os.chdir(curPath)
 
 
-def parse_strategy_name(name):
+def parse_strategy_name(name: str) -> str:
+    """
+    Parses strategy name for use with strategies.
+    :param name: Name of strategy to be parsed.
+    :return: Parsed strategy name.
+    """
     nameList = name.split()
     remainingList = nameList[1:]
 
@@ -130,7 +135,7 @@ def parse_strategy_name(name):
     return ''.join(nameList)
 
 
-def set_up_strategies(trader, strategies):
+def set_up_strategies(trader, strategies: List[tuple]):
     for strategyTuple in strategies:
         strategyClass = strategyTuple[0]
         values = strategyTuple[1]
@@ -162,7 +167,7 @@ def get_label_string(label: str) -> str:
     return label
 
 
-def get_interval_minutes(interval) -> int:
+def get_interval_minutes(interval: str) -> int:
     intervals = {
         '12 Hours': 720,
         '15 Minutes': 15,
@@ -202,55 +207,67 @@ def get_interval_strings(startingIndex: int = 0) -> list:
             '3 Days'][startingIndex:]
 
 
-def convert_interval_to_string(interval) -> str:
+def convert_small_interval(interval: str) -> str:
     """
     Converts smaller interval string to longer interval string.
     :param interval: Small interval string.
     :return: Longer interval string.
     """
     intervals = {
-        '12h': '12 Hours',
-        '15m': '15 Minutes',
-        '1d': '1 Day',
-        '1h': '1 Hour',
         '1m': '1 Minute',
-        '2h': '2 Hours',
-        '30m': '30 Minutes',
-        '3d': '3 Days',
         '3m': '3 Minutes',
-        '4h': '4 Hours',
         '5m': '5 Minutes',
+        '15m': '15 Minutes',
+        '30m': '30 Minutes',
+        '1h': '1 Hour',
+        '2h': '2 Hours',
+        '4h': '4 Hours',
         '6h': '6 Hours',
-        '8h': '8 Hours'
+        '8h': '8 Hours',
+        '12h': '12 Hours',
+        '1d': '1 Day',
+        '3d': '3 Days',
     }
     return intervals[interval]
 
 
-def convert_interval(interval) -> str:
+def convert_long_interval(interval: str) -> str:
     """
     Converts longer interval string to smaller interval string.
     :param interval: Long interval string.
     :return: Smaller interval string.
     """
     intervals = {
-        '12 Hours': '12h',
-        '15 Minutes': '15m',
-        '1 Day': '1d',
-        '1 Hour': '1h',
         '1 Minute': '1m',
-        '2 Hours': '2h',
-        '30 Minutes': '30m',
-        '3 Days': '3d',
         '3 Minutes': '3m',
-        '4 Hours': '4h',
         '5 Minutes': '5m',
+        '15 Minutes': '15m',
+        '30 Minutes': '30m',
+        '1 Hour': '1h',
+        '2 Hours': '2h',
+        '4 Hours': '4h',
         '6 Hours': '6h',
-        '8 Hours': '8h'
+        '8 Hours': '8h',
+        '12 Hours': '12h',
+        '1 Day': '1d',
+        '3 Days': '3d',
     }
     return intervals[interval]
 
 
-def get_elapsed_time(startingTime) -> str:
+def convert_all_dates_to_datetime(data: List[Dict[str, Union[float, str, datetime]]]):
+    """
+    Converts all available dates in the data list of dictionaries to datetime objects.
+    :param data: List of data in which to convert string dates to datetime objects.
+    """
+    if isinstance(data[0]['date_utc'], datetime):
+        return
+
+    for entry in data:
+        entry['date_utc'] = parser.parse(entry['date_utc'])
+
+
+def get_elapsed_time(startingTime: float) -> str:
     """
     Returns elapsed time in human readable format subtracted from starting time.
     :param startingTime: Starting time to subtract from current time.
@@ -271,7 +288,7 @@ def get_elapsed_time(startingTime) -> str:
         return f'{hours}h {minutes}m {seconds}s'
 
 
-def create_folder_if_needed(targetPath: str, basePath=None) -> bool:
+def create_folder_if_needed(targetPath: str, basePath: str = None) -> bool:
     """
     This function will create the appropriate folders in the root folder if needed.
     :param targetPath: Target path to have exist.
@@ -291,7 +308,7 @@ def create_folder_if_needed(targetPath: str, basePath=None) -> bool:
     return False
 
 
-def get_data_from_parameter(data, parameter) -> float:
+def get_data_from_parameter(data: dict, parameter: str) -> float:
     """
     Helper function for trading. Will return appropriate data from parameter passed in.
     :param data: Dictionary data with parameters.
@@ -306,7 +323,7 @@ def get_data_from_parameter(data, parameter) -> float:
         return data[parameter]
 
 
-def load_from_csv(path, descending=True) -> list:
+def load_from_csv(path: str, descending=True) -> list:
     """
     Returns data from CSV.
     :param path: Path to CSV file.
@@ -351,7 +368,7 @@ def write_json_file(filePath: str = 'secret.json', **kwargs):
         json.dump(kwargs, f, indent=4)
 
 
-def load_json_file(jsonfile) -> dict:
+def load_json_file(jsonfile: str) -> dict:
     """
     Loads JSON file passed and returns dictionary.
     :param jsonfile: File to read dictionary from.

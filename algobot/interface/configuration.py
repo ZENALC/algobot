@@ -598,6 +598,9 @@ class Configuration(QDialog):
             startDate = data[0]['date_utc']
             endDate = data[-1]['date_utc']
 
+        if startDate > endDate:
+            startDate, endDate = endDate, startDate
+
         startYear, startMonth, startDay = startDate.year, startDate.month, startDate.day
         qStartDate = QDate(startYear, startMonth, startDay)
 
@@ -605,9 +608,12 @@ class Configuration(QDialog):
         qEndDate = QDate(endYear, endMonth, endDay)
 
         self.backtestStartDate.setEnabled(True)
-        self.backtestEndDate.setEnabled(True)
         self.backtestStartDate.setDateRange(qStartDate, qEndDate)
+        self.backtestStartDate.setSelectedDate(qStartDate)
+
+        self.backtestEndDate.setEnabled(True)
         self.backtestEndDate.setDateRange(qStartDate, qEndDate)
+        self.backtestEndDate.setSelectedDate(qEndDate)
 
     def import_data(self):
         """
@@ -634,7 +640,7 @@ class Configuration(QDialog):
         self.set_download_progress(progress=0, message="Downloading data...", caller=-1)
 
         symbol = self.backtestTickerComboBox.currentText()
-        interval = helpers.convert_interval(self.backtestIntervalComboBox.currentText())
+        interval = helpers.convert_long_interval(self.backtestIntervalComboBox.currentText())
 
         thread = downloadThread.DownloadThread(symbol=symbol, interval=interval)
         thread.signals.progress.connect(self.set_download_progress)
