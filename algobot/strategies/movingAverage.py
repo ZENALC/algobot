@@ -7,13 +7,14 @@ from option import Option
 
 
 class MovingAverageStrategy(Strategy):
-    def __init__(self, parent=None, inputs=None, precision: int = 2):
+    def __init__(self, parent=None, inputs: List[Option] = None, precision: int = 2):
         super().__init__(name='Moving Average', parent=parent, precision=precision)
         self.tradingOptions: List[Option] = inputs
         self.dynamic = True
         self.description = "Basic trading strategy using moving averages. If the moving average of initial is greater" \
                            " than final, a bullish trend is determined. If the moving average of final is greater, a " \
-                           "bearish trend is determined."
+                           "bearish trend is determined. All moving averages have to have the same trend for an " \
+                           "overall trend to be set."
 
         if parent:  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
             self.validate_options()
@@ -30,7 +31,7 @@ class MovingAverageStrategy(Strategy):
         return minimum
 
     @staticmethod
-    def get_param_types() -> list:
+    def get_param_types() -> List[tuple]:
         movingAverages = ['SMA', 'EMA', 'WMA']
         parameters = ['High', 'Low', 'Open', 'Close', 'High/Low', 'Open/Close']
         return [('Moving Average', tuple, movingAverages),
@@ -39,7 +40,7 @@ class MovingAverageStrategy(Strategy):
                 ('Final', int)
                 ]
 
-    def get_params(self) -> list:
+    def get_params(self) -> List[Option]:
         return self.tradingOptions
 
     def get_trend(self, data: List[dict] or Data = None, log_data=False) -> int:
