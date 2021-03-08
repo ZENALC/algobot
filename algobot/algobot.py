@@ -299,7 +299,7 @@ class Interface(QMainWindow):
 
     def update_backtest_graph_limits(self, limit: int = 105):
         graphDict = self.get_graph_dictionary(self.backtestGraph)
-        graphDict['graph'].setLimits(xMin=0, xMax=limit)
+        graphDict['graph'].setLimits(xMin=0, xMax=limit + 1)
 
     def set_backtest_graph_limits_and_empty_plots(self, limit: int = 105):
         """
@@ -1056,6 +1056,29 @@ class Interface(QMainWindow):
 
                 graphDict['label'].setText(total)
 
+                if graph == self.backtestGraph and self.backtester is not None:
+                    self.update_backtest_activity_based_on_graph(xValue)
+
+    def update_backtest_activity_based_on_graph(self, position: int):
+        """
+        Updates backtest activity based on where the line is in the backtest graph.
+        :param position: Position to show activity at.
+        """
+        try:
+            self.update_backtest_gui(self.backtester.pastActivity[position - 1])
+        except IndexError as e:
+            self.logger.exception(str(e))
+
+    def reset_backtest_cursor(self):
+        """
+        Resets backtest hover cursor to end of graph.
+        """
+        if self.backtester is not None:
+            index = len(self.backtester.pastActivity)
+            graphDict = self.get_graph_dictionary(self.backtestGraph)
+            graphDict['line'].setPos(index)
+            self.update_backtest_activity_based_on_graph(index)
+
     @staticmethod
     def clear_table(table):
         """
@@ -1467,6 +1490,7 @@ class Interface(QMainWindow):
         self.endBacktestButton.clicked.connect(self.end_backtest_thread)
         self.clearBacktestTableButton.clicked.connect(lambda: self.clear_table(self.backtestTable))
         self.viewBacktestsButton.clicked.connect(lambda: self.open_folder("Backtest Results"))
+        self.backtestResetCursorButton.clicked.connect(self.reset_backtest_cursor)
 
     def create_interface_slots(self):
         """

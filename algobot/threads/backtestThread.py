@@ -91,7 +91,7 @@ class BacktestThread(QRunnable):
         else:
             profitPercentage = round(net / backtester.startingBalance * 100 - 100, 2)
 
-        return {
+        activity = {
             'net': round(net, backtester.precision),
             'netString': f'${round(net, backtester.precision)}',
             'balance': f'${round(backtester.balance, backtester.precision)}',
@@ -103,6 +103,9 @@ class BacktestThread(QRunnable):
             'utc': period['date_utc'].timestamp(),
             'percentage': int(index / length * 100)
         }
+
+        backtester.pastActivity.append(activity)
+        return activity
 
     def setup_bot(self):
         """

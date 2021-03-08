@@ -73,6 +73,7 @@ class Backtester:
         self.previousPosition = None
         self.currentPeriod = None
         self.minPeriod = 0
+        self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
 
         if len(strategyInterval.split()) == 1:
             strategyInterval = convert_small_interval(strategyInterval)
