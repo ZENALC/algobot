@@ -2078,12 +2078,30 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>View</string>
     </property>
+    <widget class="QMenu" name="menuTradingView">
+     <property name="title">
+      <string>TradingView</string>
+     </property>
+     <addaction name="tradingViewLiveAction"/>
+     <addaction name="tradingViewSimulationAction"/>
+     <addaction name="tradingViewBacktestAction"/>
+     <addaction name="tradingViewHomepageAction"/>
+    </widget>
+    <widget class="QMenu" name="menuBinance">
+     <property name="title">
+      <string>Binance</string>
+     </property>
+     <addaction name="binanceLiveAction"/>
+     <addaction name="binanceSimulationAction"/>
+     <addaction name="binanceBacktestAction"/>
+     <addaction name="binanceHomepageAction"/>
+    </widget>
     <addaction name="openBacktestResultsFolderAction"/>
     <addaction name="openLogFolderAction"/>
     <addaction name="openCsvFolderAction"/>
     <addaction name="openDatabasesFolderAction"/>
-    <addaction name="binanceAction"/>
-    <addaction name="tradingViewAction"/>
+    <addaction name="menuBinance"/>
+    <addaction name="menuTradingView"/>
     <addaction name="sourceCodeAction"/>
     <addaction name="openConfigurationsFolderAction"/>
     <addaction name="openCredentialsFolderAction"/>
@@ -2139,16 +2157,6 @@ p, li { white-space: pre-wrap; }
     <string>CSVs</string>
    </property>
   </action>
-  <action name="binanceAction">
-   <property name="text">
-    <string>Binance</string>
-   </property>
-  </action>
-  <action name="tradingViewAction">
-   <property name="text">
-    <string>TradingView</string>
-   </property>
-  </action>
   <action name="sourceCodeAction">
    <property name="text">
     <string>Source Code</string>
@@ -2167,6 +2175,64 @@ p, li { white-space: pre-wrap; }
   <action name="openCredentialsFolderAction">
    <property name="text">
     <string>Credential Files</string>
+   </property>
+  </action>
+  <action name="tradingViewLiveAction">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Live</string>
+   </property>
+  </action>
+  <action name="tradingViewSimulationAction">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Simulation</string>
+   </property>
+  </action>
+  <action name="tradingViewBacktestAction">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Backtest</string>
+   </property>
+  </action>
+  <action name="binanceLiveAction">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Live</string>
+   </property>
+  </action>
+  <action name="binanceSimulationAction">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Simulation</string>
+   </property>
+  </action>
+  <action name="binanceBacktestAction">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Backtest</string>
+   </property>
+  </action>
+  <action name="binanceHomepageAction">
+   <property name="text">
+    <string>Homepage</string>
+   </property>
+  </action>
+  <action name="tradingViewHomepageAction">
+   <property name="text">
+    <string>Homepage</string>
    </property>
   </action>
  </widget>
