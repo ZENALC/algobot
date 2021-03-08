@@ -4,7 +4,7 @@ from datetime import datetime
 from threading import Lock
 from typing import Dict
 
-from helpers import get_logger, convert_interval_to_string, set_up_strategies
+from helpers import get_logger, convert_small_interval, set_up_strategies
 from data import Data
 from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING, STOP
 from strategies.strategy import Strategy
@@ -141,7 +141,7 @@ class SimulationTrader:
                 'coinOwed': f'{round(self.coinOwed, 6)}',
                 'ticker': self.symbol,
                 'tickerPrice': f'${self.currentPrice}',
-                'interval': f'{convert_interval_to_string(self.dataView.interval)}',
+                'interval': f'{convert_small_interval(self.dataView.interval)}',
                 'position': self.get_position_string(),
                 'autonomous': str(not self.inHumanControl),
                 'precision': str(self.precision),
@@ -889,7 +889,7 @@ class SimulationTrader:
         self.output_message(f'Starting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')
         self.output_message(f'Starting balance: ${self.startingBalance}')
         self.output_message(f'Symbol: {self.symbol}')
-        self.output_message(f'Interval: {convert_interval_to_string(self.dataView.interval)}')
+        self.output_message(f'Interval: {convert_small_interval(self.dataView.interval)}')
         self.output_message(f'Precision: {self.precision}')
         self.output_message(f'Transaction fee percentage: {self.transactionFeePercentage}%')
         self.output_message(f'Starting coin: {self.coin}')
