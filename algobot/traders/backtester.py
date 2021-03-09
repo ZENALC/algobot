@@ -572,7 +572,7 @@ class Backtester:
 
     # noinspection DuplicatedCode
     def get_rsi(self, data: list, prices: int, parameter: str = 'close', shift: int = 0,
-                round_value: bool = True) -> float:
+                round_value: bool = False) -> float:
         """
         Returns relative strength index.
         :param data: Data values.
