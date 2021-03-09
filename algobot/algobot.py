@@ -1064,10 +1064,12 @@ class Interface(QMainWindow):
         Updates backtest activity based on where the line is in the backtest graph.
         :param position: Position to show activity at.
         """
-        try:
-            self.update_backtest_gui(self.backtester.pastActivity[position - 1])
-        except IndexError as e:
-            self.logger.exception(str(e))
+        if self.backtester is not None:
+            if 1 <= position <= len(self.backtester.pastActivity):
+                try:
+                    self.update_backtest_gui(self.backtester.pastActivity[position - 1])
+                except IndexError as e:
+                    self.logger.exception(str(e))
 
     def reset_backtest_cursor(self):
         """

@@ -568,11 +568,11 @@ class Backtester:
             rsi_values = self.rsi_dictionary[periods]['close'] + rsi_values
 
         self.rsi_dictionary[periods] = {'close': rsi_values}
-
         return rsi_values[-1][0]
 
     # noinspection DuplicatedCode
-    def get_rsi(self, data: list, prices: int, parameter: str, shift: int = 0, round_value: bool = True) -> float:
+    def get_rsi(self, data: list, prices: int, parameter: str = 'close', shift: int = 0,
+                round_value: bool = True) -> float:
         """
         Returns relative strength index.
         :param data: Data values.
@@ -586,7 +586,7 @@ class Backtester:
             rsi = self.rsi_dictionary[prices]['close'][-shift][0]
         elif prices in self.rsi_dictionary:
             alpha = 1 / prices
-            difference = data[0][parameter] - data[1][parameter]
+            difference = data[-1][parameter] - data[-2][parameter]
             if difference > 0:
                 up = difference * alpha + self.rsi_dictionary[prices]['close'][-1][1] * (1 - alpha)
                 down = self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
@@ -597,11 +597,8 @@ class Backtester:
             rsi = 100 if down == 0 else 100 - 100 / (1 + up / down)
             self.rsi_dictionary[prices]['close'].append((rsi, up, down))
         else:
-            start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
-            data = data[shift:start]
-            data = data[:]
-            data.reverse()
-
+            if shift > 0:
+                data = data[:-shift]
             ups, downs = get_ups_and_downs(data=data, parameter=parameter)
             rsi = self.helper_get_ema(ups, downs, prices)
 
