@@ -1,3 +1,6 @@
+import datetime
+
+from typing import Dict, Any
 from backtester import Backtester
 from enums import BACKTEST, TRAILING
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
@@ -24,7 +27,7 @@ class BacktestThread(QRunnable):
         self.logger = logger
         self.running = True
 
-    def get_configuration_details_to_setup_backtest(self) -> dict:
+    def get_configuration_details_to_setup_backtest(self) -> Dict[str, Any]:
         """
         Returns configuration details from GUI in a dictionary to setup backtest.
         :return: GUI configuration details in a dictionary.
@@ -53,7 +56,7 @@ class BacktestThread(QRunnable):
             'strategyInterval': config.backtestStrategyIntervalCombobox.currentText()
         }
 
-    def get_configuration_dictionary_for_gui(self) -> dict:
+    def get_configuration_dictionary_for_gui(self) -> Dict[str, str]:
         """
         Returns backtest configuration details to update GUI.
         :return: Dictionary containing backtest configuration details.
@@ -75,7 +78,7 @@ class BacktestThread(QRunnable):
 
         return d
 
-    def get_activity_dictionary(self, period: dict, index: int, length: int) -> dict:
+    def get_activity_dictionary(self, period: Dict[str, datetime], index: int, length: int) -> dict:
         """
         Returns activity dictionary based on current backtest period values.
         :param period: Current period used to update graphs and GUI with.
