@@ -2,7 +2,7 @@ import os
 import sys
 import time
 
-from typing import Dict, Union, List
+from typing import Dict, Union
 from dateutil import parser
 from datetime import datetime, timedelta
 from helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes, \
@@ -10,9 +10,7 @@ from helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_
 from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING, STOP
 from strategies.strategy import Strategy
 from algorithms import get_sma, get_wma, get_ema
-
-DICT_TYPE = Dict[str, Union[datetime, float]]
-DATA_TYPE = List[DICT_TYPE]
+from typeHints import DATA_TYPE, DICT_TYPE
 
 
 class Backtester:
