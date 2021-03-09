@@ -9,15 +9,16 @@ from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox, QTabWidget, QForm
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
 
+# noinspection PyUnresolvedReferences
+from strategies import *
+from strategies.strategy import Strategy
+
 from binance.client import Client
 from telegram.ext import Updater
 from dateutil import parser
 from threads import downloadThread
 from typing import List, Tuple, Callable
 from enums import SIMULATION, LIVE, BACKTEST, TRAILING, STOP
-
-# Import your custom strategies here.
-from strategies.movingAverage import MovingAverageStrategy
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
@@ -42,9 +43,7 @@ class Configuration(QDialog):
                              self.backtestConfigurationTabWidget,
                              ]
 
-        self.strategies = {  # Add your strategies to this dictionary of strategies. Make sure key name is exactly same!
-            'Moving Average': MovingAverageStrategy,
-        }
+        self.strategies = self.get_strategies_dictionary(Strategy.__subclasses__())
         self.strategyDict = {}  # We will store all the strategy slot information in this dictionary.
         self.lossDict = {}  # We will store stop loss settings here.
         self.takeProfitDict = {}  # We will store take profit settings here.
@@ -52,6 +51,13 @@ class Configuration(QDialog):
         self.load_comboBoxes()
         self.load_slots()
         self.load_credentials()
+
+    @staticmethod
+    def get_strategies_dictionary(strategies: list):
+        strategiesDict = {}
+        for strategy in strategies:
+            strategiesDict[strategy().name] = strategy
+        return strategiesDict
 
     def load_comboBoxes(self):
         intervals = helpers.get_interval_strings(startingIndex=0)
