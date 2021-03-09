@@ -1,7 +1,6 @@
-import datetime
-
+from datetime import datetime
 from typing import Dict, Any
-from backtester import Backtester
+from traders.backtester import Backtester
 from enums import BACKTEST, TRAILING
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 

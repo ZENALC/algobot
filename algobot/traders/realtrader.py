@@ -2,7 +2,7 @@ import math
 import time
 
 from enums import *
-from simulationtrader import SimulationTrader
+from traders.simulationtrader import SimulationTrader
 from binance.client import Client
 from binance.enums import *
 

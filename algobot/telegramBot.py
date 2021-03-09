@@ -3,7 +3,7 @@ import random
 from telegram import Bot, constants
 from telegram.ext import Updater, CommandHandler
 from enums import LONG, SHORT, LIVE
-from simulationtrader import SimulationTrader
+from traders.simulationtrader import SimulationTrader
 from helpers import get_label_string
 
 

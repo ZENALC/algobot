@@ -2,7 +2,7 @@ import unittest
 import helpers
 import pytest
 
-from backtester import Backtester
+from traders.backtester import Backtester
 from enums import TRAILING, STOP
 from datetime import datetime
 from helpers import convert_all_dates_to_datetime

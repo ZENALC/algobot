@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from typing import Dict, Union, List
 
 DICT_TYPE = Dict[str, Union[datetime, float]]

@@ -5,9 +5,9 @@ from threading import Lock
 from typing import Dict
 
 from helpers import get_logger, convert_small_interval, set_up_strategies
-from data import Data
 from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING, STOP
 from strategies.strategy import Strategy
+from data import Data
 
 
 class SimulationTrader:

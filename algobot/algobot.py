@@ -10,9 +10,9 @@ from threads import workerThread, backtestThread, botThread, listThread
 from data import Data
 from datetime import datetime
 from interface.palettes import *
-from backtester import Backtester
-from realtrader import RealTrader
-from simulationtrader import SimulationTrader
+from traders.backtester import Backtester
+from traders.realtrader import RealTrader
+from traders.simulationtrader import SimulationTrader
 from option import Option
 from enums import *
 from interface.configuration import Configuration
