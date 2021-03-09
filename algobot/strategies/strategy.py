@@ -36,7 +36,7 @@ class Strategy:
 
     @staticmethod
     def get_param_types():
-        raise NotImplementedError("Implement a function return input types.")
+        raise NotImplementedError("Implement a function to return input types.")
 
     def reset_strategy_dictionary(self):
         """
