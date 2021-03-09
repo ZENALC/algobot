@@ -789,9 +789,11 @@ class Data:
             raise ValueError('Invalid input specified.')
 
         if shift > 0:
+            updateDict = False
             data = self.data
             shift -= 1
         else:
+            updateDict = True
             data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
 
         start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
@@ -804,7 +806,7 @@ class Data:
         rs = averageUp / averageDown
         rsi = 100 - 100 / (1 + rs)
 
-        if shift == 0:
+        if shift == 0 and updateDict:
             self.rsi_data[prices] = rsi
 
         if round_value:
