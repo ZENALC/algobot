@@ -867,6 +867,12 @@ class Configuration(QDialog):
         self.set_strategy_values(strategyName, toCaller, self.get_strategy_values(strategyName, fromCaller))
 
     def copy_loss_settings(self, fromCaller: int, toCaller: int):
+        """
+        Copies loss settings from one caller to another.
+        :param fromCaller: Loss settings will be copied from this trader.
+        :param toCaller: Loss settings will be copied to this trader.
+        :return: None
+        """
         fromTab = self.get_category_tab(fromCaller)
         toTab = self.get_category_tab(toCaller)
 
