@@ -114,14 +114,14 @@ class Configuration(QDialog):
         :param innerLayout: Inner layout to place input widgets on.
         """
         self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
-        lossTypeComboBox.addItems(("Trailing", "Stop"))
-        innerLayout.addRow(QLabel("Loss Type"), lossTypeComboBox)
-
         self.lossDict[tab, "lossPercentage"] = lossPercentage = QDoubleSpinBox()
-        lossPercentage.setValue(5)
-        innerLayout.addRow(QLabel("Loss Percentage"), lossPercentage)
-
         self.lossDict[tab, "smartStopLossCounter"] = smartStopLossCounter = QSpinBox()
+
+        lossTypeComboBox.addItems(("Trailing", "Stop"))
+        lossPercentage.setValue(5)
+
+        innerLayout.addRow(QLabel("Loss Type"), lossTypeComboBox)
+        innerLayout.addRow(QLabel("Loss Percentage"), lossPercentage)
         innerLayout.addRow(QLabel("Smart Stop Loss Counter"), smartStopLossCounter)
 
         if tab != self.backtestConfigurationTabWidget:
