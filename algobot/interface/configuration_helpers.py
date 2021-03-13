@@ -1,10 +1,15 @@
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Dict, Any
 
 from PyQt5.QtWidgets import QFrame, QLabel, QSpinBox, QLineEdit, QDoubleSpinBox, QComboBox, QWidget, QGroupBox, \
     QFormLayout, QScrollArea, QVBoxLayout, QTabWidget
 
 
-def get_strategies_dictionary(strategies: list):
+def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:
+    """
+    Helper function to return a strategies dictionary with strategy name as the key and strategy itself as the value.
+    :param strategies: List of strategies to process for dictionary.
+    :return: Dictionary of strategies with strategy name as the key and strategy itself as the value.
+    """
     strategiesDict = {}
     for strategy in strategies:
         strategiesDict[strategy().name] = strategy
