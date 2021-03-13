@@ -157,7 +157,7 @@ class BotThread(QRunnable):
             self.initialize_lower_interval_trading(caller=caller, interval=interval)
 
     @staticmethod
-    def check_api_credentials(apiKey, apiSecret):
+    def check_api_credentials(apiKey: str, apiSecret: str):
         """
         Helper function that checks API credentials specified. Needs to have more tests.
         :param apiKey: API key for Binance. (for now)
@@ -203,7 +203,7 @@ class BotThread(QRunnable):
             self.gui.telegramBot.send_statistics_telegram(self.telegramChatID, self.schedulePeriod)
             self.nextScheduledEvent = datetime.now() + timedelta(seconds=self.scheduleSeconds)
 
-    def set_parameters(self, caller):
+    def set_parameters(self, caller: int):
         """
         Retrieves moving average options and loss settings based on caller.
         :param caller: Caller that dictates which parameters get set.
