@@ -130,11 +130,12 @@ class Configuration(QDialog):
 
     def create_take_profit_inputs(self, tab: QTabWidget, innerLayout: QLayout):
         self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
-        takeProfitTypeComboBox.addItems(('Stop',))
-        innerLayout.addRow(QLabel("Take Profit Type"), takeProfitTypeComboBox)
-
         self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
+
+        takeProfitTypeComboBox.addItems(('Stop',))
         takeProfitPercentage.setValue(5)
+
+        innerLayout.addRow(QLabel("Take Profit Type"), takeProfitTypeComboBox)
         innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
 
     def set_loss_settings(self, caller: int, config: dict):
