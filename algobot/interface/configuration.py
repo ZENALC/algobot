@@ -944,7 +944,11 @@ class Configuration(QDialog):
         :param config: Configuration dictionary to load.
         :return: None
         """
-        valueCount = config[f'{strategyName.lower()}Length']
+        key = f'{strategyName.lower()}Length'
+        if key not in config:
+            return
+
+        valueCount = config[key]
         tab = self.get_category_tab(caller)
         valueWidgets = self.strategyDict[tab, strategyName, 'values']
         parameters = self.strategyDict[tab, strategyName, 'parameters']
