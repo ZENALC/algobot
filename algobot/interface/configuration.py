@@ -86,24 +86,6 @@ class Configuration(QDialog):
         else:
             raise ValueError("Invalid type of caller provided.")
 
-    def load_take_profit_slots(self):
-        create_inner_tab(
-            categoryTabs=self.categoryTabs,
-            description="Configure your take profit settings here.",
-            tabName="Take Profit",
-            input_creator=self.create_take_profit_inputs,
-            dictionary=self.takeProfitDict
-        )
-
-    def create_take_profit_inputs(self, tab: QTabWidget, innerLayout: QLayout):
-        self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
-        takeProfitTypeComboBox.addItems(('Stop',))
-        innerLayout.addRow(QLabel("Take Profit Type"), takeProfitTypeComboBox)
-
-        self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
-        takeProfitPercentage.setValue(5)
-        innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
-
     def load_loss_slots(self):
         """
         Loads slots for loss settings in GUI.
@@ -114,6 +96,15 @@ class Configuration(QDialog):
             tabName="Stop Loss",
             input_creator=self.create_loss_inputs,
             dictionary=self.lossDict
+        )
+
+    def load_take_profit_slots(self):
+        create_inner_tab(
+            categoryTabs=self.categoryTabs,
+            description="Configure your take profit settings here.",
+            tabName="Take Profit",
+            input_creator=self.create_take_profit_inputs,
+            dictionary=self.takeProfitDict
         )
 
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout):
@@ -136,6 +127,15 @@ class Configuration(QDialog):
         if tab != self.backtestConfigurationTabWidget:
             self.lossDict[tab, "safetyTimer"] = safetyTimer = QSpinBox()
             innerLayout.addRow(QLabel("Safety Timer"), safetyTimer)
+
+    def create_take_profit_inputs(self, tab: QTabWidget, innerLayout: QLayout):
+        self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
+        takeProfitTypeComboBox.addItems(('Stop',))
+        innerLayout.addRow(QLabel("Take Profit Type"), takeProfitTypeComboBox)
+
+        self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
+        takeProfitPercentage.setValue(5)
+        innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
 
     def set_loss_settings(self, caller: int, config: dict):
         tab = self.get_category_tab(caller)
@@ -288,8 +288,7 @@ class Configuration(QDialog):
     def load_strategy_slots(self):
         """
         This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
-        are loaded from the self.strategies dictionary. Make sure you add your strategy to that dictionary with the key
-        as the strategy name and the value as the strategy class.
+        are loaded from the self.strategies dictionary.
         :return: None
         """
         for strategy in self.strategies.values():

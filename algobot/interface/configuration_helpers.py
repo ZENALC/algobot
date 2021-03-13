@@ -17,6 +17,15 @@ def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:
 
 
 def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_creator: Callable, dictionary: dict):
+    """
+    Creates inner tab for each category tab in list of category tabs provided.
+    :param categoryTabs: Tabs to create inner tab and append to.
+    :param description: Description to insert for inner tab.
+    :param tabName: Name of tab to display.
+    :param input_creator: Function to call for input creation.
+    :param dictionary: Dictionary to add items to for reference.
+    :return: None
+    """
     for tab in categoryTabs:
         descriptionLabel = QLabel(description)
         descriptionLabel.setWordWrap(True)
