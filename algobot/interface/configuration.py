@@ -13,7 +13,7 @@ from strategies import *
 from strategies.strategy import Strategy
 
 from interface.configuration_helpers import create_strategy_inputs, get_input_widget_value, set_value, \
-    create_inner_tab, get_strategies_dictionary
+    create_inner_tab, get_strategies_dictionary, delete_strategy_inputs, add_strategy_inputs
 
 from binance.client import Client
 from telegram.ext import Updater
@@ -232,43 +232,6 @@ class Configuration(QDialog):
 
         return values
 
-    def delete_strategy_inputs(self, parameters: list, strategyName: str, tab: QTabWidget):
-        """
-        Dynamically deletes strategy inputs.
-        :param parameters: Parameters of the strategy.
-        :param strategyName: Name of strategy to determine the dictionary.
-        :param tab: Tab in which to delete strategy inputs.
-        :return: None
-        """
-        values = self.strategyDict[tab, strategyName, 'values']
-        labels = self.strategyDict[tab, strategyName, 'labels']
-        if len(values) <= len(parameters):
-            self.strategyDict[tab, strategyName, 'status'].setText("Can't delete additional slots.")
-        else:
-            for _ in range(len(parameters)):
-                value = values.pop()
-                value.setParent(None)
-
-                label = labels.pop()
-                label.setParent(None)
-
-            labels.pop().setParent(None)  # Pop off the horizontal line from labels.
-            self.strategyDict[tab, strategyName, 'status'].setText("Deleted additional slots.")
-
-    def add_strategy_inputs(self, parameters: list, strategyName: str, groupBoxLayout, tab: QTabWidget):
-        """
-        Adds strategy parameters to the layout provided.
-        :param parameters: Parameters to add to the group box layout.
-        :param strategyName: Name of strategy.
-        :param groupBoxLayout: Layout to add parameters to.
-        :param tab: Add which group box layout is in.
-        :return: None
-        """
-        values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
-        self.strategyDict[tab, strategyName, 'labels'] += labels
-        self.strategyDict[tab, strategyName, 'values'] += values
-        self.strategyDict[tab, strategyName, 'status'].setText("Added additional slots.")
-
     def add_strategy_buttons(self, parameters, strategyName, groupBoxLayout, tab) -> Tuple[QPushButton, QPushButton]:
         """
         Adds add and delete buttons to strategy GUI.
@@ -278,10 +241,12 @@ class Configuration(QDialog):
         :param tab: Tab to modify GUI.
         :return: Tuple of add and delete buttons.
         """
+        sDict = self.strategyDict
+
         addButton = QPushButton("Add Extra")
-        addButton.clicked.connect(lambda: self.add_strategy_inputs(parameters, strategyName, groupBoxLayout, tab))
+        addButton.clicked.connect(lambda: add_strategy_inputs(sDict, parameters, strategyName, groupBoxLayout, tab))
         deleteButton = (QPushButton("Delete Extra"))
-        deleteButton.clicked.connect(lambda: self.delete_strategy_inputs(parameters, strategyName, tab))
+        deleteButton.clicked.connect(lambda: delete_strategy_inputs(sDict, parameters, strategyName, tab))
 
         return addButton, deleteButton
 
@@ -853,9 +818,9 @@ class Configuration(QDialog):
         self.strategyDict[tab, strategyName, 'groupBox'].setChecked(config[f'{strategyName.lower()}'])
 
         while valueCount > len(valueWidgets):
-            self.add_strategy_inputs(parameters, strategyName, groupBoxLayout, tab)
+            add_strategy_inputs(self.strategyDict, parameters, strategyName, groupBoxLayout, tab)
         while valueCount < len(valueWidgets):
-            self.delete_strategy_inputs(parameters, strategyName, tab)
+            delete_strategy_inputs(self.strategyDict, parameters, strategyName, tab)
 
         for index, widget in enumerate(valueWidgets, start=1):
             value = config[f'{strategyName.lower()}{index}']
@@ -875,9 +840,9 @@ class Configuration(QDialog):
         layout = self.strategyDict[tab, strategyName, 'layout']
 
         while len(values) < len(targetValues):
-            self.delete_strategy_inputs(parameters, strategyName, tab)
+            delete_strategy_inputs(self.strategyDict, parameters, strategyName, tab)
         while len(values) > len(targetValues):
-            self.add_strategy_inputs(parameters, strategyName, layout, tab)
+            add_strategy_inputs(self.strategyDict, parameters, strategyName, layout, tab)
 
         for index, widget in enumerate(targetValues):
             value = values[index]

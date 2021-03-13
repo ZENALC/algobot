@@ -133,6 +133,47 @@ def create_strategy_inputs(parameters: list, strategyName: str, groupBoxLayout: 
     return values, labels
 
 
+def delete_strategy_inputs(strategyDict: dict, parameters: list, strategyName: str, tab: QTabWidget):
+    """
+    Dynamically deletes strategy inputs.
+    :param strategyDict: Dictionary to modify.
+    :param parameters: Parameters of the strategy.
+    :param strategyName: Name of strategy to determine the dictionary.
+    :param tab: Tab in which to delete strategy inputs.
+    :return: None
+    """
+    values = strategyDict[tab, strategyName, 'values']
+    labels = strategyDict[tab, strategyName, 'labels']
+    if len(values) <= len(parameters):
+        strategyDict[tab, strategyName, 'status'].setText("Can't delete additional slots.")
+    else:
+        for _ in range(len(parameters)):
+            value = values.pop()
+            value.setParent(None)
+
+            label = labels.pop()
+            label.setParent(None)
+
+        labels.pop().setParent(None)  # Pop off the horizontal line from labels.
+        strategyDict[tab, strategyName, 'status'].setText("Deleted additional slots.")
+
+
+def add_strategy_inputs(strategyDict: dict, parameters: list, strategyName: str, groupBoxLayout, tab: QTabWidget):
+    """
+    Adds strategy parameters to the layout provided.
+    :param strategyDict: Dictionary to modify.
+    :param parameters: Parameters to add to the group box layout.
+    :param strategyName: Name of strategy.
+    :param groupBoxLayout: Layout to add parameters to.
+    :param tab: Add which group box layout is in.
+    :return: None
+    """
+    values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
+    strategyDict[tab, strategyName, 'labels'] += labels
+    strategyDict[tab, strategyName, 'values'] += values
+    strategyDict[tab, strategyName, 'status'].setText("Added additional slots.")
+
+
 def get_h_line() -> QFrame:
     """
     Returns a horizontal line object made using a QFrame object.
