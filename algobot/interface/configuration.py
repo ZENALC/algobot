@@ -135,6 +135,9 @@ class Configuration(QDialog):
         :param caller: This caller's tab's GUI will be modified by this function.
         :param config: Configuration dictionary from which to get loss settings.
         """
+        if "lossTypeIndex" not in config:  # We don't have this data in config, so just return.
+            return
+
         tab = self.get_category_tab(caller)
         self.lossDict[tab, "lossType"].setCurrentIndex(config["lossTypeIndex"])
         self.lossDict[tab, "lossPercentage"].setValue(config["lossPercentage"])
@@ -149,6 +152,9 @@ class Configuration(QDialog):
         :param caller: This caller's tab's GUI will be modified by this function.
         :param config: Configuration dictionary from which to get take profit settings.
         """
+        if "takeProfitTypeIndex" not in config:  # We don't have this data in config, so just return.
+            return
+
         tab = self.get_category_tab(caller)
         self.takeProfitDict[tab, 'takeProfitType'].setCurrentIndex(config["takeProfitTypeIndex"])
         self.takeProfitDict[tab, 'takeProfitPercentage'].setValue(config["takeProfitPercentage"])
@@ -171,6 +177,7 @@ class Configuration(QDialog):
 
         return {
             'takeProfitType': takeProfitType,
+            'takeProfitTypeIndex': dictionary[tab, 'takeProfitType'].currentIndex(),
             'takeProfitPercentage': dictionary[tab, 'takeProfitPercentage'].value()
         }
 
@@ -611,6 +618,7 @@ class Configuration(QDialog):
         }
 
         config.update(self.get_loss_settings(BACKTEST))
+        config.update(self.get_take_profit_settings(BACKTEST))
         for strategyName in self.strategies.keys():
             self.add_strategy_to_config(BACKTEST, strategyName, config)
 
@@ -641,6 +649,7 @@ class Configuration(QDialog):
         }
 
         config.update(self.get_loss_settings(SIMULATION))
+        config.update(self.get_take_profit_settings(SIMULATION))
         for strategyName in self.strategies.keys():
             self.add_strategy_to_config(SIMULATION, strategyName, config)
 
@@ -674,6 +683,7 @@ class Configuration(QDialog):
         }
 
         config.update(self.get_loss_settings(LIVE))
+        config.update(self.get_take_profit_settings(LIVE))
         for strategyName in self.strategies.keys():
             self.add_strategy_to_config(LIVE, strategyName, config)
 
@@ -707,6 +717,7 @@ class Configuration(QDialog):
                 self.backtestMarginTradingCheckBox.setChecked(config['marginTrading'])
 
                 self.set_loss_settings(BACKTEST, config)
+                self.set_take_profit_settings(BACKTEST, config)
                 for strategyName in self.strategies.keys():
                     self.load_strategy_from_config(BACKTEST, strategyName, config)
 
@@ -734,6 +745,7 @@ class Configuration(QDialog):
                 self.lowerIntervalSimulationCheck.setChecked(config['lowerInterval'])
 
                 self.set_loss_settings(SIMULATION, config)
+                self.set_take_profit_settings(SIMULATION, config)
                 for strategyName in self.strategies.keys():
                     self.load_strategy_from_config(SIMULATION, strategyName, config)
 
@@ -764,6 +776,7 @@ class Configuration(QDialog):
                 self.lowerIntervalCheck.setChecked(config['lowerInterval'])
 
                 self.set_loss_settings(LIVE, config)
+                self.set_take_profit_settings(LIVE, config)
                 for strategyName in self.strategies.keys():
                     self.load_strategy_from_config(LIVE, strategyName, config)
 
