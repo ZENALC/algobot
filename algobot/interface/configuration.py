@@ -130,6 +130,11 @@ class Configuration(QDialog):
         innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
 
     def set_loss_settings(self, caller: int, config: dict):
+        """
+        Sets loss settings to GUI from configuration dictionary provided.
+        :param caller: This caller's tab's GUI will be modified by this function.
+        :param config: Configuration dictionary from which to get loss settings.
+        """
         tab = self.get_category_tab(caller)
         self.lossDict[tab, "lossType"].setCurrentIndex(config["lossTypeIndex"])
         self.lossDict[tab, "lossPercentage"].setValue(config["lossPercentage"])
