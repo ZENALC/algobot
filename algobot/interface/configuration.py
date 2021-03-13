@@ -110,8 +110,8 @@ class Configuration(QDialog):
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout):
         """
         Creates inputs for loss settings in GUI.
-        :param tab: Tab to create inputs on.
-        :param innerLayout: Inner to place input widgets on.
+        :param tab: Tab to create inputs on. This can be for simulation, live, or backtest.
+        :param innerLayout: Inner layout to place input widgets on.
         """
         self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
         lossTypeComboBox.addItems(("Trailing", "Stop"))
