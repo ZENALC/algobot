@@ -54,30 +54,6 @@ class Configuration(QDialog):
         self.load_slots()  # Loads stop loss, take profit, and strategies slots.
         self.load_credentials()  # Load credentials if they exist.
 
-    def load_combo_boxes(self):
-        """
-        This function currently only handles combo boxes for backtester interval logic. It'll update the strategy
-        interval combo-box depending on what the data interval combo-box has as its current value.
-        """
-        intervals = helpers.get_interval_strings(startingIndex=0)
-        self.backtestIntervalComboBox.addItems(intervals)
-        self.backtestIntervalComboBox.currentTextChanged.connect(self.reset_strategy_interval_comboBox)
-        self.backtestStrategyIntervalCombobox.addItems(intervals)
-
-    def reset_strategy_interval_comboBox(self):
-        """
-        This function will reset the strategy interval combo-box.
-        """
-        childText = self.backtestStrategyIntervalCombobox.currentText()
-        parentIndex = self.backtestIntervalComboBox.currentIndex()
-        intervals = helpers.get_interval_strings(startingIndex=parentIndex)
-        self.backtestStrategyIntervalCombobox.clear()
-        self.backtestStrategyIntervalCombobox.addItems(intervals)
-
-        previousChildIndex = self.backtestStrategyIntervalCombobox.findText(childText)
-        if previousChildIndex != -1:
-            self.backtestStrategyIntervalCombobox.setCurrentIndex(previousChildIndex)
-
     def get_category_tab(self, caller: int) -> QTabWidget:
         """
         This will return the category tab (main, simulation, or live) based on the caller provided.
@@ -911,6 +887,30 @@ class Configuration(QDialog):
         graphSpeed = self.graphPlotSpeedSpinBox.value()
         self.parent.graphUpdateSeconds = graphSpeed
         self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graphSpeed} seconds.")
+
+    def reset_strategy_interval_comboBox(self):
+        """
+        This function will reset the strategy interval combo-box.
+        """
+        childText = self.backtestStrategyIntervalCombobox.currentText()
+        parentIndex = self.backtestIntervalComboBox.currentIndex()
+        intervals = helpers.get_interval_strings(startingIndex=parentIndex)
+        self.backtestStrategyIntervalCombobox.clear()
+        self.backtestStrategyIntervalCombobox.addItems(intervals)
+
+        previousChildIndex = self.backtestStrategyIntervalCombobox.findText(childText)
+        if previousChildIndex != -1:
+            self.backtestStrategyIntervalCombobox.setCurrentIndex(previousChildIndex)
+
+    def load_combo_boxes(self):
+        """
+        This function currently only handles combo boxes for backtester interval logic. It'll update the strategy
+        interval combo-box depending on what the data interval combo-box has as its current value.
+        """
+        intervals = helpers.get_interval_strings(startingIndex=0)
+        self.backtestIntervalComboBox.addItems(intervals)
+        self.backtestIntervalComboBox.currentTextChanged.connect(self.reset_strategy_interval_comboBox)
+        self.backtestStrategyIntervalCombobox.addItems(intervals)
 
     def load_slots(self):
         """
