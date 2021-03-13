@@ -142,6 +142,11 @@ class Configuration(QDialog):
         innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
 
     def get_take_profit_settings(self, caller) -> dict:
+        """
+        Returns take profit settings from GUI.
+        :param caller: Caller that'll determine which take profit settings get returned.
+        :return: Dictionary including take profit settings.
+        """
         tab = self.get_category_tab(caller)
         takeProfitType = TRAILING if self.takeProfitDict[tab, 'takeProfitType'].currentText() == "Trailing" else STOP
 
@@ -151,6 +156,9 @@ class Configuration(QDialog):
         }
 
     def load_loss_slots(self):
+        """
+        Loads slots for loss settings in GUI.
+        """
         self.create_inner_tab(
             description="Configure your stop loss settings here.",
             tabName="Stop Loss",
@@ -158,6 +166,11 @@ class Configuration(QDialog):
         )
 
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout):
+        """
+        Creates inputs for loss settings in GUI.
+        :param tab: Tab to create inputs on.
+        :param innerLayout: Inner to place input widgets on.
+        """
         self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
         lossTypeComboBox.addItems(("Trailing", "Stop"))
         innerLayout.addRow(QLabel("Loss Type"), lossTypeComboBox)
@@ -182,7 +195,12 @@ class Configuration(QDialog):
         if tab != self.backtestConfigurationTabWidget:
             self.lossDict[tab, 'safetyTimer'].setValue(config["safetyTimer"])
 
-    def get_loss_settings(self, caller: int):
+    def get_loss_settings(self, caller: int) -> dict:
+        """
+        Returns loss settings from GUI.
+        :param caller: Caller that'll determine which loss settings get returned.
+        :return: Dictionary including loss settings.
+        """
         tab = self.get_category_tab(caller)
         lossType = TRAILING if self.lossDict[tab, "lossType"].currentText() == "Trailing" else STOP
 
@@ -199,6 +217,11 @@ class Configuration(QDialog):
         return lossSettings
 
     def get_strategies(self, caller: int) -> List[tuple]:
+        """
+        Returns strategy information from GUI.
+        :param caller: Caller that asked for strategy information.
+        :return: List of strategy information.
+        """
         strategies = []
         for strategyName, strategy in self.strategies.items():
             if self.strategy_enabled(strategyName, caller):
