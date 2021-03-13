@@ -1,7 +1,7 @@
 from typing import Tuple, Callable, Dict, Any, Union
 
 from PyQt5.QtWidgets import QFrame, QLabel, QSpinBox, QLineEdit, QDoubleSpinBox, QComboBox, QWidget, QGroupBox, \
-    QFormLayout, QScrollArea, QVBoxLayout, QTabWidget, QLayout
+    QFormLayout, QScrollArea, QVBoxLayout, QTabWidget, QLayout, QPushButton
 
 
 def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:
@@ -172,6 +172,25 @@ def add_strategy_inputs(strategyDict: dict, parameters: list, strategyName: str,
     strategyDict[tab, strategyName, 'labels'] += labels
     strategyDict[tab, strategyName, 'values'] += values
     strategyDict[tab, strategyName, 'status'].setText("Added additional slots.")
+
+
+def add_strategy_buttons(sDict: dict, parameters: list, strategyName: str, groupBoxLayout: QLayout,
+                         tab: QTabWidget) -> Tuple[QPushButton, QPushButton]:
+    """
+    Adds add and delete buttons to strategy GUI.
+    :param sDict: Strategy dictionary to modify.
+    :param parameters: Parameters to pass to strategy inputs function.
+    :param strategyName: Name of strategy.
+    :param groupBoxLayout: Layout to add strategy buttons to.
+    :param tab: Tab to modify GUI.
+    :return: Tuple of add and delete buttons.
+    """
+    addButton = QPushButton("Add Extra")
+    addButton.clicked.connect(lambda: add_strategy_inputs(sDict, parameters, strategyName, groupBoxLayout, tab))
+    deleteButton = (QPushButton("Delete Extra"))
+    deleteButton.clicked.connect(lambda: delete_strategy_inputs(sDict, parameters, strategyName, tab))
+
+    return addButton, deleteButton
 
 
 def get_h_line() -> QFrame:

@@ -4,7 +4,7 @@ import telegram
 import helpers
 
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox, QTabWidget, QFormLayout, QLabel, QSpinBox, \
-    QGroupBox, QVBoxLayout, QDoubleSpinBox, QComboBox, QPushButton, QHBoxLayout, QScrollArea, QLayout
+    QGroupBox, QVBoxLayout, QDoubleSpinBox, QComboBox, QHBoxLayout, QScrollArea, QLayout
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
 
@@ -13,7 +13,7 @@ from strategies import *
 from strategies.strategy import Strategy
 
 from interface.configuration_helpers import create_strategy_inputs, get_input_widget_value, set_value, \
-    create_inner_tab, get_strategies_dictionary, delete_strategy_inputs, add_strategy_inputs
+    create_inner_tab, get_strategies_dictionary, delete_strategy_inputs, add_strategy_inputs, add_strategy_buttons
 
 from binance.client import Client
 from telegram.ext import Updater
@@ -232,24 +232,6 @@ class Configuration(QDialog):
 
         return values
 
-    def add_strategy_buttons(self, parameters, strategyName, groupBoxLayout, tab) -> Tuple[QPushButton, QPushButton]:
-        """
-        Adds add and delete buttons to strategy GUI.
-        :param parameters: Parameters to pass to strategy inputs function.
-        :param strategyName: Name of strategy.
-        :param groupBoxLayout: Layout to add strategy buttons to.
-        :param tab: Tab to modify GUI.
-        :return: Tuple of add and delete buttons.
-        """
-        sDict = self.strategyDict
-
-        addButton = QPushButton("Add Extra")
-        addButton.clicked.connect(lambda: add_strategy_inputs(sDict, parameters, strategyName, groupBoxLayout, tab))
-        deleteButton = (QPushButton("Delete Extra"))
-        deleteButton.clicked.connect(lambda: delete_strategy_inputs(sDict, parameters, strategyName, tab))
-
-        return addButton, deleteButton
-
     def load_strategy_slots(self):
         """
         This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
@@ -280,7 +262,8 @@ class Configuration(QDialog):
 
                 status = QLabel()
                 if temp.dynamic:
-                    addButton, deleteButton = self.add_strategy_buttons(parameters, strategyName, groupBoxLayout, tab)
+                    addButton, deleteButton = add_strategy_buttons(self.strategyDict, parameters, strategyName,
+                                                                   groupBoxLayout, tab)
                     horizontalLayout = QHBoxLayout()
                     horizontalLayout.addWidget(addButton)
                     horizontalLayout.addWidget(deleteButton)
