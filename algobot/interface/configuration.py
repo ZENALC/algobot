@@ -99,6 +99,9 @@ class Configuration(QDialog):
         )
 
     def load_take_profit_slots(self):
+        """
+        Loads slots for take profit settings in GUI.
+        """
         create_inner_tab(
             categoryTabs=self.categoryTabs,
             description="Configure your take profit settings here.",
@@ -110,7 +113,7 @@ class Configuration(QDialog):
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout):
         """
         Creates inputs for loss settings in GUI.
-        :param tab: Tab to create inputs on. This can be for simulation, live, or backtest.
+        :param tab: Tab to create inputs for - simulation, live, or backtest.
         :param innerLayout: Inner layout to place input widgets on.
         """
         self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
@@ -129,6 +132,11 @@ class Configuration(QDialog):
             innerLayout.addRow(QLabel("Safety Timer"), safetyTimer)
 
     def create_take_profit_inputs(self, tab: QTabWidget, innerLayout: QLayout):
+        """
+        Creates inputs for take profit settings in GUI.
+        :param tab: Tab to create inputs for - simulation, live, or backtest.
+        :param innerLayout: Inner layout to place input widgets on.
+        """
         self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
         self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
 
