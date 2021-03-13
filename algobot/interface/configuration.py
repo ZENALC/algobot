@@ -143,6 +143,16 @@ class Configuration(QDialog):
         if tab != self.backtestConfigurationTabWidget:
             self.lossDict[tab, 'safetyTimer'].setValue(config["safetyTimer"])
 
+    def set_take_profit_settings(self, caller: int, config: dict):
+        """
+        Sets take profit settings to GUI from configuration dictionary provided.
+        :param caller: This caller's tab's GUI will be modified by this function.
+        :param config: Configuration dictionary from which to get take profit settings.
+        """
+        tab = self.get_category_tab(caller)
+        self.takeProfitDict[tab, 'takeProfitType'].setCurrentIndex(config["takeProfitTypeIndex"])
+        self.takeProfitDict[tab, 'takeProfitPercentage'].setValue(config["takeProfitPercentage"])
+
     def get_take_profit_settings(self, caller) -> dict:
         """
         Returns take profit settings from GUI.
