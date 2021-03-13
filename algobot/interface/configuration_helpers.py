@@ -1,7 +1,7 @@
-from typing import Tuple, Callable, Dict, Any
+from typing import Tuple, Callable, Dict, Any, Union
 
 from PyQt5.QtWidgets import QFrame, QLabel, QSpinBox, QLineEdit, QDoubleSpinBox, QComboBox, QWidget, QGroupBox, \
-    QFormLayout, QScrollArea, QVBoxLayout, QTabWidget
+    QFormLayout, QScrollArea, QVBoxLayout, QTabWidget, QLayout
 
 
 def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:
@@ -42,7 +42,7 @@ def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_c
         tab.addTab(tabWidget, tabName)
 
 
-def set_value(widget: QWidget, value):
+def set_value(widget: QWidget, value: Union[str, int, float]):
     """
     Sets appropriate value to a widget depending on what it is.
     :param widget: Widget to alter.
@@ -79,7 +79,7 @@ def get_input_widget_value(inputWidget: QWidget, verbose: bool = False):
         raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
 
 
-def create_strategy_inputs(parameters: list, strategyName: str, groupBoxLayout) -> Tuple[list, list]:
+def create_strategy_inputs(parameters: list, strategyName: str, groupBoxLayout: QLayout) -> Tuple[list, list]:
     """
     This function will create strategy slots and labels based on the parameters provided to the layout.
     :param parameters: Parameters to add to strategy GUI slots.

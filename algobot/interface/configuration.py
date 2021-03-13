@@ -104,27 +104,6 @@ class Configuration(QDialog):
         takeProfitPercentage.setValue(5)
         innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
 
-    def get_take_profit_settings(self, caller) -> dict:
-        """
-        Returns take profit settings from GUI.
-        :param caller: Caller that'll determine which take profit settings get returned.
-        :return: Dictionary including take profit settings.
-        """
-        tab = self.get_category_tab(caller)
-        dictionary = self.takeProfitDict
-        if dictionary[tab, 'groupBox'].isChecked():
-            if dictionary[tab, 'takeProfitType'].currentText() == "Trailing":
-                takeProfitType = TRAILING
-            else:
-                takeProfitType = STOP
-        else:
-            takeProfitType = None
-
-        return {
-            'takeProfitType': takeProfitType,
-            'takeProfitPercentage': dictionary[tab, 'takeProfitPercentage'].value()
-        }
-
     def load_loss_slots(self):
         """
         Loads slots for loss settings in GUI.
@@ -166,6 +145,27 @@ class Configuration(QDialog):
 
         if tab != self.backtestConfigurationTabWidget:
             self.lossDict[tab, 'safetyTimer'].setValue(config["safetyTimer"])
+
+    def get_take_profit_settings(self, caller) -> dict:
+        """
+        Returns take profit settings from GUI.
+        :param caller: Caller that'll determine which take profit settings get returned.
+        :return: Dictionary including take profit settings.
+        """
+        tab = self.get_category_tab(caller)
+        dictionary = self.takeProfitDict
+        if dictionary[tab, 'groupBox'].isChecked():
+            if dictionary[tab, 'takeProfitType'].currentText() == "Trailing":
+                takeProfitType = TRAILING
+            else:
+                takeProfitType = STOP
+        else:
+            takeProfitType = None
+
+        return {
+            'takeProfitType': takeProfitType,
+            'takeProfitPercentage': dictionary[tab, 'takeProfitPercentage'].value()
+        }
 
     def get_loss_settings(self, caller: int) -> dict:
         """
