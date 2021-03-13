@@ -12,7 +12,7 @@ from PyQt5 import uic
 from strategies import *
 from strategies.strategy import Strategy
 
-from interface.configuration_slot_helpers import create_strategy_inputs, get_input_widget_value, set_value, \
+from interface.configuration_helpers import create_strategy_inputs, get_input_widget_value, set_value, \
     create_inner_tab, get_strategies_dictionary
 
 from binance.client import Client
