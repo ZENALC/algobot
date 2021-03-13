@@ -399,7 +399,7 @@ class Backtester:
         if self.shortTrailingPrice is not None and self.currentPrice < self.shortTrailingPrice:
             self.shortTrailingPrice = self.currentPrice
 
-    def _get_short_stop_loss(self) -> float:
+    def _get_short_stop_loss(self) -> Union[float, None]:
         """
         Returns stop loss for short position.
         :return: Stop loss for short position.
@@ -408,10 +408,12 @@ class Backtester:
             return self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
         elif self.lossStrategy == STOP:
             return self.sellShortPrice * (1 + self.lossPercentageDecimal)
+        elif self.lossStrategy is None:
+            return None
         else:
             raise ValueError("Invalid type of loss strategy provided.")
 
-    def _get_long_stop_loss(self) -> float:
+    def _get_long_stop_loss(self) -> Union[float, None]:
         """
         Returns stop loss for long position.
         :return: Stop loss for long position.
@@ -420,6 +422,8 @@ class Backtester:
             return self.longTrailingPrice * (1 - self.lossPercentageDecimal)
         elif self.lossStrategy == STOP:
             return self.buyLongPrice * (1 - self.lossPercentageDecimal)
+        elif self.lossStrategy is None:
+            return None
         else:
             raise ValueError("Invalid type of loss strategy provided.")
 
@@ -443,6 +447,9 @@ class Backtester:
         Returns price at which position will be exited to secure profits.
         :return: Price at which to exit position.
         """
+        if self.takeProfitType is None:
+            return None
+
         if self.inShortPosition:
             return self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
         elif self.inLongPosition:
@@ -611,17 +618,17 @@ class Backtester:
         """
         trend = self.get_trend()
         if self.inShortPosition:
-            if self.currentPrice > self.get_stop_loss():
+            if self.lossStrategy is not None and self.currentPrice > self.get_stop_loss():
                 self.buy_short('Exited short because a stop loss was triggered.', stopLossExit=True)
-            elif self.currentPrice <= self.get_take_profit():
+            elif self.takeProfitType is not None and self.currentPrice <= self.get_take_profit():
                 self.buy_short("Exited short because of take profit.")
             elif trend == BULLISH:
                 self.buy_short(f'Exited short because a bullish trend was detected.')
                 self.buy_long(f'Entered long because a bullish trend was detected.')
         elif self.inLongPosition:
-            if self.currentPrice < self.get_stop_loss():
+            if self.lossStrategy is not None and self.currentPrice < self.get_stop_loss():
                 self.sell_long('Exited long because a stop loss was triggered.', stopLossExit=True)
-            elif self.currentPrice >= self.get_take_profit():
+            elif self.takeProfitType is not None and self.currentPrice >= self.get_take_profit():
                 self.sell_long("Exited long because of take profit.")
             elif trend == BEARISH:
                 self.sell_long('Exited long because a bearish trend was detected.')

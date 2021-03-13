@@ -102,26 +102,28 @@ class Configuration(QDialog):
         else:
             raise ValueError("Invalid type of caller provided.")
 
-    def create_inner_tab(self, description: str, tabName: str, input_creator: Callable):
+    def create_inner_tab(self, description: str, tabName: str, input_creator: Callable, dictionary: dict):
         for tab in self.categoryTabs:
-            tabWidget = QTabWidget()
-            layout = QVBoxLayout()
-
             descriptionLabel = QLabel(description)
             descriptionLabel.setWordWrap(True)
-            layout.addWidget(descriptionLabel)
 
-            innerLayout = QFormLayout()
-            innerWidget = QWidget()
-            innerWidget.setLayout(innerLayout)
+            dictionary[tab, 'groupBox'] = groupBox = QGroupBox(f"Enable {tabName.lower()}?")
+            groupBox.setCheckable(True)
+            groupBox.setChecked(False)
+            groupBoxLayout = QFormLayout()
+            groupBox.setLayout(groupBoxLayout)
 
             scroll = QScrollArea()
-            scroll.setWidget(innerWidget)
+            scroll.setWidget(groupBox)
             scroll.setWidgetResizable(True)
+
+            layout = QVBoxLayout()
+            layout.addWidget(descriptionLabel)
             layout.addWidget(scroll)
 
-            input_creator(tab, innerLayout)
+            input_creator(tab, groupBoxLayout)
 
+            tabWidget = QTabWidget()
             tabWidget.setLayout(layout)
             tab.addTab(tabWidget, tabName)
 
@@ -129,7 +131,8 @@ class Configuration(QDialog):
         self.create_inner_tab(
             description="Configure your take profit settings here.",
             tabName="Take Profit",
-            input_creator=self.create_take_profit_inputs
+            input_creator=self.create_take_profit_inputs,
+            dictionary=self.takeProfitDict
         )
 
     def create_take_profit_inputs(self, tab: QTabWidget, innerLayout: QLayout):
@@ -148,11 +151,18 @@ class Configuration(QDialog):
         :return: Dictionary including take profit settings.
         """
         tab = self.get_category_tab(caller)
-        takeProfitType = TRAILING if self.takeProfitDict[tab, 'takeProfitType'].currentText() == "Trailing" else STOP
+        dictionary = self.takeProfitDict
+        if dictionary[tab, 'groupBox'].isChecked():
+            if dictionary[tab, 'takeProfitType'].currentText() == "Trailing":
+                takeProfitType = TRAILING
+            else:
+                takeProfitType = STOP
+        else:
+            takeProfitType = None
 
         return {
             'takeProfitType': takeProfitType,
-            'takeProfitPercentage': self.takeProfitDict[tab, 'takeProfitPercentage'].value()
+            'takeProfitPercentage': dictionary[tab, 'takeProfitPercentage'].value()
         }
 
     def load_loss_slots(self):
@@ -162,7 +172,8 @@ class Configuration(QDialog):
         self.create_inner_tab(
             description="Configure your stop loss settings here.",
             tabName="Stop Loss",
-            input_creator=self.create_loss_inputs
+            input_creator=self.create_loss_inputs,
+            dictionary=self.lossDict
         )
 
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout):
@@ -202,17 +213,21 @@ class Configuration(QDialog):
         :return: Dictionary including loss settings.
         """
         tab = self.get_category_tab(caller)
-        lossType = TRAILING if self.lossDict[tab, "lossType"].currentText() == "Trailing" else STOP
+        dictionary = self.lossDict
+        if dictionary[tab, 'groupBox'].isChecked():
+            lossType = TRAILING if dictionary[tab, "lossType"].currentText() == "Trailing" else STOP
+        else:
+            lossType = None
 
         lossSettings = {
             'lossType': lossType,
-            'lossTypeIndex': self.lossDict[tab, "lossType"].currentIndex(),
-            'lossPercentage': self.lossDict[tab, 'lossPercentage'].value(),
-            'smartStopLossCounter': self.lossDict[tab, 'smartStopLossCounter'].value()
+            'lossTypeIndex': dictionary[tab, "lossType"].currentIndex(),
+            'lossPercentage': dictionary[tab, 'lossPercentage'].value(),
+            'smartStopLossCounter': dictionary[tab, 'smartStopLossCounter'].value()
         }
 
         if tab != self.backtestConfigurationTabWidget:
-            lossSettings['safetyTimer'] = self.lossDict[tab, 'safetyTimer'].value()
+            lossSettings['safetyTimer'] = dictionary[tab, 'safetyTimer'].value()
 
         return lossSettings
 
