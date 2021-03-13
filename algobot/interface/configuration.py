@@ -4,8 +4,7 @@ import telegram
 import helpers
 
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox, QTabWidget, QFormLayout, QLabel, QSpinBox, \
-    QGroupBox, QVBoxLayout, QDoubleSpinBox, QLineEdit, QComboBox, QPushButton, QHBoxLayout, QFrame, QScrollArea, \
-    QWidget, QLayout
+    QGroupBox, QVBoxLayout, QDoubleSpinBox, QComboBox, QPushButton, QHBoxLayout, QScrollArea, QLayout
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
 
@@ -13,11 +12,14 @@ from PyQt5 import uic
 from strategies import *
 from strategies.strategy import Strategy
 
+from interface.configuration_slot_helpers import create_strategy_inputs, get_input_widget_value, set_value, \
+    create_inner_tab, get_strategies_dictionary
+
 from binance.client import Client
 from telegram.ext import Updater
 from dateutil import parser
 from threads import downloadThread
-from typing import List, Tuple, Callable
+from typing import List, Tuple
 from enums import SIMULATION, LIVE, BACKTEST, TRAILING, STOP
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
@@ -43,7 +45,7 @@ class Configuration(QDialog):
                              self.backtestConfigurationTabWidget,
                              ]
 
-        self.strategies = self.get_strategies_dictionary(Strategy.__subclasses__())
+        self.strategies = get_strategies_dictionary(Strategy.__subclasses__())
         self.strategyDict = {}  # We will store all the strategy slot information in this dictionary.
         self.lossDict = {}  # We will store stop loss settings here.
         self.takeProfitDict = {}  # We will store take profit settings here.
@@ -51,13 +53,6 @@ class Configuration(QDialog):
         self.load_comboBoxes()  # Primarily used for backtest interval changer logic.
         self.load_slots()  # Loads stop loss, take profit, and strategies slots.
         self.load_credentials()  # Load credentials if they exist.
-
-    @staticmethod
-    def get_strategies_dictionary(strategies: list):
-        strategiesDict = {}
-        for strategy in strategies:
-            strategiesDict[strategy().name] = strategy
-        return strategiesDict
 
     def load_comboBoxes(self):
         intervals = helpers.get_interval_strings(startingIndex=0)
@@ -76,17 +71,6 @@ class Configuration(QDialog):
         if previousChildIndex != -1:
             self.backtestStrategyIntervalCombobox.setCurrentIndex(previousChildIndex)
 
-    @staticmethod
-    def get_h_line() -> QFrame:
-        """
-        Returns a horizontal line object made using a QFrame object.
-        :return: Horizontal line using a QFrame.
-        """
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-        return line
-
     def get_category_tab(self, caller: int) -> QTabWidget:
         """
         This will return the category tab (main, simulation, or live) based on the caller provided.
@@ -102,33 +86,9 @@ class Configuration(QDialog):
         else:
             raise ValueError("Invalid type of caller provided.")
 
-    def create_inner_tab(self, description: str, tabName: str, input_creator: Callable, dictionary: dict):
-        for tab in self.categoryTabs:
-            descriptionLabel = QLabel(description)
-            descriptionLabel.setWordWrap(True)
-
-            dictionary[tab, 'groupBox'] = groupBox = QGroupBox(f"Enable {tabName.lower()}?")
-            groupBox.setCheckable(True)
-            groupBox.setChecked(False)
-            groupBoxLayout = QFormLayout()
-            groupBox.setLayout(groupBoxLayout)
-
-            scroll = QScrollArea()
-            scroll.setWidget(groupBox)
-            scroll.setWidgetResizable(True)
-
-            layout = QVBoxLayout()
-            layout.addWidget(descriptionLabel)
-            layout.addWidget(scroll)
-
-            input_creator(tab, groupBoxLayout)
-
-            tabWidget = QTabWidget()
-            tabWidget.setLayout(layout)
-            tab.addTab(tabWidget, tabName)
-
     def load_take_profit_slots(self):
-        self.create_inner_tab(
+        create_inner_tab(
+            categoryTabs=self.categoryTabs,
             description="Configure your take profit settings here.",
             tabName="Take Profit",
             input_creator=self.create_take_profit_inputs,
@@ -169,7 +129,8 @@ class Configuration(QDialog):
         """
         Loads slots for loss settings in GUI.
         """
-        self.create_inner_tab(
+        create_inner_tab(
+            categoryTabs=self.categoryTabs,
             description="Configure your stop loss settings here.",
             tabName="Stop Loss",
             input_creator=self.create_loss_inputs,
@@ -256,26 +217,6 @@ class Configuration(QDialog):
         tab = self.get_category_tab(caller)
         return self.strategyDict[tab, strategyName, 'groupBox'].isChecked()
 
-    @staticmethod
-    def get_input_widget_value(inputWidget: QWidget, verbose: bool = False):
-        """
-        This function will attempt to get the value of the inputWidget and return it.
-        :param verbose: If verbose, return value of widget when possible.
-        :param inputWidget: Input widget to try to get the value of.
-        :return: Value of inputWidget object.
-        """
-        if isinstance(inputWidget, QSpinBox) or isinstance(inputWidget, QDoubleSpinBox):
-            return inputWidget.value()
-        elif isinstance(inputWidget, QLineEdit):
-            return inputWidget.text()
-        elif isinstance(inputWidget, QComboBox):
-            if verbose:
-                return inputWidget.currentText()
-            else:
-                return inputWidget.currentIndex()
-        else:
-            raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
-
     def get_strategy_values(self, strategyName: str, caller: int, verbose: bool = False) -> List[int]:
         """
         This will return values from the strategy provided.
@@ -287,7 +228,7 @@ class Configuration(QDialog):
         tab = self.get_category_tab(caller)
         values = []
         for inputWidget in self.strategyDict[tab, strategyName, 'values']:
-            values.append(self.get_input_widget_value(inputWidget, verbose=verbose))
+            values.append(get_input_widget_value(inputWidget, verbose=verbose))
 
         return values
 
@@ -314,50 +255,6 @@ class Configuration(QDialog):
             labels.pop().setParent(None)  # Pop off the horizontal line from labels.
             self.strategyDict[tab, strategyName, 'status'].setText("Deleted additional slots.")
 
-    def create_strategy_inputs(self, parameters: list, strategyName: str, groupBoxLayout) -> Tuple[list, list]:
-        """
-        This function will create strategy slots and labels based on the parameters provided to the layout.
-        :param parameters: Parameters to add to strategy GUI slots.
-        :param strategyName: Name of strategy.
-        :param groupBoxLayout: Layout to add the slots to.
-        :return: Tuple of labels and values lists.
-        """
-        labels = []
-        values = []
-        for paramIndex, parameter in enumerate(parameters):
-            if type(parameter) == tuple:
-                label = QLabel(parameter[0])
-                parameter = parameter[1:]  # Set parameter to just the last element so we can use this later.
-            elif parameter == int:
-                label = QLabel(f'{strategyName} input {paramIndex + 1}')
-                parameter = [parameter]
-            else:
-                raise TypeError("Please make sure your function get_param_types() only has ints or tuples.")
-
-            if parameter[0] == int:
-                value = QSpinBox()
-                value.setRange(1, 500)
-            elif parameter[0] == float:
-                value = QDoubleSpinBox()
-            elif parameter[0] == str:
-                value = QLineEdit()
-            elif parameter[0] == tuple:
-                elements = parameter[1]
-                value = QComboBox()
-                value.addItems(elements)
-            else:
-                raise TypeError("Invalid type of parameter provided.")
-
-            labels.append(label)
-            values.append(value)
-            groupBoxLayout.addRow(label, value)
-
-        line = self.get_h_line()
-        labels.append(line)
-        groupBoxLayout.addWidget(line)
-
-        return values, labels
-
     def add_strategy_inputs(self, parameters: list, strategyName: str, groupBoxLayout, tab: QTabWidget):
         """
         Adds strategy parameters to the layout provided.
@@ -367,7 +264,7 @@ class Configuration(QDialog):
         :param tab: Add which group box layout is in.
         :return: None
         """
-        values, labels = self.create_strategy_inputs(parameters, strategyName, groupBoxLayout)
+        values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
         self.strategyDict[tab, strategyName, 'labels'] += labels
         self.strategyDict[tab, strategyName, 'values'] += values
         self.strategyDict[tab, strategyName, 'status'].setText("Added additional slots.")
@@ -429,7 +326,7 @@ class Configuration(QDialog):
 
                 layout.addWidget(scroll)
 
-                values, labels = self.create_strategy_inputs(parameters, strategyName, groupBoxLayout)
+                values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
                 self.strategyDict[tab, strategyName, 'values'] = values
                 self.strategyDict[tab, strategyName, 'labels'] = labels
                 self.strategyDict[tab, strategyName, 'parameters'] = parameters
@@ -438,6 +335,14 @@ class Configuration(QDialog):
 
                 tabWidget.setLayout(layout)
                 tab.addTab(tabWidget, strategyName)
+
+    def reset_telegram_state(self):
+        """
+        Resets telegram state once something is changed in the Telegram configuration GUI.
+        """
+        self.chatPass = False
+        self.tokenPass = False
+        self.telegrationConnectionResult.setText("Telegram credentials not yet tested.")
 
     def test_telegram(self):
         """
@@ -476,14 +381,6 @@ class Configuration(QDialog):
         self.telegrationConnectionResult.setText(message)
         self.chatPass = chatPass
         self.tokenPass = tokenPass
-
-    def reset_telegram_state(self):
-        """
-        Resets telegram state once something is changed in the Telegram configuration GUI.
-        """
-        self.chatPass = False
-        self.tokenPass = False
-        self.telegrationConnectionResult.setText("Telegram credentials not yet tested.")
 
     def test_binance_credentials(self):
         """
@@ -963,24 +860,7 @@ class Configuration(QDialog):
 
         for index, widget in enumerate(valueWidgets, start=1):
             value = config[f'{strategyName.lower()}{index}']
-            self.set_value(widget, value)
-
-    @staticmethod
-    def set_value(widget: QWidget, value):
-        """
-        Sets appropriate value to a widget depending on what it is.
-        :param widget: Widget to alter.
-        :param value: Value to modify widget with.
-        :return: None
-        """
-        if isinstance(widget, QSpinBox) or isinstance(widget, QDoubleSpinBox):
-            widget.setValue(value)
-        elif isinstance(widget, QLineEdit):
-            widget.setText(value)
-        elif isinstance(widget, QComboBox):
-            widget.setCurrentIndex(value)
-        else:
-            raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
+            set_value(widget, value)
 
     def set_strategy_values(self, strategyName: str, caller: int, values):
         """
@@ -1002,7 +882,7 @@ class Configuration(QDialog):
 
         for index, widget in enumerate(targetValues):
             value = values[index]
-            self.set_value(widget, value)
+            set_value(widget, value)
 
     def copy_strategy_settings(self, fromCaller: int, toCaller: int, strategyName: str):
         """
