@@ -146,8 +146,11 @@ class SimulationTrader:
                 'autonomous': str(not self.inHumanControl),
                 'precision': str(self.precision),
                 'trend': self.get_trend_string(self.trend)
-            },
-            'stopLoss': {
+            }
+        }
+
+        if self.lossStrategy is not None:
+            groupedDict['stopLoss'] = {
                 'stopLossType': self.get_stop_loss_strategy_string(),
                 'stopLossPercentage': self.get_safe_rounded_percentage(self.lossPercentageDecimal),
                 'stopLossPoint': self.get_safe_rounded_string(self.get_stop_loss()),
@@ -164,15 +167,16 @@ class SimulationTrader:
                 'sellShortPrice': self.get_safe_rounded_string(self.sellShortPrice),
                 'safetyTimer': self.get_safe_rounded_string(self.safetyTimer, symbol=' seconds', direction='right'),
                 'scheduledTimerRemaining': self.get_remaining_safety_timer(),
-            },
-            'takeProfit': {
+            }
+
+        if self.takeProfitType is not None:
+            groupedDict['takeProfit'] = {
                 'takeProfitType': self.get_trailing_or_stop_loss_string(self.takeProfitType),
                 'takeProfitPercentage': self.get_safe_rounded_percentage(self.takeProfitPercentageDecimal),
                 'trailingTakeProfitActivated': str(self.trailingTakeProfitActivated),
                 'takeProfitPoint': self.get_safe_rounded_string(self.takeProfitPoint),
                 self.symbol: f'${self.currentPrice}',
             }
-        }
 
         if self.dataView.current_values:
             groupedDict['currentData'] = {
@@ -711,6 +715,9 @@ class SimulationTrader:
             raise ValueError(f'Unknown moving average {movingAverage}.')
 
     def get_take_profit(self) -> None or float:
+        if self.takeProfitType is None:
+            return None
+
         if self.currentPrice is None:
             self.currentPrice = self.dataView.get_current_price()
 
@@ -734,6 +741,9 @@ class SimulationTrader:
         Returns a stop loss for the position.
         :return: Stop loss value.
         """
+        if self.lossStrategy is None:
+            return None
+
         if self.currentPrice is None:
             self.currentPrice = self.dataView.get_current_price()
 
