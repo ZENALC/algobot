@@ -48,9 +48,9 @@ class Configuration(QDialog):
         self.lossDict = {}  # We will store stop loss settings here.
         self.takeProfitDict = {}  # We will store take profit settings here.
 
-        self.load_comboBoxes()
-        self.load_slots()
-        self.load_credentials()
+        self.load_comboBoxes()  # Primarily used for backtest interval changer logic.
+        self.load_slots()  # Loads stop loss, take profit, and strategies slots.
+        self.load_credentials()  # Load credentials if they exist.
 
     @staticmethod
     def get_strategies_dictionary(strategies: list):
@@ -570,7 +570,7 @@ class Configuration(QDialog):
 
         helpers.write_json_file(self.basicFilePath, **config)
 
-    def load_credentials(self, auto=True):
+    def load_credentials(self, auto: bool = True):
         """
         Attempts to load credentials automatically from path program regularly stores credentials in if auto is True.
         """
