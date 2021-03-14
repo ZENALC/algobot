@@ -658,7 +658,7 @@ class Configuration(QDialog):
 
         self.helper_save(SIMULATION, config)
         targetPath = self.create_appropriate_config_folders('Simulation')
-        defaultPath = os.path.join(targetPath, 'simulation.json')
+        defaultPath = os.path.join(targetPath, 'simulation_configuration.json')
         filePath, _ = QFileDialog.getSaveFileName(self, 'Save Simulation Configuration', defaultPath, 'JSON (*.json)')
         filePath = filePath.strip()
 
