@@ -19,7 +19,7 @@ from binance.client import Client
 from telegram.ext import Updater
 from dateutil import parser
 from threads import downloadThread
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from enums import SIMULATION, LIVE, BACKTEST, TRAILING, STOP
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
@@ -615,6 +615,18 @@ class Configuration(QDialog):
         for strategyName in self.strategies.keys():
             self.add_strategy_to_config(caller, strategyName, config)
 
+    def helper_get_save_file_path(self, name: str) -> Union[str]:
+        """
+        Does necessary folder creations and returns save file path based on name provided.
+        :param name: Name to use for file name and folder creation.
+        :return: Absolute path to file.
+        """
+        name = name.capitalize()
+        targetPath = self.create_appropriate_config_folders(name)
+        defaultPath = os.path.join(targetPath, f'{name.lower()}_configuration.json')
+        filePath, _ = QFileDialog.getSaveFileName(self, f'Save {name} Configuration', defaultPath, 'JSON (*.json)')
+        return filePath
+
     def save_backtest_settings(self):
         """
         Saves backtest settings to JSON file.
@@ -630,9 +642,7 @@ class Configuration(QDialog):
         }
 
         self.helper_save(BACKTEST, config)
-        targetPath = self.create_appropriate_config_folders('Backtest')
-        defaultPath = os.path.join(targetPath, 'backtest_configuration.json')
-        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Backtest Configuration', defaultPath, 'JSON (*.json)')
+        filePath = self.helper_get_save_file_path("Backtest")
 
         if filePath:
             helpers.write_json_file(filePath, **config)
@@ -656,9 +666,7 @@ class Configuration(QDialog):
         }
 
         self.helper_save(SIMULATION, config)
-        targetPath = self.create_appropriate_config_folders('Simulation')
-        defaultPath = os.path.join(targetPath, 'simulation_configuration.json')
-        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Simulation Configuration', defaultPath, 'JSON (*.json)')
+        filePath = self.helper_get_save_file_path("Simulation")
 
         if filePath:
             helpers.write_json_file(filePath, **config)
@@ -685,9 +693,7 @@ class Configuration(QDialog):
         }
 
         self.helper_save(LIVE, config)
-        targetPath = self.create_appropriate_config_folders('Live')
-        defaultPath = os.path.join(targetPath, 'live_configuration.json')
-        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Live Configuration', defaultPath, 'JSON (*.json)')
+        filePath = self.helper_get_save_file_path("Live")
 
         if filePath:
             helpers.write_json_file(filePath, **config)
