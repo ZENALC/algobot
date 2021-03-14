@@ -603,6 +603,18 @@ class Configuration(QDialog):
         self.backtestDataLabel.setText(f'Currently using {symbol} in {interval} intervals to conduct backtest.')
         self.setup_calendar()
 
+    def helper_save(self, caller: int, config: dict):
+        """
+        Helper function to save caller configuration from GUI.
+        :param caller: Caller to save configuration of.
+        :param config: Configuration dictionary to dump info to.
+        :return: None
+        """
+        config.update(self.get_loss_settings(caller))
+        config.update(self.get_take_profit_settings(caller))
+        for strategyName in self.strategies.keys():
+            self.add_strategy_to_config(caller, strategyName, config)
+
     def save_backtest_settings(self):
         """
         Saves backtest settings to JSON file.
@@ -617,11 +629,7 @@ class Configuration(QDialog):
             'marginTrading': self.backtestMarginTradingCheckBox.isChecked(),
         }
 
-        config.update(self.get_loss_settings(BACKTEST))
-        config.update(self.get_take_profit_settings(BACKTEST))
-        for strategyName in self.strategies.keys():
-            self.add_strategy_to_config(BACKTEST, strategyName, config)
-
+        self.helper_save(BACKTEST, config)
         targetPath = self.create_appropriate_config_folders('Backtest')
         defaultPath = os.path.join(targetPath, 'backtest_configuration.json')
         filePath, _ = QFileDialog.getSaveFileName(self, 'Save Backtest Configuration', defaultPath, 'JSON (*.json)')
@@ -648,11 +656,7 @@ class Configuration(QDialog):
             'lowerInterval': self.lowerIntervalSimulationCheck.isChecked(),
         }
 
-        config.update(self.get_loss_settings(SIMULATION))
-        config.update(self.get_take_profit_settings(SIMULATION))
-        for strategyName in self.strategies.keys():
-            self.add_strategy_to_config(SIMULATION, strategyName, config)
-
+        self.helper_save(SIMULATION, config)
         targetPath = self.create_appropriate_config_folders('Simulation')
         defaultPath = os.path.join(targetPath, 'simulation.json')
         filePath, _ = QFileDialog.getSaveFileName(self, 'Save Simulation Configuration', defaultPath, 'JSON (*.json)')
@@ -682,11 +686,7 @@ class Configuration(QDialog):
             'lowerInterval': self.lowerIntervalCheck.isChecked(),
         }
 
-        config.update(self.get_loss_settings(LIVE))
-        config.update(self.get_take_profit_settings(LIVE))
-        for strategyName in self.strategies.keys():
-            self.add_strategy_to_config(LIVE, strategyName, config)
-
+        self.helper_save(LIVE, config)
         targetPath = self.create_appropriate_config_folders('Live')
         defaultPath = os.path.join(targetPath, 'live_configuration.json')
         filePath, _ = QFileDialog.getSaveFileName(self, 'Save Live Configuration', defaultPath, 'JSON (*.json)')
@@ -699,6 +699,18 @@ class Configuration(QDialog):
         else:
             self.configurationResult.setText("Could not save live configuration.")
 
+    def helper_load(self, caller: int, config: dict):
+        """
+        Helper function to load caller configuration to GUI.
+        :param caller: Caller to load configuration to.
+        :param config: Configuration dictionary to get info from.
+        :return: None
+        """
+        self.set_loss_settings(caller, config)
+        self.set_take_profit_settings(caller, config)
+        for strategyName in self.strategies.keys():
+            self.load_strategy_from_config(caller, strategyName, config)
+
     def load_backtest_settings(self):
         """
         Loads backtest settings from JSON file and sets them to backtest settings.
@@ -707,6 +719,7 @@ class Configuration(QDialog):
         filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetPath, "JSON (*.json)")
         try:
             config = helpers.load_json_file(filePath)
+            file = os.path.basename(filePath)
             if config['type'] != BACKTEST:
                 QMessageBox.about(self, 'Warning', 'Incorrect type of non-backtest configuration provided.')
             else:
@@ -715,13 +728,7 @@ class Configuration(QDialog):
                 self.backtestStartingBalanceSpinBox.setValue(config['startingBalance'])
                 self.backtestPrecisionSpinBox.setValue(config['precision'])
                 self.backtestMarginTradingCheckBox.setChecked(config['marginTrading'])
-
-                self.set_loss_settings(BACKTEST, config)
-                self.set_take_profit_settings(BACKTEST, config)
-                for strategyName in self.strategies.keys():
-                    self.load_strategy_from_config(BACKTEST, strategyName, config)
-
-                file = os.path.basename(filePath)
+                self.helper_load(BACKTEST, config)
                 self.backtestConfigurationResult.setText(f"Loaded backtest configuration successfully from {file}.")
         except Exception as e:
             self.logger.exception(str(e))
@@ -735,6 +742,7 @@ class Configuration(QDialog):
         filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetPath, "JSON (*.json)")
         try:
             config = helpers.load_json_file(filePath)
+            file = os.path.basename(filePath)
             if config['type'] != SIMULATION:
                 QMessageBox.about(self, 'Warning', 'Incorrect type of non-simulation configuration provided.')
             else:
@@ -743,13 +751,7 @@ class Configuration(QDialog):
                 self.simulationStartingBalanceSpinBox.setValue(config['startingBalance'])
                 self.simulationPrecisionSpinBox.setValue(config['precision'])
                 self.lowerIntervalSimulationCheck.setChecked(config['lowerInterval'])
-
-                self.set_loss_settings(SIMULATION, config)
-                self.set_take_profit_settings(SIMULATION, config)
-                for strategyName in self.strategies.keys():
-                    self.load_strategy_from_config(SIMULATION, strategyName, config)
-
-                file = os.path.basename(filePath)
+                self.helper_load(SIMULATION, config)
                 self.simulationConfigurationResult.setText(f"Loaded simulation configuration successfully from {file}.")
         except Exception as e:
             self.logger.exception(str(e))
@@ -763,6 +765,7 @@ class Configuration(QDialog):
         filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetPath, "JSON (*.json)")
         try:
             config = helpers.load_json_file(filePath)
+            file = os.path.basename(filePath)
             if config['type'] != LIVE:
                 QMessageBox.about(self, 'Warning', 'Incorrect type of non-live configuration provided.')
             else:
@@ -774,13 +777,7 @@ class Configuration(QDialog):
                 self.isolatedMarginAccountRadio.setChecked(config['isolatedMargin'])
                 self.crossMarginAccountRadio.setChecked(config['crossMargin'])
                 self.lowerIntervalCheck.setChecked(config['lowerInterval'])
-
-                self.set_loss_settings(LIVE, config)
-                self.set_take_profit_settings(LIVE, config)
-                for strategyName in self.strategies.keys():
-                    self.load_strategy_from_config(LIVE, strategyName, config)
-
-                file = os.path.basename(filePath)
+                self.helper_load(LIVE, config)
                 self.configurationResult.setText(f"Loaded live configuration successfully from {file}.")
         except Exception as e:
             self.logger.exception(str(e))
