@@ -633,7 +633,6 @@ class Configuration(QDialog):
         targetPath = self.create_appropriate_config_folders('Backtest')
         defaultPath = os.path.join(targetPath, 'backtest_configuration.json')
         filePath, _ = QFileDialog.getSaveFileName(self, 'Save Backtest Configuration', defaultPath, 'JSON (*.json)')
-        filePath = filePath.strip()
 
         if filePath:
             helpers.write_json_file(filePath, **config)
@@ -660,7 +659,6 @@ class Configuration(QDialog):
         targetPath = self.create_appropriate_config_folders('Simulation')
         defaultPath = os.path.join(targetPath, 'simulation_configuration.json')
         filePath, _ = QFileDialog.getSaveFileName(self, 'Save Simulation Configuration', defaultPath, 'JSON (*.json)')
-        filePath = filePath.strip()
 
         if filePath:
             helpers.write_json_file(filePath, **config)
@@ -690,7 +688,6 @@ class Configuration(QDialog):
         targetPath = self.create_appropriate_config_folders('Live')
         defaultPath = os.path.join(targetPath, 'live_configuration.json')
         filePath, _ = QFileDialog.getSaveFileName(self, 'Save Live Configuration', defaultPath, 'JSON (*.json)')
-        filePath = filePath.strip()
 
         if filePath:
             helpers.write_json_file(filePath, **config)
