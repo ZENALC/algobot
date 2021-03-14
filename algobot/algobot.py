@@ -827,7 +827,7 @@ class Interface(QMainWindow):
             mainDict['disableCustomStopLossButton'].setEnabled(False)
             self.add_to_monitor(caller, f'Removed custom stop loss.')
 
-    def get_loss_settings(self, caller) -> tuple:
+    def get_loss_settings(self, caller) -> dict:
         """
         Returns loss settings for caller specified.
         :param caller: Caller for which loss settings will be returned.
