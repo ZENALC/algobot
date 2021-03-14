@@ -974,6 +974,17 @@ class Interface(QMainWindow):
             'name': name,
         }
 
+    def create_infinite_line(self, graphDict: dict, colors: list = None):
+        """
+        Creates an infinite (hover) line and adds it as a reference to the graph dictionary provided.
+        :param colors: Optional colors list.
+        :param graphDict: A reference to this infinite line will be added to this graph dictionary.
+        """
+        colors = self.get_graph_colors() if colors is None else colors
+        hoverLine = InfiniteLine(pos=0, pen=mkPen(colors[-1], width=1), movable=False)
+        graphDict['graph'].addItem(hoverLine)
+        graphDict['line'] = hoverLine
+
     def setup_graph_plots(self, graph: PlotWidget, trader: Union[SimulationTrader, Backtester], graphType: int):
         """
         Setups graph plots for graph, trade, and graphType specified.
@@ -982,10 +993,8 @@ class Interface(QMainWindow):
         :param graphType: Graph type; i.e. moving average or net balance.
         """
         colors = self.get_graph_colors()
-
-        infiniteLine = InfiniteLine(pos=0, pen=mkPen(colors[-1], width=1), movable=False)
-        graph.addItem(infiniteLine)
-        self.get_graph_dictionary(graph)['line'] = infiniteLine
+        if self.configuration.enableHoverLine.isChecked():
+            self.create_infinite_line(self.get_graph_dictionary(graph), colors=colors)
 
         if graphType == NET_GRAPH:
             self.setup_net_graph_plot(graph=graph, trader=trader, color=colors[0])
@@ -1042,8 +1051,9 @@ class Interface(QMainWindow):
         :param graph: Graph being hovered on.
         """
         p = graph.plotItem.vb.mapSceneToView(point)
-        if p:
-            graphDict = self.get_graph_dictionary(graph)
+        graphDict = self.get_graph_dictionary(graph)
+
+        if p and graphDict.get('line'):  # Ensure that the hover line is enabled.
             graphDict['line'].setPos(p.x())
             xValue = int(p.x())
 
@@ -1075,9 +1085,9 @@ class Interface(QMainWindow):
         """
         Resets backtest hover cursor to end of graph.
         """
-        if self.backtester is not None:
+        graphDict = self.get_graph_dictionary(self.backtestGraph)
+        if self.backtester is not None and graphDict.get('line') is not None:
             index = len(self.backtester.pastActivity)
-            graphDict = self.get_graph_dictionary(self.backtestGraph)
             graphDict['line'].setPos(index)
             self.update_backtest_activity_based_on_graph(index)
 

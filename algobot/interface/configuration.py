@@ -54,6 +54,23 @@ class Configuration(QDialog):
         self.load_slots()  # Loads stop loss, take profit, and strategies slots.
         self.load_credentials()  # Load credentials if they exist.
 
+    def enable_disable_hover_line(self):
+        """
+        Enables or disables the hover line based on whether its checkmark is ticked or not.
+        """
+        enable = self.enableHoverLine.isChecked()
+        if enable:
+            for graphDict in self.parent.graphs:
+                if len(graphDict['plots']) > 0:
+                    self.parent.create_infinite_line(graphDict)
+        else:
+            for graphDict in self.parent.graphs:
+                hoverLine = graphDict.get('line')
+                self.parent.reset_backtest_cursor()
+                if hoverLine:
+                    graphDict['graph'].removeItem(hoverLine)
+                    graphDict['line'] = None
+
     def get_category_tab(self, caller: int) -> QTabWidget:
         """
         This will return the category tab (main, simulation, or live) based on the caller provided.
@@ -973,6 +990,7 @@ class Configuration(QDialog):
         self.saveConfigurationButton.clicked.connect(self.save_live_settings)
         self.loadConfigurationButton.clicked.connect(self.load_live_settings)
         self.graphPlotSpeedSpinBox.valueChanged.connect(self.update_graph_speed)
+        self.enableHoverLine.stateChanged.connect(self.enable_disable_hover_line)
 
         self.load_loss_slots()  # These slots are based on the ordering.
         self.load_take_profit_slots()
