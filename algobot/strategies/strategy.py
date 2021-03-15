@@ -3,7 +3,7 @@ Create your strategies from this base class here then import them to configurati
 Please make sure that they have some default values for the GUI to initialize them.
 """
 
-from typing import List
+from typing import List, Union
 from data import Data
 
 
@@ -12,7 +12,7 @@ class Strategy:
         """
         Create all your strategies from this parent strategy class.
         :param name: Name of strategy.
-        :param parent: Parent object that'll use this strategy.
+        :param parent: Parent object that'll use this strategy. This will be a trader of some sort e.g. backtester.
         """
         self.name = name
         self.parent = parent
@@ -23,7 +23,7 @@ class Strategy:
         self.strategyDict = {}
         self.lowerIntervalDict = {}
 
-    def get_trend(self, data: List[dict] or Data = None, log_data=False) -> int:
+    def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False) -> int:
         """
         Implement your strategy here. Based on the strategy's algorithm, this should return a trend.
         A trend can be either bullish, bearish, or neither.
@@ -44,7 +44,7 @@ class Strategy:
         """
         self.strategyDict = {}
 
-    def get_appropriate_dictionary(self, data):
+    def get_appropriate_dictionary(self, data: Union[list, Data]) -> dict:
         if type(data) == list:
             return self.strategyDict
         elif type(data) == Data:
