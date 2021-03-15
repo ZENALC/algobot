@@ -421,7 +421,7 @@ class Interface(QMainWindow):
 
                 while not self.simulationTrader.completedLoop:
                     self.simulationRunningLive = False
-                    if time.time() + 15 > elapsed:
+                    if time.time() > elapsed + 15:
                         break
 
                 tempTrader = self.simulationTrader
@@ -444,7 +444,7 @@ class Interface(QMainWindow):
 
                 while not self.trader.completedLoop:
                     self.runningLive = False
-                    if time.time() + 15 > elapsed:
+                    if time.time() > elapsed + 15:
                         break
 
                 tempTrader = self.trader
