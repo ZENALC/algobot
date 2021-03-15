@@ -400,9 +400,8 @@ class Interface(QMainWindow):
 
     def reset_bot_interface(self, caller):
         """
-        Resets bot interface based on
-        :param caller:
-        :return:
+        Resets bot interface based on the caller provided.
+        :param caller: Caller that'll determine which interface gets reset.
         """
         self.enable_override(caller, False)
         self.disable_interface(disable=False, caller=caller)
