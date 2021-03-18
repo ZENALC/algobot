@@ -61,8 +61,8 @@ class RealTrader(SimulationTrader):
         for filterDict in filters:
             if 'minNotional' in filterDict:
                 min_notional = float(filterDict['minNotional'])
-                return min_notional
-        return 10
+                return min_notional  # Get the default min_notional value from Binance if found.
+        return 10  # Default value of $10.
 
     @staticmethod
     def get_purchase_precision(symbolInfo) -> int:
