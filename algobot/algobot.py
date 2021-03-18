@@ -43,7 +43,7 @@ class Interface(QMainWindow):
         super(Interface, self).__init__(parent)  # Initializing object
         uic.loadUi(mainUi, self)  # Loading the main UI
         self.logger = get_logger(logFile='algobot', loggerName='algobot')
-        self.configuration = Configuration(self, logger=self.logger)  # Loading configuration
+        self.configuration = Configuration(parent=self, logger=self.logger)  # Loading configuration
         self.otherCommands = OtherCommands(self)  # Loading other commands
         self.about = About(self)  # Loading about information
         self.statistics = Statistics(self)  # Loading statistics

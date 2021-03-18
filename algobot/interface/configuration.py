@@ -26,7 +26,7 @@ configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
 
 class Configuration(QDialog):
-    def __init__(self, parent=None, logger=None):
+    def __init__(self, parent, logger=None):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
         self.parent = parent
@@ -40,10 +40,11 @@ class Configuration(QDialog):
         self.credentialsFolder = "Credentials"
         self.configFolder = 'Configuration'
         self.basicFilePath = os.path.join(helpers.ROOT_DIR, 'state.json')
-        self.categoryTabs = [self.mainConfigurationTabWidget,
-                             self.simulationConfigurationTabWidget,
-                             self.backtestConfigurationTabWidget,
-                             ]
+        self.categoryTabs = [
+            self.mainConfigurationTabWidget,
+            self.simulationConfigurationTabWidget,
+            self.backtestConfigurationTabWidget,
+        ]
 
         self.strategies = get_strategies_dictionary(Strategy.__subclasses__())
         self.strategyDict = {}  # We will store all the strategy slot information in this dictionary.
@@ -71,6 +72,21 @@ class Configuration(QDialog):
                     graphDict['graph'].removeItem(hoverLine)
                     graphDict['line'] = None
 
+    def get_caller_based_on_tab(self, tab: QTabWidget) -> int:
+        """
+        This will return a caller based on the tab provided.
+        :param tab: Tab for which the caller will be returned.
+        :return: Caller for which this tab corresponds to.
+        """
+        if tab == self.categoryTabs[2]:
+            return BACKTEST
+        elif tab == self.categoryTabs[1]:
+            return SIMULATION
+        elif tab == self.categoryTabs[0]:
+            return LIVE
+        else:
+            raise ValueError("Invalid tab provided. No known called associated with this tab.")
+
     def get_category_tab(self, caller: int) -> QTabWidget:
         """
         This will return the category tab (main, simulation, or live) based on the caller provided.
@@ -95,7 +111,7 @@ class Configuration(QDialog):
             description="Configure your stop loss settings here.",
             tabName="Stop Loss",
             input_creator=self.create_loss_inputs,
-            dictionary=self.lossDict
+            dictionary=self.lossDict,
         )
 
     def load_take_profit_slots(self):
@@ -107,7 +123,7 @@ class Configuration(QDialog):
             description="Configure your take profit settings here.",
             tabName="Take Profit",
             input_creator=self.create_take_profit_inputs,
-            dictionary=self.takeProfitDict
+            dictionary=self.takeProfitDict,
         )
 
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout):
