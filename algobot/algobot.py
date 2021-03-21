@@ -610,6 +610,10 @@ class Interface(QMainWindow):
             raise ValueError("invalid caller type specified.")
 
     def handle_custom_stop_loss_buttons(self, caller):
+        """
+        Handles GUI elements based on current caller's trading position.
+        :param caller: Caller that'll determine which GUI elements get manipulated.
+        """
         trader = self.get_trader(caller)
         mainDict = self.interfaceDictionary[caller]['mainInterface']
 
