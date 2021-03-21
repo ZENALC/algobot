@@ -50,6 +50,7 @@ class Statistics(QDialog):
             self.add_category_and_children_keys(categoryKey, valueDictionary, innerTabs, tab)
 
         self.statisticsTabWidget.insertTab(index, tab, f"{tabType.capitalize()}")
+        self.statisticsTabWidget.setCurrentIndex(index)
 
     @staticmethod
     def get_index_from_tab_type(tabType) -> int:
@@ -111,6 +112,11 @@ class Statistics(QDialog):
         """
         innerTabs = self.tabs[tabType]['innerTabs']  # live/widgets
         self.set_profit_or_loss_label(valueDictionary=valueDictionary, innerTabs=innerTabs)
+
+        for key in innerTabs:  # If there's a change in the value dictionary, re-initialize the tab.
+            if key not in valueDictionary:
+                self.initialize_tab(valueDictionary=valueDictionary, tabType=tabType)
+                break
 
         for categoryKey in valueDictionary:
             if categoryKey not in innerTabs:
