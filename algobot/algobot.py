@@ -539,20 +539,13 @@ class Interface(QMainWindow):
         :param valueDict: Dictionary containing statistics.
         :param caller: Object that determines which object gets updated.
         """
-        interfaceDict = self.interfaceDictionary[caller]
         self.statistics.modify_tab(groupedDict, tabType=self.get_caller_string(caller))
-        self.update_main_interface_and_graphs(interfaceDict, valueDict=valueDict, caller=caller)
+        self.update_main_interface_and_graphs(valueDict=valueDict, caller=caller)
         self.handle_position_buttons(caller=caller)
         self.handle_custom_stop_loss_buttons(caller=caller)
 
-    def update_main_interface_and_graphs(self, interfaceDictionary: dict, valueDict: dict, caller):
-        """
-        Updates main interface GUI elements based on caller.
-        :param interfaceDictionary: Dictionary to use for which statistics to update.
-        :param valueDict: Dictionary with trader values in formatted data types.
-        :param caller: Caller that decides which main interface gets updated.
-        """
-        mainInterfaceDictionary = interfaceDictionary['mainInterface']
+    def update_interface_text(self, caller: int, valueDict: dict):
+        mainInterfaceDictionary = self.interfaceDictionary[caller]['mainInterface']
         mainInterfaceDictionary['profitLabel'].setText(valueDict['profitLossLabel'])
         mainInterfaceDictionary['profitValue'].setText(valueDict['profitLossValue'])
         mainInterfaceDictionary['percentageValue'].setText(valueDict['percentageValue'])
@@ -561,6 +554,13 @@ class Interface(QMainWindow):
         mainInterfaceDictionary['tickerValue'].setText(valueDict['tickerValue'])
         mainInterfaceDictionary['positionValue'].setText(valueDict['currentPositionValue'])
 
+    def update_main_interface_and_graphs(self, valueDict: dict, caller: int):
+        """
+        Updates main interface GUI elements based on caller.
+        :param valueDict: Dictionary with trader values in formatted data types.
+        :param caller: Caller that decides which main interface gets updated.
+        """
+        self.update_interface_text(caller=caller, valueDict=valueDict)
         index = 0 if caller == LIVE else 1
         if self.graphUpdateSchedule[index] is None or time.time() > self.graphUpdateSchedule[index]:
             self.update_main_graphs(caller=caller, valueDict=valueDict)
