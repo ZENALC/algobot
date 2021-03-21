@@ -212,13 +212,8 @@ class BotThread(QRunnable):
         takeProfitDict = self.gui.configuration.get_take_profit_settings(caller)
 
         trader: SimulationTrader = self.gui.get_trader(caller)
-        trader.takeProfitPercentageDecimal = takeProfitDict["takeProfitPercentage"] / 100
-        trader.takeProfitType = takeProfitDict["takeProfitType"]
-
-        trader.lossStrategy = lossDict["lossType"]
-        trader.lossPercentageDecimal = lossDict["lossPercentage"] / 100
-        trader.set_safety_timer(lossDict['safetyTimer'])
-        trader.set_smart_stop_loss_counter(lossDict['smartStopLossCounter'])
+        trader.apply_take_profit_settings(takeProfitDict)
+        trader.apply_loss_settings(lossDict)
         trader.setup_strategies(self.gui.configuration.get_strategies(caller))
         trader.output_configuration()
 

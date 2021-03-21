@@ -235,7 +235,7 @@ class SimulationTrader:
 
     def get_remaining_safety_timer(self) -> str:
         if not self.scheduledSafetyTimer:
-            return 'None found.'
+            return 'None'
         else:
             remaining = int(self.scheduledSafetyTimer - time.time())
             return f'{remaining} seconds'
@@ -412,6 +412,26 @@ class SimulationTrader:
             self.currentPosition = SHORT
             self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
             self.add_trade(msg, force=force, smartEnter=smartEnter)
+
+    def apply_loss_settings(self, lossDict: Dict[str, int]):
+        """
+        Applies loss settings based on loss dictionary provided.
+        :param lossDict: Loss settings dictionary.
+        :return: None
+        """
+        self.lossStrategy = lossDict["lossType"]
+        self.lossPercentageDecimal = lossDict["lossPercentage"] / 100
+        self.set_safety_timer(lossDict['safetyTimer'])
+        self.set_smart_stop_loss_counter(lossDict['smartStopLossCounter'])
+
+    def apply_take_profit_settings(self, takeProfitDict: Dict[str, int]):
+        """
+        Applies take profit settings based on take profit dictionary provided.
+        :param takeProfitDict: Take profit settings dictionary.
+        :return: None
+        """
+        self.takeProfitPercentageDecimal = takeProfitDict["takeProfitPercentage"] / 100
+        self.takeProfitType = takeProfitDict["takeProfitType"]
 
     def get_trend(self, dataObject=None, log_data=False):
         if not dataObject:
@@ -670,7 +690,7 @@ class SimulationTrader:
         :param finalNet: Final net value.
         :return: Profit percentage.
         """
-        if finalNet > initialNet:
+        if finalNet >= initialNet:
             return finalNet / initialNet * 100 - 100
         else:
             return -1 * (100 - finalNet / initialNet * 100)
