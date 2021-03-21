@@ -112,6 +112,7 @@ class Configuration(QDialog):
             tabName="Stop Loss",
             input_creator=self.create_loss_inputs,
             dictionary=self.lossDict,
+            signalFunction=self.update_loss_settings
         )
 
     def load_take_profit_slots(self):
@@ -124,6 +125,7 @@ class Configuration(QDialog):
             tabName="Take Profit",
             input_creator=self.create_take_profit_inputs,
             dictionary=self.takeProfitDict,
+            signalFunction=self.update_take_profit_settings
         )
 
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout):
@@ -145,7 +147,12 @@ class Configuration(QDialog):
 
         if tab != self.backtestConfigurationTabWidget:
             self.lossDict[tab, "safetyTimer"] = safetyTimer = QSpinBox()
+            safetyTimer.valueChanged.connect(lambda: self.update_loss_settings(tab))
             innerLayout.addRow(QLabel("Safety Timer"), safetyTimer)
+
+        lossTypeComboBox.currentIndexChanged.connect(lambda: self.update_loss_settings(tab))
+        lossPercentage.valueChanged.connect(lambda: self.update_loss_settings(tab))
+        smartStopLossCounter.valueChanged.connect(lambda: self.update_loss_settings(tab))
 
     def create_take_profit_inputs(self, tab: QTabWidget, innerLayout: QLayout):
         """
@@ -158,6 +165,9 @@ class Configuration(QDialog):
 
         takeProfitTypeComboBox.addItems(('Stop',))
         takeProfitPercentage.setValue(5)
+
+        takeProfitTypeComboBox.currentIndexChanged.connect(lambda: self.update_take_profit_settings(tab))
+        takeProfitPercentage.valueChanged.connect(lambda: self.update_take_profit_settings(tab))
 
         innerLayout.addRow(QLabel("Take Profit Type"), takeProfitTypeComboBox)
         innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
@@ -213,6 +223,28 @@ class Configuration(QDialog):
             'takeProfitTypeIndex': dictionary[tab, 'takeProfitType'].currentIndex(),
             'takeProfitPercentage': dictionary[tab, 'takeProfitPercentage'].value()
         }
+
+    def update_loss_settings(self, tab: QTabWidget):
+        caller = self.get_caller_based_on_tab(tab)
+        trader = self.parent.get_trader(caller)
+
+        if caller == BACKTEST:
+            return   # Skip backtester for now.
+
+        if trader is not None:
+            settings = self.get_loss_settings(caller)
+            trader.apply_loss_settings(settings)
+
+    def update_take_profit_settings(self, tab: QTabWidget):
+        caller = self.get_caller_based_on_tab(tab)
+        trader = self.parent.get_trader(caller)
+
+        if caller == BACKTEST:
+            return  # Skip backtester for now.
+
+        if trader is not None:
+            settings = self.get_take_profit_settings(caller)
+            trader.apply_take_profit_settings(settings)
 
     def get_loss_settings(self, caller: int) -> dict:
         """

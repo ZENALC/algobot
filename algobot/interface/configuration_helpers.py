@@ -16,13 +16,15 @@ def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:
     return strategiesDict
 
 
-def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_creator: Callable, dictionary: dict):
+def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_creator: Callable, dictionary: dict,
+                     signalFunction: Callable):
     """
     Creates inner tab for each category tab in list of category tabs provided.
     :param categoryTabs: Tabs to create inner tab and append to.
     :param description: Description to insert for inner tab.
     :param tabName: Name of tab to display.
     :param input_creator: Function to call for input creation.
+    :param signalFunction: Function to call for input slots.
     :param dictionary: Dictionary to add items to for reference.
     :return: None
     """
@@ -30,11 +32,14 @@ def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_c
         descriptionLabel = QLabel(description)
         descriptionLabel.setWordWrap(True)
 
-        dictionary[tab, 'groupBox'] = groupBox = QGroupBox(f"Enable {tabName.lower()}?")
+        groupBox = dictionary[tab, 'groupBox'] = QGroupBox(f"Enable {tabName.lower()}?")
         groupBox.setCheckable(True)
         groupBox.setChecked(False)
+        groupBox.toggled.connect(lambda _, current_tab=tab: signalFunction(tab=current_tab))
         groupBoxLayout = QFormLayout()
         groupBox.setLayout(groupBoxLayout)
+
+        input_creator(tab, groupBoxLayout)
 
         scroll = QScrollArea()
         scroll.setWidget(groupBox)
@@ -43,8 +48,6 @@ def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_c
         layout = QVBoxLayout()
         layout.addWidget(descriptionLabel)
         layout.addWidget(scroll)
-
-        input_creator(tab, groupBoxLayout)
 
         tabWidget = QTabWidget()
         tabWidget.setLayout(layout)
