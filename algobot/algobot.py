@@ -527,6 +527,10 @@ class Interface(QMainWindow):
         self.interfaceDictionary[caller]['configuration']['mainTab'].setEnabled(disable)
         self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(disable)
 
+        tab = self.configuration.get_category_tab(caller)
+        for strategy_name in self.configuration.strategies.keys():
+            self.configuration.strategyDict[tab, strategy_name, 'groupBox'].setEnabled(disable)
+
         if everything:
             self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(disable)
         else:
