@@ -535,16 +535,22 @@ class Interface(QMainWindow):
     def update_interface_info(self, caller, valueDict: dict, groupedDict: dict):
         """
         Updates interface elements based on caller.
-        :param groupedDict: Test dict.
+        :param groupedDict: Dictionary with which to populate the statistics window.
         :param valueDict: Dictionary containing statistics.
         :param caller: Object that determines which object gets updated.
         """
         self.statistics.modify_tab(groupedDict, tabType=self.get_caller_string(caller))
-        self.update_main_interface_and_graphs(valueDict=valueDict, caller=caller)
+        self.update_main_interface_and_graphs(caller=caller, valueDict=valueDict)
         self.handle_position_buttons(caller=caller)
         self.handle_custom_stop_loss_buttons(caller=caller)
 
     def update_interface_text(self, caller: int, valueDict: dict):
+        """
+        Updates interface text based on caller and value dictionary provided.
+        :param caller: Caller that decides which interface gets updated.
+        :param valueDict: Dictionary with values to populate interface with.
+        :return: None
+        """
         mainInterfaceDictionary = self.interfaceDictionary[caller]['mainInterface']
         mainInterfaceDictionary['profitLabel'].setText(valueDict['profitLossLabel'])
         mainInterfaceDictionary['profitValue'].setText(valueDict['profitLossValue'])
@@ -554,7 +560,7 @@ class Interface(QMainWindow):
         mainInterfaceDictionary['tickerValue'].setText(valueDict['tickerValue'])
         mainInterfaceDictionary['positionValue'].setText(valueDict['currentPositionValue'])
 
-    def update_main_interface_and_graphs(self, valueDict: dict, caller: int):
+    def update_main_interface_and_graphs(self, caller: int, valueDict: dict):
         """
         Updates main interface GUI elements based on caller.
         :param valueDict: Dictionary with trader values in formatted data types.

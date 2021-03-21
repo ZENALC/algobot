@@ -359,7 +359,7 @@ class BotThread(QRunnable):
             'profitLossValue': f'${abs(round(profit, 2))}',
             'percentageValue': f'{round(self.percentage, 2)}%',
             'netValue': f'${round(net, 2)}',
-            'tickerValue': f'${round(trader.currentPrice, trader.precision)}',
+            'tickerValue': f'${trader.currentPrice}',
             'tickerLabel': trader.symbol,
             'currentPositionValue': trader.get_position_string(),
             'net': net,
