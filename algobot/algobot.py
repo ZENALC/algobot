@@ -1463,7 +1463,7 @@ class Interface(QMainWindow):
                     self.add_to_table(table, row, insertDate=False)
             label.setText("Imported trade history successfully.")
         except Exception as e:
-            label.setText("Could not import trade history due to data corruption.")
+            label.setText("Could not import trade history due to data corruption or no file being selected.")
             self.logger.exception(str(e))
 
     # noinspection DuplicatedCode
