@@ -34,7 +34,7 @@ GNU General Public License v3.0
 
 # Contributors
 
-Mihir Shrestha, Peter Motin, koutsie
+Mihir Shrestha, Peter Motin, koutsie, Malachi Soord (inverse)
 
 # Special Contributors
 
