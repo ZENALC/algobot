@@ -10,7 +10,7 @@ from datetime import datetime
 from dateutil import parser
 from typing import Tuple, List, Dict, Union
 
-from option import Option
+from algobot.option import Option
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)

@@ -5,12 +5,12 @@ import time
 from typing import Dict, Union
 from dateutil import parser
 from datetime import datetime, timedelta
-from helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes, \
+from algobot.helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes, \
     convert_small_interval, convert_all_dates_to_datetime
-from enums import BEARISH, BULLISH, LONG, SHORT, TRAILING, STOP
-from strategies.strategy import Strategy
-from algorithms import get_sma, get_wma, get_ema
-from typeHints import DATA_TYPE, DICT_TYPE
+from algobot.enums import BEARISH, BULLISH, LONG, SHORT, TRAILING, STOP
+from algobot.strategies.strategy import Strategy
+from algobot.algorithms import get_sma, get_wma, get_ema
+from algobot.typeHints import DATA_TYPE, DICT_TYPE
 
 
 class Backtester:
