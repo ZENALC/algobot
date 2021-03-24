@@ -32,9 +32,13 @@ Bot usage is as is. I am not responsible for any financial burdens or unexpected
 
 GNU General Public License v3.0
 
+# Author
+
+Mihir Shrestha
+
 # Contributors
 
-Mihir Shrestha, Peter Motin, koutsie, Malachi Soord (inverse)
+koutsie, Malachi Soord (inverse)
 
 # Special Contributors
 
