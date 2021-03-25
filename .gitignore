@@ -1,8 +1,16 @@
 /.idea/
 /Backtest Results/
 /Configuration/
+/CSV/
 /Credentials/
 /Databases/
 /Logs/
+/other/
 /Trade History/
 /venv/
+
+/algobot/strategies
+!algobot/strategies/movingAverage.py
+!algobot/strategies/strategy.py
+
+state.json
