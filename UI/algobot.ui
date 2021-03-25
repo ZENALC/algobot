@@ -2126,7 +2126,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="otherCommandsAction">
    <property name="text">
-    <string>Misc Commands</string>
+    <string>Miscellaneous</string>
    </property>
   </action>
   <action name="statisticsAction">

@@ -3,6 +3,7 @@ import sys
 import time
 
 from typing import Dict, Union
+from itertools import product
 from dateutil import parser
 from datetime import datetime, timedelta
 from algobot.helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes, \
@@ -389,6 +390,43 @@ class Backtester:
                 thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
 
         self.exit_backtest(index)
+
+    @staticmethod
+    def get_all_permutations(combos: dict):
+        """
+        Returns a list of setting permutations from combos provided.
+        :param combos: Combos with ranges for the permutations.
+        :return: List of all permutations.
+        """
+        for key, value_range in combos.items():
+            if type(value_range) == tuple:
+                continue
+            elif type(value_range) == list:
+                temp = [x for x in range(value_range[0], value_range[1] + 1, value_range[2])]
+                combos[key] = temp
+            else:
+                raise ValueError("Invalid type of value provided to combos. Make sure to provide a tuple or list.")
+
+        return [dict(zip(combos, v)) for v in product(*combos.values())]
+
+    def optimizer(self, combos: Dict, thread=None):
+        """
+        This function will run a brute-force optimization test to figure out the best inputs.
+        """
+        settings_list = self.get_all_permutations(combos)
+
+        for settings in settings_list:
+            self.apply_settings(settings)
+            self.start_backtest(thread)
+
+    def apply_settings(self, settings: dict):
+        self.takeProfitType = settings['takeProfitType']
+        self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
+        self.lossStrategy = settings['lossType']
+        self.lossPercentageDecimal = settings['lossPercentage'] / 100
+
+    def restore(self):
+        pass
 
     def handle_trailing_prices(self):
         """

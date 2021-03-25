@@ -377,6 +377,9 @@
                        <property name="text">
                         <string>Save Credentials</string>
                        </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
+                       </property>
                       </widget>
                      </item>
                      <item>
@@ -387,6 +390,9 @@
                        <property name="text">
                         <string>Load Credentials</string>
                        </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
+                       </property>
                       </widget>
                      </item>
                      <item>
@@ -396,6 +402,9 @@
                        </property>
                        <property name="text">
                         <string>Test Credentials</string>
+                       </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
                        </property>
                       </widget>
                      </item>
@@ -436,6 +445,9 @@
                        <property name="text">
                         <string>Update Tickers</string>
                        </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
+                       </property>
                       </widget>
                      </item>
                      <item>
@@ -445,6 +457,9 @@
                        </property>
                        <property name="text">
                         <string>Update Binance Values</string>
+                       </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
                        </property>
                       </widget>
                      </item>
@@ -482,12 +497,18 @@
                        <property name="text">
                         <string>Save Configuration</string>
                        </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
+                       </property>
                       </widget>
                      </item>
                      <item>
                       <widget class="QPushButton" name="loadConfigurationButton">
                        <property name="text">
                         <string>Load Configuration</string>
+                       </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
                        </property>
                       </widget>
                      </item>
@@ -725,6 +746,9 @@
                     <property name="text">
                      <string>Download Data</string>
                     </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
+                    </property>
                    </widget>
                   </item>
                   <item row="12" column="1">
@@ -753,6 +777,9 @@
                     <property name="text">
                      <string>Import Data</string>
                     </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
+                    </property>
                    </widget>
                   </item>
                   <item row="7" column="0">
@@ -776,6 +803,9 @@
                     <property name="text">
                      <string>Stop Download </string>
                     </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
+                    </property>
                    </widget>
                   </item>
                   <item row="18" column="1">
@@ -796,6 +826,9 @@
                     <property name="text">
                      <string>Copy Main Settings</string>
                     </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
+                    </property>
                    </widget>
                   </item>
                   <item row="8" column="0" colspan="3">
@@ -809,12 +842,18 @@
                        <property name="text">
                         <string>Save Configuration</string>
                        </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
+                       </property>
                       </widget>
                      </item>
                      <item>
                       <widget class="QPushButton" name="backtestLoadConfigurationButton">
                        <property name="text">
                         <string>Load Configuration</string>
+                       </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
                        </property>
                       </widget>
                      </item>
@@ -1157,6 +1196,9 @@
                     <property name="text">
                      <string>Copy Main Settings</string>
                     </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
+                    </property>
                    </widget>
                   </item>
                   <item row="3" column="0">
@@ -1170,6 +1212,9 @@
                    <widget class="QPushButton" name="simulationSaveConfigurationButton">
                     <property name="text">
                      <string>Save Configuration</string>
+                    </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -1209,6 +1254,9 @@
                     </property>
                     <property name="text">
                      <string>Load Configuration</string>
+                    </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -1251,7 +1299,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>3</number>
+              <number>2</number>
              </property>
              <property name="tabsClosable">
               <bool>false</bool>
@@ -1517,6 +1565,9 @@
                     </property>
                     <property name="text">
                      <string>Test Connection</string>
+                    </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>

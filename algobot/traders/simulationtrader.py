@@ -639,23 +639,14 @@ class SimulationTrader:
         """
         return "Profit" if profit >= 0 else "Loss"
 
-    def get_stoic_inputs(self) -> str:
+    def get_strategy_inputs(self, strategy_name):
         """
-        Returns stoic inputs if enabled.
-        :return: A string of inputs if enabled, else None.
+        Returns provided strategy's inputs if it exists.
         """
-        if 'stoic' not in self.strategies:
+        if strategy_name not in self.strategies:
             return 'None'
-        return f"{', '.join(map(str, self.strategies['stoic'].get_params()))}"
-
-    def get_shrek_inputs(self) -> str:
-        """
-        Returns shrek inputs if enabled.
-        :return: A string of inputs if enabled, else None.
-        """
-        if 'shrek' not in self.strategies:
-            return 'None'
-        return f"{', '.join(map(str, self.strategies['shrek'].get_params()))}"
+        else:
+            return f"{', '.join(map(str, self.strategies[strategy_name].get_params()))}"
 
     def get_net(self) -> float:
         """
@@ -855,7 +846,7 @@ class SimulationTrader:
         elif profit < 0:
             self.output_message(f'Loss: ${-profit}')
         else:
-            self.output_message(f'No profit or loss currently.')
+            self.output_message(f'Profit: $0')
 
     def output_basic_information(self):
         """
@@ -948,11 +939,9 @@ class SimulationTrader:
         self.output_message(f'Smart stop loss counter: {self.smartStopLossInitialCounter}')
         self.output_message(f'Safety timer: {self.safetyTimer}')
 
-        if 'shrek' in self.strategies:
-            self.output_message(f'\nShrek Inputs: {self.get_shrek_inputs()}')
-
-        if 'stoic' in self.strategies:
-            self.output_message(f'Stoic Inputs: {self.get_stoic_inputs()}')
+        for strategy in self.strategies:
+            if strategy != 'movingAverage':
+                self.output_message(f'{strategy.capitalize()} Inputs: {self.get_strategy_inputs(strategy)}')
 
         if 'movingAverage' in self.strategies:
             self.output_message("\nMoving Average Info:")

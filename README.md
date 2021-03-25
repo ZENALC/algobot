@@ -1,4 +1,4 @@
-![logo](https://i.imgur.com/YgjcoK1.png)
+![logo](https://github.com/ZENALC/algobot/blob/master/media/algobot.png?raw=true)
 
 Cryptocurrency trading bot that allows users to create strategies and then backtest, simulate, or run live bots using them. Telegram integration has been added to support easier and remote trading. 
 
@@ -6,6 +6,10 @@ Cryptocurrency trading bot that allows users to create strategies and then backt
 
 Please make sure you have an installation of at least Python 3.6.
 To install requirements and related Python packages, type ```pip install -r requirements.txt```.
+
+# Execution 
+
+To run Algobot, execute algobot.py with a version of at least Python 3.6.
 
 # Features
 
@@ -26,7 +30,7 @@ To install requirements and related Python packages, type ```pip install -r requ
 
 # Disclaimer
 
-Bot usage is as is. I am not responsible for any financial burdens or unexpected monetary bugs or glitches caused by this program.
+Bot usage is as is. Algobot is not responsible for any financial burdens or unexpected monetary bugs or glitches.
 
 # License
 
