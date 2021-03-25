@@ -1,26 +1,26 @@
 import time
-import assets
+import algobot.assets as assets
 import sys
 import os
 import webbrowser
 
 from typing import List, Dict, Union
-from helpers import ROOT_DIR, open_file_or_folder, get_logger, create_folder_if_needed
-from threads import workerThread, backtestThread, botThread, listThread
-from data import Data
+from algobot.helpers import ROOT_DIR, open_file_or_folder, get_logger, create_folder_if_needed
+from algobot.threads import workerThread, backtestThread, botThread, listThread
+from algobot.data import Data
 from datetime import datetime
-from interface.palettes import *
-from traders.backtester import Backtester
-from traders.realtrader import RealTrader
-from traders.simulationtrader import SimulationTrader
-from option import Option
-from enums import *
-from interface.configuration import Configuration
-from interface.otherCommands import OtherCommands
-from interface.about import About
-from interface.statistics import Statistics
-from scrapeNews import scrape_news
-from algodict import get_interface_dictionary
+from algobot.interface.palettes import *
+from algobot.traders.backtester import Backtester
+from algobot.traders.realtrader import RealTrader
+from algobot.traders.simulationtrader import SimulationTrader
+from algobot.option import Option
+from algobot.enums import *
+from algobot.interface.configuration import Configuration
+from algobot.interface.otherCommands import OtherCommands
+from algobot.interface.about import About
+from algobot.interface.statistics import Statistics
+from algobot.scrapeNews import scrape_news
+from algobot.algodict import get_interface_dictionary
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem, QFileDialog
@@ -29,7 +29,7 @@ from PyQt5.QtGui import QIcon, QTextCursor
 from pyqtgraph import mkPen, PlotWidget, InfiniteLine
 
 app = QApplication(sys.argv)
-mainUi = os.path.join('../', 'UI', 'algobot.ui')
+mainUi = os.path.join(ROOT_DIR, 'UI', 'algobot.ui')
 
 
 class Interface(QMainWindow):

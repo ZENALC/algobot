@@ -1,13 +1,12 @@
 import traceback
-import helpers
 import time
 
-from data import Data
+from algobot.data import Data
 from datetime import datetime, timedelta
-from enums import LIVE, SIMULATION, BEARISH, BULLISH
-from traders.realtrader import RealTrader
-from traders.simulationtrader import SimulationTrader
-from telegramBot import TelegramBot
+from algobot.enums import LIVE, SIMULATION, BEARISH, BULLISH
+from algobot.traders.realtrader import RealTrader
+from algobot.traders.simulationtrader import SimulationTrader
+from algobot.telegramBot import TelegramBot
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 
 

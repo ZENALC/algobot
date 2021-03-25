@@ -1,6 +1,6 @@
 import os
 
-from helpers import ROOT_DIR, get_label_string
+from algobot.helpers import ROOT_DIR, get_label_string
 from PyQt5 import uic, QtCore
 from PyQt5.QtWidgets import QDialog, QLabel, QTabWidget, QFormLayout
 

@@ -1,7 +1,7 @@
 import datetime
 import os
 import telegram
-import helpers
+import algobot.helpers as helpers
 
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox, QTabWidget, QFormLayout, QLabel, QSpinBox, \
     QGroupBox, QVBoxLayout, QDoubleSpinBox, QComboBox, QHBoxLayout, QScrollArea, QLayout
@@ -9,18 +9,18 @@ from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
 
 # noinspection PyUnresolvedReferences
-from strategies import *
-from strategies.strategy import Strategy
+from algobot.strategies import *
+from algobot.strategies.strategy import Strategy
 
-from interface.configuration_helpers import create_strategy_inputs, get_input_widget_value, set_value, \
+from algobot.interface.configuration_helpers import create_strategy_inputs, get_input_widget_value, set_value, \
     create_inner_tab, get_strategies_dictionary, delete_strategy_inputs, add_strategy_inputs, add_strategy_buttons
 
 from binance.client import Client
 from telegram.ext import Updater
 from dateutil import parser
-from threads import downloadThread
+from algobot.threads import downloadThread
 from typing import List, Tuple, Union
-from enums import SIMULATION, LIVE, BACKTEST, TRAILING, STOP
+from algobot.enums import SIMULATION, LIVE, BACKTEST, TRAILING, STOP
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
