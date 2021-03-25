@@ -30,7 +30,7 @@ To run Algobot, execute algobot.py with a version of at least Python 3.6.
 
 # Disclaimer
 
-Bot usage is as is. I am not responsible for any financial burdens or unexpected monetary bugs or glitches caused by this program.
+Bot usage is as is. Algobot is not responsible for any financial burdens or unexpected monetary bugs or glitches.
 
 # License
 
