@@ -1,4 +1,4 @@
-![logo](https://i.imgur.com/YgjcoK1.png)
+![logo](https://github.com/ZENALC/algobot/blob/master/media/algobot.png?raw=true)
 
 Cryptocurrency trading bot that allows users to create strategies and then backtest, simulate, or run live bots using them. Telegram integration has been added to support easier and remote trading. 
 
