@@ -1,1 +1,8 @@
 /.idea/
+/Backtest Results/
+/Configuration/
+/Credentials/
+/Databases/
+/Logs/
+/Trade History/
+/venv/
