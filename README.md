@@ -7,6 +7,10 @@ Cryptocurrency trading bot that allows users to create strategies and then backt
 Please make sure you have an installation of at least Python 3.6.
 To install requirements and related Python packages, type ```pip install -r requirements.txt```.
 
+## Running 
+
+To run Algobot, execute algobot.py with a version of at least Python 3.6.
+
 # Features
 
 • View real time data.\
