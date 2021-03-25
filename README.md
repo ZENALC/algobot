@@ -5,11 +5,16 @@ Cryptocurrency trading bot that allows users to create strategies and then backt
 # Installation
 
 Please make sure you have an installation of at least Python 3.6.
-To install requirements and related Python packages, type ```pip install -r requirements.txt```.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
 # Execution 
 
-To run Algobot, execute algobot.py with a version of at least Python 3.6.
+To run Algobot, run `python -m algobot` from within the activated virtual environment.
 
 # Features
 
