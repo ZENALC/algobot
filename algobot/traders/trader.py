@@ -9,19 +9,19 @@ class Trader:
         self.precision = precision
 
     def add_trade(self):
-        pass
+        raise NotImplementedError("Please implement a function for adding trades.")
 
     def buy_long(self):
-        pass
+        raise NotImplementedError("Please implement a function for buying long.")
 
     def sell_long(self):
-        pass
+        raise NotImplementedError("Please implement a function for selling long.")
 
     def sell_short(self):
-        pass
+        raise NotImplementedError("Please implement a function for selling short.")
 
     def buy_short(self):
-        pass
+        raise NotImplementedError("Please implement a function for buying short.")
 
     def get_stop_loss(self):
         pass
