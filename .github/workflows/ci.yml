@@ -24,3 +24,5 @@ jobs:
         pip install -r requirements-test.txt
     - name: Test with pytest
       run: pytest -v tests/
+    - name: Lint with flake8
+      run: flake8 .
