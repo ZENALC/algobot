@@ -46,11 +46,6 @@ class Backtester(Trader):
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
 
-        self.previousStopLoss = None
-        self.initialStopLossCounter = 0
-        self.stopLossCounter = 0
-        self.stopLossExit = False
-
         self.takeProfitType = takeProfitType
         self.takeProfitPercentageDecimal = takeProfitPercentage / 100
         self.profit = 0
@@ -265,19 +260,6 @@ class Backtester(Trader):
             'low': price
         }
         self.currentPrice = price
-
-    def set_stop_loss_counter(self, counter: int):
-        """
-        Sets stop loss equal to the counter provided.
-        :param counter: Value to set counter to.
-        """
-        self.stopLossCounter = self.initialStopLossCounter = counter
-
-    def reset_smart_stop_loss(self):
-        """
-        Resets smart stop loss and sets it equal to initial stop loss counter.
-        """
-        self.stopLossCounter = self.initialStopLossCounter
 
     def start_backtest(self, thread=None):
         """
@@ -675,13 +657,13 @@ class Backtester(Trader):
                 self.reset_smart_stop_loss()
             else:
                 if self.previousPosition == LONG and self.stopLossExit:
-                    if self.currentPrice > self.previousStopLoss and self.stopLossCounter > 0:
+                    if self.currentPrice > self.previousStopLoss and self.smartStopLossCounter > 0:
                         self.buy_long("Reentered long because of smart stop loss.")
-                        self.stopLossCounter -= 1
+                        self.smartStopLossCounter -= 1
                 elif self.previousPosition == SHORT and self.stopLossExit:
-                    if self.currentPrice < self.previousStopLoss and self.stopLossCounter > 0:
+                    if self.currentPrice < self.previousStopLoss and self.smartStopLossCounter > 0:
                         self.sell_short("Reentered short because of smart stop loss.")
-                        self.stopLossCounter -= 1
+                        self.smartStopLossCounter -= 1
 
     def print_options(self):
         """
@@ -711,7 +693,7 @@ class Backtester(Trader):
             sys.stdout = stdout
 
         print("Backtest configuration:")
-        print(f"\tSmart Stop Loss Counter: {self.initialStopLossCounter}")
+        print(f"\tSmart Stop Loss Counter: {self.smartStopLossInitialCounter}")
         print(f'\tInterval: {self.interval}')
         print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")

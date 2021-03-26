@@ -235,8 +235,8 @@ class TestBacktester(unittest.TestCase):
         """
         backtester = self.backtester
         test_counter = 3  # Don't change this.
-        backtester.set_stop_loss_counter(test_counter)
-        self.assertEqual(backtester.initialStopLossCounter, test_counter)
+        backtester.set_smart_stop_loss_counter(test_counter)
+        self.assertEqual(backtester.smartStopLossInitialCounter, test_counter)
 
         backtester.set_priced_current_price_and_period(5)
         backtester.buy_long("Dummy purchase to test smart stop loss.")
@@ -244,36 +244,36 @@ class TestBacktester(unittest.TestCase):
         backtester.main_logic()  # Stop loss triggered.
         backtester.set_priced_current_price_and_period(5)
         backtester.main_logic()  # Smart stop loss purchase.
-        self.assertEqual(backtester.stopLossCounter, test_counter - 1)
+        self.assertEqual(backtester.smartStopLossCounter, test_counter - 1)
 
         backtester.set_priced_current_price_and_period(3)
         backtester.main_logic()  # Stop loss triggered.
         backtester.set_priced_current_price_and_period(6)
         backtester.main_logic()  # Smart stop loss purchase.
-        self.assertEqual(backtester.stopLossCounter, test_counter - 2)
+        self.assertEqual(backtester.smartStopLossCounter, test_counter - 2)
 
         backtester.set_priced_current_price_and_period(2)
         backtester.main_logic()  # Stop loss triggered.
         backtester.set_priced_current_price_and_period(1.9)
         backtester.main_logic()  # No smart stop loss purchase.
-        self.assertEqual(backtester.stopLossCounter, test_counter - 2)
+        self.assertEqual(backtester.smartStopLossCounter, test_counter - 2)
 
         backtester.set_priced_current_price_and_period(10)
         backtester.main_logic()  # Smart stop loss purchase.
-        self.assertEqual(backtester.stopLossCounter, test_counter - 3)
+        self.assertEqual(backtester.smartStopLossCounter, test_counter - 3)
 
         backtester.set_priced_current_price_and_period(1)
         backtester.main_logic()  # Stop loss triggered.
-        backtester.stopLossCounter = 0  # Set stop loss counter at 0, so bot can't reenter.
+        backtester.smartStopLossCounter = 0  # Set stop loss counter at 0, so bot can't reenter.
         backtester.set_priced_current_price_and_period(150)  # Set exorbitant price but don't let bot reenter.
         backtester.main_logic()  # Should not reenter as counter is 0.
         self.assertEqual(backtester.inLongPosition, False)
-        self.assertEqual(backtester.stopLossCounter, 0)
+        self.assertEqual(backtester.smartStopLossCounter, 0)
 
         backtester.reset_smart_stop_loss()  # Counter is reset.
         backtester.main_logic()  # Should reenter.
         self.assertEqual(backtester.inLongPosition, True)
-        self.assertEqual(backtester.stopLossCounter, backtester.initialStopLossCounter - 1)
+        self.assertEqual(backtester.smartStopLossCounter, backtester.smartStopLossInitialCounter - 1)
 
     def test_long_stop_loss(self):
         """

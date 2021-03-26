@@ -60,10 +60,6 @@ class SimulationTrader(Trader):
         self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
         self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
-        self.previousStopLoss = None  # Previous stop loss for smart stop loss.
-        self.smartStopLossInitialCounter = 0  # Smart stop loss initial counter.
-        self.smartStopLossCounter = 0  # Smart stop loss counter.
-        self.stopLossExit = False  # Boolean that'll determine whether last position was exited from a stop loss.
         self.smartStopLossEnter = False  # Boolean that'll determine whether current position is from a smart stop loss.
         self.safetyTimer = None  # Timer to check if there's a true trend towards stop loss.
         self.scheduledSafetyTimer = None  # Next time to check if it's a true stop loss.
@@ -94,13 +90,6 @@ class SimulationTrader(Trader):
             self.safetyTimer = None
         else:
             self.safetyTimer = safetyTimer
-
-    def set_smart_stop_loss_counter(self, counter):
-        """
-        Sets smart stop loss values.
-        :param counter: Initial value to set counter at. Bot will reenter position counter many times.
-        """
-        self.smartStopLossCounter = self.smartStopLossInitialCounter = counter
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """

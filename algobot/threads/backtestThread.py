@@ -128,7 +128,7 @@ class BacktestThread(QRunnable):
                                          takeProfitType=configDetails['takeProfitType'],
                                          takeProfitPercentage=configDetails['takeProfitPercentage'],
                                          strategyInterval=configDetails['strategyInterval'])
-        self.gui.backtester.set_stop_loss_counter(configDetails['smartStopLossCounter'])
+        self.gui.backtester.set_smart_stop_loss_counter(configDetails['smartStopLossCounter'])
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
 
     def stop(self):

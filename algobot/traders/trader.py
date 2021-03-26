@@ -22,6 +22,12 @@ class Trader:
         self.longTrailingPrice = None  # Price coin has to be above for long position.
         self.shortTrailingPrice = None  # Price coin has to be below for short position.
 
+        # Stop loss information.
+        self.smartStopLossInitialCounter = 0  # Smart stop loss initial counter.
+        self.smartStopLossCounter = 0  # Smart stop loss counter.
+        self.previousStopLoss = None  # Previous stop loss for smart stop loss.
+        self.stopLossExit = False  # Boolean that'll determine whether last position was exited from a stop loss.
+
     def add_trade(self, **kwargs):
         raise NotImplementedError("Please implement a function for adding trades.")
 
@@ -36,6 +42,19 @@ class Trader:
 
     def buy_short(self, **kwargs):
         raise NotImplementedError("Please implement a function for buying short.")
+
+    def reset_smart_stop_loss(self):
+        """
+        Resets smart stop loss and sets it equal to initial stop loss counter.
+        """
+        self.smartStopLossCounter = self.smartStopLossInitialCounter
+
+    def set_smart_stop_loss_counter(self, counter):
+        """
+        Sets smart stop loss counter to argument provided.
+        :param counter: Initial value to set counter at. Bot will reenter its previous position that many times.
+        """
+        self.smartStopLossCounter = self.smartStopLossInitialCounter = counter
 
     def get_stop_loss(self):
         pass
