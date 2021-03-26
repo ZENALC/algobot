@@ -1,11 +1,11 @@
 import math
 import time
 
-from algobot.enums import SHORT, LONG
-from algobot.traders.simulationtrader import SimulationTrader
-
 from binance.client import Client
 from binance.enums import ORDER_TYPE_MARKET, SIDE_BUY, SIDE_SELL
+
+from algobot.enums import LONG, SHORT
+from algobot.traders.simulationtrader import SimulationTrader
 
 
 class RealTrader(SimulationTrader):

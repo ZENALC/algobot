@@ -1,3 +1,3 @@
 # Security Policy
 
-Please open a new issue if you spot vulnerabilities. 
+Please open a new issue if you spot vulnerabilities.

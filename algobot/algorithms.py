@@ -1,4 +1,5 @@
 from typing import List, Tuple
+
 from algobot.helpers import get_data_from_parameter
 
 

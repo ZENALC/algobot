@@ -1,4 +1,4 @@
-from algobot.enums import SIMULATION, BACKTEST, LIVE
+from algobot.enums import BACKTEST, LIVE, SIMULATION
 
 
 # noinspection DuplicatedCode

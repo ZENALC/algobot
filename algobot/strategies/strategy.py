@@ -4,6 +4,7 @@ Please make sure that they have some default values for the GUI to initialize th
 """
 
 from typing import List, Union
+
 from algobot.data import Data
 
 

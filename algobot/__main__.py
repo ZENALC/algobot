@@ -1,33 +1,37 @@
-import time
-import sys
 import os
+import sys
+import time
 import webbrowser
-import algobot.assets
-
-from typing import List, Dict, Union
 from datetime import datetime
+from typing import Dict, List, Union
 
-from algobot.helpers import ROOT_DIR, open_file_or_folder, get_logger, create_folder_if_needed
-from algobot.threads import workerThread, backtestThread, botThread, listThread
+from PyQt5 import uic
+from PyQt5.QtCore import QRunnable, QThreadPool
+from PyQt5.QtGui import QIcon, QTextCursor
+from PyQt5.QtWidgets import (QApplication, QFileDialog, QMainWindow,
+                             QMessageBox, QTableWidgetItem)
+from pyqtgraph import InfiniteLine, PlotWidget, mkPen
+
+import algobot.assets
+from algobot.algodict import get_interface_dictionary
 from algobot.data import Data
+from algobot.enums import (AVG_GRAPH, BACKTEST, LIVE, LONG, NET_GRAPH, SHORT,
+                           SIMULATION)
+from algobot.helpers import (ROOT_DIR, create_folder_if_needed, get_logger,
+                             open_file_or_folder)
+from algobot.interface.about import About
+from algobot.interface.configuration import Configuration
+from algobot.interface.otherCommands import OtherCommands
+from algobot.interface.palettes import (bloomberg_palette, dark_palette,
+                                        green_palette, light_palette,
+                                        red_palette)
+from algobot.interface.statistics import Statistics
+from algobot.option import Option
+from algobot.scrapeNews import scrape_news
+from algobot.threads import backtestThread, botThread, listThread, workerThread
 from algobot.traders.backtester import Backtester
 from algobot.traders.realtrader import RealTrader
 from algobot.traders.simulationtrader import SimulationTrader
-from algobot.option import Option
-from algobot.enums import LIVE, SIMULATION, BACKTEST, LONG, SHORT, NET_GRAPH, AVG_GRAPH
-from algobot.interface.configuration import Configuration
-from algobot.interface.otherCommands import OtherCommands
-from algobot.interface.about import About
-from algobot.interface.statistics import Statistics
-from algobot.scrapeNews import scrape_news
-from algobot.algodict import get_interface_dictionary
-from algobot.interface.palettes import red_palette, dark_palette, green_palette, light_palette, bloomberg_palette
-
-from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem, QFileDialog
-from PyQt5.QtCore import QThreadPool, QRunnable
-from PyQt5.QtGui import QIcon, QTextCursor
-from pyqtgraph import mkPen, PlotWidget, InfiniteLine
 
 app = QApplication(sys.argv)
 mainUi = os.path.join(ROOT_DIR, 'UI', 'algobot.ui')

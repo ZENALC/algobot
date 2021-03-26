@@ -1,7 +1,9 @@
-from typing import Tuple, Callable, Dict, Any, Union
+from typing import Any, Callable, Dict, Tuple, Union
 
-from PyQt5.QtWidgets import QFrame, QLabel, QSpinBox, QLineEdit, QDoubleSpinBox, QComboBox, QWidget, QGroupBox, \
-    QFormLayout, QScrollArea, QVBoxLayout, QTabWidget, QLayout, QPushButton
+from PyQt5.QtWidgets import (QComboBox, QDoubleSpinBox, QFormLayout, QFrame,
+                             QGroupBox, QLabel, QLayout, QLineEdit,
+                             QPushButton, QScrollArea, QSpinBox, QTabWidget,
+                             QVBoxLayout, QWidget)
 
 
 def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:

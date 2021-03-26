@@ -1,12 +1,12 @@
 import time
-
 from datetime import datetime
 from threading import Lock
 
-from algobot.traders.trader import Trader
-from algobot.helpers import get_logger, convert_small_interval, set_up_strategies
-from algobot.enums import LONG, SHORT, BEARISH, BULLISH, TRAILING, STOP
 from algobot.data import Data
+from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
+from algobot.helpers import (convert_small_interval, get_logger,
+                             set_up_strategies)
+from algobot.traders.trader import Trader
 
 
 class SimulationTrader(Trader):

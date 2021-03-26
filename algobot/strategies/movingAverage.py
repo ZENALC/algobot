@@ -1,9 +1,9 @@
 from typing import List
 
-from algobot.strategies.strategy import Strategy
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH
 from algobot.option import Option
+from algobot.strategies.strategy import Strategy
 
 
 class MovingAverageStrategy(Strategy):
