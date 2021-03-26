@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from algobot.helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes, \
     convert_small_interval, convert_all_dates_to_datetime
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, TRAILING, STOP
-from algobot.strategies.strategy import Strategy
 from algobot.algorithms import get_sma, get_wma, get_ema
 from algobot.typeHints import DATA_TYPE, DICT_TYPE
 from algobot.traders.trader import Trader
@@ -54,7 +53,6 @@ class Backtester(Trader):
         self.endTime = None
         self.inLongPosition = False
         self.inShortPosition = False
-        self.previousPosition = None
         self.currentPeriod = None
         self.minPeriod = 0
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
@@ -71,7 +69,6 @@ class Backtester(Trader):
 
         self.ema_dict = {}
         self.rsi_dictionary = {}
-        self.strategies: Dict[str, Strategy] = {}
         set_up_strategies(self, strategies)
 
         self.startDateIndex = self.get_start_index(startDate)

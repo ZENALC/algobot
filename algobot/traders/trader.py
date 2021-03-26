@@ -1,6 +1,8 @@
 """
 This will be the main Trader class that all other Traders will inherit from.
 """
+from typing import Dict
+from algobot.strategies.strategy import Strategy
 
 
 class Trader:
@@ -14,6 +16,9 @@ class Trader:
         self.symbol = symbol  # Symbol of ticker used for trading.
         self.precision = precision  # Precision to round data to.
         self.trades = []  # All trades performed.
+        self.strategies: Dict[str, Strategy] = {}
+
+        self.previousPosition = None  # Previous position to validate for a new trend.
 
         # Prices information.
         self.currentPrice = None  # Current price of coin.

@@ -7,7 +7,6 @@ from typing import Dict
 from algobot.traders.trader import Trader
 from algobot.helpers import get_logger, convert_small_interval, set_up_strategies
 from algobot.enums import LONG, SHORT, BEARISH, BULLISH, TRAILING, STOP
-from algobot.strategies.strategy import Strategy
 from algobot.data import Data
 
 
@@ -66,9 +65,6 @@ class SimulationTrader(Trader):
 
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
         self.currentPosition = None  # Current position value.
-        self.previousPosition = None  # Previous position to validate for a cross.
-
-        self.strategies: Dict[str, Strategy] = {}
         self.trend = None
 
         self.optionDetails = []  # Current option values. Holds most recent option values.
