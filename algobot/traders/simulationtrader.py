@@ -4,10 +4,10 @@ from datetime import datetime
 from threading import Lock
 from typing import Dict
 
-from helpers import get_logger, convert_small_interval, set_up_strategies
-from enums import LONG, SHORT, BEARISH, BULLISH, TRAILING, STOP
-from strategies.strategy import Strategy
-from data import Data
+from algobot.helpers import get_logger, convert_small_interval, set_up_strategies
+from algobot.enums import LONG, SHORT, BEARISH, BULLISH, TRAILING, STOP
+from algobot.strategies.strategy import Strategy
+from algobot.data import Data
 
 
 class SimulationTrader:

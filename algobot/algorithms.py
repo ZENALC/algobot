@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from helpers import get_data_from_parameter
+from algobot.helpers import get_data_from_parameter
 
 
 def get_wma(data: List[dict], prices: int, parameter: str, desc: bool = True) -> float:

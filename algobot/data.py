@@ -3,11 +3,11 @@ import time
 import os
 
 from datetime import timedelta, timezone, datetime
-from helpers import get_logger, ROOT_DIR, get_ups_and_downs
+from algobot.helpers import get_logger, ROOT_DIR, get_ups_and_downs
 from contextlib import closing
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
-from algorithms import get_sma, get_wma, get_ema
+from algobot.algorithms import get_sma, get_wma, get_ema
 from typing import List
 
 

@@ -1,6 +1,6 @@
 import traceback
 
-from data import Data
+from algobot.data import Data
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 

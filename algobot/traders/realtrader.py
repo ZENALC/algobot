@@ -1,8 +1,8 @@
 import math
 import time
 
-from enums import *
-from traders.simulationtrader import SimulationTrader
+from algobot.enums import *
+from algobot.traders.simulationtrader import SimulationTrader
 from binance.client import Client
 from binance.enums import *
 
