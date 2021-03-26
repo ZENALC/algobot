@@ -1,8 +1,10 @@
 from datetime import datetime
-from typing import Dict, Any
-from algobot.traders.backtester import Backtester
+from typing import Any, Dict
+
+from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
+
 from algobot.enums import BACKTEST, TRAILING
-from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
+from algobot.traders.backtester import Backtester
 
 
 class BacktestSignals(QObject):

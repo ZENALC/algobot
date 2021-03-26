@@ -1,14 +1,14 @@
-import logging
-import platform
-import subprocess
-import os
-import re
 import json
+import logging
+import os
+import platform
+import re
+import subprocess
 import time
-
 from datetime import datetime
+from typing import Dict, List, Tuple, Union
+
 from dateutil import parser
-from typing import Tuple, List, Dict, Union
 
 from algobot.option import Option
 

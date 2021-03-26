@@ -2,6 +2,7 @@
 This will be the main Trader class that all other Traders will inherit from.
 """
 from typing import Dict
+
 from algobot.strategies.strategy import Strategy
 
 

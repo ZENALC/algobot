@@ -1,18 +1,20 @@
 import os
 import sys
 import time
-
-from typing import Dict, Union
-from itertools import product
-from dateutil import parser
 from datetime import datetime, timedelta
+from itertools import product
+from typing import Dict, Union
 
-from algobot.helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes, \
-    convert_small_interval, convert_all_dates_to_datetime
-from algobot.enums import BEARISH, BULLISH, LONG, SHORT, TRAILING, STOP
-from algobot.algorithms import get_sma, get_wma, get_ema
-from algobot.typeHints import DATA_TYPE, DICT_TYPE
+from dateutil import parser
+
+from algobot.algorithms import get_ema, get_sma, get_wma
+from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
+from algobot.helpers import (convert_all_dates_to_datetime,
+                             convert_small_interval, get_interval_minutes,
+                             get_label_string, get_ups_and_downs,
+                             set_up_strategies)
 from algobot.traders.trader import Trader
+from algobot.typeHints import DATA_TYPE, DICT_TYPE
 
 
 class Backtester(Trader):

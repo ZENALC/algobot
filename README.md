@@ -1,6 +1,6 @@
 ![logo](https://github.com/ZENALC/algobot/blob/master/media/algobot.png?raw=true)
 
-Cryptocurrency trading bot that allows users to create strategies and then backtest, simulate, or run live bots using them. Telegram integration has been added to support easier and remote trading. 
+Cryptocurrency trading bot that allows users to create strategies and then backtest, simulate, or run live bots using them. Telegram integration has been added to support easier and remote trading.
 
 # Installation
 
@@ -12,7 +12,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-# Execution 
+# Execution
 
 To run Algobot, run `python -m algobot` from within the activated virtual environment.
 
@@ -61,6 +61,6 @@ The project is open-source. Please feel free to support it. Supporters are alway
 
 For any feature requests, feel free to add a feature request through Github's Issues. I would love to hear your ideas and implement them on the application.
 
-# Compatability
+# Compatibility
 
 Works fine on Python versions 3.6 and up.

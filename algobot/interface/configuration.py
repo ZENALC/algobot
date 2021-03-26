@@ -1,26 +1,32 @@
 import datetime
 import os
+from typing import List, Tuple, Union
+
 import telegram
-import algobot.helpers as helpers
-
-from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox, QTabWidget, QFormLayout, QLabel, QSpinBox, \
-    QGroupBox, QVBoxLayout, QDoubleSpinBox, QComboBox, QHBoxLayout, QScrollArea, QLayout
-from PyQt5.QtCore import QDate, QThreadPool
+from binance.client import Client
+from dateutil import parser
 from PyQt5 import uic
+from PyQt5.QtCore import QDate, QThreadPool
+from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFileDialog,
+                             QFormLayout, QGroupBox, QHBoxLayout, QLabel,
+                             QLayout, QMessageBox, QScrollArea, QSpinBox,
+                             QTabWidget, QVBoxLayout)
+from telegram.ext import Updater
 
+import algobot.helpers as helpers
+from algobot.enums import BACKTEST, LIVE, SIMULATION, STOP, TRAILING
+from algobot.interface.configuration_helpers import (add_strategy_buttons,
+                                                     add_strategy_inputs,
+                                                     create_inner_tab,
+                                                     create_strategy_inputs,
+                                                     delete_strategy_inputs,
+                                                     get_input_widget_value,
+                                                     get_strategies_dictionary,
+                                                     set_value)
 # noinspection PyUnresolvedReferences
 from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
-
-from algobot.interface.configuration_helpers import create_strategy_inputs, get_input_widget_value, set_value, \
-    create_inner_tab, get_strategies_dictionary, delete_strategy_inputs, add_strategy_inputs, add_strategy_buttons
-
-from binance.client import Client
-from telegram.ext import Updater
-from dateutil import parser
 from algobot.threads import downloadThread
-from typing import List, Tuple, Union
-from algobot.enums import SIMULATION, LIVE, BACKTEST, TRAILING, STOP
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 

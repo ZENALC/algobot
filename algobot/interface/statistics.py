@@ -1,8 +1,9 @@
 import os
 
+from PyQt5 import QtCore, uic
+from PyQt5.QtWidgets import QDialog, QFormLayout, QLabel, QTabWidget
+
 from algobot.helpers import ROOT_DIR, get_label_string
-from PyQt5 import uic, QtCore
-from PyQt5.QtWidgets import QDialog, QLabel, QTabWidget, QFormLayout
 
 statisticsUi = os.path.join(ROOT_DIR, 'UI', 'statistics.ui')
 

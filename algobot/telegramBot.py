@@ -1,11 +1,11 @@
 import random
 
 from telegram import Bot, constants
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import CommandHandler, Updater
 
-from algobot.enums import LONG, SHORT, LIVE
-from algobot.traders.simulationtrader import SimulationTrader
+from algobot.enums import LIVE, LONG, SHORT
 from algobot.helpers import get_label_string
+from algobot.traders.simulationtrader import SimulationTrader
 
 
 class TelegramBot:

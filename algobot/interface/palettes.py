@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtGui import QColor, QPalette
 
 
 def bloomberg_palette():

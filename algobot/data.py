@@ -1,16 +1,15 @@
+import os
 import sqlite3
 import time
-import os
-
-from typing import List
 from contextlib import closing
-from datetime import timedelta, timezone, datetime
+from datetime import datetime, timedelta, timezone
+from typing import List
 
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
 
-from algobot.helpers import get_logger, ROOT_DIR, get_ups_and_downs
-from algobot.algorithms import get_sma, get_wma, get_ema
+from algobot.algorithms import get_ema, get_sma, get_wma
+from algobot.helpers import ROOT_DIR, get_logger, get_ups_and_downs
 
 
 class Data:

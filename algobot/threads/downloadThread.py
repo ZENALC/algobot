@@ -1,7 +1,8 @@
 import traceback
 
-from algobot.data import Data
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
+
+from algobot.data import Data
 
 
 class DownloadSignals(QObject):

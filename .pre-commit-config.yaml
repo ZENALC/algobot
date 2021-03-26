@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: http://gitlab.com/PyCQA/flake8
+    rev: 3.9.0
+    hooks:
+      - id: flake8
+  - repo: http://github.com/PyCQA/isort
+    rev: 5.7.0
+    hooks:
+      - id: isort

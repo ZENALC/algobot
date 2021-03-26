@@ -1,11 +1,12 @@
 import os
 import unittest
+from datetime import datetime
+
 import pytest
 
-from datetime import datetime
-from algobot.traders.backtester import Backtester
-from algobot.enums import TRAILING, STOP
+from algobot.enums import STOP, TRAILING
 from algobot.helpers import convert_all_dates_to_datetime, load_from_csv
+from algobot.traders.backtester import Backtester
 
 test_data = load_from_csv(path=f'{os.path.dirname(__file__)}/1INCHUSDT_data_1m.csv', descending=False)
 convert_all_dates_to_datetime(test_data)

@@ -1,8 +1,8 @@
-import requests
-
 from datetime import date, timedelta
-from dateutil import parser
+
+import requests
 from bs4 import BeautifulSoup
+from dateutil import parser
 
 
 def scrape_news() -> list:
