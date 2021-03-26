@@ -4,13 +4,14 @@ from datetime import datetime
 from threading import Lock
 from typing import Dict
 
+from algobot.traders.trader import Trader
 from algobot.helpers import get_logger, convert_small_interval, set_up_strategies
 from algobot.enums import LONG, SHORT, BEARISH, BULLISH, TRAILING, STOP
 from algobot.strategies.strategy import Strategy
 from algobot.data import Data
 
 
-class SimulationTrader:
+class SimulationTrader(Trader):
     def __init__(self,
                  startingBalance: float = 1000,
                  interval: str = '1h',
@@ -31,24 +32,18 @@ class SimulationTrader:
         :param precision: Precision to round data to.
         :param addTradeCallback: Callback signal to emit to (if provided) to reflect a new transaction.
         """
+        super().__init__(precision=precision, symbol=symbol, startingBalance=startingBalance)
         self.logger = get_logger(logFile=logFile, loggerName=logFile)  # Get logger.
         self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData,
                                    updateData=updateData, logObject=self.logger, precision=precision)
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
 
-        # Initialize initial values.
-        self.balance = startingBalance  # USDT Balance.
-        self.startingBalance = self.balance  # Balance we started bot run with.
         self.previousNet = self.balance  # Our previous net will just be the starting balance in the beginning.
         self.coinName = self.get_coin_name()  # Retrieve primary coin to trade.
-        self.coin = 0  # Amount of coin we own.
-        self.coinOwed = 0  # Amount of coin we owe.
-        self.transactionFeePercentage = 0.001  # Binance transaction fee percentage.
         self.trades = []  # All trades performed.
         self.commissionPaid = 0  # Total commission paid to broker.
         self.dailyChangeNets = []  # Daily change net list. Will contain list of all nets.
-        self.precision = precision  # Precision to round data to.
 
         self.completedLoop = True  # Loop that'll keep track of bot. We wait for this to turn False before some action.
         self.lock = Lock()  # Lock to ensure a transaction doesn't occur when another one is taking place.
@@ -58,11 +53,6 @@ class SimulationTrader:
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
         self.endingTime = None  # Ending time for previous bot run.
 
-        self.buyLongPrice = None  # Price we last bought our target coin at in long position.
-        self.sellShortPrice = None  # Price we last sold target coin at in short position.
-        self.longTrailingPrice = None  # Price coin has to be above for long position.
-        self.shortTrailingPrice = None  # Price coin has to be below for short position.
-        self.currentPrice = None  # Current price of coin.
         self.takeProfitType = None  # Type of take profit: trailing or stop.
         self.takeProfitPercentageDecimal = None  # Percentage of profit to exit trade at.
         self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.

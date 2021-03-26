@@ -13,9 +13,10 @@ from algobot.enums import BEARISH, BULLISH, LONG, SHORT, TRAILING, STOP
 from algobot.strategies.strategy import Strategy
 from algobot.algorithms import get_sma, get_wma, get_ema
 from algobot.typeHints import DATA_TYPE, DICT_TYPE
+from algobot.traders.trader import Trader
 
 
-class Backtester:
+class Backtester(Trader):
     def __init__(self,
                  startingBalance: float,
                  data: list,
@@ -31,13 +32,8 @@ class Backtester:
                  endDate: datetime = None,
                  precision: int = 4,
                  outputTrades: bool = True):
-        self.startingBalance = startingBalance
-        self.symbol = symbol
-        self.balance = startingBalance
-        self.coin = 0
-        self.coinOwed = 0
+        super().__init__(symbol=symbol, precision=precision, startingBalance=startingBalance)
         self.commissionsPaid = 0
-        self.transactionFeePercentage = 0.001
         self.trades = []
         self.marginEnabled = marginEnabled
         self.precision = precision
@@ -58,12 +54,6 @@ class Backtester:
 
         self.takeProfitType = takeProfitType
         self.takeProfitPercentageDecimal = takeProfitPercentage / 100
-
-        self.currentPrice = None
-        self.buyLongPrice = None
-        self.sellShortPrice = None
-        self.longTrailingPrice = None
-        self.shortTrailingPrice = None
         self.profit = 0
 
         self.startTime = None
