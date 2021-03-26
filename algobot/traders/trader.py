@@ -11,9 +11,9 @@ class Trader:
         self.coin = 0  # Amount of coin we own.
         self.coinOwed = 0  # Amount of coin we owe.
         self.transactionFeePercentage = 0.001  # Binance transaction fee percentage.
-        self.symbol = symbol
+        self.symbol = symbol  # Symbol of ticker used for trading.
         self.precision = precision  # Precision to round data to.
-        self.trades = []
+        self.trades = []  # All trades performed.
 
         # Prices information.
         self.currentPrice = None  # Current price of coin.

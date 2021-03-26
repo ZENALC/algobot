@@ -34,7 +34,6 @@ class Backtester(Trader):
                  outputTrades: bool = True):
         super().__init__(symbol=symbol, precision=precision, startingBalance=startingBalance)
         self.commissionsPaid = 0
-        self.trades = []
         self.marginEnabled = marginEnabled
         self.precision = precision
         self.lossStrategy = lossStrategy

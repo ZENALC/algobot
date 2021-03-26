@@ -41,7 +41,6 @@ class SimulationTrader(Trader):
 
         self.previousNet = self.balance  # Our previous net will just be the starting balance in the beginning.
         self.coinName = self.get_coin_name()  # Retrieve primary coin to trade.
-        self.trades = []  # All trades performed.
         self.commissionPaid = 0  # Total commission paid to broker.
         self.dailyChangeNets = []  # Daily change net list. Will contain list of all nets.
 
