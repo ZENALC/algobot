@@ -21,8 +21,6 @@ class Backtester(Trader):
                  data: list,
                  lossStrategy: int,
                  lossPercentage: float,
-                 takeProfitType: int,
-                 takeProfitPercentage: float,
                  strategies: list,
                  strategyInterval: Union[str, None] = None,
                  symbol: str = None,
@@ -44,9 +42,6 @@ class Backtester(Trader):
         self.check_data()
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
-
-        self.takeProfitType = takeProfitType
-        self.takeProfitPercentageDecimal = takeProfitPercentage / 100
         self.profit = 0
 
         self.startTime = None

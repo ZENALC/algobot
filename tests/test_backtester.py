@@ -20,14 +20,13 @@ class TestBacktester(unittest.TestCase):
             startingBalance=1000,
             data=test_data,
             lossStrategy=TRAILING,
-            takeProfitType=TRAILING,
             lossPercentage=5,
-            takeProfitPercentage=5,
             strategies=[],
             strategyInterval='15m',
             symbol="1INCHUSDT",
             marginEnabled=True,
         )
+        self.backtester.apply_take_profit_settings({'takeProfitType': TRAILING, 'takeProfitPercentage': 5})
 
     def test_initialization(self):
         """

@@ -51,8 +51,6 @@ class SimulationTrader(Trader):
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
         self.endingTime = None  # Ending time for previous bot run.
 
-        self.takeProfitType = None  # Type of take profit: trailing or stop.
-        self.takeProfitPercentageDecimal = None  # Percentage of profit to exit trade at.
         self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
         self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.
 
@@ -397,15 +395,6 @@ class SimulationTrader(Trader):
         self.lossPercentageDecimal = lossDict["lossPercentage"] / 100
         self.set_safety_timer(lossDict['safetyTimer'])
         self.set_smart_stop_loss_counter(lossDict['smartStopLossCounter'])
-
-    def apply_take_profit_settings(self, takeProfitDict: Dict[str, int]):
-        """
-        Applies take profit settings based on take profit dictionary provided.
-        :param takeProfitDict: Take profit settings dictionary.
-        :return: None
-        """
-        self.takeProfitPercentageDecimal = takeProfitDict["takeProfitPercentage"] / 100
-        self.takeProfitType = takeProfitDict["takeProfitType"]
 
     def get_trend(self, dataObject=None, log_data=False):
         if not dataObject:

@@ -19,6 +19,8 @@ class Trader:
         self.strategies: Dict[str, Strategy] = {}
 
         self.previousPosition = None  # Previous position to validate for a new trend.
+        self.takeProfitType = None  # Type of take profit: trailing or stop.
+        self.takeProfitPercentageDecimal = None  # Percentage of profit to exit trade at.
 
         # Prices information.
         self.currentPrice = None  # Current price of coin.
@@ -60,6 +62,15 @@ class Trader:
         :param counter: Initial value to set counter at. Bot will reenter its previous position that many times.
         """
         self.smartStopLossCounter = self.smartStopLossInitialCounter = counter
+
+    def apply_take_profit_settings(self, takeProfitDict: Dict[str, int]):
+        """
+        Applies take profit settings based on take profit dictionary provided.
+        :param takeProfitDict: Take profit settings dictionary.
+        :return: None
+        """
+        self.takeProfitPercentageDecimal = takeProfitDict["takeProfitPercentage"] / 100
+        self.takeProfitType = takeProfitDict["takeProfitType"]
 
     def get_stop_loss(self):
         pass
