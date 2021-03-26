@@ -10,18 +10,18 @@ from datetime import datetime
 from algobot.helpers import ROOT_DIR, open_file_or_folder, get_logger, create_folder_if_needed
 from algobot.threads import workerThread, backtestThread, botThread, listThread
 from algobot.data import Data
-from algobot.interface.palettes import *
 from algobot.traders.backtester import Backtester
 from algobot.traders.realtrader import RealTrader
 from algobot.traders.simulationtrader import SimulationTrader
 from algobot.option import Option
-from algobot.enums import *
+from algobot.enums import LIVE, SIMULATION, BACKTEST, LONG, SHORT, NET_GRAPH, AVG_GRAPH
 from algobot.interface.configuration import Configuration
 from algobot.interface.otherCommands import OtherCommands
 from algobot.interface.about import About
 from algobot.interface.statistics import Statistics
 from algobot.scrapeNews import scrape_news
 from algobot.algodict import get_interface_dictionary
+from algobot.interface.palettes import red_palette, dark_palette, green_palette, light_palette, bloomberg_palette
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QTableWidgetItem, QFileDialog
@@ -1557,7 +1557,7 @@ class Interface(QMainWindow):
         """
         Switches interface to a dark theme.
         """
-        app.setPalette(get_dark_palette())
+        app.setPalette(dark_palette())
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('k')
@@ -1566,7 +1566,7 @@ class Interface(QMainWindow):
         """
         Switches interface to a light theme.
         """
-        app.setPalette(get_light_palette())
+        app.setPalette(light_palette())
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('w')
@@ -1575,7 +1575,7 @@ class Interface(QMainWindow):
         """
         Switches interface to bloomberg theme.
         """
-        app.setPalette(get_bloomberg_palette())
+        app.setPalette(bloomberg_palette())
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('k')
@@ -1584,7 +1584,7 @@ class Interface(QMainWindow):
         """
         Sets bear mode color theme. Theme is red and black mimicking a red day.
         """
-        app.setPalette(get_red_palette())
+        app.setPalette(red_palette())
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('k')
@@ -1593,7 +1593,7 @@ class Interface(QMainWindow):
         """
         Sets bull mode color theme. Theme is green and black mimicking a green day.
         """
-        app.setPalette(get_green_palette())
+        app.setPalette(green_palette())
         for graph in self.graphs:
             graph = graph['graph']
             graph.setBackground('k')

@@ -1,7 +1,7 @@
 from PyQt5.QtGui import QPalette, QColor
 
 
-def get_bloomberg_palette():
+def bloomberg_palette():
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
     palette.setColor(QPalette.WindowText, QColor(255, 140, 0))
@@ -24,7 +24,7 @@ def get_bloomberg_palette():
     return palette
 
 
-def get_green_palette():
+def green_palette():
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
     palette.setColor(QPalette.Base, QColor(25, 25, 25))
@@ -47,7 +47,7 @@ def get_green_palette():
     return palette
 
 
-def get_red_palette():
+def red_palette():
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
     palette.setColor(QPalette.WindowText, QColor(255, 0, 0))  # change
@@ -70,7 +70,7 @@ def get_red_palette():
     return palette
 
 
-def get_dark_palette():
+def dark_palette():
     palette = QPalette()  # These below were taken from qtModern.
     palette.setColor(QPalette.WindowText, QColor(180, 180, 180))
     palette.setColor(QPalette.Button, QColor(53, 53, 53))
@@ -98,6 +98,6 @@ def get_dark_palette():
     return palette
 
 
-def get_light_palette():
+def light_palette():
     palette = QPalette()
     return palette
