@@ -32,18 +32,13 @@ class BacktestThread(QRunnable):
         :return: GUI configuration details in a dictionary.
         """
         config = self.gui.configuration
-        gui = self.gui
         startDate, endDate = config.get_calendar_dates()
-        lossDict = gui.get_loss_settings(BACKTEST)
 
         return {
             'startingBalance': config.backtestStartingBalanceSpinBox.value(),
             'data': config.data,
             'startDate': startDate,
             'endDate': endDate,
-            'lossStrategy': lossDict["lossType"],
-            'lossPercentage': lossDict["lossPercentage"],
-            'smartStopLossCounter': lossDict["smartStopLossCounter"],
             'dataType': config.dataType,
             'precision': config.backtestPrecisionSpinBox.value(),
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
@@ -114,8 +109,6 @@ class BacktestThread(QRunnable):
         self.gui.backtester = Backtester(startingBalance=configDetails['startingBalance'],
                                          data=configDetails['data'],
                                          symbol=configDetails['dataType'],
-                                         lossStrategy=configDetails['lossStrategy'],
-                                         lossPercentage=configDetails['lossPercentage'],
                                          marginEnabled=configDetails['marginEnabled'],
                                          startDate=configDetails['startDate'],
                                          endDate=configDetails['endDate'],
@@ -124,7 +117,7 @@ class BacktestThread(QRunnable):
                                          strategies=configDetails['strategies'],
                                          strategyInterval=configDetails['strategyInterval'])
         self.gui.backtester.apply_take_profit_settings(self.gui.configuration.get_take_profit_settings(BACKTEST))
-        self.gui.backtester.set_smart_stop_loss_counter(configDetails['smartStopLossCounter'])
+        self.gui.backtester.apply_loss_settings(self.gui.get_loss_settings(BACKTEST))
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
 
     def stop(self):

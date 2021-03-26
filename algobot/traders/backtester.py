@@ -19,8 +19,6 @@ class Backtester(Trader):
     def __init__(self,
                  startingBalance: float,
                  data: list,
-                 lossStrategy: int,
-                 lossPercentage: float,
                  strategies: list,
                  strategyInterval: Union[str, None] = None,
                  symbol: str = None,
@@ -32,9 +30,6 @@ class Backtester(Trader):
         super().__init__(symbol=symbol, precision=precision, startingBalance=startingBalance)
         self.commissionsPaid = 0
         self.marginEnabled = marginEnabled
-        self.precision = precision
-        self.lossStrategy = lossStrategy
-        self.lossPercentageDecimal = lossPercentage / 100
         self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
 
         convert_all_dates_to_datetime(data)

@@ -2,7 +2,6 @@ import time
 
 from datetime import datetime
 from threading import Lock
-from typing import Dict
 
 from algobot.traders.trader import Trader
 from algobot.helpers import get_logger, convert_small_interval, set_up_strategies
@@ -47,18 +46,15 @@ class SimulationTrader(Trader):
         self.lock = Lock()  # Lock to ensure a transaction doesn't occur when another one is taking place.
         self.addTradeCallback = addTradeCallback
 
-        self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
         self.endingTime = None  # Ending time for previous bot run.
 
         self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
         self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.
 
-        self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
         self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
         self.smartStopLossEnter = False  # Boolean that'll determine whether current position is from a smart stop loss.
-        self.safetyTimer = None  # Timer to check if there's a true trend towards stop loss.
         self.scheduledSafetyTimer = None  # Next time to check if it's a true stop loss.
 
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
@@ -74,16 +70,6 @@ class SimulationTrader(Trader):
         :param strategies: List of strategies to set up and apply to bot.
         """
         set_up_strategies(self, strategies)
-
-    def set_safety_timer(self, safetyTimer: int):
-        """
-        Sets safety timer for bot to evaluate whether a stop loss is still apparent after the safety timer.
-        :param safetyTimer: Amount of seconds to wait after a stop loss is reached before exiting position.
-        """
-        if safetyTimer == 0:
-            self.safetyTimer = None
-        else:
-            self.safetyTimer = safetyTimer
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
@@ -384,17 +370,6 @@ class SimulationTrader(Trader):
             self.currentPosition = SHORT
             self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
             self.add_trade(msg, force=force, smartEnter=smartEnter)
-
-    def apply_loss_settings(self, lossDict: Dict[str, int]):
-        """
-        Applies loss settings based on loss dictionary provided.
-        :param lossDict: Loss settings dictionary.
-        :return: None
-        """
-        self.lossStrategy = lossDict["lossType"]
-        self.lossPercentageDecimal = lossDict["lossPercentage"] / 100
-        self.set_safety_timer(lossDict['safetyTimer'])
-        self.set_smart_stop_loss_counter(lossDict['smartStopLossCounter'])
 
     def get_trend(self, dataObject=None, log_data=False):
         if not dataObject:

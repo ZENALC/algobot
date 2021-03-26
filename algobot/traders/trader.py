@@ -19,6 +19,7 @@ class Trader:
         self.strategies: Dict[str, Strategy] = {}
 
         self.previousPosition = None  # Previous position to validate for a new trend.
+
         self.takeProfitType = None  # Type of take profit: trailing or stop.
         self.takeProfitPercentageDecimal = None  # Percentage of profit to exit trade at.
 
@@ -34,6 +35,9 @@ class Trader:
         self.smartStopLossCounter = 0  # Smart stop loss counter.
         self.previousStopLoss = None  # Previous stop loss for smart stop loss.
         self.stopLossExit = False  # Boolean that'll determine whether last position was exited from a stop loss.
+        self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
+        self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
+        self.safetyTimer = None  # Timer to check if there's a true trend towards stop loss.
 
     def add_trade(self, **kwargs):
         raise NotImplementedError("Please implement a function for adding trades.")
@@ -63,6 +67,16 @@ class Trader:
         """
         self.smartStopLossCounter = self.smartStopLossInitialCounter = counter
 
+    def set_safety_timer(self, safetyTimer: int):
+        """
+        Sets safety timer for bot to evaluate whether a stop loss is still apparent after the safety timer.
+        :param safetyTimer: Amount of seconds to wait after a stop loss is reached before exiting position.
+        """
+        if safetyTimer == 0:
+            self.safetyTimer = None
+        else:
+            self.safetyTimer = safetyTimer
+
     def apply_take_profit_settings(self, takeProfitDict: Dict[str, int]):
         """
         Applies take profit settings based on take profit dictionary provided.
@@ -71,6 +85,19 @@ class Trader:
         """
         self.takeProfitPercentageDecimal = takeProfitDict["takeProfitPercentage"] / 100
         self.takeProfitType = takeProfitDict["takeProfitType"]
+
+    def apply_loss_settings(self, lossDict: Dict[str, int]):
+        """
+        Applies loss settings based on loss dictionary provided.
+        :param lossDict: Loss settings dictionary.
+        :return: None
+        """
+        self.lossStrategy = lossDict["lossType"]
+        self.lossPercentageDecimal = lossDict["lossPercentage"] / 100
+        self.set_smart_stop_loss_counter(lossDict['smartStopLossCounter'])
+
+        if 'safetyTimer' in lossDict:
+            self.set_safety_timer(lossDict['safetyTimer'])
 
     def get_stop_loss(self):
         pass
