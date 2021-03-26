@@ -1,5 +1,4 @@
 # IDE
-
 /.idea/
 
 # Python
@@ -7,21 +6,21 @@ __pycache__/
 /.venv/
 /venv/
 
-
-/Databases/
-
+# Project
 /Backtest Results/
 /Configuration/
-/CSV/
 /Credentials/
+/CSV/
 /Databases/
 /Logs/
 /other/
 /Trade History/
 
+# Strategies
 /algobot/strategies
 !algobot/strategies/movingAverage.py
 !algobot/strategies/strategy.py
 
+# Miscellaneous
 state.json
 
