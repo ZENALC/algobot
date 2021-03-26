@@ -94,7 +94,9 @@ class Trader:
         """
         self.lossStrategy = lossDict["lossType"]
         self.lossPercentageDecimal = lossDict["lossPercentage"] / 100
-        self.set_smart_stop_loss_counter(lossDict['smartStopLossCounter'])
+
+        if 'smartStopLossCounter' in lossDict:
+            self.set_smart_stop_loss_counter(lossDict['smartStopLossCounter'])
 
         if 'safetyTimer' in lossDict:
             self.set_safety_timer(lossDict['safetyTimer'])
