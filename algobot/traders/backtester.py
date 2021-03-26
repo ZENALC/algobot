@@ -662,8 +662,8 @@ class Backtester:
             elif self.takeProfitType is not None and self.currentPrice <= self.get_take_profit():
                 self.buy_short("Exited short because of take profit.")
             elif trend == BULLISH:
-                self.buy_short(f'Exited short because a bullish trend was detected.')
-                self.buy_long(f'Entered long because a bullish trend was detected.')
+                self.buy_short('Exited short because a bullish trend was detected.')
+                self.buy_long('Entered long because a bullish trend was detected.')
         elif self.inLongPosition:
             if self.lossStrategy is not None and self.currentPrice < self.get_stop_loss():
                 self.sell_long('Exited long because a stop loss was triggered.', stopLossExit=True)
@@ -729,7 +729,7 @@ class Backtester:
         print(f'\tTake Profit Percentage: {round(self.takeProfitPercentageDecimal * 100, 2)}%')
         print(f'\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%')
         if self.lossStrategy == TRAILING:
-            print(f"\tLoss Strategy: Trailing")
+            print("\tLoss Strategy: Trailing")
         else:
             print("\tLoss Strategy: Stop")
         self.print_strategies()

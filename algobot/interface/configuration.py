@@ -9,7 +9,7 @@ from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5 import uic
 
 # noinspection PyUnresolvedReferences
-from algobot.strategies import *
+from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
 
 from algobot.interface.configuration_helpers import create_strategy_inputs, get_input_widget_value, set_value, \

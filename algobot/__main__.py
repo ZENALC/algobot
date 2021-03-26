@@ -224,7 +224,7 @@ class Interface(QMainWindow):
         fileName = fileName if fileName != '' else None
 
         if not fileName:
-            self.add_to_backtest_monitor(f'Ended backtest.')
+            self.add_to_backtest_monitor('Ended backtest.')
         else:
             path = self.backtester.write_results(resultFile=fileName)
             self.add_to_backtest_monitor(f'Ended backtest and saved results to {path}.')
@@ -810,11 +810,11 @@ class Interface(QMainWindow):
         """
         self.advancedLogging = boolean
         if self.advancedLogging:
-            self.add_to_live_activity_monitor(f'Logging method has been changed to advanced.')
-            self.add_to_simulation_activity_monitor(f'Logging method has been changed to advanced.')
+            self.add_to_live_activity_monitor('Logging method has been changed to advanced.')
+            self.add_to_simulation_activity_monitor('Logging method has been changed to advanced.')
         else:
-            self.add_to_live_activity_monitor(f'Logging method has been changed to simple.')
-            self.add_to_simulation_activity_monitor(f'Logging method has been changed to simple.')
+            self.add_to_live_activity_monitor('Logging method has been changed to simple.')
+            self.add_to_simulation_activity_monitor('Logging method has been changed to simple.')
 
     def set_custom_stop_loss(self, caller, enable: bool = True, foreignValue: float or None = None):
         """
@@ -839,7 +839,7 @@ class Interface(QMainWindow):
             trader.customStopLoss = None
             mainDict['enableCustomStopLossButton'].setEnabled(True)
             mainDict['disableCustomStopLossButton'].setEnabled(False)
-            self.add_to_monitor(caller, f'Removed custom stop loss.')
+            self.add_to_monitor(caller, 'Removed custom stop loss.')
 
     def get_loss_settings(self, caller) -> dict:
         """

@@ -457,21 +457,21 @@ class SimulationTrader:
         :param trend: Current trend the bot registers based on strategies provided.
         """
         if self.customStopLoss is not None and self.currentPrice >= self.customStopLoss:
-            self.buy_short(f'Bought short because of custom stop loss.')
+            self.buy_short('Bought short because of custom stop loss.')
         elif self.get_stop_loss() is not None and self.currentPrice >= self.get_stop_loss():
             if not self.safetyTimer:
-                self.buy_short(f'Bought short because of stop loss.', stopLossExit=True)
+                self.buy_short('Bought short because of stop loss.', stopLossExit=True)
             else:
                 if not self.scheduledSafetyTimer:
                     self.scheduledSafetyTimer = time.time() + self.safetyTimer
                 else:
                     if time.time() > self.scheduledSafetyTimer:
-                        self.buy_short(f'Bought short because of stop loss and safety timer.', stopLossExit=True)
+                        self.buy_short('Bought short because of stop loss and safety timer.', stopLossExit=True)
         elif self.get_take_profit() is not None and self.currentPrice <= self.get_take_profit():
-            self.buy_short("Bought short because of take profit.")
+            self.buy_short('Bought short because of take profit.')
         elif not self.inHumanControl and trend == BULLISH:
-            self.buy_short(f'Bought short because a bullish trend was detected.')
-            self.buy_long(f'Bought long because a bullish trend was detected.')
+            self.buy_short('Bought short because a bullish trend was detected.')
+            self.buy_long('Bought long because a bullish trend was detected.')
 
     def long_position_logic(self, trend):
         """
@@ -479,20 +479,20 @@ class SimulationTrader:
         :param trend: Current trend the bot registers based on strategies provided.
         """
         if self.customStopLoss is not None and self.currentPrice <= self.customStopLoss:
-            self.sell_long(f'Sold long because of custom stop loss.')
+            self.sell_long('Sold long because of custom stop loss.')
         elif self.get_stop_loss() is not None and self.currentPrice <= self.get_stop_loss():
             if not self.safetyTimer:
-                self.sell_long(f'Sold long because of stop loss.', stopLossExit=True)
+                self.sell_long('Sold long because of stop loss.', stopLossExit=True)
             else:
                 if not self.scheduledSafetyTimer:
                     self.scheduledSafetyTimer = time.time() + self.safetyTimer
                 else:
                     if time.time() > self.scheduledSafetyTimer:
-                        self.sell_long(f'Sold long because of stop loss and safety timer.', stopLossExit=True)
+                        self.sell_long('Sold long because of stop loss and safety timer.', stopLossExit=True)
         elif self.get_take_profit() is not None and self.currentPrice >= self.get_take_profit():
-            self.sell_long("Sold long because of take profit.")
+            self.sell_long('Sold long because of take profit.')
         elif not self.inHumanControl and trend == BEARISH:
-            self.sell_long(f'Sold long because a cross was detected.')
+            self.sell_long('Sold long because a cross was detected.')
             self.sell_short('Sold short because a cross was detected.')
 
     def no_position_logic(self, trend):
@@ -503,21 +503,21 @@ class SimulationTrader:
         if self.stopLossExit and self.smartStopLossCounter > 0:
             if self.previousPosition == LONG:
                 if self.currentPrice > self.previousStopLoss:
-                    self.buy_long("Reentered long because of smart stop loss.", smartEnter=True)
+                    self.buy_long('Reentered long because of smart stop loss.', smartEnter=True)
                     self.smartStopLossCounter -= 1
                     return
             elif self.previousPosition == SHORT:
                 if self.currentPrice < self.previousStopLoss:
-                    self.sell_short("Reentered short because of smart stop loss.", smartEnter=True)
+                    self.sell_short('Reentered short because of smart stop loss.', smartEnter=True)
                     self.smartStopLossCounter -= 1
                     return
 
         if not self.inHumanControl:
             if trend == BULLISH and self.previousPosition != LONG:
-                self.buy_long("Bought long because a bullish trend was detected.")
+                self.buy_long('Bought long because a bullish trend was detected.')
                 self.reset_smart_stop_loss()
             elif trend == BEARISH and self.previousPosition != SHORT:
-                self.sell_short("Sold short because a bearish trend was detected.")
+                self.sell_short('Sold short because a bearish trend was detected.')
                 self.reset_smart_stop_loss()
 
     # noinspection PyTypeChecker
@@ -548,11 +548,11 @@ class SimulationTrader:
         :return: Exit position type in string format.
         """
         if exitPositionType == STOP:
-            return "Stop"
+            return 'Stop'
         elif exitPositionType == TRAILING:
-            return "Trailing"
+            return 'Trailing'
         elif exitPositionType is None:
-            return "None"
+            return 'None'
         else:
             raise ValueError("Unknown type of exit position type.")
 
@@ -584,7 +584,7 @@ class SimulationTrader:
         elif trend is None:
             return 'None'
         else:
-            raise ValueError("Unknown type of trend.")
+            raise ValueError('Unknown type of trend.')
 
     def get_position_string(self) -> str:
         """
@@ -801,16 +801,16 @@ class SimulationTrader:
         """
         if self.currentPosition is None:
             if not self.inHumanControl:
-                self.output_message(f'\nCurrently not a in short or long position. Waiting for next cross.')
+                self.output_message('\nCurrently not a in short or long position. Waiting for next cross.')
             else:
-                self.output_message(f'\nCurrently not a in short or long position. Waiting for human intervention.')
+                self.output_message('\nCurrently not a in short or long position. Waiting for human intervention.')
 
     def output_short_information(self):
         """
         Outputs general information about status of trade when in a short position.
         """
         if self.currentPosition == SHORT and self.stopLoss is not None:
-            self.output_message(f'\nCurrently in short position.')
+            self.output_message('\nCurrently in short position.')
             if self.lossStrategy == TRAILING:
                 self.output_message(f'Short trailing loss: ${round(self.stopLoss, self.precision)}')
             elif self.lossStrategy == STOP:
@@ -821,7 +821,7 @@ class SimulationTrader:
         Outputs general information about status of trade when in a long position.
         """
         if self.currentPosition == LONG and self.stopLoss is not None:
-            self.output_message(f'\nCurrently in long position.')
+            self.output_message('\nCurrently in long position.')
             if self.lossStrategy == TRAILING:
                 self.output_message(f'Long trailing loss: ${round(self.stopLoss, self.precision)}')
             elif self.lossStrategy == STOP:
@@ -832,9 +832,9 @@ class SimulationTrader:
         Outputs general information about status of bot.
         """
         if self.inHumanControl:
-            self.output_message(f'Currently in human control. Bot is waiting for human input to continue.')
+            self.output_message('Currently in human control. Bot is waiting for human input to continue.')
         else:
-            self.output_message(f'Currently in autonomous mode.')
+            self.output_message('Currently in autonomous mode.')
 
     def output_profit_information(self):
         """
@@ -846,7 +846,7 @@ class SimulationTrader:
         elif profit < 0:
             self.output_message(f'Loss: ${-profit}')
         else:
-            self.output_message(f'Profit: $0')
+            self.output_message('Profit: $0')
 
     def output_basic_information(self):
         """
@@ -891,11 +891,11 @@ class SimulationTrader:
         self.endingTime = datetime.utcnow()
         if self.coin > 0:
             self.output_message(f"Selling all {self.coinName}...")
-            self.sell_long(f'Sold all owned coin as simulation ended.')
+            self.sell_long('Sold all owned coin as simulation ended.')
 
         if self.coinOwed > 0:
             self.output_message(f"Returning all borrowed {self.coinName}...")
-            self.buy_short(f'Returned all borrowed coin as simulation ended.')
+            self.buy_short('Returned all borrowed coin as simulation ended.')
 
         self.output_message("\nResults:")
         self.output_message(f'Starting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')

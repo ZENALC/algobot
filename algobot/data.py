@@ -178,7 +178,7 @@ class Data:
             totalData = self.data
 
         query = f'''INSERT INTO {self.databaseTable} (date_utc, open_price, high_price, low_price, close_price,
-                            volume, quote_asset_volume, number_of_trades, taker_buy_base_asset, taker_buy_quote_asset) 
+                    volume, quote_asset_volume, number_of_trades, taker_buy_base_asset, taker_buy_quote_asset)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
@@ -223,7 +223,7 @@ class Data:
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 rows = cursor.execute(f'''
-                        SELECT "date_utc", "open_price", "high_price", "low_price", "close_price", "volume", 
+                        SELECT "date_utc", "open_price", "high_price", "low_price", "close_price", "volume",
                         "quote_asset_volume", "number_of_trades", "taker_buy_base_asset", "taker_buy_quote_asset"
                         FROM {self.databaseTable} ORDER BY date_utc DESC
                         ''').fetchall()
@@ -488,7 +488,7 @@ class Data:
                                      'taker_buy_quote_asset': float(currentData[9]), }
             self.current_values = currentDataDictionary
             if counter > 0:
-                self.try_callback(f"Successfully reconnected.")
+                self.try_callback("Successfully reconnected.")
             return currentDataDictionary
         except Exception as e:
             sleepTime = 5 + counter * 2
