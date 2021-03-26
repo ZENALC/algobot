@@ -11,7 +11,6 @@ constantly==15.1.0
 cryptography==3.3.2
 dateparser==0.7.6
 decorator==4.4.2
-flake8
 hyperlink==19.0.0
 idna==2.9
 incremental==17.5.0
