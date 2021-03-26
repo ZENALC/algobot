@@ -1,4 +1,5 @@
 import unittest
+
 from algobot.data import Data
 
 

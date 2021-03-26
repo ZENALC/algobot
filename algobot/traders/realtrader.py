@@ -3,6 +3,7 @@ import time
 
 from algobot.enums import *
 from algobot.traders.simulationtrader import SimulationTrader
+
 from binance.client import Client
 from binance.enums import *
 

@@ -2,9 +2,9 @@ import os
 import unittest
 import pytest
 
+from datetime import datetime
 from algobot.traders.backtester import Backtester
 from algobot.enums import TRAILING, STOP
-from datetime import datetime
 from algobot.helpers import convert_all_dates_to_datetime, load_from_csv
 
 test_data = load_from_csv(path=f'{os.path.dirname(__file__)}/1INCHUSDT_data_1m.csv', descending=False)

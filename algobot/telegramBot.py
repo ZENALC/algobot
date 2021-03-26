@@ -2,6 +2,7 @@ import random
 
 from telegram import Bot, constants
 from telegram.ext import Updater, CommandHandler
+
 from algobot.enums import LONG, SHORT, LIVE
 from algobot.traders.simulationtrader import SimulationTrader
 from algobot.helpers import get_label_string

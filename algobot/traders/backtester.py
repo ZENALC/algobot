@@ -6,6 +6,7 @@ from typing import Dict, Union
 from itertools import product
 from dateutil import parser
 from datetime import datetime, timedelta
+
 from algobot.helpers import get_ups_and_downs, get_label_string, set_up_strategies, get_interval_minutes, \
     convert_small_interval, convert_all_dates_to_datetime
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, TRAILING, STOP

@@ -1,14 +1,15 @@
 import time
-import algobot.assets as assets
 import sys
 import os
 import webbrowser
+import algobot.assets
 
 from typing import List, Dict, Union
+from datetime import datetime
+
 from algobot.helpers import ROOT_DIR, open_file_or_folder, get_logger, create_folder_if_needed
 from algobot.threads import workerThread, backtestThread, botThread, listThread
 from algobot.data import Data
-from datetime import datetime
 from algobot.interface.palettes import *
 from algobot.traders.backtester import Backtester
 from algobot.traders.realtrader import RealTrader
@@ -39,7 +40,7 @@ class Interface(QMainWindow):
     """
 
     def __init__(self, parent=None):
-        assets.qInitResources()
+        algobot.assets.qInitResources()
         super(Interface, self).__init__(parent)  # Initializing object
         uic.loadUi(mainUi, self)  # Loading the main UI
         self.logger = get_logger(logFile='algobot', loggerName='algobot')
