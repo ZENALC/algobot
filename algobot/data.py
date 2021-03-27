@@ -138,13 +138,11 @@ class Data:
         Retrieves database file path.
         :return: Database file path.
         """
-        currentPath = os.getcwd()
-        os.chdir(ROOT_DIR)
-        if not os.path.exists('Databases'):
-            os.mkdir('Databases')
+        database_folder = os.path.join(ROOT_DIR, 'Databases')
+        if not os.path.exists(database_folder):
+            os.mkdir(database_folder)
 
-        filePath = os.path.join(os.getcwd(), 'Databases', f'{self.symbol}.db')
-        os.chdir(currentPath)
+        filePath = os.path.join(database_folder, f'{self.symbol}.db')
         return filePath
 
     def create_table(self):
