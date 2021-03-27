@@ -46,9 +46,6 @@ class SimulationTrader(Trader):
         self.lock = Lock()  # Lock to ensure a transaction doesn't occur when another one is taking place.
         self.addTradeCallback = addTradeCallback
 
-        self.startingTime = datetime.utcnow()  # Starting time in UTC.
-        self.endingTime = None  # Ending time for previous bot run.
-
         self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
         self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.
 

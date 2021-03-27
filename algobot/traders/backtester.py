@@ -41,12 +41,9 @@ class Backtester(Trader):
         self.intervalMinutes = get_interval_minutes(self.interval)
         self.profit = 0
 
-        self.startTime = None
-        self.endTime = None
         self.inLongPosition = False
         self.inShortPosition = False
         self.currentPeriod = None
-        self.minPeriod = 0
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
 
         if len(strategyInterval.split()) == 1:
@@ -263,12 +260,12 @@ class Backtester(Trader):
         if thread:
             thread.signals.updateGraphLimits.emit(testLength // divisor + 1)
 
-        self.startTime = time.time()
+        self.startingTime = time.time()
         if len(self.strategies) == 0:
             self.simulate_hold(testLength, divisor, thread)
         else:
             self.strategy_backtest(testLength, divisor, thread)
-        self.endTime = time.time()
+        self.endingTime = time.time()
 
     def exit_backtest(self, index: int = None):
         """
@@ -706,7 +703,7 @@ class Backtester(Trader):
 
         print("\nBacktest results:")
         print(f'\tSymbol: {"Unknown/Imported Data" if self.symbol is None else self.symbol}')
-        print(f'\tElapsed: {round(self.endTime - self.startTime, 2)} seconds')
+        print(f'\tElapsed: {round(self.endingTime - self.startingTime, 2)} seconds')
         print(f'\tStart Period: {self.data[self.startDateIndex]["date_utc"]}')
         print(f"\tEnd Period: {self.currentPeriod['date_utc']}")
         print(f'\tStarting balance: ${round(self.startingBalance, self.precision)}')

@@ -1,6 +1,7 @@
 """
 This will be the main Trader class that all other Traders will inherit from.
 """
+from datetime import datetime
 from typing import Dict
 
 from algobot.strategies.strategy import Strategy
@@ -19,6 +20,10 @@ class Trader:
         self.trades = []  # All trades performed.
         self.strategies: Dict[str, Strategy] = {}
 
+        self.startingTime = datetime.utcnow()  # Starting time in UTC.
+        self.endingTime = None  # Ending time for previous bot run.
+
+        self.minPeriod = 0  # Minimum amount of periods required for trend retrieval.
         self.previousPosition = None  # Previous position to validate for a new trend.
 
         self.takeProfitType = None  # Type of take profit: trailing or stop.
