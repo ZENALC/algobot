@@ -9,7 +9,7 @@ from algobot.traders.simulationtrader import SimulationTrader
 
 
 class TelegramBot:
-    def __init__(self, gui, token, botThread):
+    def __init__(self, gui, token: str, botThread):
         self.token = token
         self.gui = gui
         self.botThread = botThread
@@ -39,7 +39,7 @@ class TelegramBot:
         dp.add_handler(CommandHandler('joke', self.joke))
         dp.add_handler(CommandHandler('wisdom', self.wisdom))
 
-    def send_message(self, chatID, message):
+    def send_message(self, chatID: str, message: str):
         """
         Sends provided message to specified chat ID using Telegram.
         :param chatID: Chat ID in Telegram to send message to.
@@ -193,7 +193,7 @@ class TelegramBot:
                 f'{optionString}'
                 )
 
-    def send_statistics_telegram(self, chatID, period):
+    def send_statistics_telegram(self, chatID: str, period: str):
         """
         This function is used to periodically send statistics if enabled.
         :param chatID: Chat ID to send statistics to.
