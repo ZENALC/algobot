@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH
@@ -8,6 +8,9 @@ from algobot.strategies.strategy import Strategy
 
 class MovingAverageStrategy(Strategy):
     def __init__(self, parent=None, inputs: List[Option] = None, precision: int = 2):
+        """
+        Basic Moving Average strategy.
+        """
         super().__init__(name='Moving Average', parent=parent, precision=precision)
         self.tradingOptions: List[Option] = inputs
         self.dynamic = True
@@ -32,6 +35,13 @@ class MovingAverageStrategy(Strategy):
 
     @staticmethod
     def get_param_types() -> List[tuple]:
+        """
+        This function will return all the parameter types of the Moving Average strategy for the GUI.
+        The moving average tuple will return a tuple type with all the supported moving averages.
+        The parameter tuple will return a tuple type with all the supported parameters.
+        The initial value will return the int type.
+        The final value will return the int type.
+        """
         movingAverages = ['SMA', 'EMA', 'WMA']
         parameters = ['High', 'Low', 'Open', 'Close', 'High/Low', 'Open/Close']
         return [('Moving Average', tuple, movingAverages),
@@ -41,9 +51,17 @@ class MovingAverageStrategy(Strategy):
                 ]
 
     def get_params(self) -> List[Option]:
+        """
+        This function will return all the parameters used for the Moving Average strategy.
+        """
         return self.tradingOptions
 
-    def get_trend(self, data: List[dict] or Data = None, log_data=False) -> int:
+    def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False) -> int:
+        """
+        This function should return the current trend for the Moving Average strategy with the provided data.
+        :param data: Data container to get trend from - it can either be a list or a Data object.
+        :param log_data: Boolean specifying whether current information regarding strategy should be logged or not.
+        """
         parent = self.parent
         trends = []  # Current option trends. They all have to be the same to register a trend.
 
