@@ -27,8 +27,8 @@ class Data:
         :param: caller: Caller of callback (if passed).
         """
         self.callback = callback  # Used to emit signals to GUI if provided.
-        self.caller = caller  # Used to specify which caller emitted signals.
-        self.binanceClient = Client()  # Initialize Binance client.
+        self.caller = caller  # Used to specify which caller emitted signals for GUI.
+        self.binanceClient = Client()  # Initialize Binance client to retrieve data.
         self.logger = self.get_logging_object(log=log, logFile=logFile, logObject=logObject)
         self.validate_interval(interval)  # Validate the interval provided.
         self.interval = interval  # Interval to trade in.
@@ -39,9 +39,9 @@ class Data:
         self.downloadCompleted = False  # Boolean to determine whether data download is completed or not.
         self.downloadLoop = True  # Boolean to determine whether data is being downloaded or not.
 
-        symbol = symbol.upper()
-        self.validate_symbol(symbol)  # Validate symbol.
-        self.symbol = symbol  # Symbol of data being used.
+        self.tickers = self.binanceClient.get_all_tickers()  # A list of all the tickers on Binance.
+        self.symbol = symbol.upper()  # Symbol of data being used.
+        self.validate_symbol(self.symbol)  # Validate symbol.
         self.data = []  # Total bot data.
         self.ema_dict = {}  # Cached past EMA data for memoization.
         self.rsi_data = {}  # Cached past RSI data for memoization.
@@ -641,8 +641,7 @@ class Data:
         :param symbol: Symbol to be checked.
         :return: A boolean whether the symbol is valid or not.
         """
-        tickers = self.binanceClient.get_all_tickers()
-        for ticker in tickers:
+        for ticker in self.tickers:
             if ticker['symbol'] == symbol:
                 return True
         return False
