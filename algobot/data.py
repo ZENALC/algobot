@@ -29,7 +29,7 @@ class Data:
         self.callback = callback  # Used to emit signals to GUI if provided.
         self.caller = caller  # Used to specify which caller emitted signals for GUI.
         self.binanceClient = Client()  # Initialize Binance client to retrieve data.
-        self.logger = self.get_logging_object(log=log, logFile=logFile, logObject=logObject)
+        self.logger = self.get_logging_object(enable_logging=log, logFile=logFile, loggerObject=logObject)
         self.validate_interval(interval)  # Validate the interval provided.
         self.interval = interval  # Interval to trade in.
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
@@ -67,21 +67,21 @@ class Data:
             self.load_data(update=updateData)
 
     @staticmethod
-    def get_logging_object(log: bool, logFile: str, logObject):
+    def get_logging_object(enable_logging: bool, logFile: str, loggerObject):
         """
         Returns a logger object.
-        :param log: Boolean that determines where logging is enabled or not.
+        :param enable_logging: Boolean that determines where logging is enabled or not.
         :param logFile: File to log to.
-        :param logObject: Log object to return if there is one already specified.
+        :param loggerObject: Logger object to return if there is one already specified.
         :return: Logger object or None.
         """
-        if logObject:
-            return logObject
+        if loggerObject:
+            return loggerObject
         else:
-            if not log:
-                return None
+            if enable_logging:
+                return get_logger(logFile=logFile, loggerName=logFile)
             else:
-                return get_logger(logFile, logFile)
+                return None
 
     def validate_interval(self, interval: str):
         """
@@ -147,7 +147,7 @@ class Data:
 
     def create_table(self):
         """
-        Creates a new table with interval if it does not exist
+        Creates a new table with interval if it does not exist.
         """
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:

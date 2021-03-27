@@ -78,7 +78,7 @@ def setup_and_return_log_path(fileName: str) -> str:
     return fullPath
 
 
-def get_logger(logFile: str, loggerName: str):
+def get_logger(logFile: str, loggerName: str) -> logging.Logger:
     """
     Returns a logger object with loggerName provided and that'll log to logFile.
     :param logFile: File to log to.
