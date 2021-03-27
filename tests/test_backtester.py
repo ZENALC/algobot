@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from algobot.enums import STOP, TRAILING
+from algobot.enums import STOP, TRAILING, LONG, SHORT
 from algobot.helpers import convert_all_dates_to_datetime, load_from_csv
 from algobot.traders.backtester import Backtester
 
@@ -146,7 +146,7 @@ class TestBacktester(unittest.TestCase):
         rem = 1 - backtester.transactionFeePercentage  # Percentage of transaction left over.
 
         self.assertEqual(backtester.commissionsPaid, backtester.transactionFeePercentage * backtester.startingBalance)
-        self.assertEqual(backtester.inLongPosition, True)
+        self.assertEqual(backtester.currentPosition, LONG)
         self.assertEqual(backtester.coin, backtester.startingBalance / backtester.currentPrice * rem)
         self.assertEqual(backtester.balance, 0)
         self.assertEqual(backtester.buyLongPrice, backtester.currentPrice)
@@ -167,7 +167,7 @@ class TestBacktester(unittest.TestCase):
         backtester.sell_long("Test sell.")
 
         self.assertEqual(backtester.commissionsPaid, commission)
-        self.assertEqual(backtester.inLongPosition, False)
+        self.assertEqual(backtester.currentPosition, None)
         self.assertEqual(backtester.coin, 0)
         self.assertEqual(backtester.balance, backtester.get_net())
         self.assertEqual(backtester.trades[1]['action'], "Test sell.")
@@ -186,7 +186,7 @@ class TestBacktester(unittest.TestCase):
         balance = backtester.startingBalance + backtester.currentPrice * backtester.coinOwed - commission
 
         self.assertEqual(backtester.commissionsPaid, commission)
-        self.assertEqual(backtester.inShortPosition, True)
+        self.assertEqual(backtester.currentPosition, SHORT)
         self.assertEqual(backtester.coinOwed, backtester.startingBalance / backtester.currentPrice * rem)
         self.assertEqual(backtester.balance, balance)
         self.assertEqual(backtester.sellShortPrice, backtester.currentPrice)
@@ -207,7 +207,7 @@ class TestBacktester(unittest.TestCase):
         backtester.buy_short("Test buy short.")
 
         self.assertEqual(backtester.commissionsPaid, commission)
-        self.assertEqual(backtester.inShortPosition, False)
+        self.assertEqual(backtester.currentPosition, None)
         self.assertEqual(backtester.coinOwed, 0)
         self.assertEqual(backtester.balance, backtester.get_net())
         self.assertEqual(backtester.trades[1]['action'], "Test buy short.")
@@ -266,12 +266,12 @@ class TestBacktester(unittest.TestCase):
         backtester.smartStopLossCounter = 0  # Set stop loss counter at 0, so bot can't reenter.
         backtester.set_priced_current_price_and_period(150)  # Set exorbitant price but don't let bot reenter.
         backtester.main_logic()  # Should not reenter as counter is 0.
-        self.assertEqual(backtester.inLongPosition, False)
+        self.assertEqual(backtester.currentPosition, None)
         self.assertEqual(backtester.smartStopLossCounter, 0)
 
         backtester.reset_smart_stop_loss()  # Counter is reset.
         backtester.main_logic()  # Should reenter.
-        self.assertEqual(backtester.inLongPosition, True)
+        self.assertEqual(backtester.currentPosition, LONG)
         self.assertEqual(backtester.smartStopLossCounter, backtester.smartStopLossInitialCounter - 1)
 
     def test_long_stop_loss(self):

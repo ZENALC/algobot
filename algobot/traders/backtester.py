@@ -41,8 +41,6 @@ class Backtester(Trader):
         self.intervalMinutes = get_interval_minutes(self.interval)
         self.profit = 0
 
-        self.inLongPosition = False
-        self.inShortPosition = False
         self.currentPeriod = None
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
 
@@ -154,7 +152,7 @@ class Backtester(Trader):
         usd = self.balance
         transactionFee = self.transactionFeePercentage * usd
         self.commissionsPaid += transactionFee
-        self.inLongPosition = True
+        self.currentPosition = LONG
         self.coin += (usd - transactionFee) / self.currentPrice
         self.balance -= usd
         self.buyLongPrice = self.longTrailingPrice = self.currentPrice
@@ -169,7 +167,7 @@ class Backtester(Trader):
         coin = self.coin
         transactionFee = self.currentPrice * coin * self.transactionFeePercentage
         self.commissionsPaid += transactionFee
-        self.inLongPosition = False
+        self.currentPosition = None
         self.previousPosition = LONG
         self.coin -= coin
         self.balance += coin * self.currentPrice - transactionFee
@@ -184,7 +182,7 @@ class Backtester(Trader):
         transactionFee = self.balance * self.transactionFeePercentage
         coin = (self.balance - transactionFee) / self.currentPrice
         self.commissionsPaid += transactionFee
-        self.inShortPosition = True
+        self.currentPosition = SHORT
         self.coinOwed += coin
         self.balance += self.currentPrice * coin - transactionFee
         self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
@@ -199,7 +197,7 @@ class Backtester(Trader):
         transactionFee = self.coinOwed * self.currentPrice * self.transactionFeePercentage
         coin = self.coinOwed
         self.commissionsPaid += transactionFee
-        self.inShortPosition = False
+        self.currentPosition = None
         self.previousPosition = SHORT
         self.coinOwed -= coin
         self.balance -= self.currentPrice * coin + transactionFee
@@ -277,9 +275,9 @@ class Backtester(Trader):
         self.currentPeriod = self.data[index]
         self.currentPrice = self.currentPeriod['close']
 
-        if self.inShortPosition:
+        if self.currentPosition == SHORT:
             self.buy_short("Exited short position because backtest ended.")
-        elif self.inLongPosition:
+        elif self.currentPosition == LONG:
             self.sell_long("Exited long position because backtest ended.")
 
     def simulate_hold(self, testLength: int, divisor: int, thread=None):
@@ -296,7 +294,7 @@ class Backtester(Trader):
             self.currentPeriod = self.data[index]
             self.currentPrice = self.currentPeriod['open']
 
-            if not self.inLongPosition:
+            if self.currentPosition != LONG:
                 self.buy_long("Entered long to simulate a hold.")
 
             thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
@@ -429,10 +427,10 @@ class Backtester(Trader):
         :return: Stop loss value.
         """
         self.handle_trailing_prices()
-        if self.inShortPosition:
+        if self.currentPosition == SHORT:
             self.previousStopLoss = self._get_short_stop_loss()
             return self.previousStopLoss
-        elif self.inLongPosition:
+        elif self.currentPosition == LONG:
             self.previousStopLoss = self._get_long_stop_loss()
             return self.previousStopLoss
         else:
@@ -446,9 +444,9 @@ class Backtester(Trader):
         if self.takeProfitType is None:
             return None
 
-        if self.inShortPosition:
+        if self.currentPosition == SHORT:
             return self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
-        elif self.inLongPosition:
+        elif self.currentPosition == LONG:
             return self.buyLongPrice * (1 + self.takeProfitPercentageDecimal)
         else:
             return None
@@ -613,7 +611,7 @@ class Backtester(Trader):
         upcoming trends.
         """
         trend = self.get_trend()
-        if self.inShortPosition:
+        if self.currentPosition == SHORT:
             if self.lossStrategy is not None and self.currentPrice > self.get_stop_loss():
                 self.buy_short('Exited short because a stop loss was triggered.', stopLossExit=True)
             elif self.takeProfitType is not None and self.currentPrice <= self.get_take_profit():
@@ -621,7 +619,7 @@ class Backtester(Trader):
             elif trend == BULLISH:
                 self.buy_short('Exited short because a bullish trend was detected.')
                 self.buy_long('Entered long because a bullish trend was detected.')
-        elif self.inLongPosition:
+        elif self.currentPosition == LONG:
             if self.lossStrategy is not None and self.currentPrice < self.get_stop_loss():
                 self.sell_long('Exited long because a stop loss was triggered.', stopLossExit=True)
             elif self.takeProfitType is not None and self.currentPrice >= self.get_take_profit():

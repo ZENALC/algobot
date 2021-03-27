@@ -22,7 +22,7 @@ class Trader:
 
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
         self.endingTime = None  # Ending time for previous bot run.
-
+        self.currentPosition = None  # Current position value.
         self.minPeriod = 0  # Minimum amount of periods required for trend retrieval.
         self.previousPosition = None  # Previous position to validate for a new trend.
 

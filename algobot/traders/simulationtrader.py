@@ -55,7 +55,6 @@ class SimulationTrader(Trader):
         self.scheduledSafetyTimer = None  # Next time to check if it's a true stop loss.
 
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
-        self.currentPosition = None  # Current position value.
         self.trend = None
 
         self.optionDetails = []  # Current option values. Holds most recent option values.
