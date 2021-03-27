@@ -3,13 +3,14 @@ import sqlite3
 import time
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
-from typing import List
+from typing import List, Tuple
 
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
 
 from algobot.algorithms import get_ema, get_sma, get_wma
 from algobot.helpers import ROOT_DIR, get_logger, get_ups_and_downs
+from algobot.typeHints import DATA_TYPE
 
 
 class Data:
@@ -422,7 +423,7 @@ class Data:
 
         self.data = temp_data + self.data
 
-    def update_data(self, verbose=False):
+    def update_data(self, verbose: bool = False):
         """
         Updates run-time data with Binance API values.
         """
@@ -496,7 +497,7 @@ class Data:
             time.sleep(sleepTime)
             return self.get_current_data(counter=counter + 1)
 
-    def try_callback(self, message):
+    def try_callback(self, message: str):
         """
         Attempts to emit a signal to the GUI that called this data object (if it was called by a GUI).
         :param message: Message to send back.
@@ -518,7 +519,7 @@ class Data:
             time.sleep(15)
             return self.get_current_price()
 
-    def get_interval_unit_and_measurement(self) -> tuple:
+    def get_interval_unit_and_measurement(self) -> Tuple[str, int]:
         """
         Returns interval unit and measurement.
         :return: A tuple with interval unit and measurement respectively.
@@ -541,7 +542,7 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
-    def create_folders_and_change_path(self, folderName):
+    def create_folders_and_change_path(self, folderName: str):
         """
         Creates appropriate folders for data storage then changes current working directory to it.
         :param folderName: Folder to create.
@@ -583,7 +584,7 @@ class Data:
 
         return path
 
-    def create_csv_file(self, descending: bool = True, armyTime: bool = True, startDate=None) -> str:
+    def create_csv_file(self, descending: bool = True, armyTime: bool = True, startDate: datetime = None) -> str:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
         :param startDate: Date to have CSV data from.
@@ -684,7 +685,7 @@ class Data:
         self.output_message("Data has been verified to be correct.")
         return True
 
-    def get_total_non_updated_data(self) -> list:
+    def get_total_non_updated_data(self) -> DATA_TYPE:
         return [self.current_values] + self.data
 
     def get_summation(self, prices: int, parameter: str, round_value: bool = True, update: bool = True) -> float:
