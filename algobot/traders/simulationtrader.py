@@ -47,9 +47,6 @@ class SimulationTrader(Trader):
         self.lock = Lock()  # Lock to ensure a transaction doesn't occur when another one is taking place.
         self.addTradeCallback = addTradeCallback
 
-        self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
-        self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.
-
         self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
         self.smartStopLossEnter = False  # Boolean that'll determine whether current position is from a smart stop loss.
@@ -652,28 +649,6 @@ class SimulationTrader(Trader):
             return dataObject.get_ema(value, parameter, update=update, round_value=round_value)
         else:
             raise ValueError(f'Unknown moving average {movingAverage}.')
-
-    def get_take_profit(self) -> None or float:
-        if self.takeProfitType is None:
-            return None
-
-        if self.currentPrice is None:
-            self.currentPrice = self.dataView.get_current_price()
-
-        if self.currentPosition == SHORT:
-            if self.takeProfitType == STOP:
-                self.takeProfitPoint = self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
-            else:
-                raise ValueError("Invalid type of take profit type provided.")
-        elif self.currentPosition == LONG:
-            if self.takeProfitType == STOP:
-                self.takeProfitPoint = self.buyLongPrice * (1 + self.takeProfitPercentageDecimal)
-            else:
-                raise ValueError("Invalid type of take profit type provided.")
-        else:
-            self.takeProfitPoint = None
-
-        return self.takeProfitPoint
 
     def get_stop_loss(self) -> None or float:
         """

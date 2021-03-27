@@ -436,21 +436,6 @@ class Backtester(Trader):
         else:
             return None
 
-    def get_take_profit(self) -> Union[float, None]:
-        """
-        Returns price at which position will be exited to secure profits.
-        :return: Price at which to exit position.
-        """
-        if self.takeProfitType is None:
-            return None
-
-        if self.currentPosition == SHORT:
-            return self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
-        elif self.currentPosition == LONG:
-            return self.buyLongPrice * (1 + self.takeProfitPercentageDecimal)
-        else:
-            return None
-
     def get_net(self) -> float:
         """
         Returns net balance with current price of coin being traded. It factors in the current balance, the amount

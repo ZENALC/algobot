@@ -4,7 +4,7 @@ This will be the main Trader class that all other Traders will inherit from.
 from datetime import datetime
 from typing import Dict, List, Union
 
-from algobot.enums import BEARISH, BULLISH
+from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP
 from algobot.strategies.strategy import Strategy
 
 
@@ -27,6 +27,8 @@ class Trader:
         self.minPeriod = 0  # Minimum amount of periods required for trend retrieval.
         self.previousPosition = None  # Previous position to validate for a new trend.
 
+        self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
+        self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.
         self.takeProfitType = None  # Type of take profit: trailing or stop.
         self.takeProfitPercentageDecimal = None  # Percentage of profit to exit trade at.
 
@@ -127,8 +129,28 @@ class Trader:
     def get_stop_loss(self):
         pass
 
-    def get_take_profit(self):
-        pass
+    def get_take_profit(self) -> Union[float, None]:
+        """
+        Returns price at which position will be exited to secure profits.
+        :return: Price at which to exit position.
+        """
+        if self.takeProfitType is None:
+            return None
+
+        if self.currentPosition == SHORT:
+            if self.takeProfitType == STOP:
+                self.takeProfitPoint = self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
+            else:
+                raise ValueError("Invalid type of take profit type provided.")
+        elif self.currentPosition == LONG:
+            if self.takeProfitType == STOP:
+                self.takeProfitPoint = self.buyLongPrice * (1 + self.takeProfitPercentageDecimal)
+            else:
+                raise ValueError("Invalid type of take profit type provided.")
+        else:
+            self.takeProfitPoint = None
+
+        return self.takeProfitPoint
 
     def get_net(self):
         pass
