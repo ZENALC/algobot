@@ -1,11 +1,12 @@
 from datetime import date, timedelta
+from typing import List
 
 import requests
 from bs4 import BeautifulSoup
 from dateutil import parser
 
 
-def scrape_news() -> list:
+def scrape_news() -> List[str]:
     """
     Scrapes latest news from www.todayonchain.com.
     :return: List of latest news.

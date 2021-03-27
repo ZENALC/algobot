@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple, Union
 from dateutil import parser
 
 from algobot.option import Option
+from algobot.typeHints import DICT_TYPE
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -186,7 +187,7 @@ def get_interval_minutes(interval: str) -> int:
     return intervals[interval]
 
 
-def get_interval_strings(startingIndex: int = 0) -> list:
+def get_interval_strings(startingIndex: int = 0) -> List[str]:
     """
     Returns interval strings in a sorted format.
     :param startingIndex: Index to start getting interval strings from.
@@ -308,7 +309,7 @@ def create_folder_if_needed(targetPath: str, basePath: str = None) -> bool:
     return False
 
 
-def get_data_from_parameter(data: dict, parameter: str) -> float:
+def get_data_from_parameter(data: DICT_TYPE, parameter: str) -> float:
     """
     Helper function for trading. Will return appropriate data from parameter passed in.
     :param data: Dictionary data with parameters.
@@ -323,7 +324,7 @@ def get_data_from_parameter(data: dict, parameter: str) -> float:
         return data[parameter]
 
 
-def load_from_csv(path: str, descending=True) -> list:
+def load_from_csv(path: str, descending: bool = True) -> list:
     """
     Returns data from CSV.
     :param path: Path to CSV file.

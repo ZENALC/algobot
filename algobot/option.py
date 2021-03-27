@@ -11,32 +11,32 @@ class Option:
         self.initialBound = initialBound
         self.finalBound = finalBound
 
-    def get_all_params(self) -> tuple:
+    def get_all_params(self) -> Tuple[str, str, int, int]:
         """
         Returns all the option's parameters.
         :return: A tuple of option's parameters.
         """
         return self.movingAverage, self.parameter, self.initialBound, self.finalBound
 
-    def set_moving_average(self, movingAverage):
+    def set_moving_average(self, movingAverage: str):
         """
         Sets moving average for trading option.
         """
         self.movingAverage = movingAverage
 
-    def set_parameter(self, parameter):
+    def set_parameter(self, parameter: str):
         """
         Sets parameter for trading option.
         """
         self.parameter = parameter
 
-    def set_initial_bound(self, initialBound):
+    def set_initial_bound(self, initialBound: int):
         """
         Sets initial bound for trading option.
         """
         self.initialBound = initialBound
 
-    def set_final_bound(self, initialBound):
+    def set_final_bound(self, initialBound: int):
         """
         Sets final bound for trading option.
         """
