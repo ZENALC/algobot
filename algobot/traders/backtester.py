@@ -491,7 +491,7 @@ class Backtester(Trader):
                 result += 's'
         return result
 
-    def get_trend(self) -> Union[BEARISH, BULLISH, None]:
+    def get_trend(self) -> Union[int, None]:
         """
         Returns trend based on the strategies provided.
         :return: Integer in the form of an enum.

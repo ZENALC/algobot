@@ -109,7 +109,7 @@ class Trader:
             self.set_safety_timer(lossDict['safetyTimer'])
 
     @staticmethod
-    def get_cumulative_trend(trends: List[int]) -> Union[BEARISH, BULLISH, None]:
+    def get_cumulative_trend(trends: List[int]) -> Union[int, None]:
         """
         Returns cumulative trend based on the trends provided.
         :return: Integer trend in the form of an enum.

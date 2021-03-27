@@ -368,7 +368,7 @@ class SimulationTrader(Trader):
             self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
             self.add_trade(msg, force=force, smartEnter=smartEnter)
 
-    def get_trend(self, dataObject: Data = None, log_data: bool = False) -> Union[BEARISH, BULLISH, None]:
+    def get_trend(self, dataObject: Data = None, log_data: bool = False) -> Union[int, None]:
         """
         Returns trend based on the strategies provided.
         :return: Integer in the form of an enum.
