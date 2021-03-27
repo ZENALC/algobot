@@ -156,4 +156,4 @@ class Trader:
         pass
 
     def get_trend(self):
-        pass
+        raise NotImplementedError("Please implement a function for getting a trend for your Trader class.")
