@@ -2,7 +2,7 @@
 This will be the main Trader class that all other Traders will inherit from.
 """
 from datetime import datetime
-from typing import Dict, Union, List
+from typing import Dict, List, Union
 
 from algobot.enums import BEARISH, BULLISH
 from algobot.strategies.strategy import Strategy
