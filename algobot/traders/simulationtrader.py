@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 from threading import Lock
+from typing import Union
 
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
@@ -367,23 +368,16 @@ class SimulationTrader(Trader):
             self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
             self.add_trade(msg, force=force, smartEnter=smartEnter)
 
-    def get_trend(self, dataObject=None, log_data=False):
+    def get_trend(self, dataObject: Data = None, log_data: bool = False) -> Union[BEARISH, BULLISH, None]:
+        """
+        Returns trend based on the strategies provided.
+        :return: Integer in the form of an enum.
+        """
         if not dataObject:
             dataObject = self.dataView
 
         trends = [strategy.get_trend(data=dataObject, log_data=log_data) for strategy in self.strategies.values()]
-
-        if len(trends) == 0:
-            return None
-
-        if all(trend == BEARISH for trend in trends):
-            trend = BEARISH
-        elif all(trend == BULLISH for trend in trends):
-            trend = BULLISH
-        else:
-            trend = None
-
-        return trend
+        return self.get_cumulative_trend(trends=trends)
 
     def short_position_logic(self, trend):
         """

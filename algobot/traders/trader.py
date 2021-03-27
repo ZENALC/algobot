@@ -2,8 +2,9 @@
 This will be the main Trader class that all other Traders will inherit from.
 """
 from datetime import datetime
-from typing import Dict
+from typing import Dict, Union, List
 
+from algobot.enums import BEARISH, BULLISH
 from algobot.strategies.strategy import Strategy
 
 
@@ -106,6 +107,22 @@ class Trader:
 
         if 'safetyTimer' in lossDict:
             self.set_safety_timer(lossDict['safetyTimer'])
+
+    @staticmethod
+    def get_cumulative_trend(trends: List[int]) -> Union[BEARISH, BULLISH, None]:
+        """
+        Returns cumulative trend based on the trends provided.
+        :return: Integer trend in the form of an enum.
+        """
+        if len(trends) == 0:
+            return None
+
+        if all(trend == BEARISH for trend in trends):
+            return BEARISH
+        elif all(trend == BULLISH for trend in trends):
+            return BULLISH
+        else:
+            return None
 
     def get_stop_loss(self):
         pass

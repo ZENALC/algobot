@@ -491,22 +491,13 @@ class Backtester(Trader):
                 result += 's'
         return result
 
-    def get_trend(self) -> Union[int, None]:
+    def get_trend(self) -> Union[BEARISH, BULLISH, None]:
         """
         Returns trend based on the strategies provided.
         :return: Integer in the form of an enum.
         """
         trends = [strategy.trend for strategy in self.strategies.values()]
-
-        if len(trends) == 0:
-            return None
-
-        if all(trend == BEARISH for trend in trends):
-            return BEARISH
-        elif all(trend == BULLISH for trend in trends):
-            return BULLISH
-        else:
-            return None
+        return self.get_cumulative_trend(trends)
 
     def get_moving_average(self, data: list, average: str, prices: int, parameter: str, round_value=False) -> float:
         """
