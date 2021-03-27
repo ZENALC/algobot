@@ -352,8 +352,8 @@ class Data:
         if locked:
             locked.emit()
 
-        if removeFirst:
-            output_data = output_data[:-1]
+        if removeFirst:  # This should be refactored once data is inserted in the reverse order.
+            output_data.pop()
 
         progress_callback.emit(95, "Saving data...", caller)
         self.insert_data(output_data)
@@ -369,7 +369,7 @@ class Data:
         self.downloadCompleted = True
         return self.data
 
-    def get_new_data(self, timestamp, limit: int = 1000) -> list:
+    def get_new_data(self, timestamp: int, limit: int = 1000) -> list:
         """
         Returns new data from Binance API from timestamp specified.
         :param timestamp: Initial timestamp.
@@ -380,7 +380,7 @@ class Data:
         self.downloadCompleted = True
         return newData[:-1]  # Up to -1st index, because we don't want current period data.
 
-    def is_latest_date(self, latestDate) -> bool:
+    def is_latest_date(self, latestDate: datetime) -> bool:
         """
         Checks whether the latest date available is the latest period available.
         :param latestDate: Datetime object.
