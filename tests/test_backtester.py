@@ -3,8 +3,7 @@ import unittest
 from datetime import datetime
 
 import pytest
-
-from algobot.enums import STOP, TRAILING, LONG, SHORT
+from algobot.enums import LONG, SHORT, STOP, TRAILING
 from algobot.helpers import convert_all_dates_to_datetime, load_from_csv
 from algobot.traders.backtester import Backtester
 
