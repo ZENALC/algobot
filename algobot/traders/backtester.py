@@ -658,10 +658,7 @@ class Backtester(Trader):
         print(f"\tStarting Balance: ${self.startingBalance}")
         print(f'\tTake Profit Percentage: {round(self.takeProfitPercentageDecimal * 100, 2)}%')
         print(f'\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%')
-        if self.lossStrategy == TRAILING:
-            print("\tLoss Strategy: Trailing")
-        else:
-            print("\tLoss Strategy: Stop")
+        print(f'\tLoss Strategy: {self.get_stop_loss_strategy_string()}')
         self.print_strategies()
 
         sys.stdout = previous_stdout  # revert stdout back to normal
