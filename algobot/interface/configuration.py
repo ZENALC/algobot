@@ -234,10 +234,7 @@ class Configuration(QDialog):
         caller = self.get_caller_based_on_tab(tab)
         trader = self.parent.get_trader(caller)
 
-        if caller == BACKTEST:
-            return   # Skip backtester for now.
-
-        if trader is not None:
+        if trader is not None and caller != BACKTEST:  # Skip backtester for now.
             settings = self.get_loss_settings(caller)
             trader.apply_loss_settings(settings)
 
@@ -245,10 +242,7 @@ class Configuration(QDialog):
         caller = self.get_caller_based_on_tab(tab)
         trader = self.parent.get_trader(caller)
 
-        if caller == BACKTEST:
-            return  # Skip backtester for now.
-
-        if trader is not None:
+        if trader is not None and caller != BACKTEST:  # Skip backtester for now.
             settings = self.get_take_profit_settings(caller)
             trader.apply_take_profit_settings(settings)
 

@@ -154,6 +154,10 @@ def get_label_string(label: str) -> str:
 
 
 def get_interval_minutes(interval: str) -> int:
+    """
+    Returns amount of minutes from interval provided.
+    :param interval: Interval to get the amount of minutes of.
+    """
     intervals = {
         '12 Hours': 720,
         '15 Minutes': 15,
