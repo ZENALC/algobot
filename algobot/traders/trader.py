@@ -159,6 +159,15 @@ class Trader:
         else:
             raise ValueError("Unknown type of loss strategy.")
 
+    def get_strategy_inputs(self, strategy_name: str):
+        """
+        Returns provided strategy's inputs if it exists.
+        """
+        if strategy_name not in self.strategies:
+            return 'None'
+        else:
+            return f"{', '.join(map(str, self.strategies[strategy_name].get_params()))}"
+
     def get_stop_loss(self):
         pass
 

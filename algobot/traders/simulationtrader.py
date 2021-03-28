@@ -469,15 +469,6 @@ class SimulationTrader(Trader):
         """
         self.smartStopLossCounter = self.smartStopLossInitialCounter
 
-    def get_strategy_inputs(self, strategy_name: str):
-        """
-        Returns provided strategy's inputs if it exists.
-        """
-        if strategy_name not in self.strategies:
-            return 'None'
-        else:
-            return f"{', '.join(map(str, self.strategies[strategy_name].get_params()))}"
-
     def get_net(self) -> float:
         """
         Returns net balance with current price of coin being traded. It factors in the current balance, the amount
@@ -546,21 +537,21 @@ class SimulationTrader(Trader):
         if self.currentPrice is None:
             self.currentPrice = self.dataView.get_current_price()
 
-        if self.currentPosition == SHORT:  # If we are in a short position.
+        if self.currentPosition == SHORT:
             if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
                 self.stopLoss = self.previousStopLoss
             else:
-                if self.lossStrategy == TRAILING:  # This means we use trailing loss.
+                if self.lossStrategy == TRAILING:
                     self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
-                elif self.lossStrategy == STOP:  # This means we use the basic stop loss.
+                elif self.lossStrategy == STOP:
                     self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
-        elif self.currentPosition == LONG:  # If we are in a long position.
+        elif self.currentPosition == LONG:
             if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
                 self.stopLoss = self.previousStopLoss
             else:
-                if self.lossStrategy == TRAILING:  # This means we use trailing loss.
+                if self.lossStrategy == TRAILING:
                     self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
-                elif self.lossStrategy == STOP:  # This means we use the basic stop loss.
+                elif self.lossStrategy == STOP:
                     self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
         else:  # This means we are not in any position currently.
             self.stopLoss = None
@@ -692,7 +683,6 @@ class SimulationTrader(Trader):
             self.output_message(f'\nAction taken: {trade["action"]}')
 
         self.output_message('\nDaily Nets:')
-
         for index, net in enumerate(self.dailyChangeNets, start=1):
             self.output_message(f'Day {index}: {round(net, 2)}%')
 
