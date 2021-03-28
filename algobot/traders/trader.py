@@ -5,7 +5,8 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
-from algobot.helpers import set_up_strategies
+from algobot.helpers import parse_strategy_name
+from algobot.option import Option
 from algobot.strategies.strategy import Strategy
 
 
@@ -116,7 +117,17 @@ class Trader:
         Sets up strategies from list of strategies provided.
         :param strategies: List of strategies to set up and apply to bot.
         """
-        set_up_strategies(self, strategies)
+        for strategyTuple in strategies:
+            strategyClass = strategyTuple[0]
+            values = strategyTuple[1]
+            name = parse_strategy_name(strategyTuple[2])
+
+            if name != 'movingAverage':
+                self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
+            else:
+                values = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
+                self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
+                self.minPeriod = self.strategies[name].get_min_option_period()
 
     @staticmethod
     def get_cumulative_trend(trends: List[int]) -> Union[int, None]:
