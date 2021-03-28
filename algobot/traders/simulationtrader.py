@@ -139,25 +139,6 @@ class SimulationTrader(Trader):
                 'takerBuyQuoteAsset': str(round(self.dataView.current_values['taker_buy_quote_asset'], self.precision)),
             }
 
-        if 'movingAverage' in self.strategies:
-            strategy = self.strategies['movingAverage']
-            precise = self.precision
-            groupedDict['movingAverages'] = {
-                'trend': self.get_trend_string(strategy.trend),
-                'enabled': 'True',
-            }
-
-            for optionDetail in self.optionDetails:
-                initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                groupedDict['movingAverages'][initialAverageLabel] = f'${round(initialAverage, precise)}'
-                groupedDict['movingAverages'][finalAverageLabel] = f'${round(finalAverage, precise)}'
-
-            if self.lowerOptionDetails:
-                for optionDetail in self.lowerOptionDetails:
-                    initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                    groupedDict['movingAverages'][f'Lower {initialAverageLabel}'] = f'${round(initialAverage, precise)}'
-                    groupedDict['movingAverages'][f'Lower {finalAverageLabel}'] = f'${round(finalAverage, precise)}'
-
         self.add_strategy_info_to_grouped_dict(groupedDict)
         return groupedDict
 
@@ -168,24 +149,37 @@ class SimulationTrader(Trader):
         """
         for strategyName, strategy in self.strategies.items():
             if strategyName == 'movingAverage':
-                continue
+                groupedDict['movingAverages'] = movingAverageDict = {
+                    'trend': self.get_trend_string(strategy.trend),
+                    'enabled': 'True',
+                }
+                for optionDetail in self.optionDetails:
+                    initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
+                    movingAverageDict[initialAverageLabel] = f'${round(initialAverage, self.precision)}'
+                    movingAverageDict[finalAverageLabel] = f'${round(finalAverage, self.precision)}'
 
-            groupedDict[strategyName] = {
-                'trend': self.get_trend_string(strategy.trend),
-                'enabled': 'True',
-                'inputs': strategy.get_params()
-            }
+                if self.lowerOptionDetails:
+                    for optionDetail in self.lowerOptionDetails:
+                        initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
+                        movingAverageDict[f'Lower {initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
+                        movingAverageDict[f'Lower {finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
+            else:
+                groupedDict[strategyName] = {
+                    'trend': self.get_trend_string(strategy.trend),
+                    'enabled': 'True',
+                    'inputs': strategy.get_params()
+                }
 
-            if 'values' in strategy.strategyDict:
-                for key in strategy.strategyDict['values']:
-                    value = strategy.strategyDict['values'][key]
-                    if type(value) == float:
-                        value = round(value, self.precision)
-                    groupedDict[strategyName][key] = value
+                if 'values' in strategy.strategyDict:
+                    for key in strategy.strategyDict['values']:
+                        value = strategy.strategyDict['values'][key]
+                        if type(value) == float:
+                            value = round(value, self.precision)
+                        groupedDict[strategyName][key] = value
 
-            for x in strategy.get_params():
-                if x in self.dataView.rsi_data:
-                    groupedDict[strategyName][f'RSI({x})'] = round(self.dataView.rsi_data[x], self.precision)
+                for x in strategy.get_params():
+                    if x in self.dataView.rsi_data:
+                        groupedDict[strategyName][f'RSI({x})'] = round(self.dataView.rsi_data[x], self.precision)
 
     def get_remaining_safety_timer(self) -> str:
         """
