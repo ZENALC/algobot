@@ -647,17 +647,18 @@ class SimulationTrader(Trader):
         else:
             self.output_message(f'\nTrades conducted in live market: {len(self.trades)}\n')
 
-    def get_simulation_result(self):
+    def get_run_result(self, isSimulation: bool = False):
         """
         Gets end result of simulation.
+        :param isSimulation: Boolean that'll determine if coins are returned or not.
         """
-        self.output_message('\n---------------------------------------------------\nSimulation has ended')
+        self.output_message('\n---------------------------------------------------\nBot run has ended.')
         self.endingTime = datetime.utcnow()
-        if self.coin > 0:
+        if isSimulation and self.coin > 0:
             self.output_message(f"Selling all {self.coinName}...")
             self.sell_long('Sold all owned coin as simulation ended.')
 
-        if self.coinOwed > 0:
+        if isSimulation and self.coinOwed > 0:
             self.output_message(f"Returning all borrowed {self.coinName}...")
             self.buy_short('Returned all borrowed coin as simulation ended.')
 

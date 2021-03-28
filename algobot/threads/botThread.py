@@ -483,8 +483,8 @@ class BotThread(QRunnable):
 
         if trader:
             trader.completedLoop = True  # If false, this will cause an infinite loop.
-            if trader == self.gui.simulationTrader:
-                trader.get_simulation_result()
+            isSimulation = trader == self.gui.simulationTrader
+            trader.get_run_result(isSimulation=isSimulation)
 
         if self.failLimit == self.failCount or self.failed or not success:
             self.signals.error.emit(self.caller, str(self.failError))
