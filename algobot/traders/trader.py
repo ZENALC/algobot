@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
-from algobot.helpers import parse_strategy_name
+from algobot.helpers import parse_strategy_name, get_label_string
 from algobot.option import Option
 from algobot.strategies.strategy import Strategy
 
@@ -164,9 +164,20 @@ class Trader:
         Returns provided strategy's inputs if it exists.
         """
         if strategy_name not in self.strategies:
-            return 'None'
+            return 'Strategy not found.'
         else:
             return f"{', '.join(map(str, self.strategies[strategy_name].get_params()))}"
+
+    def get_strategies_info_string(self, left: str = ''):
+        """
+        Returns a formatted string with strategies information.
+        :param left: Character to add before each new line in strategies information.
+        """
+        string = '\nStrategies:\n'
+        for strategyName, strategy in self.strategies.items():
+            string += f'{left}\t{get_label_string(strategyName)}: {strategy.get_params()}\n'
+
+        return string.rstrip()  # Remove new line in the very end.
 
     def get_stop_loss(self):
         pass

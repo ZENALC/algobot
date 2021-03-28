@@ -11,7 +11,7 @@ from algobot.algorithms import get_ema, get_sma, get_wma
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import (ROOT_DIR, convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
-                             get_label_string, get_ups_and_downs)
+                             get_ups_and_downs)
 from algobot.traders.trader import Trader
 from algobot.typeHints import DATA_TYPE, DICT_TYPE
 
@@ -636,13 +636,6 @@ class Backtester(Trader):
             print(f'\t\tOption {index + 1}) {option.movingAverage.upper()}{option.initialBound, option.finalBound}'
                   f' - {option.parameter}')
 
-    def print_strategies(self):
-        """
-        Prints out strategies provided in configuration.
-        """
-        for strategyName, strategy in self.strategies.items():
-            print(f'\t{get_label_string(strategyName)}: {strategy.get_params()}')
-
     def print_configuration_parameters(self, stdout=None):
         """
         Prints out configuration parameters.
@@ -659,7 +652,7 @@ class Backtester(Trader):
         print(f'\tTake Profit Percentage: {round(self.takeProfitPercentageDecimal * 100, 2)}%')
         print(f'\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%')
         print(f'\tLoss Strategy: {self.get_stop_loss_strategy_string()}')
-        self.print_strategies()
+        print(self.get_strategies_info_string())
 
         sys.stdout = previous_stdout  # revert stdout back to normal
 
