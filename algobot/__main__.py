@@ -17,8 +17,8 @@ from algobot.data import Data
 from algobot.enums import (AVG_GRAPH, BACKTEST, LIVE, LONG, NET_GRAPH, SHORT,
                            SIMULATION)
 from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
-                                   setup_graph_plots, setup_graphs,
-                                   update_main_graphs)
+                                   get_graph_dictionary, setup_graph_plots,
+                                   setup_graphs, update_main_graphs)
 from algobot.helpers import (ROOT_DIR, create_folder_if_needed, get_logger,
                              open_file_or_folder)
 from algobot.interface.about import About
@@ -304,7 +304,7 @@ class Interface(QMainWindow):
         self.add_to_backtest_monitor(f"Started backtest with {symbol} data and {interval.lower()} interval periods.")
 
     def update_backtest_graph_limits(self, limit: int = 105):
-        graphDict = self.get_graph_dictionary(self.backtestGraph)
+        graphDict = get_graph_dictionary(self, self.backtestGraph)
         graphDict['graph'].setLimits(xMin=0, xMax=limit + 1)
 
     def set_backtest_graph_limits_and_empty_plots(self, limit: int = 105):
@@ -312,7 +312,7 @@ class Interface(QMainWindow):
         Resets backtest graph and sets x-axis limits.
         """
         initialTimeStamp = self.backtester.data[0]['date_utc'].timestamp()
-        graphDict = self.get_graph_dictionary(self.backtestGraph)
+        graphDict = get_graph_dictionary(self, self.backtestGraph)
         graphDict['graph'].setLimits(xMin=0, xMax=limit)
         plot = graphDict['plots'][0]
         plot['x'] = [0]
@@ -515,7 +515,7 @@ class Interface(QMainWindow):
         self.statistics.initialize_tab(trader.get_grouped_statistics(), tabType=self.get_caller_string(caller))
         setup_graph_plots(self, interfaceDict['graph'], trader, NET_GRAPH)
 
-        averageGraphDict = self.get_graph_dictionary(interfaceDict['averageGraph'])
+        averageGraphDict = get_graph_dictionary(self, interfaceDict['averageGraph'])
         if self.configuration.graphIndicatorsCheckBox.isChecked():
             averageGraphDict['enable'] = True
             setup_graph_plots(self, interfaceDict['averageGraph'], trader, AVG_GRAPH)
@@ -838,16 +838,6 @@ class Interface(QMainWindow):
         initialName, finalName = option.get_pretty_option()
         return initialAverage, finalAverage, initialName, finalName
 
-    def get_graph_dictionary(self, targetGraph) -> dict:
-        """
-        Loops over list of graphs and returns appropriate graph dictionary.
-        :param targetGraph: Graph to find in list of graphs.
-        :return: Dictionary with the graph values.
-        """
-        for graph in self.graphs:
-            if graph["graph"] == targetGraph:
-                return graph
-
     def onMouseMoved(self, point, graph):
         """
         Updates coordinates label when mouse is hovered over graph.
@@ -855,7 +845,7 @@ class Interface(QMainWindow):
         :param graph: Graph being hovered on.
         """
         p = graph.plotItem.vb.mapSceneToView(point)
-        graphDict = self.get_graph_dictionary(graph)
+        graphDict = get_graph_dictionary(self, graph)
 
         if p and graphDict.get('line'):  # Ensure that the hover line is enabled.
             graphDict['line'].setPos(p.x())
@@ -889,7 +879,7 @@ class Interface(QMainWindow):
         """
         Resets backtest hover cursor to end of graph.
         """
-        graphDict = self.get_graph_dictionary(self.backtestGraph)
+        graphDict = get_graph_dictionary(self, self.backtestGraph)
         if self.backtester is not None and graphDict.get('line') is not None:
             index = len(self.backtester.pastActivity)
             graphDict['line'].setPos(index)

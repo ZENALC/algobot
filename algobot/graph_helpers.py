@@ -10,6 +10,18 @@ from algobot.traders.simulationtrader import SimulationTrader
 GRAPH_LEEWAY = 10  # Amount of points to set extra for graph limits.
 
 
+def get_graph_dictionary(gui, targetGraph) -> dict:
+    """
+    Loops over list of graphs and returns appropriate graph dictionary.
+    :param gui: Graphical user interface in which to set up graphs.
+    :param targetGraph: Graph to find in list of graphs.
+    :return: Dictionary with the graph values.
+    """
+    for graph in gui.graphs:
+        if graph["graph"] == targetGraph:
+            return graph
+
+
 def add_data_to_plot(gui, targetGraph: PlotWidget, plotIndex: int, y: float, timestamp: float):
     """
     Adds data to plot in provided graph.
@@ -19,7 +31,7 @@ def add_data_to_plot(gui, targetGraph: PlotWidget, plotIndex: int, y: float, tim
     :param y: Y value to add.
     :param timestamp: Timestamp value to add.
     """
-    graphDict = gui.get_graph_dictionary(targetGraph=targetGraph)
+    graphDict = get_graph_dictionary(gui, targetGraph=targetGraph)
     plot = graphDict['plots'][plotIndex]
 
     secondsInDay = 86400  # Reset graph every 24 hours (assuming data is updated only once a second).
@@ -44,7 +56,7 @@ def setup_graph_plots(gui, graph: PlotWidget, trader: Union[SimulationTrader, Ba
     """
     colors = get_graph_colors(gui=gui)
     if gui.configuration.enableHoverLine.isChecked():
-        create_infinite_line(gui, gui.get_graph_dictionary(graph), colors=colors)
+        create_infinite_line(gui, get_graph_dictionary(gui, graph), colors=colors)
 
     if graphType == NET_GRAPH:
         setup_net_graph_plot(gui, graph=graph, trader=trader, color=colors[0])
@@ -81,7 +93,7 @@ def destroy_graph_plots(gui, targetGraph: PlotWidget):
     :param gui: Graphical user interface in which to set up graphs.
     :param targetGraph: Graph to destroy plots for.
     """
-    graphDict = gui.get_graph_dictionary(targetGraph=targetGraph)
+    graphDict = get_graph_dictionary(gui, targetGraph=targetGraph)
     graphDict['graph'].clear()
     graphDict['plots'] = []
 
@@ -141,7 +153,7 @@ def append_plot_to_graph(gui, targetGraph: PlotWidget, toAdd: list):
     :param targetGraph: Graph to add plot to.
     :param toAdd: List of plots to add to target graph.
     """
-    graphDict = gui.get_graph_dictionary(targetGraph=targetGraph)
+    graphDict = get_graph_dictionary(gui, targetGraph=targetGraph)
     graphDict['plots'] += toAdd
 
 
@@ -232,12 +244,12 @@ def update_main_graphs(gui, caller, valueDict):
     netGraph = interfaceDict['mainInterface']['graph']
     averageGraph = interfaceDict['mainInterface']['averageGraph']
 
-    graphDict = gui.get_graph_dictionary(netGraph)
+    graphDict = get_graph_dictionary(gui, netGraph)
     graphXSize = len(graphDict['plots'][0]['x']) + GRAPH_LEEWAY
     netGraph.setLimits(xMin=0, xMax=graphXSize)
     add_data_to_plot(gui, netGraph, 0, y=round(net, 2), timestamp=currentUTC)
 
-    averageGraphDict = gui.get_graph_dictionary(averageGraph)
+    averageGraphDict = get_graph_dictionary(gui, averageGraph)
     if averageGraphDict['enable']:
         averageGraph.setLimits(xMin=0, xMax=graphXSize)
         for index, optionDetail in enumerate(valueDict['optionDetails']):
