@@ -143,6 +143,51 @@ class Trader:
     def get_stop_loss(self):
         pass
 
+    @staticmethod
+    def get_trailing_or_stop_loss_string(exitPositionType: int) -> str:
+        """
+        Returns exit position type in string format instead of integer enum.
+        :return: Exit position type in string format.
+        """
+        if exitPositionType == STOP:
+            return 'Stop'
+        elif exitPositionType == TRAILING:
+            return 'Trailing'
+        elif exitPositionType is None:
+            return 'None'
+        else:
+            raise ValueError("Unknown type of exit position type.")
+
+    @staticmethod
+    def get_trend_string(trend) -> str:
+        """
+        Returns current market trend in a string format.
+        :param trend: Current trend enum.
+        :return: Current trend in a string format.
+        """
+        if trend == BULLISH:
+            return "Bullish"
+        elif trend == BEARISH:
+            return 'Bearish'
+        elif trend is None:
+            return 'None'
+        else:
+            raise ValueError('Unknown type of trend.')
+
+    def get_position_string(self) -> str:
+        """
+        Returns position in string format, instead of integer enum.
+        :return: Position in string format.
+        """
+        if self.currentPosition == LONG:
+            return 'Long'
+        elif self.currentPosition == SHORT:
+            return 'Short'
+        elif self.currentPosition is None:
+            return 'None'
+        else:
+            raise ValueError("Invalid type of current position.")
+
     def get_position(self) -> int:
         """
         Returns current position.
