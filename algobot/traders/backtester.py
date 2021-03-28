@@ -11,7 +11,7 @@ from algobot.algorithms import get_ema, get_sma, get_wma
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import (convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
-                             get_label_string, get_ups_and_downs)
+                             get_label_string, get_ups_and_downs, ROOT_DIR)
 from algobot.traders.trader import Trader
 from algobot.typeHints import DATA_TYPE, DICT_TYPE
 
@@ -727,7 +727,7 @@ class Backtester(Trader):
         symbol = 'Imported' if not self.symbol else self.symbol
         dateString = datetime.now().strftime("%Y-%m-%d_%H-%M")
         resultFile = f'{symbol}_backtest_results_{"_".join(self.interval.lower().split())}-{dateString}.txt'
-        os.chdir('../')
+        os.chdir(ROOT_DIR)
 
         if not os.path.exists(backtestResultsFolder):
             os.mkdir(backtestResultsFolder)
