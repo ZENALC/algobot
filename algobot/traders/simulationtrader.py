@@ -655,10 +655,9 @@ class SimulationTrader(Trader):
         self.output_message(f'Balance: ${round(self.balance, self.precision)}')
         self.output_profit_information()
         if type(self) == SimulationTrader:
-            self.output_message(f'\nTrades conducted this simulation: {len(self.trades)}')
+            self.output_message(f'\nTrades conducted this simulation: {len(self.trades)}\n')
         else:
-            self.output_message(f'\nTrades conducted in live market: {len(self.trades)}')
-        self.output_message('')
+            self.output_message(f'\nTrades conducted in live market: {len(self.trades)}\n')
 
     def get_simulation_result(self):
         """
