@@ -178,7 +178,10 @@ class SimulationTrader(Trader):
 
             if 'values' in strategy.strategyDict:
                 for key in strategy.strategyDict['values']:
-                    groupedDict[strategyName][key] = strategy.strategyDict['values'][key]
+                    value = strategy.strategyDict['values'][key]
+                    if type(value) == float:
+                        value = round(value, self.precision)
+                    groupedDict[strategyName][key] = value
 
             for x in strategy.get_params():
                 if x in self.dataView.rsi_data:

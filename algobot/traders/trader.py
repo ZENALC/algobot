@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
-from algobot.helpers import parse_strategy_name, get_label_string
+from algobot.helpers import get_label_string, parse_strategy_name
 from algobot.option import Option
 from algobot.strategies.strategy import Strategy
 
