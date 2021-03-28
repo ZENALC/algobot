@@ -84,6 +84,9 @@ class SimulationTrader(Trader):
             self.logger.critical(message)
 
     def get_grouped_statistics(self) -> dict:
+        """
+        Returns dictionary of grouped statistics for the statistics window in the GUI.
+        """
         groupedDict = {
             'general': {
                 'currentBalance': f'${round(self.balance, 2)}',
@@ -166,7 +169,11 @@ class SimulationTrader(Trader):
         self.add_strategy_info_to_grouped_dict(groupedDict)
         return groupedDict
 
-    def add_strategy_info_to_grouped_dict(self, groupedDict):
+    def add_strategy_info_to_grouped_dict(self, groupedDict: dict):
+        """
+        Adds strategy information to the dictionary provided.
+        :param groupedDict: Dictionary to add strategy information to.
+        """
         for strategyName, strategy in self.strategies.items():
             if strategyName == 'movingAverage':
                 continue
@@ -186,13 +193,17 @@ class SimulationTrader(Trader):
                     groupedDict[strategyName][f'RSI({x})'] = round(self.dataView.rsi_data[x], self.precision)
 
     def get_remaining_safety_timer(self) -> str:
+        """
+        Returns the number of seconds left before checking to see if a real stop loss has occurred.
+        """
         if not self.scheduledSafetyTimer:
             return 'None'
         else:
             remaining = int(self.scheduledSafetyTimer - time.time())
             return f'{remaining} seconds'
 
-    def add_trade(self, message: str, force: bool, orderID=None, stopLossExit=False, smartEnter=False):
+    def add_trade(self, message: str, force: bool, orderID: str = None, stopLossExit: bool = False,
+                  smartEnter: bool = False):
         """
         Adds a trade to list of trades
         :param smartEnter: Boolean that'll determine whether current position is entered from a smart enter or not.
@@ -221,7 +232,7 @@ class SimulationTrader(Trader):
         if self.addTradeCallback:
             try:
                 self.addTradeCallback.emit(trade)
-            except AttributeError:  # This means bots was closed with closeEvent()
+            except AttributeError:  # This means bot was closed with closeEvent()
                 pass
 
         self.trades.append(trade)
@@ -239,7 +250,7 @@ class SimulationTrader(Trader):
                             f'Percentage: {round(profitPercentage, 2)}%\n'
                             f'Profit: ${round(profit, self.precision)}\n')
 
-    def buy_long(self, msg: str, usd: float = None, force: bool = False, smartEnter=False):
+    def buy_long(self, msg: str, usd: float = None, force: bool = False, smartEnter: bool = False):
         """
         Buys coin at current market price with amount of USD specified. If not specified, assumes bot goes all in.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -269,7 +280,7 @@ class SimulationTrader(Trader):
             self.balance -= usd
             self.add_trade(msg, force=force, smartEnter=smartEnter)
 
-    def sell_long(self, msg: str, coin: float = None, force: bool = False, stopLossExit=False):
+    def sell_long(self, msg: str, coin: float = None, force: bool = False, stopLossExit: bool = False):
         """
         Sells specified amount of coin at current market price. If not specified, assumes bot sells all coin.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -302,7 +313,7 @@ class SimulationTrader(Trader):
             if self.coin == 0:
                 self.buyLongPrice = self.longTrailingPrice = None
 
-    def buy_short(self, msg: str, coin: float = None, force: bool = False, stopLossExit=False):
+    def buy_short(self, msg: str, coin: float = None, force: bool = False, stopLossExit: bool = False):
         """
         Buys borrowed coin at current market price and returns to market.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -334,7 +345,7 @@ class SimulationTrader(Trader):
             if self.coinOwed == 0:
                 self.sellShortPrice = self.shortTrailingPrice = None
 
-    def sell_short(self, msg: str, coin: float = None, force: bool = False, smartEnter=False):
+    def sell_short(self, msg: str, coin: float = None, force: bool = False, smartEnter: bool = False):
         """
         Borrows coin and sells them at current market price.
         Function also takes into account Binance's 0.1% transaction fee.
@@ -446,7 +457,7 @@ class SimulationTrader(Trader):
                 self.reset_smart_stop_loss()
 
     # noinspection PyTypeChecker
-    def main_logic(self, log_data=True):
+    def main_logic(self, log_data: bool = True):
         """
         Main bot logic will use to trade.
         If there is a trend and the previous position did not reflect the trend, the bot enters position.
@@ -564,7 +575,7 @@ class SimulationTrader(Trader):
         """
         return "Profit" if profit >= 0 else "Loss"
 
-    def get_strategy_inputs(self, strategy_name):
+    def get_strategy_inputs(self, strategy_name: str):
         """
         Returns provided strategy's inputs if it exists.
         """
@@ -627,7 +638,7 @@ class SimulationTrader(Trader):
         return self.currentPosition
 
     def get_average(self, movingAverage: str, parameter: str, value: int, dataObject: Data = None,
-                    update: bool = True, round_value=False) -> float:
+                    update: bool = True, round_value: bool = False) -> float:
         """
         Returns the moving average with parameter and value provided
         :param round_value: Boolean for whether returned value should be rounded or not.
@@ -650,7 +661,7 @@ class SimulationTrader(Trader):
         else:
             raise ValueError(f'Unknown moving average {movingAverage}.')
 
-    def get_stop_loss(self) -> None or float:
+    def get_stop_loss(self) -> Union[None, float]:
         """
         Returns a stop loss for the position.
         :return: Stop loss value.
