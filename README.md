@@ -17,10 +17,11 @@ pip install -r requirements.txt
 For Windows:
 ```bash
 python -m venv venv
-cd venv/Scripts
-activate
+call venv/Scripts/activate
 pip install -r requirements.txt
 ```
+
+If your install fails, please make sure to have [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019) installed.
 
 # Execution
 
@@ -34,7 +35,9 @@ To run Algobot, run `python -m algobot` from within the activated virtual enviro
 • Run custom backtests with parameters configured.\
 • Run live bots with parameters configured.\
 • Telegram integration that allows users to trade or view statistics.\
-• Create custom, trailing, or limit stop losses.
+• Create custom, trailing, or limit stop losses.\
+• Create take profits.
+• Ability to create your own strategies relatively easily.
 
 # User Interface
 
@@ -65,11 +68,11 @@ Peter Motin for being the founder and head of strategic development throughout t
 
 # Contribution
 
-The project is open-source. Please feel free to support it. Supporters are always welcome.
+The project is open-source. Please feel free to support it as supporters are always welcome.
 
 # Feature Requests
 
-For any feature requests, feel free to add a feature request through Github's Issues. I would love to hear your ideas and implement them on the application.
+For any feature requests, feel free to add a feature request through Github's Issues. We would love to hear your ideas and implement them on the application.
 
 # Compatibility
 
