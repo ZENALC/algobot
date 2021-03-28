@@ -10,13 +10,16 @@ from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5.QtGui import QIcon, QTextCursor
 from PyQt5.QtWidgets import (QApplication, QFileDialog, QMainWindow,
                              QMessageBox, QTableWidgetItem)
-from pyqtgraph import InfiniteLine, PlotWidget, mkPen
+from pyqtgraph import PlotWidget
 
 import algobot.assets
 from algobot.algodict import get_interface_dictionary
 from algobot.data import Data
 from algobot.enums import (AVG_GRAPH, BACKTEST, LIVE, LONG, NET_GRAPH, SHORT,
                            SIMULATION)
+from algobot.graph_helpers import (create_graph_plot, create_infinite_line,
+                                   get_graph_colors, setup_graphs,
+                                   update_main_graphs)
 from algobot.helpers import (ROOT_DIR, create_folder_if_needed, get_logger,
                              open_file_or_folder)
 from algobot.interface.about import About
@@ -61,8 +64,7 @@ class Interface(QMainWindow):
             {'graph': self.avgGraph, 'plots': [], 'label': self.liveAvgCoordinates, 'enable': True},
             {'graph': self.simulationAvgGraph, 'plots': [], 'label': self.simulationAvgCoordinates, 'enable': True},
         )
-        self.graphLeeway = 10  # Amount of points to set extra for graph limits.
-        self.setup_graphs()  # Setting up graphs.
+        setup_graphs(gui=self)  # Setting up graphs.
         self.initiate_slots()  # Initiating slots.
 
         self.interfaceDictionary = get_interface_dictionary(self)
@@ -578,37 +580,8 @@ class Interface(QMainWindow):
         self.update_interface_text(caller=caller, valueDict=valueDict)
         index = 0 if caller == LIVE else 1
         if self.graphUpdateSchedule[index] is None or time.time() > self.graphUpdateSchedule[index]:
-            self.update_main_graphs(caller=caller, valueDict=valueDict)
+            update_main_graphs(gui=self, caller=caller, valueDict=valueDict)
             self.graphUpdateSchedule[index] = time.time() + self.graphUpdateSeconds
-
-    def update_main_graphs(self, caller, valueDict):
-        """
-        Updates graphs and moving averages from statistics based on caller.
-        :param valueDict: Dictionary with required values.
-        :param caller: Caller that decides which graphs get updated.
-        """
-        precision = self.get_trader(caller=caller).precision
-        interfaceDict = self.interfaceDictionary[caller]
-        currentUTC = datetime.utcnow().timestamp()
-        net = valueDict['net']
-
-        netGraph = interfaceDict['mainInterface']['graph']
-        averageGraph = interfaceDict['mainInterface']['averageGraph']
-
-        graphDict = self.get_graph_dictionary(netGraph)
-        graphXSize = len(graphDict['plots'][0]['x']) + self.graphLeeway
-        netGraph.setLimits(xMin=0, xMax=graphXSize)
-        self.add_data_to_plot(netGraph, 0, y=round(net, 2), timestamp=currentUTC)
-
-        averageGraphDict = self.get_graph_dictionary(averageGraph)
-        if averageGraphDict['enable']:
-            averageGraph.setLimits(xMin=0, xMax=graphXSize)
-            for index, optionDetail in enumerate(valueDict['optionDetails']):
-                initialAverage, finalAverage = optionDetail[:2]
-                self.add_data_to_plot(averageGraph, index * 2, round(initialAverage, precision), currentUTC)
-                self.add_data_to_plot(averageGraph, index * 2 + 1, round(finalAverage, precision), currentUTC)
-
-            self.add_data_to_plot(averageGraph, -1, y=round(valueDict['price'], precision), timestamp=currentUTC)
 
     def destroy_trader(self, caller):
         """
@@ -866,29 +839,6 @@ class Interface(QMainWindow):
         initialName, finalName = option.get_pretty_option()
         return initialAverage, finalAverage, initialName, finalName
 
-    def setup_graphs(self):
-        """
-        Sets up all available graphs in application.
-        """
-        for graphDict in self.graphs:
-            graph = graphDict['graph']
-            graph.setLimits(xMin=0, xMax=self.graphLeeway, yMin=-1, yMax=1000_000_000_000_000)
-            graph.setBackground('w')
-            graph.setLabel('left', 'USDT')
-            graph.setLabel('bottom', 'Data Points')
-            graph.addLegend()
-
-            if graph == self.backtestGraph:
-                graph.setTitle("Backtest Price Change")
-            elif graph == self.simulationGraph:
-                graph.setTitle("Simulation Price Change")
-            elif graph == self.liveGraph:
-                graph.setTitle("Live Price Change")
-            elif graph == self.simulationAvgGraph:
-                graph.setTitle("Simulation Moving Averages")
-            elif graph == self.avgGraph:
-                graph.setTitle("Live Moving Averages")
-
     def add_data_to_plot(self, targetGraph: PlotWidget, plotIndex: int, y: float, timestamp: float):
         """
         Adds data to plot in provided graph.
@@ -983,7 +933,7 @@ class Interface(QMainWindow):
         :param timestamp: First UTC timestamp of plot.
         :return: Dictionary of plot information.
         """
-        plot = self.create_graph_plot(graph, (0,), (y,), color=color, plotName=name)
+        plot = create_graph_plot(self, graph, (0,), (y,), color=color, plotName=name)
         return {
             'plot': plot,
             'x': [0],
@@ -992,17 +942,6 @@ class Interface(QMainWindow):
             'name': name,
         }
 
-    def create_infinite_line(self, graphDict: dict, colors: list = None):
-        """
-        Creates an infinite (hover) line and adds it as a reference to the graph dictionary provided.
-        :param colors: Optional colors list.
-        :param graphDict: A reference to this infinite line will be added to this graph dictionary.
-        """
-        colors = self.get_graph_colors() if colors is None else colors
-        hoverLine = InfiniteLine(pos=0, pen=mkPen(colors[-1], width=1), movable=False)
-        graphDict['graph'].addItem(hoverLine)
-        graphDict['line'] = hoverLine
-
     def setup_graph_plots(self, graph: PlotWidget, trader: Union[SimulationTrader, Backtester], graphType: int):
         """
         Setups graph plots for graph, trade, and graphType specified.
@@ -1010,9 +949,9 @@ class Interface(QMainWindow):
         :param trader: Trade object that will use this graph.
         :param graphType: Graph type; i.e. moving average or net balance.
         """
-        colors = self.get_graph_colors()
+        colors = get_graph_colors(gui=self)
         if self.configuration.enableHoverLine.isChecked():
-            self.create_infinite_line(self.get_graph_dictionary(graph), colors=colors)
+            create_infinite_line(self, self.get_graph_dictionary(graph), colors=colors)
 
         if graphType == NET_GRAPH:
             self.setup_net_graph_plot(graph=graph, trader=trader, color=colors[0])
@@ -1020,37 +959,6 @@ class Interface(QMainWindow):
             self.setup_average_graph_plots(graph=graph, trader=trader, colors=colors)
         else:
             raise TypeError("Invalid type of graph provided.")
-
-    def get_graph_colors(self) -> list:
-        """
-        Returns graph colors to be placed based on configuration.
-        """
-        config = self.configuration
-        colorDict = {'blue': 'b',
-                     'green': 'g',
-                     'red': 'r',
-                     'cyan': 'c',
-                     'magenta': 'm',
-                     'yellow': 'y',
-                     'black': 'k',
-                     'white': 'w'}
-        colors = [config.balanceColor.currentText(), config.avg1Color.currentText(), config.avg2Color.currentText(),
-                  config.avg3Color.currentText(), config.avg4Color.currentText(), config.hoverLineColor.currentText()]
-        return [colorDict[color.lower()] for color in colors]
-
-    def create_graph_plot(self, graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):
-        """
-        Creates a graph plot with parameters provided.
-        :param graph: Graph function will plot on.
-        :param x: X values of graph.
-        :param y: Y values of graph.
-        :param plotName: Name of graph.
-        :param color: Color graph will be drawn in.
-        """
-        pen = mkPen(color=color)
-        plot = graph.plot(x, y, name=plotName, pen=pen, autoDownsample=True, downsampleMethod='subsample')
-        plot.curve.scene().sigMouseMoved.connect(lambda point: self.onMouseMoved(point=point, graph=graph))
-        return plot
 
     def get_graph_dictionary(self, targetGraph) -> dict:
         """
