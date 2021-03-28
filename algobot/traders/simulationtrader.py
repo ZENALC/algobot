@@ -599,10 +599,7 @@ class SimulationTrader(Trader):
         """
         if self.currentPosition == SHORT and self.stopLoss is not None:
             self.output_message('\nCurrently in short position.')
-            if self.lossStrategy == TRAILING:
-                self.output_message(f'Short trailing loss: ${round(self.stopLoss, self.precision)}')
-            elif self.lossStrategy == STOP:
-                self.output_message(f'Stop loss: ${round(self.stopLoss, self.precision)}')
+            self.output_message(f'{self.get_stop_loss_strategy_string()}: ${round(self.stopLoss, self.precision)}')
 
     def output_long_information(self):
         """
@@ -610,10 +607,7 @@ class SimulationTrader(Trader):
         """
         if self.currentPosition == LONG and self.stopLoss is not None:
             self.output_message('\nCurrently in long position.')
-            if self.lossStrategy == TRAILING:
-                self.output_message(f'Long trailing loss: ${round(self.stopLoss, self.precision)}')
-            elif self.lossStrategy == STOP:
-                self.output_message(f'Stop loss: ${round(self.stopLoss, self.precision)}')
+            self.output_message(f'{self.get_stop_loss_strategy_string()}: ${round(self.stopLoss, self.precision)}')
 
     def output_control_mode(self):
         """
@@ -629,12 +623,7 @@ class SimulationTrader(Trader):
         Outputs general information about profit.
         """
         profit = round(self.get_profit(), self.precision)
-        if profit > 0:
-            self.output_message(f'Profit: ${profit}')
-        elif profit < 0:
-            self.output_message(f'Loss: ${-profit}')
-        else:
-            self.output_message('Profit: $0')
+        self.output_message(f'{self.get_profit_or_loss_string}: ${abs(profit)}')
 
     def output_basic_information(self):
         """
