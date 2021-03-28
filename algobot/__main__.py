@@ -17,8 +17,11 @@ from algobot.data import Data
 from algobot.enums import (AVG_GRAPH, BACKTEST, LIVE, LONG, NET_GRAPH, SHORT,
                            SIMULATION)
 from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
-                                   get_graph_dictionary, setup_graph_plots,
-                                   setup_graphs, update_main_graphs)
+                                   get_graph_dictionary,
+                                   set_backtest_graph_limits_and_empty_plots,
+                                   setup_graph_plots, setup_graphs,
+                                   update_backtest_graph_limits,
+                                   update_main_graphs)
 from algobot.helpers import (ROOT_DIR, create_folder_if_needed, get_logger,
                              open_file_or_folder)
 from algobot.interface.about import About
@@ -204,7 +207,7 @@ class Interface(QMainWindow):
         worker.signals.finished.connect(self.end_backtest)
         worker.signals.message.connect(lambda message: self.add_to_monitor(BACKTEST, message))
         worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=BACKTEST))
-        worker.signals.updateGraphLimits.connect(self.update_backtest_graph_limits)
+        worker.signals.updateGraphLimits.connect(update_backtest_graph_limits(self))
         self.threadPool.start(worker)
 
     def end_backtest_thread(self):
@@ -299,26 +302,9 @@ class Interface(QMainWindow):
         interval = configurationDictionary['interval']
         destroy_graph_plots(self, interfaceDict['graph'])
         setup_graph_plots(self, interfaceDict['graph'], self.backtester, NET_GRAPH)
-        self.set_backtest_graph_limits_and_empty_plots()
+        set_backtest_graph_limits_and_empty_plots(self)
         self.update_backtest_configuration_gui(configurationDictionary)
         self.add_to_backtest_monitor(f"Started backtest with {symbol} data and {interval.lower()} interval periods.")
-
-    def update_backtest_graph_limits(self, limit: int = 105):
-        graphDict = get_graph_dictionary(self, self.backtestGraph)
-        graphDict['graph'].setLimits(xMin=0, xMax=limit + 1)
-
-    def set_backtest_graph_limits_and_empty_plots(self, limit: int = 105):
-        """
-        Resets backtest graph and sets x-axis limits.
-        """
-        initialTimeStamp = self.backtester.data[0]['date_utc'].timestamp()
-        graphDict = get_graph_dictionary(self, self.backtestGraph)
-        graphDict['graph'].setLimits(xMin=0, xMax=limit)
-        plot = graphDict['plots'][0]
-        plot['x'] = [0]
-        plot['y'] = [self.backtester.startingBalance]
-        plot['z'] = [initialTimeStamp]
-        plot['plot'].setData(plot['x'], plot['y'])
 
     def check_strategies(self, caller: int) -> float:
         if not self.configuration.get_strategies(caller):

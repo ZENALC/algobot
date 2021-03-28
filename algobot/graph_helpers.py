@@ -10,6 +10,32 @@ from algobot.traders.simulationtrader import SimulationTrader
 GRAPH_LEEWAY = 10  # Amount of points to set extra for graph limits.
 
 
+def set_backtest_graph_limits_and_empty_plots(gui, limit: int = 105):
+    """
+    Resets backtest graph and sets x-axis limits.
+    :param gui: Graphical user interface in which to set up graphs.
+    :param limit: Maximum x-axis limit to set in the graph.
+    """
+    initialTimeStamp = gui.backtester.data[0]['date_utc'].timestamp()
+    graphDict = get_graph_dictionary(gui, gui.backtestGraph)
+    graphDict['graph'].setLimits(xMin=0, xMax=limit)
+    plot = graphDict['plots'][0]
+    plot['x'] = [0]
+    plot['y'] = [gui.backtester.startingBalance]
+    plot['z'] = [initialTimeStamp]
+    plot['plot'].setData(plot['x'], plot['y'])
+
+
+def update_backtest_graph_limits(gui, limit: int = 105):
+    """
+    Updates backtest graph limits based on the limit provided.
+    :param gui: Graphical user interface in which to set up graphs.
+    :param limit: Maximum x-axis limit to set in the graph.
+    """
+    graphDict = get_graph_dictionary(gui, gui.backtestGraph)
+    graphDict['graph'].setLimits(xMin=0, xMax=limit + 1)
+
+
 def get_graph_dictionary(gui, targetGraph) -> dict:
     """
     Loops over list of graphs and returns appropriate graph dictionary.
