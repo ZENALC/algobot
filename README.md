@@ -62,6 +62,10 @@ Mihir Shrestha
 
 koutsie, Malachi Soord (inverse)
 
+# Wiki
+
+You can find documentation regarding Algobot [here](https://github.com/ZENALC/algobot/wiki).
+
 # Special Contributors
 
 Peter Motin for being the founder and head of strategic development throughout the entirety of this project.
