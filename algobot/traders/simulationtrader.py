@@ -492,20 +492,6 @@ class SimulationTrader(Trader):
         else:
             raise ValueError("Unknown type of exit position type.")
 
-    def get_stop_loss_strategy_string(self) -> str:
-        """
-        Returns stop loss strategy in string format, instead of integer enum.
-        :return: Stop loss strategy in string format.
-        """
-        if self.lossStrategy == STOP:
-            return 'Stop Loss'
-        elif self.lossStrategy == TRAILING:
-            return 'Trailing Loss'
-        elif self.lossStrategy is None:
-            return 'None'
-        else:
-            raise ValueError("Unknown type of loss strategy.")
-
     @staticmethod
     def get_trend_string(trend) -> str:
         """
@@ -566,15 +552,6 @@ class SimulationTrader(Trader):
             else:
                 return f'{round(value * multiplier, roundDigits)}{symbol}'
 
-    @staticmethod
-    def get_profit_or_loss_string(profit: float) -> str:
-        """
-        Helper function that returns where profit specified is profit or loss. Profit is positive; loss if negative.
-        :param profit: Amount to be checked for negativity or positivity.
-        :return: String value of whether profit ir positive or negative.
-        """
-        return "Profit" if profit >= 0 else "Loss"
-
     def get_strategy_inputs(self, strategy_name: str):
         """
         Returns provided strategy's inputs if it exists.
@@ -629,13 +606,6 @@ class SimulationTrader(Trader):
         """
         temp = self.dataView.symbol.upper().split('USDT')
         return temp[0]
-
-    def get_position(self) -> str:
-        """
-        Returns current position.
-        :return: Current position integer bot is in.
-        """
-        return self.currentPosition
 
     def get_average(self, movingAverage: str, parameter: str, value: int, dataObject: Data = None,
                     update: bool = True, round_value: bool = False) -> float:

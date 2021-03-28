@@ -746,7 +746,7 @@ class Backtester(Trader):
 
         return resultFile
 
-    def write_results(self, resultFile=None) -> str:
+    def write_results(self, resultFile: str = None) -> str:
         """
         Writes backtest results to resultFile provided. If none is provided, it'll write to a default file name.
         :param resultFile: File to write results in.
