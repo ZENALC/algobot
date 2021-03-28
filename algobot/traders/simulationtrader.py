@@ -522,36 +522,6 @@ class SimulationTrader(Trader):
         else:
             raise ValueError("Invalid type of current position.")
 
-    def get_safe_rounded_percentage(self, decimalValue: float) -> str:
-        """
-        Converts decimal value provided to a percentage.
-        :param decimalValue: Percentage in decimal format.
-        :return: Rounded percentage value in a string format.
-        """
-        return self.get_safe_rounded_string(decimalValue, direction='right', multiplier=100, symbol='%')
-
-    def get_safe_rounded_string(self, value: float, roundDigits: int = None, symbol: str = '$', direction: str = 'left',
-                                multiplier: float = 1) -> str:
-        """
-        Helper function that will, if exists, return value rounded with symbol provided.
-        :param multiplier: Optional value to final value with before return.
-        :param direction: Direction to add the safe rounded string: left or right.
-        :param roundDigits: Number of digits to round value.
-        :param symbol: Symbol to insert to beginning of return string.
-        :param value: Value that will be safety checked.
-        :return: Rounded value (if not none) in string format.
-        """
-        if roundDigits is None:
-            roundDigits = self.precision
-
-        if value is None:
-            return "None"
-        else:
-            if direction == 'left':
-                return f'{symbol}{round(value * multiplier, roundDigits)}'
-            else:
-                return f'{round(value * multiplier, roundDigits)}{symbol}'
-
     def get_strategy_inputs(self, strategy_name: str):
         """
         Returns provided strategy's inputs if it exists.
