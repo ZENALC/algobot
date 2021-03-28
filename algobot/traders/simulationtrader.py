@@ -5,8 +5,7 @@ from typing import Union
 
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
-from algobot.helpers import (convert_small_interval, get_logger,
-                             set_up_strategies)
+from algobot.helpers import convert_small_interval, get_logger
 from algobot.traders.trader import Trader
 
 
@@ -57,13 +56,6 @@ class SimulationTrader(Trader):
 
         self.optionDetails = []  # Current option values. Holds most recent option values.
         self.lowerOptionDetails = []  # Lower option values. Holds lower interval option values (if exist).
-
-    def setup_strategies(self, strategies: list):
-        """
-        Sets up strategies from list of strategies provided.
-        :param strategies: List of strategies to set up and apply to bot.
-        """
-        set_up_strategies(self, strategies)
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
@@ -510,19 +502,6 @@ class SimulationTrader(Trader):
         balance -= self.currentPrice * self.coinOwed
 
         return balance - self.startingBalance
-
-    @staticmethod
-    def get_profit_percentage(initialNet: float, finalNet: float) -> float:
-        """
-        Calculates net percentage from initial and final values and returns it.
-        :param initialNet: Initial net value.
-        :param finalNet: Final net value.
-        :return: Profit percentage.
-        """
-        if finalNet >= initialNet:
-            return finalNet / initialNet * 100 - 100
-        else:
-            return -1 * (100 - finalNet / initialNet * 100)
 
     def get_coin_name(self) -> str:
         """

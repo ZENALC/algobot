@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
+from algobot.helpers import set_up_strategies
 from algobot.strategies.strategy import Strategy
 
 
@@ -110,6 +111,13 @@ class Trader:
         if 'safetyTimer' in lossDict:
             self.set_safety_timer(lossDict['safetyTimer'])
 
+    def setup_strategies(self, strategies: list):
+        """
+        Sets up strategies from list of strategies provided.
+        :param strategies: List of strategies to set up and apply to bot.
+        """
+        set_up_strategies(self, strategies)
+
     @staticmethod
     def get_cumulative_trend(trends: List[int]) -> Union[int, None]:
         """
@@ -142,6 +150,19 @@ class Trader:
 
     def get_stop_loss(self):
         pass
+
+    @staticmethod
+    def get_profit_percentage(initialNet: float, finalNet: float) -> float:
+        """
+        Calculates net percentage from initial and final values and returns it.
+        :param initialNet: Initial net value.
+        :param finalNet: Final net value.
+        :return: Profit percentage.
+        """
+        if finalNet >= initialNet:
+            return finalNet / initialNet * 100 - 100
+        else:
+            return -1 * (100 - finalNet / initialNet * 100)
 
     @staticmethod
     def get_trailing_or_stop_loss_string(exitPositionType: int) -> str:
