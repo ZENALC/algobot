@@ -6,9 +6,19 @@ Cryptocurrency trading bot that allows users to create strategies and then backt
 
 Please make sure you have an installation of at least Python 3.6.
 
+For Linux/MacOS:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+For Windows:
+```bash
+python -m venv venv
+cd venv/Scripts
+activate
 pip install -r requirements.txt
 ```
 
