@@ -10,15 +10,14 @@ from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5.QtGui import QIcon, QTextCursor
 from PyQt5.QtWidgets import (QApplication, QFileDialog, QMainWindow,
                              QMessageBox, QTableWidgetItem)
-from pyqtgraph import PlotWidget
 
 import algobot.assets
 from algobot.algodict import get_interface_dictionary
 from algobot.data import Data
 from algobot.enums import (AVG_GRAPH, BACKTEST, LIVE, LONG, NET_GRAPH, SHORT,
                            SIMULATION)
-from algobot.graph_helpers import (create_graph_plot, create_infinite_line,
-                                   get_graph_colors, setup_graphs,
+from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
+                                   setup_graph_plots, setup_graphs,
                                    update_main_graphs)
 from algobot.helpers import (ROOT_DIR, create_folder_if_needed, get_logger,
                              open_file_or_folder)
@@ -268,7 +267,7 @@ class Interface(QMainWindow):
         self.backtestProfitPercentage.setText(updatedDict['profitPercentage'])
         self.backtestTradesMade.setText(updatedDict['tradesMade'])
         self.backtestCurrentPeriod.setText(updatedDict['currentPeriod'])
-        self.add_data_to_plot(self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, y=net, timestamp=utc)
+        add_data_to_plot(self, self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, y=net, timestamp=utc)
 
     def update_backtest_configuration_gui(self, statDict: dict):
         """
@@ -298,8 +297,8 @@ class Interface(QMainWindow):
         interfaceDict = self.interfaceDictionary[BACKTEST]['mainInterface']
         symbol = configurationDictionary['symbol']
         interval = configurationDictionary['interval']
-        self.destroy_graph_plots(interfaceDict['graph'])
-        self.setup_graph_plots(interfaceDict['graph'], self.backtester, NET_GRAPH)
+        destroy_graph_plots(self, interfaceDict['graph'])
+        setup_graph_plots(self, interfaceDict['graph'], self.backtester, NET_GRAPH)
         self.set_backtest_graph_limits_and_empty_plots()
         self.update_backtest_configuration_gui(configurationDictionary)
         self.add_to_backtest_monitor(f"Started backtest with {symbol} data and {interval.lower()} interval periods.")
@@ -511,15 +510,15 @@ class Interface(QMainWindow):
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         self.disable_interface(True, caller, False)
         self.enable_override(caller)
-        self.destroy_graph_plots(interfaceDict['graph'])
-        self.destroy_graph_plots(interfaceDict['averageGraph'])
+        destroy_graph_plots(self, interfaceDict['graph'])
+        destroy_graph_plots(self, interfaceDict['averageGraph'])
         self.statistics.initialize_tab(trader.get_grouped_statistics(), tabType=self.get_caller_string(caller))
-        self.setup_graph_plots(interfaceDict['graph'], trader, NET_GRAPH)
+        setup_graph_plots(self, interfaceDict['graph'], trader, NET_GRAPH)
 
         averageGraphDict = self.get_graph_dictionary(interfaceDict['averageGraph'])
         if self.configuration.graphIndicatorsCheckBox.isChecked():
             averageGraphDict['enable'] = True
-            self.setup_graph_plots(interfaceDict['averageGraph'], trader, AVG_GRAPH)
+            setup_graph_plots(self, interfaceDict['averageGraph'], trader, AVG_GRAPH)
         else:
             averageGraphDict['enable'] = False
 
@@ -838,127 +837,6 @@ class Interface(QMainWindow):
         finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
         initialName, finalName = option.get_pretty_option()
         return initialAverage, finalAverage, initialName, finalName
-
-    def add_data_to_plot(self, targetGraph: PlotWidget, plotIndex: int, y: float, timestamp: float):
-        """
-        Adds data to plot in provided graph.
-        :param targetGraph: Graph to use for plot to add data to.
-        :param plotIndex: Index of plot in target graph's list of plots.
-        :param y: Y value to add.
-        :param timestamp: Timestamp value to add.
-        """
-        graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
-        plot = graphDict['plots'][plotIndex]
-
-        secondsInDay = 86400  # Reset graph every 24 hours (assuming data is updated only once a second).
-        if len(plot['x']) >= secondsInDay:
-            plot['x'] = [0]
-            plot['y'] = [y]
-            plot['z'] = [timestamp]
-        else:
-            plot['x'].append(plot['x'][-1] + 1)
-            plot['y'].append(y)
-            plot['z'].append(timestamp)
-        plot['plot'].setData(plot['x'], plot['y'])
-
-    def append_plot_to_graph(self, targetGraph: PlotWidget, toAdd: list):
-        """
-        Appends plot to graph provided.
-        :param targetGraph: Graph to add plot to.
-        :param toAdd: List of plots to add to target graph.
-        """
-        graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
-        graphDict['plots'] += toAdd
-
-    def destroy_graph_plots(self, targetGraph: PlotWidget):
-        """
-        Resets graph plots for graph provided.
-        :param targetGraph: Graph to destroy plots for.
-        """
-        graphDict = self.get_graph_dictionary(targetGraph=targetGraph)
-        graphDict['graph'].clear()
-        graphDict['plots'] = []
-
-    def setup_net_graph_plot(self, graph: PlotWidget, trader: SimulationTrader, color: str):
-        """
-        Sets up net balance plot for graph provided.
-        :param trader: Type of trader that will use this graph.
-        :param graph: Graph where plot will be setup.
-        :param color: Color plot will be setup in.
-        """
-        net = trader.startingBalance
-        currentDateTimestamp = datetime.utcnow().timestamp()
-        plot = self.get_plot_dictionary(graph=graph, color=color, y=net, name='Net', timestamp=currentDateTimestamp)
-
-        self.append_plot_to_graph(graph, [plot])
-
-    def setup_average_graph_plots(self, graph: PlotWidget, trader, colors: list):
-        """
-        Sets up moving average plots for graph provided.
-        :param trader: Type of trader that will use this graph.
-        :param graph: Graph where plots will be setup.
-        :param colors: List of colors plots will be setup in.
-        """
-        if trader.currentPrice is None:
-            trader.currentPrice = trader.dataView.get_current_price()
-
-        currentPrice = trader.currentPrice
-        currentDateTimestamp = datetime.utcnow().timestamp()
-        colorCounter = 1
-
-        if 'movingAverage' in trader.strategies:
-            for option in trader.strategies['movingAverage'].get_params():
-                initialAverage, finalAverage, initialName, finalName = self.get_option_info(option, trader)
-                initialPlotDict = self.get_plot_dictionary(graph=graph, color=colors[colorCounter % len(colors)],
-                                                           y=initialAverage,
-                                                           name=initialName, timestamp=currentDateTimestamp)
-                secondaryPlotDict = self.get_plot_dictionary(graph=graph,
-                                                             color=colors[(colorCounter + 1) % len(colors)],
-                                                             y=finalAverage,
-                                                             name=finalName, timestamp=currentDateTimestamp)
-                colorCounter += 2
-                self.append_plot_to_graph(graph, [initialPlotDict, secondaryPlotDict])
-
-        tickerPlotDict = self.get_plot_dictionary(graph=graph, color=colors[0], y=currentPrice, name=trader.symbol,
-                                                  timestamp=currentDateTimestamp)
-        self.append_plot_to_graph(graph, [tickerPlotDict])
-
-    def get_plot_dictionary(self, graph, color, y, name, timestamp) -> dict:
-        """
-        Creates a graph plot and returns a dictionary of it.
-        :param graph: Graph to add plot to.
-        :param color: Color of plot.
-        :param y: Y value to start with for plot.
-        :param name: Name of plot.
-        :param timestamp: First UTC timestamp of plot.
-        :return: Dictionary of plot information.
-        """
-        plot = create_graph_plot(self, graph, (0,), (y,), color=color, plotName=name)
-        return {
-            'plot': plot,
-            'x': [0],
-            'y': [y],
-            'z': [timestamp],
-            'name': name,
-        }
-
-    def setup_graph_plots(self, graph: PlotWidget, trader: Union[SimulationTrader, Backtester], graphType: int):
-        """
-        Setups graph plots for graph, trade, and graphType specified.
-        :param graph: Graph that will be setup.
-        :param trader: Trade object that will use this graph.
-        :param graphType: Graph type; i.e. moving average or net balance.
-        """
-        colors = get_graph_colors(gui=self)
-        if self.configuration.enableHoverLine.isChecked():
-            create_infinite_line(self, self.get_graph_dictionary(graph), colors=colors)
-
-        if graphType == NET_GRAPH:
-            self.setup_net_graph_plot(graph=graph, trader=trader, color=colors[0])
-        elif graphType == AVG_GRAPH:
-            self.setup_average_graph_plots(graph=graph, trader=trader, colors=colors)
-        else:
-            raise TypeError("Invalid type of graph provided.")
 
     def get_graph_dictionary(self, targetGraph) -> dict:
         """
