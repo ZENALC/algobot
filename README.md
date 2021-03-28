@@ -36,8 +36,8 @@ To run Algobot, run `python -m algobot` from within the activated virtual enviro
 • Run live bots with parameters configured.\
 • Telegram integration that allows users to trade or view statistics.\
 • Create custom, trailing, or limit stop losses.\
-• Create take profits.
-• Ability to create your own strategies relatively easily.
+• Create take profits.\
+• Ability to create your own custom strategies.
 
 # User Interface
 
