@@ -292,6 +292,28 @@ class Interface(QMainWindow):
                 self.backtestMovingAverage3.setText(statDict['options'][1][0])
                 self.backtestMovingAverage4.setText(statDict['options'][1][1])
 
+    def update_backtest_activity_based_on_graph(self, position: int):
+        """
+        Updates backtest activity based on where the line is in the backtest graph.
+        :param position: Position to show activity at.
+        """
+        if self.backtester is not None:
+            if 1 <= position <= len(self.backtester.pastActivity):
+                try:
+                    self.update_backtest_gui(self.backtester.pastActivity[position - 1])
+                except IndexError as e:
+                    self.logger.exception(str(e))
+
+    def reset_backtest_cursor(self):
+        """
+        Resets backtest hover cursor to end of graph.
+        """
+        graphDict = get_graph_dictionary(self, self.backtestGraph)
+        if self.backtester is not None and graphDict.get('line') is not None:
+            index = len(self.backtester.pastActivity)
+            graphDict['line'].setPos(index)
+            self.update_backtest_activity_based_on_graph(index)
+
     def setup_backtester(self, configurationDictionary: dict):
         """
         Set up backtest GUI with dictionary provided.
@@ -848,28 +870,6 @@ class Interface(QMainWindow):
 
                 if graph == self.backtestGraph and self.backtester is not None:
                     self.update_backtest_activity_based_on_graph(xValue)
-
-    def update_backtest_activity_based_on_graph(self, position: int):
-        """
-        Updates backtest activity based on where the line is in the backtest graph.
-        :param position: Position to show activity at.
-        """
-        if self.backtester is not None:
-            if 1 <= position <= len(self.backtester.pastActivity):
-                try:
-                    self.update_backtest_gui(self.backtester.pastActivity[position - 1])
-                except IndexError as e:
-                    self.logger.exception(str(e))
-
-    def reset_backtest_cursor(self):
-        """
-        Resets backtest hover cursor to end of graph.
-        """
-        graphDict = get_graph_dictionary(self, self.backtestGraph)
-        if self.backtester is not None and graphDict.get('line') is not None:
-            index = len(self.backtester.pastActivity)
-            graphDict['line'].setPos(index)
-            self.update_backtest_activity_based_on_graph(index)
 
     @staticmethod
     def clear_table(table):
