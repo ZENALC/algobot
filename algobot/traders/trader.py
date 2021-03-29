@@ -44,7 +44,9 @@ class Trader:
         # Stop loss information.
         self.smartStopLossInitialCounter = 0  # Smart stop loss initial counter.
         self.smartStopLossCounter = 0  # Smart stop loss counter.
+        self.smartStopLossEnter = False  # Boolean that'll determine whether current position is from a smart stop loss.
         self.previousStopLoss = None  # Previous stop loss for smart stop loss.
+        self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
         self.stopLossExit = False  # Boolean that'll determine whether last position was exited from a stop loss.
         self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
         self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.

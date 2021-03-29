@@ -47,8 +47,6 @@ class SimulationTrader(Trader):
         self.addTradeCallback = addTradeCallback
 
         self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
-        self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
-        self.smartStopLossEnter = False  # Boolean that'll determine whether current position is from a smart stop loss.
         self.scheduledSafetyTimer = None  # Next time to check if it's a true stop loss.
 
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
