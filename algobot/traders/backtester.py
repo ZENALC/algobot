@@ -383,7 +383,7 @@ class Backtester(Trader):
     def restore(self):
         pass
 
-    def _get_short_stop_loss(self) -> Union[float, None]:
+    def get_short_stop_loss(self) -> Union[float, None]:
         """
         Returns stop loss for short position.
         :return: Stop loss for short position.
@@ -397,7 +397,7 @@ class Backtester(Trader):
         else:
             raise ValueError("Invalid type of loss strategy provided.")
 
-    def _get_long_stop_loss(self) -> Union[float, None]:
+    def get_long_stop_loss(self) -> Union[float, None]:
         """
         Returns stop loss for long position.
         :return: Stop loss for long position.
@@ -418,10 +418,10 @@ class Backtester(Trader):
         """
         self.handle_trailing_prices()
         if self.currentPosition == SHORT:
-            self.previousStopLoss = self._get_short_stop_loss()
+            self.previousStopLoss = self.get_short_stop_loss()
             return self.previousStopLoss
         elif self.currentPosition == LONG:
-            self.previousStopLoss = self._get_long_stop_loss()
+            self.previousStopLoss = self.get_long_stop_loss()
             return self.previousStopLoss
         else:
             return None
