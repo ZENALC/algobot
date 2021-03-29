@@ -1,7 +1,7 @@
 import webbrowser
 
 from algobot.enums import BACKTEST, LIVE, SIMULATION
-from algobot.helpers import clear_table
+from algobot.helpers import clear_table, open_folder
 from algobot.themes import (set_bear_mode, set_bloomberg_mode, set_bull_mode,
                             set_dark_mode, set_light_mode)
 
@@ -52,12 +52,12 @@ def create_action_slots(gui):
     gui.aboutAlgobotAction.triggered.connect(lambda: gui.about.show())
     gui.liveStatisticsAction.triggered.connect(lambda: gui.show_statistics(0))
     gui.simulationStatisticsAction.triggered.connect(lambda: gui.show_statistics(1))
-    gui.openBacktestResultsFolderAction.triggered.connect(lambda: gui.open_folder("Backtest Results"))
-    gui.openLogFolderAction.triggered.connect(lambda: gui.open_folder("Logs"))
-    gui.openCsvFolderAction.triggered.connect(lambda: gui.open_folder('CSV'))
-    gui.openDatabasesFolderAction.triggered.connect(lambda: gui.open_folder('Databases'))
-    gui.openCredentialsFolderAction.triggered.connect(lambda: gui.open_folder('Credentials'))
-    gui.openConfigurationsFolderAction.triggered.connect(lambda: gui.open_folder('Configuration'))
+    gui.openBacktestResultsFolderAction.triggered.connect(lambda: open_folder("Backtest Results"))
+    gui.openLogFolderAction.triggered.connect(lambda: open_folder("Logs"))
+    gui.openCsvFolderAction.triggered.connect(lambda: open_folder('CSV'))
+    gui.openDatabasesFolderAction.triggered.connect(lambda: open_folder('Databases'))
+    gui.openCredentialsFolderAction.triggered.connect(lambda: open_folder('Credentials'))
+    gui.openConfigurationsFolderAction.triggered.connect(lambda: open_folder('Configuration'))
     gui.sourceCodeAction.triggered.connect(lambda: webbrowser.open("https://github.com/ZENALC/algobot"))
     gui.tradingViewLiveAction.triggered.connect(lambda: gui.open_trading_view(LIVE))
     gui.tradingViewSimulationAction.triggered.connect(lambda: gui.open_trading_view(SIMULATION))
@@ -119,5 +119,5 @@ def create_backtest_slots(gui):
     gui.runBacktestButton.clicked.connect(gui.initiate_backtest)
     gui.endBacktestButton.clicked.connect(gui.end_backtest_thread)
     gui.clearBacktestTableButton.clicked.connect(lambda: clear_table(gui.backtestTable))
-    gui.viewBacktestsButton.clicked.connect(lambda: gui.open_folder("Backtest Results"))
+    gui.viewBacktestsButton.clicked.connect(lambda: open_folder("Backtest Results"))
     gui.backtestResetCursorButton.clicked.connect(gui.reset_backtest_cursor)

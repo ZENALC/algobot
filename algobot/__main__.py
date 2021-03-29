@@ -22,9 +22,9 @@ from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
                                    setup_graph_plots, setup_graphs,
                                    update_backtest_graph_limits,
                                    update_main_graphs)
-from algobot.helpers import (ROOT_DIR, create_folder_if_needed,
-                             get_caller_string, get_logger,
-                             open_file_or_folder)
+from algobot.helpers import (ROOT_DIR, add_to_table, create_folder,
+                             create_folder_if_needed, get_caller_string,
+                             get_logger, open_file_or_folder)
 from algobot.interface.about import About
 from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
@@ -219,7 +219,7 @@ class Interface(QMainWindow):
         """
         Ends backtest and prompts user if they want to see the results.
         """
-        backtestFolderPath = self.create_folder('Backtest Results')
+        backtestFolderPath = create_folder('Backtest Results')
         innerPath = os.path.join(backtestFolderPath, self.backtester.symbol)
         create_folder_if_needed(innerPath, backtestFolderPath)
         defaultFile = os.path.join(innerPath, self.backtester.get_default_result_file_name())
@@ -912,7 +912,7 @@ class Interface(QMainWindow):
         Function that adds activity information to the backtest activity monitor.
         :param message: Message to add to backtest activity log.
         """
-        self.add_to_table(self.backtestTable, [message])
+        add_to_table(self.backtestTable, [message])
         self.backtestTable.scrollToBottom()
 
     def add_to_simulation_activity_monitor(self, message: str):
@@ -920,7 +920,7 @@ class Interface(QMainWindow):
         Function that adds activity information to the simulation activity monitor.
         :param message: Message to add to simulation activity log.
         """
-        self.add_to_table(self.simulationActivityMonitor, [message])
+        add_to_table(self.simulationActivityMonitor, [message])
         self.simulationActivityMonitor.scrollToBottom()
 
     def add_to_live_activity_monitor(self, message: str):
@@ -928,29 +928,8 @@ class Interface(QMainWindow):
         Function that adds activity information to activity monitor.
         :param message: Message to add to activity log.
         """
-        self.add_to_table(self.activityMonitor, [message])
+        add_to_table(self.activityMonitor, [message])
         self.activityMonitor.scrollToBottom()
-
-    @staticmethod
-    def add_to_table(table, data: list, insertDate=True):
-        """
-        Function that will add specified data to a provided table.
-        :param insertDate: Boolean to add date to 0th index of data or not.
-        :param table: Table we will add data to.
-        :param data: Data we will add to table.
-        """
-        rowPosition = table.rowCount()
-        columns = table.columnCount()
-
-        if insertDate:
-            data.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-        if len(data) != columns:
-            raise ValueError('Data needs to have the same amount of columns as table.')
-
-        table.insertRow(rowPosition)
-        for column in range(0, columns):
-            table.setItem(rowPosition, column, QTableWidgetItem(str(data[column])))
 
     def update_trades_table_and_activity_monitor(self, trade, caller):
         """
@@ -973,7 +952,7 @@ class Interface(QMainWindow):
                      trade['method'],
                      trade['action']]
 
-        self.add_to_table(table, tradeData)
+        add_to_table(table, tradeData)
         self.add_to_monitor(caller, trade['action'])
 
         if caller == LIVE and self.telegramBot and self.configuration.enableTelegramSendMessage.isChecked():
@@ -1050,17 +1029,6 @@ class Interface(QMainWindow):
         else:
             self.create_popup('There is currently no live bot running.')
 
-    @staticmethod
-    def create_folder(folder):
-        targetPath = os.path.join(ROOT_DIR, folder)
-        create_folder_if_needed(targetPath)
-
-        return targetPath
-
-    def open_folder(self, folder):
-        targetPath = self.create_folder(folder)
-        open_file_or_folder(targetPath)
-
     def get_preferred_symbol(self) -> Union[None, str]:
         """
         Get preferred symbol on precedence of live bot, simulation bot, then finally backtest bot.
@@ -1132,7 +1100,7 @@ class Interface(QMainWindow):
                 trade.append(item.text())
             trades.append(trade)
 
-        path = self.create_folder("Trade History")
+        path = create_folder("Trade History")
 
         if caller == SIMULATION:
             defaultFile = os.path.join(path, 'live_trades.csv')
@@ -1156,7 +1124,7 @@ class Interface(QMainWindow):
         """
         table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
         label = self.interfaceDictionary[caller]['mainInterface']['historyLabel']
-        path = self.create_folder("Trade History")
+        path = create_folder("Trade History")
         path, _ = QFileDialog.getOpenFileName(self, 'Import Trades', path, "CSV (*.csv)")
 
         try:
@@ -1164,7 +1132,7 @@ class Interface(QMainWindow):
                 rows = f.readlines()
                 for row in rows:
                     row = row.strip().split(',')
-                    self.add_to_table(table, row, insertDate=False)
+                    add_to_table(table, row, insertDate=False)
             label.setText("Imported trade history successfully.")
         except Exception as e:
             label.setText("Could not import trade history due to data corruption or no file being selected.")

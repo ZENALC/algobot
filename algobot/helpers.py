@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
 from dateutil import parser
+from PyQt5.QtWidgets import QTableWidgetItem
 
 from algobot.enums import BACKTEST, LIVE, SIMULATION
 from algobot.typing_hints import DICT_TYPE
@@ -16,6 +17,39 @@ from algobot.typing_hints import DICT_TYPE
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
 LOG_FOLDER = 'Logs'
+
+
+def add_to_table(table, data: list, insertDate=True):
+    """
+    Function that will add specified data to a provided table.
+    :param insertDate: Boolean to add date to 0th index of data or not.
+    :param table: Table we will add data to.
+    :param data: Data we will add to table.
+    """
+    rowPosition = table.rowCount()
+    columns = table.columnCount()
+
+    if insertDate:
+        data.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    if len(data) != columns:
+        raise ValueError('Data needs to have the same amount of columns as table.')
+
+    table.insertRow(rowPosition)
+    for column in range(0, columns):
+        table.setItem(rowPosition, column, QTableWidgetItem(str(data[column])))
+
+
+def open_folder(folder):
+    targetPath = create_folder(folder)
+    open_file_or_folder(targetPath)
+
+
+def create_folder(folder):
+    targetPath = os.path.join(ROOT_DIR, folder)
+    create_folder_if_needed(targetPath)
+
+    return targetPath
 
 
 def clear_table(table):
