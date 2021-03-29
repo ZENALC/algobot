@@ -27,12 +27,11 @@ from algobot.helpers import (ROOT_DIR, create_folder_if_needed, get_logger,
 from algobot.interface.about import About
 from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
-from algobot.interface.palettes import (bloomberg_palette, dark_palette,
-                                        green_palette, light_palette,
-                                        red_palette)
 from algobot.interface.statistics import Statistics
-from algobot.option import Option
 from algobot.news_scraper import scrape_news
+from algobot.option import Option
+from algobot.themes import (set_bear_mode, set_bloomberg_mode, set_bull_mode,
+                            set_dark_mode, set_light_mode)
 from algobot.threads import backtestThread, botThread, listThread, workerThread
 from algobot.traders.backtester import Backtester
 from algobot.traders.realtrader import RealTrader
@@ -1077,11 +1076,11 @@ class Interface(QMainWindow):
         """
         Creates configuration slots.
         """
-        self.configuration.lightModeRadioButton.toggled.connect(lambda: self.set_light_mode())
-        self.configuration.darkModeRadioButton.toggled.connect(lambda: self.set_dark_mode())
-        self.configuration.bloombergModeRadioButton.toggled.connect(lambda: self.set_bloomberg_mode())
-        self.configuration.bullModeRadioButton.toggled.connect(lambda: self.set_bull_mode())
-        self.configuration.bearModeRadioButton.toggled.connect(lambda: self.set_bear_mode())
+        self.configuration.lightModeRadioButton.toggled.connect(lambda: set_light_mode(app, self))
+        self.configuration.darkModeRadioButton.toggled.connect(lambda: set_dark_mode(app, self))
+        self.configuration.bloombergModeRadioButton.toggled.connect(lambda: set_bloomberg_mode(app, self))
+        self.configuration.bullModeRadioButton.toggled.connect(lambda: set_bull_mode(app, self))
+        self.configuration.bearModeRadioButton.toggled.connect(lambda: set_bear_mode(app, self))
         self.configuration.simpleLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(False))
         self.configuration.advancedLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(True))
 
@@ -1318,51 +1317,6 @@ class Interface(QMainWindow):
         :param msg: Message provided.
         """
         QMessageBox.about(self, 'Warning', msg)
-
-    def set_dark_mode(self):
-        """
-        Switches interface to a dark theme.
-        """
-        app.setPalette(dark_palette())
-        for graph in self.graphs:
-            graph = graph['graph']
-            graph.setBackground('k')
-
-    def set_light_mode(self):
-        """
-        Switches interface to a light theme.
-        """
-        app.setPalette(light_palette())
-        for graph in self.graphs:
-            graph = graph['graph']
-            graph.setBackground('w')
-
-    def set_bloomberg_mode(self):
-        """
-        Switches interface to bloomberg theme.
-        """
-        app.setPalette(bloomberg_palette())
-        for graph in self.graphs:
-            graph = graph['graph']
-            graph.setBackground('k')
-
-    def set_bear_mode(self):
-        """
-        Sets bear mode color theme. Theme is red and black mimicking a red day.
-        """
-        app.setPalette(red_palette())
-        for graph in self.graphs:
-            graph = graph['graph']
-            graph.setBackground('k')
-
-    def set_bull_mode(self):
-        """
-        Sets bull mode color theme. Theme is green and black mimicking a green day.
-        """
-        app.setPalette(green_palette())
-        for graph in self.graphs:
-            graph = graph['graph']
-            graph.setBackground('k')
 
     def get_lower_interval_data(self, caller: int) -> Data:
         """
