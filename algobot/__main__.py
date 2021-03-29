@@ -30,8 +30,7 @@ from algobot.interface.other_commands import OtherCommands
 from algobot.interface.statistics import Statistics
 from algobot.news_scraper import scrape_news
 from algobot.option import Option
-from algobot.themes import (set_bear_mode, set_bloomberg_mode, set_bull_mode,
-                            set_dark_mode, set_light_mode)
+from algobot.slots import initiate_slots
 from algobot.threads import backtestThread, botThread, listThread, workerThread
 from algobot.traders.backtester import Backtester
 from algobot.traders.realtrader import RealTrader
@@ -66,7 +65,7 @@ class Interface(QMainWindow):
             {'graph': self.simulationAvgGraph, 'plots': [], 'label': self.simulationAvgCoordinates, 'enable': True},
         )
         setup_graphs(gui=self)  # Setting up graphs.
-        self.initiate_slots()  # Initiating slots.
+        initiate_slots(app=app, gui=self)  # Initiating slots.
 
         self.interfaceDictionary = get_interface_dictionary(self)
         self.advancedLogging = False
@@ -1072,21 +1071,6 @@ class Interface(QMainWindow):
         else:
             self.create_popup('There is currently no live bot running.')
 
-    def create_configuration_slots(self):
-        """
-        Creates configuration slots.
-        """
-        self.configuration.lightModeRadioButton.toggled.connect(lambda: set_light_mode(app, self))
-        self.configuration.darkModeRadioButton.toggled.connect(lambda: set_dark_mode(app, self))
-        self.configuration.bloombergModeRadioButton.toggled.connect(lambda: set_bloomberg_mode(app, self))
-        self.configuration.bullModeRadioButton.toggled.connect(lambda: set_bull_mode(app, self))
-        self.configuration.bearModeRadioButton.toggled.connect(lambda: set_bear_mode(app, self))
-        self.configuration.simpleLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(False))
-        self.configuration.advancedLoggingRadioButton.clicked.connect(lambda: self.set_advanced_logging(True))
-
-        self.configuration.updateBinanceValues.clicked.connect(self.update_binance_values)
-        self.configuration.updateTickers.clicked.connect(self.tickers_thread)
-
     @staticmethod
     def create_folder(folder):
         targetPath = os.path.join(ROOT_DIR, folder)
@@ -1097,31 +1081,6 @@ class Interface(QMainWindow):
     def open_folder(self, folder):
         targetPath = self.create_folder(folder)
         open_file_or_folder(targetPath)
-
-    def create_action_slots(self):
-        """
-        Creates actions slots.
-        """
-        self.otherCommandsAction.triggered.connect(lambda: self.otherCommands.show())
-        self.configurationAction.triggered.connect(lambda: self.configuration.show())
-        self.aboutAlgobotAction.triggered.connect(lambda: self.about.show())
-        self.liveStatisticsAction.triggered.connect(lambda: self.show_statistics(0))
-        self.simulationStatisticsAction.triggered.connect(lambda: self.show_statistics(1))
-        self.openBacktestResultsFolderAction.triggered.connect(lambda: self.open_folder("Backtest Results"))
-        self.openLogFolderAction.triggered.connect(lambda: self.open_folder("Logs"))
-        self.openCsvFolderAction.triggered.connect(lambda: self.open_folder('CSV'))
-        self.openDatabasesFolderAction.triggered.connect(lambda: self.open_folder('Databases'))
-        self.openCredentialsFolderAction.triggered.connect(lambda: self.open_folder('Credentials'))
-        self.openConfigurationsFolderAction.triggered.connect(lambda: self.open_folder('Configuration'))
-        self.sourceCodeAction.triggered.connect(lambda: webbrowser.open("https://github.com/ZENALC/algobot"))
-        self.tradingViewLiveAction.triggered.connect(lambda: self.open_trading_view(LIVE))
-        self.tradingViewSimulationAction.triggered.connect(lambda: self.open_trading_view(SIMULATION))
-        self.tradingViewBacktestAction.triggered.connect(lambda: self.open_trading_view(BACKTEST))
-        self.tradingViewHomepageAction.triggered.connect(lambda: self.open_trading_view(None))
-        self.binanceHomepageAction.triggered.connect(lambda: self.open_binance(None))
-        self.binanceLiveAction.triggered.connect(lambda: self.open_binance(LIVE))
-        self.binanceSimulationAction.triggered.connect(lambda: self.open_binance(SIMULATION))
-        self.binanceBacktestAction.triggered.connect(lambda: self.open_binance(BACKTEST))
 
     def get_preferred_symbol(self) -> Union[None, str]:
         """
@@ -1231,76 +1190,6 @@ class Interface(QMainWindow):
         except Exception as e:
             label.setText("Could not import trade history due to data corruption or no file being selected.")
             self.logger.exception(str(e))
-
-    # noinspection DuplicatedCode
-    def create_bot_slots(self):
-        """
-        Creates bot slots.
-        """
-        self.runBotButton.clicked.connect(lambda: self.initiate_bot_thread(caller=LIVE))
-        self.endBotButton.clicked.connect(lambda: self.end_bot_thread(caller=LIVE))
-        self.configureBotButton.clicked.connect(self.show_main_settings)
-        self.forceLongButton.clicked.connect(lambda: self.force_long(LIVE))
-        self.forceShortButton.clicked.connect(lambda: self.force_short(LIVE))
-        self.pauseBotButton.clicked.connect(lambda: self.pause_or_resume_bot(LIVE))
-        self.exitPositionButton.clicked.connect(lambda: self.exit_position(LIVE, True))
-        self.waitOverrideButton.clicked.connect(lambda: self.exit_position(LIVE, False))
-        self.enableCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(LIVE, True))
-        self.disableCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(LIVE, False))
-        self.clearTableButton.clicked.connect(lambda: self.clear_table(self.activityMonitor))
-        self.clearLiveTradesButton.clicked.connect(lambda: self.clear_table(self.historyTable))
-        self.exportLiveTradesButton.clicked.connect(lambda: self.export_trades(caller=LIVE))
-        self.importLiveTradesButton.clicked.connect(lambda: self.import_trades(caller=LIVE))
-
-    # noinspection DuplicatedCode
-    def create_simulation_slots(self):
-        """
-        Creates simulation slots.
-        """
-        self.runSimulationButton.clicked.connect(lambda: self.initiate_bot_thread(caller=SIMULATION))
-        self.endSimulationButton.clicked.connect(lambda: self.end_bot_thread(caller=SIMULATION))
-        self.configureSimulationButton.clicked.connect(self.show_simulation_settings)
-        self.forceLongSimulationButton.clicked.connect(lambda: self.force_long(SIMULATION))
-        self.forceShortSimulationButton.clicked.connect(lambda: self.force_short(SIMULATION))
-        self.pauseBotSimulationButton.clicked.connect(lambda: self.pause_or_resume_bot(SIMULATION))
-        self.exitPositionSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, True))
-        self.waitOverrideSimulationButton.clicked.connect(lambda: self.exit_position(SIMULATION, False))
-        self.enableSimulationCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(SIMULATION, True))
-        self.disableSimulationCustomStopLossButton.clicked.connect(lambda: self.set_custom_stop_loss(SIMULATION, False))
-        self.clearSimulationTableButton.clicked.connect(lambda: self.clear_table(self.simulationActivityMonitor))
-        self.clearSimulationTradesButton.clicked.connect(lambda: self.clear_table(self.simulationHistoryTable))
-        self.exportSimulationTradesButton.clicked.connect(lambda: self.export_trades(caller=SIMULATION))
-        self.importSimulationTradesButton.clicked.connect(lambda: self.import_trades(caller=SIMULATION))
-
-    def create_backtest_slots(self):
-        """
-        Creates backtest slots.
-        """
-        self.configureBacktestButton.clicked.connect(self.show_backtest_settings)
-        self.runBacktestButton.clicked.connect(self.initiate_backtest)
-        self.endBacktestButton.clicked.connect(self.end_backtest_thread)
-        self.clearBacktestTableButton.clicked.connect(lambda: self.clear_table(self.backtestTable))
-        self.viewBacktestsButton.clicked.connect(lambda: self.open_folder("Backtest Results"))
-        self.backtestResetCursorButton.clicked.connect(self.reset_backtest_cursor)
-
-    def create_interface_slots(self):
-        """
-        Creates interface slots.
-        """
-        self.create_bot_slots()
-        self.create_simulation_slots()
-        self.create_backtest_slots()
-
-        # Other buttons in interface.
-        self.refreshNewsButton.clicked.connect(self.news_thread)
-
-    def initiate_slots(self):
-        """
-        Initiates all interface slots.
-        """
-        self.create_action_slots()
-        self.create_configuration_slots()
-        self.create_interface_slots()
 
     def create_popup_and_emit_message(self, caller: int, message: str):
         """
