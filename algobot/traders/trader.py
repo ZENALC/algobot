@@ -279,7 +279,7 @@ class Trader:
                                 multiplier: float = 1) -> str:
         """
         Helper function that will, if exists, return value rounded with symbol provided.
-        :param multiplier: Optional value to final value with before return.
+        :param multiplier: Optional value to multiply final value with before return.
         :param direction: Direction to add the safe rounded string: left or right.
         :param roundDigits: Number of digits to round value.
         :param symbol: Symbol to insert to beginning of return string.

@@ -144,6 +144,27 @@ class TestBaseTrader(unittest.TestCase):
         self.trader.currentPosition = None
         self.assertEqual(self.trader.get_position(), None)
 
+    def test_get_safe_rounded_percentage(self):
+        self.assertEqual(self.trader.get_safe_rounded_percentage(0.05123), '5.12%')
+        self.assertEqual(self.trader.get_safe_rounded_percentage(0.01), '1.0%')
+
+    def test_get_safe_rounded_string(self):
+        self.trader.precision = 3
+        self.assertEqual(self.trader.get_safe_rounded_string(value=5.1231), '$5.123')
+        self.assertEqual(self.trader.get_safe_rounded_string(value=5.12345, roundDigits=5), '$5.12345')
+        self.assertEqual(self.trader.get_safe_rounded_string(value=5.12345, roundDigits=0), '$5.0')
+        self.assertEqual(self.trader.get_safe_rounded_string(value=1.23, roundDigits=2, symbol='*', direction='right',
+                                                             multiplier=5), '6.15*')
+
+    def test_get_take_profit(self):
+        pass
+
+    def test_get_net(self):
+        pass
+
+    def test_get_trend(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
