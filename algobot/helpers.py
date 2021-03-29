@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
 from dateutil import parser
-from PyQt5.QtWidgets import QTableWidgetItem, QTableWidget
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem
 
 from algobot.enums import BACKTEST, LIVE, SIMULATION
 from algobot.typing_hints import DICT_TYPE
