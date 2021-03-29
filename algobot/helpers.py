@@ -219,6 +219,10 @@ def get_data_from_parameter(data: DICT_TYPE, parameter: str) -> float:
 
 
 def get_caller_string(caller: int):
+    """
+    Returns the string of the caller provided. This should be changed to enums soon.
+    :param caller: Caller enum.
+    """
     if caller == LIVE:
         return 'live'
     elif caller == SIMULATION:
