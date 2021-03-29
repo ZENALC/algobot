@@ -118,7 +118,7 @@ class SimulationTrader(Trader):
 
         if self.takeProfitType is not None:
             groupedDict['takeProfit'] = {
-                'takeProfitType': self.get_trailing_or_stop_loss_string(self.takeProfitType),
+                'takeProfitType': self.get_trailing_or_stop_type_string(self.takeProfitType),
                 'takeProfitPercentage': self.get_safe_rounded_percentage(self.takeProfitPercentageDecimal),
                 'trailingTakeProfitActivated': str(self.trailingTakeProfitActivated),
                 'takeProfitPoint': self.get_safe_rounded_string(self.takeProfitPoint),

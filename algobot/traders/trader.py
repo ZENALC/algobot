@@ -129,21 +129,8 @@ class Trader:
                 self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
                 self.minPeriod = self.strategies[name].get_min_option_period()
 
-    @staticmethod
-    def get_cumulative_trend(trends: List[int]) -> Union[int, None]:
-        """
-        Returns cumulative trend based on the trends provided.
-        :return: Integer trend in the form of an enum.
-        """
-        if len(trends) == 0:
-            return None
-
-        if all(trend == BEARISH for trend in trends):
-            return BEARISH
-        elif all(trend == BULLISH for trend in trends):
-            return BULLISH
-        else:
-            return None
+    def get_stop_loss(self):
+        raise NotImplementedError("Please make sure to implement a function for getting the stop loss.")
 
     def get_stop_loss_strategy_string(self) -> str:
         """
@@ -179,8 +166,21 @@ class Trader:
 
         return string.rstrip()  # Remove new line in the very end.
 
-    def get_stop_loss(self):
-        pass
+    @staticmethod
+    def get_cumulative_trend(trends: List[int]) -> Union[int, None]:
+        """
+        Returns cumulative trend based on the trends provided.
+        :return: Integer trend in the form of an enum.
+        """
+        if len(trends) == 0:
+            return None
+
+        if all(trend == BEARISH for trend in trends):
+            return BEARISH
+        elif all(trend == BULLISH for trend in trends):
+            return BULLISH
+        else:
+            return None
 
     @staticmethod
     def get_profit_percentage(initialNet: float, finalNet: float) -> float:
@@ -196,16 +196,16 @@ class Trader:
             return -1 * (100 - finalNet / initialNet * 100)
 
     @staticmethod
-    def get_trailing_or_stop_loss_string(exitPositionType: int) -> str:
+    def get_trailing_or_stop_type_string(stopType: Union[int, None]) -> str:
         """
-        Returns exit position type in string format instead of integer enum.
-        :return: Exit position type in string format.
+        Returns stop type in string format instead of integer enum.
+        :return: Stop type in string format.
         """
-        if exitPositionType == STOP:
+        if stopType == STOP:
             return 'Stop'
-        elif exitPositionType == TRAILING:
+        elif stopType == TRAILING:
             return 'Trailing'
-        elif exitPositionType is None:
+        elif stopType is None:
             return 'None'
         else:
             raise ValueError("Unknown type of exit position type.")
@@ -225,6 +225,15 @@ class Trader:
             return 'None'
         else:
             raise ValueError('Unknown type of trend.')
+
+    @staticmethod
+    def get_profit_or_loss_string(profit: float) -> str:
+        """
+        Helper function that returns where profit specified is profit or loss. Profit is positive; loss if negative.
+        :param profit: Amount to be checked for negativity or positivity.
+        :return: String value of whether profit ir positive or negative.
+        """
+        return "Profit" if profit >= 0 else "Loss"
 
     def get_position_string(self) -> str:
         """
@@ -276,15 +285,6 @@ class Trader:
                 return f'{symbol}{round(value * multiplier, roundDigits)}'
             else:
                 return f'{round(value * multiplier, roundDigits)}{symbol}'
-
-    @staticmethod
-    def get_profit_or_loss_string(profit: float) -> str:
-        """
-        Helper function that returns where profit specified is profit or loss. Profit is positive; loss if negative.
-        :param profit: Amount to be checked for negativity or positivity.
-        :return: String value of whether profit ir positive or negative.
-        """
-        return "Profit" if profit >= 0 else "Loss"
 
     def get_take_profit(self) -> Union[float, None]:
         """
