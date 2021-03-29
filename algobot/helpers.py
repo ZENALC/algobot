@@ -10,7 +10,7 @@ from typing import Dict, List, Tuple, Union
 
 from dateutil import parser
 
-from algobot.typeHints import DICT_TYPE
+from algobot.typing_hints import DICT_TYPE
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)

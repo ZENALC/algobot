@@ -13,7 +13,7 @@ from algobot.helpers import (ROOT_DIR, convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
                              get_ups_and_downs)
 from algobot.traders.trader import Trader
-from algobot.typeHints import DATA_TYPE, DICT_TYPE
+from algobot.typing_hints import DATA_TYPE, DICT_TYPE
 
 
 class Backtester(Trader):

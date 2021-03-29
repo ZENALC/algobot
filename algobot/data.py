@@ -10,7 +10,7 @@ from binance.helpers import interval_to_milliseconds
 
 from algobot.algorithms import get_ema, get_sma, get_wma
 from algobot.helpers import ROOT_DIR, get_logger, get_ups_and_downs
-from algobot.typeHints import DATA_TYPE
+from algobot.typing_hints import DATA_TYPE
 
 
 class Data:
