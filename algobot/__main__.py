@@ -26,7 +26,7 @@ from algobot.helpers import (ROOT_DIR, create_folder_if_needed, get_logger,
                              open_file_or_folder)
 from algobot.interface.about import About
 from algobot.interface.configuration import Configuration
-from algobot.interface.otherCommands import OtherCommands
+from algobot.interface.other_commands import OtherCommands
 from algobot.interface.palettes import (bloomberg_palette, dark_palette,
                                         green_palette, light_palette,
                                         red_palette)
