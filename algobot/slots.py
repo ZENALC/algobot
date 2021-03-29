@@ -1,6 +1,7 @@
 import webbrowser
 
 from algobot.enums import BACKTEST, LIVE, SIMULATION
+from algobot.helpers import clear_table
 from algobot.themes import (set_bear_mode, set_bloomberg_mode, set_bull_mode,
                             set_dark_mode, set_light_mode)
 
@@ -83,8 +84,8 @@ def create_simulation_slots(gui):
     gui.waitOverrideSimulationButton.clicked.connect(lambda: gui.exit_position(SIMULATION, False))
     gui.enableSimulationCustomStopLossButton.clicked.connect(lambda: gui.set_custom_stop_loss(SIMULATION, True))
     gui.disableSimulationCustomStopLossButton.clicked.connect(lambda: gui.set_custom_stop_loss(SIMULATION, False))
-    gui.clearSimulationTableButton.clicked.connect(lambda: gui.clear_table(gui.simulationActivityMonitor))
-    gui.clearSimulationTradesButton.clicked.connect(lambda: gui.clear_table(gui.simulationHistoryTable))
+    gui.clearSimulationTableButton.clicked.connect(lambda: clear_table(gui.simulationActivityMonitor))
+    gui.clearSimulationTradesButton.clicked.connect(lambda: clear_table(gui.simulationHistoryTable))
     gui.exportSimulationTradesButton.clicked.connect(lambda: gui.export_trades(caller=SIMULATION))
     gui.importSimulationTradesButton.clicked.connect(lambda: gui.import_trades(caller=SIMULATION))
 
@@ -104,8 +105,8 @@ def create_bot_slots(gui):
     gui.waitOverrideButton.clicked.connect(lambda: gui.exit_position(LIVE, False))
     gui.enableCustomStopLossButton.clicked.connect(lambda: gui.set_custom_stop_loss(LIVE, True))
     gui.disableCustomStopLossButton.clicked.connect(lambda: gui.set_custom_stop_loss(LIVE, False))
-    gui.clearTableButton.clicked.connect(lambda: gui.clear_table(gui.activityMonitor))
-    gui.clearLiveTradesButton.clicked.connect(lambda: gui.clear_table(gui.historyTable))
+    gui.clearTableButton.clicked.connect(lambda: clear_table(gui.activityMonitor))
+    gui.clearLiveTradesButton.clicked.connect(lambda: clear_table(gui.historyTable))
     gui.exportLiveTradesButton.clicked.connect(lambda: gui.export_trades(caller=LIVE))
     gui.importLiveTradesButton.clicked.connect(lambda: gui.import_trades(caller=LIVE))
 
@@ -117,6 +118,6 @@ def create_backtest_slots(gui):
     gui.configureBacktestButton.clicked.connect(gui.show_backtest_settings)
     gui.runBacktestButton.clicked.connect(gui.initiate_backtest)
     gui.endBacktestButton.clicked.connect(gui.end_backtest_thread)
-    gui.clearBacktestTableButton.clicked.connect(lambda: gui.clear_table(gui.backtestTable))
+    gui.clearBacktestTableButton.clicked.connect(lambda: clear_table(gui.backtestTable))
     gui.viewBacktestsButton.clicked.connect(lambda: gui.open_folder("Backtest Results"))
     gui.backtestResetCursorButton.clicked.connect(gui.reset_backtest_cursor)

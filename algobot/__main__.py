@@ -22,7 +22,8 @@ from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
                                    setup_graph_plots, setup_graphs,
                                    update_backtest_graph_limits,
                                    update_main_graphs)
-from algobot.helpers import (ROOT_DIR, create_folder_if_needed, get_logger,
+from algobot.helpers import (ROOT_DIR, create_folder_if_needed,
+                             get_caller_string, get_logger,
                              open_file_or_folder)
 from algobot.interface.about import About
 from algobot.interface.configuration import Configuration
@@ -143,7 +144,7 @@ class Interface(QMainWindow):
             self.create_popup(e)
 
     @staticmethod
-    def get_tickers() -> list:
+    def get_tickers() -> List[str]:
         """
         Returns all available tickers from Binance API.
         :return: List of all available tickers.
@@ -152,9 +153,6 @@ class Interface(QMainWindow):
                    if 'USDT' in ticker['symbol']]
 
         tickers.sort()
-        # tickers.remove("BTCUSDT")
-        # tickers.insert(0, 'BTCUSDT')
-
         return tickers
 
     def setup_tickers(self, tickers):
@@ -518,7 +516,7 @@ class Interface(QMainWindow):
         self.enable_override(caller)
         destroy_graph_plots(self, interfaceDict['graph'])
         destroy_graph_plots(self, interfaceDict['averageGraph'])
-        self.statistics.initialize_tab(trader.get_grouped_statistics(), tabType=self.get_caller_string(caller))
+        self.statistics.initialize_tab(trader.get_grouped_statistics(), tabType=get_caller_string(caller))
         setup_graph_plots(self, interfaceDict['graph'], trader, NET_GRAPH)
 
         averageGraphDict = get_graph_dictionary(self, interfaceDict['averageGraph'])
@@ -555,7 +553,7 @@ class Interface(QMainWindow):
         :param valueDict: Dictionary containing statistics.
         :param caller: Object that determines which object gets updated.
         """
-        self.statistics.modify_tab(groupedDict, tabType=self.get_caller_string(caller))
+        self.statistics.modify_tab(groupedDict, tabType=get_caller_string(caller))
         self.update_main_interface_and_graphs(caller=caller, valueDict=valueDict)
         self.handle_position_buttons(caller=caller)
         self.handle_custom_stop_loss_buttons(caller=caller)
@@ -870,14 +868,6 @@ class Interface(QMainWindow):
                     self.update_backtest_activity_based_on_graph(xValue)
 
     @staticmethod
-    def clear_table(table):
-        """
-        Sets table row count to 0.
-        :param table: Table which is to be cleared.
-        """
-        table.setRowCount(0)
-
-    @staticmethod
     def test_table(table, trade: list):
         """
         Initial function made to test table functionality in QT.
@@ -1042,17 +1032,6 @@ class Interface(QMainWindow):
         self.configuration.show()
         self.configuration.configurationTabWidget.setCurrentIndex(2)
         self.configuration.simulationConfigurationTabWidget.setCurrentIndex(0)
-
-    @staticmethod
-    def get_caller_string(caller):
-        if caller == LIVE:
-            return 'live'
-        elif caller == SIMULATION:
-            return 'simulation'
-        elif caller == BACKTEST:
-            return 'backtest'
-        else:
-            raise ValueError("Invalid type of caller specified.")
 
     def show_statistics(self, index: int):
         """

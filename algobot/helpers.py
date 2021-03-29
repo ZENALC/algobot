@@ -10,11 +10,20 @@ from typing import Dict, List, Tuple, Union
 
 from dateutil import parser
 
+from algobot.enums import BACKTEST, LIVE, SIMULATION
 from algobot.typing_hints import DICT_TYPE
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
 LOG_FOLDER = 'Logs'
+
+
+def clear_table(table):
+    """
+    Sets table row count to 0.
+    :param table: Table which is to be cleared.
+    """
+    table.setRowCount(0)
 
 
 def open_file_or_folder(targetPath: str):
@@ -95,6 +104,17 @@ def get_logger(logFile: str, loggerName: str) -> logging.Logger:
 
     logger.addHandler(f_handler)
     return logger
+
+
+def get_caller_string(caller):
+    if caller == LIVE:
+        return 'live'
+    elif caller == SIMULATION:
+        return 'simulation'
+    elif caller == BACKTEST:
+        return 'backtest'
+    else:
+        raise ValueError("Invalid type of caller specified.")
 
 
 def initialize_logger():
