@@ -32,7 +32,7 @@ from algobot.interface.palettes import (bloomberg_palette, dark_palette,
                                         red_palette)
 from algobot.interface.statistics import Statistics
 from algobot.option import Option
-from algobot.scrapeNews import scrape_news
+from algobot.news_scraper import scrape_news
 from algobot.threads import backtestThread, botThread, listThread, workerThread
 from algobot.traders.backtester import Backtester
 from algobot.traders.realtrader import RealTrader
