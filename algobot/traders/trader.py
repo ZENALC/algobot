@@ -129,6 +129,15 @@ class Trader:
                 self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
                 self.minPeriod = self.strategies[name].get_min_option_period()
 
+    def handle_trailing_prices(self):
+        """
+        Handles trailing prices based on the current price.
+        """
+        if self.longTrailingPrice is not None and self.currentPrice > self.longTrailingPrice:
+            self.longTrailingPrice = self.currentPrice
+        if self.shortTrailingPrice is not None and self.currentPrice < self.shortTrailingPrice:
+            self.shortTrailingPrice = self.currentPrice
+
     def get_stop_loss(self):
         raise NotImplementedError("Please make sure to implement a function for getting the stop loss.")
 

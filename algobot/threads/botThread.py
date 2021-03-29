@@ -262,10 +262,7 @@ class BotThread(QRunnable):
         trader: SimulationTrader = self.gui.get_trader(caller)
         trader.dataView.get_current_data()
         trader.currentPrice = trader.dataView.current_values['close']
-        if trader.longTrailingPrice is not None and trader.currentPrice > trader.longTrailingPrice:
-            trader.longTrailingPrice = trader.currentPrice
-        if trader.shortTrailingPrice is not None and trader.currentPrice < trader.shortTrailingPrice:
-            trader.shortTrailingPrice = trader.currentPrice
+        trader.handle_trailing_prices()
 
     def handle_logging(self, caller):
         """

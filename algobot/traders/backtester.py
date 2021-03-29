@@ -383,15 +383,6 @@ class Backtester(Trader):
     def restore(self):
         pass
 
-    def handle_trailing_prices(self):
-        """
-        Handles trailing prices based on the current price.
-        """
-        if self.longTrailingPrice is not None and self.currentPrice > self.longTrailingPrice:
-            self.longTrailingPrice = self.currentPrice
-        if self.shortTrailingPrice is not None and self.currentPrice < self.shortTrailingPrice:
-            self.shortTrailingPrice = self.currentPrice
-
     def _get_short_stop_loss(self) -> Union[float, None]:
         """
         Returns stop loss for short position.
