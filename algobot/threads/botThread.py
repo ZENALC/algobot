@@ -7,7 +7,7 @@ from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 import algobot.helpers as helpers
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH, LIVE, SIMULATION
-from algobot.telegramBot import TelegramBot
+from algobot.telegram_bot import TelegramBot
 from algobot.traders.realtrader import RealTrader
 from algobot.traders.simulationtrader import SimulationTrader
 
