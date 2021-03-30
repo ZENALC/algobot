@@ -39,7 +39,6 @@ class Backtester(Trader):
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
         self.profit = 0
-
         self.currentPeriod = None
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
 
@@ -56,7 +55,6 @@ class Backtester(Trader):
         self.ema_dict = {}
         self.rsi_dictionary = {}
         self.setup_strategies(strategies)
-
         self.startDateIndex = self.get_start_index(startDate)
         self.endDateIndex = self.get_end_index(endDate)
 
