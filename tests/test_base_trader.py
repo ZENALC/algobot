@@ -75,7 +75,22 @@ class TestBaseTrader(unittest.TestCase):
         pass
 
     def test_get_stop_loss(self):
-        pass
+        self.trader.lossStrategy = STOP
+        self.trader.lossPercentageDecimal = 0.1
+        self.trader.currentPrice = 5
+
+        self.trader.currentPosition = LONG
+        self.trader.buyLongPrice = 10
+        self.assertEqual(self.trader.get_stop_loss(), 10 * (1 - self.trader.lossPercentageDecimal))
+
+        self.trader.currentPosition = SHORT
+        self.trader.sellShortPrice = 10
+        self.assertEqual(self.trader.get_stop_loss(), 10 * (1 + self.trader.lossPercentageDecimal))
+
+        self.trader.currentPosition = None
+        self.assertEqual(self.trader.get_stop_loss(), None)
+
+        # TODO implement trailing stop loss test
 
     def test_get_stop_loss_strategy_string(self):
         self.trader.lossStrategy = STOP
@@ -157,7 +172,23 @@ class TestBaseTrader(unittest.TestCase):
                                                              multiplier=5), '6.15*')
 
     def test_get_take_profit(self):
-        pass
+        self.trader.takeProfitType = STOP
+        self.trader.takeProfitPercentageDecimal = 0.05
+
+        self.trader.currentPosition = LONG
+        self.trader.buyLongPrice = 10
+        self.assertEqual(self.trader.get_take_profit(), 10 * (1 + 0.05))
+
+        self.trader.currentPosition = SHORT
+        self.trader.sellShortPrice = 10
+        self.assertEqual(self.trader.get_take_profit(), 10 * (1 - 0.05))
+
+        self.trader.takeProfitType = None
+        self.assertEqual(self.trader.get_take_profit(), None)
+
+        self.trader.takeProfitType = 5
+        with pytest.raises(ValueError, match="Invalid type of take profit type provided."):
+            self.trader.get_take_profit()
 
     def test_get_net(self):
         pass
