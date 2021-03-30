@@ -156,19 +156,17 @@ class Trader:
         if self.currentPosition == SHORT:
             if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
                 self.stopLoss = self.previousStopLoss
-            else:
-                if self.lossStrategy == TRAILING:
-                    self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
-                elif self.lossStrategy == STOP:
-                    self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
+            elif self.lossStrategy == TRAILING:
+                self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
+            elif self.lossStrategy == STOP:
+                self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
         elif self.currentPosition == LONG:
             if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
                 self.stopLoss = self.previousStopLoss
-            else:
-                if self.lossStrategy == TRAILING:
-                    self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
-                elif self.lossStrategy == STOP:
-                    self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
+            elif self.lossStrategy == TRAILING:
+                self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
+            elif self.lossStrategy == STOP:
+                self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
 
         if self.stopLoss is not None:  # This is for the smart stop loss to reenter position.
             self.previousStopLoss = self.stopLoss
