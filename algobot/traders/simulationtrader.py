@@ -517,11 +517,8 @@ class SimulationTrader(Trader):
         Returns a stop loss for the position.
         :return: Stop loss value.
         """
-        if self.lossStrategy is None:
+        if self.lossStrategy is None or self.currentPrice is None:
             return None
-
-        if self.currentPrice is None:
-            self.currentPrice = self.dataView.get_current_price()
 
         if self.currentPosition == SHORT:
             if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
@@ -539,7 +536,7 @@ class SimulationTrader(Trader):
                     self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
                 elif self.lossStrategy == STOP:
                     self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
-        else:  # This means we are not in any position currently.
+        else:
             self.stopLoss = None
 
         if self.stopLoss is not None:  # This is for the smart stop loss to reenter position.
