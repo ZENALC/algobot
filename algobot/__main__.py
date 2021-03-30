@@ -203,7 +203,7 @@ class Interface(QMainWindow):
         worker.signals.finished.connect(self.end_backtest)
         worker.signals.message.connect(lambda message: self.add_to_monitor(BACKTEST, message))
         worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=BACKTEST))
-        worker.signals.updateGraphLimits.connect(update_backtest_graph_limits(self))
+        worker.signals.updateGraphLimits.connect(lambda: update_backtest_graph_limits(self))
         self.threadPool.start(worker)
 
     def end_backtest_thread(self):

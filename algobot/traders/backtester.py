@@ -8,7 +8,7 @@ from typing import Dict, Union
 from dateutil import parser
 
 from algobot.algorithms import get_ema, get_sma, get_wma
-from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
+from algobot.enums import BEARISH, BULLISH, LONG, SHORT
 from algobot.helpers import (ROOT_DIR, convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
                              get_ups_and_downs)
@@ -141,9 +141,10 @@ class Backtester(Trader):
         else:
             return len(self.data) - 1
 
-    def buy_long(self, message: str):
+    def buy_long(self, message: str, smartEnter: bool = False):
         """
         Executes long position.
+        :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
         :param message: Message that specifies why it entered long.
         """
         usd = self.balance
@@ -153,7 +154,7 @@ class Backtester(Trader):
         self.coin += (usd - transactionFee) / self.currentPrice
         self.balance -= usd
         self.buyLongPrice = self.longTrailingPrice = self.currentPrice
-        self.add_trade(message)
+        self.add_trade(message, smartEnter=smartEnter)
 
     def sell_long(self, message: str, stopLossExit: bool = False):
         """
@@ -171,9 +172,10 @@ class Backtester(Trader):
         self.buyLongPrice = self.longTrailingPrice = None
         self.add_trade(message, stopLossExit=stopLossExit)
 
-    def sell_short(self, message: str):
+    def sell_short(self, message: str, smartEnter: bool = False):
         """
         Executes short position.
+        :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
         :param message: Message that specifies why it entered short.
         """
         transactionFee = self.balance * self.transactionFeePercentage
@@ -183,7 +185,7 @@ class Backtester(Trader):
         self.coinOwed += coin
         self.balance += self.currentPrice * coin - transactionFee
         self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
-        self.add_trade(message)
+        self.add_trade(message, smartEnter=smartEnter)
 
     def buy_short(self, message: str, stopLossExit: bool = False):
         """
@@ -201,13 +203,15 @@ class Backtester(Trader):
         self.sellShortPrice = self.shortTrailingPrice = None
         self.add_trade(message, stopLossExit=stopLossExit)
 
-    def add_trade(self, message: str, stopLossExit: bool = False):
+    def add_trade(self, message: str, stopLossExit: bool = False, smartEnter: bool = False):
         """
         Adds a trade to list of trades
+        :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
         :param stopLossExit: Boolean that'll determine where this trade occurred from a stop loss.
         :param message: Message used for conducting trade.
         """
         self.stopLossExit = stopLossExit
+        self.smartStopLossEnter = smartEnter
         self.trades.append({
             'date': self.currentPeriod['date_utc'],
             'action': message,
@@ -380,49 +384,6 @@ class Backtester(Trader):
 
     def restore(self):
         pass
-
-    def get_short_stop_loss(self) -> Union[float, None]:
-        """
-        Returns stop loss for short position.
-        :return: Stop loss for short position.
-        """
-        if self.lossStrategy == TRAILING:
-            return self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
-        elif self.lossStrategy == STOP:
-            return self.sellShortPrice * (1 + self.lossPercentageDecimal)
-        elif self.lossStrategy is None:
-            return None
-        else:
-            raise ValueError("Invalid type of loss strategy provided.")
-
-    def get_long_stop_loss(self) -> Union[float, None]:
-        """
-        Returns stop loss for long position.
-        :return: Stop loss for long position.
-        """
-        if self.lossStrategy == TRAILING:
-            return self.longTrailingPrice * (1 - self.lossPercentageDecimal)
-        elif self.lossStrategy == STOP:
-            return self.buyLongPrice * (1 - self.lossPercentageDecimal)
-        elif self.lossStrategy is None:
-            return None
-        else:
-            raise ValueError("Invalid type of loss strategy provided.")
-
-    def get_stop_loss(self) -> Union[float, None]:
-        """
-        Returns stop loss value.
-        :return: Stop loss value.
-        """
-        self.handle_trailing_prices()
-        if self.currentPosition == SHORT:
-            self.previousStopLoss = self.get_short_stop_loss()
-            return self.previousStopLoss
-        elif self.currentPosition == LONG:
-            self.previousStopLoss = self.get_long_stop_loss()
-            return self.previousStopLoss
-        else:
-            return None
 
     def get_net(self) -> float:
         """
@@ -606,11 +567,11 @@ class Backtester(Trader):
             else:
                 if self.previousPosition == LONG and self.stopLossExit:
                     if self.currentPrice > self.previousStopLoss and self.smartStopLossCounter > 0:
-                        self.buy_long("Reentered long because of smart stop loss.")
+                        self.buy_long("Reentered long because of smart stop loss.", smartEnter=True)
                         self.smartStopLossCounter -= 1
                 elif self.previousPosition == SHORT and self.stopLossExit:
                     if self.currentPrice < self.previousStopLoss and self.smartStopLossCounter > 0:
-                        self.sell_short("Reentered short because of smart stop loss.")
+                        self.sell_short("Reentered short because of smart stop loss.", smartEnter=True)
                         self.smartStopLossCounter -= 1
 
     def print_options(self):

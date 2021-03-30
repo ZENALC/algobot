@@ -4,7 +4,7 @@ from threading import Lock
 from typing import Union
 
 from algobot.data import Data
-from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
+from algobot.enums import BEARISH, BULLISH, LONG, SHORT
 from algobot.helpers import convert_small_interval, get_logger
 from algobot.traders.trader import Trader
 
@@ -511,38 +511,6 @@ class SimulationTrader(Trader):
             return dataObject.get_ema(value, parameter, update=update, round_value=round_value)
         else:
             raise ValueError(f'Unknown moving average {movingAverage}.')
-
-    def get_stop_loss(self) -> Union[None, float]:
-        """
-        Returns a stop loss for the position.
-        :return: Stop loss value.
-        """
-        if self.lossStrategy is None or self.currentPrice is None:
-            return None
-
-        if self.currentPosition == SHORT:
-            if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
-                self.stopLoss = self.previousStopLoss
-            else:
-                if self.lossStrategy == TRAILING:
-                    self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
-                elif self.lossStrategy == STOP:
-                    self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
-        elif self.currentPosition == LONG:
-            if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
-                self.stopLoss = self.previousStopLoss
-            else:
-                if self.lossStrategy == TRAILING:
-                    self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
-                elif self.lossStrategy == STOP:
-                    self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
-        else:
-            self.stopLoss = None
-
-        if self.stopLoss is not None:  # This is for the smart stop loss to reenter position.
-            self.previousStopLoss = self.stopLoss
-
-        return self.stopLoss
 
     def output_trade_options(self):
         """

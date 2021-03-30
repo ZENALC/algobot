@@ -145,7 +145,35 @@ class Trader:
             self.shortTrailingPrice = self.currentPrice
 
     def get_stop_loss(self):
-        raise NotImplementedError("Please make sure to implement a function for getting the stop loss.")
+        """
+        This function will return the stop loss for the current position the bot is in.
+        :return: Stop loss value.
+        """
+        if self.lossStrategy is None or self.currentPrice is None or self.currentPosition is None:
+            return None
+
+        self.handle_trailing_prices()
+        if self.currentPosition == SHORT:
+            if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
+                self.stopLoss = self.previousStopLoss
+            else:
+                if self.lossStrategy == TRAILING:
+                    self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
+                elif self.lossStrategy == STOP:
+                    self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
+        elif self.currentPosition == LONG:
+            if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
+                self.stopLoss = self.previousStopLoss
+            else:
+                if self.lossStrategy == TRAILING:
+                    self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
+                elif self.lossStrategy == STOP:
+                    self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
+
+        if self.stopLoss is not None:  # This is for the smart stop loss to reenter position.
+            self.previousStopLoss = self.stopLoss
+
+        return self.stopLoss
 
     def get_stop_loss_strategy_string(self) -> str:
         """
