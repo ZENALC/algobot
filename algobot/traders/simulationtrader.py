@@ -36,22 +36,13 @@ class SimulationTrader(Trader):
                                    updateData=updateData, logObject=self.logger, precision=precision)
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
-
-        self.previousNet = self.balance  # Our previous net will just be the starting balance in the beginning.
         self.coinName = self.get_coin_name()  # Retrieve primary coin to trade.
         self.commissionPaid = 0  # Total commission paid to broker.
-        self.dailyChangeNets = []  # Daily change net list. Will contain list of all nets.
-
         self.completedLoop = True  # Loop that'll keep track of bot. We wait for this to turn False before some action.
-        self.lock = Lock()  # Lock to ensure a transaction doesn't occur when another one is taking place.
-        self.addTradeCallback = addTradeCallback
-
-        self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
-        self.scheduledSafetyTimer = None  # Next time to check if it's a true stop loss.
-
         self.inHumanControl = False  # Boolean that keeps track of whether human or bot controls transactions.
-        self.trend = None
-
+        self.lock = Lock()  # Lock to ensure a transaction doesn't occur when another one is taking place.
+        self.addTradeCallback = addTradeCallback  # Callback for GUI to add trades.
+        self.dailyChangeNets = []  # Daily change net list. Will contain list of all nets.
         self.optionDetails = []  # Current option values. Holds most recent option values.
         self.lowerOptionDetails = []  # Lower option values. Holds lower interval option values (if exist).
 

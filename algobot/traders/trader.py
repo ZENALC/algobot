@@ -15,6 +15,7 @@ class Trader:
         # Initialize initial values.
         self.startingBalance = startingBalance  # Balance we started bot with.
         self.balance = startingBalance  # USDT Balance.
+        self.previousNet = startingBalance  # Our previous net will just be the starting balance in the beginning.
         self.coin = 0  # Amount of coin we own.
         self.coinOwed = 0  # Amount of coin we owe.
         self.transactionFeePercentage = 0.001  # Binance transaction fee percentage.
@@ -28,6 +29,7 @@ class Trader:
         self.currentPosition = None  # Current position value.
         self.minPeriod = 0  # Minimum amount of periods required for trend retrieval.
         self.previousPosition = None  # Previous position to validate for a new trend.
+        self.trend = None  # Current trend information.
 
         self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
         self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.
@@ -45,12 +47,14 @@ class Trader:
         self.smartStopLossInitialCounter = 0  # Smart stop loss initial counter.
         self.smartStopLossCounter = 0  # Smart stop loss counter.
         self.smartStopLossEnter = False  # Boolean that'll determine whether current position is from a smart stop loss.
+        self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
         self.previousStopLoss = None  # Previous stop loss for smart stop loss.
         self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
         self.stopLossExit = False  # Boolean that'll determine whether last position was exited from a stop loss.
         self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
         self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
         self.safetyTimer = None  # Timer to check if there's a true trend towards stop loss.
+        self.scheduledSafetyTimer = None  # Next time to check if it's a true stop loss.
 
     def add_trade(self, **kwargs):
         raise NotImplementedError("Please implement a function for adding trades.")
