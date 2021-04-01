@@ -170,9 +170,6 @@ class TestBaseTrader(unittest.TestCase):
         self.assertEqual(self.trader.smartStopLossCounter, 15)
         self.assertEqual(self.trader.safetyTimer, 45)
 
-    def test_setup_strategies(self):
-        pass
-
     def test_get_stop_loss(self):
         self.trader.lossStrategy = STOP
         self.trader.lossPercentageDecimal = 0.1
@@ -205,6 +202,12 @@ class TestBaseTrader(unittest.TestCase):
         pass
 
     def test_get_strategies_info_string(self):
+        pass
+
+    def test_get_trend(self):
+        pass
+
+    def test_setup_strategies(self):
         pass
 
     def test_get_cumulative_trend(self):
@@ -317,9 +320,6 @@ class TestBaseTrader(unittest.TestCase):
         self.trader.sell_short("test")
         self.trader.buy_short("test")
         self.assertEqual(self.trader.get_net(), 998)
-
-    def test_get_trend(self):
-        pass
 
 
 if __name__ == '__main__':
