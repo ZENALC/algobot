@@ -428,5 +428,10 @@ class Trader:
 
         return self.takeProfitPoint
 
-    def get_trend(self):
-        raise NotImplementedError("Please implement a function for getting a trend for your Trader class.")
+    def get_trend(self) -> Union[int, None]:
+        """
+        Returns trend based on the strategies provided.
+        :return: Integer in the form of an enum.
+        """
+        trends = [strategy.trend for strategy in self.strategies.values()]
+        return self.get_cumulative_trend(trends)

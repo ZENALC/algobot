@@ -332,14 +332,6 @@ class Backtester(Trader):
                 result += 's'
         return result
 
-    def get_trend(self) -> Union[int, None]:
-        """
-        Returns trend based on the strategies provided.
-        :return: Integer in the form of an enum.
-        """
-        trends = [strategy.trend for strategy in self.strategies.values()]
-        return self.get_cumulative_trend(trends)
-
     def get_moving_average(self, data: list, average: str, prices: int, parameter: str, round_value=False) -> float:
         """
         Returns moving average of given parameters.
