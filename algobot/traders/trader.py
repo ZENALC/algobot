@@ -188,7 +188,7 @@ class Trader:
         if 'safetyTimer' in lossDict:
             self.set_safety_timer(lossDict['safetyTimer'])
 
-    def setup_strategies(self, strategies: list):
+    def setup_strategies(self, strategies: List[tuple]):
         """
         Sets up strategies from list of strategies provided.
         :param strategies: List of strategies to set up and apply to bot.
@@ -281,7 +281,7 @@ class Trader:
         """
         string = '\nStrategies:\n'
         for strategyName, strategy in self.strategies.items():
-            string += f'{left}\t{get_label_string(strategyName)}: {strategy.get_params()}\n'
+            string += f'{left}\t{get_label_string(strategyName)}: {self.get_strategy_inputs(strategyName)}\n'
 
         return string.rstrip()  # Remove new line in the very end.
 

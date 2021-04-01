@@ -3,6 +3,7 @@ import unittest
 import pytest
 
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
+from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 
 
@@ -199,13 +200,59 @@ class TestBaseTrader(unittest.TestCase):
         self.assertEqual(self.trader.get_stop_loss_strategy_string(), "None")
 
     def test_get_strategy_inputs(self):
-        pass
+        dummy_strategy = Strategy(name="dummy", parent=None)
+
+        def temp():
+            return 3, 4, 5
+
+        dummy_strategy.get_params = temp
+        self.assertEqual(dummy_strategy.get_params(), (3, 4, 5))
+
+        self.trader.strategies = {'dummy': dummy_strategy}
+        self.assertEqual(self.trader.get_strategy_inputs('dummy'), '3, 4, 5')
 
     def test_get_strategies_info_string(self):
-        pass
+        dummy_strategy = Strategy(name="dummy", parent=None)
+        dummy_strategy2 = Strategy(name='dummy2', parent=None)
+
+        def temp():
+            return 3, 4, 5
+
+        def temp2():
+            return 5, 6, 7, 8, 9, 10
+
+        dummy_strategy.get_params = temp
+        dummy_strategy2.get_params = temp2
+        expected_string = '\nStrategies:\n\tDummy: 3, 4, 5\n\tDummy2: 5, 6, 7, 8, 9, 10'
+
+        self.trader.strategies = {'dummy': dummy_strategy, 'dummy2': dummy_strategy2}
+        self.assertEqual(self.trader.get_strategies_info_string(), expected_string)
 
     def test_get_trend(self):
-        pass
+        self.assertEqual(self.trader.get_trend(), None)
+
+        bullish_strategy1 = Strategy(name='b1', parent=None)
+        bullish_strategy1.trend = BULLISH
+
+        self.trader.strategies['b1'] = bullish_strategy1
+        self.assertEqual(self.trader.get_trend(), BULLISH)
+
+        bullish_strategy2 = Strategy(name='b2', parent=None)
+        bullish_strategy2.trend = BULLISH
+
+        self.trader.strategies['b2'] = bullish_strategy2
+        self.assertEqual(self.trader.get_trend(), BULLISH)
+
+        bearish_strategy = Strategy(name='b3', parent=None)
+        bearish_strategy.trend = BEARISH
+
+        self.trader.strategies['b3'] = bearish_strategy
+        self.assertEqual(self.trader.get_trend(), None)
+
+        for strategy in self.trader.strategies:
+            self.trader.strategies[strategy].trend = BEARISH
+
+        self.assertEqual(self.trader.get_trend(), BEARISH)
 
     def test_setup_strategies(self):
         pass
