@@ -18,14 +18,16 @@ class Trader:
         self.previousNet = startingBalance  # Our previous net will just be the starting balance in the beginning.
         self.coin = 0  # Amount of coin we own.
         self.coinOwed = 0  # Amount of coin we owe.
-        self.transactionFeePercentage = 0.001  # Binance transaction fee percentage.
+        self.transactionFeePercentageDecimal = 0.001  # Binance transaction fee percentage.
         self.symbol = symbol  # Symbol of ticker used for trading.
+        self.commissionsPaid = 0  # Total commissions paid this bot run.
         self.precision = precision  # Precision to round data to.
         self.trades = []  # All trades performed.
         self.strategies: Dict[str, Strategy] = {}
 
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
         self.endingTime = None  # Ending time for previous bot run.
+        self.currentPeriod = None  # Current time period the bot is in used for backtesting.
         self.currentPosition = None  # Current position value.
         self.minPeriod = 0  # Minimum amount of periods required for trend retrieval.
         self.previousPosition = None  # Previous position to validate for a new trend.
@@ -56,20 +58,88 @@ class Trader:
         self.safetyTimer = None  # Timer to check if there's a true trend towards stop loss.
         self.scheduledSafetyTimer = None  # Next time to check if it's a true stop loss.
 
-    def add_trade(self, **kwargs):
-        raise NotImplementedError("Please implement a function for adding trades.")
+    def add_trade(self, message: str, stopLossExit: bool = False, smartEnter: bool = False):
+        """
+        Adds a trade to list of trades
+        :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
+        :param stopLossExit: Boolean that'll determine where this trade occurred from a stop loss.
+        :param message: Message used for conducting trade.
+        """
+        self.stopLossExit = stopLossExit
+        self.smartStopLossEnter = smartEnter
+        self.trades.append({
+            'date': self.currentPeriod['date_utc'],
+            'action': message,
+            'net': round(self.get_net(), self.precision)
+        })
 
-    def buy_long(self, **kwargs):
-        raise NotImplementedError("Please implement a function for buying long.")
+    def reset_trades(self):
+        """
+        Clears trades list.
+        """
+        self.trades = []
 
-    def sell_long(self, **kwargs):
-        raise NotImplementedError("Please implement a function for selling long.")
+    def buy_long(self, message: str, smartEnter: bool = False):
+        """
+        Executes long position.
+        :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
+        :param message: Message that specifies why it entered long.
+        """
+        usd = self.balance
+        transactionFee = self.transactionFeePercentageDecimal * usd
+        self.commissionsPaid += transactionFee
+        self.currentPosition = LONG
+        self.coin += (usd - transactionFee) / self.currentPrice
+        self.balance -= usd
+        self.buyLongPrice = self.longTrailingPrice = self.currentPrice
+        self.add_trade(message, smartEnter=smartEnter)
 
-    def sell_short(self, **kwargs):
-        raise NotImplementedError("Please implement a function for selling short.")
+    def sell_long(self, message: str, stopLossExit: bool = False):
+        """
+        Exits long position.
+        :param stopLossExit: Boolean that'll determine whether a position was exited from a stop loss.
+        :param message: Message that specifies why it exited long.
+        """
+        coin = self.coin
+        transactionFee = self.currentPrice * coin * self.transactionFeePercentageDecimal
+        self.commissionsPaid += transactionFee
+        self.currentPosition = None
+        self.previousPosition = LONG
+        self.coin -= coin
+        self.balance += coin * self.currentPrice - transactionFee
+        self.buyLongPrice = self.longTrailingPrice = None
+        self.add_trade(message, stopLossExit=stopLossExit)
 
-    def buy_short(self, **kwargs):
-        raise NotImplementedError("Please implement a function for buying short.")
+    def sell_short(self, message: str, smartEnter: bool = False):
+        """
+        Executes short position.
+        :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
+        :param message: Message that specifies why it entered short.
+        """
+        transactionFee = self.balance * self.transactionFeePercentageDecimal
+        coin = self.balance / self.currentPrice
+        self.commissionsPaid += transactionFee
+        self.currentPosition = SHORT
+        self.coinOwed += coin
+        self.balance += self.currentPrice * coin - transactionFee
+        self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
+        self.add_trade(message, smartEnter=smartEnter)
+
+    def buy_short(self, message: str, stopLossExit: bool = False):
+        """
+        Exits short position.
+        :param stopLossExit: Boolean that'll determine whether a position was exited from a stop loss.
+        :param message: Message that specifies why it exited short.
+        """
+        transactionFee = self.coinOwed * self.currentPrice * self.transactionFeePercentageDecimal
+        coin = self.coinOwed
+        self.commissionsPaid += transactionFee
+        self.currentPosition = None
+        self.previousPosition = SHORT
+        self.coinOwed -= coin
+        self.balance -= self.currentPrice * coin + transactionFee
+        self.sellShortPrice = self.shortTrailingPrice = None
+        self.add_trade(message, stopLossExit=stopLossExit)
 
     def reset_smart_stop_loss(self):
         """
@@ -186,6 +256,14 @@ class Trader:
             return 'None'
         else:
             raise ValueError("Unknown type of loss strategy.")
+
+    def get_net(self) -> float:
+        """
+        Returns net balance with current price of coin being traded. It factors in the current balance, the amount
+        shorted, and the amount owned.
+        :return: Net balance.
+        """
+        return self.coin * self.currentPrice - self.coinOwed * self.currentPrice + self.balance
 
     def get_strategy_inputs(self, strategy_name: str):
         """
@@ -349,9 +427,6 @@ class Trader:
             self.takeProfitPoint = None
 
         return self.takeProfitPoint
-
-    def get_net(self):
-        pass
 
     def get_trend(self):
         raise NotImplementedError("Please implement a function for getting a trend for your Trader class.")

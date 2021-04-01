@@ -142,12 +142,11 @@ class TestBacktester(unittest.TestCase):
         backtester = self.backtester
         backtester.set_indexed_current_price_and_period(0)
         backtester.buy_long("Test purchase.")
+        commission = backtester.transactionFeePercentageDecimal * backtester.startingBalance
 
-        rem = 1 - backtester.transactionFeePercentage  # Percentage of transaction left over.
-
-        self.assertEqual(backtester.commissionsPaid, backtester.transactionFeePercentage * backtester.startingBalance)
+        self.assertEqual(backtester.commissionsPaid, commission)
         self.assertEqual(backtester.currentPosition, LONG)
-        self.assertEqual(backtester.coin, backtester.startingBalance / backtester.currentPrice * rem)
+        self.assertEqual(backtester.coin, (backtester.startingBalance - commission) / backtester.currentPrice)
         self.assertEqual(backtester.balance, 0)
         self.assertEqual(backtester.buyLongPrice, backtester.currentPrice)
         self.assertEqual(backtester.trades[0]['action'], "Test purchase.")
@@ -159,11 +158,11 @@ class TestBacktester(unittest.TestCase):
         """
         backtester = self.backtester
         backtester.set_indexed_current_price_and_period(0)
-        commission = backtester.balance * backtester.transactionFeePercentage
+        commission = backtester.balance * backtester.transactionFeePercentageDecimal
         backtester.buy_long("Test purchase to test sell.")
 
         backtester.set_indexed_current_price_and_period(3)
-        commission += backtester.coin * backtester.currentPrice * backtester.transactionFeePercentage
+        commission += backtester.coin * backtester.currentPrice * backtester.transactionFeePercentageDecimal
         backtester.sell_long("Test sell.")
 
         self.assertEqual(backtester.commissionsPaid, commission)
@@ -181,13 +180,12 @@ class TestBacktester(unittest.TestCase):
         backtester.set_indexed_current_price_and_period(0)
         backtester.sell_short("Test short.")
 
-        rem = 1 - backtester.transactionFeePercentage
-        commission = backtester.transactionFeePercentage * backtester.startingBalance
+        commission = backtester.transactionFeePercentageDecimal * backtester.startingBalance
         balance = backtester.startingBalance + backtester.currentPrice * backtester.coinOwed - commission
 
         self.assertEqual(backtester.commissionsPaid, commission)
         self.assertEqual(backtester.currentPosition, SHORT)
-        self.assertEqual(backtester.coinOwed, backtester.startingBalance / backtester.currentPrice * rem)
+        self.assertEqual(backtester.coinOwed, backtester.startingBalance / backtester.currentPrice)
         self.assertEqual(backtester.balance, balance)
         self.assertEqual(backtester.sellShortPrice, backtester.currentPrice)
         self.assertEqual(backtester.trades[0]['action'], "Test short.")
@@ -202,8 +200,8 @@ class TestBacktester(unittest.TestCase):
         backtester.sell_short("Test sell short to buy short.")
 
         backtester.set_indexed_current_price_and_period(3)
-        commission = backtester.startingBalance * backtester.transactionFeePercentage
-        commission += backtester.coinOwed * backtester.currentPrice * backtester.transactionFeePercentage
+        commission = backtester.startingBalance * backtester.transactionFeePercentageDecimal
+        commission += backtester.coinOwed * backtester.currentPrice * backtester.transactionFeePercentageDecimal
         backtester.buy_short("Test buy short.")
 
         self.assertEqual(backtester.commissionsPaid, commission)

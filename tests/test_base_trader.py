@@ -14,24 +14,123 @@ class TestBaseTrader(unittest.TestCase):
         self.trader = Trader(symbol="BTCUSDT", precision=2, startingBalance=1000)
 
     def test_add_trade(self):
-        with pytest.raises(NotImplementedError, match='Please implement a function for adding trades.'):
-            self.trader.add_trade()
+        self.trader.currentPeriod = {'date_utc': 'test_date'}
+        self.trader.currentPrice = 10
+
+        self.trader.add_trade(message="test_trade", stopLossExit=True, smartEnter=True)
+        self.assertEqual(self.trader.stopLossExit, True)
+        self.assertEqual(self.trader.smartStopLossEnter, True)
+        self.assertEqual(self.trader.trades[-1], {
+            'date': 'test_date',
+            'action': 'test_trade',
+            'net': self.trader.startingBalance
+        })
 
     def test_buy_long(self):
-        with pytest.raises(NotImplementedError, match='Please implement a function for buying long.'):
-            self.trader.buy_long()
+        self.trader.currentPeriod = {'date_utc': 'test_date'}
+        self.trader.currentPrice = 10
+
+        transaction_fee = self.trader.startingBalance * self.trader.transactionFeePercentageDecimal
+        coin = (self.trader.startingBalance - transaction_fee) / self.trader.currentPrice
+
+        self.trader.buy_long("test_buy", smartEnter=True)
+        self.assertEqual(self.trader.smartStopLossEnter, True)
+        self.assertEqual(self.trader.stopLossExit, False)
+        self.assertEqual(self.trader.currentPosition, LONG)
+        self.assertEqual(self.trader.buyLongPrice, self.trader.currentPrice)
+        self.assertEqual(self.trader.longTrailingPrice, self.trader.currentPrice)
+        self.assertEqual(self.trader.balance, 0)
+        self.assertEqual(self.trader.coin, coin)
+        self.assertEqual(self.trader.commissionsPaid, transaction_fee)
+        self.assertEqual(self.trader.trades[-1], {
+            'date': 'test_date',
+            'action': 'test_buy',
+            'net': round(self.trader.get_net(), self.trader.precision)
+        })
 
     def test_sell_long(self):
-        with pytest.raises(NotImplementedError, match='Please implement a function for selling long.'):
-            self.trader.sell_long()
+        self.trader.currentPeriod = {'date_utc': 'test_date'}
+        self.trader.currentPrice = 10
+
+        transaction_fee = self.trader.startingBalance * self.trader.transactionFeePercentageDecimal
+        coin = (self.trader.startingBalance - transaction_fee) / self.trader.currentPrice
+
+        self.trader.buy_long("test_buy")
+        self.trader.currentPrice = 15
+
+        previous_transaction_fee = transaction_fee
+        transaction_fee = coin * self.trader.currentPrice * self.trader.transactionFeePercentageDecimal
+        balance = coin * self.trader.currentPrice - transaction_fee
+
+        self.trader.sell_long("test_sell", stopLossExit=True)
+        self.assertEqual(self.trader.smartStopLossEnter, False)
+        self.assertEqual(self.trader.stopLossExit, True)
+        self.assertEqual(self.trader.balance, balance)
+        self.assertEqual(self.trader.currentPosition, None)
+        self.assertEqual(self.trader.previousPosition, LONG)
+        self.assertEqual(self.trader.buyLongPrice, None)
+        self.assertEqual(self.trader.longTrailingPrice, None)
+        self.assertEqual(self.trader.commissionsPaid, transaction_fee + previous_transaction_fee)
+        self.assertEqual(self.trader.coin, 0)
+        self.assertEqual(self.trader.trades[-1], {
+            'date': 'test_date',
+            'action': 'test_sell',
+            'net': round(self.trader.get_net(), self.trader.precision)
+        })
 
     def test_sell_short(self):
-        with pytest.raises(NotImplementedError, match='Please implement a function for selling short.'):
-            self.trader.sell_short()
+        self.trader.currentPeriod = {'date_utc': 'test_date'}
+        self.trader.currentPrice = 10
+
+        transaction_fee = self.trader.startingBalance * self.trader.transactionFeePercentageDecimal
+        coin_owed = self.trader.startingBalance / self.trader.currentPrice
+
+        self.trader.sell_short("test_short")
+        self.assertEqual(self.trader.smartStopLossEnter, False)
+        self.assertEqual(self.trader.stopLossExit, False)
+        self.assertEqual(self.trader.balance, self.trader.startingBalance * 2 - transaction_fee)
+        self.assertEqual(self.trader.currentPosition, SHORT)
+        self.assertEqual(self.trader.sellShortPrice, self.trader.currentPrice)
+        self.assertEqual(self.trader.shortTrailingPrice, self.trader.currentPrice)
+        self.assertEqual(self.trader.coin, 0)
+        self.assertEqual(self.trader.coinOwed, coin_owed)
+        self.assertEqual(self.trader.commissionsPaid, transaction_fee)
+        self.assertEqual(self.trader.trades[-1], {
+            'date': 'test_date',
+            'action': 'test_short',
+            'net': round(self.trader.get_net(), self.trader.precision)
+        })
 
     def test_buy_short(self):
-        with pytest.raises(NotImplementedError, match='Please implement a function for buying short.'):
-            self.trader.buy_short()
+        self.trader.currentPeriod = {'date_utc': 'test_date'}
+        self.trader.currentPrice = 10
+
+        transaction_fee = self.trader.startingBalance * self.trader.transactionFeePercentageDecimal
+        coin_owed = self.trader.startingBalance / self.trader.currentPrice
+
+        self.trader.sell_short("test_short", smartEnter=True)
+        self.trader.currentPrice = 5
+
+        previous_transaction_fee = transaction_fee
+        transaction_fee = coin_owed * self.trader.currentPrice * self.trader.transactionFeePercentageDecimal
+        balance = self.trader.balance - coin_owed * self.trader.currentPrice - transaction_fee
+
+        self.trader.buy_short("test_end_short", stopLossExit=True)
+        self.assertEqual(self.trader.stopLossExit, True)
+        self.assertEqual(self.trader.smartStopLossEnter, False)
+        self.assertEqual(self.trader.currentPosition, None)
+        self.assertEqual(self.trader.previousPosition, SHORT)
+        self.assertEqual(self.trader.sellShortPrice, None)
+        self.assertEqual(self.trader.shortTrailingPrice, None)
+        self.assertEqual(self.trader.balance, balance)
+        self.assertEqual(self.trader.commissionsPaid, previous_transaction_fee + transaction_fee)
+        self.assertEqual(self.trader.coin, 0)
+        self.assertEqual(self.trader.coinOwed, 0)
+        self.assertEqual(self.trader.trades[-1], {
+            'date': 'test_date',
+            'action': 'test_end_short',
+            'net': round(self.trader.get_net(), self.trader.precision)
+        })
 
     def test_set_and_reset_smart_stop_loss(self):
         self.trader.set_smart_stop_loss_counter(5)
@@ -191,7 +290,33 @@ class TestBaseTrader(unittest.TestCase):
             self.trader.get_take_profit()
 
     def test_get_net(self):
-        pass
+        self.trader.currentPeriod = {'date_utc': 'test_date'}
+        self.trader.currentPrice = 100
+        self.trader.buy_long("test")
+
+        self.trader.currentPrice = 200
+        self.assertEqual(self.trader.get_net(), self.trader.currentPrice * self.trader.coin)
+
+        self.trader.currentPrice = 50
+        self.assertEqual(self.trader.get_net(), self.trader.currentPrice * self.trader.coin)
+        self.trader.sell_long("end_buy_net")
+
+        self.trader.startingBalance = self.trader.balance = 1000
+        self.trader.commissionsPaid = 0
+        self.trader.currentPrice = 20
+        self.trader.sell_short("test_short")
+        self.assertEqual(self.trader.get_net(), self.trader.startingBalance - self.trader.commissionsPaid)
+
+        self.trader.currentPrice = 10
+        self.trader.buy_short("test_end_short")
+        self.assertEqual(round(self.trader.get_net(), 2), 1498.50)
+
+        self.trader.startingBalance = self.trader.balance = 1000
+        self.trader.commissionsPaid = 0
+        self.trader.currentPrice = 5
+        self.trader.sell_short("test")
+        self.trader.buy_short("test")
+        self.assertEqual(self.trader.get_net(), 998)
 
     def test_get_trend(self):
         pass

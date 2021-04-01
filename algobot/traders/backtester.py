@@ -29,7 +29,6 @@ class Backtester(Trader):
                  precision: int = 4,
                  outputTrades: bool = True):
         super().__init__(symbol=symbol, precision=precision, startingBalance=startingBalance)
-        self.commissionsPaid = 0
         self.marginEnabled = marginEnabled
         self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
 
@@ -39,7 +38,6 @@ class Backtester(Trader):
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
         self.profit = 0
-        self.currentPeriod = None
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
 
         if len(strategyInterval.split()) == 1:
@@ -140,89 +138,6 @@ class Backtester(Trader):
                 return endDateIndex
         else:
             return len(self.data) - 1
-
-    def buy_long(self, message: str, smartEnter: bool = False):
-        """
-        Executes long position.
-        :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
-        :param message: Message that specifies why it entered long.
-        """
-        usd = self.balance
-        transactionFee = self.transactionFeePercentage * usd
-        self.commissionsPaid += transactionFee
-        self.currentPosition = LONG
-        self.coin += (usd - transactionFee) / self.currentPrice
-        self.balance -= usd
-        self.buyLongPrice = self.longTrailingPrice = self.currentPrice
-        self.add_trade(message, smartEnter=smartEnter)
-
-    def sell_long(self, message: str, stopLossExit: bool = False):
-        """
-        Exits long position.
-        :param stopLossExit: Boolean that'll determine whether a position was exited from a stop loss.
-        :param message: Message that specifies why it exited long.
-        """
-        coin = self.coin
-        transactionFee = self.currentPrice * coin * self.transactionFeePercentage
-        self.commissionsPaid += transactionFee
-        self.currentPosition = None
-        self.previousPosition = LONG
-        self.coin -= coin
-        self.balance += coin * self.currentPrice - transactionFee
-        self.buyLongPrice = self.longTrailingPrice = None
-        self.add_trade(message, stopLossExit=stopLossExit)
-
-    def sell_short(self, message: str, smartEnter: bool = False):
-        """
-        Executes short position.
-        :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
-        :param message: Message that specifies why it entered short.
-        """
-        transactionFee = self.balance * self.transactionFeePercentage
-        coin = (self.balance - transactionFee) / self.currentPrice
-        self.commissionsPaid += transactionFee
-        self.currentPosition = SHORT
-        self.coinOwed += coin
-        self.balance += self.currentPrice * coin - transactionFee
-        self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
-        self.add_trade(message, smartEnter=smartEnter)
-
-    def buy_short(self, message: str, stopLossExit: bool = False):
-        """
-        Exits short position.
-        :param stopLossExit: Boolean that'll determine whether a position was exited from a stop loss.
-        :param message: Message that specifies why it exited short.
-        """
-        transactionFee = self.coinOwed * self.currentPrice * self.transactionFeePercentage
-        coin = self.coinOwed
-        self.commissionsPaid += transactionFee
-        self.currentPosition = None
-        self.previousPosition = SHORT
-        self.coinOwed -= coin
-        self.balance -= self.currentPrice * coin + transactionFee
-        self.sellShortPrice = self.shortTrailingPrice = None
-        self.add_trade(message, stopLossExit=stopLossExit)
-
-    def add_trade(self, message: str, stopLossExit: bool = False, smartEnter: bool = False):
-        """
-        Adds a trade to list of trades
-        :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
-        :param stopLossExit: Boolean that'll determine where this trade occurred from a stop loss.
-        :param message: Message used for conducting trade.
-        """
-        self.stopLossExit = stopLossExit
-        self.smartStopLossEnter = smartEnter
-        self.trades.append({
-            'date': self.currentPeriod['date_utc'],
-            'action': message,
-            'net': round(self.get_net(), self.precision)
-        })
-
-    def reset_trades(self):
-        """
-        Clears trades list.
-        """
-        self.trades = []
 
     def set_indexed_current_price_and_period(self, index: int):
         """
@@ -384,14 +299,6 @@ class Backtester(Trader):
 
     def restore(self):
         pass
-
-    def get_net(self) -> float:
-        """
-        Returns net balance with current price of coin being traded. It factors in the current balance, the amount
-        shorted, and the amount owned.
-        :return: Net balance.
-        """
-        return self.coin * self.currentPrice - self.coinOwed * self.currentPrice + self.balance
 
     def get_interval(self) -> str:
         """

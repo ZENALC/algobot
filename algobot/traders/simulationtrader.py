@@ -180,7 +180,7 @@ class SimulationTrader(Trader):
             remaining = int(self.scheduledSafetyTimer - time.time())
             return f'{remaining} seconds'
 
-    def add_trade(self, message: str, force: bool, orderID: str = None, stopLossExit: bool = False,
+    def add_trade(self, message: str, force: bool = False, orderID: str = None, stopLossExit: bool = False,
                   smartEnter: bool = False):
         """
         Adds a trade to list of trades
@@ -250,7 +250,7 @@ class SimulationTrader(Trader):
                 raise ValueError(f'You currently have ${self.balance}. You cannot invest ${usd}.')
 
             self.currentPrice = self.dataView.get_current_price()
-            transactionFee = usd * self.transactionFeePercentage
+            transactionFee = usd * self.transactionFeePercentageDecimal
             self.commissionPaid += transactionFee
             self.currentPosition = LONG
             self.buyLongPrice = self.longTrailingPrice = self.currentPrice
@@ -280,8 +280,8 @@ class SimulationTrader(Trader):
                 raise ValueError(f'You have {self.coin} {self.coinName}. You cannot sell {coin} {self.coinName}.')
 
             self.currentPrice = self.dataView.get_current_price()
-            self.commissionPaid += coin * self.currentPrice * self.transactionFeePercentage
-            self.balance += coin * self.currentPrice * (1 - self.transactionFeePercentage)
+            self.commissionPaid += coin * self.currentPrice * self.transactionFeePercentageDecimal
+            self.balance += coin * self.currentPrice * (1 - self.transactionFeePercentageDecimal)
             self.currentPosition = None
             self.customStopLoss = None
             self.previousPosition = LONG
@@ -316,8 +316,8 @@ class SimulationTrader(Trader):
             self.customStopLoss = None
             self.currentPosition = None
             self.previousPosition = SHORT
-            self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
-            self.balance -= self.currentPrice * coin * (1 + self.transactionFeePercentage)
+            self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentageDecimal
+            self.balance -= self.currentPrice * coin * (1 + self.transactionFeePercentageDecimal)
             self.add_trade(msg, force=force, stopLossExit=stopLossExit)
 
             if self.coinOwed == 0:
@@ -341,15 +341,15 @@ class SimulationTrader(Trader):
             self.currentPrice = self.dataView.get_current_price()
 
             if coin is None:
-                transactionFee = self.balance * self.transactionFeePercentage
+                transactionFee = self.balance * self.transactionFeePercentageDecimal
                 coin = (self.balance - transactionFee) / self.currentPrice
 
             if coin <= 0:
                 raise ValueError(f"You cannot borrow negative {abs(coin)} {self.coinName}.")
 
             self.coinOwed += coin
-            self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentage
-            self.balance += self.currentPrice * coin * (1 - self.transactionFeePercentage)
+            self.commissionPaid += self.currentPrice * coin * self.transactionFeePercentageDecimal
+            self.balance += self.currentPrice * coin * (1 - self.transactionFeePercentageDecimal)
             self.currentPosition = SHORT
             self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
             self.add_trade(msg, force=force, smartEnter=smartEnter)
@@ -648,7 +648,7 @@ class SimulationTrader(Trader):
         self.output_message(f'\tSymbol: {self.symbol}')
         self.output_message(f'\tInterval: {convert_small_interval(self.dataView.interval)}')
         self.output_message(f'\tPrecision: {self.precision}')
-        self.output_message(f'\tTransaction fee percentage: {self.transactionFeePercentage}%')
+        self.output_message(f'\tTransaction fee percentage: {self.transactionFeePercentageDecimal}%')
         self.output_message(f'\tStarting coin: {self.coin}')
         self.output_message(f'\tStarting borrowed coin: {self.coinOwed}')
         self.output_message(f'\tStarting net: ${self.get_net()}')
