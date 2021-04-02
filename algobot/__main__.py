@@ -161,7 +161,7 @@ class Interface(QMainWindow):
         """
         config = self.configuration
         tickerWidgets = [config.tickerComboBox, config.backtestTickerComboBox, config.simulationTickerComboBox,
-                         self.otherCommands.csvGenerationTicker]
+                         self.otherCommands.csvGenerationTicker, self.configuration.optimizerTickerComboBox]
 
         for widget in tickerWidgets:
             widget.clear()
@@ -1004,12 +1004,17 @@ class Interface(QMainWindow):
         self.configuration.configurationTabWidget.setCurrentIndex(1)
         self.configuration.backtestConfigurationTabWidget.setCurrentIndex(0)
 
+    def show_optimizer_settings(self):
+        self.configuration.show()
+        self.configuration.configurationTabWidget.setCurrentIndex(2)
+        self.configuration.optimizerConfigurationTabWidget.setCurrentIndex(0)
+
     def show_simulation_settings(self):
         """
         Opens simulation settings in the configuration window.
         """
         self.configuration.show()
-        self.configuration.configurationTabWidget.setCurrentIndex(2)
+        self.configuration.configurationTabWidget.setCurrentIndex(3)
         self.configuration.simulationConfigurationTabWidget.setCurrentIndex(0)
 
     def show_statistics(self, index: int):

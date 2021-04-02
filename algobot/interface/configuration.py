@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
 from telegram.ext import Updater
 
 import algobot.helpers as helpers
-from algobot.enums import BACKTEST, LIVE, SIMULATION, STOP, TRAILING
+from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.interface.configuration_helpers import (add_strategy_buttons,
                                                      add_strategy_inputs,
                                                      create_inner_tab,
@@ -50,6 +50,7 @@ class Configuration(QDialog):
             self.mainConfigurationTabWidget,
             self.simulationConfigurationTabWidget,
             self.backtestConfigurationTabWidget,
+            self.optimizerConfigurationTabWidget
         ]
 
         self.strategies = get_strategies_dictionary(Strategy.__subclasses__())
@@ -90,6 +91,8 @@ class Configuration(QDialog):
             return SIMULATION
         elif tab == self.categoryTabs[0]:
             return LIVE
+        elif tab == self.categoryTabs[3]:
+            return OPTIMIZER
         else:
             raise ValueError("Invalid tab provided. No known called associated with this tab.")
 
@@ -361,60 +364,57 @@ class Configuration(QDialog):
             parameters = temp.get_param_types()
             for tab in self.categoryTabs:
                 self.strategyDict[tab, strategyName] = tabWidget = QTabWidget()
-                self.strategyDict[tab, strategyName, 'groupBox'] = groupBox = QGroupBox(f"Enable {strategyName}?")
-
-                layout = QVBoxLayout()
                 descriptionLabel = QLabel(f'Strategy description: {temp.description}')
                 descriptionLabel.setWordWrap(True)
+
+                layout = QVBoxLayout()
                 layout.addWidget(descriptionLabel)
 
                 scroll = QScrollArea()  # Added a scroll area so user can scroll when additional slots are added.
-                scroll.setWidget(groupBox)
                 scroll.setWidgetResizable(True)
 
-                groupBox.setCheckable(True)
-                groupBox.setChecked(False)
-                groupBoxLayout = QFormLayout()
-                groupBox.setLayout(groupBoxLayout)
-
-                status = QLabel()
-                if temp.dynamic:
-                    addButton, deleteButton = add_strategy_buttons(self.strategyDict, parameters, strategyName,
-                                                                   groupBoxLayout, tab)
-                    horizontalLayout = QHBoxLayout()
-                    horizontalLayout.addWidget(addButton)
-                    horizontalLayout.addWidget(deleteButton)
-                    horizontalLayout.addWidget(status)
-                    horizontalLayout.addStretch()
-                    layout.addLayout(horizontalLayout)
-
-                layout.addWidget(scroll)
-
-                values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
-                self.strategyDict[tab, strategyName, 'values'] = values
-                self.strategyDict[tab, strategyName, 'labels'] = labels
-                self.strategyDict[tab, strategyName, 'parameters'] = parameters
-                self.strategyDict[tab, strategyName, 'layout'] = groupBoxLayout
-                self.strategyDict[tab, strategyName, 'status'] = status
-
-                tabWidget.setLayout(layout)
-                tab.addTab(tabWidget, strategyName)
-
-                if self.get_caller_based_on_tab(tab) == BACKTEST:
+                if self.get_caller_based_on_tab(tab) == OPTIMIZER:
                     message = f'Enable {strategyName} optimization?'
-                    optimizationGroupBox = self.strategyDict[tab, f'{strategyName}Optimization'] = QGroupBox(message)
-                    optimizationGroupBox.setCheckable(True)
-                    optimizationGroupBox.setChecked(False)
                     optimizationGroupBoxLayout = QFormLayout()
-                    optimizationGroupBox.setLayout(optimizationGroupBoxLayout)
-                    layout.addWidget(optimizationGroupBox)
-
+                    groupBox = self.strategyDict[tab, f'{strategyName}Optimization'] = QGroupBox(message)
+                    groupBox.setCheckable(True)
+                    groupBox.setChecked(False)
+                    groupBox.setLayout(optimizationGroupBoxLayout)
                     for index in range(len(parameters)):
                         self.strategyDict[strategyName, index, 'start'] = start = QSpinBox()
                         self.strategyDict[strategyName, index, 'end'] = end = QSpinBox()
                         self.strategyDict[strategyName, index, 'step'] = step = QSpinBox()
                         message = f"{strategyName} {index + 1}"
                         self.add_start_end_step_to_layout(optimizationGroupBoxLayout, message, start, end, step)
+                else:
+                    self.strategyDict[tab, strategyName, 'groupBox'] = groupBox = QGroupBox(f"Enable {strategyName}?")
+                    groupBox.setCheckable(True)
+                    groupBox.setChecked(False)
+                    groupBoxLayout = QFormLayout()
+                    groupBox.setLayout(groupBoxLayout)
+
+                    status = QLabel()
+                    if temp.dynamic:
+                        addButton, deleteButton = add_strategy_buttons(self.strategyDict, parameters, strategyName,
+                                                                       groupBoxLayout, tab)
+                        horizontalLayout = QHBoxLayout()
+                        horizontalLayout.addWidget(addButton)
+                        horizontalLayout.addWidget(deleteButton)
+                        horizontalLayout.addWidget(status)
+                        horizontalLayout.addStretch()
+                        layout.addLayout(horizontalLayout)
+
+                    values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
+                    self.strategyDict[tab, strategyName, 'values'] = values
+                    self.strategyDict[tab, strategyName, 'labels'] = labels
+                    self.strategyDict[tab, strategyName, 'parameters'] = parameters
+                    self.strategyDict[tab, strategyName, 'layout'] = groupBoxLayout
+                    self.strategyDict[tab, strategyName, 'status'] = status
+
+                layout.addWidget(scroll)
+                scroll.setWidget(groupBox)
+                tabWidget.setLayout(layout)
+                tab.addTab(tabWidget, strategyName)
 
     def reset_telegram_state(self):
         """
@@ -1041,19 +1041,20 @@ class Configuration(QDialog):
         self.parent.graphUpdateSeconds = graphSpeed
         self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graphSpeed} seconds.")
 
-    def reset_strategy_interval_comboBox(self):
+    @staticmethod
+    def reset_strategy_interval_comboBox(strategy_combobox, interval_combobox):
         """
         This function will reset the strategy interval combo-box.
         """
-        childText = self.backtestStrategyIntervalCombobox.currentText()
-        parentIndex = self.backtestIntervalComboBox.currentIndex()
+        childText = strategy_combobox.currentText()
+        parentIndex = interval_combobox.currentIndex()
         intervals = helpers.get_interval_strings(startingIndex=parentIndex)
-        self.backtestStrategyIntervalCombobox.clear()
-        self.backtestStrategyIntervalCombobox.addItems(intervals)
+        strategy_combobox.clear()
+        strategy_combobox.addItems(intervals)
 
-        previousChildIndex = self.backtestStrategyIntervalCombobox.findText(childText)
+        previousChildIndex = strategy_combobox.findText(childText)
         if previousChildIndex != -1:
-            self.backtestStrategyIntervalCombobox.setCurrentIndex(previousChildIndex)
+            strategy_combobox.setCurrentIndex(previousChildIndex)
 
     def load_combo_boxes(self):
         """
@@ -1061,9 +1062,19 @@ class Configuration(QDialog):
         interval combo-box depending on what the data interval combo-box has as its current value.
         """
         intervals = helpers.get_interval_strings(startingIndex=0)
-        self.backtestIntervalComboBox.addItems(intervals)
-        self.backtestIntervalComboBox.currentTextChanged.connect(self.reset_strategy_interval_comboBox)
         self.backtestStrategyIntervalCombobox.addItems(intervals)
+        self.backtestIntervalComboBox.addItems(intervals)
+        self.backtestIntervalComboBox.currentTextChanged.connect(lambda: self.reset_strategy_interval_comboBox(
+            strategy_combobox=self.backtestStrategyIntervalCombobox,
+            interval_combobox=self.backtestIntervalComboBox
+        ))
+
+        self.optimizerStrategyIntervalCombobox.addItems(intervals)
+        self.optimizerIntervalComboBox.addItems(intervals)
+        self.optimizerIntervalComboBox.currentTextChanged.connect(lambda: self.reset_strategy_interval_comboBox(
+            strategy_combobox=self.optimizerStrategyIntervalCombobox,
+            interval_combobox=self.optimizerIntervalComboBox
+        ))
 
     def load_slots(self):
         """

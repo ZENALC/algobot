@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
                              QPushButton, QScrollArea, QSpinBox, QTabWidget,
                              QVBoxLayout, QWidget)
 
-from algobot.enums import BACKTEST
+from algobot.enums import OPTIMIZER
 
 
 def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:
@@ -37,32 +37,30 @@ def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_c
         descriptionLabel = QLabel(description)
         descriptionLabel.setWordWrap(True)
 
-        groupBox = dictionary[tab, 'groupBox'] = QGroupBox(f"Enable {tabName.lower()}?")
-        groupBox.setCheckable(True)
-        groupBox.setChecked(False)
-        groupBox.toggled.connect(lambda _, current_tab=tab: signalFunction(tab=current_tab))
-        groupBoxLayout = QFormLayout()
-        groupBox.setLayout(groupBoxLayout)
+        layout = QVBoxLayout()
+        layout.addWidget(descriptionLabel)
 
-        input_creator(tab, groupBoxLayout)
+        if parent and parent.get_caller_based_on_tab(tab) == OPTIMIZER:
+            message = f"Enable {tabName.lower()} optimization?"
+            groupBox = dictionary[tab, 'optimizationGroupBox'] = QGroupBox(message)
+            groupBox.setCheckable(True)
+            groupBox.setChecked(False)
+            optimizationGroupBoxLayout = QFormLayout()
+            groupBox.setLayout(optimizationGroupBoxLayout)
+            input_creator(tab, optimizationGroupBoxLayout, isOptimizer=True)
+        else:
+            groupBox = dictionary[tab, 'groupBox'] = QGroupBox(f"Enable {tabName.lower()}?")
+            groupBox.setCheckable(True)
+            groupBox.setChecked(False)
+            groupBox.toggled.connect(lambda _, current_tab=tab: signalFunction(tab=current_tab))
+            groupBoxLayout = QFormLayout()
+            groupBox.setLayout(groupBoxLayout)
+            input_creator(tab, groupBoxLayout)
 
         scroll = QScrollArea()
         scroll.setWidget(groupBox)
         scroll.setWidgetResizable(True)
-
-        layout = QVBoxLayout()
-        layout.addWidget(descriptionLabel)
         layout.addWidget(scroll)
-
-        if parent and parent.get_caller_based_on_tab(tab) == BACKTEST:
-            message = f"Enable {tabName.lower()} optimization?"
-            optimizationGroupBox = dictionary[tab, 'optimizationGroupBox'] = QGroupBox(message)
-            optimizationGroupBox.setCheckable(True)
-            optimizationGroupBox.setChecked(False)
-            optimizationGroupBoxLayout = QFormLayout()
-            optimizationGroupBox.setLayout(optimizationGroupBoxLayout)
-            layout.addWidget(optimizationGroupBox)
-            input_creator(tab, optimizationGroupBoxLayout, isOptimizer=True)
 
         tabWidget = QTabWidget()
         tabWidget.setLayout(layout)
