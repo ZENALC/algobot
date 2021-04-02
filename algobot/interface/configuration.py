@@ -136,6 +136,13 @@ class Configuration(QDialog):
             parent=self
         )
 
+    @staticmethod
+    def add_start_end_step_to_layout(layout, msg, start, end, step):
+        layout.addRow(QLabel(f"{helpers.get_label_string(msg)} Optimization"))
+        layout.addRow("Start", start)
+        layout.addRow("End", end)
+        layout.addRow("Step", step)
+
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout, isOptimizer: bool = False):
         """
         Creates inputs for loss settings in GUI.
@@ -156,10 +163,7 @@ class Configuration(QDialog):
                 self.lossDict[optimizerType, 'start'] = start = QSpinBox()
                 self.lossDict[optimizerType, 'end'] = end = QSpinBox()
                 self.lossDict[optimizerType, 'step'] = step = QSpinBox()
-                innerLayout.addRow(QLabel(f"{helpers.get_label_string(optimizerType)} Optimization"))
-                innerLayout.addRow("Start", start)
-                innerLayout.addRow("End", end)
-                innerLayout.addRow("Step", step)
+                self.add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:
             self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
             self.lossDict[tab, "lossPercentage"] = lossPercentage = QDoubleSpinBox()
@@ -199,10 +203,7 @@ class Configuration(QDialog):
             self.takeProfitDict['optimizerStart'] = start = QSpinBox()
             self.takeProfitDict['optimizerEnd'] = end = QSpinBox()
             self.takeProfitDict['optimizerStep'] = step = QSpinBox()
-            innerLayout.addRow(QLabel("Take Profit Percentage Optimization"))
-            innerLayout.addRow("Start", start)
-            innerLayout.addRow("End", end)
-            innerLayout.addRow("Step", step)
+            self.add_start_end_step_to_layout(innerLayout, 'takeProfitPercentage', start, end, step)
         else:
             self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
             self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
@@ -412,10 +413,8 @@ class Configuration(QDialog):
                         self.strategyDict[strategyName, index, 'start'] = start = QSpinBox()
                         self.strategyDict[strategyName, index, 'end'] = end = QSpinBox()
                         self.strategyDict[strategyName, index, 'step'] = step = QSpinBox()
-                        optimizationGroupBoxLayout.addRow(QLabel(f"{strategyName} {index} Optimization"))
-                        optimizationGroupBoxLayout.addRow("Start", start)
-                        optimizationGroupBoxLayout.addRow("End", end)
-                        optimizationGroupBoxLayout.addRow("Step", step)
+                        message = f"{strategyName} {index + 1} Optimization"
+                        self.add_start_end_step_to_layout(optimizationGroupBoxLayout, message, start, end, step)
 
     def reset_telegram_state(self):
         """
