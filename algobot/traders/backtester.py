@@ -3,7 +3,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 from itertools import product
-from typing import Dict, Union, Any
+from typing import Any, Dict, Union
 
 from dateutil import parser
 
@@ -278,8 +278,10 @@ class Backtester(Trader):
             else:
                 raise ValueError("Invalid type of value provided to combos. Make sure to use a list or a tuple.")
 
-        combos = [dict(zip(combos, v)) for v in product(*combos.values())]
-        return combos
+        permutations = []
+        for v in product(*combos.values()):
+            permutations.append(dict(zip(combos, v)))
+        return permutations
 
     def optimizer(self, combos: Dict, thread=None):
         """
