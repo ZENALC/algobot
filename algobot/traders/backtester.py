@@ -3,7 +3,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 from itertools import product
-from typing import Dict, Union
+from typing import Dict, Union, Any
 
 from dateutil import parser
 
@@ -37,7 +37,6 @@ class Backtester(Trader):
         self.check_data()
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
-        self.profit = 0
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
 
         if len(strategyInterval.split()) == 1:
@@ -264,41 +263,59 @@ class Backtester(Trader):
         self.exit_backtest(index)
 
     @staticmethod
-    def get_all_permutations(combos: dict):
+    def get_all_permutations(combos: Dict[str, Any]):
         """
         Returns a list of setting permutations from combos provided.
         :param combos: Combos with ranges for the permutations.
         :return: List of all permutations.
         """
         for key, value_range in combos.items():
-            if type(value_range) == tuple:
-                continue
-            elif type(value_range) == list:
+            if type(value_range) == list:
                 temp = [x for x in range(value_range[0], value_range[1] + 1, value_range[2])]
                 combos[key] = temp
+            elif type(value_range) == tuple:
+                continue
             else:
-                raise ValueError("Invalid type of value provided to combos. Make sure to provide a tuple or list.")
+                raise ValueError("Invalid type of value provided to combos. Make sure to use a list or a tuple.")
 
-        return [dict(zip(combos, v)) for v in product(*combos.values())]
+        combos = [dict(zip(combos, v)) for v in product(*combos.values())]
+        return combos
 
     def optimizer(self, combos: Dict, thread=None):
         """
         This function will run a brute-force optimization test to figure out the best inputs.
+        Sample combos should look something like: {
+            'lossType': (TRAILING,), -> use a tuple for predefined values.
+            'lossPercentage': [5, 15, 3] -> use a list with 3 values for steps i.e. -> 5, 8, 11, 14.
+            (make sure to use ints for above ^)
+            'stopLossCounter': 5 -> use a str, float, or int for a static value
+        }
         """
         settings_list = self.get_all_permutations(combos)
 
         for settings in settings_list:
-            self.apply_settings(settings)
+            self.apply_general_settings(settings)
             self.start_backtest(thread)
+            self.restore()
 
-    def apply_settings(self, settings: dict):
+    def apply_general_settings(self, settings: dict):
         self.takeProfitType = settings['takeProfitType']
         self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
         self.lossStrategy = settings['lossType']
         self.lossPercentageDecimal = settings['lossPercentage'] / 100
+        self.strategies = settings['strategies']
 
     def restore(self):
-        pass
+        self.reset_trades()
+        self.reset_smart_stop_loss()
+        self.balance = self.startingBalance
+        self.coin = self.coinOwed = 0
+        self.currentPosition = self.currentPeriod = None
+        self.previousStopLoss = None
+        self.stopLossExit = False
+        self.smartStopLossEnter = False
+        self.ema_dict = {}
+        self.rsi_dictionary = {}
 
     def get_interval(self) -> str:
         """
@@ -606,3 +623,14 @@ class Backtester(Trader):
 
         os.chdir(currentPath)
         return filePath
+
+
+if __name__ == '__main__':
+    da = [{'date_utc': '09-09-2020'}, {'date_utc': '09-10-2020'}]
+    b = Backtester(1000, data=da, strategyInterval='1d', strategies=[])
+    c = {'lossPercentage': (5, ), 'lossType': ("STOP", "TRAILING"),
+         'shrek1': [1, 15, 3], 'shrek2': [10, 15, 1], 'shrek3': [15, 20, 1],
+         'stoic1': [5, 10, 1], 'stoic2': [10, 15, 2], 'stoic3': [0, 5, 1]}
+    y = b.get_all_permutations(c)
+    for _ in y:
+        print(_)
