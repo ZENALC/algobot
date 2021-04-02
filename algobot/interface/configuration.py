@@ -399,6 +399,24 @@ class Configuration(QDialog):
                 tabWidget.setLayout(layout)
                 tab.addTab(tabWidget, strategyName)
 
+                if self.get_caller_based_on_tab(tab) == BACKTEST:
+                    message = f'Enable {strategyName} optimization?'
+                    optimizationGroupBox = self.strategyDict[tab, f'{strategyName}Optimization'] = QGroupBox(message)
+                    optimizationGroupBox.setCheckable(True)
+                    optimizationGroupBox.setChecked(False)
+                    optimizationGroupBoxLayout = QFormLayout()
+                    optimizationGroupBox.setLayout(optimizationGroupBoxLayout)
+                    layout.addWidget(optimizationGroupBox)
+
+                    for index in range(len(parameters)):
+                        self.strategyDict[strategyName, index, 'start'] = start = QSpinBox()
+                        self.strategyDict[strategyName, index, 'end'] = end = QSpinBox()
+                        self.strategyDict[strategyName, index, 'step'] = step = QSpinBox()
+                        optimizationGroupBoxLayout.addRow(QLabel(f"{strategyName} {index} Optimization"))
+                        optimizationGroupBoxLayout.addRow("Start", start)
+                        optimizationGroupBoxLayout.addRow("End", end)
+                        optimizationGroupBoxLayout.addRow("Step", step)
+
     def reset_telegram_state(self):
         """
         Resets telegram state once something is changed in the Telegram configuration GUI.
