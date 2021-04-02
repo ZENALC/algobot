@@ -372,12 +372,22 @@ class Configuration(QDialog):
                 if self.get_caller_based_on_tab(tab) == OPTIMIZER:
                     groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f'Enable {strategyName} optimization?')
                     self.strategyDict[tab, f'{strategyName}Optimization'] = groupBox
-                    for index in range(len(parameters)):
-                        self.strategyDict[strategyName, index, 'start'] = start = QSpinBox()
-                        self.strategyDict[strategyName, index, 'end'] = end = QSpinBox()
-                        self.strategyDict[strategyName, index, 'step'] = step = QSpinBox()
-                        message = f"{strategyName} {index + 1}"
-                        self.add_start_end_step_to_layout(groupBoxLayout, message, start, end, step)
+                    for index, parameter in enumerate(parameters, start=1):
+                        if type(parameter) == tuple and parameter[1] == int or type(parameter) != tuple:
+                            self.strategyDict[strategyName, index, 'start'] = start = QSpinBox()
+                            self.strategyDict[strategyName, index, 'end'] = end = QSpinBox()
+                            self.strategyDict[strategyName, index, 'step'] = step = QSpinBox()
+                            if type(parameter) == tuple:
+                                message = parameter[0]
+                            else:
+                                message = f"{strategyName} {index}"
+                            self.add_start_end_step_to_layout(groupBoxLayout, message, start, end, step)
+                        elif type(parameter) == tuple and parameter[1] == tuple:
+                            groupBoxLayout.addRow(QLabel(parameter[0]))
+                            for option in parameter[2]:
+                                groupBoxLayout.addRow(QCheckBox(option))
+                        else:
+                            raise ValueError("Invalid type of parameter type provided.")
                 else:
                     groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {strategyName}?")
                     self.strategyDict[tab, strategyName, 'groupBox'] = groupBox
