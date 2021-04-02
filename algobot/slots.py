@@ -25,6 +25,9 @@ def create_interface_slots(gui):
 
     # Other buttons in interface.
     gui.refreshNewsButton.clicked.connect(gui.news_thread)
+    gui.configureOptimizerButton.clicked.connect(gui.show_backtest_settings)
+    gui.runOptimizerButton.clicked.connect(lambda: gui.create_popup("Not implemented yet."))
+    gui.stopOptimizerButton.clicked.connect(lambda: gui.create_popup("Not implemented yet."))
 
 
 def create_configuration_slots(app, gui):

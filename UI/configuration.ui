@@ -61,7 +61,7 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>1</number>
          </property>
          <property name="movable">
           <bool>false</bool>
@@ -559,7 +559,7 @@
          </widget>
          <widget class="QWidget" name="backtestTab">
           <attribute name="title">
-           <string>Backtest</string>
+           <string>Backtest/Optimizer</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_21">
            <item row="0" column="0">

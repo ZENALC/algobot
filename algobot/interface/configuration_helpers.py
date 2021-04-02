@@ -1,9 +1,11 @@
 from typing import Any, Callable, Dict, Tuple, Union
 
-from PyQt5.QtWidgets import (QComboBox, QDoubleSpinBox, QFormLayout, QFrame,
-                             QGroupBox, QLabel, QLayout, QLineEdit,
-                             QPushButton, QScrollArea, QSpinBox, QTabWidget,
-                             QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
+                             QFrame, QGroupBox, QLabel, QLayout, QLineEdit,
+                             QPushButton, QScrollArea, QSpinBox,
+                             QTabWidget, QVBoxLayout, QWidget)
+
+from algobot.enums import BACKTEST
 
 
 def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:
@@ -19,7 +21,7 @@ def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:
 
 
 def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_creator: Callable, dictionary: dict,
-                     signalFunction: Callable):
+                     signalFunction: Callable, parent: QDialog = None):
     """
     Creates inner tab for each category tab in list of category tabs provided.
     :param categoryTabs: Tabs to create inner tab and append to.
@@ -28,6 +30,7 @@ def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_c
     :param input_creator: Function to call for input creation.
     :param signalFunction: Function to call for input slots.
     :param dictionary: Dictionary to add items to for reference.
+    :param parent: Parent configuration object.
     :return: None
     """
     for tab in categoryTabs:
@@ -50,6 +53,16 @@ def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_c
         layout = QVBoxLayout()
         layout.addWidget(descriptionLabel)
         layout.addWidget(scroll)
+
+        if parent and parent.get_caller_based_on_tab(tab) == BACKTEST:
+            message = f"Enable {tabName.lower()} optimization?"
+            optimizationGroupBox = dictionary[tab, 'optimizationGroupBox'] = QGroupBox(message)
+            optimizationGroupBox.setCheckable(True)
+            optimizationGroupBox.setChecked(False)
+            optimizationGroupBoxLayout = QFormLayout()
+            optimizationGroupBox.setLayout(optimizationGroupBoxLayout)
+            layout.addWidget(optimizationGroupBox)
+            input_creator(tab, optimizationGroupBoxLayout, isOptimizer=True)
 
         tabWidget = QTabWidget()
         tabWidget.setLayout(layout)

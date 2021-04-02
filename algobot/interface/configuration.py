@@ -7,10 +7,10 @@ from binance.client import Client
 from dateutil import parser
 from PyQt5 import uic
 from PyQt5.QtCore import QDate, QThreadPool
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFileDialog,
-                             QFormLayout, QGroupBox, QHBoxLayout, QLabel,
-                             QLayout, QMessageBox, QScrollArea, QSpinBox,
-                             QTabWidget, QVBoxLayout)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
+                             QFileDialog, QFormLayout, QGroupBox, QHBoxLayout,
+                             QLabel, QLayout, QMessageBox, QScrollArea,
+                             QSpinBox, QTabWidget, QVBoxLayout)
 from telegram.ext import Updater
 
 import algobot.helpers as helpers
@@ -118,7 +118,8 @@ class Configuration(QDialog):
             tabName="Stop Loss",
             input_creator=self.create_loss_inputs,
             dictionary=self.lossDict,
-            signalFunction=self.update_loss_settings
+            signalFunction=self.update_loss_settings,
+            parent=self
         )
 
     def load_take_profit_slots(self):
@@ -131,52 +132,88 @@ class Configuration(QDialog):
             tabName="Take Profit",
             input_creator=self.create_take_profit_inputs,
             dictionary=self.takeProfitDict,
-            signalFunction=self.update_take_profit_settings
+            signalFunction=self.update_take_profit_settings,
+            parent=self
         )
 
-    def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout):
+    def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout, isOptimizer: bool = False):
         """
         Creates inputs for loss settings in GUI.
         :param tab: Tab to create inputs for - simulation, live, or backtest.
         :param innerLayout: Inner layout to place input widgets on.
+        :param isOptimizer: Boolean for whether optimizer method called this function.
         """
-        self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
-        self.lossDict[tab, "lossPercentage"] = lossPercentage = QDoubleSpinBox()
-        self.lossDict[tab, "smartStopLossCounter"] = smartStopLossCounter = QSpinBox()
+        lossTypes = ("Trailing", "Stop")
+        if isOptimizer:
+            self.lossDict['optimizerTypes'] = []
+            for lossType in lossTypes:
+                checkbox = QCheckBox(f'Enable {lossType} type of stop loss??')
+                innerLayout.addRow(checkbox)
+                self.lossDict['optimizerTypes'].append((lossType, checkbox))
 
-        lossTypeComboBox.addItems(("Trailing", "Stop"))
-        lossPercentage.setValue(5)
+            optimizerTypes = ('lossPercentage', 'stopLossCounter')
+            for optimizerType in optimizerTypes:
+                self.lossDict[optimizerType, 'start'] = start = QSpinBox()
+                self.lossDict[optimizerType, 'end'] = end = QSpinBox()
+                self.lossDict[optimizerType, 'step'] = step = QSpinBox()
+                innerLayout.addRow(QLabel(f"{helpers.get_label_string(optimizerType)} Optimization"))
+                innerLayout.addRow("Start", start)
+                innerLayout.addRow("End", end)
+                innerLayout.addRow("Step", step)
+        else:
+            self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
+            self.lossDict[tab, "lossPercentage"] = lossPercentage = QDoubleSpinBox()
+            self.lossDict[tab, "smartStopLossCounter"] = smartStopLossCounter = QSpinBox()
 
-        innerLayout.addRow(QLabel("Loss Type"), lossTypeComboBox)
-        innerLayout.addRow(QLabel("Loss Percentage"), lossPercentage)
-        innerLayout.addRow(QLabel("Smart Stop Loss Counter"), smartStopLossCounter)
+            lossTypeComboBox.addItems(lossTypes)
+            lossPercentage.setValue(5)
 
-        if tab != self.backtestConfigurationTabWidget:
-            self.lossDict[tab, "safetyTimer"] = safetyTimer = QSpinBox()
-            safetyTimer.valueChanged.connect(lambda: self.update_loss_settings(tab))
-            innerLayout.addRow(QLabel("Safety Timer"), safetyTimer)
+            innerLayout.addRow(QLabel("Loss Type"), lossTypeComboBox)
+            innerLayout.addRow(QLabel("Loss Percentage"), lossPercentage)
+            innerLayout.addRow(QLabel("Smart Stop Loss Counter"), smartStopLossCounter)
 
-        lossTypeComboBox.currentIndexChanged.connect(lambda: self.update_loss_settings(tab))
-        lossPercentage.valueChanged.connect(lambda: self.update_loss_settings(tab))
-        smartStopLossCounter.valueChanged.connect(lambda: self.update_loss_settings(tab))
+            if tab != self.backtestConfigurationTabWidget:
+                self.lossDict[tab, "safetyTimer"] = safetyTimer = QSpinBox()
+                safetyTimer.valueChanged.connect(lambda: self.update_loss_settings(tab))
+                innerLayout.addRow(QLabel("Safety Timer"), safetyTimer)
 
-    def create_take_profit_inputs(self, tab: QTabWidget, innerLayout: QLayout):
+            lossTypeComboBox.currentIndexChanged.connect(lambda: self.update_loss_settings(tab))
+            lossPercentage.valueChanged.connect(lambda: self.update_loss_settings(tab))
+            smartStopLossCounter.valueChanged.connect(lambda: self.update_loss_settings(tab))
+
+    def create_take_profit_inputs(self, tab: QTabWidget, innerLayout: QLayout, isOptimizer: bool = False):
         """
         Creates inputs for take profit settings in GUI.
         :param tab: Tab to create inputs for - simulation, live, or backtest.
         :param innerLayout: Inner layout to place input widgets on.
+        :param isOptimizer: Boolean for whether optimizer method called this function.
         """
-        self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
-        self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
+        takeProfitTypes = ('Stop', 'Trailing')
+        if isOptimizer:
+            self.takeProfitDict['optimizerTypes'] = []
+            for takeProfitType in takeProfitTypes:
+                checkbox = QCheckBox(f'Enable {takeProfitType} take profit?')
+                innerLayout.addRow(checkbox)
+                self.takeProfitDict['optimizerTypes'].append((takeProfitType, checkbox))
 
-        takeProfitTypeComboBox.addItems(('Stop',))
-        takeProfitPercentage.setValue(5)
+            self.takeProfitDict['optimizerStart'] = start = QSpinBox()
+            self.takeProfitDict['optimizerEnd'] = end = QSpinBox()
+            self.takeProfitDict['optimizerStep'] = step = QSpinBox()
+            innerLayout.addRow(QLabel("Take Profit Percentage Optimization"))
+            innerLayout.addRow("Start", start)
+            innerLayout.addRow("End", end)
+            innerLayout.addRow("Step", step)
+        else:
+            self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
+            self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
 
-        takeProfitTypeComboBox.currentIndexChanged.connect(lambda: self.update_take_profit_settings(tab))
-        takeProfitPercentage.valueChanged.connect(lambda: self.update_take_profit_settings(tab))
+            takeProfitTypeComboBox.addItems(takeProfitTypes)
+            takeProfitTypeComboBox.currentIndexChanged.connect(lambda: self.update_take_profit_settings(tab))
+            takeProfitPercentage.setValue(5)
+            takeProfitPercentage.valueChanged.connect(lambda: self.update_take_profit_settings(tab))
 
-        innerLayout.addRow(QLabel("Take Profit Type"), takeProfitTypeComboBox)
-        innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
+            innerLayout.addRow(QLabel("Take Profit Type"), takeProfitTypeComboBox)
+            innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
 
     def set_loss_settings(self, caller: int, config: dict):
         """
