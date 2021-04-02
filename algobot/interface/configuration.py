@@ -413,7 +413,7 @@ class Configuration(QDialog):
                         self.strategyDict[strategyName, index, 'start'] = start = QSpinBox()
                         self.strategyDict[strategyName, index, 'end'] = end = QSpinBox()
                         self.strategyDict[strategyName, index, 'step'] = step = QSpinBox()
-                        message = f"{strategyName} {index + 1} Optimization"
+                        message = f"{strategyName} {index + 1}"
                         self.add_start_end_step_to_layout(optimizationGroupBoxLayout, message, start, end, step)
 
     def reset_telegram_state(self):
