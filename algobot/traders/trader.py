@@ -15,6 +15,7 @@ class Trader:
         # Initialize initial values.
         self.startingBalance = startingBalance  # Balance we started bot with.
         self.balance = startingBalance  # USDT Balance.
+        self.previousNet = startingBalance  # Our previous net will just be the starting balance in the beginning.
         self.coin = 0  # Amount of coin we own.
         self.coinOwed = 0  # Amount of coin we owe.
         self.transactionFeePercentageDecimal = 0.001  # Binance transaction fee percentage.

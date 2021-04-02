@@ -24,6 +24,9 @@ class Strategy:
         self.strategyDict = {}
         self.lowerIntervalDict = {}
 
+    def set_inputs(self, inputs: list):
+        raise NotImplementedError("Implement a function to set new inputs to your strategy.")
+
     def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False) -> int:
         """
         Implement your strategy here. Based on the strategy's algorithm, this should return a trend.

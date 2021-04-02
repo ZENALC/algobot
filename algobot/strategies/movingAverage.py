@@ -22,6 +22,9 @@ class MovingAverageStrategy(Strategy):
         if parent:  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
             self.validate_options()
 
+    def set_inputs(self, inputs: List[Option]):
+        self.tradingOptions = inputs
+
     def get_min_option_period(self) -> int:
         """
         Returns the minimum period required to perform moving average calculations. For instance, if we needed to

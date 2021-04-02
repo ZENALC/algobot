@@ -280,7 +280,19 @@ class Backtester(Trader):
 
         permutations = []
         for v in product(*combos.values()):
-            permutations.append(dict(zip(combos, v)))
+            strategy_dict = dict(zip(combos, v))
+            return_dict = {'strategies': {}}
+
+            for key, value in strategy_dict.items():
+                stripped = key.rstrip('0123456789')
+                if key != stripped:
+                    if stripped not in return_dict['strategies']:
+                        return_dict['strategies'][stripped] = []
+                    return_dict['strategies'][stripped].append(value)
+                else:
+                    return_dict[key] = value
+
+            permutations.append(return_dict)
         return permutations
 
     def optimizer(self, combos: Dict, thread=None):
@@ -305,7 +317,9 @@ class Backtester(Trader):
         self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
         self.lossStrategy = settings['lossType']
         self.lossPercentageDecimal = settings['lossPercentage'] / 100
-        self.strategies = settings['strategies']
+
+        for strategy_name, strategy_values in settings['strategies'].items():
+            self.strategies[strategy_name].set_inputs(strategy_values)
 
     def restore(self):
         self.reset_trades()
