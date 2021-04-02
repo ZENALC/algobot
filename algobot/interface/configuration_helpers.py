@@ -8,6 +8,16 @@ from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
 from algobot.enums import OPTIMIZER
 
 
+def get_regular_groupbox_and_layout(name) -> Tuple[QGroupBox, QFormLayout]:
+    layout = QFormLayout()
+    groupBox = QGroupBox(name)
+    groupBox.setCheckable(True)
+    groupBox.setChecked(False)
+    groupBox.setLayout(layout)
+
+    return groupBox, layout
+
+
 def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:
     """
     Helper function to return a strategies dictionary with strategy name as the key and strategy itself as the value.
@@ -41,20 +51,13 @@ def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_c
         layout.addWidget(descriptionLabel)
 
         if parent and parent.get_caller_based_on_tab(tab) == OPTIMIZER:
-            message = f"Enable {tabName.lower()} optimization?"
-            groupBox = dictionary[tab, 'optimizationGroupBox'] = QGroupBox(message)
-            groupBox.setCheckable(True)
-            groupBox.setChecked(False)
-            optimizationGroupBoxLayout = QFormLayout()
-            groupBox.setLayout(optimizationGroupBoxLayout)
-            input_creator(tab, optimizationGroupBoxLayout, isOptimizer=True)
+            groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()} optimization?")
+            dictionary[tab, 'optimizationGroupBox'] = groupBox
+            input_creator(tab, groupBoxLayout, isOptimizer=True)
         else:
-            groupBox = dictionary[tab, 'groupBox'] = QGroupBox(f"Enable {tabName.lower()}?")
-            groupBox.setCheckable(True)
-            groupBox.setChecked(False)
+            groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()}?")
             groupBox.toggled.connect(lambda _, current_tab=tab: signalFunction(tab=current_tab))
-            groupBoxLayout = QFormLayout()
-            groupBox.setLayout(groupBoxLayout)
+            dictionary[tab, 'groupBox'] = groupBox
             input_creator(tab, groupBoxLayout)
 
         scroll = QScrollArea()

@@ -8,21 +8,17 @@ from dateutil import parser
 from PyQt5 import uic
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
-                             QFileDialog, QFormLayout, QGroupBox, QHBoxLayout,
-                             QLabel, QLayout, QMessageBox, QScrollArea,
-                             QSpinBox, QTabWidget, QVBoxLayout)
+                             QFileDialog, QHBoxLayout, QLabel, QLayout,
+                             QMessageBox, QScrollArea, QSpinBox, QTabWidget,
+                             QVBoxLayout)
 from telegram.ext import Updater
 
 import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
-from algobot.interface.configuration_helpers import (add_strategy_buttons,
-                                                     add_strategy_inputs,
-                                                     create_inner_tab,
-                                                     create_strategy_inputs,
-                                                     delete_strategy_inputs,
-                                                     get_input_widget_value,
-                                                     get_strategies_dictionary,
-                                                     set_value)
+from algobot.interface.configuration_helpers import (
+    add_strategy_buttons, add_strategy_inputs, create_inner_tab,
+    create_strategy_inputs, delete_strategy_inputs, get_input_widget_value,
+    get_regular_groupbox_and_layout, get_strategies_dictionary, set_value)
 # noinspection PyUnresolvedReferences
 from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
@@ -374,24 +370,17 @@ class Configuration(QDialog):
                 scroll.setWidgetResizable(True)
 
                 if self.get_caller_based_on_tab(tab) == OPTIMIZER:
-                    message = f'Enable {strategyName} optimization?'
-                    optimizationGroupBoxLayout = QFormLayout()
-                    groupBox = self.strategyDict[tab, f'{strategyName}Optimization'] = QGroupBox(message)
-                    groupBox.setCheckable(True)
-                    groupBox.setChecked(False)
-                    groupBox.setLayout(optimizationGroupBoxLayout)
+                    groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f'Enable {strategyName} optimization?')
+                    self.strategyDict[tab, f'{strategyName}Optimization'] = groupBox
                     for index in range(len(parameters)):
                         self.strategyDict[strategyName, index, 'start'] = start = QSpinBox()
                         self.strategyDict[strategyName, index, 'end'] = end = QSpinBox()
                         self.strategyDict[strategyName, index, 'step'] = step = QSpinBox()
                         message = f"{strategyName} {index + 1}"
-                        self.add_start_end_step_to_layout(optimizationGroupBoxLayout, message, start, end, step)
+                        self.add_start_end_step_to_layout(groupBoxLayout, message, start, end, step)
                 else:
-                    self.strategyDict[tab, strategyName, 'groupBox'] = groupBox = QGroupBox(f"Enable {strategyName}?")
-                    groupBox.setCheckable(True)
-                    groupBox.setChecked(False)
-                    groupBoxLayout = QFormLayout()
-                    groupBox.setLayout(groupBoxLayout)
+                    groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {strategyName}?")
+                    self.strategyDict[tab, strategyName, 'groupBox'] = groupBox
 
                     status = QLabel()
                     if temp.dynamic:
