@@ -2,8 +2,8 @@ from typing import Any, Callable, Dict, Tuple, Union
 
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
                              QFrame, QGroupBox, QLabel, QLayout, QLineEdit,
-                             QPushButton, QScrollArea, QSpinBox,
-                             QTabWidget, QVBoxLayout, QWidget)
+                             QPushButton, QScrollArea, QSpinBox, QTabWidget,
+                             QVBoxLayout, QWidget)
 
 from algobot.enums import BACKTEST
 
