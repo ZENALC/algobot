@@ -177,6 +177,25 @@ class Configuration(QDialog):
             parent=self
         )
 
+    def get_optimizer_settings(self):
+        settings = {}
+
+        lossDict = self.lossDict
+        if lossDict[OPTIMIZER, 'groupBox'].isChecked():
+            start, end, step = [lossDict['optimizerStart'], lossDict['optimizerEnd'], lossDict['optimizerStep']]
+            settings['lossPercentage'] = [start, end, step]
+
+            settings['lossTypes'] = []
+            for lossString, checkBox in lossDict['optimizerTypes']:
+                if checkBox.isChecked():
+                    settings['lossTypes'].append(lossString)
+
+        takeProfitDict = self.takeProfitDict
+        if takeProfitDict[OPTIMIZER, 'groupBox'].isChecked():
+            for takeProfitString, checkBox in takeProfitDict['optimizerTypes']:
+                if checkBox.isChecked():
+                    settings['takeProfitTypes'].append(takeProfitString)
+
     @staticmethod
     def add_start_end_step_to_layout(layout, msg, start, end, step):
         layout.addRow(QLabel(f"{helpers.get_label_string(msg)} Optimization"))
@@ -201,9 +220,9 @@ class Configuration(QDialog):
 
             optimizerTypes = ('lossPercentage', 'stopLossCounter')
             for optimizerType in optimizerTypes:
-                self.lossDict[optimizerType, 'start'] = start = QSpinBox()
-                self.lossDict[optimizerType, 'end'] = end = QSpinBox()
-                self.lossDict[optimizerType, 'step'] = step = QSpinBox()
+                self.lossDict['optimizerStart'] = start = QSpinBox()
+                self.lossDict['optimizerEnd'] = end = QSpinBox()
+                self.lossDict['optimizerStep'] = step = QSpinBox()
                 self.add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:
             self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
