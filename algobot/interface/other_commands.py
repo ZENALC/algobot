@@ -44,7 +44,7 @@ class OtherCommands(QDialog):
     def purge(self, directory):
         path = os.path.join(helpers.ROOT_DIR, directory)
         if not os.path.exists(path):
-            QMessageBox.about(self, 'Warning', f"No {directory.lower()} files found.")
+            QMessageBox.about(self, 'Warning', f"No {directory.lower()} files detected.")
             return
 
         message = f'Are you sure you want to delete your {directory.lower()} files? You might not be able to undo ' \
