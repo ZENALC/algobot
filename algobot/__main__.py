@@ -182,6 +182,12 @@ class Interface(QMainWindow):
         self.newsTextBrowser.moveCursor(QTextCursor.Start)
         self.newsStatusLabel.setText(f'Retrieved news successfully. (Updated: {now.strftime("%m/%d/%Y, %H:%M:%S")})')
 
+    def initiate_optimizer(self):
+        self.create_popup("Not implemented.")
+
+    def end_optimizer(self):
+        self.create_popup("Not implemented.")
+
     def initiate_backtest(self):
         """
         Initiates backtest based on settings configured. If there is no data configured, prompts user to configure data.
