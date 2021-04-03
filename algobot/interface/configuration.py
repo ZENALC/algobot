@@ -184,7 +184,6 @@ class Configuration(QDialog):
         if lossDict[OPTIMIZER, 'groupBox'].isChecked():
             start, end, step = [lossDict['optimizerStart'], lossDict['optimizerEnd'], lossDict['optimizerStep']]
             settings['lossPercentage'] = [start, end, step]
-
             settings['lossTypes'] = []
             for lossString, checkBox in lossDict['optimizerTypes']:
                 if checkBox.isChecked():
@@ -192,6 +191,10 @@ class Configuration(QDialog):
 
         takeProfitDict = self.takeProfitDict
         if takeProfitDict[OPTIMIZER, 'groupBox'].isChecked():
+            start, end, step = [takeProfitDict['optimizerStart'], takeProfitDict['optimizerEnd'],
+                                takeProfitDict['optimizerStep']]
+            settings['takeProfitPercentage'] = [start, end, step]
+            settings['takeProfitTypes'] = []
             for takeProfitString, checkBox in takeProfitDict['optimizerTypes']:
                 if checkBox.isChecked():
                     settings['takeProfitTypes'].append(takeProfitString)
