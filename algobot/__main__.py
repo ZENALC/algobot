@@ -243,9 +243,10 @@ class Interface(QMainWindow):
 
         self.backtestProgressBar.setValue(100)
 
-    def update_backtest_gui(self, updatedDict: dict):
+    def update_backtest_gui(self, updatedDict: dict, add_data: bool = True):
         """
         Updates activity backtest details to GUI.
+        :param add_data: Boolean to determine whether to add data to graph or not.
         :param updatedDict: Dictionary containing backtest data.
         """
         self.backtestProgressBar.setValue(updatedDict['percentage'])
@@ -266,7 +267,10 @@ class Interface(QMainWindow):
         self.backtestProfitPercentage.setText(updatedDict['profitPercentage'])
         self.backtestTradesMade.setText(updatedDict['tradesMade'])
         self.backtestCurrentPeriod.setText(updatedDict['currentPeriod'])
-        add_data_to_plot(self, self.interfaceDictionary[BACKTEST]['mainInterface']['graph'], 0, y=net, timestamp=utc)
+
+        if add_data:
+            graphDict = self.interfaceDictionary[BACKTEST]['mainInterface']['graph']
+            add_data_to_plot(self, graphDict, 0, y=net, timestamp=utc)
 
     def update_backtest_configuration_gui(self, statDict: dict):
         """
@@ -296,7 +300,7 @@ class Interface(QMainWindow):
         if self.backtester is not None:
             if 1 <= position <= len(self.backtester.pastActivity):
                 try:
-                    self.update_backtest_gui(self.backtester.pastActivity[position - 1])
+                    self.update_backtest_gui(self.backtester.pastActivity[position - 1], add_data=False)
                 except IndexError as e:
                     self.logger.exception(str(e))
 
