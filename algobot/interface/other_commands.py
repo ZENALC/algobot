@@ -33,6 +33,7 @@ class OtherCommands(QDialog):
 
     def start_date_thread(self):
         self.csvGenerationStatus.setText("Searching for earliest start date..")
+        self.csvGenerationProgressBar.setValue(0)
         self.setDateThread = Worker(self.get_start_date_for_csv)
         self.setDateThread.signals.finished.connect(self.set_start_date_for_csv)
         self.setDateThread.signals.started.connect(lambda: self.generateCSVButton.setEnabled(False))
@@ -82,14 +83,12 @@ class OtherCommands(QDialog):
         self.csvThread = thread
         self.threadPool.start(thread)
 
-    def progress_update(self, progress, message, caller):
+    def progress_update(self, progress, message):
         """
         Updates progress bar and message label with values passed.
-        :param caller: This is not used in this function.
         :param progress: Progress value to set.
         :param message: Message to set in message label.
         """
-        assert caller == -1  # Dummy assertion text to make sure caller is equal to -1.
         self.csvGenerationProgressBar.setValue(progress)
         self.csvGenerationStatus.setText(message)
 

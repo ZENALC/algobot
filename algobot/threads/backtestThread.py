@@ -38,10 +38,10 @@ class BacktestThread(QRunnable):
 
         return {
             'startingBalance': config.backtestStartingBalanceSpinBox.value(),
-            'data': config.data,
+            'data': config.optimizer_backtest_dict[BACKTEST]['data'],
             'startDate': startDate,
             'endDate': endDate,
-            'dataType': config.dataType,
+            'dataType': config.optimizer_backtest_dict[BACKTEST]['dataType'],
             'precision': config.backtestPrecisionSpinBox.value(),
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
             'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),

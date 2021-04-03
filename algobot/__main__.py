@@ -186,7 +186,7 @@ class Interface(QMainWindow):
         """
         Initiates backtest based on settings configured. If there is no data configured, prompts user to configure data.
         """
-        if self.configuration.data is None:
+        if self.configuration.optimizer_backtest_dict[BACKTEST]['data'] is None:
             self.create_popup("No data setup yet for backtesting. Please configure them in settings first.")
             return
 
