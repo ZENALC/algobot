@@ -1130,15 +1130,15 @@ class Configuration(QDialog):
         self.simulationLoadConfigurationButton.clicked.connect(self.load_simulation_settings)
 
         self.backtestCopySettingsButton.clicked.connect(self.copy_settings_to_backtest)
+        self.backtestSaveConfigurationButton.clicked.connect(self.save_backtest_settings)
+        self.backtestLoadConfigurationButton.clicked.connect(self.load_backtest_settings)
         self.backtestImportDataButton.clicked.connect(lambda: self.import_data(BACKTEST))
         self.backtestDownloadDataButton.clicked.connect(lambda: self.download_data(BACKTEST))
         self.backtestStopDownloadButton.clicked.connect(lambda: self.stop_download(BACKTEST))
-        self.backtestSaveConfigurationButton.clicked.connect(self.save_backtest_settings)
-        self.backtestLoadConfigurationButton.clicked.connect(self.load_backtest_settings)
 
-        # self.optimizerDownloadDataButton.clicked.connect()
-        # self.optimizerStopDownloadButton.clicked.connect()
-        # self.optimizerImportDataButton.clicked.connect()
+        self.optimizerImportDataButton.clicked.connect(lambda: self.import_data(OPTIMIZER))
+        self.optimizerDownloadDataButton.clicked.connect(lambda: self.download_data(OPTIMIZER))
+        self.optimizerStopDownloadButton.clicked.connect(lambda: self.stop_download(OPTIMIZER))
 
         self.testCredentialsButton.clicked.connect(self.test_binance_credentials)
         self.saveCredentialsButton.clicked.connect(self.save_credentials)
