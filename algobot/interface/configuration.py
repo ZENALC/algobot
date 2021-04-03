@@ -192,7 +192,7 @@ class Configuration(QDialog):
         if isOptimizer:
             self.lossDict['optimizerTypes'] = []
             for lossType in lossTypes:
-                checkbox = QCheckBox(f'Enable {lossType} type of stop loss??')
+                checkbox = QCheckBox(f'Enable {lossType.lower()} type of stop loss?')
                 innerLayout.addRow(checkbox)
                 self.lossDict['optimizerTypes'].append((lossType, checkbox))
 

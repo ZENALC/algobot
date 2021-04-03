@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1144</width>
+    <width>1480</width>
     <height>840</height>
    </rect>
   </property>
@@ -46,7 +46,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>1107</width>
+         <width>1443</width>
          <height>868</height>
         </rect>
        </property>
@@ -1975,7 +1975,33 @@
              </spacer>
             </item>
             <item row="1" column="0" colspan="5">
-             <widget class="QTableWidget" name="optimizerTableWidget"/>
+             <widget class="QTableWidget" name="optimizerTableWidget">
+              <column>
+               <property name="text">
+                <string>Profit</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Stop Loss</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Take Profit</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Ticker</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Interval</string>
+               </property>
+              </column>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -2113,7 +2139,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1144</width>
+     <width>1480</width>
      <height>21</height>
     </rect>
    </property>
