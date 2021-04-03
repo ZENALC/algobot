@@ -330,7 +330,6 @@ class Interface(QMainWindow):
 
     def check_strategies(self, caller: int) -> float:
         if not self.configuration.get_strategies(caller):
-            qm = QMessageBox
             if caller == BACKTEST:
                 message = "No strategies found. Would you like to backtest a hold?"
             elif caller == SIMULATION:
@@ -340,6 +339,7 @@ class Interface(QMainWindow):
             else:
                 raise ValueError("Invalid type of caller specified.")
 
+            qm = QMessageBox
             ret = qm.question(self, 'Warning', message, qm.Yes | qm.No)
             return ret == qm.Yes
         return True

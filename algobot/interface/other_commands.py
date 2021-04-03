@@ -1,4 +1,5 @@
 import os
+import shutil
 from datetime import datetime, timezone
 
 from PyQt5 import uic
@@ -17,6 +18,7 @@ class OtherCommands(QDialog):
     def __init__(self, parent=None):
         super(OtherCommands, self).__init__(parent)  # Initializing object
         uic.loadUi(otherCommandsUi, self)  # Loading the main UI
+        self.parent = parent
         self.threadPool = QThreadPool()
         self.load_slots()
         self.csvThread = None
@@ -30,6 +32,29 @@ class OtherCommands(QDialog):
         self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
         self.stopButton.clicked.connect(self.stop_csv_generation)
         self.csvGenerationTicker.currentTextChanged.connect(self.start_date_thread)
+
+        # Purge
+        self.purgeLogsButton.clicked.connect(lambda: self.purge('Logs'))
+        self.purgeDatabasesButton.clicked.connect(lambda: self.purge('Databases'))
+        self.purgeBacktestResultsButton.clicked.connect(lambda: self.purge('Backtest Results'))
+        self.purgeConfigurationFilesButton.clicked.connect(lambda: self.purge('Configuration'))
+        self.purgeCredentialsButton.clicked.connect(lambda: self.purge('Credentials'))
+        self.purgeCSVFilesButton.clicked.connect(lambda: self.purge('CSV'))
+
+    def purge(self, directory):
+        path = os.path.join(helpers.ROOT_DIR, directory)
+        if not os.path.exists(path):
+            QMessageBox.about(self, 'Warning', f"No {directory.lower()} files found.")
+            return
+
+        message = f'Are you sure you want to delete your {directory.lower()} files? You might not be able to undo ' \
+                  f'this operation. \n\nThe following path will be deleted: \n{path}'
+        qm = QMessageBox
+        ret = qm.question(self, 'Warning', message, qm.Yes | qm.No)
+
+        if ret == qm.Yes and os.path.exists(path):
+            shutil.rmtree(path)
+            self.infoLabel.setText(f'{directory.capitalize()} files have been successfully deleted.')
 
     def start_date_thread(self):
         self.csvGenerationStatus.setText("Searching for earliest start date..")
