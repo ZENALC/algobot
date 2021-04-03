@@ -52,13 +52,13 @@ def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_c
 
         if parent and parent.get_caller_based_on_tab(tab) == OPTIMIZER:
             groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()} optimization?")
-            dictionary[tab, 'optimizationGroupBox'] = groupBox
             input_creator(tab, groupBoxLayout, isOptimizer=True)
         else:
             groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()}?")
             groupBox.toggled.connect(lambda _, current_tab=tab: signalFunction(tab=current_tab))
-            dictionary[tab, 'groupBox'] = groupBox
             input_creator(tab, groupBoxLayout)
+
+        dictionary[tab, 'groupBox'] = groupBox
 
         scroll = QScrollArea()
         scroll.setWidget(groupBox)

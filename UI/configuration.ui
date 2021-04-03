@@ -1009,7 +1009,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <property name="movable">
               <bool>true</bool>
@@ -1028,7 +1028,7 @@
                   </sizepolicy>
                  </property>
                  <property name="title">
-                  <string>Backtest Main Options</string>
+                  <string>Optimizer Main Options</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_9">
                   <item row="1" column="0">
@@ -1291,7 +1291,7 @@
              </widget>
              <widget class="QWidget" name="optimizerDateTab">
               <attribute name="title">
-               <string>Backtest Period</string>
+               <string>Optimizer Period</string>
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout_3">
                <item>
