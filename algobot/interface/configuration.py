@@ -762,7 +762,7 @@ class Configuration(QDialog):
 
         self.optimizer_backtest_dict[caller]['data'] = data
         self.optimizer_backtest_dict[caller]['dataType'] = symbol
-        self.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Downloaded {symbol} {interval} data successfully.")
+        self.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Downloaded {interval} {symbol} data successfully.")
         self.optimizer_backtest_dict[caller]['dataLabel'].setText(f'Using {interval} {symbol} data to run backtest.')
         self.setup_calendar(caller=caller)
 
