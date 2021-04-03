@@ -70,6 +70,9 @@ class Configuration(QDialog):
             }
         }
 
+        self.lossTypes = ("Trailing", "Stop")
+        self.takeProfitTypes = ('Stop', 'Trailing')
+
         # Telegram
         self.tokenPass = False
         self.chatPass = False
@@ -188,10 +191,10 @@ class Configuration(QDialog):
         :param innerLayout: Inner layout to place input widgets on.
         :param isOptimizer: Boolean for whether optimizer method called this function.
         """
-        lossTypes = ("Trailing", "Stop")
         if isOptimizer:
             self.lossDict['optimizerTypes'] = []
-            for lossType in lossTypes:
+            innerLayout.addRow(QLabel("Loss Types"))
+            for lossType in self.lossTypes:
                 checkbox = QCheckBox(f'Enable {lossType.lower()} type of stop loss?')
                 innerLayout.addRow(checkbox)
                 self.lossDict['optimizerTypes'].append((lossType, checkbox))
@@ -207,7 +210,7 @@ class Configuration(QDialog):
             self.lossDict[tab, "lossPercentage"] = lossPercentage = QDoubleSpinBox()
             self.lossDict[tab, "smartStopLossCounter"] = smartStopLossCounter = QSpinBox()
 
-            lossTypeComboBox.addItems(lossTypes)
+            lossTypeComboBox.addItems(self.lossTypes)
             lossPercentage.setValue(5)
 
             innerLayout.addRow(QLabel("Loss Type"), lossTypeComboBox)
@@ -230,10 +233,10 @@ class Configuration(QDialog):
         :param innerLayout: Inner layout to place input widgets on.
         :param isOptimizer: Boolean for whether optimizer method called this function.
         """
-        takeProfitTypes = ('Stop', 'Trailing')
         if isOptimizer:
             self.takeProfitDict['optimizerTypes'] = []
-            for takeProfitType in takeProfitTypes:
+            innerLayout.addRow(QLabel("Take Profit Types"))
+            for takeProfitType in self.takeProfitTypes:
                 checkbox = QCheckBox(f'Enable {takeProfitType} take profit?')
                 innerLayout.addRow(checkbox)
                 self.takeProfitDict['optimizerTypes'].append((takeProfitType, checkbox))
@@ -246,7 +249,7 @@ class Configuration(QDialog):
             self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
             self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
 
-            takeProfitTypeComboBox.addItems(takeProfitTypes)
+            takeProfitTypeComboBox.addItems(self.takeProfitTypes)
             takeProfitTypeComboBox.currentIndexChanged.connect(lambda: self.update_take_profit_settings(tab))
             takeProfitPercentage.setValue(5)
             takeProfitPercentage.valueChanged.connect(lambda: self.update_take_profit_settings(tab))
