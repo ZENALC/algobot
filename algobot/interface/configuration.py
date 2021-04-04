@@ -9,12 +9,13 @@ from PyQt5 import uic
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QFileDialog, QHBoxLayout, QLabel, QLayout,
-                             QMessageBox, QScrollArea, QSpinBox, QTabWidget,
-                             QVBoxLayout)
+                             QMainWindow, QMessageBox, QScrollArea, QSpinBox,
+                             QTabWidget, QVBoxLayout)
 from telegram.ext import Updater
 
 import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
+from algobot.graph_helpers import create_infinite_line
 from algobot.interface.configuration_helpers import (
     add_strategy_buttons, add_strategy_inputs, create_inner_tab,
     create_strategy_inputs, delete_strategy_inputs, get_input_widget_value,
@@ -28,7 +29,7 @@ configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
 
 class Configuration(QDialog):
-    def __init__(self, parent, logger=None):
+    def __init__(self, parent: QMainWindow, logger=None):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
         self.parent = parent
@@ -106,7 +107,7 @@ class Configuration(QDialog):
         if enable:
             for graphDict in self.parent.graphs:
                 if len(graphDict['plots']) > 0:
-                    self.parent.create_infinite_line(graphDict)
+                    create_infinite_line(gui=self.parent, graphDict=graphDict)
         else:
             for graphDict in self.parent.graphs:
                 hoverLine = graphDict.get('line')
