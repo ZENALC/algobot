@@ -330,6 +330,13 @@ class Trader:
             raise ValueError("Unknown type of exit position type.")
 
     @staticmethod
+    def get_enum_from_str(string):
+        if string.lower() == "trailing":
+            return TRAILING
+        elif string.lower() == 'stop':
+            return STOP
+
+    @staticmethod
     def get_trend_string(trend) -> str:
         """
         Returns current market trend in a string format.
