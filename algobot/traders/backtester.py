@@ -12,7 +12,8 @@ from algobot.algorithms import get_ema, get_sma, get_wma
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT
 from algobot.helpers import (ROOT_DIR, convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
-                             get_ups_and_downs)
+                             get_ups_and_downs, parse_strategy_name)
+from algobot.option import Option
 from algobot.traders.trader import Trader
 from algobot.typing_hints import DATA_TYPE, DICT_TYPE
 
@@ -334,7 +335,15 @@ class Backtester(Trader):
                 self.smartStopLossCounter = settings['stopLossCounter']
 
         for strategy_name, strategy_values in settings['strategies'].items():
-            self.strategies[strategy_name].set_inputs(strategy_values)
+            strategy_name = parse_strategy_name(strategy_name)
+
+            if strategy_name != 'movingAverage':
+                self.strategies[strategy_name].set_inputs(strategy_values.values())
+            else:
+                self.strategies[strategy_name].set_inputs([Option(movingAverage=strategy_values['Moving Average'],
+                                                                  parameter=strategy_values['Parameter'],
+                                                                  initialBound=strategy_values['Initial'],
+                                                                  finalBound=strategy_values['Final'])])
 
     def restore(self):
         self.reset_trades()
@@ -659,7 +668,7 @@ class Backtester(Trader):
 if __name__ == '__main__':
     da = [{'date_utc': '09-09-2020'}, {'date_utc': '09-10-2020'}]
     b = Backtester(1000, data=da, strategyInterval='1d', strategies=[])
-    c = {'lossPercentage': (5, ), 'lossType': ("STOP", "TRAILING"),
+    c = {'lossPercentage': (5,), 'lossType': ("STOP", "TRAILING"),
          'shrek1': [1, 15, 3], 'shrek2': [10, 15, 1], 'shrek3': [15, 20, 1],
          'stoic1': [5, 10, 1], 'stoic2': [10, 15, 2], 'stoic3': [0, 5, 1]}
     y = b.get_all_permutations(c)
