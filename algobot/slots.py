@@ -26,7 +26,7 @@ def create_interface_slots(gui):
     # Other buttons in interface.
     gui.refreshNewsButton.clicked.connect(gui.news_thread)
     gui.configureOptimizerButton.clicked.connect(gui.show_optimizer_settings)
-    gui.runOptimizerButton.clicked.connect(gui.initiate_optimizer)
+    gui.runOptimizerButton.clicked.connect(gui.configuration.get_optimizer_settings)
     gui.stopOptimizerButton.clicked.connect(gui.end_optimizer)
 
 

@@ -1,9 +1,10 @@
+import copy
 import os
 import sys
 import time
 from datetime import datetime, timedelta
 from itertools import product
-from typing import Any, Dict, Union
+from typing import Dict, Union
 
 from dateutil import parser
 
@@ -263,46 +264,54 @@ class Backtester(Trader):
         self.exit_backtest(index)
 
     @staticmethod
-    def get_all_permutations(combos: Dict[str, Any]):
+    def extend_helper(x_tuple, temp_dict, temp_key):
+        start, end, step = x_tuple
+        if start > end:
+            raise ValueError("Your start can't have a bigger value than the end.")
+
+        if step > 0:
+            temp = [x for x in range(start, end + 1, step)]
+            temp_dict[temp_key] = temp
+        else:
+            raise ValueError("Step value cannot be 0.")
+
+    def get_all_permutations(self, combos):
         """
         Returns a list of setting permutations from combos provided.
         :param combos: Combos with ranges for the permutations.
         :return: List of all permutations.
         """
-        for key, value_range in combos.items():
-            if type(value_range) == list:
-                temp = [x for x in range(value_range[0], value_range[1] + 1, value_range[2])]
-                combos[key] = temp
-            elif type(value_range) == tuple:
+        for key, value_range in combos.items():  # This will handle steps -> (5, 10, 1) start = 5, end = 10, step = 1
+            if type(value_range) == tuple and len(value_range) == 3:
+                self.extend_helper(value_range, combos, key)
+            elif key == "strategies":
+                for strategyKey, strategyDict in value_range.items():
+                    for inputKey, step_tuple in strategyDict.items():
+                        if type(step_tuple) == tuple and len(step_tuple) == 3:
+                            self.extend_helper(step_tuple, strategyDict, inputKey)
+            elif type(value_range) == list:
                 continue
             else:
                 raise ValueError("Invalid type of value provided to combos. Make sure to use a list or a tuple.")
 
+        for strategyKey, strategyItems in combos['strategies'].items():  # Create cartesian product of strategies
+            combos['strategies'][strategyKey] = [dict(zip(strategyItems, v)) for v in product(*strategyItems.values())]
+
         permutations = []
+        strategies = combos.pop('strategies')
         for v in product(*combos.values()):
-            strategy_dict = dict(zip(combos, v))
-            return_dict = {'strategies': {}}
-
-            for key, value in strategy_dict.items():
-                stripped = key.rstrip('0123456789')
-                if key != stripped:
-                    if stripped not in return_dict['strategies']:
-                        return_dict['strategies'][stripped] = []
-                    return_dict['strategies'][stripped].append(value)
-                else:
-                    return_dict[key] = value
-
-            permutations.append(return_dict)
+            permutations_dict = dict(zip(combos, v))
+            for z in product(*strategies.values()):
+                permutations_dict['strategies'] = dict(zip(strategies, z))
+                permutations.append(copy.deepcopy(permutations_dict))
         return permutations
 
     def optimizer(self, combos: Dict, thread=None):
         """
         This function will run a brute-force optimization test to figure out the best inputs.
         Sample combos should look something like: {
-            'lossType': (TRAILING,), -> use a tuple for predefined values.
-            'lossPercentage': [5, 15, 3] -> use a list with 3 values for steps i.e. -> 5, 8, 11, 14.
-            (make sure to use ints for above ^)
-            'stopLossCounter': 5 -> use a str, float, or int for a static value
+            'lossTypes': [TRAILING] -> use a list for predefined values.
+            'lossPercentage': (5, 15, 3) -> use a tuple with 3 values for steps i.e. -> 5, 8, 11, 14.
         }
         """
         settings_list = self.get_all_permutations(combos)
@@ -313,9 +322,9 @@ class Backtester(Trader):
             self.restore()
 
     def apply_general_settings(self, settings: dict):
-        self.takeProfitType = settings['takeProfitType']
+        self.takeProfitType = self.get_enum_from_str(settings['takeProfitType'])
         self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
-        self.lossStrategy = settings['lossType']
+        self.lossStrategy = self.get_enum_from_str(settings['lossType'])
         self.lossPercentageDecimal = settings['lossPercentage'] / 100
 
         for strategy_name, strategy_values in settings['strategies'].items():

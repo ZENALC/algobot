@@ -72,7 +72,9 @@ class Configuration(QDialog):
         }
 
         self.lossTypes = ("Trailing", "Stop")
-        self.takeProfitTypes = ('Stop', 'Trailing')
+        self.lossOptimizerTypes = ('lossPercentage', 'stopLossCounter')
+        self.takeProfitTypes = ('Stop',)
+        self.takeProfitOptimizerTypes = ('takeProfitPercentage',)
 
         # Telegram
         self.tokenPass = False
@@ -178,27 +180,56 @@ class Configuration(QDialog):
             parent=self
         )
 
+    @staticmethod
+    def helper_get_optimizer(tab, dictionary: dict, key: str, optimizerTypes: tuple, settings: dict):
+        if dictionary[tab, 'groupBox'].isChecked():
+            settings[key] = []
+            for string, checkBox in dictionary['optimizerTypes']:
+                if checkBox.isChecked():
+                    settings[key].append(string)
+
+            if len(settings[key]) > 0:
+                for opt in optimizerTypes:
+                    start, end, step = (dictionary[opt, 'start'].value(), dictionary[opt, 'end'].value(),
+                                        dictionary[opt, 'step'].value())
+                    settings[opt] = (start, end, step)
+            else:
+                del settings[key]
+
     def get_optimizer_settings(self):
+        tab = self.get_category_tab(OPTIMIZER)
         settings = {}
 
-        lossDict = self.lossDict
-        if lossDict[OPTIMIZER, 'groupBox'].isChecked():
-            start, end, step = [lossDict['optimizerStart'], lossDict['optimizerEnd'], lossDict['optimizerStep']]
-            settings['lossPercentage'] = [start, end, step]
-            settings['lossTypes'] = []
-            for lossString, checkBox in lossDict['optimizerTypes']:
-                if checkBox.isChecked():
-                    settings['lossTypes'].append(lossString)
+        self.helper_get_optimizer(tab, self.lossDict, 'lossType', self.lossOptimizerTypes, settings)
+        self.helper_get_optimizer(tab, self.takeProfitDict, 'takeProfitType', self.takeProfitOptimizerTypes, settings)
 
-        takeProfitDict = self.takeProfitDict
-        if takeProfitDict[OPTIMIZER, 'groupBox'].isChecked():
-            start, end, step = [takeProfitDict['optimizerStart'], takeProfitDict['optimizerEnd'],
-                                takeProfitDict['optimizerStep']]
-            settings['takeProfitPercentage'] = [start, end, step]
-            settings['takeProfitTypes'] = []
-            for takeProfitString, checkBox in takeProfitDict['optimizerTypes']:
-                if checkBox.isChecked():
-                    settings['takeProfitTypes'].append(takeProfitString)
+        settings['strategies'] = {}
+        for strategy in self.strategies.values():
+            temp = strategy()
+            strategyName = temp.name
+            parameters = temp.get_param_types()
+            if self.strategyDict[tab, strategyName].isChecked():
+                current = {}
+                for index, parameter in enumerate(parameters, start=1):
+                    if type(parameter) == tuple and parameter[1] == int or type(parameter) != tuple:
+                        if type(parameter) == type:
+                            key = strategyName.lower() + str(index)
+                        else:
+                            key = parameter[0]
+                        current[key] = (
+                            self.strategyDict[strategyName, index, 'start'].value(),
+                            self.strategyDict[strategyName, index, 'end'].value(),
+                            self.strategyDict[strategyName, index, 'step'].value(),
+                        )
+                    else:
+                        current[parameter[0]] = []
+                        for option in parameter[2]:
+                            if self.strategyDict[strategyName, option].isChecked():
+                                current[parameter[0]].append(option)
+                settings['strategies'][strategyName] = current
+
+        print(settings)
+        # return settings
 
     @staticmethod
     def add_start_end_step_to_layout(layout, msg, start, end, step):
@@ -222,11 +253,10 @@ class Configuration(QDialog):
                 innerLayout.addRow(checkbox)
                 self.lossDict['optimizerTypes'].append((lossType, checkbox))
 
-            optimizerTypes = ('lossPercentage', 'stopLossCounter')
-            for optimizerType in optimizerTypes:
-                self.lossDict['optimizerStart'] = start = QSpinBox()
-                self.lossDict['optimizerEnd'] = end = QSpinBox()
-                self.lossDict['optimizerStep'] = step = QSpinBox()
+            for optimizerType in self.lossOptimizerTypes:
+                self.lossDict[optimizerType, 'start'] = start = self.default_widget(QSpinBox, 1)
+                self.lossDict[optimizerType, 'end'] = end = self.default_widget(QSpinBox, 1)
+                self.lossDict[optimizerType, 'step'] = step = self.default_widget(QSpinBox, 1)
                 self.add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:
             self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
@@ -264,10 +294,11 @@ class Configuration(QDialog):
                 innerLayout.addRow(checkbox)
                 self.takeProfitDict['optimizerTypes'].append((takeProfitType, checkbox))
 
-            self.takeProfitDict['optimizerStart'] = start = QSpinBox()
-            self.takeProfitDict['optimizerEnd'] = end = QSpinBox()
-            self.takeProfitDict['optimizerStep'] = step = QSpinBox()
-            self.add_start_end_step_to_layout(innerLayout, 'takeProfitPercentage', start, end, step)
+            for optimizerType in self.takeProfitOptimizerTypes:
+                self.takeProfitDict[optimizerType, 'start'] = start = self.default_widget(QSpinBox, 1)
+                self.takeProfitDict[optimizerType, 'end'] = end = self.default_widget(QSpinBox, 1)
+                self.takeProfitDict[optimizerType, 'step'] = step = self.default_widget(QSpinBox, 1)
+                self.add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:
             self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
             self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
@@ -413,6 +444,13 @@ class Configuration(QDialog):
 
         return values
 
+    @staticmethod
+    def default_widget(widget, default: Union[int, float], minimum: int = 1):
+        default_widget = widget()
+        default_widget.setValue(default)
+        default_widget.setMinimum(minimum)
+        return default_widget
+
     def load_strategy_slots(self):
         """
         This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
@@ -436,12 +474,12 @@ class Configuration(QDialog):
 
                 if self.get_caller_based_on_tab(tab) == OPTIMIZER:
                     groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f'Enable {strategyName} optimization?')
-                    self.strategyDict[tab, f'{strategyName}Optimization'] = groupBox
+                    self.strategyDict[tab, strategyName] = groupBox
                     for index, parameter in enumerate(parameters, start=1):
                         if type(parameter) == tuple and parameter[1] == int or type(parameter) != tuple:
-                            self.strategyDict[strategyName, index, 'start'] = start = QSpinBox()
-                            self.strategyDict[strategyName, index, 'end'] = end = QSpinBox()
-                            self.strategyDict[strategyName, index, 'step'] = step = QSpinBox()
+                            self.strategyDict[strategyName, index, 'start'] = start = self.default_widget(QSpinBox, 1)
+                            self.strategyDict[strategyName, index, 'end'] = end = self.default_widget(QSpinBox, 1)
+                            self.strategyDict[strategyName, index, 'step'] = step = self.default_widget(QSpinBox, 1)
                             if type(parameter) == tuple:
                                 message = parameter[0]
                             else:
@@ -450,7 +488,8 @@ class Configuration(QDialog):
                         elif type(parameter) == tuple and parameter[1] == tuple:
                             groupBoxLayout.addRow(QLabel(parameter[0]))
                             for option in parameter[2]:
-                                groupBoxLayout.addRow(QCheckBox(option))
+                                self.strategyDict[strategyName, option] = checkBox = QCheckBox(option)
+                                groupBoxLayout.addRow(checkBox)
                         else:
                             raise ValueError("Invalid type of parameter type provided.")
                 else:
