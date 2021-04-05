@@ -229,7 +229,7 @@ class Configuration(QDialog):
                 settings['strategies'][strategyName] = current
 
         print(settings)
-        # return settings
+        return settings
 
     @staticmethod
     def add_start_end_step_to_layout(layout, msg, start, end, step):
@@ -254,8 +254,8 @@ class Configuration(QDialog):
                 self.lossDict['optimizerTypes'].append((lossType, checkbox))
 
             for optimizerType in self.lossOptimizerTypes:
-                self.lossDict[optimizerType, 'start'] = start = self.default_widget(QSpinBox, 1)
-                self.lossDict[optimizerType, 'end'] = end = self.default_widget(QSpinBox, 1)
+                self.lossDict[optimizerType, 'start'] = start = self.default_widget(QSpinBox, 1, 0)
+                self.lossDict[optimizerType, 'end'] = end = self.default_widget(QSpinBox, 1, 0)
                 self.lossDict[optimizerType, 'step'] = step = self.default_widget(QSpinBox, 1)
                 self.add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:
@@ -295,8 +295,8 @@ class Configuration(QDialog):
                 self.takeProfitDict['optimizerTypes'].append((takeProfitType, checkbox))
 
             for optimizerType in self.takeProfitOptimizerTypes:
-                self.takeProfitDict[optimizerType, 'start'] = start = self.default_widget(QSpinBox, 1)
-                self.takeProfitDict[optimizerType, 'end'] = end = self.default_widget(QSpinBox, 1)
+                self.takeProfitDict[optimizerType, 'start'] = start = self.default_widget(QSpinBox, 1, 0)
+                self.takeProfitDict[optimizerType, 'end'] = end = self.default_widget(QSpinBox, 1, 0)
                 self.takeProfitDict[optimizerType, 'step'] = step = self.default_widget(QSpinBox, 1)
                 self.add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:

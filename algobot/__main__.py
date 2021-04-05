@@ -137,9 +137,11 @@ class Interface(QMainWindow):
         self.threadPool.start(tickerThread)
 
     def tickers_thread_error(self, e):
-        self.add_to_live_activity_monitor('Failed to retrieve tickers because of a connectivity issue.')
+        fail = 'Failed to retrieve tickers because of a connectivity issue.'
+        self.add_to_live_activity_monitor(fail)
+        self.configuration.serverResult.setText(fail)
         if 'api.binance.com' in e:
-            self.create_popup('Failed to retrieve tickers because of a connectivity issue.')
+            self.create_popup(fail)
         else:
             self.create_popup(e)
 

@@ -322,10 +322,16 @@ class Backtester(Trader):
             self.restore()
 
     def apply_general_settings(self, settings: dict):
-        self.takeProfitType = self.get_enum_from_str(settings['takeProfitType'])
-        self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
-        self.lossStrategy = self.get_enum_from_str(settings['lossType'])
-        self.lossPercentageDecimal = settings['lossPercentage'] / 100
+        if 'takeProfitType' in settings:
+            self.takeProfitType = self.get_enum_from_str(settings['takeProfitType'])
+            self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
+
+        if 'lossStrategy' in settings:
+            self.lossStrategy = self.get_enum_from_str(settings['lossType'])
+            self.lossPercentageDecimal = settings['lossPercentage'] / 100
+
+            if 'stopLossCounter' in settings:
+                self.smartStopLossCounter = settings['stopLossCounter']
 
         for strategy_name, strategy_values in settings['strategies'].items():
             self.strategies[strategy_name].set_inputs(strategy_values)
