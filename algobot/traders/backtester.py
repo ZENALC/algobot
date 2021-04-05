@@ -327,7 +327,7 @@ class Backtester(Trader):
             self.takeProfitType = self.get_enum_from_str(settings['takeProfitType'])
             self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
 
-        if 'lossStrategy' in settings:
+        if 'lossType' in settings:
             self.lossStrategy = self.get_enum_from_str(settings['lossType'])
             self.lossPercentageDecimal = settings['lossPercentage'] / 100
 
@@ -336,9 +336,8 @@ class Backtester(Trader):
 
         for strategy_name, strategy_values in settings['strategies'].items():
             strategy_name = parse_strategy_name(strategy_name)
-
             if strategy_name != 'movingAverage':
-                self.strategies[strategy_name].set_inputs(strategy_values.values())
+                self.strategies[strategy_name].set_inputs(list(strategy_values.values()))
             else:
                 self.strategies[strategy_name].set_inputs([Option(movingAverage=strategy_values['Moving Average'],
                                                                   parameter=strategy_values['Parameter'],
@@ -551,15 +550,19 @@ class Backtester(Trader):
             sys.stdout = stdout
 
         print("Backtest configuration:")
-        print(f"\tSmart Stop Loss Counter: {self.smartStopLossInitialCounter}")
         print(f'\tInterval: {self.interval}')
         print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")
-        print(f'\tTake Profit Percentage: {round(self.takeProfitPercentageDecimal * 100, 2)}%')
-        print(f'\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%')
-        print(f'\tLoss Strategy: {self.get_stop_loss_strategy_string()}')
-        print(self.get_strategies_info_string())
 
+        if self.takeProfitType is not None:
+            print(f'\tTake Profit Percentage: {round(self.takeProfitPercentageDecimal * 100, 2)}%')
+
+        if self.lossStrategy is not None:
+            print(f'\tStop Loss Strategy: {self.get_stop_loss_strategy_string()}')
+            print(f'\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%')
+            print(f"\tSmart Stop Loss Counter: {self.smartStopLossInitialCounter}")
+
+        print(self.get_strategies_info_string())
         sys.stdout = previous_stdout  # revert stdout back to normal
 
     def print_backtest_results(self, stdout=None):
@@ -666,11 +669,31 @@ class Backtester(Trader):
 
 
 if __name__ == '__main__':
-    da = [{'date_utc': '09-09-2020'}, {'date_utc': '09-10-2020'}]
-    b = Backtester(1000, data=da, strategyInterval='1d', strategies=[])
-    c = {'lossPercentage': (5,), 'lossType': ("STOP", "TRAILING"),
-         'shrek1': [1, 15, 3], 'shrek2': [10, 15, 1], 'shrek3': [15, 20, 1],
-         'stoic1': [5, 10, 1], 'stoic2': [10, 15, 2], 'stoic3': [0, 5, 1]}
-    y = b.get_all_permutations(c)
-    for _ in y:
-        print(_)
+    pass
+    # from algobot.strategies.stoic import StoicStrategy
+    # from algobot.strategies.movingAverage import MovingAverageStrategy
+    #
+    # da = [{'date_utc': '09-09-2020'}, {'date_utc': '09-10-2020'}]
+    # strategies = [
+    #     (StoicStrategy, [14, 15, 16], 'stoic'),
+    #     (MovingAverageStrategy, ['sma', 'high', 1, 1], 'Moving Average')
+    # ]
+    # b = Backtester(1000, data=da, strategyInterval='1d', strategies=strategies)
+    # c = {'lossPercentage': (1, 5, 1), 'lossType': ["STOP", "TRAILING"],
+    #      'strategies': {
+    #          'Stoic': {
+    #              'stoic1': (5, 5, 1), 'stoic2': (10, 10, 2), 'stoic3': (0, 1, 1)
+    #          },
+    #          'Moving Average': {
+    #              'Moving Average': ['SMA', 'WMA'],
+    #              'Parameter': ['High'],
+    #              'Initial': (1, 3, 1),
+    #              'Final': (1, 4, 1)},
+    #      }
+    #      }
+    # y = b.get_all_permutations(c)
+    # for _ in y:
+    #     print()
+    #     print(_)
+    #     b.apply_general_settings(_)
+    #     b.print_configuration_parameters()
