@@ -72,6 +72,7 @@ class Interface(QMainWindow):
         self.advancedLogging = False
         self.runningLive = False
         self.simulationRunningLive = False
+        self.optimizer: Union[Backtester, None] = None
         self.backtester: Union[Backtester, None] = None
         self.trader: Union[RealTrader, None] = None
         self.simulationTrader: Union[SimulationTrader, None] = None
@@ -832,14 +833,6 @@ class Interface(QMainWindow):
             mainDict['enableCustomStopLossButton'].setEnabled(True)
             mainDict['disableCustomStopLossButton'].setEnabled(False)
             self.add_to_monitor(caller, 'Removed custom stop loss.')
-
-    def get_loss_settings(self, caller) -> dict:
-        """
-        Returns loss settings for caller specified.
-        :param caller: Caller for which loss settings will be returned.
-        :return: Tuple with stop loss type and loss percentage.
-        """
-        return self.configuration.get_loss_settings(caller)
 
     @staticmethod
     def get_option_info(option: Option, trader: SimulationTrader) -> tuple:
