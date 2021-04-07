@@ -257,6 +257,8 @@ class Interface(QMainWindow):
         thread = self.threads[BACKTEST]
         if thread:
             thread.stop()
+        else:
+            self.create_popup("There is no optimizer running.")
 
     def end_backtest(self):
         """
