@@ -7,15 +7,17 @@ from algobot.traders.backtester import Backtester
 
 
 class OptimizerSignals(QObject):
-    activity = pyqtSignal(str)
-    error = pyqtSignal(int, str)
+    activity = pyqtSignal(tuple)
+    error = pyqtSignal(str)
     restore = pyqtSignal()
+    started = pyqtSignal()
 
 
 class OptimizerThread(QRunnable):
-    def __init__(self, gui, logger):
+    def __init__(self, gui, logger, combos):
         super(OptimizerThread, self).__init__()
         self.signals = OptimizerSignals()
+        self.combos = combos
         self.gui = gui
         self.logger = logger
         self.running = True
@@ -60,8 +62,7 @@ class OptimizerThread(QRunnable):
 
     def run_optimizer(self):
         optimizer = self.gui.optimizer
-        combos = self.gui.configuration.get_optimizer_settings()
-        optimizer.optimize(combos=combos, thread=self)
+        optimizer.optimize(combos=self.combos, thread=self)
 
     @pyqtSlot()
     def run(self):
@@ -70,6 +71,6 @@ class OptimizerThread(QRunnable):
             self.run_optimizer()
         except Exception as e:
             self.logger.exception(repr(e))
-            self.signals.error.emit(OPTIMIZER, str(e))
+            self.signals.error.emit(str(e))
         finally:
             self.signals.restore.emit()
