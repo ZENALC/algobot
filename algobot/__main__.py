@@ -210,6 +210,7 @@ class Interface(QMainWindow):
         combos = self.configuration.get_optimizer_settings()
         if not self.check_combos(combos['strategies']):
             self.create_popup("Please configure your strategies correctly.")
+            return
 
         self.threads[OPTIMIZER] = optimizerThread.OptimizerThread(gui=self, logger=self.logger, combos=combos)
 
