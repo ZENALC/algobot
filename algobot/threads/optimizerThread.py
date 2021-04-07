@@ -63,6 +63,7 @@ class OptimizerThread(QRunnable):
     def run_optimizer(self):
         optimizer = self.gui.optimizer
         optimizer.optimize(combos=self.combos, thread=self)
+        self.running = False
 
     @pyqtSlot()
     def run(self):

@@ -368,7 +368,7 @@ class Backtester(Trader):
             self.strategyInterval,
             len(self.trades),
             f'{run}/{totalRuns}',
-            self.get_strategies_info_string(right=' ')
+            self.get_strategies_info_string(left=' ', right=' ')
         )
 
     def apply_general_settings(self, settings: dict):

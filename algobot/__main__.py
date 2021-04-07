@@ -223,7 +223,12 @@ class Interface(QMainWindow):
     def end_optimizer(self):
         thread = self.threads[OPTIMIZER]
         if thread:
-            thread.stop()
+            if thread.running:
+                thread.stop()
+            else:
+                self.create_popup("There is no optimizer running.")
+        else:
+            self.create_popup("There is no optimizer running.")
 
     def initiate_backtest(self):
         """
@@ -256,9 +261,12 @@ class Interface(QMainWindow):
         """
         thread = self.threads[BACKTEST]
         if thread:
-            thread.stop()
+            if thread.running:
+                thread.stop()
+            else:
+                self.create_popup("There is no backtest running.")
         else:
-            self.create_popup("There is no optimizer running.")
+            self.create_popup("There is no backtest running.")
 
     def end_backtest(self):
         """
