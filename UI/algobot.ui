@@ -2028,12 +2028,12 @@
               </column>
               <column>
                <property name="text">
-                <string>Strategy</string>
+                <string>Run</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>Run</string>
+                <string>Strategy</string>
                </property>
               </column>
              </widget>
