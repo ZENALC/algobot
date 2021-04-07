@@ -270,7 +270,13 @@ class Backtester(Trader):
                 if len(strategyData) + 1 >= self.minPeriod:
                     strategyData.append(self.currentPeriod)
                     for strategy in self.strategies.values():
-                        strategy.get_trend(strategyData)
+                        try:
+                            strategy.get_trend(strategyData)
+                        except Exception as e:
+                            if thread and thread.caller == OPTIMIZER:
+                                return  # We don't want optimizer to stop.
+                            else:
+                                raise e
                     strategyData.pop()
 
             if seenData is not strategyData and self.currentPeriod['date_utc'] >= nextInsertion:
