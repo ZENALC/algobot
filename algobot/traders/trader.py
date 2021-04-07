@@ -274,14 +274,15 @@ class Trader:
         else:
             return f"{', '.join(map(str, self.strategies[strategy_name].get_params()))}"
 
-    def get_strategies_info_string(self, left: str = ''):
+    def get_strategies_info_string(self, left: str = '', right: str = '\n'):
         """
         Returns a formatted string with strategies information.
         :param left: Character to add before each new line in strategies information.
+        :param right: Character to add after each new line in strategies information.
         """
-        string = '\nStrategies:\n'
+        string = f'Strategies:{right}'
         for strategyName, strategy in self.strategies.items():
-            string += f'{left}\t{get_label_string(strategyName)}: {self.get_strategy_inputs(strategyName)}\n'
+            string += f'{left}\t{get_label_string(strategyName)}: {self.get_strategy_inputs(strategyName)}{right}'
 
         return string.rstrip()  # Remove new line in the very end.
 
