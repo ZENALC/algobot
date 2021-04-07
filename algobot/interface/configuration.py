@@ -227,8 +227,6 @@ class Configuration(QDialog):
                             if self.strategyDict[strategyName, option].isChecked():
                                 current[parameter[0]].append(option)
                 settings['strategies'][strategyName] = current
-
-        print(settings)
         return settings
 
     @staticmethod
