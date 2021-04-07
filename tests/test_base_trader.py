@@ -223,7 +223,7 @@ class TestBaseTrader(unittest.TestCase):
 
         dummy_strategy.get_params = temp
         dummy_strategy2.get_params = temp2
-        expected_string = '\nStrategies:\n\tDummy: 3, 4, 5\n\tDummy2: 5, 6, 7, 8, 9, 10'
+        expected_string = 'Strategies:\n\tDummy: 3, 4, 5\n\tDummy2: 5, 6, 7, 8, 9, 10'
 
         self.trader.strategies = {'dummy': dummy_strategy, 'dummy2': dummy_strategy2}
         self.assertEqual(self.trader.get_strategies_info_string(), expected_string)
