@@ -209,7 +209,7 @@ class BotThread(QRunnable):
         Retrieves moving average options and loss settings based on caller.
         :param caller: Caller that dictates which parameters get set.
         """
-        lossDict = self.gui.get_loss_settings(caller)
+        lossDict = self.gui.configuration.get_loss_settings(caller)
         takeProfitDict = self.gui.configuration.get_take_profit_settings(caller)
 
         trader: SimulationTrader = self.gui.get_trader(caller)

@@ -119,7 +119,7 @@ class BacktestThread(QRunnable):
                                          strategies=configDetails['strategies'],
                                          strategyInterval=configDetails['strategyInterval'])
         self.gui.backtester.apply_take_profit_settings(self.gui.configuration.get_take_profit_settings(BACKTEST))
-        self.gui.backtester.apply_loss_settings(self.gui.get_loss_settings(BACKTEST))
+        self.gui.backtester.apply_loss_settings(self.gui.configuration.get_loss_settings(BACKTEST))
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
 
     def stop(self):
