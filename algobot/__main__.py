@@ -59,7 +59,7 @@ class Interface(QMainWindow):
         self.about = About(self)  # Loading about information
         self.statistics = Statistics(self)  # Loading statistics
         self.threadPool = QThreadPool(self)  # Initiating threading pool
-        self.threads: Dict[int, QRunnable or None] = {BACKTEST: None, SIMULATION: None, LIVE: None}
+        self.threads: Dict[int, QRunnable or None] = {BACKTEST: None, SIMULATION: None, LIVE: None, OPTIMIZER: None}
         self.graphs = (
             {'graph': self.simulationGraph, 'plots': [], 'label': self.simulationCoordinates, 'enable': True},
             {'graph': self.backtestGraph, 'plots': [], 'label': self.backtestCoordinates, 'enable': True},
@@ -213,7 +213,6 @@ class Interface(QMainWindow):
             return
 
         self.threads[OPTIMIZER] = optimizerThread.OptimizerThread(gui=self, logger=self.logger, combos=combos)
-
         worker = self.threads[OPTIMIZER]
         worker.signals.started.connect(lambda: clear_table(self.optimizerTableWidget))
         worker.signals.error.connect(self.create_popup)
@@ -222,7 +221,9 @@ class Interface(QMainWindow):
         self.threadPool.start(worker)
 
     def end_optimizer(self):
-        self.create_popup("Not implemented.")
+        thread = self.threads[OPTIMIZER]
+        if thread:
+            thread.stop()
 
     def initiate_backtest(self):
         """

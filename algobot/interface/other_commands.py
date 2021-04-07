@@ -56,6 +56,9 @@ class OtherCommands(QDialog):
             shutil.rmtree(path)
             self.infoLabel.setText(f'{directory.capitalize()} files have been successfully deleted.')
 
+            if directory == 'Logs':
+                self.parent.logger = helpers.get_logger(logFile='algobot', loggerName='algobot')
+
     def start_date_thread(self):
         self.csvGenerationStatus.setText("Searching for earliest start date..")
         self.csvGenerationProgressBar.setValue(0)
