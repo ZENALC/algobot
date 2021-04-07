@@ -14,17 +14,18 @@ from PyQt5.QtWidgets import (QApplication, QFileDialog, QMainWindow,
 import algobot.assets
 from algobot.algodict import get_interface_dictionary
 from algobot.data import Data
-from algobot.enums import (AVG_GRAPH, BACKTEST, LIVE, LONG, NET_GRAPH, SHORT,
-                           SIMULATION)
+from algobot.enums import (AVG_GRAPH, BACKTEST, LIVE, LONG, NET_GRAPH,
+                           OPTIMIZER, SHORT, SIMULATION)
 from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
                                    get_graph_dictionary,
                                    set_backtest_graph_limits_and_empty_plots,
                                    setup_graph_plots, setup_graphs,
                                    update_backtest_graph_limits,
                                    update_main_graphs)
-from algobot.helpers import (ROOT_DIR, add_to_table, create_folder,
-                             create_folder_if_needed, get_caller_string,
-                             get_logger, open_file_or_folder)
+from algobot.helpers import (ROOT_DIR, add_to_table, clear_table,
+                             create_folder, create_folder_if_needed,
+                             get_caller_string, get_logger,
+                             open_file_or_folder)
 from algobot.interface.about import About
 from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
@@ -32,7 +33,8 @@ from algobot.interface.statistics import Statistics
 from algobot.news_scraper import scrape_news
 from algobot.option import Option
 from algobot.slots import initiate_slots
-from algobot.threads import backtestThread, botThread, listThread, workerThread
+from algobot.threads import (backtestThread, botThread, listThread,
+                             optimizerThread, workerThread)
 from algobot.traders.backtester import Backtester
 from algobot.traders.realtrader import RealTrader
 from algobot.traders.simulationtrader import SimulationTrader
@@ -185,8 +187,38 @@ class Interface(QMainWindow):
         self.newsTextBrowser.moveCursor(QTextCursor.Start)
         self.newsStatusLabel.setText(f'Retrieved news successfully. (Updated: {now.strftime("%m/%d/%Y, %H:%M:%S")})')
 
+    def check_combos(self, combos: dict) -> bool:
+        if not combos:
+            return False
+        elif type(combos) != dict:
+            return True
+
+        for key, value in combos.items():
+            if not self.check_combos(value):
+                return False
+        return True
+
     def initiate_optimizer(self):
-        self.create_popup("Not implemented.")
+        if self.configuration.optimizer_backtest_dict[OPTIMIZER]['data'] is None:
+            self.create_popup("No data setup yet for optimizer. Please configure them in settings first.")
+            return
+
+        if self.configuration.get_optimizer_settings()['strategies'] == {}:
+            self.create_popup("No strategies found. Make sure you have some strategies for optimization.")
+            return
+
+        combos = self.configuration.get_optimizer_settings()
+        if not self.check_combos(combos['strategies']):
+            self.create_popup("Please configure your strategies correctly.")
+
+        self.threads[OPTIMIZER] = optimizerThread.OptimizerThread(gui=self, logger=self.logger, combos=combos)
+
+        worker = self.threads[OPTIMIZER]
+        worker.signals.started.connect(lambda: clear_table(self.optimizerTableWidget))
+        worker.signals.error.connect(self.create_popup)
+        worker.signals.activity.connect(lambda data: add_to_table(self.optimizerTableWidget, data=data,
+                                                                  insertDate=False))
+        self.threadPool.start(worker)
 
     def end_optimizer(self):
         self.create_popup("Not implemented.")

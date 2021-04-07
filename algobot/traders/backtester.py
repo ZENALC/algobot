@@ -9,11 +9,13 @@ from typing import Dict, Union
 from dateutil import parser
 
 from algobot.algorithms import get_ema, get_sma, get_wma
-from algobot.enums import BEARISH, BULLISH, LONG, SHORT
+from algobot.enums import BACKTEST, BEARISH, BULLISH, LONG, OPTIMIZER, SHORT
 from algobot.helpers import (ROOT_DIR, convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
                              get_ups_and_downs, parse_strategy_name)
+from algobot.interface.configuration_helpers import get_strategies_dictionary
 from algobot.option import Option
+from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 from algobot.typing_hints import DATA_TYPE, DICT_TYPE
 
@@ -44,6 +46,7 @@ class Backtester(Trader):
         if len(strategyInterval.split()) == 1:
             strategyInterval = convert_small_interval(strategyInterval)
 
+        self.allStrategies = get_strategies_dictionary(Strategy.__subclasses__())
         self.strategyInterval = self.interval if strategyInterval is None else strategyInterval
         self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
         self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
@@ -64,8 +67,10 @@ class Backtester(Trader):
         :param data: Data to get total interval data from.
         :return: Dictionary of interval data of gap minutes.
         """
-        if check and len(data) != self.strategyIntervalMinutes:
-            raise AssertionError(f"Expected {self.strategyIntervalMinutes} data length. Received {len(data)} data.")
+        if check:
+            expected_length = self.strategyIntervalMinutes / self.intervalMinutes
+            if expected_length != len(data):
+                raise AssertionError(f"Expected {expected_length} data length. Received {len(data)} data.")
 
         return {
             'date_utc': data[0]['date_utc'],
@@ -172,7 +177,7 @@ class Backtester(Trader):
         if divisor < 1:
             divisor = 1
 
-        if thread:
+        if thread and thread.caller == BACKTEST:
             thread.signals.updateGraphLimits.emit(testLength // divisor + 1)
 
         self.startingTime = time.time()
@@ -206,7 +211,10 @@ class Backtester(Trader):
         """
         for index in range(self.startDateIndex, self.endDateIndex, divisor):
             if thread and not thread.running:
-                raise RuntimeError("Backtest was canceled.")
+                if thread.caller == BACKTEST:
+                    raise RuntimeError("Backtest was canceled.")
+                elif thread.caller == OPTIMIZER:
+                    raise RuntimeError("Optimizer was canceled.")
 
             self.currentPeriod = self.data[index]
             self.currentPrice = self.currentPeriod['open']
@@ -214,7 +222,8 @@ class Backtester(Trader):
             if self.currentPosition != LONG:
                 self.buy_long("Entered long to simulate a hold.")
 
-            thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
+            if thread and thread.caller == BACKTEST:
+                thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
 
         self.exit_backtest()
 
@@ -232,21 +241,31 @@ class Backtester(Trader):
 
         for index in range(self.startDateIndex, self.endDateIndex + 1):
             if thread and not thread.running:
-                raise RuntimeError("Backtest was canceled.")
+                if thread.caller == BACKTEST:
+                    raise RuntimeError("Backtest was canceled.")
+                elif thread.caller == OPTIMIZER:
+                    raise RuntimeError("Optimizer was canceled.")
 
             self.set_indexed_current_price_and_period(index)
             seenData.append(self.currentPeriod)
 
             self.main_logic()
             if self.get_net() < 0.5:
-                thread.signals.updateGraphLimits.emit(index // divisor + 1)
-                thread.signals.message.emit("Backtester ran out of money. Try changing your strategy or date interval.")
+                if thread and thread.caller == BACKTEST:
+                    thread.signals.updateGraphLimits.emit(index // divisor + 1)
+                    thread.signals.message.emit("Backtester ran out of money. Change your strategy or date interval.")
                 break
 
             if strategyData is seenData:
                 if len(strategyData) >= self.minPeriod:
                     for strategy in self.strategies.values():
-                        strategy.get_trend(strategyData)
+                        try:
+                            strategy.get_trend(strategyData)
+                        except Exception as e:
+                            if thread and thread.caller == OPTIMIZER:
+                                return  # We don't want optimizer to stop.
+                            else:
+                                raise e
             else:
                 if len(strategyData) + 1 >= self.minPeriod:
                     strategyData.append(self.currentPeriod)
@@ -259,7 +278,7 @@ class Backtester(Trader):
                 gapData = self.get_gap_data(seenData[-self.intervalGapMultiplier - 1: -1])
                 strategyData.append(gapData)
 
-            if thread and index % divisor == 0:
+            if thread and thread.caller == BACKTEST and index % divisor == 0:
                 thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
 
         self.exit_backtest(index)
@@ -307,7 +326,7 @@ class Backtester(Trader):
                 permutations.append(copy.deepcopy(permutations_dict))
         return permutations
 
-    def optimizer(self, combos: Dict, thread=None):
+    def optimize(self, combos: Dict, thread=None):
         """
         This function will run a brute-force optimization test to figure out the best inputs.
         Sample combos should look something like: {
@@ -316,11 +335,35 @@ class Backtester(Trader):
         }
         """
         settings_list = self.get_all_permutations(combos)
+        if thread:
+            thread.signals.started.emit()
 
-        for settings in settings_list:
+        for index, settings in enumerate(settings_list, start=1):
+            if thread and not thread.running:
+                break
+
             self.apply_general_settings(settings)
             self.start_backtest(thread)
+
+            if thread:
+                thread.signals.activity.emit(self.get_basic_optimize_info(index, len(settings_list)))
+
             self.restore()
+
+    def get_basic_optimize_info(self, run, totalRuns):
+        return (
+            str(round(self.get_net() / self.startingBalance * 100 - 100, 2)) + '%',
+            self.get_stop_loss_strategy_string(),
+            self.get_safe_rounded_string(self.lossPercentageDecimal, multiplier=100, symbol='%'),
+            self.get_trailing_or_stop_type_string(self.takeProfitType),
+            self.get_safe_rounded_string(self.takeProfitPercentageDecimal, multiplier=100, symbol='%'),
+            self.symbol,
+            self.interval,
+            self.strategyInterval,
+            len(self.trades),
+            f'{run}/{totalRuns}',
+            self.get_strategies_info_string(right=' ')
+        )
 
     def apply_general_settings(self, settings: dict):
         if 'takeProfitType' in settings:
@@ -335,7 +378,21 @@ class Backtester(Trader):
                 self.smartStopLossCounter = settings['stopLossCounter']
 
         for strategy_name, strategy_values in settings['strategies'].items():
+            pretty_strategy_name = strategy_name
             strategy_name = parse_strategy_name(strategy_name)
+
+            if strategy_name not in self.strategies:
+                if type(strategy_values) == dict:
+                    strategy_values = list(strategy_values.values())
+
+                temp_strategy_tuple = (
+                    self.allStrategies[pretty_strategy_name],
+                    strategy_values,
+                    pretty_strategy_name
+                )
+                self.setup_strategies([temp_strategy_tuple])
+                continue
+
             if strategy_name != 'movingAverage':
                 self.strategies[strategy_name].set_inputs(list(strategy_values.values()))
             else:
@@ -666,34 +723,3 @@ class Backtester(Trader):
 
         os.chdir(currentPath)
         return filePath
-
-
-if __name__ == '__main__':
-    pass
-    # from algobot.strategies.stoic import StoicStrategy
-    # from algobot.strategies.movingAverage import MovingAverageStrategy
-    #
-    # da = [{'date_utc': '09-09-2020'}, {'date_utc': '09-10-2020'}]
-    # strategies = [
-    #     (StoicStrategy, [14, 15, 16], 'stoic'),
-    #     (MovingAverageStrategy, ['sma', 'high', 1, 1], 'Moving Average')
-    # ]
-    # b = Backtester(1000, data=da, strategyInterval='1d', strategies=strategies)
-    # c = {'lossPercentage': (1, 5, 1), 'lossType': ["STOP", "TRAILING"],
-    #      'strategies': {
-    #          'Stoic': {
-    #              'stoic1': (5, 5, 1), 'stoic2': (10, 10, 2), 'stoic3': (0, 1, 1)
-    #          },
-    #          'Moving Average': {
-    #              'Moving Average': ['SMA', 'WMA'],
-    #              'Parameter': ['High'],
-    #              'Initial': (1, 3, 1),
-    #              'Final': (1, 4, 1)},
-    #      }
-    #      }
-    # y = b.get_all_permutations(c)
-    # for _ in y:
-    #     print()
-    #     print(_)
-    #     b.apply_general_settings(_)
-    #     b.print_configuration_parameters()
