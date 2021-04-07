@@ -27,6 +27,7 @@ class BacktestThread(QRunnable):
         self.gui = gui
         self.logger = logger
         self.running = True
+        self.caller = BACKTEST
 
     def get_configuration_details_to_setup_backtest(self) -> Dict[str, Any]:
         """
