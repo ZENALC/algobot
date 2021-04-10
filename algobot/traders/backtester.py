@@ -357,12 +357,24 @@ class Backtester(Trader):
                 break
 
             self.apply_general_settings(settings)
-            self.start_backtest(thread)
+            if not self.has_moving_average_redundancy():
+                self.start_backtest(thread)
 
             if thread:
                 thread.signals.activity.emit(self.get_basic_optimize_info(index, len(settings_list)))
 
             self.restore()
+
+    def has_moving_average_redundancy(self):
+        """
+        Simple check to see if a moving average strategy needs to be run or not. If the initial bound is greater than
+        or equal to the final bound, then it should be skipped.
+        """
+        if 'movingAverage' in self.strategies:
+            for option in self.strategies['movingAverage'].get_params():
+                if option.initialBound >= option.finalBound:
+                    return True
+        return False
 
     def get_basic_optimize_info(self, run, totalRuns) -> tuple:
         """
