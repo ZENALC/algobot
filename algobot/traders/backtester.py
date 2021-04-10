@@ -367,7 +367,7 @@ class Backtester(Trader):
         Return basic information in a tuple for emitting to the trades table in the GUI.
         """
         return (
-            str(round(self.get_net() / self.startingBalance * 100 - 100, 2)) + '%',
+            round(self.get_net() / self.startingBalance * 100 - 100, 2),
             self.get_stop_loss_strategy_string(),
             self.get_safe_rounded_string(self.lossPercentageDecimal, multiplier=100, symbol='%'),
             self.get_trailing_or_stop_type_string(self.takeProfitType),

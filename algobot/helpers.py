@@ -8,6 +8,7 @@ import time
 from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
+from PyQt5.QtCore import Qt
 from dateutil import parser
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem
 
@@ -37,7 +38,13 @@ def add_to_table(table: QTableWidget, data: list, insertDate=True):
 
     table.insertRow(rowPosition)
     for column in range(0, columns):
-        table.setItem(rowPosition, column, QTableWidgetItem(str(data[column])))
+        value = data[column]
+        if type(value) not in (int, float):
+            item = QTableWidgetItem(str(value))
+        else:
+            item = QTableWidgetItem()
+            item.setData(Qt.DisplayRole, value)
+        table.setItem(rowPosition, column, item)
 
 
 def clear_table(table: QTableWidget):

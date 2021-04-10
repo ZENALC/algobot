@@ -2002,7 +2002,7 @@
               </attribute>
               <column>
                <property name="text">
-                <string>Profit</string>
+                <string>Profit Percentage</string>
                </property>
               </column>
               <column>
