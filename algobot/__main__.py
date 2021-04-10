@@ -201,6 +201,9 @@ class Interface(QMainWindow):
                 return False
         return True
 
+    def export_optimizer(self):
+        pass
+
     def initiate_optimizer(self):
         """
         Main function to begin optimization.
@@ -1072,6 +1075,9 @@ class Interface(QMainWindow):
         self.configuration.backtestConfigurationTabWidget.setCurrentIndex(0)
 
     def show_optimizer_settings(self):
+        """
+        Open configuration settings for optimizer.
+        """
         self.configuration.show()
         self.configuration.configurationTabWidget.setCurrentIndex(2)
         self.configuration.optimizerConfigurationTabWidget.setCurrentIndex(0)

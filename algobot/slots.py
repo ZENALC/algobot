@@ -22,12 +22,10 @@ def create_interface_slots(gui):
     create_bot_slots(gui)
     create_simulation_slots(gui)
     create_backtest_slots(gui)
+    create_optimizer_slots(gui)
 
     # Other buttons in interface.
     gui.refreshNewsButton.clicked.connect(gui.news_thread)
-    gui.configureOptimizerButton.clicked.connect(gui.show_optimizer_settings)
-    gui.runOptimizerButton.clicked.connect(gui.initiate_optimizer)
-    gui.stopOptimizerButton.clicked.connect(gui.end_optimizer)
 
 
 def create_configuration_slots(app, gui):
@@ -124,3 +122,13 @@ def create_backtest_slots(gui):
     gui.clearBacktestTableButton.clicked.connect(lambda: clear_table(gui.backtestTable))
     gui.viewBacktestsButton.clicked.connect(lambda: open_folder("Backtest Results"))
     gui.backtestResetCursorButton.clicked.connect(gui.reset_backtest_cursor)
+
+
+def create_optimizer_slots(gui):
+    """
+    Creates optimizer slots.
+    """
+    gui.configureOptimizerButton.clicked.connect(gui.show_optimizer_settings)
+    gui.runOptimizerButton.clicked.connect(gui.initiate_optimizer)
+    gui.stopOptimizerButton.clicked.connect(gui.end_optimizer)
+    gui.exportOptimizerButton.clicked.connect(gui.export_optimizer)

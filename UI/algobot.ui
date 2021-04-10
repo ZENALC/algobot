@@ -1935,6 +1935,19 @@
               </property>
              </widget>
             </item>
+            <item row="0" column="4">
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>746</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
             <item row="0" column="1">
              <widget class="QPushButton" name="runOptimizerButton">
               <property name="sizePolicy">
@@ -1947,19 +1960,6 @@
                <string>Run</string>
               </property>
              </widget>
-            </item>
-            <item row="0" column="3">
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>746</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
             </item>
             <item row="0" column="2">
              <widget class="QPushButton" name="stopOptimizerButton">
@@ -1974,7 +1974,7 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="0" colspan="5">
+            <item row="1" column="0" colspan="6">
              <widget class="QTableWidget" name="optimizerTableWidget">
               <property name="horizontalScrollBarPolicy">
                <enum>Qt::ScrollBarAlwaysOn</enum>
@@ -2055,6 +2055,13 @@
                 <string>Strategy</string>
                </property>
               </column>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QPushButton" name="exportOptimizerButton">
+              <property name="text">
+               <string>Export</string>
+              </property>
              </widget>
             </item>
            </layout>
