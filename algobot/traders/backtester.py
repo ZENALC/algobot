@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 from itertools import product
 from typing import Dict, Union
 
-from dateutil import parser
 import pandas as pd
+from dateutil import parser
 
 from algobot.algorithms import get_ema, get_sma, get_wma
 from algobot.enums import BACKTEST, BEARISH, BULLISH, LONG, OPTIMIZER, SHORT
