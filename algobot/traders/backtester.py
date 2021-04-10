@@ -389,7 +389,7 @@ class Backtester(Trader):
         Exports optimizer rows to file path provided using Pandas.
         """
         headers = ['Profit Percentage', 'Stop Loss Strategy', 'Stop Loss Percentage', 'Take Profit Strategy',
-                   'Ticker', 'Interval', 'Strategy Interval', 'Trades', 'Run', 'Strategy']
+                   'Take Profit Percentage', 'Ticker', 'Interval', 'Strategy Interval', 'Trades', 'Run', 'Strategy']
         df = pd.DataFrame(self.optimizerRows)
         df.columns = headers
         df.set_index('Run', inplace=True)
