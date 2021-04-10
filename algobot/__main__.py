@@ -202,7 +202,17 @@ class Interface(QMainWindow):
         return True
 
     def export_optimizer(self):
-        pass
+        """
+        Export table rows to CSV file.
+        """
+        if self.optimizer:
+            if len(self.optimizer.optimizerRows) > 0:
+                filePath, _ = QFileDialog.getSaveFileName(self, 'Save Credentials', ROOT_DIR, 'CSV (*.csv)')
+                self.optimizer.export_optimizer_rows(filePath)
+            else:
+                self.create_popup("No table rows found.")
+        else:
+            self.create_popup('No table rows found because optimizer has not been run yet.')
 
     def initiate_optimizer(self):
         """
