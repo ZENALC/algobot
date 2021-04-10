@@ -182,6 +182,9 @@ class Configuration(QDialog):
 
     @staticmethod
     def helper_get_optimizer(tab, dictionary: dict, key: str, optimizerTypes: tuple, settings: dict):
+        """
+        Helper function to get optimizer settings based on the dictionary provided.
+        """
         if dictionary[tab, 'groupBox'].isChecked():
             settings[key] = []
             for string, checkBox in dictionary['optimizerTypes']:
