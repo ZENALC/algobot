@@ -196,7 +196,10 @@ class Configuration(QDialog):
             else:
                 del settings[key]
 
-    def get_optimizer_settings(self):
+    def get_optimizer_settings(self) -> dict:
+        """
+        Returns optimizer configuration in a dictionary.
+        """
         tab = self.get_category_tab(OPTIMIZER)
         settings = {}
 
@@ -231,6 +234,9 @@ class Configuration(QDialog):
 
     @staticmethod
     def add_start_end_step_to_layout(layout, msg, start, end, step):
+        """
+        Adds start, end, and step rows to the layout provided.
+        """
         layout.addRow(QLabel(f"{helpers.get_label_string(msg)} Optimization"))
         layout.addRow("Start", start)
         layout.addRow("End", end)
@@ -444,6 +450,9 @@ class Configuration(QDialog):
 
     @staticmethod
     def default_widget(widget, default: Union[int, float], minimum: int = 1):
+        """
+        Returns a default widget with default and minimum values provided. 
+        """
         default_widget = widget()
         default_widget.setValue(default)
         default_widget.setMinimum(minimum)
