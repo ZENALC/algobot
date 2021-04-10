@@ -359,6 +359,8 @@ class Backtester(Trader):
             self.apply_general_settings(settings)
             if not self.has_moving_average_redundancy():
                 self.start_backtest(thread)
+            else:
+                self.currentPrice = 0  # Or else it'll crash.
 
             if thread:
                 thread.signals.activity.emit(self.get_basic_optimize_info(index, len(settings_list)))
