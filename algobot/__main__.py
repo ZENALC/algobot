@@ -154,24 +154,24 @@ class Interface(QMainWindow):
         Returns all available tickers from Binance API.
         :return: List of all available tickers.
         """
-        tickers = [ticker['symbol'] for ticker in Data(loadData=False, log=False).binanceClient.get_all_tickers()
-                   if 'USDT' in ticker['symbol']]
-
-        tickers.sort()
-        return tickers
+        tickers = [ticker['symbol'] for ticker in Data(loadData=False, log=False).binanceClient.get_all_tickers()]
+        return sorted(tickers)
 
     def setup_tickers(self, tickers):
         """
         Sets up all available tickers from Binance API and displays them on appropriate combo boxes in application.
         """
+        filtered_tickers = [ticker for ticker in tickers if 'USDT' in ticker]
         config = self.configuration
         tickerWidgets = [config.tickerComboBox, config.backtestTickerComboBox, config.simulationTickerComboBox,
-                         self.otherCommands.csvGenerationTicker, self.configuration.optimizerTickerComboBox]
+                         self.configuration.optimizerTickerComboBox]
 
         for widget in tickerWidgets:
             widget.clear()
-            widget.addItems(tickers)
+            widget.addItems(filtered_tickers)
 
+        self.otherCommands.csvGenerationTicker.clear()
+        self.otherCommands.csvGenerationTicker.addItems(tickers)
         self.configuration.serverResult.setText("Updated tickers successfully.")
 
     def setup_news(self, news):
