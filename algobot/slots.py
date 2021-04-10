@@ -131,4 +131,5 @@ def create_optimizer_slots(gui):
     gui.configureOptimizerButton.clicked.connect(gui.show_optimizer_settings)
     gui.runOptimizerButton.clicked.connect(gui.initiate_optimizer)
     gui.stopOptimizerButton.clicked.connect(gui.end_optimizer)
-    gui.exportOptimizerButton.clicked.connect(gui.export_optimizer)
+    gui.exportOptimizerCSVButton.clicked.connect(lambda: gui.export_optimizer('CSV'))
+    gui.exportOptimizerXLSXButton.clicked.connect(lambda: gui.export_optimizer('XLSX'))

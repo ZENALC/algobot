@@ -384,7 +384,7 @@ class Backtester(Trader):
         self.optimizerRows.append(row)
         return row
 
-    def export_optimizer_rows(self, file_path: str):
+    def export_optimizer_rows(self, file_path: str, file_type: str):
         """
         Exports optimizer rows to file path provided using Pandas.
         """
@@ -393,7 +393,13 @@ class Backtester(Trader):
         df = pd.DataFrame(self.optimizerRows)
         df.columns = headers
         df.set_index('Run', inplace=True)
-        df.to_csv(file_path)
+
+        if file_type == 'CSV':
+            df.to_csv(file_path)
+        elif file_type == 'XLSX':
+            df.to_excel(file_path)
+        else:
+            raise TypeError("Invalid type of file type provided.")
 
     def apply_general_settings(self, settings: Dict[str, Union[float, str, dict]]):
         """
