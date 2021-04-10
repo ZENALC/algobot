@@ -449,7 +449,6 @@ class Backtester(Trader):
         self.smartStopLossEnter = False
         self.ema_dict = {}
         self.rsi_dictionary = {}
-        self.optimizerRows = []
 
     def get_interval(self) -> str:
         """
