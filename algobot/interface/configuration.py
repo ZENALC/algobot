@@ -10,7 +10,7 @@ from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QFileDialog, QHBoxLayout, QLabel, QLayout,
                              QMainWindow, QMessageBox, QScrollArea, QSpinBox,
-                             QTabWidget, QVBoxLayout)
+                             QTabWidget, QVBoxLayout, QWidget)
 from telegram.ext import Updater
 
 import algobot.helpers as helpers
@@ -233,7 +233,7 @@ class Configuration(QDialog):
         return settings
 
     @staticmethod
-    def add_start_end_step_to_layout(layout, msg, start, end, step):
+    def add_start_end_step_to_layout(layout: QLayout, msg: str, start: QWidget, end: QWidget, step: QWidget):
         """
         Adds start, end, and step rows to the layout provided.
         """
@@ -451,7 +451,7 @@ class Configuration(QDialog):
     @staticmethod
     def default_widget(widget, default: Union[int, float], minimum: int = 1):
         """
-        Returns a default widget with default and minimum values provided. 
+        Returns a default widget with default and minimum values provided.
         """
         default_widget = widget()
         default_widget.setValue(default)
