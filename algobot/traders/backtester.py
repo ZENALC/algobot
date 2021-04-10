@@ -290,7 +290,13 @@ class Backtester(Trader):
         self.exit_backtest(index)
 
     @staticmethod
-    def extend_helper(x_tuple, temp_dict, temp_key):
+    def extend_helper(x_tuple: tuple, temp_dict: Dict[str, list], temp_key: str):
+        """
+        Helper function for get all permutations function.
+        :param x_tuple: Tuple containing start, end, and step values i.e -> (5, 15, 1). Kind of like range().
+        :param temp_dict: Dictionary to modify.
+        :param temp_key: The key to add value to in the dictionary provided.
+        """
         start, end, step = x_tuple
         if start > end:
             raise ValueError("Your start can't have a bigger value than the end.")
@@ -301,7 +307,7 @@ class Backtester(Trader):
         else:
             raise ValueError("Step value cannot be 0.")
 
-    def get_all_permutations(self, combos):
+    def get_all_permutations(self, combos: dict):
         """
         Returns a list of setting permutations from combos provided.
         :param combos: Combos with ranges for the permutations.
@@ -356,7 +362,10 @@ class Backtester(Trader):
 
             self.restore()
 
-    def get_basic_optimize_info(self, run, totalRuns):
+    def get_basic_optimize_info(self, run, totalRuns) -> tuple:
+        """
+        Return basic information in a tuple for emitting to the trades table in the GUI.
+        """
         return (
             str(round(self.get_net() / self.startingBalance * 100 - 100, 2)) + '%',
             self.get_stop_loss_strategy_string(),
@@ -371,7 +380,11 @@ class Backtester(Trader):
             self.get_strategies_info_string(left=' ', right=' ')
         )
 
-    def apply_general_settings(self, settings: dict):
+    def apply_general_settings(self, settings: Dict[str, Union[float, str, dict]]):
+        """
+        Apples settings provided from the settings argument to the backtester object.
+        :param settings: Dictionary with keys and values to set.
+        """
         if 'takeProfitType' in settings:
             self.takeProfitType = self.get_enum_from_str(settings['takeProfitType'])
             self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
@@ -408,6 +421,9 @@ class Backtester(Trader):
                                                                   finalBound=strategy_values['Final'])])
 
     def restore(self):
+        """
+        Restore backtester to initial values.
+        """
         self.reset_trades()
         self.reset_smart_stop_loss()
         self.balance = self.startingBalance

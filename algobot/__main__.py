@@ -188,6 +188,9 @@ class Interface(QMainWindow):
         self.newsStatusLabel.setText(f'Retrieved news successfully. (Updated: {now.strftime("%m/%d/%Y, %H:%M:%S")})')
 
     def check_combos(self, combos: dict) -> bool:
+        """
+        This function will recursively check optimizer combo values to see if settings are properly configured.
+        """
         if not combos:
             return False
         elif type(combos) != dict:
@@ -199,6 +202,9 @@ class Interface(QMainWindow):
         return True
 
     def initiate_optimizer(self):
+        """
+        Main function to begin optimization.
+        """
         if self.configuration.optimizer_backtest_dict[OPTIMIZER]['data'] is None:
             self.create_popup("No data setup yet for optimizer. Please configure them in settings first.")
             return
@@ -221,6 +227,9 @@ class Interface(QMainWindow):
         self.threadPool.start(worker)
 
     def end_optimizer(self):
+        """
+        Function to end optimizer thread if it exists.
+        """
         thread = self.threads[OPTIMIZER]
         if thread:
             if thread.running:
@@ -382,6 +391,9 @@ class Interface(QMainWindow):
         self.add_to_backtest_monitor(f"Started backtest with {symbol} data and {interval.lower()} interval periods.")
 
     def check_strategies(self, caller: int) -> float:
+        """
+        Checks if strategies exist based on the caller provided and prompts an appropriate message.
+        """
         if not self.configuration.get_strategies(caller):
             if caller == BACKTEST:
                 message = "No strategies found. Would you like to backtest a hold?"
@@ -474,6 +486,12 @@ class Interface(QMainWindow):
         self.disable_interface(disable=False, caller=caller)
 
     def end_bot_gracefully(self, caller, callback=None):
+        """
+        This function will attempt to end the bot in a graceful and appropriate manner. This is the only way a bot
+        should end.
+        :param caller: Caller object that'll determine which bot is to be ended.
+        :param callback: Callback flag for thread used for emitting signals.
+        """
         tempTrader = None
         elapsed = time.time()
 
