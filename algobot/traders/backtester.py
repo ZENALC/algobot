@@ -7,6 +7,7 @@ from itertools import product
 from typing import Dict, Union
 
 from dateutil import parser
+import pandas as pd
 
 from algobot.algorithms import get_ema, get_sma, get_wma
 from algobot.enums import BACKTEST, BEARISH, BULLISH, LONG, OPTIMIZER, SHORT
@@ -42,6 +43,7 @@ class Backtester(Trader):
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
+        self.optimizerRows = []
 
         if len(strategyInterval.split()) == 1:
             strategyInterval = convert_small_interval(strategyInterval)
@@ -366,7 +368,7 @@ class Backtester(Trader):
         """
         Return basic information in a tuple for emitting to the trades table in the GUI.
         """
-        return (
+        row = (
             round(self.get_net() / self.startingBalance * 100 - 100, 2),
             self.get_stop_loss_strategy_string(),
             self.get_safe_rounded_string(self.lossPercentageDecimal, multiplier=100, symbol='%'),
@@ -379,6 +381,19 @@ class Backtester(Trader):
             f'{run}/{totalRuns}',
             self.get_strategies_info_string(left=' ', right=' ')
         )
+        self.optimizerRows.append(row)
+        return row
+
+    def export_optimizer_rows(self, file_path: str):
+        """
+        Exports optimizer rows to file path provided using Pandas.
+        """
+        headers = ['Profit Percentage', 'Stop Loss Strategy', 'Stop Loss Percentage', 'Take Profit Strategy',
+                   'Ticker', 'Interval', 'Strategy Interval', 'Trades', 'Run', 'Strategy']
+        df = pd.DataFrame(self.optimizerRows)
+        df.columns = headers
+        df.set_index('Run', inplace=True)
+        df.to_csv(file_path)
 
     def apply_general_settings(self, settings: Dict[str, Union[float, str, dict]]):
         """
@@ -434,6 +449,7 @@ class Backtester(Trader):
         self.smartStopLossEnter = False
         self.ema_dict = {}
         self.rsi_dictionary = {}
+        self.optimizerRows = []
 
     def get_interval(self) -> str:
         """
