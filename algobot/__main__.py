@@ -207,7 +207,8 @@ class Interface(QMainWindow):
         """
         if self.optimizer:
             if len(self.optimizer.optimizerRows) > 0:
-                filePath, _ = QFileDialog.getSaveFileName(self, 'Save Credentials', ROOT_DIR,
+                defaultPath = os.path.join(ROOT_DIR, f'default.{file_type.lower()}')
+                filePath, _ = QFileDialog.getSaveFileName(self, 'Save Credentials', defaultPath,
                                                           f'{file_type} (*.{file_type.lower()})')
                 if not filePath:
                     self.create_popup("Export cancelled.")
