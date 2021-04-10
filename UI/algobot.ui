@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1480</width>
-    <height>840</height>
+    <width>1380</width>
+    <height>838</height>
    </rect>
   </property>
   <property name="font">
@@ -46,7 +46,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>1443</width>
+         <width>1343</width>
          <height>868</height>
         </rect>
        </property>
@@ -69,7 +69,7 @@
            <enum>QTabWidget::West</enum>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>0</number>
           </property>
           <property name="movable">
            <bool>true</bool>
@@ -489,7 +489,7 @@
                <enum>Qt::SolidLine</enum>
               </property>
               <property name="sortingEnabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="wordWrap">
                <bool>true</bool>
@@ -989,7 +989,7 @@
                <enum>Qt::SolidLine</enum>
               </property>
               <property name="sortingEnabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="wordWrap">
                <bool>true</bool>
@@ -1263,7 +1263,7 @@
                <enum>Qt::SolidLine</enum>
               </property>
               <property name="sortingEnabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="wordWrap">
                <bool>true</bool>
@@ -1355,7 +1355,7 @@
                <enum>Qt::SolidLine</enum>
               </property>
               <property name="sortingEnabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="wordWrap">
                <bool>true</bool>
@@ -1807,7 +1807,7 @@
                <enum>Qt::SolidLine</enum>
               </property>
               <property name="sortingEnabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="wordWrap">
                <bool>true</bool>
@@ -1990,13 +1990,13 @@
                <set>QAbstractItemView::NoEditTriggers</set>
               </property>
               <property name="sortingEnabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <attribute name="horizontalHeaderDefaultSectionSize">
                <number>125</number>
               </attribute>
               <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-               <bool>true</bool>
+               <bool>false</bool>
               </attribute>
               <attribute name="horizontalHeaderStretchLastSection">
                <bool>true</bool>
@@ -2055,6 +2055,11 @@
               <column>
                <property name="text">
                 <string>Run</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Result</string>
                </property>
               </column>
               <column>
@@ -2207,7 +2212,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1480</width>
+     <width>1380</width>
      <height>21</height>
     </rect>
    </property>

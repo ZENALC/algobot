@@ -359,11 +359,13 @@ class Backtester(Trader):
             self.apply_general_settings(settings)
             if not self.has_moving_average_redundancy():
                 self.start_backtest(thread)
+                result = 'PASSED'
             else:
                 self.currentPrice = 0  # Or else it'll crash.
+                result = 'SKIPPED'
 
             if thread:
-                thread.signals.activity.emit(self.get_basic_optimize_info(index, len(settings_list)))
+                thread.signals.activity.emit(self.get_basic_optimize_info(index, len(settings_list), result=result))
 
             self.restore()
 
@@ -378,7 +380,7 @@ class Backtester(Trader):
                     return True
         return False
 
-    def get_basic_optimize_info(self, run, totalRuns) -> tuple:
+    def get_basic_optimize_info(self, run, totalRuns, result: str = 'PASSED') -> tuple:
         """
         Return basic information in a tuple for emitting to the trades table in the GUI.
         """
@@ -393,6 +395,7 @@ class Backtester(Trader):
             self.strategyInterval,
             len(self.trades),
             f'{run}/{totalRuns}',
+            result,
             self.get_strategies_info_string(left=' ', right=' ')
         )
         self.optimizerRows.append(row)
@@ -403,7 +406,8 @@ class Backtester(Trader):
         Exports optimizer rows to file path provided using Pandas.
         """
         headers = ['Profit Percentage', 'Stop Loss Strategy', 'Stop Loss Percentage', 'Take Profit Strategy',
-                   'Take Profit Percentage', 'Ticker', 'Interval', 'Strategy Interval', 'Trades', 'Run', 'Strategy']
+                   'Take Profit Percentage', 'Ticker', 'Interval', 'Strategy Interval', 'Trades', 'Run',
+                   'Result', 'Strategy']
         df = pd.DataFrame(self.optimizerRows)
         df.columns = headers
         df.set_index('Run', inplace=True)
