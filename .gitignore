@@ -6,6 +6,10 @@ __pycache__/
 /.venv/
 /venv/
 
+# Coverage
+/.coverage
+/coverage.xml
+
 # Project
 /Backtest Results/
 /Configuration/
