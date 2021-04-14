@@ -3,4 +3,3 @@ pytest==6.2.3
 pytest-cov==2.11.1
 flake8==3.9.0
 pre-commit==2.12.0
-
