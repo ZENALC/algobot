@@ -282,6 +282,8 @@ class Backtester(Trader):
                             if thread and thread.caller == OPTIMIZER:
                                 return 'CRASHED'  # We don't want optimizer to stop.
                             else:
+                                if thread:
+                                    thread.signals.updateGraphLimits(len(self.pastActivity))
                                 raise RuntimeError(self.generate_error_message(e, strategy))
             else:
                 if len(strategyData) + 1 >= self.minPeriod:
@@ -293,6 +295,8 @@ class Backtester(Trader):
                             if thread and thread.caller == OPTIMIZER:
                                 return 'CRASHED'  # We don't want optimizer to stop.
                             else:
+                                if thread:
+                                    thread.signals.updateGraphLimits(len(self.pastActivity))
                                 raise RuntimeError(self.generate_error_message(e, strategy))
                     strategyData.pop()
 
