@@ -1009,7 +1009,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <property name="movable">
               <bool>true</bool>
@@ -1031,10 +1031,119 @@
                   <string>Optimizer Main Options</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_9">
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="optimizerTickerLabel">
+                  <item row="5" column="0">
+                   <widget class="QLabel" name="optimizerPrecisionLabel">
+                    <property name="text">
+                     <string>Data Precision</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="QCheckBox" name="optimizerOutputTradesCheckBox">
+                    <property name="toolTip">
+                     <string>If a backtest has a lot of trades, it can take a while to open the file. If you're just interested in the results and not the trades, untick this.</string>
+                    </property>
+                    <property name="text">
+                     <string>Output Trades?</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="optimizerStartingBalance">
+                    <property name="text">
+                     <string>Starting Balance</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="18" column="0" colspan="3">
+                   <widget class="QProgressBar" name="optimizerDownloadProgressBar">
+                    <property name="value">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1" colspan="2">
+                   <widget class="QSpinBox" name="optimizerPrecisionSpinBox">
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>20</number>
+                    </property>
+                    <property name="value">
+                     <number>2</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="17" column="0">
+                   <widget class="QPushButton" name="optimizerStopDownloadButton">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Stop Download </string>
+                    </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="12" column="1">
+                   <widget class="QLabel" name="optimizerCopyLabel">
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="0">
+                   <widget class="QCheckBox" name="optimizerMarginTradingCheckBox">
+                    <property name="toolTip">
+                     <string>If you don't want to simulate margin trading, untick this.</string>
+                    </property>
+                    <property name="text">
+                     <string>Enable Margin Trading?</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="17" column="1">
+                   <widget class="QLabel" name="optimizerDownloadLabel">
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="9" column="0">
+                   <widget class="QPushButton" name="optimizerImportDataButton">
+                    <property name="text">
+                     <string>Import Data</string>
+                    </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1" colspan="2">
+                   <widget class="QComboBox" name="optimizerStrategyIntervalCombobox">
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
+                    <property name="currentText">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="12" column="0">
+                   <widget class="QPushButton" name="optimizerDownloadDataButton">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -1045,7 +1154,10 @@
                      </font>
                     </property>
                     <property name="text">
-                     <string>Ticker</string>
+                     <string>Download Data</string>
+                    </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -1069,20 +1181,28 @@
                     </item>
                    </widget>
                   </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="optimizerTickerLabel">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <pointsize>10</pointsize>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Ticker</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="3" column="0">
                    <widget class="QLabel" name="optimizerStrategyIntervalLabel">
                     <property name="text">
                      <string>Strategy Interval</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="1" colspan="2">
-                   <widget class="QSpinBox" name="optimizerStartingBalanceSpinBox">
-                    <property name="minimum">
-                     <number>10</number>
-                    </property>
-                    <property name="maximum">
-                     <number>1000000</number>
                     </property>
                    </widget>
                   </item>
@@ -1095,6 +1215,16 @@
                     </property>
                     <property name="currentText">
                      <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1" colspan="2">
+                   <widget class="QSpinBox" name="optimizerStartingBalanceSpinBox">
+                    <property name="minimum">
+                     <number>10</number>
+                    </property>
+                    <property name="maximum">
+                     <number>1000000</number>
                     </property>
                    </widget>
                   </item>
@@ -1116,133 +1246,26 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="0">
-                   <widget class="QLabel" name="optimizerStartingBalance">
+                  <item row="6" column="0">
+                   <widget class="QLabel" name="drawdownPercentageLabel">
+                    <property name="toolTip">
+                     <string>Percentage at which optimizer will exit one iteration. If 100%, bot will need to completely lose all money to stop iteration.</string>
+                    </property>
                     <property name="text">
-                     <string>Starting Balance</string>
+                     <string>Drawdown Percentage</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="5" column="0">
-                   <widget class="QLabel" name="optimizerPrecisionLabel">
-                    <property name="text">
-                     <string>Data Precision</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="1" colspan="2">
-                   <widget class="QSpinBox" name="optimizerPrecisionSpinBox">
+                  <item row="6" column="1" colspan="2">
+                   <widget class="QSpinBox" name="drawdownPercentageSpinBox">
                     <property name="minimum">
                      <number>1</number>
                     </property>
                     <property name="maximum">
-                     <number>20</number>
+                     <number>100</number>
                     </property>
                     <property name="value">
-                     <number>2</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="0">
-                   <widget class="QCheckBox" name="optimizerOutputTradesCheckBox">
-                    <property name="toolTip">
-                     <string>If a backtest has a lot of trades, it can take a while to open the file. If you're just interested in the results and not the trades, untick this.</string>
-                    </property>
-                    <property name="text">
-                     <string>Output Trades?</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="17" column="0" colspan="3">
-                   <widget class="QProgressBar" name="optimizerDownloadProgressBar">
-                    <property name="value">
-                     <number>0</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="11" column="1">
-                   <widget class="QLabel" name="optimizerCopyLabel">
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="16" column="1">
-                   <widget class="QLabel" name="optimizerDownloadLabel">
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="16" column="0">
-                   <widget class="QPushButton" name="optimizerStopDownloadButton">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                    <property name="text">
-                     <string>Stop Download </string>
-                    </property>
-                    <property name="autoDefault">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="7" column="0">
-                   <widget class="QCheckBox" name="optimizerMarginTradingCheckBox">
-                    <property name="toolTip">
-                     <string>If you don't want to simulate margin trading, untick this.</string>
-                    </property>
-                    <property name="text">
-                     <string>Enable Margin Trading?</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1" colspan="2">
-                   <widget class="QComboBox" name="optimizerStrategyIntervalCombobox">
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="currentText">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="11" column="0">
-                   <widget class="QPushButton" name="optimizerDownloadDataButton">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>Download Data</string>
-                    </property>
-                    <property name="autoDefault">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="8" column="0">
-                   <widget class="QPushButton" name="optimizerImportDataButton">
-                    <property name="text">
-                     <string>Import Data</string>
-                    </property>
-                    <property name="autoDefault">
-                     <bool>false</bool>
+                     <number>100</number>
                     </property>
                    </widget>
                   </item>
