@@ -89,6 +89,7 @@ class BacktestThread(QRunnable):
             profitPercentage = round(net / backtester.startingBalance * 100 - 100, 2)
 
         activity = {
+            'price': backtester.get_safe_rounded_string(backtester.currentPrice),
             'net': round(net, backtester.precision),
             'netString': f'${round(net, backtester.precision)}',
             'balance': f'${round(backtester.balance, backtester.precision)}',

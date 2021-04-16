@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1380</width>
+    <width>1284</width>
     <height>838</height>
    </rect>
   </property>
@@ -46,7 +46,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>1343</width>
+         <width>1247</width>
          <height>868</height>
         </rect>
        </property>
@@ -69,7 +69,7 @@
            <enum>QTabWidget::West</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <property name="movable">
            <bool>true</bool>
@@ -1475,32 +1475,15 @@
                   <string>Backtest Information</string>
                  </property>
                  <layout class="QFormLayout" name="formLayout_3">
-                  <item row="2" column="0">
+                  <item row="3" column="0">
                    <widget class="QLabel" name="backtestBalanceLabel">
                     <property name="text">
                      <string>Balance</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="1">
-                   <widget class="QLabel" name="backtestbalance">
-                    <property name="text">
-                     <string>No backtest found.</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="backtestNetLabel">
-                    <property name="text">
-                     <string>Net</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="3" column="1">
-                   <widget class="QLabel" name="backtestNet">
+                   <widget class="QLabel" name="backtestBalance">
                     <property name="text">
                      <string>No backtest found.</string>
                     </property>
@@ -1510,14 +1493,14 @@
                    </widget>
                   </item>
                   <item row="4" column="0">
-                   <widget class="QLabel" name="backtestCommissionsPaidLabel">
+                   <widget class="QLabel" name="backtestNetLabel">
                     <property name="text">
-                     <string>Commissions Paid</string>
+                     <string>Net</string>
                     </property>
                    </widget>
                   </item>
                   <item row="4" column="1">
-                   <widget class="QLabel" name="backtestCommissionsPaid">
+                   <widget class="QLabel" name="backtestNet">
                     <property name="text">
                      <string>No backtest found.</string>
                     </property>
@@ -1527,14 +1510,14 @@
                    </widget>
                   </item>
                   <item row="5" column="0">
-                   <widget class="QLabel" name="backtestProfitLabel">
+                   <widget class="QLabel" name="backtestCommissionsPaidLabel">
                     <property name="text">
-                     <string>Profit</string>
+                     <string>Commissions Paid</string>
                     </property>
                    </widget>
                   </item>
                   <item row="5" column="1">
-                   <widget class="QLabel" name="backtestProfit">
+                   <widget class="QLabel" name="backtestCommissionsPaid">
                     <property name="text">
                      <string>No backtest found.</string>
                     </property>
@@ -1544,14 +1527,14 @@
                    </widget>
                   </item>
                   <item row="6" column="0">
-                   <widget class="QLabel" name="backtestProfitPercentageLabel">
+                   <widget class="QLabel" name="backtestProfitLabel">
                     <property name="text">
-                     <string>Profit Percentage</string>
+                     <string>Profit</string>
                     </property>
                    </widget>
                   </item>
                   <item row="6" column="1">
-                   <widget class="QLabel" name="backtestProfitPercentage">
+                   <widget class="QLabel" name="backtestProfit">
                     <property name="text">
                      <string>No backtest found.</string>
                     </property>
@@ -1561,13 +1544,30 @@
                    </widget>
                   </item>
                   <item row="7" column="0">
+                   <widget class="QLabel" name="backtestProfitPercentageLabel">
+                    <property name="text">
+                     <string>Profit Percentage</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="1">
+                   <widget class="QLabel" name="backtestProfitPercentage">
+                    <property name="text">
+                     <string>No backtest found.</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="0">
                    <widget class="QLabel" name="backtestTradesMadeLabel">
                     <property name="text">
                      <string>Trades Made</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="7" column="1">
+                  <item row="8" column="1">
                    <widget class="QLabel" name="backtestTradesMade">
                     <property name="text">
                      <string>No backtest found.</string>
@@ -1577,70 +1577,70 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="10" column="0">
+                  <item row="11" column="0">
                    <widget class="QLabel" name="backtestIntervalLabel">
                     <property name="text">
                      <string>Interval</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="10" column="1">
+                  <item row="11" column="1">
                    <widget class="QLabel" name="backtestInterval">
                     <property name="text">
                      <string>Configuration Required</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="11" column="0">
+                  <item row="12" column="0">
                    <widget class="QLabel" name="backtestMarginEnabledLabel">
                     <property name="text">
                      <string>Margin Enabled</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="11" column="1">
+                  <item row="12" column="1">
                    <widget class="QLabel" name="backtestMarginEnabled">
                     <property name="text">
                      <string>Configuration Required</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="12" column="0">
+                  <item row="13" column="0">
                    <widget class="QLabel" name="backtestStopLossPercentageLabel">
                     <property name="text">
                      <string>Stop Loss Percentage</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="12" column="1">
+                  <item row="13" column="1">
                    <widget class="QLabel" name="backtestStopLossPercentage">
                     <property name="text">
                      <string>Configuration Required</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="13" column="0">
+                  <item row="14" column="0">
                    <widget class="QLabel" name="backtestLossStrategyLabel">
                     <property name="text">
                      <string>Loss Strategy</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="13" column="1">
+                  <item row="14" column="1">
                    <widget class="QLabel" name="backtestLossStrategy">
                     <property name="text">
                      <string>Configuration Required</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="8" column="0">
+                  <item row="9" column="0">
                    <widget class="QLabel" name="backtestCurrentPeriodLabel">
                     <property name="text">
                      <string>Current Period</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="8" column="1">
+                  <item row="9" column="1">
                    <widget class="QLabel" name="backtestCurrentPeriod">
                     <property name="text">
                      <string>No backtest found.</string>
@@ -1650,98 +1650,98 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="14" column="0">
+                  <item row="15" column="0">
                    <widget class="QLabel" name="backtestStartPeriodLabel">
                     <property name="text">
                      <string>Start Period</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="15" column="0">
+                  <item row="16" column="0">
                    <widget class="QLabel" name="backtestEndPeriodLabel">
                     <property name="text">
                      <string>End Period</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="14" column="1">
+                  <item row="15" column="1">
                    <widget class="QLabel" name="backtestStartPeriod">
                     <property name="text">
                      <string>Configuration Required</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="15" column="1">
+                  <item row="16" column="1">
                    <widget class="QLabel" name="backtestEndPeriod">
                     <property name="text">
                      <string>Configuration Required</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="16" column="0">
+                  <item row="17" column="0">
                    <widget class="QLabel" name="backtestMovingAverage1Label">
                     <property name="text">
                      <string>Moving Average 1</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="17" column="0">
+                  <item row="18" column="0">
                    <widget class="QLabel" name="backtestMovingAverage2Label">
                     <property name="text">
                      <string>Moving Average 2</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="16" column="1">
+                  <item row="17" column="1">
                    <widget class="QLabel" name="backtestMovingAverage1">
                     <property name="text">
                      <string>Configuration Required</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="17" column="1">
+                  <item row="18" column="1">
                    <widget class="QLabel" name="backtestMovingAverage2">
                     <property name="text">
                      <string>Configuration Required</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="18" column="0">
+                  <item row="19" column="0">
                    <widget class="QLabel" name="backtestMovingAverage3Label">
                     <property name="text">
                      <string>Moving Average 3</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="19" column="0">
+                  <item row="20" column="0">
                    <widget class="QLabel" name="backtestMovingAverage4Label">
                     <property name="text">
                      <string>Moving Average 4</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="18" column="1">
+                  <item row="19" column="1">
                    <widget class="QLabel" name="backtestMovingAverage3">
                     <property name="text">
                      <string>Configuration Required</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="19" column="1">
+                  <item row="20" column="1">
                    <widget class="QLabel" name="backtestMovingAverage4">
                     <property name="text">
                      <string>Configuration Required</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="9" column="0">
+                  <item row="10" column="0">
                    <widget class="QLabel" name="backtestStartingBalanceLabel">
                     <property name="text">
                      <string>Starting Balance</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="9" column="1">
+                  <item row="10" column="1">
                    <widget class="QLabel" name="backtestStartingBalance">
                     <property name="text">
                      <string>Configuration Required</string>
@@ -1760,6 +1760,20 @@
                   </item>
                   <item row="1" column="1">
                    <widget class="QLabel" name="backtestSymbol">
+                    <property name="text">
+                     <string>No backtest found.</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="backtestPriceLabel">
+                    <property name="text">
+                     <string>Price</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QLabel" name="backtestPrice">
                     <property name="text">
                      <string>No backtest found.</string>
                     </property>
@@ -2212,7 +2226,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1380</width>
+     <width>1284</width>
      <height>21</height>
     </rect>
    </property>

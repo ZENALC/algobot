@@ -341,7 +341,8 @@ class Interface(QMainWindow):
             self.backtestProfitLabel.setText("Profit")
             self.backtestProfitPercentageLabel.setText("Profit Percentage")
 
-        self.backtestbalance.setText(updatedDict['balance'])
+        self.backtestBalance.setText(updatedDict['balance'])
+        self.backtestPrice.setText(updatedDict['price'])
         self.backtestNet.setText(updatedDict['netString'])
         self.backtestCommissionsPaid.setText(updatedDict['commissionsPaid'])
         self.backtestProfit.setText(updatedDict['profit'])
