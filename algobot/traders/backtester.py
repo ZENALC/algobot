@@ -181,6 +181,18 @@ class Backtester(Trader):
               f'logs file at {os.path.join(ROOT_DIR, LOG_FOLDER)}.'
         return msg
 
+    def strategy_loop(self, strategyData, thread) -> Union[None, str]:
+        for strategy in self.strategies.values():
+            try:
+                strategy.get_trend(strategyData)
+            except Exception as e:
+                if thread and thread.caller == OPTIMIZER:
+                    return 'CRASHED'  # We don't want optimizer to stop.
+                else:
+                    if thread:
+                        thread.signals.updateGraphLimits.emit(len(self.pastActivity))
+                    raise RuntimeError(self.generate_error_message(e, strategy))
+
     def start_backtest(self, thread=None):
         """
         Main function to start a backtest.
@@ -275,29 +287,15 @@ class Backtester(Trader):
 
             if strategyData is seenData:
                 if len(strategyData) >= self.minPeriod:
-                    for strategy in self.strategies.values():
-                        try:
-                            strategy.get_trend(strategyData)
-                        except Exception as e:
-                            if thread and thread.caller == OPTIMIZER:
-                                return 'CRASHED'  # We don't want optimizer to stop.
-                            else:
-                                if thread:
-                                    thread.signals.updateGraphLimits(len(self.pastActivity))
-                                raise RuntimeError(self.generate_error_message(e, strategy))
+                    result = self.strategy_loop(strategyData=strategyData, thread=thread)
+                    if result is not None:
+                        return result
             else:
                 if len(strategyData) + 1 >= self.minPeriod:
                     strategyData.append(self.currentPeriod)
-                    for strategy in self.strategies.values():
-                        try:
-                            strategy.get_trend(strategyData)
-                        except Exception as e:
-                            if thread and thread.caller == OPTIMIZER:
-                                return 'CRASHED'  # We don't want optimizer to stop.
-                            else:
-                                if thread:
-                                    thread.signals.updateGraphLimits(len(self.pastActivity))
-                                raise RuntimeError(self.generate_error_message(e, strategy))
+                    result = self.strategy_loop(strategyData=strategyData, thread=thread)
+                    if result is not None:
+                        return result
                     strategyData.pop()
 
             if seenData is not strategyData and self.currentPeriod['date_utc'] >= nextInsertion:
