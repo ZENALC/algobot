@@ -11,7 +11,8 @@ from dateutil import parser
 
 from algobot.algorithms import get_ema, get_sma, get_wma
 from algobot.enums import BACKTEST, BEARISH, BULLISH, LONG, OPTIMIZER, SHORT
-from algobot.helpers import (ROOT_DIR, convert_all_dates_to_datetime,
+from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
+                             convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
                              get_ups_and_downs, parse_strategy_name)
 from algobot.interface.configuration_helpers import get_strategies_dictionary
@@ -31,6 +32,7 @@ class Backtester(Trader):
                  marginEnabled: bool = True,
                  startDate: datetime = None,
                  endDate: datetime = None,
+                 drawdownPercentage: int = 100,
                  precision: int = 4,
                  outputTrades: bool = True):
         super().__init__(symbol=symbol, precision=precision, startingBalance=startingBalance)
@@ -43,6 +45,7 @@ class Backtester(Trader):
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
+        self.drawdownPercentageDecimal = drawdownPercentage / 100  # Percentage of loss at which bot exits backtest.
         self.optimizerRows = []
 
         if len(strategyInterval.split()) == 1:
@@ -169,6 +172,15 @@ class Backtester(Trader):
         }
         self.currentPrice = price
 
+    @staticmethod
+    def generate_error_message(error: Exception, strategy: Strategy) -> str:
+        msg = f'It looks like your strategy has crashed because of: {str(error)}. Try using' \
+              f' different parameters, rewriting your strategy, or taking a look at ' \
+              f'your strategy code again. The strategy that caused this crash is: ' \
+              f'{strategy.name}. You can find more details about the crash in the ' \
+              f'logs file at {os.path.join(ROOT_DIR, LOG_FOLDER)}.'
+        return msg
+
     def start_backtest(self, thread=None):
         """
         Main function to start a backtest.
@@ -184,10 +196,11 @@ class Backtester(Trader):
 
         self.startingTime = time.time()
         if len(self.strategies) == 0:
-            self.simulate_hold(testLength, divisor, thread)
+            result = self.simulate_hold(testLength, divisor, thread)
         else:
-            self.strategy_backtest(testLength, divisor, thread)
+            result = self.strategy_backtest(testLength, divisor, thread)
         self.endingTime = time.time()
+        return result
 
     def exit_backtest(self, index: int = None):
         """
@@ -204,7 +217,7 @@ class Backtester(Trader):
         elif self.currentPosition == LONG:
             self.sell_long("Exited long position because backtest ended.")
 
-    def simulate_hold(self, testLength: int, divisor: int, thread=None):
+    def simulate_hold(self, testLength: int, divisor: int, thread=None) -> str:
         """
         Simulate a long hold position if no strategies are provided.
         :param divisor: Divisor where when remainder of test length and divisor is 0, a signal is emitted to GUI.
@@ -228,8 +241,9 @@ class Backtester(Trader):
                 thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
 
         self.exit_backtest()
+        return 'HOLD'
 
-    def strategy_backtest(self, testLength: int, divisor: int, thread=None):
+    def strategy_backtest(self, testLength: int, divisor: int, thread=None) -> str:
         """
         Perform a backtest with provided strategies to backtester object.
         :param divisor: Divisor where when remainder of test length and divisor is 0, a signal is emitted to GUI.
@@ -254,9 +268,10 @@ class Backtester(Trader):
             self.main_logic()
             if self.get_net() < 0.5:
                 if thread and thread.caller == BACKTEST:
-                    thread.signals.updateGraphLimits.emit(index // divisor + 1)
                     thread.signals.message.emit("Backtester ran out of money. Change your strategy or date interval.")
-                break
+                return 'OUT OF MONEY'
+            elif self.get_net() < (1 - self.drawdownPercentageDecimal) * self.startingBalance:
+                return 'DRAWDOWN'
 
             if strategyData is seenData:
                 if len(strategyData) >= self.minPeriod:
@@ -265,9 +280,9 @@ class Backtester(Trader):
                             strategy.get_trend(strategyData)
                         except Exception as e:
                             if thread and thread.caller == OPTIMIZER:
-                                return  # We don't want optimizer to stop.
+                                return 'CRASHED'  # We don't want optimizer to stop.
                             else:
-                                raise e
+                                raise RuntimeError(self.generate_error_message(e, strategy))
             else:
                 if len(strategyData) + 1 >= self.minPeriod:
                     strategyData.append(self.currentPeriod)
@@ -276,9 +291,9 @@ class Backtester(Trader):
                             strategy.get_trend(strategyData)
                         except Exception as e:
                             if thread and thread.caller == OPTIMIZER:
-                                return  # We don't want optimizer to stop.
+                                return 'CRASHED'  # We don't want optimizer to stop.
                             else:
-                                raise e
+                                raise RuntimeError(self.generate_error_message(e, strategy))
                     strategyData.pop()
 
             if seenData is not strategyData and self.currentPeriod['date_utc'] >= nextInsertion:
@@ -290,6 +305,7 @@ class Backtester(Trader):
                 thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
 
         self.exit_backtest(index)
+        return 'PASSED'
 
     @staticmethod
     def extend_helper(x_tuple: tuple, temp_dict: Dict[str, list], temp_key: str):
@@ -358,8 +374,7 @@ class Backtester(Trader):
 
             self.apply_general_settings(settings)
             if not self.has_moving_average_redundancy():
-                self.start_backtest(thread)
-                result = 'PASSED'
+                result = self.start_backtest(thread)
             else:
                 self.currentPrice = 0  # Or else it'll crash.
                 result = 'SKIPPED'
@@ -479,6 +494,7 @@ class Backtester(Trader):
         Attempts to parse interval from loaded data.
         :return: Interval in str format.
         """
+        assert len(self.data) >= 2, "Not enough data gathered. Change your data interval."
         period1 = self.data[0]['date_utc']
         period2 = self.data[1]['date_utc']
 
