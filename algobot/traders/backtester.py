@@ -285,18 +285,18 @@ class Backtester(Trader):
             elif self.get_net() < (1 - self.drawdownPercentageDecimal) * self.startingBalance:
                 return 'DRAWDOWN'
 
+            result = None  # Result of strategy loop to ensure nothing crashed -> None is good, anything else is bad.
             if strategyData is seenData:
                 if len(strategyData) >= self.minPeriod:
                     result = self.strategy_loop(strategyData=strategyData, thread=thread)
-                    if result is not None:
-                        return result
             else:
                 if len(strategyData) + 1 >= self.minPeriod:
                     strategyData.append(self.currentPeriod)
                     result = self.strategy_loop(strategyData=strategyData, thread=thread)
-                    if result is not None:
-                        return result
                     strategyData.pop()
+
+            if result is not None:
+                return result
 
             if seenData is not strategyData and self.currentPeriod['date_utc'] >= nextInsertion:
                 nextInsertion = self.currentPeriod['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
