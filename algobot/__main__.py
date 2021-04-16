@@ -279,7 +279,7 @@ class Interface(QMainWindow):
         worker.signals.finished.connect(self.end_backtest)
         worker.signals.message.connect(lambda message: self.add_to_monitor(BACKTEST, message))
         worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=BACKTEST))
-        worker.signals.updateGraphLimits.connect(lambda: update_backtest_graph_limits(self))
+        worker.signals.updateGraphLimits.connect(lambda x: update_backtest_graph_limits(gui=self, limit=x))
         self.threadPool.start(worker)
 
     def end_backtest_thread(self):
@@ -951,7 +951,7 @@ class Interface(QMainWindow):
                 graphDict['label'].setText(total)
 
                 if graph == self.backtestGraph and self.backtester is not None:
-                    self.update_backtest_activity_based_on_graph(xValue)
+                    self.update_backtest_activity_based_on_graph(xValue + 1)
 
     @staticmethod
     def test_table(table, trade: list):
