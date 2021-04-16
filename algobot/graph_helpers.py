@@ -32,7 +32,7 @@ def update_backtest_graph_limits(gui: QMainWindow, limit: int = 105):
     :param limit: Maximum x-axis limit to set in the graph.
     """
     graphDict = get_graph_dictionary(gui, gui.backtestGraph)
-    graphDict['graph'].setLimits(xMin=0, xMax=limit + 1)
+    graphDict['graph'].setLimits(xMin=0, xMax=limit)
 
 
 def get_graph_dictionary(gui: QMainWindow, targetGraph: PlotWidget) -> dict:
