@@ -42,6 +42,7 @@ class OptimizerThread(QRunnable):
             'marginEnabled': config.optimizerMarginTradingCheckBox.isChecked(),
             'strategies': [],
             'strategyInterval': config.optimizerStrategyIntervalCombobox.currentText(),
+            'drawdownPercentage': config.drawdownPercentageSpinBox.value()
         }
 
     def setup(self):
@@ -55,7 +56,8 @@ class OptimizerThread(QRunnable):
                                         precision=configDetails['precision'],
                                         outputTrades=configDetails['outputTrades'],
                                         strategies=configDetails['strategies'],
-                                        strategyInterval=configDetails['strategyInterval'])
+                                        strategyInterval=configDetails['strategyInterval'],
+                                        drawdownPercentage=configDetails['drawdownPercentage'])
 
     def stop(self):
         self.running = False
