@@ -683,7 +683,7 @@
                   <item row="4" column="1" colspan="2">
                    <widget class="QSpinBox" name="backtestStartingBalanceSpinBox">
                     <property name="minimum">
-                     <number>10</number>
+                     <number>100</number>
                     </property>
                     <property name="maximum">
                      <number>1000000</number>
@@ -1221,7 +1221,7 @@
                   <item row="4" column="1" colspan="2">
                    <widget class="QSpinBox" name="optimizerStartingBalanceSpinBox">
                     <property name="minimum">
-                     <number>10</number>
+                     <number>100</number>
                     </property>
                     <property name="maximum">
                      <number>1000000</number>

@@ -687,6 +687,7 @@ class Backtester(Trader):
 
         print("Backtest configuration:")
         print(f'\tInterval: {self.interval}')
+        print(f'\tDrawdown Percentage: {self.drawdownPercentageDecimal * 100}')
         print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")
 
