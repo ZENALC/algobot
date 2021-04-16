@@ -135,6 +135,7 @@ class BacktestThread(QRunnable):
         """
         backtester = self.gui.backtester
         backtester.start_backtest(thread=self)
+        self.signals.updateGraphLimits.emit(len(backtester.pastActivity))
         self.signals.activity.emit(self.get_activity_dictionary(period=backtester.data[backtester.endDateIndex],
                                                                 index=1,
                                                                 length=1))
