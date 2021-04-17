@@ -278,9 +278,10 @@ class Backtester(Trader):
             seenData.append(self.currentPeriod)
 
             self.main_logic()
-            if self.get_net() < 0.5:
+            if self.get_net() < 10:
                 if thread and thread.caller == BACKTEST:
                     thread.signals.message.emit("Backtester ran out of money. Change your strategy or date interval.")
+                self.exit_backtest(index)
                 return 'OUT OF MONEY'
             elif self.get_net() < (1 - self.drawdownPercentageDecimal) * self.startingBalance:
                 return 'DRAWDOWN'
