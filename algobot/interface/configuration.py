@@ -715,7 +715,7 @@ class Configuration(QDialog):
         :return: Start and end dates for backtest.
         """
         startDate = self.optimizer_backtest_dict[caller]['startDate'].selectedDate().toPyDate()
-        endDate = self.optimizer_backtest_dict[caller]['startDate'].selectedDate().toPyDate()
+        endDate = self.optimizer_backtest_dict[caller]['endDate'].selectedDate().toPyDate()
         if startDate == endDate:
             return None, None
         return startDate, endDate
