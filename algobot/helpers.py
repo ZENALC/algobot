@@ -20,6 +20,10 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 LOG_FOLDER = 'Logs'
 
 
+def is_debug() -> bool:
+    return os.getenv('DEBUG') is not None
+
+
 def add_to_table(table: QTableWidget, data: list, insertDate=True):
     """
     Function that will add specified data to a provided table.
@@ -125,44 +129,23 @@ def setup_and_return_log_path(fileName: str) -> str:
     return fullPath
 
 
-def initialize_logger():
-    """
-    Initializes logger. THIS FUNCTION IS OFFICIALLY DEPRECATED.
-    """
-    curPath = os.getcwd()
-    os.chdir('../')
-    if not os.path.exists('Logs'):
-        os.mkdir('Logs')
-
-    os.chdir('Logs')
-    todayDate = datetime.today().strftime('%Y-%m-%d')
-
-    if not os.path.exists(todayDate):
-        os.mkdir(todayDate)
-
-    os.chdir(todayDate)
-
-    logFileName = f'{datetime.now().strftime("%H-%M-%S")}.log'
-    logging.basicConfig(filename=logFileName, level=logging.INFO, format='%(message)s')
-    os.chdir(curPath)
-
-
-def get_logger(logFile: str, loggerName: str) -> logging.Logger:
+def get_logger(log_file: str, logger_name: str) -> logging.Logger:
     """
     Returns a logger object with loggerName provided and that'll log to logFile.
-    :param logFile: File to log to.
-    :param loggerName: Name logger will have.
+    :param log_file: File to log to.
+    :param logger_name: Name logger will have.
     :return: A logger object.
     """
-    logger = logging.getLogger(loggerName)
-    logger.setLevel(logging.INFO)
+    logger = logging.getLogger(logger_name)
+    log_level = logging.INFO
+    if is_debug():
+        log_level = logging.DEBUG
+    logger.setLevel(log_level)
+    formatter = logging.Formatter('%(message)s')
+    handler = logging.FileHandler(filename=setup_and_return_log_path(fileName=log_file), delay=True)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
-    c_formatter = logging.Formatter('%(message)s')
-    f_handler = logging.FileHandler(filename=setup_and_return_log_path(fileName=logFile), delay=True)
-    # f_handler.setLevel(logging.INFO)
-    f_handler.setFormatter(c_formatter)
-
-    logger.addHandler(f_handler)
     return logger
 
 
