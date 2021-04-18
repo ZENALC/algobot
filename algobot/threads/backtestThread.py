@@ -56,12 +56,17 @@ class BacktestThread(QRunnable):
         :return: Dictionary containing backtest configuration details.
         """
         backtester = self.gui.backtester
+        if backtester.lossStrategy is not None:
+            stop_loss_percentage_string = f'{backtester.lossPercentageDecimal * 100}%'
+        else:
+            stop_loss_percentage_string = 'Configuration Required'
+
         d = {
             'startingBalance': f'${backtester.startingBalance}',
             'interval': backtester.interval,
             'marginEnabled': f'{backtester.marginEnabled}',
-            'stopLossPercentage': f'{backtester.lossPercentageDecimal * 100}%',
-            'stopLossStrategy': f'{"Trailing Loss" if backtester.lossStrategy == TRAILING else "Stop Loss"}',
+            'stopLossPercentage': stop_loss_percentage_string,
+            'stopLossStrategy': backtester.get_stop_loss_strategy_string(),
             'startPeriod': f'{backtester.data[backtester.startDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
             'endPeriod': f'{backtester.data[backtester.endDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
             'symbol': f'{backtester.symbol}'
