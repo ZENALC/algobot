@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
-from algobot.enums import BACKTEST, TRAILING
+from algobot.enums import BACKTEST
 from algobot.traders.backtester import Backtester
 
 
