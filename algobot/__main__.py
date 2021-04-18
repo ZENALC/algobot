@@ -854,7 +854,17 @@ class Interface(QMainWindow):
         thread.signals.error.connect(self.create_popup)
         self.threadPool.start(thread)
 
-    def modify_override_buttons(self, caller, pauseText, shortBtn, longBtn, exitBtn, waitBtn):
+    def modify_override_buttons(self, caller, pauseText: str, shortBtn: bool, longBtn: bool, exitBtn: bool,
+                                waitBtn: bool):
+        """
+        Modify force override button with booleans provided above for caller.
+        :param caller: Caller object that specifies which trading object will have its override buttons modified.
+        :param pauseText: Text to show in the pause bot button.
+        :param shortBtn: Boolean that'll determine if the force short button is enabled or disabled.
+        :param longBtn: Boolean that'll determine if the force long button is enabled or disabled.
+        :param exitBtn: Boolean that'll determine if the exit button is enabled or disabled.
+        :param waitBtn: Boolean that'll determine if the wait override button is enabled or disabled.
+        """
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         interfaceDict['pauseBotButton'].setText(pauseText)
         interfaceDict['forceShortButton'].setEnabled(shortBtn)
