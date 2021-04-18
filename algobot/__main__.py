@@ -53,7 +53,7 @@ class Interface(QMainWindow):
         algobot.assets.qInitResources()
         super(Interface, self).__init__(parent)  # Initializing object
         uic.loadUi(mainUi, self)  # Loading the main UI
-        self.logger = get_logger(logFile='algobot', loggerName='algobot')
+        self.logger = get_logger(log_file='algobot', logger_name='algobot')
         self.configuration = Configuration(parent=self, logger=self.logger)  # Loading configuration
         self.otherCommands = OtherCommands(self)  # Loading other commands
         self.about = About(self)  # Loading about information
@@ -1280,7 +1280,6 @@ class Interface(QMainWindow):
 
 def main():
     app.setStyle('Fusion')
-    # helpers.initialize_logger()
     interface = Interface()
     interface.showMaximized()
     app.setWindowIcon(QIcon('../media/algobotwolf.png'))

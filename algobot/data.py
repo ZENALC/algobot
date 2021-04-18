@@ -78,11 +78,11 @@ class Data:
         """
         if loggerObject:
             return loggerObject
-        else:
-            if enable_logging:
-                return get_logger(logFile=logFile, loggerName=logFile)
-            else:
-                return None
+
+        if enable_logging:
+            return get_logger(log_file=logFile, logger_name=logFile)
+
+        return None
 
     def validate_interval(self, interval: str):
         """

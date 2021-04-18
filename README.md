@@ -29,18 +29,20 @@ If your install fails, please make sure to have [Visual Studio Build Tools](http
 
 To run Algobot, run `python -m algobot` from within the activated virtual environment.
 
+Set `DEBUG=1` to enable debug level logging.
+
 # Features
 
-• View real time data.\
-• Create graphs with real time data and/or moving averages.\
-• Run simulations with parameters configured.\
-• Run custom backtests with parameters configured.\
-• Run live bots with parameters configured.\
-• Telegram integration that allows users to trade or view statistics.\
-• Create custom, trailing, or limit stop losses.\
-• Create take profits.\
-• Optimize your strategies using the built-in optimizer. \
-• Ability to create your own custom strategies.
+- View real time data.
+- Create graphs with real time data and/or moving averages.
+- Run simulations with parameters configured.
+- Run custom backtests with parameters configured.
+- Run live bots with parameters configured.
+- Telegram integration that allows users to trade or view statistics.
+- Create custom, trailing, or limit stop losses.
+- Create take profits.
+- Optimize your strategies using the built-in optimizer. \
+- Ability to create your own custom strategies.
 
 # User Interface
 

@@ -57,7 +57,7 @@ class OtherCommands(QDialog):
             self.infoLabel.setText(f'{directory.capitalize()} files have been successfully deleted.')
 
             if directory == 'Logs':
-                self.parent.logger = helpers.get_logger(logFile='algobot', loggerName='algobot')
+                self.parent.logger = helpers.get_logger(log_file='algobot', logger_name='algobot')
 
     def start_date_thread(self):
         self.csvGenerationStatus.setText("Searching for earliest start date..")

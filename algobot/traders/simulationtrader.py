@@ -31,7 +31,7 @@ class SimulationTrader(Trader):
         :param addTradeCallback: Callback signal to emit to (if provided) to reflect a new transaction.
         """
         super().__init__(precision=precision, symbol=symbol, startingBalance=startingBalance)
-        self.logger = get_logger(logFile=logFile, loggerName=logFile)  # Get logger.
+        self.logger = get_logger(log_file=logFile, logger_name=logFile)  # Get logger.
         self.dataView: Data = Data(interval=interval, symbol=symbol, loadData=loadData,
                                    updateData=updateData, logObject=self.logger, precision=precision)
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
