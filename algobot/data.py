@@ -71,7 +71,7 @@ class Data:
     def get_logging_object(enable_logging: bool, logFile: str, loggerObject):
         """
         Returns a logger object.
-        :param enable_logging: Boolean that determines where logging is enabled or not.
+        :param enable_logging: Boolean that determines whether logging is enabled or not.
         :param logFile: File to log to.
         :param loggerObject: Logger object to return if there is one already specified.
         :return: Logger object or None.
