@@ -760,26 +760,28 @@ class Backtester(Trader):
 
         sys.stdout = previous_stdout  # revert stdout back to normal
 
-    def get_default_result_file_name(self):
+    def get_default_result_file_name(self, name: str = 'backtest'):
         """
-        Returns a default backtest result file name.
+        Returns a default backtest/optimizer result file name.
         :return: String filename.
         """
-        backtestResultsFolder = 'Backtest Results'
+        resultsFolder = os.path.join(ROOT_DIR, f'{name.capitalize()} Results')
         symbol = 'Imported' if not self.symbol else self.symbol
         dateString = datetime.now().strftime("%Y-%m-%d_%H-%M")
-        resultFile = f'{symbol}_backtest_results_{"_".join(self.interval.lower().split())}-{dateString}.txt'
-        os.chdir(ROOT_DIR)
+        resultFile = f'{symbol}_{name}_results_{"_".join(self.interval.lower().split())}-{dateString}.txt'
 
-        if not os.path.exists(backtestResultsFolder):
-            os.mkdir(backtestResultsFolder)
-        os.chdir(backtestResultsFolder)
+        if not os.path.exists(resultsFolder):
+            return resultFile
+
+        innerFolder = os.path.join(resultsFolder, self.symbol)
+        if not os.path.exists(innerFolder):
+            return resultFile
 
         counter = 0
         previousFile = resultFile
 
-        while os.path.exists(resultFile):
-            resultFile = f'({counter}){previousFile}'
+        while os.path.exists(os.path.join(innerFolder, resultFile)):
+            resultFile = f'({counter}){previousFile}'  # (1), (2)
             counter += 1
 
         return resultFile

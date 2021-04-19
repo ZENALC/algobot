@@ -207,7 +207,11 @@ class Interface(QMainWindow):
         """
         if self.optimizer:
             if len(self.optimizer.optimizerRows) > 0:
-                defaultPath = os.path.join(ROOT_DIR, f'default.{file_type.lower()}')
+                optimizerFolderPath = create_folder('Optimizer Results')
+                innerPath = os.path.join(optimizerFolderPath, self.optimizer.symbol)
+                create_folder_if_needed(innerPath, optimizerFolderPath)
+                defaultFileName = self.optimizer.get_default_result_file_name('optimizer')
+                defaultPath = os.path.join(innerPath, f'{defaultFileName}.{file_type.lower()}')
                 filePath, _ = QFileDialog.getSaveFileName(self, 'Save Credentials', defaultPath,
                                                           f'{file_type} (*.{file_type.lower()})')
                 if not filePath:
