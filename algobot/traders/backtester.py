@@ -476,6 +476,7 @@ class Backtester(Trader):
                                                                   parameter=strategy_values['Parameter'],
                                                                   initialBound=strategy_values['Initial'],
                                                                   finalBound=strategy_values['Final'])])
+                self.minPeriod = self.strategies[strategy_name].get_min_option_period()
 
     def restore(self):
         """
@@ -486,7 +487,7 @@ class Backtester(Trader):
         self.balance = self.startingBalance
         self.coin = self.coinOwed = 0
         self.currentPosition = self.currentPeriod = None
-        self.previousStopLoss = None
+        self.previousStopLoss = self.previousPosition = None
         self.stopLossExit = False
         self.smartStopLossEnter = False
         self.ema_dict = {}
