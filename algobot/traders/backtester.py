@@ -398,7 +398,7 @@ class Backtester(Trader):
                     return True
         return False
 
-    def get_basic_optimize_info(self, run, totalRuns, result: str = 'PASSED') -> tuple:
+    def get_basic_optimize_info(self, run: int, totalRuns: int, result: str = 'PASSED') -> tuple:
         """
         Return basic information in a tuple for emitting to the trades table in the GUI.
         """
@@ -413,7 +413,7 @@ class Backtester(Trader):
             self.strategyInterval,
             len(self.trades),
             f'{run}/{totalRuns}',
-            result,
+            result,  # PASSED / DRAWDOWN / CRASHED
             self.get_strategies_info_string(left=' ', right=' ')
         )
         self.optimizerRows.append(row)
