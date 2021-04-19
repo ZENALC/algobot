@@ -266,7 +266,6 @@ class Backtester(Trader):
         strategyData = seenData if self.strategyIntervalMinutes == self.intervalMinutes else []
         nextInsertion = self.data[self.startDateIndex]['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
         index = None
-
         for index in range(self.startDateIndex, self.endDateIndex + 1):
             if thread and not thread.running:
                 if thread.caller == BACKTEST:
@@ -469,14 +468,16 @@ class Backtester(Trader):
                 self.setup_strategies([temp_strategy_tuple])
                 continue
 
+            loop_strategy = self.strategies[strategy_name]
+            loop_strategy.trend = None  # Annoying bug fix for optimizer.
             if strategy_name != 'movingAverage':
-                self.strategies[strategy_name].set_inputs(list(strategy_values.values()))
+                loop_strategy.set_inputs(list(strategy_values.values()))
             else:
-                self.strategies[strategy_name].set_inputs([Option(movingAverage=strategy_values['Moving Average'],
-                                                                  parameter=strategy_values['Parameter'],
-                                                                  initialBound=strategy_values['Initial'],
-                                                                  finalBound=strategy_values['Final'])])
-                self.minPeriod = self.strategies[strategy_name].get_min_option_period()
+                loop_strategy.set_inputs([Option(movingAverage=strategy_values['Moving Average'],
+                                                 parameter=strategy_values['Parameter'],
+                                                 initialBound=strategy_values['Initial'],
+                                                 finalBound=strategy_values['Final'])])
+                self.minPeriod = loop_strategy.get_min_option_period()
 
     def restore(self):
         """
