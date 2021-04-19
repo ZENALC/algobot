@@ -245,6 +245,8 @@ class Configuration(QDialog):
         layout.addRow("End", end)
         layout.addRow("Step", step)
 
+        start.valueChanged.connect(lambda: (end.setValue(start.value()), end.setMinimum(start.value())))
+
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout, isOptimizer: bool = False):
         """
         Creates inputs for loss settings in GUI.
