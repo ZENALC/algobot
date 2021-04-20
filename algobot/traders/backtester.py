@@ -469,6 +469,7 @@ class Backtester(Trader):
                 continue
 
             loop_strategy = self.strategies[strategy_name]
+            loop_strategy.reset_strategy_dictionary()  # Mandatory for bugs in optimizer.
             loop_strategy.trend = None  # Annoying bug fix for optimizer.
             if strategy_name != 'movingAverage':
                 loop_strategy.set_inputs(list(strategy_values.values()))
