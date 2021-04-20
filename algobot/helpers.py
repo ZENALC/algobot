@@ -60,11 +60,17 @@ def clear_table(table: QTableWidget):
 
 
 def open_folder(folder: str):
+    """
+    This will open a folder even if it doesn't exist. It'll create one if it doesn't exist.
+    """
     targetPath = create_folder(folder)
     open_file_or_folder(targetPath)
 
 
 def create_folder(folder: str):
+    """
+    This will create a folder if needed in the root directory.
+    """
     targetPath = os.path.join(ROOT_DIR, folder)
     create_folder_if_needed(targetPath)
 
