@@ -54,6 +54,7 @@ def create_action_slots(gui):
     gui.liveStatisticsAction.triggered.connect(lambda: gui.show_statistics(0))
     gui.simulationStatisticsAction.triggered.connect(lambda: gui.show_statistics(1))
     gui.openBacktestResultsFolderAction.triggered.connect(lambda: open_folder("Backtest Results"))
+    gui.openOptimizerResultsFolderAction.triggered.connect(lambda: open_folder('Optimizer Results'))
     gui.openLogFolderAction.triggered.connect(lambda: open_folder("Logs"))
     gui.openCsvFolderAction.triggered.connect(lambda: open_folder('CSV'))
     gui.openDatabasesFolderAction.triggered.connect(lambda: open_folder('Databases'))
