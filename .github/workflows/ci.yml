@@ -12,6 +12,9 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9, 3.8, 3.7, 3.6]
+    env:
+      IS_COVERAGE_ALLOWED: ${{ secrets.CODACY_PROJECT_TOKEN != '' }}
+      IS_MASTER_BRANCH: ${{ github.ref == 'refs/heads/master' }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -29,7 +32,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-test.txt
       - name: Test with pytest
-        run: pytest -v tests/
+        run: pytest --cov-report xml --cov=algobot tests/
+      - name: Upload coverage
+        if: ${{ matrix.python-version == 3.9 && env.IS_COVERAGE_ALLOWED == 'true' && env.IS_MASTER_BRANCH == 'true' }}
+        uses: codacy/codacy-coverage-reporter-action@master
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage.xml
   lint:
     runs-on: ubuntu-latest
     steps:
