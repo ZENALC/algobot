@@ -81,7 +81,8 @@ class SimulationTrader(Trader):
                 'position': self.get_position_string(),
                 'autonomous': str(not self.inHumanControl),
                 'precision': str(self.precision),
-                'trend': self.get_trend_string(self.trend)
+                'trend': self.get_trend_string(self.trend),
+                'marginEnabled': str(self.marginEnabled),
             }
         }
 
