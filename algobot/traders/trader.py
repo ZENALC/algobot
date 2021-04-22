@@ -11,7 +11,7 @@ from algobot.strategies.strategy import Strategy
 
 
 class Trader:
-    def __init__(self, symbol, precision, startingBalance):
+    def __init__(self, symbol, precision, startingBalance, marginEnabled: bool = True):
         # Initialize initial values.
         self.startingBalance = startingBalance  # Balance we started bot with.
         self.balance = startingBalance  # USDT Balance.
@@ -32,6 +32,7 @@ class Trader:
         self.minPeriod = 0  # Minimum amount of periods required for trend retrieval.
         self.previousPosition = None  # Previous position to validate for a new trend.
         self.trend = None  # Current trend information.
+        self.marginEnabled = marginEnabled  # Boolean for whether margin trading is enabled or not.
 
         self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
         self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.

@@ -35,13 +35,14 @@ class Backtester(Trader):
                  drawdownPercentage: int = 100,
                  precision: int = 4,
                  outputTrades: bool = True):
-        super().__init__(symbol=symbol, precision=precision, startingBalance=startingBalance)
-        self.marginEnabled = marginEnabled
-        self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
-
+        super().__init__(symbol=symbol,
+                         precision=precision,
+                         startingBalance=startingBalance,
+                         marginEnabled=marginEnabled)
         convert_all_dates_to_datetime(data)
         self.data = data
         self.check_data()
+        self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
