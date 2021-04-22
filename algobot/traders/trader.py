@@ -19,7 +19,7 @@ class Trader:
         self.coin = 0  # Amount of coin we own.
         self.coinOwed = 0  # Amount of coin we owe.
         self.transactionFeePercentageDecimal = 0.001  # Binance transaction fee percentage.
-        self.symbol = symbol  # Symbol of ticker used for trading.
+        self.symbol = symbol.strip()  # Symbol of ticker used for trading.
         self.commissionsPaid = 0  # Total commissions paid this bot run.
         self.precision = precision  # Precision to round data to.
         self.trades = []  # All trades performed.
