@@ -97,8 +97,10 @@ class Data:
         Validates symbol for data to be retrieved. Raises ValueError if symbol type is incorrect.
         :param symbol: Symbol to be checked.
         """
+        if symbol.strip() == '':
+            raise ValueError("No symbol/ticker found.")
         if not self.is_valid_symbol(symbol):
-            raise ValueError(f'Invalid symbol {symbol} specified.')
+            raise ValueError(f'Invalid symbol/ticker {symbol} provided.')
 
     def load_data(self, update: bool = True):
         """

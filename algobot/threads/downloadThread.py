@@ -19,7 +19,7 @@ class DownloadSignals(QObject):
 
 
 class DownloadThread(QRunnable):
-    def __init__(self, interval, symbol, descending=None, armyTime=None, startDate=None, caller=None):
+    def __init__(self, interval, symbol, descending=None, armyTime=None, startDate=None, caller=None, logger=None):
         super(DownloadThread, self).__init__()
         self.caller = caller
         self.signals = DownloadSignals()
@@ -28,6 +28,7 @@ class DownloadThread(QRunnable):
         self.descending = descending
         self.armyTime = armyTime
         self.startDate = startDate
+        self.logger = logger
         self.client: Data or None = None
 
     @pyqtSlot()
@@ -49,8 +50,11 @@ class DownloadThread(QRunnable):
                                                             startDate=self.startDate)
                     self.signals.csv_finished.emit(savedPath)
         except Exception as e:
-            print(f'Error: {e}')
-            traceback.print_exc()
+            error_message = traceback.format_exc()
+            if self.logger:
+                self.logger.critical(error_message)
+            else:
+                print(error_message)
             self.signals.error.emit(str(e), self.caller)
         finally:
             self.signals.restore.emit(self.caller)

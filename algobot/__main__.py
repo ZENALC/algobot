@@ -5,11 +5,11 @@ import webbrowser
 from datetime import datetime
 from typing import Dict, List, Union
 
-from PyQt5 import uic
+from PyQt5 import uic, QtCore
 from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5.QtGui import QIcon, QTextCursor
 from PyQt5.QtWidgets import (QApplication, QFileDialog, QMainWindow,
-                             QMessageBox, QTableWidgetItem)
+                             QMessageBox, QTableWidgetItem, QCompleter)
 
 import algobot.assets
 from algobot.algodict import get_interface_dictionary
@@ -163,12 +163,14 @@ class Interface(QMainWindow):
         """
         filtered_tickers = [ticker for ticker in tickers if 'USDT' in ticker]
         config = self.configuration
-        tickerWidgets = [config.tickerComboBox, config.backtestTickerComboBox, config.simulationTickerComboBox,
-                         self.configuration.optimizerTickerComboBox]
+        tickerWidgets = [config.tickerLineEdit, config.backtestTickerLineEdit, config.simulationTickerLineEdit,
+                         config.optimizerTickerLineEdit]
+
+        completer = QCompleter(filtered_tickers)
+        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
 
         for widget in tickerWidgets:
-            widget.clear()
-            widget.addItems(filtered_tickers)
+            widget.setCompleter(completer)
 
         self.otherCommands.csvGenerationTicker.clear()
         self.otherCommands.csvGenerationTicker.addItems(tickers)

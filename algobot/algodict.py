@@ -45,7 +45,7 @@ def get_interface_dictionary(parent, caller: int = None):
             'configuration': {
                 'mainTab': parent.configuration.simulationMainTab,
                 'mainConfigurationTabWidget': parent.configuration.simulationConfigurationTabWidget,
-                'ticker': parent.configuration.simulationTickerComboBox,
+                'ticker': parent.configuration.simulationTickerLineEdit,
                 'interval': parent.configuration.simulationIntervalComboBox,
                 'lowerIntervalCheck': parent.configuration.lowerIntervalSimulationCheck,
                 'precision': parent.configuration.simulationPrecisionSpinBox,
@@ -86,7 +86,7 @@ def get_interface_dictionary(parent, caller: int = None):
             'configuration': {
                 'mainTab': parent.configuration.mainMainTab,
                 'mainConfigurationTabWidget': parent.configuration.mainConfigurationTabWidget,
-                'ticker': parent.configuration.tickerComboBox,
+                'ticker': parent.configuration.tickerLineEdit,
                 'interval': parent.configuration.intervalComboBox,
                 'lowerIntervalCheck': parent.configuration.lowerIntervalCheck,
                 'precision': parent.configuration.precisionSpinBox,
@@ -105,7 +105,7 @@ def get_interface_dictionary(parent, caller: int = None):
                 'mainTab': parent.configuration.backtestMainTab,
                 'mainConfigurationTabWidget': parent.configuration.backtestConfigurationTabWidget,
                 'precision': parent.configuration.backtestPrecisionSpinBox,
-                'ticker': parent.configuration.backtestTickerComboBox,
+                'ticker': parent.configuration.backtestTickerLineEdit,
             },
         }
     }

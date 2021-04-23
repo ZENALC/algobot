@@ -101,7 +101,7 @@ class OtherCommands(QDialog):
         startDate = None if selectedDate == self.currentDateList[0] else selectedDate
 
         self.csvGenerationStatus.setText("Downloading data...")
-        thread = DownloadThread(interval, symbol, descending, armyTime, startDate)
+        thread = DownloadThread(interval, symbol, descending, armyTime, startDate, logger=self.parent.logger)
         thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
         thread.signals.csv_finished.connect(self.end_csv_generation)
         thread.signals.error.connect(self.handle_csv_generation_error)

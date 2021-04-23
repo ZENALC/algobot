@@ -40,7 +40,7 @@ class Configuration(QDialog):
             BACKTEST: {
                 'startDate': self.backtestStartDate,
                 'endDate': self.backtestEndDate,
-                'tickers': self.backtestTickerComboBox,
+                'tickers': self.backtestTickerLineEdit,
                 'intervals': self.backtestIntervalComboBox,
                 'data': None,
                 'dataType': None,
@@ -56,7 +56,7 @@ class Configuration(QDialog):
             OPTIMIZER: {
                 'startDate': self.optimizerStartDate,
                 'endDate': self.optimizerEndDate,
-                'tickers': self.optimizerTickerComboBox,
+                'tickers': self.optimizerTickerLineEdit,
                 'intervals': self.optimizerIntervalComboBox,
                 'data': None,
                 'dataType': None,
@@ -774,10 +774,10 @@ class Configuration(QDialog):
         self.optimizer_backtest_dict[caller]['importButton'].setEnabled(False)
         self.set_download_progress(progress=0, message="Attempting to download...", caller=caller, enableStop=False)
 
-        symbol = self.optimizer_backtest_dict[caller]['tickers'].currentText()
+        symbol = self.optimizer_backtest_dict[caller]['tickers'].text()
         interval = helpers.convert_long_interval(self.optimizer_backtest_dict[caller]['intervals'].currentText())
 
-        thread = downloadThread.DownloadThread(symbol=symbol, interval=interval, caller=caller)
+        thread = downloadThread.DownloadThread(symbol=symbol, interval=interval, caller=caller, logger=self.logger)
         thread.signals.progress.connect(self.set_download_progress)
         thread.signals.finished.connect(self.set_downloaded_data)
         thread.signals.error.connect(self.handle_download_failure)
@@ -826,7 +826,8 @@ class Configuration(QDialog):
         :param caller: Caller that'll determine which caller was used.
         :param e: Error for why download failed.
         """
-        self.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Error occurred during download: {e}.")
+        self.set_download_progress(progress=-1, message=f'Download failed.', caller=caller, enableStop=False)
+        self.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Error occurred during download: {e}")
 
     def set_downloaded_data(self, data, caller: int = BACKTEST):
         """
@@ -834,7 +835,7 @@ class Configuration(QDialog):
         :param caller: Caller that'll determine which caller was used.
         :param data: Data to be used for backtesting.
         """
-        symbol = self.optimizer_backtest_dict[caller]['tickers'].currentText()
+        symbol = self.optimizer_backtest_dict[caller]['tickers'].text()
         interval = self.optimizer_backtest_dict[caller]['intervals'].currentText().lower()
 
         self.optimizer_backtest_dict[caller]['data'] = data
@@ -874,7 +875,7 @@ class Configuration(QDialog):
         config = {
             # General
             'type': BACKTEST,
-            'ticker': self.backtestTickerComboBox.currentIndex(),
+            'ticker': self.backtestTickerLineEdit.text(),
             'interval': self.backtestIntervalComboBox.currentIndex(),
             'startingBalance': self.backtestStartingBalanceSpinBox.value(),
             'precision': self.backtestPrecisionSpinBox.value(),
@@ -898,7 +899,7 @@ class Configuration(QDialog):
         config = {
             # General
             'type': SIMULATION,
-            'ticker': self.simulationTickerComboBox.currentIndex(),
+            'ticker': self.simulationTickerLineEdit.text(),
             'interval': self.simulationIntervalComboBox.currentIndex(),
             'startingBalance': self.simulationStartingBalanceSpinBox.value(),
             'precision': self.simulationPrecisionSpinBox.value(),
@@ -922,7 +923,7 @@ class Configuration(QDialog):
         config = {
             # General
             'type': LIVE,
-            'ticker': self.tickerComboBox.currentIndex(),
+            'ticker': self.tickerLineEdit.text(),
             'interval': self.intervalComboBox.currentIndex(),
             'precision': self.precisionSpinBox.value(),
             'usRegion': self.usRegionRadio.isChecked(),
@@ -966,7 +967,7 @@ class Configuration(QDialog):
             if config['type'] != BACKTEST:
                 QMessageBox.about(self, 'Warning', 'Incorrect type of non-backtest configuration provided.')
             else:
-                self.backtestTickerComboBox.setCurrentIndex(config['ticker'])
+                self.backtestTickerLineEdit.setText(config['ticker'])
                 self.backtestIntervalComboBox.setCurrentIndex(config['interval'])
                 self.backtestStartingBalanceSpinBox.setValue(config['startingBalance'])
                 self.backtestPrecisionSpinBox.setValue(config['precision'])
@@ -989,7 +990,7 @@ class Configuration(QDialog):
             if config['type'] != SIMULATION:
                 QMessageBox.about(self, 'Warning', 'Incorrect type of non-simulation configuration provided.')
             else:
-                self.simulationTickerComboBox.setCurrentIndex(config['ticker'])
+                self.simulationTickerLineEdit.setText(config['ticker'])
                 self.simulationIntervalComboBox.setCurrentIndex(config['interval'])
                 self.simulationStartingBalanceSpinBox.setValue(config['startingBalance'])
                 self.simulationPrecisionSpinBox.setValue(config['precision'])
@@ -1012,7 +1013,7 @@ class Configuration(QDialog):
             if config['type'] != LIVE:
                 QMessageBox.about(self, 'Warning', 'Incorrect type of non-live configuration provided.')
             else:
-                self.tickerComboBox.setCurrentIndex(config['ticker'])
+                self.tickerLineEdit.setText(config['ticker'])
                 self.intervalComboBox.setCurrentIndex(config['interval'])
                 self.precisionSpinBox.setValue(config['precision'])
                 self.usRegionRadio.setChecked(config['usRegion'])
