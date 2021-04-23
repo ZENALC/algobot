@@ -1145,7 +1145,7 @@ class Configuration(QDialog):
         :return: None
         """
         self.backtestIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
-        self.backtestTickerLineEdit.setCurrentIndex(self.tickerLineEdit.text())
+        self.backtestTickerLineEdit.setText(self.tickerLineEdit.text())
         self.backtestPrecisionSpinBox.setValue(self.precisionSpinBox.value())
         self.copy_loss_settings(LIVE, BACKTEST)
 
