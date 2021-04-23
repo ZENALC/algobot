@@ -967,7 +967,7 @@ class Configuration(QDialog):
             if config['type'] != BACKTEST:
                 QMessageBox.about(self, 'Warning', 'Incorrect type of non-backtest configuration provided.')
             else:
-                self.backtestTickerLineEdit.setText(config['ticker'])
+                self.backtestTickerLineEdit.setText(str(config['ticker']))
                 self.backtestIntervalComboBox.setCurrentIndex(config['interval'])
                 self.backtestStartingBalanceSpinBox.setValue(config['startingBalance'])
                 self.backtestPrecisionSpinBox.setValue(config['precision'])
@@ -990,7 +990,7 @@ class Configuration(QDialog):
             if config['type'] != SIMULATION:
                 QMessageBox.about(self, 'Warning', 'Incorrect type of non-simulation configuration provided.')
             else:
-                self.simulationTickerLineEdit.setText(config['ticker'])
+                self.simulationTickerLineEdit.setText(str(config['ticker']))
                 self.simulationIntervalComboBox.setCurrentIndex(config['interval'])
                 self.simulationStartingBalanceSpinBox.setValue(config['startingBalance'])
                 self.simulationPrecisionSpinBox.setValue(config['precision'])
@@ -1013,7 +1013,7 @@ class Configuration(QDialog):
             if config['type'] != LIVE:
                 QMessageBox.about(self, 'Warning', 'Incorrect type of non-live configuration provided.')
             else:
-                self.tickerLineEdit.setText(config['ticker'])
+                self.tickerLineEdit.setText(str(config['ticker']))
                 self.intervalComboBox.setCurrentIndex(config['interval'])
                 self.precisionSpinBox.setValue(config['precision'])
                 self.usRegionRadio.setChecked(config['usRegion'])
