@@ -5,11 +5,11 @@ import webbrowser
 from datetime import datetime
 from typing import Dict, List, Union
 
-from PyQt5 import uic, QtCore
+from PyQt5 import QtCore, uic
 from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5.QtGui import QIcon, QTextCursor
-from PyQt5.QtWidgets import (QApplication, QFileDialog, QMainWindow,
-                             QMessageBox, QTableWidgetItem, QCompleter)
+from PyQt5.QtWidgets import (QApplication, QCompleter, QFileDialog,
+                             QMainWindow, QMessageBox, QTableWidgetItem)
 
 import algobot.assets
 from algobot.algodict import get_interface_dictionary
