@@ -141,6 +141,9 @@
             <property name="text">
              <string>Generate CSV File</string>
             </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
            </widget>
           </item>
           <item row="1" column="0">
@@ -177,24 +180,6 @@
             <property name="wordWrap">
              <bool>true</bool>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="4">
-           <widget class="QComboBox" name="csvGenerationTicker">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="toolTip">
-             <string>Select ticker for which CSV data will be downloaded.</string>
-            </property>
-            <item>
-             <property name="text">
-              <string>BTCUSDT</string>
-             </property>
-            </item>
            </widget>
           </item>
           <item row="6" column="3" colspan="2">
@@ -308,6 +293,16 @@
             </layout>
            </widget>
           </item>
+          <item row="1" column="4">
+           <widget class="QLineEdit" name="csvGenerationTicker">
+            <property name="placeholderText">
+             <string>Search for your ticker here.</string>
+            </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="purgeTab">
@@ -331,8 +326,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>759</width>
-               <height>684</height>
+               <width>424</width>
+               <height>158</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_3">

@@ -1,6 +1,7 @@
 import os
 import shutil
 from datetime import datetime, timezone
+from typing import List
 
 from PyQt5 import uic
 from PyQt5.QtCore import QDate, QThreadPool
@@ -16,6 +17,9 @@ otherCommandsUi = os.path.join(helpers.ROOT_DIR, 'UI', 'otherCommands.ui')
 
 class OtherCommands(QDialog):
     def __init__(self, parent=None):
+        """
+        Initializer for other commands QDialog. This is the main QDialog that supports CSV creation and data purges.
+        """
         super(OtherCommands, self).__init__(parent)  # Initializing object
         uic.loadUi(otherCommandsUi, self)  # Loading the main UI
         self.parent = parent
@@ -31,9 +35,9 @@ class OtherCommands(QDialog):
         """
         self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
         self.stopButton.clicked.connect(self.stop_csv_generation)
-        self.csvGenerationTicker.currentTextChanged.connect(self.start_date_thread)
+        self.csvGenerationTicker.editingFinished.connect(self.start_date_thread)
 
-        # Purge
+        # Purge buttons.
         self.purgeLogsButton.clicked.connect(lambda: self.purge('Logs'))
         self.purgeDatabasesButton.clicked.connect(lambda: self.purge('Databases'))
         self.purgeBacktestResultsButton.clicked.connect(lambda: self.purge('Backtest Results'))
@@ -41,7 +45,7 @@ class OtherCommands(QDialog):
         self.purgeCredentialsButton.clicked.connect(lambda: self.purge('Credentials'))
         self.purgeCSVFilesButton.clicked.connect(lambda: self.purge('CSV'))
 
-    def purge(self, directory):
+    def purge(self, directory: str):
         path = os.path.join(helpers.ROOT_DIR, directory)
         if not os.path.exists(path):
             QMessageBox.about(self, 'Warning', f"No {directory.lower()} files detected.")
@@ -60,17 +64,24 @@ class OtherCommands(QDialog):
                 self.parent.logger = helpers.get_logger(log_file='algobot', logger_name='algobot')
 
     def start_date_thread(self):
+        """
+        Main thread for finding start dates when attempting to initiate a CSV generation.
+        """
+        self.csvGenerationTicker.clearFocus()  # Shift focus to next element.
         self.csvGenerationStatus.setText("Searching for earliest start date..")
         self.csvGenerationProgressBar.setValue(0)
-        self.setDateThread = Worker(self.get_start_date_for_csv)
+        self.setDateThread = Worker(self.get_start_date_for_csv, logger=self.parent.logger)
         self.setDateThread.signals.finished.connect(self.set_start_date_for_csv)
         self.setDateThread.signals.started.connect(lambda: self.generateCSVButton.setEnabled(False))
-        self.setDateThread.signals.restore.connect(self.restore_csv_state)
+        self.setDateThread.signals.error.connect(self.error_handle_for_csv_start_date)
         self.threadPool.start(self.setDateThread)
 
     # noinspection PyProtectedMember
-    def get_start_date_for_csv(self):
-        symbol = self.csvGenerationTicker.currentText()
+    def get_start_date_for_csv(self) -> List[QDate]:
+        """
+        Find start date by instantiating a Data object and fetching the Binance API.
+        """
+        symbol = self.csvGenerationTicker.text()
         interval = helpers.convert_long_interval(self.csvGenerationDataInterval.currentText())
 
         ts = Data(loadData=False, log=False).binanceClient._get_earliest_valid_timestamp(symbol, interval)
@@ -79,20 +90,27 @@ class OtherCommands(QDialog):
 
         endDate = datetime.now(tz=timezone.utc)
         qEnd = QDate(endDate.year, endDate.month, endDate.day)
-
         return [qStart, qEnd]
 
-    def set_start_date_for_csv(self, startEndList):
+    def set_start_date_for_csv(self, startEndList: List[QDate]):
         self.currentDateList = startEndList
         self.startDateCalendar.setDateRange(*startEndList)
         self.startDateCalendar.setSelectedDate(startEndList[0])
         self.csvGenerationStatus.setText("Setup filtered date successfully.")
+        self.generateCSVButton.setEnabled(True)
+
+    def error_handle_for_csv_start_date(self, error_message: str):
+        """
+        Error handling function when CSV start date can't be handled.
+        """
+        self.csvGenerationStatus.setText(error_message)
+        self.generateCSVButton.setEnabled(False)
 
     def initiate_csv_generation(self):
         """
         Starts download of data and CSV generation.
         """
-        symbol = self.csvGenerationTicker.currentText()
+        symbol = self.csvGenerationTicker.text()
         descending = self.descendingDateRadio.isChecked()
         armyTime = self.armyDateRadio.isChecked()
         interval = helpers.convert_long_interval(self.csvGenerationDataInterval.currentText())
@@ -111,7 +129,7 @@ class OtherCommands(QDialog):
         self.csvThread = thread
         self.threadPool.start(thread)
 
-    def progress_update(self, progress, message):
+    def progress_update(self, progress: int, message: str):
         """
         Updates progress bar and message label with values passed.
         :param progress: Progress value to set.
@@ -120,7 +138,7 @@ class OtherCommands(QDialog):
         self.csvGenerationProgressBar.setValue(progress)
         self.csvGenerationStatus.setText(message)
 
-    def end_csv_generation(self, savedPath):
+    def end_csv_generation(self, savedPath: str):
         """
         After getting a successful end signal from thread, it modifies GUI to reflect this action. It also opens up a
         pop-up asking the user if they want to open the file right away.
@@ -147,7 +165,6 @@ class OtherCommands(QDialog):
     def restore_csv_state(self):
         """
         Restores GUI state once CSV generation process is finished.
-        :return:
         """
         self.generateCSVButton.setEnabled(True)
         self.stopButton.setEnabled(False)
@@ -161,9 +178,9 @@ class OtherCommands(QDialog):
             self.csvGenerationStatus.setText("Canceling download...")
             self.csvThread.stop()
 
-    def handle_csv_generation_error(self, e):
+    def handle_csv_generation_error(self, e: str):
         """
         In the event that thread fails, it modifies the GUI with the error message passed to function.
         :param e: Error message.
         """
-        self.csvGenerationStatus.setText(f"Download failed because of error: {e}.")
+        self.csvGenerationStatus.setText(f"Download failed because of error: {e}")

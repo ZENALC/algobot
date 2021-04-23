@@ -159,7 +159,7 @@ class Interface(QMainWindow):
 
     def setup_tickers(self, tickers):
         """
-        Sets up all available tickers from Binance API and displays them on appropriate combo boxes in application.
+        Sets up all available tickers from Binance API and displays them on appropriate comboboxes in application.
         """
         filtered_tickers = [ticker for ticker in tickers if 'USDT' in ticker]
         config = self.configuration
@@ -172,8 +172,10 @@ class Interface(QMainWindow):
         for widget in tickerWidgets:
             widget.setCompleter(completer)
 
-        self.otherCommands.csvGenerationTicker.clear()
-        self.otherCommands.csvGenerationTicker.addItems(tickers)
+        full_completer = QCompleter(tickers)
+        full_completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+
+        self.otherCommands.csvGenerationTicker.setCompleter(full_completer)
         self.configuration.serverResult.setText("Updated tickers successfully.")
 
     def setup_news(self, news):
