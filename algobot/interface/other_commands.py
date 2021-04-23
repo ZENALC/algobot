@@ -3,9 +3,9 @@ import shutil
 from datetime import datetime, timezone
 from typing import List
 
-from PyQt5 import uic
+from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QDate, QThreadPool
-from PyQt5.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QLineEdit, QMessageBox
 
 import algobot.helpers as helpers
 from algobot.data import Data
@@ -28,6 +28,11 @@ class OtherCommands(QDialog):
         self.csvThread = None
         self.setDateThread = None
         self.currentDateList = None
+
+    def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+        focused_widget = QtGui.QApplication.focusWidget()
+        if isinstance(focused_widget, QLineEdit):
+            focused_widget.clearFocus()
 
     def load_slots(self):
         """
