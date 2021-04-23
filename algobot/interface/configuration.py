@@ -826,7 +826,7 @@ class Configuration(QDialog):
         :param caller: Caller that'll determine which caller was used.
         :param e: Error for why download failed.
         """
-        self.set_download_progress(progress=-1, message=f'Download failed.', caller=caller, enableStop=False)
+        self.set_download_progress(progress=-1, message='Download failed.', caller=caller, enableStop=False)
         self.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Error occurred during download: {e}")
 
     def set_downloaded_data(self, data, caller: int = BACKTEST):
