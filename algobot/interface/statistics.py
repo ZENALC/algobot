@@ -1,7 +1,8 @@
 import os
 
 from PyQt5 import QtCore, uic
-from PyQt5.QtWidgets import QDialog, QFormLayout, QLabel, QTabWidget
+from PyQt5.QtWidgets import (QDialog, QFormLayout, QLabel, QMainWindow,
+                             QTabWidget)
 
 from algobot.helpers import ROOT_DIR, get_label_string
 
@@ -9,7 +10,7 @@ statisticsUi = os.path.join(ROOT_DIR, 'UI', 'statistics.ui')
 
 
 class Statistics(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QMainWindow = None):
         super(Statistics, self).__init__(parent)  # Initializing object
         uic.loadUi(statisticsUi, self)  # Loading the main UI
         self.tabs = {}
