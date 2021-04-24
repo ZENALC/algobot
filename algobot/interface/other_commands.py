@@ -5,7 +5,7 @@ from typing import List
 
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QDate, QThreadPool
-from PyQt5.QtWidgets import QDialog, QLineEdit, QMessageBox, QMainWindow
+from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QMessageBox
 
 import algobot.helpers as helpers
 from algobot.data import Data
