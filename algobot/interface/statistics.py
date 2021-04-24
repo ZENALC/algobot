@@ -1,4 +1,5 @@
 import os
+from typing import Any, Dict
 
 from PyQt5 import QtCore, uic
 from PyQt5.QtWidgets import (QDialog, QFormLayout, QLabel, QMainWindow,
@@ -15,7 +16,7 @@ class Statistics(QDialog):
         uic.loadUi(statisticsUi, self)  # Loading the main UI
         self.tabs = {}
 
-    def remove_tab_if_needed(self, tabType):
+    def remove_tab_if_needed(self, tabType: str):
         """
         Removes tab based on tabType provided (if it exists).
         :param tabType: Tab type to remove from list of statistics tabs.
@@ -25,7 +26,7 @@ class Statistics(QDialog):
             index = self.statisticsTabWidget.indexOf(tab)
             self.statisticsTabWidget.removeTab(index)
 
-    def remove_old_tab(self, tabType):
+    def remove_old_tab(self, tabType: str):
         """
         Removes previous tab of the same tab type.
         :param tabType: Tab type to remove.
@@ -33,7 +34,7 @@ class Statistics(QDialog):
         index = self.get_index_from_tab_type(tabType)
         self.statisticsTabWidget.removeTab(index)
 
-    def initialize_tab(self, valueDictionary, tabType):
+    def initialize_tab(self, valueDictionary: Dict[str, Any], tabType: str):
         """
         Initializes tab of tabType provided.
         :param valueDictionary: Dictionary with values to fill into the tab.
@@ -55,7 +56,7 @@ class Statistics(QDialog):
         self.statisticsTabWidget.setCurrentIndex(index)
 
     @staticmethod
-    def get_index_from_tab_type(tabType) -> int:
+    def get_index_from_tab_type(tabType: str) -> int:
         """
         Returns index of type of tab.
         :param tabType: Type of tab to get index of.
@@ -67,7 +68,8 @@ class Statistics(QDialog):
             return 0
 
     @staticmethod
-    def add_category_and_children_keys(categoryKey, valueDictionary, innerTabs, tab):
+    def add_category_and_children_keys(categoryKey: str, valueDictionary: Dict[str, Any], innerTabs: Dict[str, Any],
+                                       tab: QTabWidget):
         """
         Modifies instance tabs variable with new values from valueDictionary.
         :param categoryKey: Category to modify.
@@ -90,7 +92,7 @@ class Statistics(QDialog):
         tab.addTab(innerTabs[categoryKey]['tab'], get_label_string(categoryKey))
 
     @staticmethod
-    def set_profit_or_loss_label(valueDictionary, innerTabs):
+    def set_profit_or_loss_label(valueDictionary: Dict[str, Any], innerTabs: Dict[str, Any]):
         """
         Sets the profit or loss label appropriately based on the value dictionary provided.
         :param valueDictionary: Dictionary with values to update profit or loss label.
@@ -106,7 +108,7 @@ class Statistics(QDialog):
                     label = 'Profit'
                 tab['profit']['label'].setText(label)
 
-    def modify_tab(self, valueDictionary, tabType):
+    def modify_tab(self, valueDictionary: Dict[str, Any], tabType: str):
         """
         Modifies tab.
         :param valueDictionary: Dictionary with values.
