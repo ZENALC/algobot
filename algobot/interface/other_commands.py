@@ -5,7 +5,7 @@ from typing import List
 
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QDate, QThreadPool
-from PyQt5.QtWidgets import QDialog, QLineEdit, QMessageBox
+from PyQt5.QtWidgets import QDialog, QLineEdit, QMessageBox, QMainWindow
 
 import algobot.helpers as helpers
 from algobot.data import Data
@@ -16,7 +16,7 @@ otherCommandsUi = os.path.join(helpers.ROOT_DIR, 'UI', 'otherCommands.ui')
 
 
 class OtherCommands(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent: QMainWindow = None):
         """
         Initializer for other commands QDialog. This is the main QDialog that supports CSV creation and data purges.
         """
@@ -30,6 +30,9 @@ class OtherCommands(QDialog):
         self.currentDateList = None
 
     def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+        """
+        Overrides QDialog to detect click events. Used mainly to clear focus from QLineEdits.
+        """
         focused_widget = QtGui.QApplication.focusWidget()
         if isinstance(focused_widget, QLineEdit):
             focused_widget.clearFocus()
@@ -51,6 +54,9 @@ class OtherCommands(QDialog):
         self.purgeCSVFilesButton.clicked.connect(lambda: self.purge('CSV'))
 
     def purge(self, directory: str):
+        """
+        Deletes directory provided.
+        """
         path = os.path.join(helpers.ROOT_DIR, directory)
         if not os.path.exists(path):
             QMessageBox.about(self, 'Warning', f"No {directory.lower()} files detected.")
@@ -98,6 +104,9 @@ class OtherCommands(QDialog):
         return [qStart, qEnd]
 
     def set_start_date_for_csv(self, startEndList: List[QDate]):
+        """
+        Sets start date for CSV generation based on the parameters provided.
+        """
         self.currentDateList = startEndList
         self.startDateCalendar.setDateRange(*startEndList)
         self.startDateCalendar.setSelectedDate(startEndList[0])
