@@ -42,7 +42,7 @@ class BacktestThread(QRunnable):
             'data': config.optimizer_backtest_dict[BACKTEST]['data'],
             'startDate': startDate,
             'endDate': endDate,
-            'dataType': config.optimizer_backtest_dict[BACKTEST]['dataType'],
+            'symbol': config.optimizer_backtest_dict[BACKTEST]['dataType'],
             'precision': config.backtestPrecisionSpinBox.value(),
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
             'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
@@ -116,17 +116,7 @@ class BacktestThread(QRunnable):
         """
         Sets up initial backtester and then emits parameters to GUI.
         """
-        configDetails = self.get_configuration_details_to_setup_backtest()
-        self.gui.backtester = Backtester(startingBalance=configDetails['startingBalance'],
-                                         data=configDetails['data'],
-                                         symbol=configDetails['dataType'],
-                                         marginEnabled=configDetails['marginEnabled'],
-                                         startDate=configDetails['startDate'],
-                                         endDate=configDetails['endDate'],
-                                         precision=configDetails['precision'],
-                                         outputTrades=configDetails['outputTrades'],
-                                         strategies=configDetails['strategies'],
-                                         strategyInterval=configDetails['strategyInterval'])
+        self.gui.backtester = Backtester(**self.get_configuration_details_to_setup_backtest())
         self.gui.backtester.apply_take_profit_settings(self.gui.configuration.get_take_profit_settings(BACKTEST))
         self.gui.backtester.apply_loss_settings(self.gui.configuration.get_loss_settings(BACKTEST))
         self.signals.started.emit(self.get_configuration_dictionary_for_gui())
