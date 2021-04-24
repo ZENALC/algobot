@@ -36,7 +36,7 @@ class OptimizerThread(QRunnable):
             'data': config.optimizer_backtest_dict[OPTIMIZER]['data'],
             'startDate': startDate,
             'endDate': endDate,
-            'dataType': config.optimizer_backtest_dict[OPTIMIZER]['dataType'],
+            'symbol': config.optimizer_backtest_dict[OPTIMIZER]['dataType'],
             'precision': config.optimizerPrecisionSpinBox.value(),
             'outputTrades': config.optimizerOutputTradesCheckBox.isChecked(),
             'marginEnabled': config.optimizerMarginTradingCheckBox.isChecked(),
@@ -46,18 +46,7 @@ class OptimizerThread(QRunnable):
         }
 
     def setup(self):
-        configDetails = self.get_configuration_details()
-        self.gui.optimizer = Backtester(startingBalance=configDetails['startingBalance'],
-                                        data=configDetails['data'],
-                                        symbol=configDetails['dataType'],
-                                        marginEnabled=configDetails['marginEnabled'],
-                                        startDate=configDetails['startDate'],
-                                        endDate=configDetails['endDate'],
-                                        precision=configDetails['precision'],
-                                        outputTrades=configDetails['outputTrades'],
-                                        strategies=configDetails['strategies'],
-                                        strategyInterval=configDetails['strategyInterval'],
-                                        drawdownPercentage=configDetails['drawdownPercentage'])
+        self.gui.optimizer = Backtester(**self.get_configuration_details())
 
     def stop(self):
         self.running = False
