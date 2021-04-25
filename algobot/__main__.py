@@ -46,9 +46,12 @@ mainUi = os.path.join(ROOT_DIR, 'UI', 'algobot.ui')
 class Interface(QMainWindow):
     """
         Main Algobot interface.
-        Algobot currently supports trading with live bots, running simulations, and running backtests.
-    """
+        Algobot currently supports trading with live bots and running simulations, optimizers, or backtests.
 
+        To contribute, please visit: https://github.com/ZENALC/algobot.
+        For bug reports or feature requests, please create an issue at: https://github.com/ZENALC/algobot/issues.
+        For available documentation, please visit: https://github.com/ZENALC/algobot/wiki.
+    """
     def __init__(self, parent=None):
         algobot.assets.qInitResources()
         super(Interface, self).__init__(parent)  # Initializing object
