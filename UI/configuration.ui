@@ -1655,7 +1655,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>2</number>
+              <number>4</number>
              </property>
              <property name="tabsClosable">
               <bool>false</bool>
@@ -2487,6 +2487,53 @@
                    </widget>
                   </item>
                  </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_2">
+              <attribute name="title">
+               <string>Miscellaneous</string>
+              </attribute>
+              <layout class="QFormLayout" name="formLayout">
+               <item row="0" column="0">
+                <widget class="QLabel" name="failLimitLabel">
+                 <property name="toolTip">
+                  <string>Amount of times to retry after a fail while running a simulation or bot.</string>
+                 </property>
+                 <property name="text">
+                  <string>Failure Limit</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QSpinBox" name="failureLimitSpinBox">
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="value">
+                  <number>5</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="failSleepLabel">
+                 <property name="toolTip">
+                  <string>Amount of time to wait before retrying to execute simulation or bot.</string>
+                 </property>
+                 <property name="text">
+                  <string>Failure Sleep Time</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QSpinBox" name="failureSleepSpinBox">
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="value">
+                  <number>10</number>
+                 </property>
                 </widget>
                </item>
               </layout>

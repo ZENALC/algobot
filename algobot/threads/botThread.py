@@ -62,9 +62,9 @@ class BotThread(QRunnable):
         self.trader = None
 
         self.failed = False  # All these variables pertain to bot failures.
-        self.failCount = 0
-        self.failLimit = 10
-        self.failSleep = 6
+        self.failCount = 0  # Current amount of times the bot has failed.
+        self.failLimit = gui.configuration.failureLimitSpinBox.value()
+        self.failSleep = gui.configuration.failureSleepSpinBox.value()
         self.failError = ''
 
     def initialize_lower_interval_trading(self, caller, interval: str):
