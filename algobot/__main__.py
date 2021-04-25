@@ -596,7 +596,7 @@ class Interface(QMainWindow):
         if '-1021' in msg:
             msg = msg + ' Please sync your system time.'
         if 'list index out of range' in msg:
-            pair = self.configuration.tickerComboBox.currentText()
+            pair = self.configuration.tickerLineEdit.text()
             msg = f'You may not have any assets in the symbol {pair}. Please check Binance and try again.'
         if 'Chat not found' in msg:
             msg = "Please check your Telegram bot chat ID or turn off Telegram notifications to get rid of this error."
@@ -1159,22 +1159,19 @@ class Interface(QMainWindow):
     def open_binance(self, caller: int = None):
         """
         Opens Binance hyperlink.
-        :param caller: If provided, it'll open the link to the caller's symbol's link on Binance.
+        :param caller: If provided, it'll open the link to the caller's symbol's link on Binance. By default, if no
+        caller is provided, the homepage will open up.
         """
         if caller is None:
-            symbol = None
-        else:
-            symbol = self.interfaceDictionary[caller]['configuration']['ticker'].currentText()
-            index = symbol.index("USDT")
-            if index == 0:
-                symbol = f"USDT_{symbol[4:]}"
-            else:
-                symbol = f"{symbol[:index]}_USDT"
-
-        if symbol:
-            webbrowser.open(f"https://www.binance.com/en/trade/{symbol}")
-        else:
             webbrowser.open("https://www.binance.com/en")
+        else:
+            symbol = self.interfaceDictionary[caller]['configuration']['ticker'].text()
+            if symbol.strip() == '' or 'USDT' not in symbol:  # TODO: Add more ticker pair separators.
+                webbrowser.open("https://www.binance.com/en")
+            else:
+                index = symbol.index("USDT")
+                symbol = f"USDT_{symbol[4:]}" if index == 0 else f"{symbol[:index]}_USDT"
+                webbrowser.open(f"https://www.binance.com/en/trade/{symbol}")
 
     def open_trading_view(self, caller: int = None):
         """
@@ -1182,14 +1179,13 @@ class Interface(QMainWindow):
         :param caller: If provided, it'll open the link to the caller's symbol's link on TradingView.
         """
         if caller is None:
-            symbol = None
-        else:
-            symbol = self.interfaceDictionary[caller]['configuration']['ticker'].currentText()
-
-        if symbol:
-            webbrowser.open(f"https://www.tradingview.com/symbols/{symbol}/?exchange=BINANCE")
-        else:
             webbrowser.open("https://www.tradingview.com/")
+        else:
+            symbol = self.interfaceDictionary[caller]['configuration']['ticker'].text()
+            if symbol.strip() == '':
+                webbrowser.open("https://www.tradingview.com/")
+            else:
+                webbrowser.open(f"https://www.tradingview.com/symbols/{symbol}/?exchange=BINANCE")
 
     def export_trades(self, caller):
         """
