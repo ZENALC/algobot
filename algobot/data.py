@@ -3,6 +3,7 @@ import sqlite3
 import time
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
+from logging import Logger
 from typing import List, Tuple
 
 from binance.client import Client
@@ -15,7 +16,7 @@ from algobot.typing_hints import DATA_TYPE
 
 class Data:
     def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True,
-                 updateData: bool = True, log: bool = False, logFile: str = 'data', logObject=None,
+                 updateData: bool = True, log: bool = False, logFile: str = 'data', logObject: Logger = None,
                  precision: int = 2, callback=None, caller=None):
         """
         Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
@@ -68,7 +69,7 @@ class Data:
             self.load_data(update=updateData)
 
     @staticmethod
-    def get_logging_object(enable_logging: bool, logFile: str, loggerObject):
+    def get_logging_object(enable_logging: bool, logFile: str, loggerObject: Logger):
         """
         Returns a logger object.
         :param enable_logging: Boolean that determines whether logging is enabled or not.
