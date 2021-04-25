@@ -632,6 +632,8 @@ class Configuration(QDialog):
                 self.hoverLineColor.setCurrentIndex(config['lineColor'])
 
                 self.graphIndicatorsCheckBox.setChecked(config['averagePlot'])
+                self.failureLimitSpinBox.setValue(int(config['failureLimit']))
+                self.failureSleepSpinBox.setValue(int(config['failureSleep']))
 
                 if self.parent:
                     self.parent.add_to_live_activity_monitor('Loaded previous state successfully.')
@@ -639,7 +641,7 @@ class Configuration(QDialog):
                 self.logger.exception(str(e))
 
                 if self.parent:
-                    self.parent.add_to_live_activity_monitor('Failed to load previous state.')
+                    self.parent.add_to_live_activity_monitor('Failed to fully load previous state. Try restarting.')
 
     def save_state(self):
         """
@@ -658,6 +660,8 @@ class Configuration(QDialog):
             'avg4Color': self.avg4Color.currentIndex(),
             'lineColor': self.hoverLineColor.currentIndex(),
             'averagePlot': self.graphIndicatorsCheckBox.isChecked(),
+            'failureLimit': self.failureLimitSpinBox.value(),
+            'failureSleep': self.failureSleepSpinBox.value()
         }
 
         helpers.write_json_file(self.basicFilePath, **config)
