@@ -4,7 +4,7 @@ import time
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from logging import Logger
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
@@ -37,10 +37,8 @@ class Data:
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
         self.precision = precision  # Decimal precision with which to show data.
         self.dataLimit = 2000  # Max amount of data to contain.
-
         self.downloadCompleted = False  # Boolean to determine whether data download is completed or not.
         self.downloadLoop = True  # Boolean to determine whether data is being downloaded or not.
-
         self.tickers = self.binanceClient.get_all_tickers()  # A list of all the tickers on Binance.
         self.symbol = symbol.upper()  # Symbol of data being used.
         self.validate_symbol(self.symbol)  # Validate symbol.
@@ -69,7 +67,7 @@ class Data:
             self.load_data(update=updateData)
 
     @staticmethod
-    def get_logging_object(enable_logging: bool, logFile: str, loggerObject: Logger):
+    def get_logging_object(enable_logging: bool, logFile: str, loggerObject: Logger) -> Union[None, Logger]:
         """
         Returns a logger object.
         :param enable_logging: Boolean that determines whether logging is enabled or not.
