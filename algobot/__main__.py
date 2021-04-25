@@ -123,7 +123,7 @@ class Interface(QMainWindow):
         newsThread.signals.restore.connect(lambda: self.refreshNewsButton.setEnabled(True))
         self.threadPool.start(newsThread)
 
-    def news_thread_error(self, e):
+    def news_thread_error(self, e: str):
         self.newsStatusLabel.setText("Failed to retrieve latest news.")
         if 'www.todayonchain.com' in e:
             self.create_popup('Failed to retrieve latest news due to a connectivity error.')
@@ -142,7 +142,7 @@ class Interface(QMainWindow):
         tickerThread.signals.restore.connect(lambda: self.configuration.updateTickers.setEnabled(True))
         self.threadPool.start(tickerThread)
 
-    def tickers_thread_error(self, e):
+    def tickers_thread_error(self, e: str):
         fail = 'Failed to retrieve tickers because of a connectivity issue.'
         self.add_to_live_activity_monitor(fail)
         self.configuration.serverResult.setText(fail)

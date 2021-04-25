@@ -1,5 +1,6 @@
 import datetime
 import os
+from logging import Logger
 from typing import List, Tuple, Union
 
 import telegram
@@ -29,7 +30,7 @@ configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
 
 class Configuration(QDialog):
-    def __init__(self, parent: QMainWindow, logger=None):
+    def __init__(self, parent: QMainWindow, logger: Logger = None):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
         self.parent = parent
