@@ -89,7 +89,7 @@ class Interface(QMainWindow):
         self.graphUpdateSeconds = 1
         self.graphUpdateSchedule: List[float or None] = [None, None]  # LIVE, SIM
 
-    def inform_telegram(self, message):
+    def inform_telegram(self, message: str):
         """
         Sends a notification to Telegram if some action is taken by the bot.
         :param message: Message to send.
@@ -157,7 +157,7 @@ class Interface(QMainWindow):
         tickers = [ticker['symbol'] for ticker in Data(loadData=False, log=False).binanceClient.get_all_tickers()]
         return sorted(tickers)
 
-    def setup_tickers(self, tickers):
+    def setup_tickers(self, tickers: List[str]):
         """
         Sets up all available tickers from Binance API and displays them on appropriate comboboxes in application.
         """
@@ -178,7 +178,7 @@ class Interface(QMainWindow):
         self.otherCommands.csvGenerationTicker.setCompleter(full_completer)
         self.configuration.serverResult.setText("Updated tickers successfully.")
 
-    def setup_news(self, news):
+    def setup_news(self, news: List[str]):
         """
         Sets up all latest available news with news list provided.
         :param news: List of news.
@@ -468,7 +468,7 @@ class Interface(QMainWindow):
         worker.signals.removeCustomStopLoss.connect(lambda: self.set_custom_stop_loss(LIVE, False))
         self.threadPool.start(worker)
 
-    def download_progress_update(self, value, message, caller):
+    def download_progress_update(self, value: int, message: str, caller):
         """
         This will update the GUI with the current download progress.
         :param value: Percentage completed.
@@ -629,7 +629,7 @@ class Interface(QMainWindow):
         else:
             averageGraphDict['enable'] = False
 
-    def disable_interface(self, disable: bool, caller, everything=False):
+    def disable_interface(self, disable: bool, caller, everything: bool = False):
         """
         Function that will control trading configuration interfaces.
         :param everything: Disables everything during initialization.
@@ -749,7 +749,7 @@ class Interface(QMainWindow):
         self.interfaceDictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(enabled)
         self.interfaceDictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(enabled)
 
-    def exit_position_thread(self, caller, humanControl):
+    def exit_position_thread(self, caller, humanControl: bool):
         """
         Thread that'll take care of exiting position.
         :param caller: Caller that will specify which trader will exit position.
@@ -769,7 +769,7 @@ class Interface(QMainWindow):
                 trader.buy_short('Exited short because of override and resumed autonomous logic.', force=True)
         # self.inform_telegram("Force exited position from GUI.", caller=caller)
 
-    def set_exit_position_gui(self, caller, humanControl):
+    def set_exit_position_gui(self, caller, humanControl: bool):
         """
         This function will configure GUI to reflect exit position aftermath.
         :param caller: Caller that will specify which interface's GUI will change.
@@ -896,7 +896,7 @@ class Interface(QMainWindow):
             pauseButton.setText('Pause Bot')
             self.add_to_monitor(caller, 'Resuming bot logic.')
 
-    def set_advanced_logging(self, boolean):
+    def set_advanced_logging(self, boolean: bool):
         """
         Sets logging standard.
         :param boolean: Boolean that will determine whether logging is advanced or not. If true, advanced, else regular.
@@ -1036,7 +1036,7 @@ class Interface(QMainWindow):
         add_to_table(self.activityMonitor, [message])
         self.activityMonitor.scrollToBottom()
 
-    def update_trades_table_and_activity_monitor(self, trade, caller):
+    def update_trades_table_and_activity_monitor(self, trade: dict, caller):
         """
         Updates trade table and activity based on caller and sends message to Telegram if live bot is trading and
         Telegram feature is enabled.
