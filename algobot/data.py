@@ -114,7 +114,7 @@ class Data:
             else:
                 self.output_message("Database is up-to-date.")
 
-    def output_message(self, message: str, level=2, printMessage: bool = False):
+    def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
         I need to research the logging module better, but in essence, this function just logs and optionally prints
         message provided.
@@ -168,7 +168,7 @@ class Data:
                                 );''')
                 connection.commit()
 
-    def dump_to_table(self, totalData: list = None) -> bool:
+    def dump_to_table(self, totalData: List[dict] = None) -> bool:
         """
         Dumps date and price information to database.
         :return: A boolean whether data entry was successful or not.
@@ -224,7 +224,7 @@ class Data:
                 rows = cursor.execute(f'''
                         SELECT "date_utc", "open_price", "high_price", "low_price", "close_price", "volume",
                         "quote_asset_volume", "number_of_trades", "taker_buy_base_asset", "taker_buy_quote_asset"
-                        FROM {self.databaseTable} ORDER BY date_utc DESC
+                        FROM {self.databaseTable} ORDER BY date_utc
                         ''').fetchall()
 
         if len(rows) > 0:
@@ -297,7 +297,7 @@ class Data:
             self.output_message("Database is up-to-date.")
 
     # noinspection PyProtectedMember
-    def custom_get_new_data(self, limit: int = 500, progress_callback=None, locked=None, removeFirst=False,
+    def custom_get_new_data(self, limit: int = 500, progress_callback=None, locked=None, removeFirst: bool = False,
                             caller=-1) -> List[dict]:
         """
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
@@ -308,7 +308,7 @@ class Data:
         :param limit: Limit per pull.
         :return: A list of dictionaries.
         """
-        # This code below is taken from binance client and slightly refactored.
+        # This code below is taken from binance client and slightly refactored to make usage of completion percentages.
         self.downloadLoop = True
         output_data = []  # Initialize our list
         timeframe = interval_to_milliseconds(self.interval)
@@ -351,7 +351,7 @@ class Data:
             progress_callback.emit(-1, "Download canceled.", caller)
             return []
 
-        if locked:
+        if locked:  # If we have a callback for emitting lock signals.
             locked.emit()
 
         if removeFirst:  # This should be refactored once data is inserted in the reverse order.
@@ -362,9 +362,9 @@ class Data:
         progress_callback.emit(97, "This may take a while. Dumping data to database...", caller)
 
         if removeFirst:  # We don't want current data as it's not the latest data.
-            self.dump_to_table(self.data[:len(output_data)])
-        else:
-            self.dump_to_table(self.data[1:len(output_data)])
+            self.dump_to_table(self.data)
+        else:  # Strip off last element because it contains current info which we don't want to store.
+            self.dump_to_table(self.data[:-1])
 
         progress_callback.emit(100, "Downloaded all new data successfully.", caller)
         self.downloadLoop = False
@@ -380,7 +380,10 @@ class Data:
         """
         newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
         self.downloadCompleted = True
-        return newData[:-1]  # Up to -1st index, because we don't want current period data.
+        if len(newData[:-1]) == 0:
+            raise RuntimeError("No data was fetched from Binance. Please check Binance server.")
+        else:
+            return newData[:-1]  # Up to -1st index, because we don't want current period data.
 
     def is_latest_date(self, latestDate: datetime) -> bool:
         """
@@ -397,17 +400,15 @@ class Data:
         Checks whether data is fully updated or not.
         :return: A boolean whether data is updated or not with Binance values.
         """
-        latestDate = self.data[0]['date_utc']
+        latestDate = self.data[-1]['date_utc']
         return self.is_latest_date(latestDate)
 
-    def insert_data(self, newData: list):
+    def insert_data(self, newData: List[List[str]]):
         """
         Inserts data from newData to run-time data.
         :param newData: List with new data values.
         """
-        temp_data = []
-
-        for data in newData[::-1]:
+        for data in newData:
             parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
             current_dict = {'date_utc': parsedDate,
                             'open': float(data[1]),
@@ -420,15 +421,13 @@ class Data:
                             'taker_buy_base_asset': float(data[8]),
                             'taker_buy_quote_asset': float(data[9]),
                             }
-            temp_data.append(current_dict)
-
-        self.data = temp_data + self.data
+            self.data.append(current_dict)
 
     def update_data(self, verbose: bool = False):
         """
         Updates run-time data with Binance API values.
         """
-        latestDate = self.data[0]['date_utc']
+        latestDate = self.data[-1]['date_utc']
         timestamp = int(latestDate.timestamp()) * 1000
         dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
         if verbose:
@@ -448,11 +447,11 @@ class Data:
 
     def remove_past_data_if_needed(self):
         """
-        Remove past data past data limit.
+        Remove past data when over data limit.
         """
         if len(self.data) > self.dataLimit:  # Remove past data.
             self.dump_to_table()
-            self.data = self.data[:self.dataLimit // 2]
+            self.data = self.data[self.dataLimit // 2:]
 
     def get_current_data(self, counter: int = 0) -> dict:
         """
@@ -465,7 +464,7 @@ class Data:
             if not self.data_is_updated():
                 self.update_data()
 
-            currentInterval = self.data[0]['date_utc'] + timedelta(minutes=self.get_interval_minutes())
+            currentInterval = self.data[-1]['date_utc'] + timedelta(minutes=self.get_interval_minutes())
             currentTimestamp = int(currentInterval.timestamp() * 1000)
 
             nextInterval = currentInterval + timedelta(minutes=self.get_interval_minutes())
@@ -598,14 +597,14 @@ class Data:
         data = self.data
         if startDate is not None:
             for index, period in enumerate(data):
-                if period['date_utc'].date() < startDate:
-                    data = self.data[:index]
+                if period['date_utc'].date() <= startDate:
+                    data = self.data[index:]
                     break
 
         if descending:
-            path = self.write_csv_data(data, fileName=fileName, armyTime=armyTime)
-        else:
             path = self.write_csv_data(data[::-1], fileName=fileName, armyTime=armyTime)
+        else:
+            path = self.write_csv_data(data, fileName=fileName, armyTime=armyTime)
 
         self.output_message(f'Data saved to {path}.')
         return path
@@ -624,11 +623,10 @@ class Data:
     def is_valid_interval(self, interval: str) -> bool:
         """
         Returns whether interval provided is valid or not.
-        :param interval: Interval argument.
+        :param interval: Interval argument in short form -> e.g. 12h for 12 hours
         :return: A boolean whether the interval is valid or not.
         """
-        availableIntervals = ('12h', '15m', '1d', '1h',
-                              '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
+        availableIntervals = ('12h', '15m', '1d', '1h', '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
         if interval in availableIntervals:
             return True
         else:
@@ -687,73 +685,7 @@ class Data:
         return True
 
     def get_total_non_updated_data(self) -> DATA_TYPE:
-        return [self.current_values] + self.data
-
-    def get_summation(self, prices: int, parameter: str, round_value: bool = True, update: bool = True) -> float:
-        """
-        Returns total summation.
-        :param update: Boolean for whether function should call API and get latest data or not.
-        :param prices: Amount of periods to iterate through for summation.
-        :param parameter: Parameter to iterate through.
-        :param round_value: Boolean that determines whether returned output is rounded or not.
-        :return: Total summation.
-        """
-        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
-        data = data[:prices]
-
-        total = 0
-        for period in data:
-            total += period[parameter]
-
-        if round_value:
-            return round(total, self.precision)
-        return total
-
-    def get_lowest_low_value(self, prices: int, parameter: str = 'low', round_value: bool = True,
-                             update: bool = True) -> float:
-        """
-        Function that returns the lowest low values.
-        :param update: Boolean for whether function should call API and get latest data or not.
-        :param prices: Amount of periods to iterate through.
-        :param parameter: Parameter to iterate through. By default, it is low.
-        :param round_value: Boolean that determines whether returned output is rounded or not.
-        :return: Lowest low value from periods.
-        """
-        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
-        data = data[:prices]
-
-        lowest = data[0][parameter]
-
-        for period in data[1:]:
-            if period[parameter] < lowest:
-                lowest = period[parameter]
-
-        if round_value:
-            return round(lowest, self.precision)
-        return lowest
-
-    def get_highest_high_value(self, prices: int, parameter: str = 'high', round_value: bool = True,
-                               update: bool = True) -> float:
-        """
-        Function that returns the highest high values.
-        :param update: Boolean for whether function should call API and get latest data or not.
-        :param prices: Amount of periods to iterate through.
-        :param parameter: Parameter to iterate through. By default, it is high.
-        :param round_value: Boolean that determines whether returned output is rounded or not.
-        :return: Highest high value from periods.
-        """
-        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
-        data = data[:prices]
-
-        highest = data[0][parameter]
-
-        for period in data[1:]:
-            if period[parameter] > highest:
-                highest = period[parameter]
-
-        if round_value:
-            return round(highest, self.precision)
-        return highest
+        return self.data + [self.current_values]
 
     @staticmethod
     def helper_get_ema(up_data: list, down_data: list, periods: int) -> tuple:
@@ -794,14 +726,10 @@ class Data:
             shift -= 1
         else:
             updateDict = True
-            data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
+            data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
 
-        start = 500 + prices + shift if len(data) > 500 + prices + shift else len(data)
-        data = data[shift:start]
-        data = data[:]
-        data.reverse()
-
-        ups, downs = get_ups_and_downs(data=data, parameter=parameter)
+        start = len(data) - 500 - prices - shift if len(data) > 500 + prices + shift else 0
+        ups, downs = get_ups_and_downs(data=data[start:len(data) - shift], parameter=parameter)
         averageUp, averageDown = self.helper_get_ema(ups, downs, prices)
         rs = averageUp / averageDown
         rsi = 100 - 100 / (1 + rs)
@@ -827,8 +755,8 @@ class Data:
         if not self.is_valid_average_input(shift, prices):
             raise ValueError('Invalid average input specified.')
 
-        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
-        data = data[shift: prices + shift]  # Data now starts from shift and goes up to prices + shift
+        data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
+        data = data[len(data) - prices - shift: len(data) - shift]
         sma = get_sma(data, prices, parameter)
 
         if round_value:
@@ -849,9 +777,9 @@ class Data:
         if not self.is_valid_average_input(shift, prices):
             raise ValueError('Invalid average input specified.')
 
-        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
-        data = data[shift: prices + shift]
-        wma = get_wma(data, prices, parameter)
+        data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
+        data = data[len(data) - prices - shift: len(data) - shift]
+        wma = get_wma(data, prices, parameter, desc=False)
 
         if round_value:
             return round(wma, self.precision)
@@ -878,9 +806,9 @@ class Data:
             self.ema_dict = {}
             self.update_data()
 
-        data = [self.get_current_data()] + self.data if update else self.get_total_non_updated_data()
-        data = data[shift:]
-        ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict)
+        data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
+        data = data[:len(data) - shift]
+        ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict, desc=False)
 
         if round_value:
             return round(ema, self.precision)
