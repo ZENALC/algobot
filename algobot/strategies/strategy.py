@@ -25,6 +25,9 @@ class Strategy:
         self.lowerIntervalDict = {}
 
     def set_inputs(self, inputs: list):
+        """
+        This function is used extensively by the optimizer. Your inputs argument will reset the strategy's inputs.
+        """
         raise NotImplementedError("Implement a function to set new inputs to your strategy.")
 
     def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False) -> int:
