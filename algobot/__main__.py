@@ -84,6 +84,7 @@ class Interface(QMainWindow):
         self.simulationLowerIntervalData: Union[Data, None] = None
         self.lowerIntervalData: Union[Data, None] = None
         self.telegramBot = None
+        self.tickers = []  # All available tickers.
         self.add_to_live_activity_monitor('Initialized interface.')
         self.load_tickers_and_news()
         self.homeTab.setCurrentIndex(0)
@@ -175,6 +176,7 @@ class Interface(QMainWindow):
         shown for downloads.
         :param tickers: List of tickers in a string format retrieved from Binance API.
         """
+        self.tickers = tickers
         filtered_tickers = [ticker for ticker in tickers if 'USDT' in ticker]
         config = self.configuration
         tickerWidgets = [config.tickerLineEdit, config.backtestTickerLineEdit, config.simulationTickerLineEdit,
@@ -248,6 +250,9 @@ class Interface(QMainWindow):
         """
         Main function to begin optimization.
         """
+        if not self.validate_ticker(OPTIMIZER):
+            return
+
         if self.configuration.optimizer_backtest_dict[OPTIMIZER]['data'] is None:
             self.create_popup("No data setup yet for optimizer. Please configure them in settings first.")
             return
@@ -286,6 +291,9 @@ class Interface(QMainWindow):
         """
         Initiates backtest based on settings configured. If there is no data configured, prompts user to configure data.
         """
+        if not self.validate_ticker(BACKTEST):
+            return
+
         if self.configuration.optimizer_backtest_dict[BACKTEST]['data'] is None:
             self.create_popup("No data setup yet for backtesting. Please configure them in settings first.")
             return
@@ -434,7 +442,7 @@ class Interface(QMainWindow):
         self.update_backtest_configuration_gui(configurationDictionary)
         self.add_to_backtest_monitor(f"Started backtest with {symbol} data and {interval.lower()} interval periods.")
 
-    def check_strategies(self, caller: int) -> float:
+    def check_strategies(self, caller: int) -> bool:
         """
         Checks if strategies exist based on the caller provided and prompts an appropriate message.
         """
@@ -453,16 +461,30 @@ class Interface(QMainWindow):
             return ret == qm.Yes
         return True
 
+    def validate_ticker(self, caller: int):
+        """
+        Validate ticker provided before running a bot.
+        """
+        selected_ticker = self.interfaceDictionary[caller]['configuration']['ticker'].text()
+        if selected_ticker.strip() == '':
+            self.create_popup("Please specify a ticker. No ticker found.")
+            return False
+        if selected_ticker not in self.tickers:
+            self.create_popup("Invalid ticker specified. Please check your settings and configure it correctly.")
+            return False
+        return True
+
     def initiate_bot_thread(self, caller: int):
         """
         Main function that initiates bot thread and handles all data-view logic.
         :param caller: Caller that decides whether a live bot or simulation bot is run.
         """
+        if not self.validate_ticker(caller):
+            return
         if not self.check_strategies(caller):
             return
 
         self.disable_interface(True, caller)
-
         worker = botThread.BotThread(gui=self, caller=caller, logger=self.logger)
         worker.signals.smallError.connect(self.create_popup)
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
