@@ -1,4 +1,4 @@
-from algobot.enums import BACKTEST, LIVE, SIMULATION
+from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 
 
 # noinspection DuplicatedCode
@@ -106,6 +106,11 @@ def get_interface_dictionary(parent, caller: int = None):
                 'mainConfigurationTabWidget': parent.configuration.backtestConfigurationTabWidget,
                 'precision': parent.configuration.backtestPrecisionSpinBox,
                 'ticker': parent.configuration.backtestTickerLineEdit,
+            },
+        },
+        OPTIMIZER: {
+            'configuration': {
+                'ticker': parent.configuration.optimizerTickerLineEdit,
             },
         }
     }

@@ -124,6 +124,10 @@ class Interface(QMainWindow):
         self.threadPool.start(newsThread)
 
     def news_thread_error(self, e: str):
+        """
+        Creates a popup regarding news retrieval error.
+        :param e: Error string.
+        """
         self.newsStatusLabel.setText("Failed to retrieve latest news.")
         if 'www.todayonchain.com' in e:
             self.create_popup('Failed to retrieve latest news due to a connectivity error.')
@@ -143,6 +147,10 @@ class Interface(QMainWindow):
         self.threadPool.start(tickerThread)
 
     def tickers_thread_error(self, e: str):
+        """
+        Creates a popup when tickers fail to get fetched.
+        :param e: Error message.
+        """
         fail = 'Failed to retrieve tickers because of a connectivity issue.'
         self.add_to_live_activity_monitor(fail)
         self.configuration.serverResult.setText(fail)
@@ -163,6 +171,9 @@ class Interface(QMainWindow):
     def setup_tickers(self, tickers: List[str]):
         """
         Sets up all available tickers from Binance API and displays them on appropriate comboboxes in application.
+        By default, tickers that aren't traded with USDT are not shown for trading, but all available tickers are
+        shown for downloads.
+        :param tickers: List of tickers in a string format retrieved from Binance API.
         """
         filtered_tickers = [ticker for ticker in tickers if 'USDT' in ticker]
         config = self.configuration
@@ -197,6 +208,7 @@ class Interface(QMainWindow):
     def check_combos(self, combos: dict) -> bool:
         """
         This function will recursively check optimizer combo values to see if settings are properly configured.
+        :param combos: Combinations dictionary.
         """
         if not combos:
             return False
@@ -211,6 +223,7 @@ class Interface(QMainWindow):
     def export_optimizer(self, file_type: str):
         """
         Export table rows to CSV file.
+        :param file_type: Type of file to export optimizer results to.
         """
         if self.optimizer:
             if len(self.optimizer.optimizerRows) > 0:
