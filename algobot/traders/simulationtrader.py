@@ -358,9 +358,11 @@ class SimulationTrader(Trader):
     def get_trend(self, dataObject: Data = None, log_data: bool = False) -> Union[int, None]:
         """
         Returns trend based on the strategies provided.
+        :param dataObject: Data object to use to retrieve trend.
+        :param log_data: Boolean whether data should be logged or not.
         :return: Integer in the form of an enum.
         """
-        if not dataObject:
+        if not dataObject:  # We usually only pass the dataObject for a lower interval.
             dataObject = self.dataView
 
         trends = [strategy.get_trend(data=dataObject, log_data=log_data) for strategy in self.strategies.values()]

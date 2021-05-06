@@ -87,10 +87,10 @@ class MovingAverageStrategy(Strategy):
             movingAverage, parameter, initialBound, finalBound = option.get_all_params()
             initialName, finalName = option.get_pretty_option()
 
-            if type(data) == list:
+            if type(data) == list:  # This means it was called by the optimizer/backtester.
                 avg1 = parent.get_moving_average(data, option.movingAverage, option.initialBound, option.parameter)
                 avg2 = parent.get_moving_average(data, option.movingAverage, option.finalBound, option.parameter)
-            else:
+            else:  # This means it was called by the live bot / simulation.
                 avg1 = parent.get_average(movingAverage, parameter, initialBound, data, update=False)
                 avg2 = parent.get_average(movingAverage, parameter, finalBound, data, update=False)
 
