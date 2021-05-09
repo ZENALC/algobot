@@ -1,9 +1,9 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from algobot.helpers import get_data_from_parameter
 
 
-def get_wma(data: List[dict], prices: int, parameter: str, desc: bool = True) -> float:
+def get_wma(data: List[Dict[str, float]], prices: int, parameter: str, desc: bool = True) -> float:
     """
     Calculates the weighted moving average from data provided.
     The data is assumed to be in descending order - meaning newer dates are in the front of the list.
@@ -33,7 +33,7 @@ def get_wma(data: List[dict], prices: int, parameter: str, desc: bool = True) ->
     return wma
 
 
-def get_sma(data: List[dict], prices: int, parameter: str) -> float:
+def get_sma(data: List[Dict[str, float]], prices: int, parameter: str) -> float:
     """
     Calculates the simple moving average from data provided.
     :param data: Data to calculate simple moving average.
@@ -103,3 +103,58 @@ def get_ema(data: List[dict], prices: int, parameter: str, sma_prices: int, memo
 
 def get_rsi():
     pass
+
+
+# Volume Indicators
+
+def get_accumulation_distribution_indicator(data: Dict[str, float]) -> float:
+    """
+    Retrieve the accumulation distribution indicator based on open, close, high, low, and volume values.
+    :param data: Dictionary containing open, high, close, low, and volume data.
+    :return: Accumulation distribution indicator.
+    """
+    return (data['close'] - data['open']) / (data['high'] - data['low']) * data['volume']
+
+
+def get_normal_volume_oscillator(periods: int, ad_cache: List[float], data: List[Dict[str, float]]) -> \
+        Union[float, None]:
+    """
+    Gets the normal value oscillator based on the periods, past accumulation distribution indicator values, and volumes.
+    :param periods: Number of periods to look previously.
+    :param ad_cache: Data containing previous accumulation distribution indicator values.
+    :param data: List containing previous periods' data.
+    :return: Normal volume oscillator.
+    """
+    if len(ad_cache) < periods or len(data) < periods:
+        return None
+    else:
+        volumes = [data_period['volume'] for data_period in data[-periods:]]
+        ad_values = ad_cache[-periods:]
+        return sum(ad_values) / sum(volumes)
+
+
+def get_intraday_intensity_indicator(data: Dict[str, float]) -> float:
+    """
+    Returns the intraday intensity indicator based on the data provided.
+    :param data: Dictionary containing open, high, close, low, and volume data.
+    :return: Intraday intensity indicator.
+    """
+    return (2 * data['close'] - data['high'] - data['low']) / (data['high'] - data['low']) * data['volume']
+
+
+def get_normalized_intraday_intensity(periods: int, intraday_intensity_cache: List[float],
+                                      data: List[Dict[str, float]]) -> Union[float, None]:
+    """
+    Returns the normalized intraday intensity value based on the periods, past intraday intensity values, and past
+    data period values.
+    :param periods: Number of periods to look previously.
+    :param intraday_intensity_cache: Cache of previous intraday intensities.
+    :param data: List containing previous periods' data.
+    :return: Normalized intraday intensity.
+    """
+    if len(intraday_intensity_cache) < periods or len(data) < periods:
+        return None
+    else:
+        intraday_intensities = intraday_intensity_cache[-periods:]
+        volumes = [data_period['volume'] for data_period in data[-periods:]]
+        return sum(intraday_intensities) / sum(volumes)
