@@ -1,6 +1,7 @@
 import unittest
 
 import pytest
+
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader

@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 import pytest
+
 from algobot.algorithms import get_sma, get_wma
 
 
