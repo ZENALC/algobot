@@ -1,9 +1,12 @@
+from datetime import datetime, timedelta
 from typing import Dict, List
 
 import pytest
 
 from algobot.algorithms import (get_accumulation_distribution_indicator,
-                                get_intraday_intensity_indicator, get_sma,
+                                get_ema, get_intraday_intensity_indicator,
+                                get_normal_volume_oscillator,
+                                get_normalized_intraday_intensity, get_sma,
                                 get_wma)
 
 
@@ -15,28 +18,32 @@ def get_dummy_data():
             'close': 5,
             'high': 10,
             'low': 0,
-            'volume': 2500
+            'volume': 2500,
+            'date_utc': datetime.now() - timedelta(minutes=1)
         },
         {
             'open': 2,
             'close': 3,
             'high': 15,
             'low': 3,
-            'volume': 2500
+            'volume': 2500,
+            'date_utc': datetime.now() - timedelta(minutes=2)
         },
         {
             'open': 3,
             'close': 2,
             'low': 2,
             'high': 20,
-            'volume': 2500
+            'volume': 2500,
+            'date_utc': datetime.now() - timedelta(minutes=3)
         },
         {
             'open': 4,
             'close': 7,
             'low': 0.5,
             'high': 9,
-            'volume': 2500
+            'volume': 2500,
+            'date_utc': datetime.now() - timedelta(minutes=4)
         },
     ]
 
@@ -63,8 +70,16 @@ def test_wma(dummy_data: List[Dict[str, float]], prices: int, parameter: str, de
     assert get_wma(data=dummy_data, prices=prices, parameter=parameter, desc=desc) == expected
 
 
-def test_ema():
-    pass
+@pytest.mark.parametrize(
+    'prices, parameter, sma_prices, expected',
+    [
+        (3, 'open', 2, 3.125),
+        (2, 'close', 1, 5.518518518518518)
+    ]
+)
+def test_ema(dummy_data: List[Dict[str, float]], prices: int, parameter: str, sma_prices: int, expected: float):
+    ema, _ = get_ema(data=dummy_data, prices=prices, parameter=parameter, sma_prices=sma_prices, desc=False)
+    assert ema == expected
 
 
 @pytest.mark.parametrize(
@@ -94,8 +109,16 @@ def test_accumulation_distribution_indicator(data: Dict[str, float], expected: f
     assert get_accumulation_distribution_indicator(data) == expected
 
 
-def test_normal_volume_oscillator():
-    pass
+@pytest.mark.parametrize(
+    'ad_cache, periods, expected',
+    [
+        ([1, 2], 5, None),
+        ([1, 2], 2, 0.0006)
+    ]
+)
+def test_normal_volume_oscillator(dummy_data: List[Dict[str, float]], ad_cache: List[float], periods: int,
+                                  expected: float):
+    assert get_normal_volume_oscillator(data=dummy_data, ad_cache=ad_cache, periods=periods) == expected
 
 
 @pytest.mark.parametrize(
@@ -107,9 +130,18 @@ def test_normal_volume_oscillator():
         (3, 1323.5294117647059),
     ]
 )
-def test_intraday_intensity_indicator(dummy_data, index, expected):
+def test_intraday_intensity_indicator(dummy_data: List[Dict[str, float]], index: int, expected: float):
     assert get_intraday_intensity_indicator(dummy_data[index]) == expected
 
 
-def test_normalized_intraday_intensity():
-    pass
+@pytest.mark.parametrize(
+    'periods, intraday_cache, expected',
+    [
+        (15, [1, 2], None),
+        (3, [1, 2, 3], 0.0008),
+    ]
+)
+def test_normalized_intraday_intensity(dummy_data: List[Dict[str, float]], periods: int, intraday_cache: List[float],
+                                       expected: float):
+    assert get_normalized_intraday_intensity(periods=periods, data=dummy_data,
+                                             intraday_intensity_cache=intraday_cache) == expected
