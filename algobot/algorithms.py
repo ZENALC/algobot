@@ -1,4 +1,7 @@
+import math
 from typing import Dict, List, Tuple, Union
+
+import numpy as np
 
 from algobot.helpers import get_data_from_parameter
 
@@ -158,3 +161,89 @@ def get_normalized_intraday_intensity(periods: int, intraday_intensity_cache: Li
         intraday_intensities = intraday_intensity_cache[-periods:]
         volumes = [data_period['volume'] for data_period in data[-periods:]]
         return sum(intraday_intensities) / sum(volumes)
+
+
+def get_basic_volatility(periods: int, data: List[Dict[str, float]]) -> float:
+    """
+    Retrieves the basic volatility based on periods and data provided.
+    :param periods: Amount of periods to traverse behind for basic volatility.
+    :param data: Data to get close values from.
+    """
+    closes = []
+    previous_close = data[-periods - 1]['close']
+    for period in data[-periods:]:
+        close_average = period['close'] / previous_close - 1
+        previous_close = period['close']
+        closes.append(close_average)
+
+    return float(np.std(closes, ddof=1))
+
+
+def get_parkinson_volatility(periods: int, data: List[Dict[str, float]]) -> float:
+    """
+    Retrieves the Parkinson volatility based on periods and data provided.
+    :param periods: Amount of periods to traverse behind for basic volatility.
+    :param data: Data to get close values from.
+    """
+    running_sum = 0
+    for period in data[-periods:]:
+        calculation = math.log(period['high'] / period['low']) ** 2
+        running_sum += calculation
+
+    return math.sqrt(running_sum / (4 * math.log(2) * periods))
+
+
+def get_gk_volatility(periods: int, data: List[Dict[str, float]]) -> float:
+    """
+    Retrieves the Garman-Klass (GK) volatility based on periods and data provided.
+    :param periods: Amount of periods to traverse behind for basic volatility.
+    :param data: Data to get close values from.
+    """
+    running_sum = 0
+    for period in data[-periods:]:
+        high = period['high']
+        low = period['low']
+        close = period['close']
+        open_ = period['open']  # open is a Python keyword
+        calculation = 0.5 * math.log(high / low) ** 2 + (2 * math.log(2) - 1) * math.log(close / open_) ** 2
+        running_sum += calculation
+
+    return math.sqrt(running_sum / periods)
+
+
+def get_rs_volatility(periods: int, data: List[Dict[str, float]]) -> float:
+    """
+    Retrieves the Rogers Satchell (RS) volatility based on periods and data provided.
+    :param periods: Amount of periods to traverse behind for basic volatility.
+    :param data: Data to get close values from.
+    """
+    running_sum = 0
+    for period in data[-periods:]:
+        u = math.log(period['high'] / period['open'])
+        d = math.log(period['low'] / period['open'])
+        c = math.log(period['close'] / period['open'])
+        running_sum += u * (u - c) + d * (d - c)
+
+    return math.sqrt(running_sum / periods)
+
+
+def get_zh_volatility(periods: int, data: List[Dict[str, float]]) -> float:
+    """
+    Retrieves the Yang Zhang (ZH) volatility based on periods and data provided.
+    :param periods: Amount of periods to traverse behind for basic volatility.
+    :param data: Data to get close values from.
+    """
+    close_values = []
+    open_values = []
+    for period in data[-periods:]:
+        o = math.log(period['open'] / period['close'])
+        c = math.log(period['close'] / period['open'])
+        close_values.append(c)
+        open_values.append(o)
+
+    open_std = float(np.std(open_values, ddof=1))
+    close_std = float(np.std(close_values, ddof=1))
+    k = 0.34 / (1.34 + (periods + 1) / (periods - 1))
+    rs_volatility = get_rs_volatility(periods=periods, data=data)
+
+    return math.sqrt(close_std ** 2 + k * open_std ** 2 + (1 - k) * rs_volatility ** 2)

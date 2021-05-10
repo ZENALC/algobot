@@ -1,13 +1,20 @@
+"""
+Unit tests for algorithms or technical indicators.
+"""
+
 from datetime import datetime, timedelta
 from typing import Dict, List
 
 import pytest
 
 from algobot.algorithms import (get_accumulation_distribution_indicator,
-                                get_ema, get_intraday_intensity_indicator,
+                                get_basic_volatility, get_ema,
+                                get_gk_volatility,
+                                get_intraday_intensity_indicator,
                                 get_normal_volume_oscillator,
-                                get_normalized_intraday_intensity, get_sma,
-                                get_wma)
+                                get_normalized_intraday_intensity,
+                                get_parkinson_volatility, get_rs_volatility,
+                                get_sma, get_wma, get_zh_volatility)
 
 
 @pytest.fixture(name='dummy_data')
@@ -86,22 +93,22 @@ def test_ema(dummy_data: List[Dict[str, float]], prices: int, parameter: str, sm
     'data, expected',
     [
         (
-            {
-                'close': 5,
-                'open': 10,
-                'high': 12,
-                'low': 4,
-                'volume': 155
-            }, -96.875
+                {
+                    'close': 5,
+                    'open': 10,
+                    'high': 12,
+                    'low': 4,
+                    'volume': 155
+                }, -96.875
         ),
         (
-            {
-                'close': 1,
-                'open': 15,
-                'high': 25,
-                'low': 0,
-                'volume': 251
-            }, -140.56
+                {
+                    'close': 1,
+                    'open': 15,
+                    'high': 25,
+                    'low': 0,
+                    'volume': 251
+                }, -140.56
         ),
     ]
 )
@@ -145,3 +152,130 @@ def test_normalized_intraday_intensity(dummy_data: List[Dict[str, float]], perio
                                        expected: float):
     assert get_normalized_intraday_intensity(periods=periods, data=dummy_data,
                                              intraday_intensity_cache=intraday_cache) == expected
+
+
+@pytest.fixture(name='volatility_data')
+def get_volatility_data():
+    return [
+        {
+            'high': 0.0082,
+            'low': 0.00555,
+            'close': 0.005781,
+            'open': 0.006088,
+        },
+        {
+            'high': 0.005929,
+            'low': 0.00485,
+            'close': 0.00511,
+            'open': 0.005788,
+        },
+        {
+            'high': 0.005962,
+            'low': 0.005012,
+            'close': 0.005262,
+            'open': 0.005088,
+        },
+        {
+            'high': 0.00547,
+            'low': 0.005001,
+            'close': 0.005237,
+            'open': 0.005264
+        },
+        {
+            'high': 0.005695,
+            'low': 0.005105,
+            'close': 0.005472,
+            'open': 0.005237
+        },
+        {
+            'high': 0.005684,
+            'low': 0.005192,
+            'close': 0.005313,
+            'open': 0.005473
+        },
+        {
+            'high': 0.005705,
+            'low': 0.005203,
+            'close': 0.005675,
+            'open': 0.005314,
+        },
+        {
+            'high': 0.006168,
+            'low': 0.005554,
+            'close': 0.006045,
+            'open': 0.005676
+        },
+        {
+            'high': 0.006949,
+            'low': 0.005825,
+            'close': 0.00638,
+            'open': 0.006044
+        },
+        {
+            'high': 0.006447,
+            'low': 0.005947,
+            'close': 0.006202,
+            'open': 0.006397
+        },
+        {
+            'high': 0.0068,
+            'low': 0.006151,
+            'close': 0.00659,
+            'open': 0.006202
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    'periods, expected',
+    [
+        (10, 0.0593474375889191),
+        (8, 0.04253494804852161)
+    ]
+)
+def test_basic_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
+    assert get_basic_volatility(periods=periods, data=volatility_data) == expected
+
+
+@pytest.mark.parametrize(
+    'periods, expected',
+    [
+        (10, 0.07734426892046951),
+        (5, 0.06961744039623198)
+    ]
+)
+def test_parkinson_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
+    assert get_parkinson_volatility(periods=periods, data=volatility_data) == expected
+
+
+@pytest.mark.parametrize(
+    'periods, expected',
+    [
+        (10, 0.09827614438649765),
+        (7, 0.08525759356946656)
+    ]
+)
+def test_gk_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
+    assert get_gk_volatility(data=volatility_data, periods=periods) == expected
+
+
+@pytest.mark.parametrize(
+    'periods, expected',
+    [
+        (10, 0.08607419520730895),
+        (7, 0.07241871087258109)
+    ]
+)
+def test_rs_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
+    assert get_rs_volatility(data=volatility_data, periods=periods) == expected
+
+
+@pytest.mark.parametrize(
+    'periods, expected',
+    [
+        (10, 0.10324062709358658),
+        (7, 0.0818737245934366)
+    ]
+)
+def test_zh_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
+    assert get_zh_volatility(periods=periods, data=volatility_data) == expected
