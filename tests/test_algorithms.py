@@ -11,6 +11,7 @@ from algobot.algorithms import (get_accumulation_distribution_indicator,
                                 get_basic_volatility, get_ema,
                                 get_gk_volatility,
                                 get_intraday_intensity_indicator,
+                                get_money_flow_index,
                                 get_normal_volume_oscillator,
                                 get_normalized_intraday_intensity,
                                 get_parkinson_volatility, get_rs_volatility,
@@ -279,3 +280,97 @@ def test_rs_volatility(volatility_data: List[Dict[str, float]], periods: int, ex
 )
 def test_zh_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
     assert get_zh_volatility(periods=periods, data=volatility_data) == expected
+
+
+@pytest.fixture(name='money_flow_fixture')
+def get_money_flow_fixture():
+    return [
+        {
+            'open': 10,
+            'high': 15,
+            'low': 8,
+            'close': 12,
+            'volume': 120,
+        },
+        {
+            'open': 12,
+            'high': 16,
+            'low': 11,
+            'close': 13,
+            'volume': 150,
+        },
+        {
+            'open': 13,
+            'high': 17,
+            'low': 12,
+            'close': 14,
+            'volume': 160,
+        },
+        {
+            'open': 14,
+            'high': 18,
+            'low': 13,
+            'close': 15,
+            'volume': 130,
+        },
+        {
+            'open': 15,
+            'high': 19,
+            'low': 14,
+            'close': 16,
+            'volume': 160,
+        },
+        {
+            'open': 16,
+            'high': 19,
+            'low': 5,
+            'close': 12,
+            'volume': 120,
+        },
+        {
+            'open': 11,
+            'high': 14,
+            'low': 8,
+            'close': 13,
+            'volume': 180,
+        },
+        {
+            'open': 13,
+            'high': 21,
+            'low': 6,
+            'close': 7,
+            'volume': 230,
+        },
+        {
+            'open': 7,
+            'high': 15,
+            'low': 4,
+            'close': 8,
+            'volume': 130,
+        },
+        {
+            'open': 8,
+            'high': 14,
+            'low': 4,
+            'close': 6,
+            'volume': 80,
+        },
+        {
+            'open': 6,
+            'high': 14,
+            'low': 7,
+            'close': 8,
+            'volume': 111,
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    'periods, expected',
+    [
+        (3, 62.63864565090485),
+        (7, 11.88305216139392)
+    ]
+)
+def test_money_flow_index(money_flow_fixture, periods: int, expected: float):
+    assert get_money_flow_index(data=money_flow_fixture, periods=periods) == expected

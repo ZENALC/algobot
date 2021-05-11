@@ -6,6 +6,16 @@ import numpy as np
 from algobot.helpers import get_data_from_parameter
 
 
+def validate(periods: int, data: List[Dict[str, float]]):
+    """
+    Validates periods and data length and raises an error if not logical.
+    :param periods: Periods of data to validate against.
+    :param data: Data to check length against.
+    """
+    if periods > len(data):
+        raise IndexError("Not enough data periods.")
+
+
 def get_wma(data: List[Dict[str, float]], prices: int, parameter: str, desc: bool = True) -> float:
     """
     Calculates the weighted moving average from data provided.
@@ -110,6 +120,30 @@ def get_rsi():
 
 # Volume Indicators
 
+def get_money_flow_index(periods: int, data: List[Dict[str, float]]) -> float:
+    """
+    Returns the money flow index based on periods and data provided.
+    :param periods: Number of periods to look previously.
+    :param data: Dictionary containing open, high, close, low, and volume data.
+    :return: Accumulation distribution indicator.
+    """
+    validate(periods=periods, data=data)
+    previous_typical_price = None
+    negative_money_flows = 0
+    positive_money_flows = 0
+    for period in data[-periods:]:
+        typical_price = (period['high'] + period['low'] + period['close']) / 3
+        raw_money_flow = typical_price * period['volume']
+        if previous_typical_price is not None:
+            if typical_price > previous_typical_price:  # If the typical price equals the previous one, then skip.
+                positive_money_flows += raw_money_flow
+            elif typical_price < previous_typical_price:
+                negative_money_flows += raw_money_flow
+        previous_typical_price = typical_price
+    money_flow_ratio = positive_money_flows / negative_money_flows
+    return 100 - 100 / (1 + money_flow_ratio)
+
+
 def get_accumulation_distribution_indicator(data: Dict[str, float]) -> float:
     """
     Retrieve the accumulation distribution indicator based on open, close, high, low, and volume values.
@@ -169,6 +203,7 @@ def get_basic_volatility(periods: int, data: List[Dict[str, float]]) -> float:
     :param periods: Amount of periods to traverse behind for basic volatility.
     :param data: Data to get close values from.
     """
+    validate(periods=periods + 1, data=data)
     closes = []
     previous_close = data[-periods - 1]['close']
     for period in data[-periods:]:
@@ -185,6 +220,7 @@ def get_parkinson_volatility(periods: int, data: List[Dict[str, float]]) -> floa
     :param periods: Amount of periods to traverse behind for basic volatility.
     :param data: Data to get close values from.
     """
+    validate(periods, data)
     running_sum = 0
     for period in data[-periods:]:
         calculation = math.log(period['high'] / period['low']) ** 2
@@ -199,6 +235,7 @@ def get_gk_volatility(periods: int, data: List[Dict[str, float]]) -> float:
     :param periods: Amount of periods to traverse behind for basic volatility.
     :param data: Data to get close values from.
     """
+    validate(periods, data)
     running_sum = 0
     for period in data[-periods:]:
         high = period['high']
@@ -217,6 +254,7 @@ def get_rs_volatility(periods: int, data: List[Dict[str, float]]) -> float:
     :param periods: Amount of periods to traverse behind for basic volatility.
     :param data: Data to get close values from.
     """
+    validate(periods, data)
     running_sum = 0
     for period in data[-periods:]:
         u = math.log(period['high'] / period['open'])
@@ -233,6 +271,7 @@ def get_zh_volatility(periods: int, data: List[Dict[str, float]]) -> float:
     :param periods: Amount of periods to traverse behind for basic volatility.
     :param data: Data to get close values from.
     """
+    validate(periods, data)
     close_values = []
     open_values = []
     for period in data[-periods:]:
