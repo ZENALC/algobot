@@ -16,7 +16,7 @@ def validate(periods: int, data: List[Dict[str, float]]):
         raise IndexError("Not enough data periods.")
 
 
-def get_wma(data: List[Dict[str, float]], prices: int, parameter: str, desc: bool = True) -> float:
+def get_wma(data: List[Dict[str, float]], prices: int, parameter: str, desc: bool = False) -> float:
     """
     Calculates the weighted moving average from data provided.
     The data is assumed to be in descending order - meaning newer dates are in the front of the list.
@@ -57,8 +57,8 @@ def get_sma(data: List[Dict[str, float]], prices: int, parameter: str) -> float:
     return sum([get_data_from_parameter(data=period, parameter=parameter) for period in data]) / prices
 
 
-def get_ema(data: List[dict], prices: int, parameter: str, sma_prices: int, memo: dict = None, desc: bool = True) -> \
-        Tuple[float, dict]:
+def get_ema(data: List[dict], prices: int, parameter: str, sma_prices: int = 5, memo: dict = None,
+            desc: bool = False) -> Tuple[float, dict]:
     """
     Calculates the exponential moving average from data provided.
     The data is assumed to be in descending order - meaning newer dates are in the front of the list.
@@ -286,3 +286,66 @@ def get_zh_volatility(periods: int, data: List[Dict[str, float]]) -> float:
     rs_volatility = get_rs_volatility(periods=periods, data=data)
 
     return math.sqrt(close_std ** 2 + k * open_std ** 2 + (1 - k) * rs_volatility ** 2)
+
+
+def get_bollinger_bands(moving_average_periods: int, volatility_look_back_periods: int, volatility: str,
+                        bb_coefficient: float, moving_average: str, moving_average_parameter: str,
+                        data: List[Dict[str, float]]) -> Tuple[float, float, float]:
+    """
+    Returns the bollinger bands based on inputs provided in the order of lower, middle, then upper bands.
+    :param moving_average_periods: Amount of periods to loop behind for the moving average.
+    :param moving_average_parameter: Parameter to use for the moving average - high, low, open, close.
+    :param moving_average: Moving average to use.
+    :param data: Data to use to retrieve the Bollinger bands.
+    :param volatility: Volatility indicator to use - zh, basic, rs, gk, Parkinson.
+    :param volatility_look_back_periods: Amount of periods to loop behind for the volatility indicator.
+    :param bb_coefficient: BB coefficient itself.
+    """
+    moving_average = moving_average.upper()
+    moving_data = data[-moving_average_periods:]
+    if moving_average == 'WMA':
+        middle_band = get_wma(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
+    elif moving_average == 'SMA':
+        middle_band = get_sma(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
+    elif moving_average == 'EMA':
+        middle_band, _ = get_ema(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
+    else:
+        raise ValueError("Invalid moving average provided. Available are: EMA, SMA, and WMA.")
+
+    volatility = volatility.lower()
+    if volatility == 'zh':
+        volatility_measure = get_zh_volatility(periods=volatility_look_back_periods, data=data)
+    elif volatility == 'rs':
+        volatility_measure = get_rs_volatility(periods=volatility_look_back_periods, data=data)
+    elif volatility == 'gk':
+        volatility_measure = get_gk_volatility(periods=volatility_look_back_periods, data=data)
+    elif volatility == 'parkinson':
+        volatility_measure = get_parkinson_volatility(periods=volatility_look_back_periods, data=data)
+    elif volatility == 'basic':
+        volatility_measure = get_basic_volatility(periods=volatility_look_back_periods, data=data)
+    else:
+        raise ValueError("Invalid type of volatility specified.")
+
+    upper_band = middle_band + bb_coefficient * volatility_measure
+    lower_band = middle_band - bb_coefficient * volatility_measure
+    return lower_band, middle_band, upper_band
+
+
+def get_percent_b(data: List[Dict[str, float]], bollinger_bands: Tuple[float, float, float]) -> float:
+    """
+    Returns the percentage B indicator.
+    :param bollinger_bands: Bollinger bands.
+    :param data: :param data: List containing previous periods' data.
+    """
+    lower_band, middle_band, upper_band = bollinger_bands
+    current_price = data[-1]['close']
+    return (current_price - lower_band) / (upper_band - lower_band)
+
+
+def get_bandwidth(bollinger_bands: Tuple[float, float, float]) -> float:
+    """
+    Returns the bandwidth indicator.
+    :param bollinger_bands: Bollinger bands.
+    """
+    lower_band, middle_band, upper_band = bollinger_bands
+    return (upper_band - lower_band) / middle_band

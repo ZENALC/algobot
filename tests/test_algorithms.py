@@ -3,19 +3,21 @@ Unit tests for algorithms or technical indicators.
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import pytest
 
 from algobot.algorithms import (get_accumulation_distribution_indicator,
-                                get_basic_volatility, get_ema,
+                                get_bandwidth, get_basic_volatility,
+                                get_bollinger_bands, get_ema,
                                 get_gk_volatility,
                                 get_intraday_intensity_indicator,
                                 get_money_flow_index,
                                 get_normal_volume_oscillator,
                                 get_normalized_intraday_intensity,
-                                get_parkinson_volatility, get_rs_volatility,
-                                get_sma, get_wma, get_zh_volatility)
+                                get_parkinson_volatility, get_percent_b,
+                                get_rs_volatility, get_sma, get_wma,
+                                get_zh_volatility)
 
 
 @pytest.fixture(name='dummy_data')
@@ -374,3 +376,61 @@ def get_money_flow_fixture():
 )
 def test_money_flow_index(money_flow_fixture, periods: int, expected: float):
     assert get_money_flow_index(data=money_flow_fixture, periods=periods) == expected
+
+
+@pytest.fixture(name='bollinger_fixture')
+def get_bollinger_fixture():
+    return [
+        {'close': 10},
+        {'close': 13},
+        {'close': 7},
+        {'close': 9},
+        {'close': 11},
+        {'close': 8},
+        {'close': 4},
+        {'close': 13},
+        {'close': 17},
+        {'close': 12},
+    ]
+
+
+@pytest.mark.parametrize(
+    'moving_average_n, moving_average, moving_average_param, volatility_look_back_n, volatility, bb, expected',
+    [
+        (2, 'SMA', 'close', 3, 'basic', 2, (11.840768407313707, 14.5, 17.159231592686293))
+    ]
+)
+def test_bollinger_bands(bollinger_fixture: List[Dict[str, float]], moving_average_n: int, moving_average: str,
+                         moving_average_param: str, volatility_look_back_n: int, volatility: str, bb: float,
+                         expected: float):
+    bollinger_bands = get_bollinger_bands(
+        moving_average_periods=moving_average_n,
+        moving_average=moving_average,
+        volatility_look_back_periods=volatility_look_back_n,
+        volatility=volatility,
+        data=bollinger_fixture,
+        moving_average_parameter=moving_average_param,
+        bb_coefficient=bb
+    )
+
+    assert bollinger_bands == expected
+
+
+@pytest.mark.parametrize(
+    'bollinger_bands, data, expected',
+    [
+        ((5.833333, 7, 8.4), [{'close': 7.2}], 0.5324675931860269)
+    ]
+)
+def test_get_percent_b(bollinger_bands: Tuple[float, float, float], data: List[Dict[str, float]], expected: float):
+    assert get_percent_b(bollinger_bands=bollinger_bands, data=data) == expected
+
+
+@pytest.mark.parametrize(
+    'bollinger_bands, expected',
+    [
+        ((5.833333, 7, 8.4), 0.3666667142857144),
+    ]
+)
+def test_get_bandwidth(bollinger_bands: Tuple[float, float, float], expected: float):
+    assert get_bandwidth(bollinger_bands) == expected
