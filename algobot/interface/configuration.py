@@ -489,10 +489,15 @@ class Configuration(QDialog):
                     groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f'Enable {strategyName} optimization?')
                     self.strategyDict[tab, strategyName] = groupBox
                     for index, parameter in enumerate(parameters, start=1):
-                        if type(parameter) == tuple and parameter[1] == int or type(parameter) != tuple:
-                            self.strategyDict[strategyName, index, 'start'] = start = self.default_widget(QSpinBox, 1)
-                            self.strategyDict[strategyName, index, 'end'] = end = self.default_widget(QSpinBox, 1)
-                            self.strategyDict[strategyName, index, 'step'] = step = self.default_widget(QSpinBox, 1)
+                        # TODO: Refactor this logic.
+                        if type(parameter) != tuple or type(parameter) == tuple and parameter[1] in [int, float]:
+                            if type(parameter) == tuple:
+                                widget = QSpinBox if parameter[1] == int else QDoubleSpinBox
+                            else:
+                                widget = QSpinBox if parameter == int else QDoubleSpinBox
+                            self.strategyDict[strategyName, index, 'start'] = start = self.default_widget(widget, 1)
+                            self.strategyDict[strategyName, index, 'end'] = end = self.default_widget(widget, 1)
+                            self.strategyDict[strategyName, index, 'step'] = step = self.default_widget(widget, 1)
                             if type(parameter) == tuple:
                                 message = parameter[0]
                             else:
