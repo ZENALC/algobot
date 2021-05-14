@@ -19,8 +19,9 @@ from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
 from algobot.interface.configuration_helpers import (
     add_strategy_buttons, add_strategy_inputs, create_inner_tab,
-    create_strategy_inputs, delete_strategy_inputs, get_input_widget_value,
-    get_regular_groupbox_and_layout, get_strategies_dictionary, set_value)
+    create_strategy_inputs, delete_strategy_inputs, get_default_widget,
+    get_input_widget_value, get_regular_groupbox_and_layout,
+    get_strategies_dictionary, set_value)
 # noinspection PyUnresolvedReferences
 from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
@@ -264,9 +265,9 @@ class Configuration(QDialog):
                 self.lossDict['optimizerTypes'].append((lossType, checkbox))
 
             for optimizerType in self.lossOptimizerTypes:
-                self.lossDict[optimizerType, 'start'] = start = self.default_widget(QSpinBox, 1, 0)
-                self.lossDict[optimizerType, 'end'] = end = self.default_widget(QSpinBox, 1, 0)
-                self.lossDict[optimizerType, 'step'] = step = self.default_widget(QSpinBox, 1)
+                self.lossDict[optimizerType, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
+                self.lossDict[optimizerType, 'end'] = end = get_default_widget(QSpinBox, 1, 0)
+                self.lossDict[optimizerType, 'step'] = step = get_default_widget(QSpinBox, 1)
                 self.add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:
             self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
@@ -305,9 +306,9 @@ class Configuration(QDialog):
                 self.takeProfitDict['optimizerTypes'].append((takeProfitType, checkbox))
 
             for optimizerType in self.takeProfitOptimizerTypes:
-                self.takeProfitDict[optimizerType, 'start'] = start = self.default_widget(QSpinBox, 1, 0)
-                self.takeProfitDict[optimizerType, 'end'] = end = self.default_widget(QSpinBox, 1, 0)
-                self.takeProfitDict[optimizerType, 'step'] = step = self.default_widget(QSpinBox, 1)
+                self.takeProfitDict[optimizerType, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
+                self.takeProfitDict[optimizerType, 'end'] = end = get_default_widget(QSpinBox, 1, 0)
+                self.takeProfitDict[optimizerType, 'step'] = step = get_default_widget(QSpinBox, 1)
                 self.add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:
             self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
@@ -454,16 +455,6 @@ class Configuration(QDialog):
 
         return values
 
-    @staticmethod
-    def default_widget(widget, default: Union[int, float], minimum: int = 1):
-        """
-        Returns a default widget with default and minimum values provided.
-        """
-        default_widget = widget()
-        default_widget.setValue(default)
-        default_widget.setMinimum(minimum)
-        return default_widget
-
     def load_strategy_slots(self):
         """
         This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
@@ -495,9 +486,9 @@ class Configuration(QDialog):
                                 widget = QSpinBox if parameter[1] == int else QDoubleSpinBox
                             else:
                                 widget = QSpinBox if parameter == int else QDoubleSpinBox
-                            self.strategyDict[strategyName, index, 'start'] = start = self.default_widget(widget, 1)
-                            self.strategyDict[strategyName, index, 'end'] = end = self.default_widget(widget, 1)
-                            self.strategyDict[strategyName, index, 'step'] = step = self.default_widget(widget, 1)
+                            self.strategyDict[strategyName, index, 'start'] = start = get_default_widget(widget, 1)
+                            self.strategyDict[strategyName, index, 'end'] = end = get_default_widget(widget, 1)
+                            self.strategyDict[strategyName, index, 'step'] = step = get_default_widget(widget, 1)
                             if type(parameter) == tuple:
                                 message = parameter[0]
                             else:
@@ -1167,16 +1158,15 @@ class Configuration(QDialog):
     def update_graph_speed(self):
         """
         Updates graph speed on main Algobot interface.
-        :return: None
         """
         graphSpeed = self.graphPlotSpeedSpinBox.value()
         self.parent.graphUpdateSeconds = graphSpeed
         self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graphSpeed} seconds.")
 
     @staticmethod
-    def reset_strategy_interval_comboBox(strategy_combobox, interval_combobox):
+    def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_combobox: QComboBox):
         """
-        This function will reset the strategy interval combo-box.
+        This function will reset the strategy combobox based on what interval is picked in the interval combobox.
         """
         childText = strategy_combobox.currentText()
         parentIndex = interval_combobox.currentIndex()

@@ -24,7 +24,7 @@ class Strategy:
         self.strategyDict = {}
         self.lowerIntervalDict = {}
 
-    def set_inputs(self, inputs: list):
+    def set_inputs(self, *args, **kwargs):
         """
         This function is used extensively by the optimizer. Your inputs argument will reset the strategy's inputs.
         """

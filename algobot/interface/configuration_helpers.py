@@ -221,3 +221,15 @@ def get_h_line() -> QFrame:
     line.setFrameShape(QFrame.HLine)
     line.setFrameShadow(QFrame.Sunken)
     return line
+
+
+def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, float], minimum: int = 1,
+                       maximum: int = 99) -> Union[QSpinBox, QDoubleSpinBox]:
+    """
+    Returns a default QSpinbox or QDoubleSpinbox widget with default, minimum, and maximum values provided.
+    """
+    default_widget = widget()
+    default_widget.setValue(default)
+    default_widget.setMinimum(minimum)
+    default_widget.setMaximum(maximum)
+    return default_widget
