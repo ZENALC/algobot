@@ -13,7 +13,7 @@ def validate(periods: int, data: List[Dict[str, float]]):
     :param data: Data to check length against.
     """
     if periods > len(data):
-        raise IndexError("Not enough data periods.")
+        raise IndexError("Not enough data periods")
 
 
 def get_wma(data: List[Dict[str, float]], prices: int, parameter: str, desc: bool = False) -> float:
@@ -302,6 +302,7 @@ def get_bollinger_bands(moving_average_periods: int, volatility_look_back_period
     :param bb_coefficient: BB coefficient itself.
     """
     moving_average = moving_average.upper()
+    moving_average_parameter = moving_average_parameter.lower()
     moving_data = data[-moving_average_periods:]
     if moving_average == 'WMA':
         middle_band = get_wma(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
@@ -313,11 +314,11 @@ def get_bollinger_bands(moving_average_periods: int, volatility_look_back_period
         raise ValueError("Invalid moving average provided. Available are: EMA, SMA, and WMA.")
 
     volatility = volatility.lower()
-    if volatility == 'zh':
+    if volatility == 'zh' or 'yang zhang' in volatility:
         volatility_measure = get_zh_volatility(periods=volatility_look_back_periods, data=data)
-    elif volatility == 'rs':
+    elif volatility == 'rs' or 'rogers satchell' in volatility:
         volatility_measure = get_rs_volatility(periods=volatility_look_back_periods, data=data)
-    elif volatility == 'gk':
+    elif volatility == 'gk' or 'garman-klass' in volatility:
         volatility_measure = get_gk_volatility(periods=volatility_look_back_periods, data=data)
     elif volatility == 'parkinson':
         volatility_measure = get_parkinson_volatility(periods=volatility_look_back_periods, data=data)
@@ -326,8 +327,8 @@ def get_bollinger_bands(moving_average_periods: int, volatility_look_back_period
     else:
         raise ValueError("Invalid type of volatility specified.")
 
-    upper_band = middle_band + bb_coefficient * volatility_measure
-    lower_band = middle_band - bb_coefficient * volatility_measure
+    upper_band = middle_band + bb_coefficient * volatility_measure * middle_band
+    lower_band = middle_band - bb_coefficient * volatility_measure * middle_band
     return lower_band, middle_band, upper_band
 
 

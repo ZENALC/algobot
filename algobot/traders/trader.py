@@ -199,12 +199,28 @@ class Trader:
             values = strategyTuple[1]
             name = parse_strategy_name(strategyTuple[2])
 
-            if name != 'movingAverage':
-                self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
-            else:
+            # TODO: Leverage kwargs to initialize strategies.
+
+            if name == 'movingAverage':
                 values = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
                 self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
-                self.minPeriod = self.strategies[name].get_min_option_period()
+            elif name == 'bollingerBand':
+                self.strategies[name] = strategyClass(parent=self,
+                                                      volatility_n=values[0],
+                                                      volatility=values[1],
+                                                      bb_coefficient=values[2],
+                                                      bb_safety=values[3],
+                                                      moving_average=values[4],
+                                                      moving_average_parameter=values[5],
+                                                      moving_average_n=values[6],
+                                                      method=values[7],
+                                                      upper_percentage_b=values[8],
+                                                      lower_percentage_b=values[9],
+                                                      precision=self.precision)
+            else:
+                self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
+
+            self.minPeriod = max(self.strategies[name].get_min_option_period(), self.minPeriod)
 
     def handle_trailing_prices(self):
         """

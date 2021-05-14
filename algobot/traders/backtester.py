@@ -175,7 +175,7 @@ class Backtester(Trader):
 
     @staticmethod
     def generate_error_message(error: Exception, strategy: Strategy) -> str:
-        msg = f'It looks like your strategy has crashed because of: {str(error)}. Try using' \
+        msg = f'It looks like your strategy has crashed because of: "{str(error)}". Try using' \
               f' different parameters, rewriting your strategy, or taking a look at ' \
               f'your strategy code again. The strategy that caused this crash is: ' \
               f'{strategy.name}. You can find more details about the crash in the ' \
@@ -479,7 +479,7 @@ class Backtester(Trader):
                                                  parameter=strategy_values['Parameter'],
                                                  initialBound=strategy_values['Initial'],
                                                  finalBound=strategy_values['Final'])])
-                self.minPeriod = loop_strategy.get_min_option_period()
+            self.minPeriod = max(loop_strategy.get_min_option_period(), self.minPeriod)
 
     def restore(self):
         """
