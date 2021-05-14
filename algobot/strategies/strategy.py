@@ -75,6 +75,6 @@ class Strategy:
 
     def get_min_option_period(self):
         """
-        This function should return the minimum amount of periods required to get a trend.
+        This function should return the minimum amount of periods required to get a trend. It's 0 by default.
         """
-        pass
+        return 0
