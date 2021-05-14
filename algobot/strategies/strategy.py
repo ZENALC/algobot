@@ -1,6 +1,6 @@
 """
 Create your strategies from this base class here then import them to configuration.py to load them to the GUI.
-Please make sure that they have some default values for the GUI to initialize them.
+Please make sure that they have some default values like None for the GUI to initialize them.
 """
 
 from typing import List, Union

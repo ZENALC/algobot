@@ -397,7 +397,7 @@ def get_bollinger_fixture():
 @pytest.mark.parametrize(
     'moving_average_n, moving_average, moving_average_param, volatility_look_back_n, volatility, bb, expected',
     [
-        (2, 'SMA', 'close', 3, 'basic', 2, (11.840768407313707, 14.5, 17.159231592686293))
+        (2, 'SMA', 'close', 3, 'basic', 2, (-24.058858093951244, 14.5, 53.058858093951244))
     ]
 )
 def test_bollinger_bands(bollinger_fixture: List[Dict[str, float]], moving_average_n: int, moving_average: str,
