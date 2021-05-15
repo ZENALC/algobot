@@ -208,14 +208,15 @@ class Trader:
                 self.strategies[name] = strategyClass(parent=self,
                                                       volatility_n=values[0],
                                                       volatility=values[1],
-                                                      bb_coefficient=values[2],
-                                                      bb_safety=values[3],
-                                                      moving_average=values[4],
-                                                      moving_average_parameter=values[5],
-                                                      moving_average_n=values[6],
-                                                      method=values[7],
-                                                      upper_percentage_b=values[8],
-                                                      lower_percentage_b=values[9],
+                                                      volatility_calculation_type=values[2],
+                                                      bb_coefficient=values[3],
+                                                      bb_safety=values[4],
+                                                      moving_average=values[5],
+                                                      moving_average_parameter=values[6],
+                                                      moving_average_n=values[7],
+                                                      method=values[8],
+                                                      upper_percentage_b=values[9],
+                                                      lower_percentage_b=values[10],
                                                       precision=self.precision)
             else:
                 self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)

@@ -197,19 +197,23 @@ def get_normalized_intraday_intensity(periods: int, intraday_intensity_cache: Li
         return sum(intraday_intensities) / sum(volumes)
 
 
-def get_basic_volatility(periods: int, data: List[Dict[str, float]]) -> float:
+def get_basic_volatility(periods: int, data: List[Dict[str, float]], use_returns: bool = True) -> float:
     """
     Retrieves the basic volatility based on periods and data provided.
     :param periods: Amount of periods to traverse behind for basic volatility.
+    :param use_returns: If true, this will use the returns option, and if false, it'll use the previous closes option.
     :param data: Data to get close values from.
     """
-    validate(periods=periods + 1, data=data)
+    validate(periods=periods + int(use_returns), data=data)
     closes = []
-    previous_close = data[-periods - 1]['close']
-    for period in data[-periods:]:
-        close_average = period['close'] / previous_close - 1
-        previous_close = period['close']
-        closes.append(close_average)
+    if use_returns:
+        previous_close = data[-periods - 1]['close']
+        for period in data[-periods:]:
+            close_average = period['close'] / previous_close - 1
+            previous_close = period['close']
+            closes.append(close_average)
+    else:
+        closes = [period['close'] for period in data[-periods:]]
 
     return float(np.std(closes, ddof=1))
 
@@ -290,7 +294,8 @@ def get_zh_volatility(periods: int, data: List[Dict[str, float]]) -> float:
 
 def get_bollinger_bands(moving_average_periods: int, volatility_look_back_periods: int, volatility: str,
                         bb_coefficient: float, moving_average: str, moving_average_parameter: str,
-                        data: List[Dict[str, float]]) -> Tuple[float, float, float]:
+                        data: List[Dict[str, float]], use_returns: bool = True,
+                        dictionary: dict = None) -> Tuple[float, float, float]:
     """
     Returns the bollinger bands based on inputs provided in the order of lower, middle, then upper bands.
     :param moving_average_periods: Amount of periods to loop behind for the moving average.
@@ -299,7 +304,9 @@ def get_bollinger_bands(moving_average_periods: int, volatility_look_back_period
     :param data: Data to use to retrieve the Bollinger bands.
     :param volatility: Volatility indicator to use - zh, basic, rs, gk, Parkinson.
     :param volatility_look_back_periods: Amount of periods to loop behind for the volatility indicator.
+    :param use_returns: Boolean for whether the basic volatility strategy will use return values for calculation.
     :param bb_coefficient: BB coefficient itself.
+    :param dictionary: Optional dictionary to populate volatility data with if provided.
     """
     moving_average = moving_average.upper()
     moving_average_parameter = moving_average_parameter.lower()
@@ -323,12 +330,21 @@ def get_bollinger_bands(moving_average_periods: int, volatility_look_back_period
     elif volatility == 'parkinson':
         volatility_measure = get_parkinson_volatility(periods=volatility_look_back_periods, data=data)
     elif volatility == 'basic':
-        volatility_measure = get_basic_volatility(periods=volatility_look_back_periods, data=data)
+        volatility_measure = get_basic_volatility(periods=volatility_look_back_periods, data=data,
+                                                  use_returns=use_returns)
     else:
         raise ValueError("Invalid type of volatility specified.")
 
-    upper_band = middle_band + bb_coefficient * volatility_measure * middle_band
-    lower_band = middle_band - bb_coefficient * volatility_measure * middle_band
+    if use_returns:
+        upper_band = middle_band + bb_coefficient * volatility_measure * middle_band
+        lower_band = middle_band - bb_coefficient * volatility_measure * middle_band
+    else:
+        upper_band = middle_band + bb_coefficient * volatility_measure
+        lower_band = middle_band - bb_coefficient * volatility_measure
+
+    if dictionary:  # Optional dictionary to populate with volatility measure.
+        dictionary['Volatility Measure'] = volatility_measure
+
     return lower_band, middle_band, upper_band
 
 
