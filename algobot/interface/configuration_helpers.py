@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, Type, Union
 
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
                              QFrame, QGroupBox, QLabel, QLayout, QLineEdit,
@@ -6,9 +6,14 @@ from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
                              QVBoxLayout, QWidget)
 
 from algobot.enums import OPTIMIZER
+from algobot.strategies.strategy import Strategy
 
 
-def get_regular_groupbox_and_layout(name) -> Tuple[QGroupBox, QFormLayout]:
+def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:
+    """
+    Returns a groupbox and a layout with the groupbox on the layout.
+    :param name: Title to put for the groupbox.
+    """
     layout = QFormLayout()
     groupBox = QGroupBox(name)
     groupBox.setCheckable(True)
@@ -18,7 +23,7 @@ def get_regular_groupbox_and_layout(name) -> Tuple[QGroupBox, QFormLayout]:
     return groupBox, layout
 
 
-def get_strategies_dictionary(strategies: list) -> Dict[str, Any]:
+def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Any]:
     """
     Helper function to return a strategies dictionary with strategy name as the key and strategy itself as the value.
     :param strategies: List of strategies to process for dictionary.
