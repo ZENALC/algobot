@@ -323,7 +323,18 @@ class Backtester(Trader):
             raise ValueError("Your start can't have a bigger value than the end.")
 
         if step > 0:
-            temp = [x for x in range(start, end + 1, step)]
+            if type(step) == int:
+                temp = [x for x in range(start, end + 1, step)]
+            elif type(step) == float:
+                temp = [start]
+                current = start
+                while current < end:
+                    current += step
+                    if current <= end:
+                        temp.append(current)
+            else:
+                raise ValueError("Step values can only be integers or floats.")
+
             temp_dict[temp_key] = temp
         else:
             raise ValueError("Step value cannot be 0.")

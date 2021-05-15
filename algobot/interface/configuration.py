@@ -219,7 +219,7 @@ class Configuration(QDialog):
             if self.strategyDict[tab, strategyName].isChecked():
                 current = {}
                 for index, parameter in enumerate(parameters, start=1):
-                    if type(parameter) == tuple and parameter[1] == int or type(parameter) != tuple:
+                    if type(parameter) == tuple and parameter[1] in (int, float) or type(parameter) != tuple:
                         if type(parameter) == type:
                             key = strategyName.lower() + str(index)
                         else:
@@ -484,11 +484,13 @@ class Configuration(QDialog):
                         if type(parameter) != tuple or type(parameter) == tuple and parameter[1] in [int, float]:
                             if type(parameter) == tuple:
                                 widget = QSpinBox if parameter[1] == int else QDoubleSpinBox
+                                step_val = 1 if widget == QSpinBox else 0.1
                             else:
                                 widget = QSpinBox if parameter == int else QDoubleSpinBox
+                                step_val = 1 if widget == QSpinBox else 0.1
                             self.strategyDict[strategyName, index, 'start'] = start = get_default_widget(widget, 1)
                             self.strategyDict[strategyName, index, 'end'] = end = get_default_widget(widget, 1)
-                            self.strategyDict[strategyName, index, 'step'] = step = get_default_widget(widget, 1)
+                            self.strategyDict[strategyName, index, 'step'] = step = get_default_widget(widget, step_val)
                             if type(parameter) == tuple:
                                 message = parameter[0]
                             else:
