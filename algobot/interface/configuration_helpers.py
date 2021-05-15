@@ -112,10 +112,11 @@ def get_input_widget_value(inputWidget: QWidget, verbose: bool = False):
         raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
 
 
-def create_strategy_inputs(parameters: list, strategyName: str, groupBoxLayout: QLayout) -> Tuple[list, list]:
+def create_strategy_inputs(parameters: List[Union[int, tuple]], strategyName: str,
+                           groupBoxLayout: QLayout) -> Tuple[list, list]:
     """
     This function will create strategy slots and labels based on the parameters provided to the layout.
-    :param parameters: Parameters to add to strategy GUI slots.
+    :param parameters: Parameters to add to strategy GUI slots. These are fetched from get_param_types() in strategies.
     :param strategyName: Name of strategy.
     :param groupBoxLayout: Layout to add the slots to.
     :return: Tuple of labels and values lists.
@@ -157,7 +158,7 @@ def create_strategy_inputs(parameters: list, strategyName: str, groupBoxLayout: 
     return values, labels
 
 
-def delete_strategy_inputs(strategyDict: dict, parameters: list, strategyName: str, tab: QTabWidget):
+def delete_strategy_inputs(strategyDict: Dict[Any, Any], parameters: list, strategyName: str, tab: QTabWidget):
     """
     Dynamically deletes strategy inputs.
     :param strategyDict: Dictionary to modify.
