@@ -23,7 +23,7 @@ def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:
     return groupBox, layout
 
 
-def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Any]:
+def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Type[Strategy]]:
     """
     Helper function to return a strategies dictionary with strategy name as the key and strategy itself as the value.
     :param strategies: List of strategies to process for dictionary.
@@ -35,8 +35,8 @@ def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Any
     return strategiesDict
 
 
-def create_inner_tab(categoryTabs: list, description: str, tabName: str, input_creator: Callable, dictionary: dict,
-                     signalFunction: Callable, parent: QDialog = None):
+def create_inner_tab(categoryTabs: List[QTabWidget], description: str, tabName: str, input_creator: Callable,
+                     dictionary: Dict[Any, QGroupBox], signalFunction: Callable, parent: QDialog = None):
     """
     Creates inner tab for each category tab in list of category tabs provided.
     :param categoryTabs: Tabs to create inner tab and append to.

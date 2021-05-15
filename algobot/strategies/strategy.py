@@ -6,12 +6,12 @@ Please make sure that they have some default values like None for the GUI to ini
 from typing import List, Union
 
 from algobot.data import Data
+from algobot.traders.backtester import Backtester
 from algobot.traders.simulationtrader import SimulationTrader
-from algobot.traders.trader import Trader
 
 
 class Strategy:
-    def __init__(self, name: str = None, parent: Union[Trader, SimulationTrader] = None, precision: int = 2):
+    def __init__(self, name: str = None, parent: Union[Backtester, SimulationTrader] = None, precision: int = 2):
         """
         Create all your strategies from this parent strategy class.
         :param name: Name of strategy.
