@@ -14,7 +14,8 @@ import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
 from algobot.interface.config_utils.calendar_utils import setup_calendar
-from algobot.interface.config_utils.telegram_utils import reset_telegram_state, test_telegram
+from algobot.interface.config_utils.telegram_utils import (
+    reset_telegram_state, test_telegram)
 from algobot.interface.config_utils.user_config_utils import (
     copy_settings_to_backtest, copy_settings_to_simulation,
     load_backtest_settings, load_live_settings, load_simulation_settings,
