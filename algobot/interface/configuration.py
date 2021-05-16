@@ -15,6 +15,9 @@ from algobot.graph_helpers import create_infinite_line
 from algobot.interface.config_utils.calendar_utils import setup_calendar
 from algobot.interface.config_utils.credential_utils import (
     load_credentials, save_credentials, test_binance_credentials)
+from algobot.interface.config_utils.data_utils import (download_data,
+                                                       import_data,
+                                                       stop_download)
 from algobot.interface.config_utils.telegram_utils import (
     reset_telegram_state, test_telegram)
 from algobot.interface.config_utils.user_config_utils import (
@@ -29,7 +32,6 @@ from algobot.interface.configuration_helpers import (
 # noinspection PyUnresolvedReferences
 from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
-from algobot.threads import downloadThread
 
 configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
 
@@ -607,84 +609,6 @@ class Configuration(QDialog):
 
         helpers.write_json_file(self.basicFilePath, **config)
 
-    def import_data(self, caller: int = BACKTEST):
-        """
-        Imports CSV data and loads it.
-        """
-        self.optimizer_backtest_dict[caller]['infoLabel'].setText("Importing data...")
-        filePath, _ = QFileDialog.getOpenFileName(self, 'Open file', helpers.ROOT_DIR, "CSV (*.csv)")
-        if filePath == '':
-            self.optimizer_backtest_dict[caller]['infoLabel'].setText("Data not imported.")
-        else:
-            self.optimizer_backtest_dict[caller]['data'] = helpers.load_from_csv(filePath, descending=False)
-            self.optimizer_backtest_dict[caller]['dataType'] = "Imported"
-            self.optimizer_backtest_dict[caller]['infoLabel'].setText("Imported data successfully.")
-            self.optimizer_backtest_dict[caller]['dataLabel'].setText('Using imported data to conduct backtest.')
-            setup_calendar(config_obj=self, caller=caller)
-
-    def download_data(self, caller: int = BACKTEST):
-        """
-        Loads data from data object. If the data object is empty, it downloads it.
-        """
-        self.optimizer_backtest_dict[caller]['downloadButton'].setEnabled(False)
-        self.optimizer_backtest_dict[caller]['importButton'].setEnabled(False)
-        self.set_download_progress(progress=0, message="Attempting to download...", caller=caller, enableStop=False)
-
-        symbol = self.optimizer_backtest_dict[caller]['tickers'].text()
-        interval = helpers.convert_long_interval(self.optimizer_backtest_dict[caller]['intervals'].currentText())
-
-        thread = downloadThread.DownloadThread(symbol=symbol, interval=interval, caller=caller, logger=self.logger)
-        thread.signals.progress.connect(self.set_download_progress)
-        thread.signals.finished.connect(self.set_downloaded_data)
-        thread.signals.error.connect(self.handle_download_failure)
-        thread.signals.restore.connect(self.restore_download_state)
-        thread.signals.locked.connect(lambda:
-                                      self.optimizer_backtest_dict[caller]['stopDownloadButton'].setEnabled(False))
-        self.optimizer_backtest_dict[caller]['downloadThread'] = thread
-        self.threadPool.start(thread)
-
-    def stop_download(self, caller: int = BACKTEST):
-        """
-        Stops download if download is in progress.
-        :param caller: Caller that'll determine who called this function -> OPTIMIZER or BACKTEST
-        """
-        if self.optimizer_backtest_dict[caller]['downloadThread'] is not None:
-            self.optimizer_backtest_dict[caller]['downloadLabel'].setText("Canceling download...")
-            self.optimizer_backtest_dict[caller]['downloadThread'].stop()
-
-    def set_download_progress(self, progress: int, message: str, caller: int = BACKTEST, enableStop: bool = True):
-        """
-        Sets download progress and message with parameters passed.
-        :param enableStop: Boolean that'll determine if download can be stopped or not.
-        :param caller: Caller that'll determine which caller was used.
-        :param progress: Progress value to set bar at.
-        :param message: Message to display in label.
-        """
-        if enableStop:
-            self.optimizer_backtest_dict[caller]['stopDownloadButton'].setEnabled(True)
-
-        if progress != -1:
-            self.optimizer_backtest_dict[caller]['downloadProgress'].setValue(progress)
-        self.optimizer_backtest_dict[caller]['downloadLabel'].setText(message)
-
-    def restore_download_state(self, caller: int = BACKTEST):
-        """
-        Restores GUI to normal state.
-        """
-        self.optimizer_backtest_dict[caller]['downloadThread'] = None
-        self.optimizer_backtest_dict[caller]['stopDownloadButton'].setEnabled(False)
-        self.optimizer_backtest_dict[caller]['importButton'].setEnabled(True)
-        self.optimizer_backtest_dict[caller]['downloadButton'].setEnabled(True)
-
-    def handle_download_failure(self, e, caller: int = BACKTEST):
-        """
-        If download fails for backtest data, then GUI gets updated.
-        :param caller: Caller that'll determine which caller was used.
-        :param e: Error for why download failed.
-        """
-        self.set_download_progress(progress=-1, message='Download failed.', caller=caller, enableStop=False)
-        self.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Error occurred during download: {e}")
-
     def set_downloaded_data(self, data, caller: int = BACKTEST):
         """
         If download is successful, the data passed is set to backtest data.
@@ -856,13 +780,13 @@ class Configuration(QDialog):
         self.backtestCopySettingsButton.clicked.connect(lambda: copy_settings_to_backtest(self))
         self.backtestSaveConfigurationButton.clicked.connect(lambda: save_backtest_settings(self))
         self.backtestLoadConfigurationButton.clicked.connect(lambda: load_backtest_settings(self))
-        self.backtestImportDataButton.clicked.connect(lambda: self.import_data(BACKTEST))
-        self.backtestDownloadDataButton.clicked.connect(lambda: self.download_data(BACKTEST))
-        self.backtestStopDownloadButton.clicked.connect(lambda: self.stop_download(BACKTEST))
+        self.backtestImportDataButton.clicked.connect(lambda: import_data(self, BACKTEST))
+        self.backtestDownloadDataButton.clicked.connect(lambda: download_data(self, BACKTEST))
+        self.backtestStopDownloadButton.clicked.connect(lambda: stop_download(self, BACKTEST))
 
-        self.optimizerImportDataButton.clicked.connect(lambda: self.import_data(OPTIMIZER))
-        self.optimizerDownloadDataButton.clicked.connect(lambda: self.download_data(OPTIMIZER))
-        self.optimizerStopDownloadButton.clicked.connect(lambda: self.stop_download(OPTIMIZER))
+        self.optimizerImportDataButton.clicked.connect(lambda: import_data(self, OPTIMIZER))
+        self.optimizerDownloadDataButton.clicked.connect(lambda: download_data(self, OPTIMIZER))
+        self.optimizerStopDownloadButton.clicked.connect(lambda: stop_download(self, OPTIMIZER))
 
         self.testCredentialsButton.clicked.connect(lambda: test_binance_credentials(self))
         self.saveCredentialsButton.clicked.connect(lambda: save_credentials(self))
