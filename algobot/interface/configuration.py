@@ -2,7 +2,6 @@ import os
 from logging import Logger
 from typing import List, Union
 
-from binance.client import Client
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
@@ -14,6 +13,8 @@ import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
 from algobot.interface.config_utils.calendar_utils import setup_calendar
+from algobot.interface.config_utils.credential_utils import (
+    load_credentials, save_credentials, test_binance_credentials)
 from algobot.interface.config_utils.telegram_utils import (
     reset_telegram_state, test_telegram)
 from algobot.interface.config_utils.user_config_utils import (
@@ -104,7 +105,7 @@ class Configuration(QDialog):
 
         self.load_combo_boxes()  # Primarily used for backtest interval changer logic.
         self.load_slots()  # Loads stop loss, take profit, and strategies slots.
-        self.load_credentials()  # Load credentials if they exist.
+        load_credentials(self)  # Load credentials if they exist.
 
     def enable_disable_hover_line(self):
         """
@@ -533,22 +534,6 @@ class Configuration(QDialog):
                 tabWidget.setLayout(layout)
                 tab.addTab(tabWidget, strategyName)
 
-    def test_binance_credentials(self):
-        """
-        Tests Binance credentials provided in configuration.
-        """
-        apiKey = self.binanceApiKey.text()
-        apiSecret = self.binanceApiSecret.text()
-        try:
-            Client(apiKey, apiSecret).get_account()
-            self.credentialResult.setText('Connected successfully.')
-        except Exception as e:
-            stringError = repr(e)
-            if '1000ms' in stringError:
-                self.credentialResult.setText('Time not synchronized. Please synchronize your time.')
-            else:
-                self.credentialResult.setText(stringError)
-
     def create_appropriate_config_folders(self, folder: str) -> str:
         """
         Creates appropriate configuration folders. If a configuration folder doesn't exist, it'll create that. Next,
@@ -621,55 +606,6 @@ class Configuration(QDialog):
         }
 
         helpers.write_json_file(self.basicFilePath, **config)
-
-    def load_credentials(self, auto: bool = True):
-        """
-        Attempts to load credentials automatically from path program regularly stores credentials in if auto is True.
-        """
-        targetFolder = os.path.join(helpers.ROOT_DIR, self.credentialsFolder)
-        if helpers.create_folder_if_needed(targetFolder):
-            self.credentialResult.setText('No credentials found.')
-            return
-
-        if not auto:
-            filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetFolder, "JSON (*.json)")
-        else:
-            filePath = os.path.join(targetFolder, 'default.json')
-
-        try:
-            credentials = helpers.load_json_file(jsonfile=filePath)
-            self.binanceApiKey.setText(credentials['apiKey'])
-            self.binanceApiSecret.setText(credentials['apiSecret'])
-            self.telegramApiKey.setText(credentials['telegramApiKey'])
-            self.telegramChatID.setText(credentials['chatID'])
-            self.credentialResult.setText(f'Credentials loaded successfully from {os.path.basename(filePath)}.')
-        except FileNotFoundError:
-            self.credentialResult.setText('Could not load credentials.')
-        except Exception as e:
-            self.credentialResult.setText(str(e))
-
-    def save_credentials(self):
-        """
-        Function that saves credentials to base path in a JSON format. Obviously not very secure, but temp fix.
-        """
-        targetFolder = os.path.join(helpers.ROOT_DIR, self.credentialsFolder)
-        helpers.create_folder_if_needed(targetFolder)
-
-        apiKey = self.binanceApiKey.text()
-        apiSecret = self.binanceApiSecret.text()
-        telegramApiKey = self.telegramApiKey.text()
-        telegramChatId = self.telegramChatID.text()
-
-        defaultPath = os.path.join(targetFolder, 'default.json')
-        filePath, _ = QFileDialog.getSaveFileName(self, 'Save Credentials', defaultPath, 'JSON (*.json)')
-        filePath = filePath.strip()
-
-        if filePath:
-            helpers.write_json_file(filePath=filePath, apiKey=apiKey, apiSecret=apiSecret,
-                                    telegramApiKey=telegramApiKey, chatID=telegramChatId)
-            self.credentialResult.setText(f'Credentials saved successfully to {os.path.basename(filePath)}.')
-        else:
-            self.credentialResult.setText('Credentials could not be saved.')
 
     def import_data(self, caller: int = BACKTEST):
         """
@@ -928,9 +864,9 @@ class Configuration(QDialog):
         self.optimizerDownloadDataButton.clicked.connect(lambda: self.download_data(OPTIMIZER))
         self.optimizerStopDownloadButton.clicked.connect(lambda: self.stop_download(OPTIMIZER))
 
-        self.testCredentialsButton.clicked.connect(self.test_binance_credentials)
-        self.saveCredentialsButton.clicked.connect(self.save_credentials)
-        self.loadCredentialsButton.clicked.connect(lambda: self.load_credentials(auto=False))
+        self.testCredentialsButton.clicked.connect(lambda: test_binance_credentials(self))
+        self.saveCredentialsButton.clicked.connect(lambda: save_credentials(self))
+        self.loadCredentialsButton.clicked.connect(lambda: load_credentials(config_obj=self, auto=False))
 
         self.testTelegramButton.clicked.connect(lambda: test_telegram(self))
         self.telegramApiKey.textChanged.connect(lambda: reset_telegram_state(self))
