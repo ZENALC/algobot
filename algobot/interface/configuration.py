@@ -12,7 +12,6 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
 import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
-from algobot.interface.config_utils.calendar_utils import setup_calendar
 from algobot.interface.config_utils.credential_utils import (
     load_credentials, save_credentials, test_binance_credentials)
 from algobot.interface.config_utils.data_utils import (download_data,
@@ -608,21 +607,6 @@ class Configuration(QDialog):
         }
 
         helpers.write_json_file(self.basicFilePath, **config)
-
-    def set_downloaded_data(self, data, caller: int = BACKTEST):
-        """
-        If download is successful, the data passed is set to backtest data.
-        :param caller: Caller that'll determine which caller was used.
-        :param data: Data to be used for backtesting.
-        """
-        symbol = self.optimizer_backtest_dict[caller]['tickers'].text()
-        interval = self.optimizer_backtest_dict[caller]['intervals'].currentText().lower()
-
-        self.optimizer_backtest_dict[caller]['data'] = data
-        self.optimizer_backtest_dict[caller]['dataType'] = symbol
-        self.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Downloaded {interval} {symbol} data successfully.")
-        self.optimizer_backtest_dict[caller]['dataLabel'].setText(f'Using {interval} {symbol} data to run backtest.')
-        setup_calendar(config_obj=self, caller=caller)
 
     def helper_save(self, caller: int, config: dict):
         """

@@ -43,13 +43,30 @@ def download_data(config_obj, caller: int = BACKTEST):
     thread = downloadThread.DownloadThread(symbol=symbol, interval=interval, caller=caller, logger=config_obj.logger)
     thread.signals.progress.connect(lambda progress, msg: set_download_progress(config_obj=config_obj, message=msg,
                                                                                 progress=progress,  caller=caller))
-    thread.signals.finished.connect(config_obj.set_downloaded_data)
+    thread.signals.finished.connect(lambda data, *_: set_downloaded_data(config_obj, data=data, caller=caller))
     thread.signals.error.connect(lambda e, *_: handle_download_failure(config_obj=config_obj, caller=caller, e=e))
     thread.signals.restore.connect(lambda: restore_download_state(config_obj=config_obj, caller=caller))
     thread.signals.locked.connect(lambda:
                                   config_obj.optimizer_backtest_dict[caller]['stopDownloadButton'].setEnabled(False))
     config_obj.optimizer_backtest_dict[caller]['downloadThread'] = thread
     config_obj.threadPool.start(thread)
+
+
+def set_downloaded_data(config_obj, data, caller: int = BACKTEST):
+    """
+    If download is successful, the data passed is set to backtest data.
+    :param config_obj: Configuration QDialog object (from configuration.py)
+    :param caller: Caller that'll determine which caller was used.
+    :param data: Data to be used for backtesting.
+    """
+    symbol = config_obj.optimizer_backtest_dict[caller]['tickers'].text()
+    interval = config_obj.optimizer_backtest_dict[caller]['intervals'].currentText().lower()
+
+    config_obj.optimizer_backtest_dict[caller]['data'] = data
+    config_obj.optimizer_backtest_dict[caller]['dataType'] = symbol
+    config_obj.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Downloaded {interval} {symbol} data.")
+    config_obj.optimizer_backtest_dict[caller]['dataLabel'].setText(f'Using {interval} {symbol} data to run backtest.')
+    setup_calendar(config_obj=config_obj, caller=caller)
 
 
 def stop_download(config_obj, caller: int = BACKTEST):
