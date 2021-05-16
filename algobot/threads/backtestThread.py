@@ -4,6 +4,7 @@ from typing import Any, Dict
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 from algobot.enums import BACKTEST
+from algobot.interface.config_utils.calendar_utils import get_calendar_dates
 from algobot.traders.backtester import Backtester
 
 
@@ -35,7 +36,7 @@ class BacktestThread(QRunnable):
         :return: GUI configuration details in a dictionary.
         """
         config = self.gui.configuration
-        startDate, endDate = config.get_calendar_dates()
+        startDate, endDate = get_calendar_dates(config_obj=config)
 
         return {
             'startingBalance': config.backtestStartingBalanceSpinBox.value(),

@@ -1,22 +1,24 @@
-import datetime
 import os
 from logging import Logger
-from typing import List, Tuple, Union
+from typing import List, Union
 
-import telegram
 from binance.client import Client
-from dateutil import parser
 from PyQt5 import uic
-from PyQt5.QtCore import QDate, QThreadPool
+from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QFileDialog, QHBoxLayout, QLabel, QLayout,
-                             QMainWindow, QMessageBox, QScrollArea, QSpinBox,
-                             QTabWidget, QVBoxLayout, QWidget)
-from telegram.ext import Updater
+                             QMainWindow, QScrollArea, QSpinBox, QTabWidget,
+                             QVBoxLayout, QWidget)
 
 import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
+from algobot.interface.config_utils.calendar_utils import setup_calendar
+from algobot.interface.config_utils.telegram_utils import reset_telegram_state, test_telegram
+from algobot.interface.config_utils.user_config_utils import (
+    copy_settings_to_backtest, copy_settings_to_simulation,
+    load_backtest_settings, load_live_settings, load_simulation_settings,
+    save_backtest_settings, save_live_settings, save_simulation_settings)
 from algobot.interface.configuration_helpers import (
     add_strategy_buttons, add_strategy_inputs, create_inner_tab,
     create_strategy_inputs, delete_strategy_inputs, get_default_widget,
@@ -530,52 +532,6 @@ class Configuration(QDialog):
                 tabWidget.setLayout(layout)
                 tab.addTab(tabWidget, strategyName)
 
-    def reset_telegram_state(self):
-        """
-        Resets telegram state once something is changed in the Telegram configuration GUI.
-        """
-        self.chatPass = False
-        self.tokenPass = False
-        self.telegrationConnectionResult.setText("Telegram credentials not yet tested.")
-
-    def test_telegram(self):
-        """
-        Tests Telegram connection and updates respective GUI elements.
-        """
-        tokenPass = chatPass = False
-        message = error = ''
-
-        try:
-            telegramApikey = self.telegramApiKey.text()
-            chatID = self.telegramChatID.text()
-            Updater(telegramApikey, use_context=True)
-            tokenPass = True
-            telegram.Bot(token=telegramApikey).send_message(chat_id=chatID, text='Testing connection with Chat ID.')
-            chatPass = True
-        except Exception as e:
-            error = repr(e)
-            if 'ConnectionError' in error:
-                error = 'There was a connection error. Please check your connection.'
-
-        if tokenPass:
-            if 'Unauthorized' in error:
-                message = 'Token authorization was unsuccessful. Please recheck your token.'
-            else:
-                message += "Token authorization was successful. "
-                if chatPass:
-                    message += "Chat ID checked and connected to successfully. "
-                else:
-                    if 'Chat not found' in error:
-                        message += "However, the specified chat ID is invalid."
-                    else:
-                        message += f'However, chat ID error occurred: "{error}".'
-        else:
-            message = f'Error: {error}'
-
-        self.telegrationConnectionResult.setText(message)
-        self.chatPass = chatPass
-        self.tokenPass = tokenPass
-
     def test_binance_credentials(self):
         """
         Tests Binance credentials provided in configuration.
@@ -714,46 +670,6 @@ class Configuration(QDialog):
         else:
             self.credentialResult.setText('Credentials could not be saved.')
 
-    def get_calendar_dates(self, caller: int = BACKTEST) -> Tuple[datetime.date or None, datetime.date or None]:
-        """
-        Returns start end end dates for backtest. If both are the same, returns None.
-        :return: Start and end dates for backtest.
-        """
-        startDate = self.optimizer_backtest_dict[caller]['startDate'].selectedDate().toPyDate()
-        endDate = self.optimizer_backtest_dict[caller]['endDate'].selectedDate().toPyDate()
-        if startDate == endDate:
-            return None, None
-        return startDate, endDate
-
-    def setup_calendar(self, caller: int = BACKTEST):
-        """
-        Parses data if needed and then manipulates GUI elements with data timeframe.
-        """
-        data = self.optimizer_backtest_dict[caller]['data']
-        if type(data[0]['date_utc']) == str:
-            startDate = parser.parse(data[0]['date_utc'])
-            endDate = parser.parse(data[-1]['date_utc'])
-        else:
-            startDate = data[0]['date_utc']
-            endDate = data[-1]['date_utc']
-
-        if startDate > endDate:
-            startDate, endDate = endDate, startDate
-
-        startYear, startMonth, startDay = startDate.year, startDate.month, startDate.day
-        qStartDate = QDate(startYear, startMonth, startDay)
-
-        endYear, endMonth, endDay = endDate.year, endDate.month, endDate.day
-        qEndDate = QDate(endYear, endMonth, endDay)
-
-        self.optimizer_backtest_dict[caller]['startDate'].setEnabled(True)
-        self.optimizer_backtest_dict[caller]['startDate'].setDateRange(qStartDate, qEndDate)
-        self.optimizer_backtest_dict[caller]['startDate'].setSelectedDate(qStartDate)
-
-        self.optimizer_backtest_dict[caller]['endDate'].setEnabled(True)
-        self.optimizer_backtest_dict[caller]['endDate'].setDateRange(qStartDate, qEndDate)
-        self.optimizer_backtest_dict[caller]['endDate'].setSelectedDate(qEndDate)
-
     def import_data(self, caller: int = BACKTEST):
         """
         Imports CSV data and loads it.
@@ -767,7 +683,7 @@ class Configuration(QDialog):
             self.optimizer_backtest_dict[caller]['dataType'] = "Imported"
             self.optimizer_backtest_dict[caller]['infoLabel'].setText("Imported data successfully.")
             self.optimizer_backtest_dict[caller]['dataLabel'].setText('Using imported data to conduct backtest.')
-            self.setup_calendar(caller=caller)
+            setup_calendar(config_obj=self, caller=caller)
 
     def download_data(self, caller: int = BACKTEST):
         """
@@ -845,7 +761,7 @@ class Configuration(QDialog):
         self.optimizer_backtest_dict[caller]['dataType'] = symbol
         self.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Downloaded {interval} {symbol} data successfully.")
         self.optimizer_backtest_dict[caller]['dataLabel'].setText(f'Using {interval} {symbol} data to run backtest.')
-        self.setup_calendar(caller=caller)
+        setup_calendar(config_obj=self, caller=caller)
 
     def helper_save(self, caller: int, config: dict):
         """
@@ -871,81 +787,6 @@ class Configuration(QDialog):
         filePath, _ = QFileDialog.getSaveFileName(self, f'Save {name} Configuration', defaultPath, 'JSON (*.json)')
         return filePath
 
-    def save_backtest_settings(self):
-        """
-        Saves backtest settings to JSON file.
-        """
-        config = {
-            # General
-            'type': BACKTEST,
-            'ticker': self.backtestTickerLineEdit.text(),
-            'interval': self.backtestIntervalComboBox.currentIndex(),
-            'startingBalance': self.backtestStartingBalanceSpinBox.value(),
-            'precision': self.backtestPrecisionSpinBox.value(),
-            'marginTrading': self.backtestMarginTradingCheckBox.isChecked(),
-        }
-
-        self.helper_save(BACKTEST, config)
-        filePath = self.helper_get_save_file_path("Backtest")
-
-        if filePath:
-            helpers.write_json_file(filePath, **config)
-            file = os.path.basename(filePath)
-            self.backtestConfigurationResult.setText(f"Saved backtest configuration successfully to {file}.")
-        else:
-            self.backtestConfigurationResult.setText("Could not save backtest configuration.")
-
-    def save_simulation_settings(self):
-        """
-        Saves simulation settings to JSON file.
-        """
-        config = {
-            # General
-            'type': SIMULATION,
-            'ticker': self.simulationTickerLineEdit.text(),
-            'interval': self.simulationIntervalComboBox.currentIndex(),
-            'startingBalance': self.simulationStartingBalanceSpinBox.value(),
-            'precision': self.simulationPrecisionSpinBox.value(),
-            'lowerInterval': self.lowerIntervalSimulationCheck.isChecked(),
-        }
-
-        self.helper_save(SIMULATION, config)
-        filePath = self.helper_get_save_file_path("Simulation")
-
-        if filePath:
-            helpers.write_json_file(filePath, **config)
-            file = os.path.basename(filePath)
-            self.simulationConfigurationResult.setText(f"Saved simulation configuration successfully to {file}.")
-        else:
-            self.simulationConfigurationResult.setText("Could not save simulation configuration.")
-
-    def save_live_settings(self):
-        """
-        Saves live settings to JSON file.
-        """
-        config = {
-            # General
-            'type': LIVE,
-            'ticker': self.tickerLineEdit.text(),
-            'interval': self.intervalComboBox.currentIndex(),
-            'precision': self.precisionSpinBox.value(),
-            'usRegion': self.usRegionRadio.isChecked(),
-            'otherRegion': self.otherRegionRadio.isChecked(),
-            'isolatedMargin': self.isolatedMarginAccountRadio.isChecked(),
-            'crossMargin': self.crossMarginAccountRadio.isChecked(),
-            'lowerInterval': self.lowerIntervalCheck.isChecked(),
-        }
-
-        self.helper_save(LIVE, config)
-        filePath = self.helper_get_save_file_path("Live")
-
-        if filePath:
-            helpers.write_json_file(filePath, **config)
-            file = os.path.basename(filePath)
-            self.configurationResult.setText(f"Saved live configuration successfully to {file}.")
-        else:
-            self.configurationResult.setText("Could not save live configuration.")
-
     def helper_load(self, caller: int, config: dict):
         """
         Helper function to load caller configuration to GUI.
@@ -957,78 +798,6 @@ class Configuration(QDialog):
         self.set_take_profit_settings(caller, config)
         for strategyName in self.strategies.keys():
             self.load_strategy_from_config(caller, strategyName, config)
-
-    def load_backtest_settings(self):
-        """
-        Loads backtest settings from JSON file and sets them to backtest settings.
-        """
-        targetPath = self.create_appropriate_config_folders('Backtest')
-        filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetPath, "JSON (*.json)")
-        try:
-            config = helpers.load_json_file(filePath)
-            file = os.path.basename(filePath)
-            if config['type'] != BACKTEST:
-                QMessageBox.about(self, 'Warning', 'Incorrect type of non-backtest configuration provided.')
-            else:
-                self.backtestTickerLineEdit.setText(str(config['ticker']))
-                self.backtestIntervalComboBox.setCurrentIndex(config['interval'])
-                self.backtestStartingBalanceSpinBox.setValue(config['startingBalance'])
-                self.backtestPrecisionSpinBox.setValue(config['precision'])
-                self.backtestMarginTradingCheckBox.setChecked(config['marginTrading'])
-                self.helper_load(BACKTEST, config)
-                self.backtestConfigurationResult.setText(f"Loaded backtest configuration successfully from {file}.")
-        except Exception as e:
-            self.logger.exception(str(e))
-            self.backtestConfigurationResult.setText("Could not load backtest configuration.")
-
-    def load_simulation_settings(self):
-        """
-        Loads simulation settings from JSON file and sets it to simulation settings.
-        """
-        targetPath = self.create_appropriate_config_folders('Simulation')
-        filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetPath, "JSON (*.json)")
-        try:
-            config = helpers.load_json_file(filePath)
-            file = os.path.basename(filePath)
-            if config['type'] != SIMULATION:
-                QMessageBox.about(self, 'Warning', 'Incorrect type of non-simulation configuration provided.')
-            else:
-                self.simulationTickerLineEdit.setText(str(config['ticker']))
-                self.simulationIntervalComboBox.setCurrentIndex(config['interval'])
-                self.simulationStartingBalanceSpinBox.setValue(config['startingBalance'])
-                self.simulationPrecisionSpinBox.setValue(config['precision'])
-                self.lowerIntervalSimulationCheck.setChecked(config['lowerInterval'])
-                self.helper_load(SIMULATION, config)
-                self.simulationConfigurationResult.setText(f"Loaded simulation configuration successfully from {file}.")
-        except Exception as e:
-            self.logger.exception(str(e))
-            self.simulationConfigurationResult.setText("Could not load simulation configuration.")
-
-    def load_live_settings(self):
-        """
-        Loads live settings from JSON file and sets it to live settings.
-        """
-        targetPath = self.create_appropriate_config_folders('Live')
-        filePath, _ = QFileDialog.getOpenFileName(self, 'Load Credentials', targetPath, "JSON (*.json)")
-        try:
-            config = helpers.load_json_file(filePath)
-            file = os.path.basename(filePath)
-            if config['type'] != LIVE:
-                QMessageBox.about(self, 'Warning', 'Incorrect type of non-live configuration provided.')
-            else:
-                self.tickerLineEdit.setText(str(config['ticker']))
-                self.intervalComboBox.setCurrentIndex(config['interval'])
-                self.precisionSpinBox.setValue(config['precision'])
-                self.usRegionRadio.setChecked(config['usRegion'])
-                self.otherRegionRadio.setChecked(config['otherRegion'])
-                self.isolatedMarginAccountRadio.setChecked(config['isolatedMargin'])
-                self.crossMarginAccountRadio.setChecked(config['crossMargin'])
-                self.lowerIntervalCheck.setChecked(config['lowerInterval'])
-                self.helper_load(LIVE, config)
-                self.configurationResult.setText(f"Loaded live configuration successfully from {file}.")
-        except Exception as e:
-            self.logger.exception(str(e))
-            self.configurationResult.setText("Could not load live configuration.")
 
     def add_strategy_to_config(self, caller: int, strategyName: str, config: dict):
         """
@@ -1095,68 +864,6 @@ class Configuration(QDialog):
             value = values[index]
             set_value(widget, value)
 
-    def copy_strategy_settings(self, fromCaller: int, toCaller: int, strategyName: str):
-        """
-        Copies strategy settings from caller provided and sets it to caller provided based on strategy name.
-        :param fromCaller: Function will copy settings from this caller.
-        :param toCaller: Function will copy settings to this caller.
-        :param strategyName: This strategy's settings will be copied.
-        :return: None
-        """
-        fromCallerTab = self.get_category_tab(fromCaller)
-        toCallerTab = self.get_category_tab(toCaller)
-
-        fromCallerGroupBox = self.strategyDict[fromCallerTab, strategyName, 'groupBox']
-        self.strategyDict[toCallerTab, strategyName, 'groupBox'].setChecked(fromCallerGroupBox.isChecked())
-        self.set_strategy_values(strategyName, toCaller, self.get_strategy_values(strategyName, fromCaller))
-
-    def copy_loss_settings(self, fromCaller: int, toCaller: int):
-        """
-        Copies loss settings from one caller to another.
-        :param fromCaller: Loss settings will be copied from this trader.
-        :param toCaller: Loss settings will be copied to this trader.
-        :return: None
-        """
-        fromTab = self.get_category_tab(fromCaller)
-        toTab = self.get_category_tab(toCaller)
-
-        self.lossDict[toTab, "lossType"].setCurrentIndex(self.lossDict[fromTab, "lossType"].currentIndex())
-        self.lossDict[toTab, "lossPercentage"].setValue(self.lossDict[fromTab, "lossPercentage"].value())
-        self.lossDict[toTab, "smartStopLossCounter"].setValue(self.lossDict[fromTab, "smartStopLossCounter"].value())
-
-        if toTab != self.backtestConfigurationTabWidget:
-            self.lossDict[toTab, "safetyTimer"].setValue(self.lossDict[fromTab, "safetyTimer"].value())
-
-    def copy_settings_to_simulation(self):
-        """
-        Copies parameters from main configuration to simulation configuration.
-        :return: None
-        """
-        self.simulationIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
-        self.simulationTickerLineEdit.setText(self.tickerLineEdit.text())
-        self.simulationPrecisionSpinBox.setValue(self.precisionSpinBox.value())
-        self.copy_loss_settings(LIVE, SIMULATION)
-
-        for strategyName in self.strategies.keys():
-            self.copy_strategy_settings(LIVE, SIMULATION, strategyName)
-
-        self.simulationCopyLabel.setText("Copied all viable settings from main to simulation settings successfully.")
-
-    def copy_settings_to_backtest(self):
-        """
-        Copies parameters from main configuration to backtest configuration.
-        :return: None
-        """
-        self.backtestIntervalComboBox.setCurrentIndex(self.intervalComboBox.currentIndex())
-        self.backtestTickerLineEdit.setText(self.tickerLineEdit.text())
-        self.backtestPrecisionSpinBox.setValue(self.precisionSpinBox.value())
-        self.copy_loss_settings(LIVE, BACKTEST)
-
-        for strategyName in self.strategies.keys():
-            self.copy_strategy_settings(LIVE, BACKTEST, strategyName)
-
-        self.backtestCopyLabel.setText("Copied all viable settings from main to backtest settings successfully.")
-
     def update_graph_speed(self):
         """
         Updates graph speed on main Algobot interface.
@@ -1205,13 +912,13 @@ class Configuration(QDialog):
         Loads all configuration interface slots.
         :return: None
         """
-        self.simulationCopySettingsButton.clicked.connect(self.copy_settings_to_simulation)
-        self.simulationSaveConfigurationButton.clicked.connect(self.save_simulation_settings)
-        self.simulationLoadConfigurationButton.clicked.connect(self.load_simulation_settings)
+        self.simulationCopySettingsButton.clicked.connect(lambda: copy_settings_to_simulation(self))
+        self.simulationSaveConfigurationButton.clicked.connect(lambda: save_simulation_settings(self))
+        self.simulationLoadConfigurationButton.clicked.connect(lambda: load_simulation_settings(self))
 
-        self.backtestCopySettingsButton.clicked.connect(self.copy_settings_to_backtest)
-        self.backtestSaveConfigurationButton.clicked.connect(self.save_backtest_settings)
-        self.backtestLoadConfigurationButton.clicked.connect(self.load_backtest_settings)
+        self.backtestCopySettingsButton.clicked.connect(lambda: copy_settings_to_backtest(self))
+        self.backtestSaveConfigurationButton.clicked.connect(lambda: save_backtest_settings(self))
+        self.backtestLoadConfigurationButton.clicked.connect(lambda: load_backtest_settings(self))
         self.backtestImportDataButton.clicked.connect(lambda: self.import_data(BACKTEST))
         self.backtestDownloadDataButton.clicked.connect(lambda: self.download_data(BACKTEST))
         self.backtestStopDownloadButton.clicked.connect(lambda: self.stop_download(BACKTEST))
@@ -1224,12 +931,12 @@ class Configuration(QDialog):
         self.saveCredentialsButton.clicked.connect(self.save_credentials)
         self.loadCredentialsButton.clicked.connect(lambda: self.load_credentials(auto=False))
 
-        self.testTelegramButton.clicked.connect(self.test_telegram)
-        self.telegramApiKey.textChanged.connect(self.reset_telegram_state)
-        self.telegramChatID.textChanged.connect(self.reset_telegram_state)
+        self.testTelegramButton.clicked.connect(lambda: test_telegram(self))
+        self.telegramApiKey.textChanged.connect(lambda: reset_telegram_state(self))
+        self.telegramChatID.textChanged.connect(lambda: reset_telegram_state(self))
 
-        self.saveConfigurationButton.clicked.connect(self.save_live_settings)
-        self.loadConfigurationButton.clicked.connect(self.load_live_settings)
+        self.saveConfigurationButton.clicked.connect(lambda: save_live_settings(self))
+        self.loadConfigurationButton.clicked.connect(lambda: load_live_settings(self))
         self.graphPlotSpeedSpinBox.valueChanged.connect(self.update_graph_speed)
         self.enableHoverLine.stateChanged.connect(self.enable_disable_hover_line)
 

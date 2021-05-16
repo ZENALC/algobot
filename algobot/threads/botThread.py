@@ -7,6 +7,7 @@ from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 import algobot.helpers as helpers
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH, LIVE, SIMULATION
+from algobot.interface.config_utils.telegram_utils import test_telegram
 from algobot.telegram_bot import TelegramBot
 from algobot.traders.realtrader import RealTrader
 from algobot.traders.simulationtrader import SimulationTrader
@@ -277,7 +278,7 @@ class BotThread(QRunnable):
         Attempts to initiate Telegram bot.
         """
         gui = self.gui
-        gui.configuration.test_telegram()
+        test_telegram(config_obj=gui.configuration)
         apiKey = gui.configuration.telegramApiKey.text()
         gui.telegramBot = TelegramBot(gui=gui, token=apiKey, botThread=self)
         gui.telegramBot.start()
