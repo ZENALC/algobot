@@ -491,22 +491,6 @@ class Configuration(QDialog):
 
         return lossSettings
 
-    def create_appropriate_config_folders(self, folder: str) -> str:
-        """
-        Creates appropriate configuration folders. If a configuration folder doesn't exist, it'll create that. Next,
-        it'll try to check if a type of configuration folder exists (e.g. Live, Simulation, Backtest). If it exists,
-        it'll just return the path to it. If not, it'll create the folder then return the path to it.
-        :param folder: Folder to create inside configuration folder.
-        :return: Absolute path to new folder.
-        """
-        basePath = os.path.join(helpers.ROOT_DIR, self.configFolder)
-        helpers.create_folder_if_needed(basePath)
-
-        targetPath = os.path.join(basePath, folder)
-        helpers.create_folder_if_needed(targetPath, basePath=basePath)
-
-        return targetPath
-
     def load_state(self):
         """
         This function will attempt to load previous basic configuration settings from self.basicFilePath.

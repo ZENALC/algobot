@@ -13,6 +13,24 @@ from algobot.interface.config_utils.strategy_utils import (get_strategy_values,
                                                            set_strategy_values)
 
 
+def create_appropriate_config_folders(config_obj, folder: str) -> str:
+    """
+    Creates appropriate configuration folders. If a configuration folder doesn't exist, it'll create that. Next,
+    it'll try to check if a type of configuration folder exists (e.g. Live, Simulation, Backtest). If it exists,
+    it'll just return the path to it. If not, it'll create the folder then return the path to it.
+    :param config_obj: Configuration QDialog object (from configuration.py)
+    :param folder: Folder to create inside configuration folder.
+    :return: Absolute path to new folder.
+    """
+    basePath = os.path.join(helpers.ROOT_DIR, config_obj.configFolder)
+    helpers.create_folder_if_needed(basePath)
+
+    targetPath = os.path.join(basePath, folder)
+    helpers.create_folder_if_needed(targetPath, basePath=basePath)
+
+    return targetPath
+
+
 def helper_load(config_obj, caller: int, config: dict):
     """
     Helper function to load caller configuration to GUI.
@@ -49,7 +67,7 @@ def helper_get_save_file_path(config_obj, name: str) -> Union[str]:
     :return: Absolute path to file.
     """
     name = name.capitalize()
-    targetPath = config_obj.create_appropriate_config_folders(name)
+    targetPath = create_appropriate_config_folders(config_obj, name)
     defaultPath = os.path.join(targetPath, f'{name.lower()}_configuration.json')
     filePath, _ = QFileDialog.getSaveFileName(config_obj, f'Save {name} Configuration', defaultPath, 'JSON (*.json)')
     return filePath
@@ -138,7 +156,7 @@ def load_live_settings(config_obj):
     Loads live settings from JSON file and sets it to live settings.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    targetPath = config_obj.create_appropriate_config_folders('Live')
+    targetPath = create_appropriate_config_folders(config_obj, 'Live')
     filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', targetPath, "JSON (*.json)")
     try:
         config = helpers.load_json_file(filePath)
@@ -166,7 +184,7 @@ def load_simulation_settings(config_obj):
     Loads simulation settings from JSON file and sets it to simulation settings.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    targetPath = config_obj.create_appropriate_config_folders('Simulation')
+    targetPath = create_appropriate_config_folders(config_obj, 'Simulation')
     filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', targetPath, "JSON (*.json)")
     try:
         config = helpers.load_json_file(filePath)
@@ -191,7 +209,7 @@ def load_backtest_settings(config_obj):
     Loads backtest settings from JSON file and sets them to backtest settings.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    targetPath = config_obj.create_appropriate_config_folders('Backtest')
+    targetPath = create_appropriate_config_folders(config_obj, 'Backtest')
     filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', targetPath, "JSON (*.json)")
     try:
         config = helpers.load_json_file(filePath)
