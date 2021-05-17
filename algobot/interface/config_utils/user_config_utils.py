@@ -3,6 +3,7 @@ Saving, loading, and copying settings helper functions for configuration.py can 
 """
 
 import os
+from typing import Union
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
@@ -10,6 +11,48 @@ from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, SIMULATION
 from algobot.interface.config_utils.strategy_utils import (get_strategy_values,
                                                            set_strategy_values)
+
+
+def helper_load(config_obj, caller: int, config: dict):
+    """
+    Helper function to load caller configuration to GUI.
+    :param config_obj: Configuration QDialog object (from configuration.py)
+    :param caller: Caller to load configuration to.
+    :param config: Configuration dictionary to get info from.
+    :return: None
+    """
+    config_obj.set_loss_settings(caller, config)
+    config_obj.set_take_profit_settings(caller, config)
+    for strategyName in config_obj.strategies.keys():
+        config_obj.load_strategy_from_config(caller, strategyName, config)
+
+
+def helper_save(config_obj, caller: int, config: dict):
+    """
+    Helper function to save caller configuration from GUI.
+    :param config_obj: Configuration QDialog object (from configuration.py)
+    :param caller: Caller to save configuration of.
+    :param config: Configuration dictionary to dump info to.
+    :return: None
+    """
+    config.update(config_obj.get_loss_settings(caller))
+    config.update(config_obj.get_take_profit_settings(caller))
+    for strategyName in config_obj.strategies.keys():
+        config_obj.add_strategy_to_config(caller, strategyName, config)
+
+
+def helper_get_save_file_path(config_obj, name: str) -> Union[str]:
+    """
+    Does necessary folder creations and returns save file path based on name provided.
+    :param config_obj: Configuration QDialog object (from configuration.py)
+    :param name: Name to use for file name and folder creation.
+    :return: Absolute path to file.
+    """
+    name = name.capitalize()
+    targetPath = config_obj.create_appropriate_config_folders(name)
+    defaultPath = os.path.join(targetPath, f'{name.lower()}_configuration.json')
+    filePath, _ = QFileDialog.getSaveFileName(config_obj, f'Save {name} Configuration', defaultPath, 'JSON (*.json)')
+    return filePath
 
 
 def save_backtest_settings(config_obj):
@@ -26,8 +69,8 @@ def save_backtest_settings(config_obj):
         'marginTrading': config_obj.backtestMarginTradingCheckBox.isChecked(),
     }
 
-    config_obj.helper_save(BACKTEST, config)
-    filePath = config_obj.helper_get_save_file_path("Backtest")
+    helper_save(config_obj, BACKTEST, config)
+    filePath = helper_get_save_file_path(config_obj, "Backtest")
 
     if filePath:
         helpers.write_json_file(filePath, **config)
@@ -54,8 +97,8 @@ def save_live_settings(config_obj):
         'lowerInterval': config_obj.lowerIntervalCheck.isChecked(),
     }
 
-    config_obj.helper_save(LIVE, config)
-    filePath = config_obj.helper_get_save_file_path("Live")
+    helper_save(config_obj, LIVE, config)
+    filePath = helper_get_save_file_path(config_obj, "Live")
 
     if filePath:
         helpers.write_json_file(filePath, **config)
@@ -79,8 +122,8 @@ def save_simulation_settings(config_obj):
         'lowerInterval': config_obj.lowerIntervalSimulationCheck.isChecked(),
     }
 
-    config_obj.helper_save(SIMULATION, config)
-    filePath = config_obj.helper_get_save_file_path("Simulation")
+    helper_save(config_obj, SIMULATION, config)
+    filePath = helper_get_save_file_path(config_obj, "Simulation")
 
     if filePath:
         helpers.write_json_file(filePath, **config)
@@ -111,7 +154,7 @@ def load_live_settings(config_obj):
             config_obj.isolatedMarginAccountRadio.setChecked(config['isolatedMargin'])
             config_obj.crossMarginAccountRadio.setChecked(config['crossMargin'])
             config_obj.lowerIntervalCheck.setChecked(config['lowerInterval'])
-            config_obj.helper_load(LIVE, config)
+            helper_load(config_obj, LIVE, config)
             config_obj.configurationResult.setText(f"Loaded live configuration successfully from {file}.")
     except Exception as e:
         config_obj.logger.exception(str(e))
@@ -136,7 +179,7 @@ def load_simulation_settings(config_obj):
             config_obj.simulationStartingBalanceSpinBox.setValue(config['startingBalance'])
             config_obj.simulationPrecisionSpinBox.setValue(config['precision'])
             config_obj.lowerIntervalSimulationCheck.setChecked(config['lowerInterval'])
-            config_obj.helper_load(SIMULATION, config)
+            helper_load(config_obj, SIMULATION, config)
             config_obj.simulationConfigurationResult.setText(f"Loaded sim configuration successfully from {file}.")
     except Exception as e:
         config_obj.logger.exception(str(e))
@@ -161,7 +204,7 @@ def load_backtest_settings(config_obj):
             config_obj.backtestStartingBalanceSpinBox.setValue(config['startingBalance'])
             config_obj.backtestPrecisionSpinBox.setValue(config['precision'])
             config_obj.backtestMarginTradingCheckBox.setChecked(config['marginTrading'])
-            config_obj.helper_load(BACKTEST, config)
+            helper_load(config_obj, BACKTEST, config)
             config_obj.backtestConfigurationResult.setText(f"Loaded backtest configuration successfully from {file}.")
     except Exception as e:
         config_obj.logger.exception(str(e))

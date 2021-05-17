@@ -1,13 +1,11 @@
 import os
 from logging import Logger
-from typing import Union
 
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
-                             QFileDialog, QHBoxLayout, QLabel, QLayout,
-                             QMainWindow, QScrollArea, QSpinBox, QTabWidget,
-                             QVBoxLayout)
+                             QHBoxLayout, QLabel, QLayout, QMainWindow,
+                             QScrollArea, QSpinBox, QTabWidget, QVBoxLayout)
 
 import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
@@ -126,6 +124,14 @@ class Configuration(QDialog):
                 if hoverLine:
                     graphDict['graph'].removeItem(hoverLine)
                     graphDict['line'] = None
+
+    def update_graph_speed(self):
+        """
+        Updates graph speed on main Algobot interface.
+        """
+        graphSpeed = self.graphPlotSpeedSpinBox.value()
+        self.parent.graphUpdateSeconds = graphSpeed
+        self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graphSpeed} seconds.")
 
     def get_caller_based_on_tab(self, tab: QTabWidget) -> int:
         """
@@ -558,42 +564,6 @@ class Configuration(QDialog):
 
         helpers.write_json_file(self.basicFilePath, **config)
 
-    def helper_save(self, caller: int, config: dict):
-        """
-        Helper function to save caller configuration from GUI.
-        :param caller: Caller to save configuration of.
-        :param config: Configuration dictionary to dump info to.
-        :return: None
-        """
-        config.update(self.get_loss_settings(caller))
-        config.update(self.get_take_profit_settings(caller))
-        for strategyName in self.strategies.keys():
-            self.add_strategy_to_config(caller, strategyName, config)
-
-    def helper_get_save_file_path(self, name: str) -> Union[str]:
-        """
-        Does necessary folder creations and returns save file path based on name provided.
-        :param name: Name to use for file name and folder creation.
-        :return: Absolute path to file.
-        """
-        name = name.capitalize()
-        targetPath = self.create_appropriate_config_folders(name)
-        defaultPath = os.path.join(targetPath, f'{name.lower()}_configuration.json')
-        filePath, _ = QFileDialog.getSaveFileName(self, f'Save {name} Configuration', defaultPath, 'JSON (*.json)')
-        return filePath
-
-    def helper_load(self, caller: int, config: dict):
-        """
-        Helper function to load caller configuration to GUI.
-        :param caller: Caller to load configuration to.
-        :param config: Configuration dictionary to get info from.
-        :return: None
-        """
-        self.set_loss_settings(caller, config)
-        self.set_take_profit_settings(caller, config)
-        for strategyName in self.strategies.keys():
-            self.load_strategy_from_config(caller, strategyName, config)
-
     def add_strategy_to_config(self, caller: int, strategyName: str, config: dict):
         """
         Adds strategy configuration to config dictionary provided.
@@ -636,14 +606,6 @@ class Configuration(QDialog):
         for index, widget in enumerate(valueWidgets, start=1):
             value = config[f'{strategyName.lower()}{index}']
             set_value(widget, value)
-
-    def update_graph_speed(self):
-        """
-        Updates graph speed on main Algobot interface.
-        """
-        graphSpeed = self.graphPlotSpeedSpinBox.value()
-        self.parent.graphUpdateSeconds = graphSpeed
-        self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graphSpeed} seconds.")
 
     def load_combo_boxes(self):
         """
