@@ -2,9 +2,22 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
                              QFrame, QGroupBox, QLabel, QLineEdit, QScrollArea,
-                             QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+                             QSpinBox, QTabWidget, QVBoxLayout, QWidget, QLayout)
 
+from algobot import helpers
 from algobot.enums import OPTIMIZER
+
+
+def add_start_end_step_to_layout(layout: QLayout, msg: str, start: QWidget, end: QWidget, step: QWidget):
+    """
+    Adds start, end, and step rows to the layout provided.
+    """
+    layout.addRow(QLabel(f"{helpers.get_label_string(msg)} Optimization"))
+    layout.addRow("Start", start)
+    layout.addRow("End", end)
+    layout.addRow("Step", step)
+
+    start.valueChanged.connect(lambda: (end.setValue(start.value()), end.setMinimum(start.value())))
 
 
 def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:

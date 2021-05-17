@@ -7,7 +7,7 @@ from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QFileDialog, QHBoxLayout, QLabel, QLayout,
                              QMainWindow, QScrollArea, QSpinBox, QTabWidget,
-                             QVBoxLayout, QWidget)
+                             QVBoxLayout)
 
 import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
@@ -29,7 +29,7 @@ from algobot.interface.config_utils.user_config_utils import (
     save_backtest_settings, save_live_settings, save_simulation_settings)
 from algobot.interface.configuration_helpers import (
     create_inner_tab, get_default_widget, get_regular_groupbox_and_layout,
-    set_value)
+    set_value, add_start_end_step_to_layout)
 # noinspection PyUnresolvedReferences
 from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
@@ -229,7 +229,7 @@ class Configuration(QDialog):
                                 message = parameter[0]
                             else:
                                 message = f"{strategyName} {index}"
-                            self.add_start_end_step_to_layout(groupBoxLayout, message, start, end, step)
+                            add_start_end_step_to_layout(groupBoxLayout, message, start, end, step)
                         elif type(parameter) == tuple and parameter[1] == tuple:
                             groupBoxLayout.addRow(QLabel(parameter[0]))
                             for option in parameter[2]:
@@ -319,18 +319,6 @@ class Configuration(QDialog):
                 settings['strategies'][strategyName] = current
         return settings
 
-    @staticmethod
-    def add_start_end_step_to_layout(layout: QLayout, msg: str, start: QWidget, end: QWidget, step: QWidget):
-        """
-        Adds start, end, and step rows to the layout provided.
-        """
-        layout.addRow(QLabel(f"{helpers.get_label_string(msg)} Optimization"))
-        layout.addRow("Start", start)
-        layout.addRow("End", end)
-        layout.addRow("Step", step)
-
-        start.valueChanged.connect(lambda: (end.setValue(start.value()), end.setMinimum(start.value())))
-
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout, isOptimizer: bool = False):
         """
         Creates inputs for loss settings in GUI.
@@ -350,7 +338,7 @@ class Configuration(QDialog):
                 self.lossDict[optimizerType, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
                 self.lossDict[optimizerType, 'end'] = end = get_default_widget(QSpinBox, 1, 0)
                 self.lossDict[optimizerType, 'step'] = step = get_default_widget(QSpinBox, 1)
-                self.add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
+                add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:
             self.lossDict[tab, "lossType"] = lossTypeComboBox = QComboBox()
             self.lossDict[tab, "lossPercentage"] = lossPercentage = QDoubleSpinBox()
@@ -391,7 +379,7 @@ class Configuration(QDialog):
                 self.takeProfitDict[optimizerType, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
                 self.takeProfitDict[optimizerType, 'end'] = end = get_default_widget(QSpinBox, 1, 0)
                 self.takeProfitDict[optimizerType, 'step'] = step = get_default_widget(QSpinBox, 1)
-                self.add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
+                add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:
             self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
             self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
