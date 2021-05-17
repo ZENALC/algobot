@@ -4,30 +4,19 @@ from logging import Logger
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
-                             QHBoxLayout, QLabel, QLayout, QMainWindow,
-                             QScrollArea, QSpinBox, QTabWidget, QVBoxLayout)
+                             QLabel, QLayout, QMainWindow, QSpinBox,
+                             QTabWidget)
 
 import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
-from algobot.interface.config_utils.credential_utils import (
-    load_credentials, save_credentials, test_binance_credentials)
-from algobot.interface.config_utils.data_utils import (download_data,
-                                                       import_data,
-                                                       stop_download)
+from algobot.interface.config_utils.credential_utils import load_credentials
+from algobot.interface.config_utils.slot_utils import load_slots
 from algobot.interface.config_utils.strategy_utils import (
-    add_strategy_buttons, add_strategy_inputs, create_strategy_inputs,
-    delete_strategy_inputs, get_strategies_dictionary, get_strategy_values,
-    reset_strategy_interval_comboBox, strategy_enabled)
-from algobot.interface.config_utils.telegram_utils import (
-    reset_telegram_state, test_telegram)
-from algobot.interface.config_utils.user_config_utils import (
-    copy_settings_to_backtest, copy_settings_to_simulation,
-    load_backtest_settings, load_live_settings, load_simulation_settings,
-    save_backtest_settings, save_live_settings, save_simulation_settings)
+    add_strategy_inputs, delete_strategy_inputs, get_strategies_dictionary,
+    get_strategy_values, strategy_enabled)
 from algobot.interface.configuration_helpers import (
-    add_start_end_step_to_layout, create_inner_tab, get_default_widget,
-    get_regular_groupbox_and_layout, set_value)
+    add_start_end_step_to_layout, get_default_widget, set_value)
 # noinspection PyUnresolvedReferences
 from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
@@ -104,8 +93,7 @@ class Configuration(QDialog):
         self.lossDict = {}  # We will store stop loss settings here.
         self.takeProfitDict = {}  # We will store take profit settings here.
 
-        self.load_interval_combo_boxes()  # Primarily used for backtester/optimizer interval changer logic.
-        self.load_slots()  # Loads stop loss, take profit, and strategies slots.
+        load_slots(self)  # Loads stop loss, take profit, and strategies slots.
         load_credentials(self)  # Load credentials if they exist.
 
     def enable_disable_hover_line(self):
@@ -166,109 +154,6 @@ class Configuration(QDialog):
             return self.categoryTabs[3]
         else:
             raise ValueError("Invalid type of caller provided.")
-
-    def load_loss_slots(self):
-        """
-        Loads slots for loss settings in GUI.
-        """
-        create_inner_tab(
-            categoryTabs=self.categoryTabs,
-            description="Configure your stop loss settings here.",
-            tabName="Stop Loss",
-            input_creator=self.create_loss_inputs,
-            dictionary=self.lossDict,
-            signalFunction=self.update_loss_settings,
-            parent=self
-        )
-
-    def load_take_profit_slots(self):
-        """
-        Loads slots for take profit settings in GUI.
-        """
-        create_inner_tab(
-            categoryTabs=self.categoryTabs,
-            description="Configure your take profit settings here.",
-            tabName="Take Profit",
-            input_creator=self.create_take_profit_inputs,
-            dictionary=self.takeProfitDict,
-            signalFunction=self.update_take_profit_settings,
-            parent=self
-        )
-
-    def load_strategy_slots(self):
-        """
-        This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
-        are loaded from the self.strategies dictionary.
-        :return: None
-        """
-        for strategy in self.strategies.values():
-            temp = strategy()
-            strategyName = temp.name
-            parameters = temp.get_param_types()
-            for tab in self.categoryTabs:
-                self.strategyDict[tab, strategyName] = tabWidget = QTabWidget()
-                descriptionLabel = QLabel(f'Strategy description: {temp.description}')
-                descriptionLabel.setWordWrap(True)
-
-                layout = QVBoxLayout()
-                layout.addWidget(descriptionLabel)
-
-                scroll = QScrollArea()  # Added a scroll area so user can scroll when additional slots are added.
-                scroll.setWidgetResizable(True)
-
-                if self.get_caller_based_on_tab(tab) == OPTIMIZER:
-                    groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f'Enable {strategyName} optimization?')
-                    self.strategyDict[tab, strategyName] = groupBox
-                    for index, parameter in enumerate(parameters, start=1):
-                        # TODO: Refactor this logic.
-                        if type(parameter) != tuple or type(parameter) == tuple and parameter[1] in [int, float]:
-                            if type(parameter) == tuple:
-                                widget = QSpinBox if parameter[1] == int else QDoubleSpinBox
-                                step_val = 1 if widget == QSpinBox else 0.1
-                            else:
-                                widget = QSpinBox if parameter == int else QDoubleSpinBox
-                                step_val = 1 if widget == QSpinBox else 0.1
-                            self.strategyDict[strategyName, index, 'start'] = start = get_default_widget(widget, 1)
-                            self.strategyDict[strategyName, index, 'end'] = end = get_default_widget(widget, 1)
-                            self.strategyDict[strategyName, index, 'step'] = step = get_default_widget(widget, step_val)
-                            if type(parameter) == tuple:
-                                message = parameter[0]
-                            else:
-                                message = f"{strategyName} {index}"
-                            add_start_end_step_to_layout(groupBoxLayout, message, start, end, step)
-                        elif type(parameter) == tuple and parameter[1] == tuple:
-                            groupBoxLayout.addRow(QLabel(parameter[0]))
-                            for option in parameter[2]:
-                                self.strategyDict[strategyName, option] = checkBox = QCheckBox(option)
-                                groupBoxLayout.addRow(checkBox)
-                        else:
-                            raise ValueError("Invalid type of parameter type provided.")
-                else:
-                    groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {strategyName}?")
-                    self.strategyDict[tab, strategyName, 'groupBox'] = groupBox
-
-                    status = QLabel()
-                    if temp.dynamic:
-                        addButton, deleteButton = add_strategy_buttons(self.strategyDict, parameters, strategyName,
-                                                                       groupBoxLayout, tab)
-                        horizontalLayout = QHBoxLayout()
-                        horizontalLayout.addWidget(addButton)
-                        horizontalLayout.addWidget(deleteButton)
-                        horizontalLayout.addWidget(status)
-                        horizontalLayout.addStretch()
-                        layout.addLayout(horizontalLayout)
-
-                    values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
-                    self.strategyDict[tab, strategyName, 'values'] = values
-                    self.strategyDict[tab, strategyName, 'labels'] = labels
-                    self.strategyDict[tab, strategyName, 'parameters'] = parameters
-                    self.strategyDict[tab, strategyName, 'layout'] = groupBoxLayout
-                    self.strategyDict[tab, strategyName, 'status'] = status
-
-                layout.addWidget(scroll)
-                scroll.setWidget(groupBox)
-                tabWidget.setLayout(layout)
-                tab.addTab(tabWidget, strategyName)
 
     @staticmethod
     def helper_get_optimizer(tab, dictionary: dict, key: str, optimizerTypes: tuple, settings: dict):
@@ -590,60 +475,3 @@ class Configuration(QDialog):
         for index, widget in enumerate(valueWidgets, start=1):
             value = config[f'{strategyName.lower()}{index}']
             set_value(widget, value)
-
-    def load_interval_combo_boxes(self):
-        """
-        This function currently only handles combo boxes for backtester/optimizer interval logic. It'll update the
-        strategy interval combo-box depending on what the data interval combo-box has as its current value.
-        """
-        intervals = helpers.get_interval_strings(startingIndex=0)
-        self.backtestStrategyIntervalCombobox.addItems(intervals)
-        self.backtestIntervalComboBox.addItems(intervals)
-        self.backtestIntervalComboBox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(
-            strategy_combobox=self.backtestStrategyIntervalCombobox,
-            interval_combobox=self.backtestIntervalComboBox
-        ))
-
-        self.optimizerStrategyIntervalCombobox.addItems(intervals)
-        self.optimizerIntervalComboBox.addItems(intervals)
-        self.optimizerIntervalComboBox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(
-            strategy_combobox=self.optimizerStrategyIntervalCombobox,
-            interval_combobox=self.optimizerIntervalComboBox
-        ))
-
-    def load_slots(self):
-        """
-        Loads all configuration interface slots.
-        :return: None
-        """
-        self.simulationCopySettingsButton.clicked.connect(lambda: copy_settings_to_simulation(self))
-        self.simulationSaveConfigurationButton.clicked.connect(lambda: save_simulation_settings(self))
-        self.simulationLoadConfigurationButton.clicked.connect(lambda: load_simulation_settings(self))
-
-        self.backtestCopySettingsButton.clicked.connect(lambda: copy_settings_to_backtest(self))
-        self.backtestSaveConfigurationButton.clicked.connect(lambda: save_backtest_settings(self))
-        self.backtestLoadConfigurationButton.clicked.connect(lambda: load_backtest_settings(self))
-        self.backtestImportDataButton.clicked.connect(lambda: import_data(self, BACKTEST))
-        self.backtestDownloadDataButton.clicked.connect(lambda: download_data(self, BACKTEST))
-        self.backtestStopDownloadButton.clicked.connect(lambda: stop_download(self, BACKTEST))
-
-        self.optimizerImportDataButton.clicked.connect(lambda: import_data(self, OPTIMIZER))
-        self.optimizerDownloadDataButton.clicked.connect(lambda: download_data(self, OPTIMIZER))
-        self.optimizerStopDownloadButton.clicked.connect(lambda: stop_download(self, OPTIMIZER))
-
-        self.testCredentialsButton.clicked.connect(lambda: test_binance_credentials(self))
-        self.saveCredentialsButton.clicked.connect(lambda: save_credentials(self))
-        self.loadCredentialsButton.clicked.connect(lambda: load_credentials(config_obj=self, auto=False))
-
-        self.testTelegramButton.clicked.connect(lambda: test_telegram(self))
-        self.telegramApiKey.textChanged.connect(lambda: reset_telegram_state(self))
-        self.telegramChatID.textChanged.connect(lambda: reset_telegram_state(self))
-
-        self.saveConfigurationButton.clicked.connect(lambda: save_live_settings(self))
-        self.loadConfigurationButton.clicked.connect(lambda: load_live_settings(self))
-        self.graphPlotSpeedSpinBox.valueChanged.connect(self.update_graph_speed)
-        self.enableHoverLine.stateChanged.connect(self.enable_disable_hover_line)
-
-        self.load_loss_slots()  # These slots are based on the ordering.
-        self.load_take_profit_slots()
-        self.load_strategy_slots()
