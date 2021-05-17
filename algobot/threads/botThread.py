@@ -7,6 +7,7 @@ from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 import algobot.helpers as helpers
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH, LIVE, SIMULATION
+from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.config_utils.telegram_utils import test_telegram
 from algobot.telegram_bot import TelegramBot
 from algobot.traders.realtrader import RealTrader
@@ -210,13 +211,14 @@ class BotThread(QRunnable):
         Retrieves moving average options and loss settings based on caller.
         :param caller: Caller that dictates which parameters get set.
         """
-        lossDict = self.gui.configuration.get_loss_settings(caller)
-        takeProfitDict = self.gui.configuration.get_take_profit_settings(caller)
+        config = self.gui.configuration
+        lossDict = config.get_loss_settings(caller)
+        takeProfitDict = config.get_take_profit_settings(caller)
 
         trader: SimulationTrader = self.gui.get_trader(caller)
         trader.apply_take_profit_settings(takeProfitDict)
         trader.apply_loss_settings(lossDict)
-        trader.setup_strategies(self.gui.configuration.get_strategies(caller))
+        trader.setup_strategies(get_strategies(config, caller))
         trader.output_configuration()
 
     def setup_bot(self, caller):

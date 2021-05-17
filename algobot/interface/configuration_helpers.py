@@ -1,12 +1,10 @@
-from typing import Any, Callable, Dict, List, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
-                             QFrame, QGroupBox, QLabel, QLayout, QLineEdit,
-                             QPushButton, QScrollArea, QSpinBox, QTabWidget,
-                             QVBoxLayout, QWidget)
+                             QFrame, QGroupBox, QLabel, QLineEdit, QScrollArea,
+                             QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from algobot.enums import OPTIMIZER
-from algobot.strategies.strategy import Strategy
 
 
 def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:
@@ -21,18 +19,6 @@ def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:
     groupBox.setLayout(layout)
 
     return groupBox, layout
-
-
-def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Type[Strategy]]:
-    """
-    Helper function to return a strategies dictionary with strategy name as the key and strategy itself as the value.
-    :param strategies: List of strategies to process for dictionary.
-    :return: Dictionary of strategies with strategy name as the key and strategy itself as the value.
-    """
-    strategiesDict = {}
-    for strategy in strategies:
-        strategiesDict[strategy().name] = strategy
-    return strategiesDict
 
 
 def create_inner_tab(categoryTabs: List[QTabWidget], description: str, tabName: str, input_creator: Callable,
@@ -110,112 +96,6 @@ def get_input_widget_value(inputWidget: QWidget, verbose: bool = False):
             return inputWidget.currentIndex()
     else:
         raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
-
-
-def create_strategy_inputs(parameters: List[Union[int, tuple]], strategyName: str,
-                           groupBoxLayout: QLayout) -> Tuple[list, list]:
-    """
-    This function will create strategy slots and labels based on the parameters provided to the layout.
-    :param parameters: Parameters to add to strategy GUI slots. These are fetched from get_param_types() in strategies.
-    :param strategyName: Name of strategy.
-    :param groupBoxLayout: Layout to add the slots to.
-    :return: Tuple of labels and values lists.
-    """
-    labels = []
-    values = []
-    for paramIndex, parameter in enumerate(parameters):
-        if type(parameter) == tuple:
-            label = QLabel(parameter[0])
-            parameter = parameter[1:]  # Set parameter to just the last element so we can use this later.
-        elif parameter == int:
-            label = QLabel(f'{strategyName} input {paramIndex + 1}')
-            parameter = [parameter]
-        else:
-            raise TypeError("Please make sure your function get_param_types() only has ints or tuples.")
-
-        if parameter[0] == int:
-            value = QSpinBox()
-            value.setRange(1, 500)
-        elif parameter[0] == float:
-            value = QDoubleSpinBox()
-        elif parameter[0] == str:
-            value = QLineEdit()
-        elif parameter[0] == tuple:
-            elements = parameter[1]
-            value = QComboBox()
-            value.addItems(elements)
-        else:
-            raise TypeError("Invalid type of parameter provided.")
-
-        labels.append(label)
-        values.append(value)
-        groupBoxLayout.addRow(label, value)
-
-    line = get_h_line()
-    labels.append(line)
-    groupBoxLayout.addWidget(line)
-
-    return values, labels
-
-
-def delete_strategy_inputs(strategyDict: Dict[Any, Any], parameters: list, strategyName: str, tab: QTabWidget):
-    """
-    Dynamically deletes strategy inputs.
-    :param strategyDict: Dictionary to modify.
-    :param parameters: Parameters of the strategy.
-    :param strategyName: Name of strategy to determine the dictionary.
-    :param tab: Tab in which to delete strategy inputs.
-    :return: None
-    """
-    values = strategyDict[tab, strategyName, 'values']
-    labels = strategyDict[tab, strategyName, 'labels']
-    if len(values) <= len(parameters):
-        strategyDict[tab, strategyName, 'status'].setText("Can't delete additional slots.")
-    else:
-        for _ in range(len(parameters)):
-            value = values.pop()
-            value.setParent(None)
-
-            label = labels.pop()
-            label.setParent(None)
-
-        labels.pop().setParent(None)  # Pop off the horizontal line from labels.
-        strategyDict[tab, strategyName, 'status'].setText("Deleted additional slots.")
-
-
-def add_strategy_inputs(strategyDict: dict, parameters: list, strategyName: str, groupBoxLayout, tab: QTabWidget):
-    """
-    Adds strategy parameters to the layout provided.
-    :param strategyDict: Dictionary to modify.
-    :param parameters: Parameters to add to the group box layout.
-    :param strategyName: Name of strategy.
-    :param groupBoxLayout: Layout to add parameters to.
-    :param tab: Add which group box layout is in.
-    :return: None
-    """
-    values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
-    strategyDict[tab, strategyName, 'labels'] += labels
-    strategyDict[tab, strategyName, 'values'] += values
-    strategyDict[tab, strategyName, 'status'].setText("Added additional slots.")
-
-
-def add_strategy_buttons(sDict: dict, parameters: list, strategyName: str, groupBoxLayout: QLayout,
-                         tab: QTabWidget) -> Tuple[QPushButton, QPushButton]:
-    """
-    Adds add and delete buttons to strategy GUI.
-    :param sDict: Strategy dictionary to modify.
-    :param parameters: Parameters to pass to strategy inputs function.
-    :param strategyName: Name of strategy.
-    :param groupBoxLayout: Layout to add strategy buttons to.
-    :param tab: Tab to modify GUI.
-    :return: Tuple of add and delete buttons.
-    """
-    addButton = QPushButton("Add Extra")
-    addButton.clicked.connect(lambda: add_strategy_inputs(sDict, parameters, strategyName, groupBoxLayout, tab))
-    deleteButton = (QPushButton("Delete Extra"))
-    deleteButton.clicked.connect(lambda: delete_strategy_inputs(sDict, parameters, strategyName, tab))
-
-    return addButton, deleteButton
 
 
 def get_h_line() -> QFrame:

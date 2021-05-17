@@ -27,6 +27,7 @@ from algobot.helpers import (ROOT_DIR, add_to_table, clear_table,
                              get_caller_string, get_logger,
                              open_file_or_folder)
 from algobot.interface.about import About
+from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
 from algobot.interface.statistics import Statistics
@@ -446,7 +447,7 @@ class Interface(QMainWindow):
         """
         Checks if strategies exist based on the caller provided and prompts an appropriate message.
         """
-        if not self.configuration.get_strategies(caller):
+        if not get_strategies(self.configuration, caller):
             if caller == BACKTEST:
                 message = "No strategies found. Would you like to backtest a hold?"
             elif caller == SIMULATION:

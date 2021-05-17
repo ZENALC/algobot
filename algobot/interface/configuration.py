@@ -1,6 +1,6 @@
 import os
 from logging import Logger
-from typing import List, Union
+from typing import Union
 
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
@@ -17,6 +17,10 @@ from algobot.interface.config_utils.credential_utils import (
 from algobot.interface.config_utils.data_utils import (download_data,
                                                        import_data,
                                                        stop_download)
+from algobot.interface.config_utils.strategy_utils import (
+    add_strategy_buttons, add_strategy_inputs, create_strategy_inputs,
+    delete_strategy_inputs, get_strategies_dictionary, get_strategy_values,
+    reset_strategy_interval_comboBox, strategy_enabled)
 from algobot.interface.config_utils.telegram_utils import (
     reset_telegram_state, test_telegram)
 from algobot.interface.config_utils.user_config_utils import (
@@ -24,10 +28,8 @@ from algobot.interface.config_utils.user_config_utils import (
     load_backtest_settings, load_live_settings, load_simulation_settings,
     save_backtest_settings, save_live_settings, save_simulation_settings)
 from algobot.interface.configuration_helpers import (
-    add_strategy_buttons, add_strategy_inputs, create_inner_tab,
-    create_strategy_inputs, delete_strategy_inputs, get_default_widget,
-    get_input_widget_value, get_regular_groupbox_and_layout,
-    get_strategies_dictionary, set_value)
+    create_inner_tab, get_default_widget, get_regular_groupbox_and_layout,
+    set_value)
 # noinspection PyUnresolvedReferences
 from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
@@ -186,6 +188,81 @@ class Configuration(QDialog):
             signalFunction=self.update_take_profit_settings,
             parent=self
         )
+
+    def load_strategy_slots(self):
+        """
+        This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
+        are loaded from the self.strategies dictionary.
+        :return: None
+        """
+        for strategy in self.strategies.values():
+            temp = strategy()
+            strategyName = temp.name
+            parameters = temp.get_param_types()
+            for tab in self.categoryTabs:
+                self.strategyDict[tab, strategyName] = tabWidget = QTabWidget()
+                descriptionLabel = QLabel(f'Strategy description: {temp.description}')
+                descriptionLabel.setWordWrap(True)
+
+                layout = QVBoxLayout()
+                layout.addWidget(descriptionLabel)
+
+                scroll = QScrollArea()  # Added a scroll area so user can scroll when additional slots are added.
+                scroll.setWidgetResizable(True)
+
+                if self.get_caller_based_on_tab(tab) == OPTIMIZER:
+                    groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f'Enable {strategyName} optimization?')
+                    self.strategyDict[tab, strategyName] = groupBox
+                    for index, parameter in enumerate(parameters, start=1):
+                        # TODO: Refactor this logic.
+                        if type(parameter) != tuple or type(parameter) == tuple and parameter[1] in [int, float]:
+                            if type(parameter) == tuple:
+                                widget = QSpinBox if parameter[1] == int else QDoubleSpinBox
+                                step_val = 1 if widget == QSpinBox else 0.1
+                            else:
+                                widget = QSpinBox if parameter == int else QDoubleSpinBox
+                                step_val = 1 if widget == QSpinBox else 0.1
+                            self.strategyDict[strategyName, index, 'start'] = start = get_default_widget(widget, 1)
+                            self.strategyDict[strategyName, index, 'end'] = end = get_default_widget(widget, 1)
+                            self.strategyDict[strategyName, index, 'step'] = step = get_default_widget(widget, step_val)
+                            if type(parameter) == tuple:
+                                message = parameter[0]
+                            else:
+                                message = f"{strategyName} {index}"
+                            self.add_start_end_step_to_layout(groupBoxLayout, message, start, end, step)
+                        elif type(parameter) == tuple and parameter[1] == tuple:
+                            groupBoxLayout.addRow(QLabel(parameter[0]))
+                            for option in parameter[2]:
+                                self.strategyDict[strategyName, option] = checkBox = QCheckBox(option)
+                                groupBoxLayout.addRow(checkBox)
+                        else:
+                            raise ValueError("Invalid type of parameter type provided.")
+                else:
+                    groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {strategyName}?")
+                    self.strategyDict[tab, strategyName, 'groupBox'] = groupBox
+
+                    status = QLabel()
+                    if temp.dynamic:
+                        addButton, deleteButton = add_strategy_buttons(self.strategyDict, parameters, strategyName,
+                                                                       groupBoxLayout, tab)
+                        horizontalLayout = QHBoxLayout()
+                        horizontalLayout.addWidget(addButton)
+                        horizontalLayout.addWidget(deleteButton)
+                        horizontalLayout.addWidget(status)
+                        horizontalLayout.addStretch()
+                        layout.addLayout(horizontalLayout)
+
+                    values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
+                    self.strategyDict[tab, strategyName, 'values'] = values
+                    self.strategyDict[tab, strategyName, 'labels'] = labels
+                    self.strategyDict[tab, strategyName, 'parameters'] = parameters
+                    self.strategyDict[tab, strategyName, 'layout'] = groupBoxLayout
+                    self.strategyDict[tab, strategyName, 'status'] = status
+
+                layout.addWidget(scroll)
+                scroll.setWidget(groupBox)
+                tabWidget.setLayout(layout)
+                tab.addTab(tabWidget, strategyName)
 
     @staticmethod
     def helper_get_optimizer(tab, dictionary: dict, key: str, optimizerTypes: tuple, settings: dict):
@@ -420,121 +497,6 @@ class Configuration(QDialog):
 
         return lossSettings
 
-    def get_strategies(self, caller: int) -> List[tuple]:
-        """
-        Returns strategy information from GUI.
-        :param caller: Caller that asked for strategy information.
-        :return: List of strategy information.
-        """
-        strategies = []
-        for strategyName, strategy in self.strategies.items():
-            if self.strategy_enabled(strategyName, caller):
-                values = self.get_strategy_values(strategyName, caller, verbose=True)
-                strategyTuple = (strategy, values, strategyName)
-                strategies.append(strategyTuple)
-
-        return strategies
-
-    def strategy_enabled(self, strategyName: str, caller: int) -> bool:
-        """
-        Returns a boolean whether a strategy is enabled or not.
-        :param strategyName: Name of strategy to check if enabled.
-        :param caller: Caller of the strategy.
-        :return: Boolean whether strategy is enabled or not.
-        """
-        tab = self.get_category_tab(caller)
-        return self.strategyDict[tab, strategyName, 'groupBox'].isChecked()
-
-    def get_strategy_values(self, strategyName: str, caller: int, verbose: bool = False) -> List[int]:
-        """
-        This will return values from the strategy provided.
-        :param verbose: If verbose, return value of widget when possible.
-        :param strategyName: Name of strategy to get values from.
-        :param caller: Caller that'll determine which tab object is used to get the strategy values.
-        :return: List of strategy values.
-        """
-        tab = self.get_category_tab(caller)
-        values = []
-        for inputWidget in self.strategyDict[tab, strategyName, 'values']:
-            values.append(get_input_widget_value(inputWidget, verbose=verbose))
-
-        return values
-
-    def load_strategy_slots(self):
-        """
-        This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
-        are loaded from the self.strategies dictionary.
-        :return: None
-        """
-        for strategy in self.strategies.values():
-            temp = strategy()
-            strategyName = temp.name
-            parameters = temp.get_param_types()
-            for tab in self.categoryTabs:
-                self.strategyDict[tab, strategyName] = tabWidget = QTabWidget()
-                descriptionLabel = QLabel(f'Strategy description: {temp.description}')
-                descriptionLabel.setWordWrap(True)
-
-                layout = QVBoxLayout()
-                layout.addWidget(descriptionLabel)
-
-                scroll = QScrollArea()  # Added a scroll area so user can scroll when additional slots are added.
-                scroll.setWidgetResizable(True)
-
-                if self.get_caller_based_on_tab(tab) == OPTIMIZER:
-                    groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f'Enable {strategyName} optimization?')
-                    self.strategyDict[tab, strategyName] = groupBox
-                    for index, parameter in enumerate(parameters, start=1):
-                        # TODO: Refactor this logic.
-                        if type(parameter) != tuple or type(parameter) == tuple and parameter[1] in [int, float]:
-                            if type(parameter) == tuple:
-                                widget = QSpinBox if parameter[1] == int else QDoubleSpinBox
-                                step_val = 1 if widget == QSpinBox else 0.1
-                            else:
-                                widget = QSpinBox if parameter == int else QDoubleSpinBox
-                                step_val = 1 if widget == QSpinBox else 0.1
-                            self.strategyDict[strategyName, index, 'start'] = start = get_default_widget(widget, 1)
-                            self.strategyDict[strategyName, index, 'end'] = end = get_default_widget(widget, 1)
-                            self.strategyDict[strategyName, index, 'step'] = step = get_default_widget(widget, step_val)
-                            if type(parameter) == tuple:
-                                message = parameter[0]
-                            else:
-                                message = f"{strategyName} {index}"
-                            self.add_start_end_step_to_layout(groupBoxLayout, message, start, end, step)
-                        elif type(parameter) == tuple and parameter[1] == tuple:
-                            groupBoxLayout.addRow(QLabel(parameter[0]))
-                            for option in parameter[2]:
-                                self.strategyDict[strategyName, option] = checkBox = QCheckBox(option)
-                                groupBoxLayout.addRow(checkBox)
-                        else:
-                            raise ValueError("Invalid type of parameter type provided.")
-                else:
-                    groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {strategyName}?")
-                    self.strategyDict[tab, strategyName, 'groupBox'] = groupBox
-
-                    status = QLabel()
-                    if temp.dynamic:
-                        addButton, deleteButton = add_strategy_buttons(self.strategyDict, parameters, strategyName,
-                                                                       groupBoxLayout, tab)
-                        horizontalLayout = QHBoxLayout()
-                        horizontalLayout.addWidget(addButton)
-                        horizontalLayout.addWidget(deleteButton)
-                        horizontalLayout.addWidget(status)
-                        horizontalLayout.addStretch()
-                        layout.addLayout(horizontalLayout)
-
-                    values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
-                    self.strategyDict[tab, strategyName, 'values'] = values
-                    self.strategyDict[tab, strategyName, 'labels'] = labels
-                    self.strategyDict[tab, strategyName, 'parameters'] = parameters
-                    self.strategyDict[tab, strategyName, 'layout'] = groupBoxLayout
-                    self.strategyDict[tab, strategyName, 'status'] = status
-
-                layout.addWidget(scroll)
-                scroll.setWidget(groupBox)
-                tabWidget.setLayout(layout)
-                tab.addTab(tabWidget, strategyName)
-
     def create_appropriate_config_folders(self, folder: str) -> str:
         """
         Creates appropriate configuration folders. If a configuration folder doesn't exist, it'll create that. Next,
@@ -652,8 +614,8 @@ class Configuration(QDialog):
         :param config: Dictionary to add strategy information to.
         :return: None
         """
-        values = self.get_strategy_values(strategyName, caller)
-        config[strategyName.lower()] = self.strategy_enabled(strategyName, caller)
+        values = get_strategy_values(self, strategyName, caller)
+        config[strategyName.lower()] = strategy_enabled(self, strategyName, caller)
         config[f'{strategyName.lower()}Length'] = len(values)
         for index, value in enumerate(values, start=1):
             config[f'{strategyName.lower()}{index}'] = value
@@ -687,28 +649,6 @@ class Configuration(QDialog):
             value = config[f'{strategyName.lower()}{index}']
             set_value(widget, value)
 
-    def set_strategy_values(self, strategyName: str, caller: int, values):
-        """
-        Set GUI values for a strategy based on values passed.
-        :param strategyName: Name of the strategy that'll have its values set.
-        :param caller: Caller that'll determine which tab object gets returned.
-        :param values: List of values to populate GUI with.
-        :return: None
-        """
-        tab = self.get_category_tab(caller)
-        targetValues = self.strategyDict[tab, strategyName, 'values']
-        parameters = self.strategyDict[tab, strategyName, 'parameters']
-        layout = self.strategyDict[tab, strategyName, 'layout']
-
-        while len(values) < len(targetValues):
-            delete_strategy_inputs(self.strategyDict, parameters, strategyName, tab)
-        while len(values) > len(targetValues):
-            add_strategy_inputs(self.strategyDict, parameters, strategyName, layout, tab)
-
-        for index, widget in enumerate(targetValues):
-            value = values[index]
-            set_value(widget, value)
-
     def update_graph_speed(self):
         """
         Updates graph speed on main Algobot interface.
@@ -716,21 +656,6 @@ class Configuration(QDialog):
         graphSpeed = self.graphPlotSpeedSpinBox.value()
         self.parent.graphUpdateSeconds = graphSpeed
         self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graphSpeed} seconds.")
-
-    @staticmethod
-    def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_combobox: QComboBox):
-        """
-        This function will reset the strategy combobox based on what interval is picked in the interval combobox.
-        """
-        childText = strategy_combobox.currentText()
-        parentIndex = interval_combobox.currentIndex()
-        intervals = helpers.get_interval_strings(startingIndex=parentIndex)
-        strategy_combobox.clear()
-        strategy_combobox.addItems(intervals)
-
-        previousChildIndex = strategy_combobox.findText(childText)
-        if previousChildIndex != -1:
-            strategy_combobox.setCurrentIndex(previousChildIndex)
 
     def load_combo_boxes(self):
         """
@@ -740,14 +665,14 @@ class Configuration(QDialog):
         intervals = helpers.get_interval_strings(startingIndex=0)
         self.backtestStrategyIntervalCombobox.addItems(intervals)
         self.backtestIntervalComboBox.addItems(intervals)
-        self.backtestIntervalComboBox.currentTextChanged.connect(lambda: self.reset_strategy_interval_comboBox(
+        self.backtestIntervalComboBox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(
             strategy_combobox=self.backtestStrategyIntervalCombobox,
             interval_combobox=self.backtestIntervalComboBox
         ))
 
         self.optimizerStrategyIntervalCombobox.addItems(intervals)
         self.optimizerIntervalComboBox.addItems(intervals)
-        self.optimizerIntervalComboBox.currentTextChanged.connect(lambda: self.reset_strategy_interval_comboBox(
+        self.optimizerIntervalComboBox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(
             strategy_combobox=self.optimizerStrategyIntervalCombobox,
             interval_combobox=self.optimizerIntervalComboBox
         ))

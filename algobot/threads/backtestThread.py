@@ -5,6 +5,7 @@ from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 from algobot.enums import BACKTEST
 from algobot.interface.config_utils.calendar_utils import get_calendar_dates
+from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.traders.backtester import Backtester
 
 
@@ -47,7 +48,7 @@ class BacktestThread(QRunnable):
             'precision': config.backtestPrecisionSpinBox.value(),
             'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
             'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
-            'strategies': config.get_strategies(BACKTEST),
+            'strategies': get_strategies(config, BACKTEST),
             'strategyInterval': config.backtestStrategyIntervalCombobox.currentText()
         }
 

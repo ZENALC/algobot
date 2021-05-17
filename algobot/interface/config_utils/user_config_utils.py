@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, SIMULATION
+from algobot.interface.config_utils.strategy_utils import (get_strategy_values,
+                                                           set_strategy_values)
 
 
 def save_backtest_settings(config_obj):
@@ -214,7 +216,7 @@ def copy_strategy_settings(config_obj, fromCaller: int, toCaller: int, strategyN
 
     fromCallerGroupBox = config_obj.strategyDict[fromCallerTab, strategyName, 'groupBox']
     config_obj.strategyDict[toCallerTab, strategyName, 'groupBox'].setChecked(fromCallerGroupBox.isChecked())
-    config_obj.set_strategy_values(strategyName, toCaller, config_obj.get_strategy_values(strategyName, fromCaller))
+    set_strategy_values(config_obj, strategyName, toCaller, get_strategy_values(config_obj, strategyName, fromCaller))
 
 
 def copy_loss_settings(config_obj, fromCaller: int, toCaller: int):

@@ -15,7 +15,8 @@ from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
                              convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
                              get_ups_and_downs, parse_strategy_name)
-from algobot.interface.configuration_helpers import get_strategies_dictionary
+from algobot.interface.config_utils.strategy_utils import \
+    get_strategies_dictionary
 from algobot.option import Option
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
