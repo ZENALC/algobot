@@ -104,7 +104,7 @@ class Configuration(QDialog):
         self.lossDict = {}  # We will store stop loss settings here.
         self.takeProfitDict = {}  # We will store take profit settings here.
 
-        self.load_combo_boxes()  # Primarily used for backtest interval changer logic.
+        self.load_interval_combo_boxes()  # Primarily used for backtester/optimizer interval changer logic.
         self.load_slots()  # Loads stop loss, take profit, and strategies slots.
         load_credentials(self)  # Load credentials if they exist.
 
@@ -591,10 +591,10 @@ class Configuration(QDialog):
             value = config[f'{strategyName.lower()}{index}']
             set_value(widget, value)
 
-    def load_combo_boxes(self):
+    def load_interval_combo_boxes(self):
         """
-        This function currently only handles combo boxes for backtester interval logic. It'll update the strategy
-        interval combo-box depending on what the data interval combo-box has as its current value.
+        This function currently only handles combo boxes for backtester/optimizer interval logic. It'll update the
+        strategy interval combo-box depending on what the data interval combo-box has as its current value.
         """
         intervals = helpers.get_interval_strings(startingIndex=0)
         self.backtestStrategyIntervalCombobox.addItems(intervals)
