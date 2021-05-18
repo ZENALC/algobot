@@ -380,12 +380,15 @@ class Backtester(Trader):
         }
         """
         settings_list = self.get_all_permutations(combos)
+        was_thread = thread is not None
         if thread:
             thread.signals.started.emit()
 
         for index, settings in enumerate(settings_list, start=1):
             if thread and not thread.running:
                 break
+            if was_thread and not thread:
+                break  # Bug fix for optimizer keeping on running even after it was stopped.
 
             self.apply_general_settings(settings)
             if not self.has_moving_average_redundancy():
