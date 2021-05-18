@@ -144,13 +144,17 @@ def get_money_flow_index(periods: int, data: List[Dict[str, float]]) -> float:
     return 100 - 100 / (1 + money_flow_ratio)
 
 
-def get_accumulation_distribution_indicator(data: Dict[str, float]) -> float:
+def get_accumulation_distribution_indicator(data: Dict[str, float], option: str = 'bollinger') -> float:
     """
     Retrieve the accumulation distribution indicator based on open, close, high, low, and volume values.
     :param data: Dictionary containing open, high, close, low, and volume data.
+    :param option: Method for accumulation distribution. It can either be Bollinger or Investopedia.
     :return: Accumulation distribution indicator.
     """
-    return (data['close'] - data['open']) / (data['high'] - data['low']) * data['volume']
+    if option.lower() == 'bollinger':
+        return (data['close'] - data['open']) / (data['high'] - data['low']) * data['volume']
+    else:
+        return (2 * data['close'] - data['low'] - data['high']) / (data['high'] - data['low']) * data['volume']
 
 
 def get_normal_volume_oscillator(periods: int, ad_cache: List[float], data: List[Dict[str, float]]) -> \
