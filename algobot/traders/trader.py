@@ -217,6 +217,7 @@ class Trader:
                                                       method=values[8],
                                                       upper_percentage_b=values[9],
                                                       lower_percentage_b=values[10],
+                                                      stdev_type=values[11],
                                                       precision=self.precision)
             else:
                 self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)

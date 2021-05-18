@@ -197,12 +197,14 @@ def get_normalized_intraday_intensity(periods: int, intraday_intensity_cache: Li
         return sum(intraday_intensities) / sum(volumes)
 
 
-def get_basic_volatility(periods: int, data: List[Dict[str, float]], use_returns: bool = True) -> float:
+def get_basic_volatility(periods: int, data: List[Dict[str, float]], use_returns: bool = True,
+                         stdev_type: str = 'sample') -> float:
     """
     Retrieves the basic volatility based on periods and data provided.
     :param periods: Amount of periods to traverse behind for basic volatility.
     :param use_returns: If true, this will use the returns option, and if false, it'll use the previous closes option.
     :param data: Data to get close values from.
+    :param stdev_type: Standard deviation type for the basic volatility.
     """
     validate(periods=periods + int(use_returns), data=data)
     closes = []
@@ -215,7 +217,9 @@ def get_basic_volatility(periods: int, data: List[Dict[str, float]], use_returns
     else:
         closes = [period['close'] for period in data[-periods:]]
 
-    return float(np.std(closes, ddof=1))
+    ddof = 1 if stdev_type.lower() == 'sample' else 0
+
+    return float(np.std(closes, ddof=ddof))
 
 
 def get_parkinson_volatility(periods: int, data: List[Dict[str, float]]) -> float:
@@ -269,11 +273,12 @@ def get_rs_volatility(periods: int, data: List[Dict[str, float]]) -> float:
     return math.sqrt(running_sum / periods)
 
 
-def get_zh_volatility(periods: int, data: List[Dict[str, float]]) -> float:
+def get_zh_volatility(periods: int, data: List[Dict[str, float]], stdev_type: str = 'sample') -> float:
     """
     Retrieves the Yang Zhang (ZH) volatility based on periods and data provided.
     :param periods: Amount of periods to traverse behind for basic volatility.
     :param data: Data to get close values from.
+    :param stdev_type: Standard deviation type for the basic volatility.
     """
     validate(periods, data)
     close_values = []
@@ -284,8 +289,9 @@ def get_zh_volatility(periods: int, data: List[Dict[str, float]]) -> float:
         close_values.append(c)
         open_values.append(o)
 
-    open_std = float(np.std(open_values, ddof=1))
-    close_std = float(np.std(close_values, ddof=1))
+    ddof = 1 if stdev_type.lower() == 'sample' else 0
+    open_std = float(np.std(open_values, ddof=ddof))
+    close_std = float(np.std(close_values, ddof=ddof))
     k = 0.34 / (1.34 + (periods + 1) / (periods - 1))
     rs_volatility = get_rs_volatility(periods=periods, data=data)
 
@@ -295,7 +301,7 @@ def get_zh_volatility(periods: int, data: List[Dict[str, float]]) -> float:
 def get_bollinger_bands(moving_average_periods: int, volatility_look_back_periods: int, volatility: str,
                         bb_coefficient: float, moving_average: str, moving_average_parameter: str,
                         data: List[Dict[str, float]], use_returns: bool = True,
-                        dictionary: dict = None) -> Tuple[float, float, float]:
+                        dictionary: dict = None, stdev_type: str = 'sample') -> Tuple[float, float, float]:
     """
     Returns the bollinger bands based on inputs provided in the order of lower, middle, then upper bands.
     :param moving_average_periods: Amount of periods to loop behind for the moving average.
@@ -307,6 +313,7 @@ def get_bollinger_bands(moving_average_periods: int, volatility_look_back_period
     :param use_returns: Boolean for whether the basic volatility strategy will use return values for calculation.
     :param bb_coefficient: BB coefficient itself.
     :param dictionary: Optional dictionary to populate volatility data with if provided.
+    :param stdev_type: Standard deviation type which can either be sample or population.
     """
     moving_average = moving_average.upper()
     moving_average_parameter = moving_average_parameter.lower()
@@ -322,7 +329,7 @@ def get_bollinger_bands(moving_average_periods: int, volatility_look_back_period
 
     volatility = volatility.lower()
     if volatility == 'zh' or 'yang zhang' in volatility:
-        volatility_measure = get_zh_volatility(periods=volatility_look_back_periods, data=data)
+        volatility_measure = get_zh_volatility(periods=volatility_look_back_periods, data=data, stdev_type=stdev_type)
     elif volatility == 'rs' or 'rogers satchell' in volatility:
         volatility_measure = get_rs_volatility(periods=volatility_look_back_periods, data=data)
     elif volatility == 'gk' or 'garman-klass' in volatility:
@@ -331,7 +338,7 @@ def get_bollinger_bands(moving_average_periods: int, volatility_look_back_period
         volatility_measure = get_parkinson_volatility(periods=volatility_look_back_periods, data=data)
     elif volatility == 'basic':
         volatility_measure = get_basic_volatility(periods=volatility_look_back_periods, data=data,
-                                                  use_returns=use_returns)
+                                                  use_returns=use_returns, stdev_type=stdev_type)
     else:
         raise ValueError("Invalid type of volatility specified.")
 
