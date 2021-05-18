@@ -61,7 +61,7 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>4</number>
          </property>
          <property name="movable">
           <bool>false</bool>
@@ -1655,7 +1655,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>4</number>
+              <number>2</number>
              </property>
              <property name="tabsClosable">
               <bool>false</bool>
@@ -1826,7 +1826,7 @@
                   <string>Telegram Integration</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_33">
-                  <item row="6" column="0" colspan="4">
+                  <item row="7" column="0" colspan="4">
                    <widget class="QGroupBox" name="schedulingGroup">
                     <property name="title">
                      <string>Scheduling</string>
@@ -1908,22 +1908,13 @@
                     </layout>
                    </widget>
                   </item>
-                  <item row="2" column="0">
-                   <widget class="QPushButton" name="testTelegramButton">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="toolTip">
-                     <string>Tests Telegram connection with token and chat ID.</string>
-                    </property>
+                  <item row="4" column="0" colspan="4">
+                   <widget class="QCheckBox" name="enableTelegramSendMessage">
                     <property name="text">
-                     <string>Test Connection</string>
+                     <string>Send Telegram notification whenever bot performs an action? Telegram chat ID is required for this function.</string>
                     </property>
-                    <property name="autoDefault">
-                     <bool>false</bool>
+                    <property name="checked">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -1947,10 +1938,29 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="0" colspan="3">
-                   <widget class="QCheckBox" name="enableTelegramTrading">
+                  <item row="2" column="0">
+                   <widget class="QPushButton" name="testTelegramButton">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="toolTip">
+                     <string>Tests Telegram connection with token and chat ID.</string>
+                    </property>
                     <property name="text">
-                     <string>Enable Telegram trading? Telegram bot token is required for this function.</string>
+                     <string>Test Connection</string>
+                    </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0" colspan="4">
+                   <widget class="QCheckBox" name="enableTelegramNotification">
+                    <property name="text">
+                     <string>Enable Telegram lower-interval notification? Telegram chat ID and lower-interval notifications must be setup for this function.</string>
                     </property>
                     <property name="checked">
                      <bool>true</bool>
@@ -1970,13 +1980,13 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="1" colspan="3">
-                   <widget class="QLabel" name="telegrationConnectionResult">
+                  <item row="5" column="0" colspan="3">
+                   <widget class="QCheckBox" name="enableTelegramTrading">
                     <property name="text">
-                     <string/>
+                     <string>Enable Telegram trading? Telegram bot token is required for this function.</string>
                     </property>
-                    <property name="alignment">
-                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                    <property name="checked">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -1993,20 +2003,20 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="5" column="0" colspan="4">
-                   <widget class="QCheckBox" name="enableTelegramNotification">
+                  <item row="2" column="1" colspan="3">
+                   <widget class="QLabel" name="telegrationConnectionResult">
                     <property name="text">
-                     <string>Enable Telegram lower-interval notification? Telegram chat ID and lower-interval notifications must be setup for this function.</string>
+                     <string/>
                     </property>
-                    <property name="checked">
-                     <bool>true</bool>
+                    <property name="alignment">
+                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
                   <item row="3" column="0" colspan="4">
-                   <widget class="QCheckBox" name="enableTelegramSendMessage">
+                   <widget class="QCheckBox" name="enabledOptimizerNotification">
                     <property name="text">
-                     <string>Send Telegram notification whenever bot performs an action? Telegram chat ID is required for this function.</string>
+                     <string>Send message when optimizer finishes running?</string>
                     </property>
                     <property name="checked">
                      <bool>true</bool>

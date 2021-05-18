@@ -34,6 +34,7 @@ from algobot.interface.statistics import Statistics
 from algobot.news_scraper import scrape_news
 from algobot.option import Option
 from algobot.slots import initiate_slots
+from algobot.telegram_bot import TelegramBot
 from algobot.threads import (backtestThread, botThread, listThread,
                              optimizerThread, workerThread)
 from algobot.traders.backtester import Backtester
@@ -94,15 +95,24 @@ class Interface(QMainWindow):
         self.graphUpdateSeconds = 1
         self.graphUpdateSchedule: List[float or None] = [None, None]  # LIVE, SIM
 
-    def inform_telegram(self, message: str):
+    def inform_telegram(self, message: str, stop_bot: bool = False):
         """
         Sends a notification to Telegram if some action is taken by the bot.
         :param message: Message to send.
+        :param stop_bot: Boolean for whether bot should be stopped or not.
         """
         try:
+            if self.telegramBot is None:
+                apiKey = self.configuration.telegramApiKey.text()
+                self.telegramBot = TelegramBot(gui=self, token=apiKey, botThread=None)
+
             chatID = self.configuration.telegramChatID.text()
             if self.configuration.chatPass:
                 self.telegramBot.send_message(chatID, message)
+
+            if stop_bot:
+                self.telegramBot.stop()
+                self.telegramBot = None
         except Exception as e:
             self.logger.exception(str(e))
 
@@ -271,6 +281,9 @@ class Interface(QMainWindow):
         worker = self.threads[OPTIMIZER]
         worker.signals.started.connect(lambda: clear_table(self.optimizerTableWidget))
         worker.signals.error.connect(self.create_popup)
+        if self.configuration.enabledOptimizerNotification.isChecked():
+            worker.signals.finished.connect(lambda: self.inform_telegram('Optimizer has finished running.',
+                                                                         stop_bot=True))
         worker.signals.activity.connect(lambda data: add_to_table(self.optimizerTableWidget, data=data,
                                                                   insertDate=False))
         self.threadPool.start(worker)

@@ -12,6 +12,7 @@ class OptimizerSignals(QObject):
     error = pyqtSignal(str)
     restore = pyqtSignal()
     started = pyqtSignal()
+    finished = pyqtSignal()
 
 
 class OptimizerThread(QRunnable):
@@ -56,6 +57,7 @@ class OptimizerThread(QRunnable):
         optimizer = self.gui.optimizer
         optimizer.optimize(combos=self.combos, thread=self)
         self.running = False
+        self.signals.finished.emit()
 
     @pyqtSlot()
     def run(self):
