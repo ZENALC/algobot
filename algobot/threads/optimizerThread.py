@@ -3,6 +3,7 @@ from typing import Any, Dict
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 from algobot.enums import OPTIMIZER
+from algobot.interface.config_utils.calendar_utils import get_calendar_dates
 from algobot.traders.backtester import Backtester
 
 
@@ -29,7 +30,7 @@ class OptimizerThread(QRunnable):
         :return: GUI configuration details in a dictionary.
         """
         config = self.gui.configuration
-        startDate, endDate = config.get_calendar_dates(OPTIMIZER)
+        startDate, endDate = get_calendar_dates(config_obj=config, caller=OPTIMIZER)
 
         return {
             'startingBalance': config.optimizerStartingBalanceSpinBox.value(),
