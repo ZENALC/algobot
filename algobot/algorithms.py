@@ -153,8 +153,10 @@ def get_accumulation_distribution_indicator(data: Dict[str, float], option: str 
     """
     if option.lower() == 'bollinger':
         return (data['close'] - data['open']) / (data['high'] - data['low']) * data['volume']
-    else:
+    elif option.lower() == 'investopedia':
         return (2 * data['close'] - data['low'] - data['high']) / (data['high'] - data['low']) * data['volume']
+    else:
+        raise ValueError("Please input either bollinger or investopedia for option type.")
 
 
 def get_normal_volume_oscillator(periods: int, ad_cache: List[float], data: List[Dict[str, float]]) -> \
