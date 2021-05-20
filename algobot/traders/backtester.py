@@ -10,7 +10,8 @@ import pandas as pd
 from dateutil import parser
 
 from algobot.algorithms import get_ema, get_sma, get_wma
-from algobot.enums import BACKTEST, BEARISH, BULLISH, LONG, OPTIMIZER, SHORT
+from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
+                           EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT)
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
                              convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
@@ -655,6 +656,8 @@ class Backtester(Trader):
             elif trend == BULLISH:
                 self.buy_short('Exited short because a bullish trend was detected.')
                 self.buy_long('Entered long because a bullish trend was detected.')
+            elif trend == EXIT_SHORT:
+                self.buy_short('Bought short because an exit-short trend was detected.')
         elif self.currentPosition == LONG:
             if self.lossStrategy is not None and self.currentPrice < self.get_stop_loss():
                 self.sell_long('Exited long because a stop loss was triggered.', stopLossExit=True)
@@ -664,6 +667,8 @@ class Backtester(Trader):
                 self.sell_long('Exited long because a bearish trend was detected.')
                 if self.marginEnabled:
                     self.sell_short('Entered short because a bearish trend was detected.')
+            elif trend == EXIT_LONG:
+                self.sell_long("Exited long because an exit-long trend was detected.")
         else:
             if not self.marginEnabled and self.previousStopLoss is not None and self.currentPrice is not None:
                 if self.previousStopLoss < self.currentPrice:
@@ -674,6 +679,12 @@ class Backtester(Trader):
                 self.reset_smart_stop_loss()
             elif self.marginEnabled and trend == BEARISH and self.previousPosition != SHORT:
                 self.sell_short('Entered short because a bearish trend was detected.')
+                self.reset_smart_stop_loss()
+            elif trend == ENTER_LONG:
+                self.buy_long("Entered long because an enter-long trend was detected.")
+                self.reset_smart_stop_loss()
+            elif trend == ENTER_SHORT:
+                self.sell_short("Entered short because an enter-short trend was detected.")
                 self.reset_smart_stop_loss()
             else:
                 if self.previousPosition == LONG and self.stopLossExit:

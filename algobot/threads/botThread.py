@@ -6,7 +6,7 @@ from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 import algobot.helpers as helpers
 from algobot.data import Data
-from algobot.enums import BEARISH, BULLISH, LIVE, SIMULATION
+from algobot.enums import LIVE, SIMULATION
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.config_utils.telegram_utils import test_telegram
 from algobot.telegram_bot import TelegramBot
@@ -301,8 +301,7 @@ class BotThread(QRunnable):
             lowerTrend = trader.get_trend(dataObject=lowerData, log_data=self.gui.advancedLogging)
             self.lowerTrend = trader.get_trend_string(lowerTrend)
             if previousLowerTrend != lowerTrend:
-                trends = {BEARISH: 'Bearish', BULLISH: 'Bullish', None: 'No'}
-                message = f'{trends[lowerTrend]} trend detected on lower interval data.'
+                message = f'({lowerTrend}) trend detected on lower interval data.'
                 self.signals.activity.emit(caller, message)
                 if self.gui.configuration.enableTelegramNotification.isChecked() and caller == LIVE:
                     self.gui.telegramBot.send_message(message=message, chatID=self.telegramChatID)

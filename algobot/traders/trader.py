@@ -4,7 +4,8 @@ This will be the main Trader class that all other Traders will inherit from.
 from datetime import datetime
 from typing import Dict, List, Union
 
-from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
+from algobot.enums import (BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
+                           EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING)
 from algobot.helpers import get_label_string, parse_strategy_name
 from algobot.option import Option
 from algobot.strategies.strategy import Strategy
@@ -318,6 +319,14 @@ class Trader:
             return BEARISH
         elif all(trend == BULLISH for trend in trends):
             return BULLISH
+        elif all(trend in (BULLISH, ENTER_LONG) for trend in trends):
+            return ENTER_LONG
+        elif all(trend in (BEARISH, EXIT_LONG) for trend in trends):
+            return EXIT_LONG
+        elif all(trend in (BULLISH, EXIT_SHORT) for trend in trends):
+            return EXIT_SHORT
+        elif all(trend in (BEARISH, ENTER_SHORT) for trend in trends):
+            return ENTER_SHORT
         else:
             return None
 
@@ -369,6 +378,14 @@ class Trader:
             return 'Bearish'
         elif trend is None:
             return 'None'
+        elif trend == ENTER_LONG:
+            return "Enter Long"
+        elif trend == EXIT_LONG:
+            return "Exit Long"
+        elif trend == ENTER_SHORT:
+            return "Enter Short"
+        elif trend == EXIT_SHORT:
+            return "Exit Short"
         else:
             raise ValueError('Unknown type of trend.')
 

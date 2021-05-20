@@ -1,5 +1,11 @@
+# TODO: Add unit tests.
+
 BULLISH = 1
 BEARISH = -1
+ENTER_LONG = 2
+EXIT_LONG = -2
+ENTER_SHORT = -3
+EXIT_SHORT = 3
 
 NET_GRAPH = 1
 AVG_GRAPH = 2
