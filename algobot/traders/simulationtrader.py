@@ -158,8 +158,12 @@ class SimulationTrader(Trader):
                 groupedDict[strategyName] = {
                     'trend': self.get_trend_string(strategy.trend),
                     'enabled': 'True',
-                    'inputs': strategy.get_params()  # TODO: Refactor this logic to return a dictionary.
                 }
+
+                if strategy.showInputs:
+                    groupedDict[strategyName].update({
+                        'inputs': strategy.get_params()  # TODO: Refactor this logic to return a dictionary.
+                    })
 
                 if 'values' in strategy.strategyDict:
                     for key in strategy.strategyDict['values']:

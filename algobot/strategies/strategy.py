@@ -18,6 +18,7 @@ class Strategy:
         self.name = name
         self.parent = parent
         self.precision = precision
+        self.showInputs = True
         self.trend = None
         self.dynamic = False  # Set this to true if you want to have additional slots.
         self.description = "No strategy description found. You can setup your strategy description in strategies.py."

@@ -370,8 +370,8 @@ def get_money_flow_fixture():
 @pytest.mark.parametrize(
     'periods, expected',
     [
-        (3, 62.63864565090485),
-        (7, 11.88305216139392)
+        (3, 37.21817551161983),
+        (7, 31.661370208136503)
     ]
 )
 def test_money_flow_index(money_flow_fixture, periods: int, expected: float):

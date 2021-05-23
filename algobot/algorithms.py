@@ -127,11 +127,11 @@ def get_money_flow_index(periods: int, data: List[Dict[str, float]]) -> float:
     :param data: Dictionary containing open, high, close, low, and volume data.
     :return: Accumulation distribution indicator.
     """
-    validate(periods=periods, data=data)
+    validate(periods=periods + 1, data=data)
     previous_typical_price = None
     negative_money_flows = 0
     positive_money_flows = 0
-    for period in data[-periods:]:
+    for period in data[-periods - 1:]:
         typical_price = (period['high'] + period['low'] + period['close']) / 3
         raw_money_flow = typical_price * period['volume']
         if previous_typical_price is not None:
