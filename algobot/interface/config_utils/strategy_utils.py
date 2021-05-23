@@ -195,9 +195,12 @@ def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Typ
     :param strategies: List of strategies to process for dictionary.
     :return: Dictionary of strategies with strategy name as the key and strategy itself as the value.
     """
+    ignoredStrategies = ['Sample']
     strategiesDict = {}
     for strategy in strategies:
-        strategiesDict[strategy().name] = strategy
+        strategyName = strategy().name
+        if strategyName not in ignoredStrategies:
+            strategiesDict[strategyName] = strategy
     return strategiesDict
 
 
