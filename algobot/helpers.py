@@ -10,7 +10,7 @@ from typing import Dict, List, Tuple, Union
 
 from dateutil import parser
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QDialog
+from PyQt5.QtWidgets import QDialog, QTableWidget, QTableWidgetItem
 
 from algobot.enums import BACKTEST, LIVE, SIMULATION
 from algobot.typing_hints import DICT_TYPE

@@ -25,7 +25,8 @@ from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
 from algobot.helpers import (ROOT_DIR, add_to_table, clear_table,
                              create_folder, create_folder_if_needed,
                              get_caller_string, get_logger,
-                             open_file_or_folder, show_and_bring_window_to_front)
+                             open_file_or_folder,
+                             show_and_bring_window_to_front)
 from algobot.interface.about import About
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.configuration import Configuration

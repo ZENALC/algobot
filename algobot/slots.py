@@ -1,7 +1,8 @@
 import webbrowser
 
 from algobot.enums import BACKTEST, LIVE, SIMULATION
-from algobot.helpers import clear_table, open_folder, show_and_bring_window_to_front
+from algobot.helpers import (clear_table, open_folder,
+                             show_and_bring_window_to_front)
 from algobot.themes import (set_bear_mode, set_bloomberg_mode, set_bull_mode,
                             set_dark_mode, set_light_mode)
 
