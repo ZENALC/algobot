@@ -25,7 +25,7 @@ from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
 from algobot.helpers import (ROOT_DIR, add_to_table, clear_table,
                              create_folder, create_folder_if_needed,
                              get_caller_string, get_logger,
-                             open_file_or_folder)
+                             open_file_or_folder, show_and_bring_window_to_front)
 from algobot.interface.about import About
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.configuration import Configuration
@@ -1149,7 +1149,7 @@ class Interface(QMainWindow):
         """
         Opens main settings in the configuration window.
         """
-        self.configuration.show()
+        show_and_bring_window_to_front(self.configuration)
         self.configuration.configurationTabWidget.setCurrentIndex(0)
         self.configuration.mainConfigurationTabWidget.setCurrentIndex(0)
 
@@ -1157,7 +1157,7 @@ class Interface(QMainWindow):
         """
         Opens backtest settings in the configuration window.
         """
-        self.configuration.show()
+        show_and_bring_window_to_front(self.configuration)
         self.configuration.configurationTabWidget.setCurrentIndex(1)
         self.configuration.backtestConfigurationTabWidget.setCurrentIndex(0)
 
@@ -1165,7 +1165,7 @@ class Interface(QMainWindow):
         """
         Open configuration settings for optimizer.
         """
-        self.configuration.show()
+        show_and_bring_window_to_front(self.configuration)
         self.configuration.configurationTabWidget.setCurrentIndex(2)
         self.configuration.optimizerConfigurationTabWidget.setCurrentIndex(0)
 
@@ -1173,7 +1173,7 @@ class Interface(QMainWindow):
         """
         Opens simulation settings in the configuration window.
         """
-        self.configuration.show()
+        show_and_bring_window_to_front(self.configuration)
         self.configuration.configurationTabWidget.setCurrentIndex(3)
         self.configuration.simulationConfigurationTabWidget.setCurrentIndex(0)
 
@@ -1182,7 +1182,7 @@ class Interface(QMainWindow):
         Opens statistics window and sets tab index to index provided.
         :param index: Index to be changed in the tab.
         """
-        self.statistics.show()
+        show_and_bring_window_to_front(self.statistics)
         self.statistics.statisticsTabWidget.setCurrentIndex(index)
 
     def update_binance_values(self):

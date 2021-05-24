@@ -1,7 +1,7 @@
 import webbrowser
 
 from algobot.enums import BACKTEST, LIVE, SIMULATION
-from algobot.helpers import clear_table, open_folder
+from algobot.helpers import clear_table, open_folder, show_and_bring_window_to_front
 from algobot.themes import (set_bear_mode, set_bloomberg_mode, set_bull_mode,
                             set_dark_mode, set_light_mode)
 
@@ -48,9 +48,9 @@ def create_action_slots(gui):
     """
     Creates actions slots.
     """
-    gui.otherCommandsAction.triggered.connect(lambda: gui.otherCommands.show())
-    gui.configurationAction.triggered.connect(lambda: gui.configuration.show())
-    gui.aboutAlgobotAction.triggered.connect(lambda: gui.about.show())
+    gui.otherCommandsAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.otherCommands))
+    gui.configurationAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.configuration))
+    gui.aboutAlgobotAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.about))
     gui.liveStatisticsAction.triggered.connect(lambda: gui.show_statistics(0))
     gui.simulationStatisticsAction.triggered.connect(lambda: gui.show_statistics(1))
     gui.openBacktestResultsFolderAction.triggered.connect(lambda: open_folder("Backtest Results"))

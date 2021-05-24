@@ -10,7 +10,7 @@ from typing import Dict, List, Tuple, Union
 
 from dateutil import parser
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QDialog
 
 from algobot.enums import BACKTEST, LIVE, SIMULATION
 from algobot.typing_hints import DICT_TYPE
@@ -22,6 +22,12 @@ LOG_FOLDER = 'Logs'
 
 def is_debug() -> bool:
     return os.getenv('DEBUG') is not None
+
+
+def show_and_bring_window_to_front(window: QDialog):
+    window.show()
+    window.activateWindow()
+    window.raise_()
 
 
 def add_to_table(table: QTableWidget, data: list, insertDate=True):
