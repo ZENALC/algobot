@@ -108,7 +108,7 @@ class BacktestThread(QRunnable):
             'profitPercentage': f'{profitPercentage}%',
             'currentPeriod': period['date_utc'].strftime("%m/%d/%Y, %H:%M:%S"),
             'utc': period['date_utc'].timestamp(),
-            'percentage': int(index / length * 100)
+            'percentage': int((index - backtester.startDateIndex) / length * 100)
         }
 
         backtester.pastActivity.append(activity)
