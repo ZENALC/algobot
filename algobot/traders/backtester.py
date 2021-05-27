@@ -86,6 +86,7 @@ class Backtester(Trader):
             'high': max([d['high'] for d in data]),
             'low': min([d['low'] for d in data]),
             'close': data[-1]['close'],
+            'volume': sum([d['volume'] for d in data])
         }
 
     def check_data(self):

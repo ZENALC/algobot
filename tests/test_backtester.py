@@ -53,6 +53,7 @@ class TestBacktester(unittest.TestCase):
         gap_data = backtester.data[:15]
         max_price = max([data['high'] for data in gap_data])
         min_price = min([data['low'] for data in gap_data])
+        volume = sum([data['volume'] for data in gap_data])
         result = backtester.get_gap_data(gap_data)
 
         self.assertEqual(gap_data[0]['date_utc'], result['date_utc'])
@@ -60,11 +61,13 @@ class TestBacktester(unittest.TestCase):
         self.assertEqual(gap_data[-1]['close'], result['close'])
         self.assertEqual(min_price, result['low'])
         self.assertEqual(max_price, result['high'])
+        self.assertEqual(volume, result['volume'])
 
         backtester.strategyInterval = '1 Hour'
         gap_data = backtester.data[10:70]
         max_price = max([data['high'] for data in gap_data])
         min_price = min([data['low'] for data in gap_data])
+        volume = sum([data['volume'] for data in gap_data])
         result = backtester.get_gap_data(gap_data, check=False)
 
         self.assertEqual(gap_data[0]['date_utc'], result['date_utc'])
@@ -72,6 +75,7 @@ class TestBacktester(unittest.TestCase):
         self.assertEqual(gap_data[-1]['close'], result['close'])
         self.assertEqual(min_price, result['low'])
         self.assertEqual(max_price, result['high'])
+        self.assertEqual(volume, result['volume'])
 
     def test_check_data(self):
         """
