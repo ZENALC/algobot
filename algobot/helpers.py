@@ -313,12 +313,33 @@ def parse_strategy_name(name: str) -> str:
     return ''.join(nameList)
 
 
+def get_normalized_data(data: List[str], date_in_utc: Union[str, datetime] = None) -> Dict[str, Union[str, float]]:
+    """
+    Normalize data provided and return as an appropriate dictionary.
+    :param data: Data to normalize into a dictionary.
+    :param date_in_utc: Optional date to use (if provided). If not provided, it'll use the first element from data.
+    """
+    return {
+        'date_utc': date_in_utc if date_in_utc is not None else data[0],
+        'open': float(data[1]),
+        'high': float(data[2]),
+        'low': float(data[3]),
+        'close': float(data[4]),
+        'volume': float(data[5]),
+        'quote_asset_volume': float(data[6]),
+        'number_of_trades': float(data[7]),
+        'taker_buy_base_asset': float(data[8]),
+        'taker_buy_quote_asset': float(data[9]),
+    }
+
+
 def convert_small_interval(interval: str) -> str:
     """
     Converts smaller interval string to longer interval string.
     :param interval: Small interval string.
     :return: Longer interval string.
     """
+    # TODO: Why have both this and the one below? Refactor to support inverses.
     intervals = {
         '1m': '1 Minute',
         '3m': '3 Minutes',

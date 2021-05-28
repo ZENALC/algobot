@@ -10,7 +10,8 @@ from binance.client import Client
 from binance.helpers import interval_to_milliseconds
 
 from algobot.algorithms import get_ema, get_sma, get_wma
-from algobot.helpers import ROOT_DIR, get_logger, get_ups_and_downs
+from algobot.helpers import (ROOT_DIR, get_logger, get_normalized_data,
+                             get_ups_and_downs)
 from algobot.typing_hints import DATA_TYPE
 
 
@@ -235,7 +236,7 @@ class Data:
 
         for row in rows:
             date_utc = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            normalized_data = self.get_normalized_data(data=row, date_in_utc=date_utc)
+            normalized_data = get_normalized_data(data=row, date_in_utc=date_utc)
             self.data.append(normalized_data)
 
     def database_is_updated(self) -> bool:
@@ -405,7 +406,7 @@ class Data:
         """
         for data in newData:
             parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
-            current_dict = self.get_normalized_data(data=data, date_in_utc=parsedDate)
+            current_dict = get_normalized_data(data=data, date_in_utc=parsedDate)
             self.data.append(current_dict)
 
     def update_data(self, verbose: bool = False):
@@ -438,26 +439,6 @@ class Data:
             self.dump_to_table()
             self.data = self.data[self.dataLimit // 2:]
 
-    @staticmethod
-    def get_normalized_data(data: List[str], date_in_utc: Union[str, datetime] = None) -> Dict[str, Union[str, float]]:
-        """
-        Normalize data provided and return as an appropriate dictionary.
-        :param data: Data to normalize into a dictionary.
-        :param date_in_utc: Optional date to use (if provided). If not provided, it'll use the first element from data.
-        """
-        return {
-            'date_utc': date_in_utc if date_in_utc is not None else data[0],
-            'open': float(data[1]),
-            'high': float(data[2]),
-            'low': float(data[3]),
-            'close': float(data[4]),
-            'volume': float(data[5]),
-            'quote_asset_volume': float(data[6]),
-            'number_of_trades': float(data[7]),
-            'taker_buy_base_asset': float(data[8]),
-            'taker_buy_quote_asset': float(data[9]),
-        }
-
     def get_current_data(self, counter: int = 0) -> Dict[str, Union[str, float]]:
         """
         Retrieves current market dictionary with open, high, low, close prices.
@@ -479,7 +460,7 @@ class Data:
                                                         startTime=currentTimestamp,
                                                         endTime=nextTimestamp,
                                                         )[0]
-            self.current_values = self.get_normalized_data(data=currentData, date_in_utc=currentInterval)
+            self.current_values = get_normalized_data(data=currentData, date_in_utc=currentInterval)
             if counter > 0:
                 self.try_callback("Successfully reconnected.")
             return self.current_values
