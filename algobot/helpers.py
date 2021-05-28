@@ -94,6 +94,7 @@ def create_folder_if_needed(targetPath: str, basePath: str = None) -> bool:
         basePath = ROOT_DIR
 
     if not os.path.exists(targetPath):
+        # TODO: Why not os.mkdir(os.path.join(basePath, folder)) directly?
         folder = os.path.basename(targetPath)
         cur_path = os.getcwd()
         os.chdir(basePath)
