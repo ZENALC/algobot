@@ -4,7 +4,7 @@ import time
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from logging import Logger
-from typing import List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
@@ -235,17 +235,8 @@ class Data:
 
         for row in rows:
             date_utc = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            self.data.append({'date_utc': date_utc,
-                              'open': float(row[1]),
-                              'high': float(row[2]),
-                              'low': float(row[3]),
-                              'close': float(row[4]),
-                              'volume': float(row[5]),
-                              'quote_asset_volume': float(row[6]),
-                              'number_of_trades': float(row[7]),
-                              'taker_buy_base_asset': float(row[8]),
-                              'taker_buy_quote_asset': float(row[9]),
-                              })
+            normalized_data = self.get_normalized_data(data=row, date_in_utc=date_utc)
+            self.data.append(normalized_data)
 
     def database_is_updated(self) -> bool:
         """
@@ -371,11 +362,12 @@ class Data:
         self.downloadCompleted = True
         return self.data
 
-    def get_new_data(self, timestamp: int, limit: int = 1000) -> list:
+    def get_new_data(self, timestamp: int, limit: int = 1000, get_current: bool = False) -> list:
         """
         Returns new data from Binance API from timestamp specified.
         :param timestamp: Initial timestamp.
         :param limit: Limit per pull.
+        :param get_current: Boolean for whether to include current period's data.
         :return: A list of dictionaries.
         """
         newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
@@ -383,7 +375,10 @@ class Data:
         if len(newData[:-1]) == 0:
             raise RuntimeError("No data was fetched from Binance. Please check Binance server.")
         else:
-            return newData[:-1]  # Up to -1st index, because we don't want current period data.
+            if get_current:
+                return newData
+            else:
+                return newData[:-1]  # Up to -1st index, because we don't want current period data.
 
     def is_latest_date(self, latestDate: datetime) -> bool:
         """
@@ -410,17 +405,7 @@ class Data:
         """
         for data in newData:
             parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
-            current_dict = {'date_utc': parsedDate,
-                            'open': float(data[1]),
-                            'high': float(data[2]),
-                            'low': float(data[3]),
-                            'close': float(data[4]),
-                            'volume': float(data[5]),
-                            'quote_asset_volume': float(data[6]),
-                            'number_of_trades': float(data[7]),
-                            'taker_buy_base_asset': float(data[8]),
-                            'taker_buy_quote_asset': float(data[9]),
-                            }
+            current_dict = self.get_normalized_data(data=data, date_in_utc=parsedDate)
             self.data.append(current_dict)
 
     def update_data(self, verbose: bool = False):
@@ -453,7 +438,27 @@ class Data:
             self.dump_to_table()
             self.data = self.data[self.dataLimit // 2:]
 
-    def get_current_data(self, counter: int = 0) -> dict:
+    @staticmethod
+    def get_normalized_data(data: List[str], date_in_utc: Union[str, datetime] = None) -> Dict[str, Union[str, float]]:
+        """
+        Normalize data provided and return as an appropriate dictionary.
+        :param data: Data to normalize into a dictionary.
+        :param date_in_utc: Optional date to use (if provided). If not provided, it'll use the first element from data.
+        """
+        return {
+            'date_utc': date_in_utc if date_in_utc is not None else data[0],
+            'open': float(data[1]),
+            'high': float(data[2]),
+            'low': float(data[3]),
+            'close': float(data[4]),
+            'volume': float(data[5]),
+            'quote_asset_volume': float(data[6]),
+            'number_of_trades': float(data[7]),
+            'taker_buy_base_asset': float(data[8]),
+            'taker_buy_quote_asset': float(data[9]),
+        }
+
+    def get_current_data(self, counter: int = 0) -> Dict[str, Union[str, float]]:
         """
         Retrieves current market dictionary with open, high, low, close prices.
         :param counter: Counter to check how many times bot is trying to retrieve current data.
@@ -474,20 +479,10 @@ class Data:
                                                         startTime=currentTimestamp,
                                                         endTime=nextTimestamp,
                                                         )[0]
-            currentDataDictionary = {'date_utc': currentInterval,
-                                     'open': float(currentData[1]),
-                                     'high': float(currentData[2]),
-                                     'low': float(currentData[3]),
-                                     'close': float(currentData[4]),
-                                     'volume': float(currentData[5]),
-                                     'quote_asset_volume': float(currentData[6]),
-                                     'number_of_trades': float(currentData[7]),
-                                     'taker_buy_base_asset': float(currentData[8]),
-                                     'taker_buy_quote_asset': float(currentData[9]), }
-            self.current_values = currentDataDictionary
+            self.current_values = self.get_normalized_data(data=currentData, date_in_utc=currentInterval)
             if counter > 0:
                 self.try_callback("Successfully reconnected.")
-            return currentDataDictionary
+            return self.current_values
         except Exception as e:
             sleepTime = 5 + counter * 2
             error_message = f"Error: {e}. Retrying in {sleepTime} seconds..."
