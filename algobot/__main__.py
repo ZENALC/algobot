@@ -28,6 +28,7 @@ from algobot.helpers import (ROOT_DIR, add_to_table, clear_table,
                              open_file_or_folder,
                              show_and_bring_window_to_front)
 from algobot.interface.about import About
+from algobot.interface.config_utils.state_utils import load_state, save_state
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
@@ -92,7 +93,7 @@ class Interface(QMainWindow):
         self.add_to_live_activity_monitor('Initialized interface.')
         self.load_tickers_and_news()
         self.homeTab.setCurrentIndex(0)
-        self.configuration.load_state()
+        load_state(self.configuration)
 
         self.graphUpdateSeconds = 1
         self.graphUpdateSchedule: List[float or None] = [None, None]  # LIVE, SIM
@@ -1126,7 +1127,7 @@ class Interface(QMainWindow):
         Close event override. Makes user confirm they want to end program if something is running live.
         :param event: close event
         """
-        self.configuration.save_state()
+        save_state(self.configuration)
         qm = QMessageBox
         message = ""
         if self.simulationRunningLive and self.runningLive:

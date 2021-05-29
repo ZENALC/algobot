@@ -79,7 +79,7 @@ class Configuration(QDialog):
         # Folders and files
         self.credentialsFolder = "Credentials"
         self.configFolder = 'Configuration'
-        self.basicFilePath = os.path.join(helpers.ROOT_DIR, 'state.json')
+        self.stateFilePath = os.path.join(helpers.ROOT_DIR, 'state.json')
 
         self.categoryTabs = [
             self.mainConfigurationTabWidget,
@@ -375,80 +375,6 @@ class Configuration(QDialog):
             lossSettings['safetyTimer'] = dictionary[tab, 'safetyTimer'].value()
 
         return lossSettings
-
-    def load_state(self):
-        """
-        This function will attempt to load previous basic configuration settings from self.basicFilePath.
-        :return: None
-        """
-        if os.path.exists(self.basicFilePath):
-            try:
-                config = helpers.load_json_file(self.basicFilePath)
-
-                self.lightModeRadioButton.setChecked(config['lightTheme'])
-                self.darkModeRadioButton.setChecked(config['darkTheme'])
-                self.bloombergModeRadioButton.setChecked(config['bloombergTheme'])
-                self.bullModeRadioButton.setChecked(config['bullTheme'])
-                self.bearModeRadioButton.setChecked(config['bearTheme'])
-
-                self.balanceColor.setCurrentIndex(config['balanceColor'])
-                self.avg1Color.setCurrentIndex(config['avg1Color'])
-                self.avg2Color.setCurrentIndex(config['avg2Color'])
-                self.avg3Color.setCurrentIndex(config['avg3Color'])
-                self.avg4Color.setCurrentIndex(config['avg4Color'])
-                self.hoverLineColor.setCurrentIndex(config['lineColor'])
-
-                self.graphIndicatorsCheckBox.setChecked(config['averagePlot'])
-                self.failureLimitSpinBox.setValue(int(config['failureLimit']))
-                self.failureSleepSpinBox.setValue(int(config['failureSleep']))
-                self.tokenPass = config['tokenPass']
-                self.chatPass = config['chatPass']
-                self.telegrationConnectionResult.setText(config['telegramResult'])
-
-                # Load saved tickers.
-                self.tickerLineEdit.setText(config['mainTicker'])
-                self.simulationTickerLineEdit.setText(config['simTicker'])
-                self.optimizerTickerLineEdit.setText(config['optimizerTicker'])
-                self.backtestTickerLineEdit.setText(config['backtestTicker'])
-
-                if self.parent:
-                    self.parent.add_to_live_activity_monitor('Loaded previous state successfully.')
-            except Exception as e:
-                self.logger.exception(str(e))
-
-                if self.parent:
-                    self.parent.add_to_live_activity_monitor('Failed to fully load previous state because of a '
-                                                             'potential new update/install. Try restarting Algobot.')
-
-    def save_state(self):
-        """
-        Saves bot configuration to a JSON file for next application run.
-        """
-        config = {
-            'lightTheme': self.lightModeRadioButton.isChecked(),
-            'darkTheme': self.darkModeRadioButton.isChecked(),
-            'bloombergTheme': self.bloombergModeRadioButton.isChecked(),
-            'bullTheme': self.bullModeRadioButton.isChecked(),
-            'bearTheme': self.bearModeRadioButton.isChecked(),
-            'balanceColor': self.balanceColor.currentIndex(),
-            'avg1Color': self.avg1Color.currentIndex(),
-            'avg2Color': self.avg2Color.currentIndex(),
-            'avg3Color': self.avg3Color.currentIndex(),
-            'avg4Color': self.avg4Color.currentIndex(),
-            'lineColor': self.hoverLineColor.currentIndex(),
-            'averagePlot': self.graphIndicatorsCheckBox.isChecked(),
-            'failureLimit': self.failureLimitSpinBox.value(),
-            'failureSleep': self.failureSleepSpinBox.value(),
-            'chatPass': self.chatPass,
-            'tokenPass': self.tokenPass,
-            'telegramResult': self.telegrationConnectionResult.text(),
-            'mainTicker': self.tickerLineEdit.text(),
-            'simTicker': self.simulationTickerLineEdit.text(),
-            'optimizerTicker': self.optimizerTickerLineEdit.text(),
-            'backtestTicker': self.backtestTickerLineEdit.text()
-        }
-
-        helpers.write_json_file(self.basicFilePath, **config)
 
     def add_strategy_to_config(self, caller: int, strategyName: str, config: dict):
         """
