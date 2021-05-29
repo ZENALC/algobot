@@ -32,6 +32,7 @@ from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
 from algobot.interface.statistics import Statistics
+from algobot.interface.utils import create_popup
 from algobot.news_scraper import scrape_news
 from algobot.option import Option
 from algobot.slots import initiate_slots
@@ -143,9 +144,9 @@ class Interface(QMainWindow):
         """
         self.newsStatusLabel.setText("Failed to retrieve latest news.")
         if 'www.todayonchain.com' in e:
-            self.create_popup('Failed to retrieve latest news due to a connectivity error.')
+            create_popup(self, 'Failed to retrieve latest news due to a connectivity error.')
         else:
-            self.create_popup(e)
+            create_popup(self, e)
 
     def tickers_thread(self):
         """
@@ -168,9 +169,9 @@ class Interface(QMainWindow):
         self.add_to_live_activity_monitor(fail)
         self.configuration.serverResult.setText(fail)
         if 'api.binance.com' in e:
-            self.create_popup(fail)
+            create_popup(self, fail)
         else:
-            self.create_popup(e)
+            create_popup(self, e)
 
     @staticmethod
     def get_tickers() -> List[str]:
@@ -249,14 +250,14 @@ class Interface(QMainWindow):
                 filePath, _ = QFileDialog.getSaveFileName(self, 'Save Credentials', defaultPath,
                                                           f'{file_type} (*.{file_type.lower()})')
                 if not filePath:
-                    self.create_popup("Export cancelled.")
+                    create_popup(self, "Export cancelled.")
                 else:
                     self.optimizer.export_optimizer_rows(filePath, file_type)
-                    self.create_popup(f'Exported successfully to {filePath}.')
+                    create_popup(self, f'Exported successfully to {filePath}.')
             else:
-                self.create_popup("No table rows found.")
+                create_popup(self, "No table rows found.")
         else:
-            self.create_popup('No table rows found because optimizer has not been run yet.')
+            create_popup(self, 'No table rows found because optimizer has not been run yet.')
 
     def initiate_optimizer(self):
         """
@@ -266,22 +267,22 @@ class Interface(QMainWindow):
             return
 
         if self.configuration.optimizer_backtest_dict[OPTIMIZER]['data'] is None:
-            self.create_popup("No data setup yet for optimizer. Please configure them in settings first.")
+            create_popup(self, "No data setup yet for optimizer. Please configure them in settings first.")
             return
 
         if self.configuration.get_optimizer_settings()['strategies'] == {}:
-            self.create_popup("No strategies found. Make sure you have some strategies for optimization.")
+            create_popup(self, "No strategies found. Make sure you have some strategies for optimization.")
             return
 
         combos = self.configuration.get_optimizer_settings()
         if not self.check_combos(combos['strategies']):
-            self.create_popup("Please configure your strategies correctly.")
+            create_popup(self, "Please configure your strategies correctly.")
             return
 
         self.threads[OPTIMIZER] = optimizerThread.OptimizerThread(gui=self, logger=self.logger, combos=combos)
         worker = self.threads[OPTIMIZER]
         worker.signals.started.connect(lambda: clear_table(self.optimizerTableWidget))
-        worker.signals.error.connect(self.create_popup)
+        worker.signals.error.connect(lambda x: create_popup(self, x))
         if self.configuration.enabledOptimizerNotification.isChecked():
             worker.signals.finished.connect(lambda: self.inform_telegram('Optimizer has finished running.',
                                                                          stop_bot=True))
@@ -298,9 +299,9 @@ class Interface(QMainWindow):
             if thread.running:
                 thread.stop()
             else:
-                self.create_popup("There is no optimizer running.")
+                create_popup(self, "There is no optimizer running.")
         else:
-            self.create_popup("There is no optimizer running.")
+            create_popup(self, "There is no optimizer running.")
 
     def initiate_backtest(self):
         """
@@ -310,7 +311,7 @@ class Interface(QMainWindow):
             return
 
         if self.configuration.optimizer_backtest_dict[BACKTEST]['data'] is None:
-            self.create_popup("No data setup yet for backtesting. Please configure them in settings first.")
+            create_popup(self, "No data setup yet for backtesting. Please configure them in settings first.")
             return
 
         if not self.check_strategies(BACKTEST):
@@ -339,9 +340,9 @@ class Interface(QMainWindow):
             if thread.running:
                 thread.stop()
             else:
-                self.create_popup("There is no backtest running.")
+                create_popup(self, "There is no backtest running.")
         else:
-            self.create_popup("There is no backtest running.")
+            create_popup(self, "There is no backtest running.")
 
     def end_backtest(self):
         """
@@ -482,10 +483,10 @@ class Interface(QMainWindow):
         """
         selected_ticker = self.interfaceDictionary[caller]['configuration']['ticker'].text()
         if selected_ticker.strip() == '':
-            self.create_popup("Please specify a ticker. No ticker found.")
+            create_popup(self, "Please specify a ticker. No ticker found.")
             return False
         if selected_ticker not in self.tickers:
-            self.create_popup("Invalid ticker specified. Please check your settings and configure it correctly.")
+            create_popup(self, "Invalid ticker specified. Please check your settings and configure it correctly.")
             return False
         return True
 
@@ -501,7 +502,7 @@ class Interface(QMainWindow):
 
         self.disable_interface(True, caller)
         worker = botThread.BotThread(gui=self, caller=caller, logger=self.logger)
-        worker.signals.smallError.connect(self.create_popup)
+        worker.signals.smallError.connect(lambda x: create_popup(self, x))
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.activity.connect(self.add_to_monitor)
         worker.signals.started.connect(self.initial_bot_ui_setup)
@@ -543,7 +544,7 @@ class Interface(QMainWindow):
         self.disable_interface(True, caller=caller, everything=True)  # Disable everything until everything is done.
         self.enable_override(caller, False)  # Disable overrides.
         thread = workerThread.Worker(lambda: self.end_bot_gracefully(caller=caller))
-        thread.signals.error.connect(self.create_popup)
+        thread.signals.error.connect(lambda x: create_popup(self, x))
         thread.signals.finished.connect(lambda: self.add_end_bot_status(caller=caller))
         thread.signals.restore.connect(lambda: self.reset_bot_interface(caller=caller))
         self.threadPool.start(thread)
@@ -844,7 +845,7 @@ class Interface(QMainWindow):
         thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
         thread.signals.finished.connect(lambda: self.set_exit_position_gui(caller=caller, humanControl=humanControl))
         thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
-        thread.signals.error.connect(self.create_popup)
+        thread.signals.error.connect(lambda x: create_popup(self, x))
         self.threadPool.start(thread)
 
     def set_force_long_gui(self, caller):
@@ -878,7 +879,7 @@ class Interface(QMainWindow):
         thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
         thread.signals.finished.connect(lambda: self.set_force_long_gui(caller=caller))
         thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
-        thread.signals.error.connect(self.create_popup)
+        thread.signals.error.connect(lambda x: create_popup(self, x))
         self.threadPool.start(thread)
 
     def set_force_short_gui(self, caller):
@@ -912,7 +913,7 @@ class Interface(QMainWindow):
         thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
         thread.signals.finished.connect(lambda: self.set_force_short_gui(caller=caller))
         thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
-        thread.signals.error.connect(self.create_popup)
+        thread.signals.error.connect(lambda x: create_popup(self, x))
         self.threadPool.start(thread)
 
     def modify_override_buttons(self, caller, pauseText: str, shortBtn: bool, longBtn: bool, exitBtn: bool,
@@ -1189,11 +1190,11 @@ class Interface(QMainWindow):
     def update_binance_values(self):
         if self.trader is not None:
             thread = workerThread.Worker(self.trader.retrieve_margin_values)
-            thread.signals.finished.connect(lambda: self.create_popup('Successfully updated values.'))
-            thread.signals.error.connect(self.create_popup)
+            thread.signals.finished.connect(lambda: create_popup(self, 'Successfully updated values.'))
+            thread.signals.error.connect(lambda x: create_popup(self, x))
             self.threadPool.start(thread)
         else:
-            self.create_popup('There is currently no live bot running.')
+            create_popup(self, 'There is currently no live bot running.')
 
     def get_preferred_symbol(self) -> Union[None, str]:
         """
@@ -1307,14 +1308,7 @@ class Interface(QMainWindow):
         :param message: Message to create popup of emit to activity monitor.
         """
         self.add_to_monitor(caller, message)
-        self.create_popup(message)
-
-    def create_popup(self, msg: str):
-        """
-        Creates a popup with message provided.
-        :param msg: Message provided.
-        """
-        QMessageBox.about(self, 'Warning', msg)
+        create_popup(self, message)
 
     def get_lower_interval_data(self, caller: int) -> Data:
         """
