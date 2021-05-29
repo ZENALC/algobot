@@ -246,15 +246,19 @@ class Interface(QMainWindow):
                 optimizerFolderPath = create_folder('Optimizer Results')
                 innerPath = os.path.join(optimizerFolderPath, self.optimizer.symbol)
                 create_folder_if_needed(innerPath, optimizerFolderPath)
-                defaultFileName = self.optimizer.get_default_result_file_name('optimizer')
-                defaultPath = os.path.join(innerPath, f'{defaultFileName}.{file_type.lower()}')
-                filePath, _ = QFileDialog.getSaveFileName(self, 'Save Credentials', defaultPath,
+                defaultFileName = self.optimizer.get_default_result_file_name('optimizer', ext=file_type.lower())
+                defaultPath = os.path.join(innerPath, defaultFileName)
+                filePath, _ = QFileDialog.getSaveFileName(self, 'Save Optimizer', defaultPath,
                                                           f'{file_type} (*.{file_type.lower()})')
                 if not filePath:
                     create_popup(self, "Export cancelled.")
                 else:
                     self.optimizer.export_optimizer_rows(filePath, file_type)
                     create_popup(self, f'Exported successfully to {filePath}.')
+
+                if open_from_msg_box(text='Do you want to open the optimization report?', title='Optimizer Report'):
+                    open_file_or_folder(filePath)
+
             else:
                 create_popup(self, "No table rows found.")
         else:

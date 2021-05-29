@@ -789,7 +789,7 @@ class Backtester(Trader):
 
         sys.stdout = previous_stdout  # revert stdout back to normal
 
-    def get_default_result_file_name(self, name: str = 'backtest'):
+    def get_default_result_file_name(self, name: str = 'backtest', ext: str = 'txt'):
         """
         Returns a default backtest/optimizer result file name.
         :return: String filename.
@@ -797,7 +797,7 @@ class Backtester(Trader):
         resultsFolder = os.path.join(ROOT_DIR, f'{name.capitalize()} Results')
         symbol = 'Imported' if not self.symbol else self.symbol
         dateString = datetime.now().strftime("%Y-%m-%d_%H-%M")
-        resultFile = f'{symbol}_{name}_results_{"_".join(self.interval.lower().split())}-{dateString}.txt'
+        resultFile = f'{symbol}_{name}_results_{"_".join(self.interval.lower().split())}-{dateString}.{ext}'
 
         if not os.path.exists(resultsFolder):
             return resultFile
