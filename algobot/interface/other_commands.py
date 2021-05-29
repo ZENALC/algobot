@@ -4,12 +4,12 @@ from datetime import datetime, timezone
 from typing import List
 
 import pandas as pd
+from binance.client import Client
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QMessageBox
 
 import algobot.helpers as helpers
-from algobot.data import Data
 from algobot.threads.downloadThread import DownloadThread
 from algobot.threads.listThread import Worker
 from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread
@@ -105,7 +105,7 @@ class OtherCommands(QDialog):
         symbol = self.csvGenerationTicker.text()
         interval = helpers.convert_long_interval(self.csvGenerationDataInterval.currentText())
 
-        ts = Data(loadData=False, log=False).binanceClient._get_earliest_valid_timestamp(symbol, interval)
+        ts = Client()._get_earliest_valid_timestamp(symbol, interval)
         startDate = datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
         qStart = QDate(startDate.year, startDate.month, startDate.day)
 
@@ -146,10 +146,10 @@ class OtherCommands(QDialog):
         thread = DownloadThread(interval, symbol, descending, armyTime, startDate, logger=self.parent.logger)
         thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
         thread.signals.csv_finished.connect(self.end_csv_generation)
-        thread.signals.error.connect(self.handle_csv_generation_error)
-        thread.signals.restore.connect(self.restore_csv_state)
+        thread.signals.error.connect(lambda e: self.csvGenerationStatus.setText(f"Download failed with error: {e}"))
+        thread.signals.restore.connect(lambda: self.modify_csv_ui(running=False, reset=True))
         thread.signals.progress.connect(self.progress_update)
-        thread.signals.started.connect(self.disable_csv_state)
+        thread.signals.started.connect(lambda: self.modify_csv_ui(running=True))
         self.csvThread = thread
         self.threadPool.start(thread)
 
@@ -182,17 +182,12 @@ class OtherCommands(QDialog):
         if msgBox.exec_() == QMessageBox.Open:
             helpers.open_file_or_folder(savedPath)
 
-    def disable_csv_state(self):
-        self.generateCSVButton.setEnabled(False)
-        self.stopButton.setEnabled(True)
+    def modify_csv_ui(self, running: bool, reset: bool = False):
+        self.generateCSVButton.setEnabled(not running)
+        self.stopButton.setEnabled(running)
 
-    def restore_csv_state(self):
-        """
-        Restores GUI state once CSV generation process is finished.
-        """
-        self.generateCSVButton.setEnabled(True)
-        self.stopButton.setEnabled(False)
-        self.csvThread = None
+        if reset:
+            self.csvThread = None
 
     def stop_csv_generation(self):
         """
@@ -201,13 +196,6 @@ class OtherCommands(QDialog):
         if self.csvThread:
             self.csvGenerationStatus.setText("Canceling download...")
             self.csvThread.stop()
-
-    def handle_csv_generation_error(self, e: str):
-        """
-        In the event that thread fails, it modifies the GUI with the error message passed to function.
-        :param e: Error message.
-        """
-        self.csvGenerationStatus.setText(f"Download failed because of error: {e}")
 
     def end_snoop_generate_volatility_report(self, volatility_dict, output_type):
         self.volatilityStatus.setText("Finished snooping. Generating report...")
