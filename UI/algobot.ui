@@ -69,7 +69,7 @@
            <enum>QTabWidget::West</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>0</number>
           </property>
           <property name="movable">
            <bool>true</bool>
@@ -2274,6 +2274,7 @@ p, li { white-space: pre-wrap; }
     </widget>
     <addaction name="openBacktestResultsFolderAction"/>
     <addaction name="openOptimizerResultsFolderAction"/>
+    <addaction name="openVolatilityResultsFolderAction"/>
     <addaction name="openLogFolderAction"/>
     <addaction name="openCsvFolderAction"/>
     <addaction name="openDatabasesFolderAction"/>
@@ -2415,6 +2416,11 @@ p, li { white-space: pre-wrap; }
   <action name="openOptimizerResultsFolderAction">
    <property name="text">
     <string>Optimizer Results</string>
+   </property>
+  </action>
+  <action name="openVolatilityResultsFolderAction">
+   <property name="text">
+    <string>Volatility Results</string>
    </property>
   </action>
  </widget>
