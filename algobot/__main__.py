@@ -37,7 +37,8 @@ from algobot.news_scraper import scrape_news
 from algobot.option import Option
 from algobot.slots import initiate_slots
 from algobot.telegram_bot import TelegramBot
-from algobot.threads import (backtestThread, botThread, optimizerThread, workerThread)
+from algobot.threads import (backtestThread, botThread, optimizerThread,
+                             workerThread)
 from algobot.traders.backtester import Backtester
 from algobot.traders.realtrader import RealTrader
 from algobot.traders.simulationtrader import SimulationTrader
