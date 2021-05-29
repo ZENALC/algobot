@@ -37,8 +37,7 @@ from algobot.news_scraper import scrape_news
 from algobot.option import Option
 from algobot.slots import initiate_slots
 from algobot.telegram_bot import TelegramBot
-from algobot.threads import (backtestThread, botThread, listThread,
-                             optimizerThread, workerThread)
+from algobot.threads import (backtestThread, botThread, optimizerThread, workerThread)
 from algobot.traders.backtester import Backtester
 from algobot.traders.realtrader import RealTrader
 from algobot.traders.simulationtrader import SimulationTrader
@@ -131,7 +130,7 @@ class Interface(QMainWindow):
         """
         self.newsStatusLabel.setText("Retrieving latest news...")
         self.refreshNewsButton.setEnabled(False)
-        newsThread = listThread.Worker(scrape_news)
+        newsThread = workerThread.Worker(scrape_news)
         newsThread.signals.error.connect(self.news_thread_error)
         newsThread.signals.finished.connect(self.setup_news)
         newsThread.signals.restore.connect(lambda: self.refreshNewsButton.setEnabled(True))
@@ -154,7 +153,7 @@ class Interface(QMainWindow):
         """
         self.configuration.serverResult.setText("Updating tickers...")
         self.configuration.updateTickers.setEnabled(False)
-        tickerThread = listThread.Worker(self.get_tickers)
+        tickerThread = workerThread.Worker(self.get_tickers)
         tickerThread.signals.error.connect(self.tickers_thread_error)
         tickerThread.signals.finished.connect(self.setup_tickers)
         tickerThread.signals.restore.connect(lambda: self.configuration.updateTickers.setEnabled(True))

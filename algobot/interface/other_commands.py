@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QMessageBox
 
 import algobot.helpers as helpers
 from algobot.threads.downloadThread import DownloadThread
-from algobot.threads.listThread import Worker
+from algobot.threads.workerThread import Worker
 from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread
 
 otherCommandsUi = os.path.join(helpers.ROOT_DIR, 'UI', 'otherCommands.ui')
