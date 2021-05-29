@@ -52,8 +52,7 @@ class OtherCommands(QDialog):
         self.csvGenerationTicker.editingFinished.connect(self.start_date_thread)
 
         # Volatility snooper slots.
-        self.volatilityGenerateCSVButton.clicked.connect(lambda: self.volatility_snooper('CSV'))
-        self.volatilityGenerateXLSXButton.clicked.connect(lambda: self.volatility_snooper('XLSX'))
+        self.volatilityGenerateButton.clicked.connect(self.volatility_snooper)
         self.stopVolatilityButton.clicked.connect(lambda: self.stop_volatility_snooper())
 
         # Purge buttons.
@@ -202,16 +201,16 @@ class OtherCommands(QDialog):
 
         df = pd.DataFrame(list(volatility_dict.items()), columns=['Ticker', 'Volatility'])
         if output_type.lower() == 'csv':
-            df.to_csv(file_path)
+            df.to_csv(file_path, index=False)
         elif output_type.lower() == 'xlsx':
             df.to_excel(file_path, index=False)
         else:
             raise ValueError(f"Unknown type of output type: {output_type} provided.")
 
+        self.volatilityStatus.setText(f"Generated report at {file_path}.")
+
         if open_from_msg_box(text='Do you want to open the volatility report?', title='Volatility Report'):
             helpers.open_file_or_folder(file_path)
-
-        self.volatilityStatus.setText(f"Generated report at {file_path}.")
 
     def stop_volatility_snooper(self):
         if self.volatilityThread:
@@ -223,11 +222,10 @@ class OtherCommands(QDialog):
             self.volatilityStatus.setText("No volatility snooper running.")
 
     def modify_snooper_ui(self, running: bool):
-        self.volatilityGenerateCSVButton.setEnabled(not running)
-        self.volatilityGenerateXLSXButton.setEnabled(not running)
+        self.volatilityGenerateButton.setEnabled(not running)
         self.stopVolatilityButton.setEnabled(running)
 
-    def volatility_snooper(self, output_type):
+    def volatility_snooper(self):
         """
         Starts volatility snooper.
         """
@@ -237,6 +235,7 @@ class OtherCommands(QDialog):
         ticker_filter = self.volatilityFilter.text()
         progress_bar = self.volatilityProgressBar
         status = self.volatilityStatus
+        output_type = self.volatilityFileType.currentText()
 
         self.volatilityThread = thread = VolatilitySnooperThread(periods=periods, interval=interval,
                                                                  volatility=volatility, tickers=self.parent.tickers,

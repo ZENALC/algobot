@@ -329,8 +329,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>424</width>
-               <height>158</height>
+               <width>759</width>
+               <height>684</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -439,9 +439,36 @@
            </widget>
           </item>
           <item row="6" column="0">
-           <widget class="QPushButton" name="volatilityGenerateXLSXButton">
+           <widget class="QPushButton" name="volatilityGenerateButton">
             <property name="text">
-             <string>Generate XLSX</string>
+             <string>Generate</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <spacer name="volatilitySpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="volatilityPeriodsLabel">
+            <property name="text">
+             <string>Data Periods</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0" colspan="3">
+           <widget class="QLabel" name="volatilityStatus">
+            <property name="text">
+             <string>Nothing in progress.</string>
             </property>
            </widget>
           </item>
@@ -481,66 +508,6 @@
             </property>
             <property name="text">
              <string>Stop</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="0">
-           <spacer name="volatilitySpacer">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="8" column="0" colspan="3">
-           <widget class="QLabel" name="volatilityStatus">
-            <property name="text">
-             <string>Nothing in progress.</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="volatilityPeriodsLabel">
-            <property name="text">
-             <string>Data Periods</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QSpinBox" name="volatilityPeriodsSpinBox">
-            <property name="minimum">
-             <number>5</number>
-            </property>
-            <property name="maximum">
-             <number>999999999</number>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0" colspan="3">
-           <widget class="QLabel" name="volatilityDescription">
-            <property name="font">
-             <font>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>Tool to find most volatile securities in the data interval and periods defined.</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QPushButton" name="volatilityGenerateCSVButton">
-            <property name="text">
-             <string>Generate CSV</string>
             </property>
            </widget>
           </item>
@@ -622,6 +589,13 @@
             </item>
            </widget>
           </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="volatilityLabel">
+            <property name="text">
+             <string>Volatility</string>
+            </property>
+           </widget>
+          </item>
           <item row="9" column="0" colspan="3">
            <widget class="QProgressBar" name="volatilityProgressBar">
             <property name="value">
@@ -629,10 +603,36 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="volatilityLabel">
+          <item row="0" column="0" colspan="3">
+           <widget class="QLabel" name="volatilityDescription">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
             <property name="text">
-             <string>Volatility</string>
+             <string>Tool to find most volatile securities in the data interval and periods defined.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QSpinBox" name="volatilityPeriodsSpinBox">
+            <property name="minimum">
+             <number>5</number>
+            </property>
+            <property name="maximum">
+             <number>999999999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLineEdit" name="volatilityFilter">
+            <property name="text">
+             <string>USDT</string>
             </property>
            </widget>
           </item>
@@ -643,11 +643,25 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="2">
-           <widget class="QLineEdit" name="volatilityFilter">
+          <item row="5" column="0">
+           <widget class="QLabel" name="volatilityFileTypeLabel">
             <property name="text">
-             <string>USDT</string>
+             <string>File Type</string>
             </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QComboBox" name="volatilityFileType">
+            <item>
+             <property name="text">
+              <string>XLSX</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CSV</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
