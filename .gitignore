@@ -9,6 +9,7 @@ __pycache__/
 # Project
 /Backtest Results/
 /Optimizer Results/
+/Volatility Results/
 /Configuration/
 /Credentials/
 /CSV/

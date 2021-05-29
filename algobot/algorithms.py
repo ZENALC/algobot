@@ -13,7 +13,7 @@ def validate(periods: int, data: List[Dict[str, float]]):
     :param data: Data to check length against.
     """
     if periods > len(data):
-        raise IndexError("Not enough data periods")
+        raise IndexError(f"Not enough data periods. Need {periods}, got {len(data)}.")
 
 
 def get_wma(data: List[Dict[str, float]], prices: int, parameter: str, desc: bool = False) -> float:

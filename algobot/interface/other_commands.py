@@ -3,6 +3,7 @@ import shutil
 from datetime import datetime, timezone
 from typing import List
 
+import pandas as pd
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QMessageBox
@@ -11,6 +12,7 @@ import algobot.helpers as helpers
 from algobot.data import Data
 from algobot.threads.downloadThread import DownloadThread
 from algobot.threads.listThread import Worker
+from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread
 
 otherCommandsUi = os.path.join(helpers.ROOT_DIR, 'UI', 'otherCommands.ui')
 
@@ -26,6 +28,7 @@ class OtherCommands(QDialog):
         self.threadPool = QThreadPool()
         self.load_slots()
         self.csvThread = None
+        self.volatilityThread = None
         self.setDateThread = None
         self.currentDateList = None
 
@@ -42,9 +45,15 @@ class OtherCommands(QDialog):
         """
         Loads all the slots for the GUI.
         """
+        # CSV generation slots.
         self.generateCSVButton.clicked.connect(self.initiate_csv_generation)
         self.stopButton.clicked.connect(self.stop_csv_generation)
         self.csvGenerationTicker.editingFinished.connect(self.start_date_thread)
+
+        # Volatility snooper slots.
+        self.volatilityGenerateCSVButton.clicked.connect(lambda: self.volatility_snooper('CSV'))
+        self.volatilityGenerateXLSXButton.clicked.connect(lambda: self.volatility_snooper('XLSX'))
+        self.stopVolatilityButton.clicked.connect(lambda: self.stop_volatility_snooper())
 
         # Purge buttons.
         self.purgeLogsButton.clicked.connect(lambda: self.purge('Logs'))
@@ -199,3 +208,50 @@ class OtherCommands(QDialog):
         :param e: Error message.
         """
         self.csvGenerationStatus.setText(f"Download failed because of error: {e}")
+
+    def end_snoop_generate_volatility_report(self, volatility_dict, output_type):
+        self.volatilityStatus.setText("Finished snooping. Generating report...")
+        self.volatilityProgressBar.setValue(100)
+        folder_path = helpers.create_folder("Volatility Results")
+        file_name = f'Volatility_Results_{datetime.now().strftime("%m_%d_%Y")}.{output_type.lower()}'
+        file_path = os.path.join(folder_path, file_name)
+
+        df = pd.DataFrame(list(volatility_dict.items()), columns=['Ticker', 'Volatility'])
+        if output_type.lower() == 'csv':
+            df.to_csv(file_path)
+        elif output_type.lower() == 'xlsx':
+            df.to_excel(file_path)
+        else:
+            raise ValueError(f"Unknown type of output type: {output_type} provided.")
+
+        self.volatilityStatus.setText(f"Generated report at {file_path}.")
+
+    def stop_volatility_snooper(self):
+        if self.volatilityThread:
+            self.volatilityStatus.setText("Stopping volatility snooper...")
+            self.volatilityThread.stop()
+            self.volatilityProgressBar.setValue(0)
+            self.volatilityStatus.setText("Stopped volatility snooper.")
+        else:
+            self.volatilityStatus.setText("No volatility snooper running.")
+
+    def volatility_snooper(self, output_type):
+        """
+        Starts volatility snooper.
+        """
+        periods = self.volatilityPeriodsSpinBox.value()
+        interval = self.volatilityDataInterval.currentText()
+        volatility = self.volatilityComboBox.currentText()
+        ticker_filter = self.volatilityFilter.text()
+        progress_bar = self.volatilityProgressBar
+        status = self.volatilityStatus
+
+        self.volatilityThread = thread = VolatilitySnooperThread(periods=periods, interval=interval,
+                                                                 volatility=volatility, tickers=self.parent.tickers,
+                                                                 logger=self.parent.logger, filter_word=ticker_filter)
+        thread.signals.progress.connect(progress_bar.setValue)
+        thread.signals.activity.connect(status.setText)
+        thread.signals.error.connect(lambda x: status.setText(f'Error: {x}'))
+        thread.signals.started.connect(lambda: progress_bar.setValue(0))
+        thread.signals.finished.connect(lambda d: self.end_snoop_generate_volatility_report(d, output_type=output_type))
+        self.threadPool.start(thread)

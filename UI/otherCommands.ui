@@ -426,6 +426,229 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="volatilitySnooper">
+         <attribute name="title">
+          <string>Volatility Snooper</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="2" column="0">
+           <widget class="QLabel" name="volatilityDataIntervalLabel">
+            <property name="text">
+             <string>Data Interval</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QPushButton" name="volatilityGenerateXLSXButton">
+            <property name="text">
+             <string>Generate XLSX</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QComboBox" name="volatilityComboBox">
+            <item>
+             <property name="text">
+              <string>Basic</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Yang Zhang</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Rogers Satchell</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Garman-Klass</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Parkinson</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QPushButton" name="stopVolatilityButton">
+            <property name="text">
+             <string>Stop</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <spacer name="volatilitySpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="8" column="0" colspan="3">
+           <widget class="QLabel" name="volatilityStatus">
+            <property name="text">
+             <string>Nothing in progress.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="volatilityPeriodsLabel">
+            <property name="text">
+             <string>Data Periods</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QSpinBox" name="volatilityPeriodsSpinBox">
+            <property name="minimum">
+             <number>5</number>
+            </property>
+            <property name="maximum">
+             <number>999999999</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="3">
+           <widget class="QLabel" name="volatilityDescription">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Tool to find most volatile securities in the data interval and periods defined.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QPushButton" name="volatilityGenerateCSVButton">
+            <property name="text">
+             <string>Generate CSV</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QComboBox" name="volatilityDataInterval">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>Select data interval to download CSV for.</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>1 Day</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>3 Days</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>1 Hour</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2 Hours</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>4 Hours</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>6 Hours</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>8 Hours</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>12 Hours</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>1 Minute</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>3 Minutes</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>5 Minutes</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>15 Minutes</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>30 Minutes</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="9" column="0" colspan="3">
+           <widget class="QProgressBar" name="volatilityProgressBar">
+            <property name="value">
+             <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="volatilityLabel">
+            <property name="text">
+             <string>Volatility</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="volatilityFilterLabel">
+            <property name="text">
+             <string>Filter</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLineEdit" name="volatilityFilter">
+            <property name="text">
+             <string>USDT</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </item>
      </layout>
