@@ -405,6 +405,12 @@ class Configuration(QDialog):
                 self.chatPass = config['chatPass']
                 self.telegrationConnectionResult.setText(config['telegramResult'])
 
+                # Load saved tickers.
+                self.tickerLineEdit.setText(config['mainTicker'])
+                self.simulationTickerLineEdit.setText(config['simTicker'])
+                self.optimizerTickerLineEdit.setText(config['optimizerTicker'])
+                self.backtestTickerLineEdit.setText(config['backtestTicker'])
+
                 if self.parent:
                     self.parent.add_to_live_activity_monitor('Loaded previous state successfully.')
             except Exception as e:
@@ -435,7 +441,11 @@ class Configuration(QDialog):
             'failureSleep': self.failureSleepSpinBox.value(),
             'chatPass': self.chatPass,
             'tokenPass': self.tokenPass,
-            'telegramResult': self.telegrationConnectionResult.text()
+            'telegramResult': self.telegrationConnectionResult.text(),
+            'mainTicker': self.tickerLineEdit.text(),
+            'simTicker': self.simulationTickerLineEdit.text(),
+            'optimizerTicker': self.optimizerTickerLineEdit.text(),
+            'backtestTicker': self.backtestTickerLineEdit.text()
         }
 
         helpers.write_json_file(self.basicFilePath, **config)
