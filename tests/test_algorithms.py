@@ -19,6 +19,8 @@ from algobot.algorithms import (get_accumulation_distribution_indicator,
                                 get_rs_volatility, get_sma, get_wma,
                                 get_zh_volatility)
 
+DATA_HINT = List[Dict[str, float]]
+
 
 @pytest.fixture(name='dummy_data')
 def get_dummy_data():
@@ -65,7 +67,7 @@ def get_dummy_data():
         (4, 'close', 4.25)
     ]
 )
-def test_sma(dummy_data: List[Dict[str, float]], prices: int, parameter: str, expected: float):
+def test_sma(dummy_data: DATA_HINT, prices: int, parameter: str, expected: float):
     assert get_sma(data=dummy_data, prices=prices, parameter=parameter) == expected
 
 
@@ -76,7 +78,7 @@ def test_sma(dummy_data: List[Dict[str, float]], prices: int, parameter: str, ex
             (4, 'close', False, 4.5)
     )
 )
-def test_wma(dummy_data: List[Dict[str, float]], prices: int, parameter: str, desc: bool, expected: float):
+def test_wma(dummy_data: DATA_HINT, prices: int, parameter: str, desc: bool, expected: float):
     assert get_wma(data=dummy_data, prices=prices, parameter=parameter, desc=desc) == expected
 
 
@@ -87,7 +89,7 @@ def test_wma(dummy_data: List[Dict[str, float]], prices: int, parameter: str, de
         (2, 'close', 1, 5.518518518518518)
     ]
 )
-def test_ema(dummy_data: List[Dict[str, float]], prices: int, parameter: str, sma_prices: int, expected: float):
+def test_ema(dummy_data: DATA_HINT, prices: int, parameter: str, sma_prices: int, expected: float):
     ema, _ = get_ema(data=dummy_data, prices=prices, parameter=parameter, sma_prices=sma_prices, desc=False)
     assert ema == expected
 
@@ -126,7 +128,7 @@ def test_accumulation_distribution_indicator(data: Dict[str, float], expected: f
         ([1, 2], 2, 0.0006)
     ]
 )
-def test_normal_volume_oscillator(dummy_data: List[Dict[str, float]], ad_cache: List[float], periods: int,
+def test_normal_volume_oscillator(dummy_data: DATA_HINT, ad_cache: List[float], periods: int,
                                   expected: float):
     assert get_normal_volume_oscillator(data=dummy_data, ad_cache=ad_cache, periods=periods) == expected
 
@@ -140,7 +142,7 @@ def test_normal_volume_oscillator(dummy_data: List[Dict[str, float]], ad_cache: 
         (3, 1323.5294117647059),
     ]
 )
-def test_intraday_intensity_indicator(dummy_data: List[Dict[str, float]], index: int, expected: float):
+def test_intraday_intensity_indicator(dummy_data: DATA_HINT, index: int, expected: float):
     assert get_intraday_intensity_indicator(dummy_data[index]) == expected
 
 
@@ -151,7 +153,7 @@ def test_intraday_intensity_indicator(dummy_data: List[Dict[str, float]], index:
         (3, [1, 2, 3], 0.0008),
     ]
 )
-def test_normalized_intraday_intensity(dummy_data: List[Dict[str, float]], periods: int, intraday_cache: List[float],
+def test_normalized_intraday_intensity(dummy_data: DATA_HINT, periods: int, intraday_cache: List[float],
                                        expected: float):
     assert get_normalized_intraday_intensity(periods=periods, data=dummy_data,
                                              intraday_intensity_cache=intraday_cache) == expected
@@ -239,7 +241,7 @@ def get_volatility_data():
         (11, 0.00048397375449638004, False, 'population')
     ]
 )
-def test_basic_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float, use_returns: bool,
+def test_basic_volatility(volatility_data: DATA_HINT, periods: int, expected: float, use_returns: bool,
                           stdev_type: str):
     assert get_basic_volatility(periods=periods, data=volatility_data,
                                 use_returns=use_returns, stdev_type=stdev_type) == expected
@@ -252,7 +254,7 @@ def test_basic_volatility(volatility_data: List[Dict[str, float]], periods: int,
         (5, 0.06961744039623198)
     ]
 )
-def test_parkinson_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
+def test_parkinson_volatility(volatility_data: DATA_HINT, periods: int, expected: float):
     assert get_parkinson_volatility(periods=periods, data=volatility_data) == expected
 
 
@@ -263,7 +265,7 @@ def test_parkinson_volatility(volatility_data: List[Dict[str, float]], periods: 
         (7, 0.08525759356946656)
     ]
 )
-def test_gk_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
+def test_gk_volatility(volatility_data: DATA_HINT, periods: int, expected: float):
     assert get_gk_volatility(data=volatility_data, periods=periods) == expected
 
 
@@ -274,7 +276,7 @@ def test_gk_volatility(volatility_data: List[Dict[str, float]], periods: int, ex
         (7, 0.07241871087258109)
     ]
 )
-def test_rs_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
+def test_rs_volatility(volatility_data: DATA_HINT, periods: int, expected: float):
     assert get_rs_volatility(data=volatility_data, periods=periods) == expected
 
 
@@ -287,7 +289,7 @@ def test_rs_volatility(volatility_data: List[Dict[str, float]], periods: int, ex
         (9, 0.08771349273185311, 'sample')
     ]
 )
-def test_zh_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float, stdev_type: str):
+def test_zh_volatility(volatility_data: DATA_HINT, periods: int, expected: float, stdev_type: str):
     assert get_zh_volatility(periods=periods, data=volatility_data, stdev_type=stdev_type) == expected
 
 
@@ -407,7 +409,7 @@ def get_bollinger_fixture():
         (2, 'SMA', 'close', 3, 'basic', 2, (-24.058858093951244, 14.5, 53.058858093951244))
     ]
 )
-def test_bollinger_bands(bollinger_fixture: List[Dict[str, float]], moving_average_n: int, moving_average: str,
+def test_bollinger_bands(bollinger_fixture: DATA_HINT, moving_average_n: int, moving_average: str,
                          moving_average_param: str, volatility_look_back_n: int, volatility: str, bb: float,
                          expected: float):
     bollinger_bands = get_bollinger_bands(
@@ -429,7 +431,7 @@ def test_bollinger_bands(bollinger_fixture: List[Dict[str, float]], moving_avera
         ((5.833333, 7, 8.4), [{'close': 7.2}], 0.5324675931860269)
     ]
 )
-def test_get_percent_b(bollinger_bands: Tuple[float, float, float], data: List[Dict[str, float]], expected: float):
+def test_get_percent_b(bollinger_bands: Tuple[float, float, float], data: DATA_HINT, expected: float):
     assert get_percent_b(bollinger_bands=bollinger_bands, data=data) == expected
 
 
