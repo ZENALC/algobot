@@ -32,6 +32,7 @@ class VolatilitySnooperThread(QRunnable):
         self.short_interval = convert_long_interval(interval)
         self.volatility = volatility
         self.volatility_func = self.get_volatility_func()
+        self.filter_word = filter_word
         self.tickers = self.get_filtered_tickers(tickers=tickers, filter_word=filter_word)
         self.binanceClient = Client()
         self.running = True
@@ -46,10 +47,7 @@ class VolatilitySnooperThread(QRunnable):
         if filter_word is not None:
             tickers = [ticker for ticker in tickers if filter_word.upper() in ticker]
 
-        if len(tickers) < 1:
-            raise RuntimeError(f"No tickers found with the filter: {filter_word}")
-        else:
-            return tickers
+        return tickers
 
     def get_volatility_func(self):
         volatility_map = {
@@ -76,7 +74,12 @@ class VolatilitySnooperThread(QRunnable):
 
         return int(current_timestamp - period_microseconds)
 
+    def validate(self):
+        if len(self.tickers) < 1:
+            raise RuntimeError(f"No tickers found with the filter: {self.filter_word}.")
+
     def snoop(self):
+        self.validate()
         self.signals.activity.emit('Starting the volatility snooper...')
         volatility_dict = {}
         for index, ticker in enumerate(self.tickers):
