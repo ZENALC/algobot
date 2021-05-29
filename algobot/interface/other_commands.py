@@ -204,7 +204,7 @@ class OtherCommands(QDialog):
         if output_type.lower() == 'csv':
             df.to_csv(file_path)
         elif output_type.lower() == 'xlsx':
-            df.to_excel(file_path)
+            df.to_excel(file_path, index=False)
         else:
             raise ValueError(f"Unknown type of output type: {output_type} provided.")
 
