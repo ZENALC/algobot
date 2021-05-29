@@ -230,14 +230,19 @@ def get_volatility_data():
 
 
 @pytest.mark.parametrize(
-    'periods, expected',
+    'periods, expected, use_returns, stdev_type',
     [
-        (10, 0.0593474375889191),
-        (8, 0.04253494804852161)
+        (10, 0.0593474375889191, True, 'sample'),
+        (8, 0.04253494804852161, True, 'sample'),
+        (7, 0.00047902728821763686, False, 'sample'),
+        (9, 0.03751254848636268, True, 'population'),
+        (11, 0.00048397375449638004, False, 'population')
     ]
 )
-def test_basic_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
-    assert get_basic_volatility(periods=periods, data=volatility_data) == expected
+def test_basic_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float, use_returns: bool,
+                          stdev_type: str):
+    assert get_basic_volatility(periods=periods, data=volatility_data,
+                                use_returns=use_returns, stdev_type=stdev_type) == expected
 
 
 @pytest.mark.parametrize(
@@ -274,14 +279,16 @@ def test_rs_volatility(volatility_data: List[Dict[str, float]], periods: int, ex
 
 
 @pytest.mark.parametrize(
-    'periods, expected',
+    'periods, expected, stdev_type',
     [
-        (10, 0.10324062709358658),
-        (7, 0.0818737245934366)
+        (10, 0.10324062709358658, 'sample'),
+        (7, 0.0818737245934366, 'sample'),
+        (8, 0.0803648056187744, 'sample'),
+        (9, 0.08771349273185311, 'sample')
     ]
 )
-def test_zh_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float):
-    assert get_zh_volatility(periods=periods, data=volatility_data) == expected
+def test_zh_volatility(volatility_data: List[Dict[str, float]], periods: int, expected: float, stdev_type: str):
+    assert get_zh_volatility(periods=periods, data=volatility_data, stdev_type=stdev_type) == expected
 
 
 @pytest.fixture(name='money_flow_fixture')

@@ -6,6 +6,15 @@ import numpy as np
 from algobot.helpers import get_data_from_parameter
 
 
+def get_ddof_from_stdev(stdev_type: str) -> int:
+    if stdev_type.lower() == 'population':
+        return 0
+    elif stdev_type.lower() == 'sample':
+        return 1
+    else:
+        raise ValueError("The only valid STDEV types are sample and population.")
+
+
 def validate(periods: int, data: List[Dict[str, float]]):
     """
     Validates periods and data length and raises an error if not logical.
@@ -204,7 +213,7 @@ def get_normalized_intraday_intensity(periods: int, intraday_intensity_cache: Li
 
 
 def get_basic_volatility(periods: int, data: List[Dict[str, float]], use_returns: bool = True,
-                         stdev_type: str = 'sample') -> float:
+                         stdev_type: str = 'population') -> float:
     """
     Retrieves the basic volatility based on periods and data provided.
     :param periods: Amount of periods to traverse behind for basic volatility.
@@ -223,8 +232,7 @@ def get_basic_volatility(periods: int, data: List[Dict[str, float]], use_returns
     else:
         closes = [period['close'] for period in data[-periods:]]
 
-    ddof = 1 if stdev_type.lower() == 'sample' else 0
-
+    ddof = get_ddof_from_stdev(stdev_type)
     return float(np.std(closes, ddof=ddof))
 
 
@@ -279,7 +287,7 @@ def get_rs_volatility(periods: int, data: List[Dict[str, float]]) -> float:
     return math.sqrt(running_sum / periods)
 
 
-def get_zh_volatility(periods: int, data: List[Dict[str, float]], stdev_type: str = 'sample') -> float:
+def get_zh_volatility(periods: int, data: List[Dict[str, float]], stdev_type: str = 'population') -> float:
     """
     Retrieves the Yang Zhang (ZH) volatility based on periods and data provided.
     :param periods: Amount of periods to traverse behind for basic volatility.
@@ -295,7 +303,7 @@ def get_zh_volatility(periods: int, data: List[Dict[str, float]], stdev_type: st
         close_values.append(c)
         open_values.append(o)
 
-    ddof = 1 if stdev_type.lower() == 'sample' else 0
+    ddof = get_ddof_from_stdev(stdev_type)
     open_std = float(np.std(open_values, ddof=ddof))
     close_std = float(np.std(close_values, ddof=ddof))
     k = 0.34 / (1.34 + (periods + 1) / (periods - 1))
