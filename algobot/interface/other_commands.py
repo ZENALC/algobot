@@ -213,7 +213,7 @@ class OtherCommands(QDialog):
         self.volatilityStatus.setText("Finished snooping. Generating report...")
         self.volatilityProgressBar.setValue(100)
         folder_path = helpers.create_folder("Volatility Results")
-        file_name = f'Volatility_Results_{datetime.now().strftime("%m_%d_%Y")}.{output_type.lower()}'
+        file_name = f'Volatility_Results_{datetime.now().strftime("%m_%d_%Y_%H_%M_%S")}.{output_type.lower()}'
         file_path = os.path.join(folder_path, file_name)
 
         df = pd.DataFrame(list(volatility_dict.items()), columns=['Ticker', 'Volatility'])
@@ -235,6 +235,11 @@ class OtherCommands(QDialog):
         else:
             self.volatilityStatus.setText("No volatility snooper running.")
 
+    def modify_snooper_ui(self, running: bool):
+        self.volatilityGenerateCSVButton.setEnabled(not running)
+        self.volatilityGenerateXLSXButton.setEnabled(not running)
+        self.stopVolatilityButton.setEnabled(running)
+
     def volatility_snooper(self, output_type):
         """
         Starts volatility snooper.
@@ -252,6 +257,7 @@ class OtherCommands(QDialog):
         thread.signals.progress.connect(progress_bar.setValue)
         thread.signals.activity.connect(status.setText)
         thread.signals.error.connect(lambda x: status.setText(f'Error: {x}'))
-        thread.signals.started.connect(lambda: progress_bar.setValue(0))
+        thread.signals.started.connect(lambda: self.modify_snooper_ui(running=True))
+        thread.signals.restore.connect(lambda: self.modify_snooper_ui(running=False))
         thread.signals.finished.connect(lambda d: self.end_snoop_generate_volatility_report(d, output_type=output_type))
         self.threadPool.start(thread)
