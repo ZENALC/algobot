@@ -10,6 +10,7 @@ from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QMessageBox
 
 import algobot.helpers as helpers
+from algobot.interface.utils import create_popup, open_from_msg_box
 from algobot.threads.downloadThread import DownloadThread
 from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread
 from algobot.threads.workerThread import Worker
@@ -69,7 +70,7 @@ class OtherCommands(QDialog):
         """
         path = os.path.join(helpers.ROOT_DIR, directory)
         if not os.path.exists(path):
-            QMessageBox.about(self, 'Warning', f"No {directory.lower()} files detected.")
+            create_popup(self, f"No {directory.lower()} files detected.")
             return
 
         message = f'Are you sure you want to delete your {directory.lower()} files? You might not be able to undo ' \
@@ -174,12 +175,7 @@ class OtherCommands(QDialog):
         self.csvGenerationProgressBar.setValue(100)
         self.generateCSVButton.setEnabled(True)
 
-        msgBox = QMessageBox()
-        msgBox.setIcon(QMessageBox.Information)
-        msgBox.setText(f"Successfully saved CSV data to {savedPath}.")
-        msgBox.setWindowTitle("Data saved successfully.")
-        msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
-        if msgBox.exec_() == QMessageBox.Open:
+        if open_from_msg_box(text=f"Successfully saved CSV data to {savedPath}.", title="Data saved successfully."):
             helpers.open_file_or_folder(savedPath)
 
     def modify_csv_ui(self, running: bool, reset: bool = False):
@@ -211,6 +207,9 @@ class OtherCommands(QDialog):
             df.to_excel(file_path)
         else:
             raise ValueError(f"Unknown type of output type: {output_type} provided.")
+
+        if open_from_msg_box(text='Do you want to open the volatility report?', title='Volatility Report'):
+            helpers.open_file_or_folder(file_path)
 
         self.volatilityStatus.setText(f"Generated report at {file_path}.")
 

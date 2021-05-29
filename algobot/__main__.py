@@ -33,7 +33,7 @@ from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
 from algobot.interface.statistics import Statistics
-from algobot.interface.utils import create_popup
+from algobot.interface.utils import create_popup, open_from_msg_box
 from algobot.news_scraper import scrape_news
 from algobot.option import Option
 from algobot.slots import initiate_slots
@@ -363,12 +363,7 @@ class Interface(QMainWindow):
             path = self.backtester.write_results(resultFile=fileName)
             self.add_to_backtest_monitor(f'Ended backtest and saved results to {path}.')
 
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText(f"Backtest results have been saved to {path}.")
-            msgBox.setWindowTitle("Backtest Results")
-            msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
-            if msgBox.exec_() == QMessageBox.Open:
+            if open_from_msg_box(text=f"Backtest results have been saved to {path}.", title="Backtest Results"):
                 open_file_or_folder(path)
 
         self.backtestProgressBar.setValue(100)
