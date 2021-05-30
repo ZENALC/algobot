@@ -68,8 +68,8 @@ class Configuration(QDialog):
         }
 
         self.lossTypes = ("Trailing", "Stop")
-        self.lossOptimizerTypes = ('lossPercentage', 'stopLossCounter')
         self.takeProfitTypes = ('Stop',)
+        self.lossOptimizerTypes = ('lossPercentage', 'stopLossCounter')
         self.takeProfitOptimizerTypes = ('takeProfitPercentage',)
 
         # Telegram
@@ -119,7 +119,7 @@ class Configuration(QDialog):
         """
         graphSpeed = self.graphPlotSpeedSpinBox.value()
         self.parent.graphUpdateSeconds = graphSpeed
-        self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graphSpeed} seconds.")
+        self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graphSpeed} second(s).")
 
     def get_caller_based_on_tab(self, tab: QTabWidget) -> int:
         """
@@ -156,11 +156,16 @@ class Configuration(QDialog):
             raise ValueError("Invalid type of caller provided.")
 
     @staticmethod
-    def helper_get_optimizer(tab, dictionary: dict, key: str, optimizerTypes: tuple, settings: dict):
+    def helper_get_optimizer(optimizer_tab, dictionary: dict, key: str, optimizerTypes: tuple, settings: dict):
         """
-        Helper function to get optimizer settings based on the dictionary provided.
+        Helper function to get optimizer settings and modify the settings dictionary based on the dictionary provided.
+        :param optimizer_tab: Optimizer tab.
+        :param dictionary: Specific dictionary that is either the loss dictionary or the take profit dictionary.
+        :param key: Key to populate in the settings dictionary.
+        :param optimizerTypes: Optimizer types.
+        :param settings: Dictionary to modify.
         """
-        if dictionary[tab, 'groupBox'].isChecked():
+        if dictionary[optimizer_tab, 'groupBox'].isChecked():
             settings[key] = []
             for string, checkBox in dictionary['optimizerTypes']:
                 if checkBox.isChecked():
