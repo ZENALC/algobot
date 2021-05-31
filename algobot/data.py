@@ -346,17 +346,19 @@ class Data:
         if locked:  # If we have a callback for emitting lock signals.
             locked.emit()
 
-        if removeFirst:  # This should be refactored once data is inserted in the reverse order.
+        if removeFirst:
             output_data.pop()
 
         progress_callback.emit(95, "Saving data...", caller)
         self.insert_data(output_data)
         progress_callback.emit(97, "This may take a while. Dumping data to database...", caller)
 
+        start_index_for_dump = -len(output_data)
+
         if removeFirst:  # We don't want current data as it's not the latest data.
-            self.dump_to_table(self.data)
+            self.dump_to_table(self.data[start_index_for_dump:])
         else:  # Strip off last element because it contains current info which we don't want to store.
-            self.dump_to_table(self.data[:-1])
+            self.dump_to_table(self.data[start_index_for_dump:-1])
 
         progress_callback.emit(100, "Downloaded all new data successfully.", caller)
         self.downloadLoop = False
