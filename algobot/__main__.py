@@ -372,13 +372,16 @@ class Interface(QMainWindow):
 
         self.backtestProgressBar.setValue(100)
 
-    def update_backtest_gui(self, updatedDict: dict, add_data: bool = True):
+    def update_backtest_gui(self, updatedDict: dict, add_data: bool = True, update_progress_bar: bool = True):
         """
         Updates activity backtest details to GUI.
+        :param update_progress_bar: Boolean for whether progress bar should be updated based on the dictionary provided.
         :param add_data: Boolean to determine whether to add data to graph or not.
         :param updatedDict: Dictionary containing backtest data.
         """
-        self.backtestProgressBar.setValue(updatedDict['percentage'])
+        if update_progress_bar:
+            self.backtestProgressBar.setValue(updatedDict['percentage'])
+
         net = updatedDict['net']
         utc = updatedDict['utc']
 
@@ -430,7 +433,8 @@ class Interface(QMainWindow):
         if self.backtester is not None:
             if 1 <= position <= len(self.backtester.pastActivity):
                 try:
-                    self.update_backtest_gui(self.backtester.pastActivity[position - 1], add_data=False)
+                    self.update_backtest_gui(self.backtester.pastActivity[position - 1], add_data=False,
+                                             update_progress_bar=False)
                 except IndexError as e:
                     self.logger.exception(str(e))
 
