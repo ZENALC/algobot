@@ -243,15 +243,15 @@ def setup_graphs(gui: QMainWindow):
         graph.addLegend()
 
         if graph == gui.backtestGraph:
-            graph.setTitle("Backtest Price Change")
+            graph.setTitle("Backtest Net")
         elif graph == gui.simulationGraph:
-            graph.setTitle("Simulation Price Change")
+            graph.setTitle("Simulation Net")
         elif graph == gui.liveGraph:
-            graph.setTitle("Live Price Change")
+            graph.setTitle("Live Net")
         elif graph == gui.simulationAvgGraph:
-            graph.setTitle("Simulation Moving Averages")
+            graph.setTitle("Simulation Indicators")
         elif graph == gui.avgGraph:
-            graph.setTitle("Live Moving Averages")
+            graph.setTitle("Live Indicators")
 
 
 def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
