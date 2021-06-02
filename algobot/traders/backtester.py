@@ -68,6 +68,21 @@ class Backtester(Trader):
         self.startDateIndex = self.get_start_index(startDate)
         self.endDateIndex = self.get_end_index(endDate)
 
+    def change_strategy_interval(self, interval: str):
+        """
+        Changes strategy interval to the one provided.
+        :param interval: Interval to update strategy interval with.
+        """
+        if len(interval.split()) == 1:
+            interval = convert_small_interval(interval)
+
+        self.strategyInterval = self.interval if interval is None else interval
+        self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
+        self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
+        self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
+        if self.intervalMinutes > self.strategyIntervalMinutes:
+            raise RuntimeError("Your strategy interval can't be smaller than the data interval.")
+
     def get_gap_data(self, data: DATA_TYPE, check: bool = True) -> DICT_TYPE:
         """
         Returns gap interval data from data list provided.
@@ -76,7 +91,8 @@ class Backtester(Trader):
         :return: Dictionary of interval data of gap minutes.
         """
         if check:
-            expected_length = self.strategyIntervalMinutes / self.intervalMinutes
+            # TODO: Look into this. This is not a valid fix.
+            expected_length = int(self.strategyIntervalMinutes / self.intervalMinutes)
             if expected_length != len(data):
                 raise AssertionError(f"Expected {expected_length} data length. Received {len(data)} data.")
 
@@ -316,7 +332,7 @@ class Backtester(Trader):
     @staticmethod
     def extend_helper(x_tuple: tuple, temp_dict: Dict[str, list], temp_key: str):
         """
-        Helper function for get all permutations function.
+        Helper function to get all permutations.
         :param x_tuple: Tuple containing start, end, and step values i.e -> (5, 15, 1). Kind of like range().
         :param temp_dict: Dictionary to modify.
         :param temp_key: The key to add value to in the dictionary provided.
@@ -470,6 +486,7 @@ class Backtester(Trader):
             if 'stopLossCounter' in settings:
                 self.smartStopLossCounter = settings['stopLossCounter']
 
+        self.change_strategy_interval(settings['strategyIntervals'])
         for strategy_name, strategy_values in settings['strategies'].items():
             pretty_strategy_name = strategy_name
             strategy_name = parse_strategy_name(strategy_name)

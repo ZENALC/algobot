@@ -204,16 +204,17 @@ def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Typ
     return strategiesDict
 
 
-def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_combobox: QComboBox):
+def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_combobox: QComboBox, start_index: int = 0):
     """
     This function will reset the strategy combobox based on what interval is picked in the interval combobox.
     """
-    childText = strategy_combobox.currentText()
-    parentIndex = interval_combobox.currentIndex()
-    intervals = helpers.get_interval_strings(startingIndex=parentIndex)
+    strategyInterval = strategy_combobox.currentText()
+    dataIndex = interval_combobox.currentIndex()
+    intervals = helpers.get_interval_strings(startingIndex=start_index + dataIndex)
+
     strategy_combobox.clear()
     strategy_combobox.addItems(intervals)
 
-    previousChildIndex = strategy_combobox.findText(childText)
-    if previousChildIndex != -1:
-        strategy_combobox.setCurrentIndex(previousChildIndex)
+    previousStrategyIntervalIndex = strategy_combobox.findText(strategyInterval)
+    if previousStrategyIntervalIndex != -1:
+        strategy_combobox.setCurrentIndex(previousStrategyIntervalIndex)

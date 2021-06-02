@@ -179,6 +179,16 @@ class Configuration(QDialog):
             else:
                 del settings[key]
 
+    def get_strategy_intervals_for_optimizer(self, settings: dict):
+        start = self.optimizerStrategyIntervalCombobox.currentText()
+        end = self.optimizerStrategyIntervalEndCombobox.currentText()
+
+        sorted_intervals = helpers.get_interval_strings()
+        start_index = sorted_intervals.index(start)
+        end_index = sorted_intervals.index(end)
+
+        settings['strategyIntervals'] = sorted_intervals[start_index: end_index + 1]
+
     def get_optimizer_settings(self) -> dict:
         """
         Returns optimizer configuration in a dictionary.
@@ -188,6 +198,7 @@ class Configuration(QDialog):
 
         self.helper_get_optimizer(tab, self.lossDict, 'lossType', self.lossOptimizerTypes, settings)
         self.helper_get_optimizer(tab, self.takeProfitDict, 'takeProfitType', self.takeProfitOptimizerTypes, settings)
+        self.get_strategy_intervals_for_optimizer(settings)
 
         settings['strategies'] = {}
         for strategy in self.strategies.values():

@@ -151,9 +151,17 @@ def load_interval_combo_boxes(config_obj):
 
     config_obj.optimizerStrategyIntervalCombobox.addItems(intervals)
     config_obj.optimizerIntervalComboBox.addItems(intervals)
+    config_obj.optimizerStrategyIntervalEndCombobox.addItems(intervals)
+
     config_obj.optimizerIntervalComboBox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(
         strategy_combobox=config_obj.optimizerStrategyIntervalCombobox,
         interval_combobox=config_obj.optimizerIntervalComboBox
+    ))
+
+    config_obj.optimizerStrategyIntervalCombobox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(
+        strategy_combobox=config_obj.optimizerStrategyIntervalEndCombobox,
+        interval_combobox=config_obj.optimizerStrategyIntervalCombobox,
+        start_index=config_obj.optimizerIntervalComboBox.currentIndex()
     ))
 
 
