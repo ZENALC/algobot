@@ -67,12 +67,12 @@ class VolatilitySnooperThread(QRunnable):
 
         return utc_timestamp
 
-    def get_starting_timestamp(self) -> int:
+    def get_starting_timestamp(self, multiplier: int = 1) -> int:
         current_timestamp = self.get_current_timestamp() * 1000
         period_minutes = get_interval_minutes(self.long_interval)
         period_microseconds = period_minutes * 60 * 1000 * (self.periods + 1)  # Using +1 for safety.
 
-        return int(current_timestamp - period_microseconds)
+        return int(current_timestamp - period_microseconds * multiplier)
 
     def validate(self):
         if len(self.tickers) < 1:
@@ -90,12 +90,14 @@ class VolatilitySnooperThread(QRunnable):
             self.signals.progress.emit(int(index / len(self.tickers) * 100))
 
             data = self.binanceClient.get_historical_klines(ticker, self.short_interval, self.get_starting_timestamp())
+            multiplier = 2
+
+            while len(data) < self.periods + 1:
+                starting_timestamp = self.get_starting_timestamp(multiplier=multiplier)
+                data = self.binanceClient.get_historical_klines(ticker, self.short_interval, starting_timestamp)
+                multiplier += 1
+
             data = [get_normalized_data(d) for d in data]
-
-            if len(data) < self.periods + 1:
-                volatility_dict[ticker] = "Not enough data."
-                continue
-
             volatility_dict[ticker] = self.volatility_func(periods=self.periods, data=data)
 
         return volatility_dict
