@@ -90,15 +90,27 @@ class VolatilitySnooperThread(QRunnable):
             self.signals.progress.emit(int(index / len(self.tickers) * 100))
 
             data = self.binanceClient.get_historical_klines(ticker, self.short_interval, self.get_starting_timestamp())
+            data_length = len(data)
+
             multiplier = 2
+            impossible = False
 
             while len(data) < self.periods + 1:
                 starting_timestamp = self.get_starting_timestamp(multiplier=multiplier)
                 data = self.binanceClient.get_historical_klines(ticker, self.short_interval, starting_timestamp)
                 multiplier += 1
 
-            data = [get_normalized_data(d) for d in data]
-            volatility_dict[ticker] = self.volatility_func(periods=self.periods, data=data)
+                if len(data) == data_length:
+                    impossible = True
+                    break
+                else:
+                    data_length = len(data)
+
+            if impossible:
+                volatility_dict[ticker] = "Not enough data. Maybe the ticker is too new."
+            else:
+                data = [get_normalized_data(d) for d in data]
+                volatility_dict[ticker] = self.volatility_func(periods=self.periods, data=data)
 
         return volatility_dict
 
