@@ -264,24 +264,34 @@ class Interface(QMainWindow):
         else:
             create_popup(self, 'No table rows found because optimizer has not been run yet.')
 
+    def validate_optimizer(self, combos: dict):
+        """
+        Validate optimizer to ensure it is correctly setup.
+        :return: False if not validated and true if validated.
+        """
+        if not self.validate_ticker(OPTIMIZER):
+            return False
+
+        if self.configuration.optimizer_backtest_dict[OPTIMIZER]['data'] is None:
+            create_popup(self, "No data setup yet for optimizer. Please configure them in settings first.")
+            return False
+
+        if self.configuration.get_optimizer_settings()['strategies'] == {}:
+            create_popup(self, "No strategies found. Make sure you have some strategies for optimization.")
+            return False
+
+        if not self.check_combos(combos['strategies']):
+            create_popup(self, "Please configure your strategies correctly.")
+            return False
+
+        return True
+
     def initiate_optimizer(self):
         """
         Main function to begin optimization.
         """
-        if not self.validate_ticker(OPTIMIZER):
-            return
-
-        if self.configuration.optimizer_backtest_dict[OPTIMIZER]['data'] is None:
-            create_popup(self, "No data setup yet for optimizer. Please configure them in settings first.")
-            return
-
-        if self.configuration.get_optimizer_settings()['strategies'] == {}:
-            create_popup(self, "No strategies found. Make sure you have some strategies for optimization.")
-            return
-
         combos = self.configuration.get_optimizer_settings()
-        if not self.check_combos(combos['strategies']):
-            create_popup(self, "Please configure your strategies correctly.")
+        if not self.validate_optimizer(combos=combos):
             return
 
         self.threads[OPTIMIZER] = optimizerThread.OptimizerThread(gui=self, logger=self.logger, combos=combos)
