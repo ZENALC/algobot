@@ -91,8 +91,7 @@ class Backtester(Trader):
         :return: Dictionary of interval data of gap minutes.
         """
         if check:
-            # TODO: Look into this. This is not a valid fix.
-            expected_length = int(self.strategyIntervalMinutes / self.intervalMinutes)
+            expected_length = self.strategyIntervalMinutes / self.intervalMinutes
             if expected_length != len(data):
                 raise AssertionError(f"Expected {expected_length} data length. Received {len(data)} data.")
 
