@@ -18,6 +18,7 @@ from algobot.interface.config_utils.strategy_utils import (
 from algobot.interface.configuration_helpers import (
     add_start_end_step_to_layout, get_default_widget, set_value)
 # noinspection PyUnresolvedReferences
+from algobot.interface.utils import get_elements_from_combobox
 from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
 
@@ -184,14 +185,11 @@ class Configuration(QDialog):
                 del settings[key]
 
     def get_strategy_intervals_for_optimizer(self, settings: dict):
-        start = self.optimizerStrategyIntervalCombobox.currentText()
-        end = self.optimizerStrategyIntervalEndCombobox.currentText()
+        combobox = self.optimizerStrategyIntervalEndCombobox
+        intervals = get_elements_from_combobox(combobox)
+        end_index = intervals.index(combobox.currentText())
 
-        sorted_intervals = helpers.get_interval_strings()
-        start_index = sorted_intervals.index(start)
-        end_index = sorted_intervals.index(end)
-
-        settings['strategyIntervals'] = sorted_intervals[start_index: end_index + 1]
+        settings['strategyIntervals'] = intervals[:end_index + 1]
 
     def get_optimizer_settings(self) -> dict:
         """

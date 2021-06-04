@@ -1,4 +1,6 @@
-from PyQt5.QtWidgets import QMessageBox
+from typing import List
+
+from PyQt5.QtWidgets import QComboBox, QMessageBox
 
 
 def create_popup(parent, msg: str, title='Warning'):
@@ -24,3 +26,12 @@ def open_from_msg_box(text: str, title: str):
     msgBox.setWindowTitle(title)
     msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
     return msgBox.exec_() == QMessageBox.Open
+
+
+def get_elements_from_combobox(combobox: QComboBox) -> List[str]:
+    """
+    Returns all elements from combobox provided in a list.
+    :param combobox: Combobox to get list of elements from.
+    :return: List of elements from combobox.
+    """
+    return [combobox.itemText(i) for i in range(combobox.count())]
