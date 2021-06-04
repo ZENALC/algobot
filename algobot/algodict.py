@@ -106,11 +106,13 @@ def get_interface_dictionary(parent, caller: int = None):
                 'mainConfigurationTabWidget': parent.configuration.backtestConfigurationTabWidget,
                 'precision': parent.configuration.backtestPrecisionSpinBox,
                 'ticker': parent.configuration.backtestTickerLineEdit,
+                'interval': parent.configuration.backtestIntervalComboBox,
             },
         },
         OPTIMIZER: {
             'configuration': {
                 'ticker': parent.configuration.optimizerTickerLineEdit,
+                'interval': parent.configuration.optimizerIntervalComboBox,
             },
         }
     }

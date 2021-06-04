@@ -264,25 +264,43 @@ class Interface(QMainWindow):
         else:
             create_popup(self, 'No table rows found because optimizer has not been run yet.')
 
-    def validate_optimizer(self, combos: dict):
+    def validate_optimizer_or_backtest(self, caller):
         """
-        Validate optimizer to ensure it is correctly setup.
+        Validate optimizer/backtester to ensure it is correctly setup.
         :return: False if not validated and true if validated.
         """
-        if not self.validate_ticker(OPTIMIZER):
+        config = self.configuration
+        noun = 'optimizer' if caller == OPTIMIZER else 'backtester'
+
+        if not self.validate_ticker(caller):
             return False
 
-        if self.configuration.optimizer_backtest_dict[OPTIMIZER]['data'] is None:
-            create_popup(self, "No data setup yet for optimizer. Please configure them in settings first.")
+        if config.optimizer_backtest_dict[caller]['data'] is None:
+            create_popup(self, f"No data setup yet for {noun}. Please download or import data in settings first.")
             return False
 
-        if self.configuration.get_optimizer_settings()['strategies'] == {}:
-            create_popup(self, "No strategies found. Make sure you have some strategies for optimization.")
+        selected_symbol = self.interfaceDictionary[caller]['configuration']['ticker'].text()
+        download_symbol = config.optimizer_backtest_dict[caller]['dataType']
+
+        if selected_symbol != download_symbol and download_symbol.lower() != 'imported':
+            create_popup(self, f"{noun.capitalize()} symbol ({selected_symbol}) does not match downloaded symbol "
+                               f"({download_symbol}). Change your ticker to ({download_symbol}) "
+                               f"or download ({selected_symbol}) data to get rid of this error.")
             return False
 
-        if not self.check_combos(combos['strategies']):
-            create_popup(self, "Please configure your strategies correctly.")
+        selected_interval = self.interfaceDictionary[caller]['configuration']['interval'].currentText().lower()
+        download_interval = config.optimizer_backtest_dict[caller]['dataInterval'].lower()
+
+        if selected_interval != download_interval and download_symbol.lower() != 'imported':
+            create_popup(self, f"{noun.capitalize()} interval ({selected_interval}) does not match downloaded interval "
+                               f"({download_interval}). Change your data interval to ({download_interval}) "
+                               f"or download ({selected_interval}) data to get rid of this error.")
             return False
+
+        if download_symbol.lower() == 'imported':
+            # TODO: Add verification for imports.
+            create_popup(self, "You are using imported data. Please ensure they logically work correctly with your "
+                               "inputs. Algobot currently does not support imported data verification.")
 
         return True
 
@@ -290,8 +308,16 @@ class Interface(QMainWindow):
         """
         Main function to begin optimization.
         """
+        if not self.validate_optimizer_or_backtest(caller=OPTIMIZER):
+            return
+
         combos = self.configuration.get_optimizer_settings()
-        if not self.validate_optimizer(combos=combos):
+        if combos['strategies'] == {}:
+            create_popup(self, "No strategies found. Make sure you have some strategies for optimization.")
+            return
+
+        if not self.check_combos(combos['strategies']):
+            create_popup(self, "Please configure your strategies correctly.")
             return
 
         self.threads[OPTIMIZER] = optimizerThread.OptimizerThread(gui=self, logger=self.logger, combos=combos)
@@ -322,11 +348,7 @@ class Interface(QMainWindow):
         """
         Initiates backtest based on settings configured. If there is no data configured, prompts user to configure data.
         """
-        if not self.validate_ticker(BACKTEST):
-            return
-
-        if self.configuration.optimizer_backtest_dict[BACKTEST]['data'] is None:
-            create_popup(self, "No data setup yet for backtesting. Please configure them in settings first.")
+        if not self.validate_optimizer_or_backtest(caller=BACKTEST):
             return
 
         if not self.check_strategies(BACKTEST):
@@ -500,7 +522,8 @@ class Interface(QMainWindow):
             create_popup(self, "Please specify a ticker. No ticker found.")
             return False
         if selected_ticker not in self.tickers:
-            create_popup(self, "Invalid ticker specified. Please check your settings and configure it correctly.")
+            create_popup(self, f'Invalid ticker "{selected_ticker}" provided. If it is valid, '
+                               f'then try updating your tickers in the configuration settings.')
             return False
         return True
 

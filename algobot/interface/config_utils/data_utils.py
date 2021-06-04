@@ -15,15 +15,21 @@ def import_data(config_obj, caller: int = BACKTEST):
     :param config_obj: Configuration QDialog object (from configuration.py)
     :param caller: Caller that'll determine who called this function -> OPTIMIZER or BACKTEST
     """
-    config_obj.optimizer_backtest_dict[caller]['infoLabel'].setText("Importing data...")
+    inner_dict = config_obj.optimizer_backtest_dict[caller]
+    action = 'backtest' if caller == BACKTEST else 'optimization'
+
+    inner_dict['infoLabel'].setText("Importing data...")
     filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Open file', helpers.ROOT_DIR, "CSV (*.csv)")
     if filePath == '':
-        config_obj.optimizer_backtest_dict[caller]['infoLabel'].setText("Data not imported.")
+        inner_dict['infoLabel'].setText("Data not imported.")
+        inner_dict['downloadProgress'].setValue(0)
     else:
-        config_obj.optimizer_backtest_dict[caller]['data'] = helpers.load_from_csv(filePath, descending=False)
-        config_obj.optimizer_backtest_dict[caller]['dataType'] = "Imported"
-        config_obj.optimizer_backtest_dict[caller]['infoLabel'].setText("Imported data successfully.")
-        config_obj.optimizer_backtest_dict[caller]['dataLabel'].setText('Using imported data to conduct backtest.')
+        inner_dict['data'] = helpers.load_from_csv(filePath, descending=False)
+        inner_dict['dataType'] = "Imported"
+        inner_dict['dataInterval'] = inner_dict['dataIntervalComboBox'].currentText()
+        inner_dict['infoLabel'].setText("Imported data successfully.")
+        inner_dict['dataLabel'].setText(f'Using imported data to conduct {action}.')
+        inner_dict['downloadProgress'].setValue(100)
         setup_calendar(config_obj=config_obj, caller=caller)
 
 
@@ -59,13 +65,17 @@ def set_downloaded_data(config_obj, data, caller: int = BACKTEST):
     :param caller: Caller that'll determine which caller was used.
     :param data: Data to be used for backtesting.
     """
-    symbol = config_obj.optimizer_backtest_dict[caller]['tickers'].text()
-    interval = config_obj.optimizer_backtest_dict[caller]['intervals'].currentText().lower()
+    inner_dict = config_obj.optimizer_backtest_dict[caller]
+    action = 'backtest' if caller == BACKTEST else 'optimization'
 
-    config_obj.optimizer_backtest_dict[caller]['data'] = data
-    config_obj.optimizer_backtest_dict[caller]['dataType'] = symbol
-    config_obj.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Downloaded {interval} {symbol} data.")
-    config_obj.optimizer_backtest_dict[caller]['dataLabel'].setText(f'Using {interval} {symbol} data to run backtest.')
+    symbol = inner_dict['tickers'].text()
+    interval = inner_dict['intervals'].currentText().lower()
+
+    inner_dict['dataInterval'] = inner_dict['dataIntervalComboBox'].currentText()
+    inner_dict['data'] = data
+    inner_dict['dataType'] = symbol
+    inner_dict['infoLabel'].setText(f"Downloaded {interval} {symbol} data.")
+    inner_dict['dataLabel'].setText(f'Using {interval} {symbol} data to run {action}.')
     setup_calendar(config_obj=config_obj, caller=caller)
 
 
