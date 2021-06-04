@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Tuple, Type, Union
 from PyQt5.QtWidgets import (QComboBox, QDoubleSpinBox, QLabel, QLayout,
                              QLineEdit, QPushButton, QSpinBox, QTabWidget)
 
-from algobot import helpers
+from algobot.helpers import get_interval_minutes, get_interval_strings
 from algobot.interface.configuration_helpers import (get_h_line,
                                                      get_input_widget_value,
                                                      set_value)
@@ -204,16 +204,29 @@ def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Typ
     return strategiesDict
 
 
-def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_combobox: QComboBox, start_index: int = 0):
+def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_combobox: QComboBox,
+                                     start_index: int = 0, filter_intervals: bool = True, divisor: int = None):
     """
     This function will reset the strategy combobox based on what interval is picked in the interval combobox.
     :param strategy_combobox: Combobox to modify based on the interval combobox.
     :param interval_combobox: Interval combobox that will trigger this function.
     :param start_index: Optional start index to start from when getting interval strings.
+    :param filter_intervals: Boolean on whether to filter tickers or not.
+    :param divisor: Divisor to use for filtering intervals. If none is provided, it will use data interval minutes.
     """
-    strategyInterval = strategy_combobox.currentText()
+    dataInterval = interval_combobox.currentText()
+    if not dataInterval:
+        return  # Means text is empty, so just return.
+
+    dataIntervalMinutes = get_interval_minutes(dataInterval)
     dataIndex = interval_combobox.currentIndex()
-    intervals = helpers.get_interval_strings(startingIndex=start_index + dataIndex)
+
+    strategyInterval = strategy_combobox.currentText()
+    intervals = get_interval_strings(startingIndex=start_index + dataIndex)
+
+    if filter_intervals:
+        divisor = divisor if divisor is not None else dataIntervalMinutes
+        intervals = [interval for interval in intervals if get_interval_minutes(interval) % divisor == 0]
 
     strategy_combobox.clear()
     strategy_combobox.addItems(intervals)

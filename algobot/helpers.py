@@ -137,7 +137,6 @@ def setup_and_return_log_path(fileName: str) -> str:
 
     logFileName = f'{datetime.now().strftime("%H-%M-%S")}-{fileName}.log'
     fullPath = os.path.join(os.getcwd(), logFileName)
-    # print(fullPath)
     os.chdir(previousPath)
     return fullPath
 

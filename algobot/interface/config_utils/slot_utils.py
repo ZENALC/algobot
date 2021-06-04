@@ -161,7 +161,8 @@ def load_interval_combo_boxes(config_obj):
     config_obj.optimizerStrategyIntervalCombobox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(
         strategy_combobox=config_obj.optimizerStrategyIntervalEndCombobox,
         interval_combobox=config_obj.optimizerStrategyIntervalCombobox,
-        start_index=config_obj.optimizerIntervalComboBox.currentIndex()
+        start_index=config_obj.optimizerIntervalComboBox.currentIndex(),
+        divisor=helpers.get_interval_minutes(config_obj.optimizerIntervalComboBox.currentText())
     ))
 
 
