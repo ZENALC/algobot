@@ -460,73 +460,8 @@
                      <string>Select interval to trade in here.</string>
                     </property>
                     <property name="currentText">
-                     <string>1 Hour</string>
+                     <string/>
                     </property>
-                    <item>
-                     <property name="text">
-                      <string>1 Hour</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>2 Hours</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>4 Hours</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>6 Hours</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>8 Hours</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>12 Hours</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>1 Day</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>3 Days</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>1 Minute</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>3 Minutes</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>5 Minutes</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>15 Minutes</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>30 Minutes</string>
-                     </property>
-                    </item>
                    </widget>
                   </item>
                   <item row="0" column="1" colspan="2">
@@ -1478,73 +1413,8 @@
                   <item row="1" column="1" colspan="2">
                    <widget class="QComboBox" name="simulationIntervalComboBox">
                     <property name="currentText">
-                     <string>1 Hour</string>
+                     <string/>
                     </property>
-                    <item>
-                     <property name="text">
-                      <string>1 Hour</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>2 Hours</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>4 Hours</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>6 Hours</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>8 Hours</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>12 Hours</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>1 Day</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>3 Days</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>1 Minute</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>3 Minutes</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>5 Minutes</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>15 Minutes</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>30 Minutes</string>
-                     </property>
-                    </item>
                    </widget>
                   </item>
                   <item row="5" column="0">

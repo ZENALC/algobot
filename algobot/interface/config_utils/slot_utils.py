@@ -142,6 +142,10 @@ def load_interval_combo_boxes(config_obj):
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
     intervals = helpers.get_interval_strings(startingIndex=0)
+
+    config_obj.intervalComboBox.addItems(intervals)
+    config_obj.simulationIntervalComboBox.addItems(intervals)
+
     config_obj.backtestStrategyIntervalCombobox.addItems(intervals)
     config_obj.backtestIntervalComboBox.addItems(intervals)
     config_obj.backtestIntervalComboBox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(

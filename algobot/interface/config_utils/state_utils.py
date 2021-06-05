@@ -38,6 +38,15 @@ def load_state(config_obj):
             config_obj.optimizerTickerLineEdit.setText(config['optimizerTicker'])
             config_obj.backtestTickerLineEdit.setText(config['backtestTicker'])
 
+            # Load intervals.
+            config_obj.intervalComboBox.setCurrentIndex(config['mainInterval'])
+            config_obj.simulationIntervalComboBox.setCurrentIndex(config['simInterval'])
+            config_obj.optimizerIntervalComboBox.setCurrentIndex(config['optimizerInterval'])
+            config_obj.optimizerStrategyIntervalCombobox.setCurrentIndex(config['optimizerStrategyInterval'])
+            config_obj.optimizerStrategyIntervalEndCombobox.setCurrentIndex(config['optimizerStrategyEndInterval'])
+            config_obj.backtestIntervalComboBox.setCurrentIndex(config['backtestInterval'])
+            config_obj.backtestStrategyIntervalCombobox.setCurrentIndex(config['backtestStrategyInterval'])
+
             if config_obj.parent:
                 config_obj.parent.add_to_live_activity_monitor('Loaded previous state successfully.')
         except Exception as e:
@@ -52,6 +61,7 @@ def save_state(config_obj):
     """
     Saves bot configuration to a JSON file for next application run.
     """
+    # TODO: Dynamically populate this over time and get rid of this.
     config = {
         'lightTheme': config_obj.lightModeRadioButton.isChecked(),
         'darkTheme': config_obj.darkModeRadioButton.isChecked(),
@@ -70,10 +80,21 @@ def save_state(config_obj):
         'chatPass': config_obj.chatPass,
         'tokenPass': config_obj.tokenPass,
         'telegramResult': config_obj.telegrationConnectionResult.text(),
+
+        # Tickers
         'mainTicker': config_obj.tickerLineEdit.text(),
         'simTicker': config_obj.simulationTickerLineEdit.text(),
+        'backtestTicker': config_obj.backtestTickerLineEdit.text(),
         'optimizerTicker': config_obj.optimizerTickerLineEdit.text(),
-        'backtestTicker': config_obj.backtestTickerLineEdit.text()
+
+        # Intervals
+        'mainInterval': int(config_obj.intervalComboBox.currentIndex()),
+        'simInterval': int(config_obj.simulationIntervalComboBox.currentIndex()),
+        'optimizerInterval': int(config_obj.optimizerIntervalComboBox.currentIndex()),
+        'optimizerStrategyInterval': int(config_obj.optimizerStrategyIntervalCombobox.currentIndex()),
+        'optimizerStrategyEndInterval': int(config_obj.optimizerStrategyIntervalEndCombobox.currentIndex()),
+        'backtestInterval': int(config_obj.backtestIntervalComboBox.currentIndex()),
+        'backtestStrategyInterval': int(config_obj.backtestStrategyIntervalCombobox.currentIndex())
     }
 
     helpers.write_json_file(config_obj.stateFilePath, **config)
