@@ -60,7 +60,8 @@ class Backtester(Trader):
         self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
         self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
         if self.intervalMinutes > self.strategyIntervalMinutes:
-            raise RuntimeError("Your strategy interval can't be smaller than the data interval.")
+            raise RuntimeError(f"Your strategy interval ({self.strategyIntervalMinutes} minute(s)) can't be smaller "
+                               f"than the data interval ({self.intervalMinutes} minute(s)).")
 
         self.ema_dict = {}
         self.rsi_dictionary = {}
