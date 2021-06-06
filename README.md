@@ -7,7 +7,7 @@ Cryptocurrency trading bot that allows users to create strategies and then backt
 
 # Installation
 
-Please make sure you have an installation of at least Python 3.6 and are in the same directory as Algobot when running the commands below.
+Please make sure you have an installation of at least Python 3.7 and are in the same directory as Algobot when running the commands below.
 
 For Linux/MacOS:
 
@@ -86,4 +86,4 @@ For any feature requests, feel free to add a feature request through Github's Is
 
 # Compatibility
 
-Works fine on Python versions 3.6 and up.
+Works fine on Python versions 3.7 and up.
