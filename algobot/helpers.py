@@ -12,7 +12,7 @@ from dateutil import parser
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QTableWidget, QTableWidgetItem
 
-from algobot.enums import BACKTEST, LIVE, SIMULATION
+from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.typing_hints import DICT_TYPE
 
 BASE_DIR = os.path.dirname(__file__)
@@ -231,6 +231,8 @@ def get_caller_string(caller: int):
         return 'simulation'
     elif caller == BACKTEST:
         return 'backtest'
+    elif caller == OPTIMIZER:
+        return 'optimizer'
     else:
         raise ValueError("Invalid type of caller specified.")
 

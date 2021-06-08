@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QCheckBox, QDoubleSpinBox, QHBoxLayout, QLabel,
                              QScrollArea, QSpinBox, QTabWidget, QVBoxLayout)
 
 from algobot import helpers
-from algobot.enums import BACKTEST, OPTIMIZER
+from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.interface.config_utils.credential_utils import (
     load_credentials, save_credentials, test_binance_credentials)
 from algobot.interface.config_utils.data_utils import (download_data,
@@ -17,10 +17,11 @@ from algobot.interface.config_utils.strategy_utils import (
 from algobot.interface.config_utils.telegram_utils import (
     reset_telegram_state, test_telegram)
 from algobot.interface.config_utils.user_config_utils import (
-    copy_settings_to_backtest, copy_settings_to_simulation,
-    load_backtest_settings, load_live_settings, load_optimizer_settings,
-    load_simulation_settings, save_backtest_settings, save_live_settings,
-    save_optimizer_settings, save_simulation_settings)
+    copy_config_helper, copy_settings_to_backtest, copy_settings_to_simulation,
+    load_backtest_settings, load_config_helper, load_live_settings,
+    load_optimizer_settings, load_simulation_settings, save_backtest_settings,
+    save_config_helper, save_live_settings, save_optimizer_settings,
+    save_simulation_settings)
 from algobot.interface.configuration_helpers import (
     add_start_end_step_to_layout, create_inner_tab, get_default_widget,
     get_regular_groupbox_and_layout)
@@ -177,37 +178,49 @@ def load_slots(config_obj):
     :param config_obj: Configuration QDialog object (from configuration.py)
     :return: None
     """
-    config_obj.simulationCopySettingsButton.clicked.connect(lambda: copy_settings_to_simulation(config_obj))
-    config_obj.simulationSaveConfigurationButton.clicked.connect(lambda: save_simulation_settings(config_obj))
-    config_obj.simulationLoadConfigurationButton.clicked.connect(lambda: load_simulation_settings(config_obj))
+    c = config_obj
 
-    config_obj.backtestCopySettingsButton.clicked.connect(lambda: copy_settings_to_backtest(config_obj))
-    config_obj.backtestSaveConfigurationButton.clicked.connect(lambda: save_backtest_settings(config_obj))
-    config_obj.backtestLoadConfigurationButton.clicked.connect(lambda: load_backtest_settings(config_obj))
-    config_obj.backtestImportDataButton.clicked.connect(lambda: import_data(config_obj, BACKTEST))
-    config_obj.backtestDownloadDataButton.clicked.connect(lambda: download_data(config_obj, BACKTEST))
-    config_obj.backtestStopDownloadButton.clicked.connect(lambda: stop_download(config_obj, BACKTEST))
+    c.saveConfigurationButton.clicked.connect(lambda: save_config_helper(
+        config_obj=c, caller=LIVE, result_label=c.configurationResult, func=save_live_settings))
+    c.loadConfigurationButton.clicked.connect(lambda: load_config_helper(
+        config_obj=c, caller=LIVE, result_label=c.configurationResult, func=load_live_settings))
 
-    config_obj.optimizerSaveConfigurationButton.clicked.connect(lambda: save_optimizer_settings(config_obj))
-    config_obj.optimizerLoadConfigurationButton.clicked.connect(lambda: load_optimizer_settings(config_obj))
-    config_obj.optimizerImportDataButton.clicked.connect(lambda: import_data(config_obj, OPTIMIZER))
-    config_obj.optimizerDownloadDataButton.clicked.connect(lambda: download_data(config_obj, OPTIMIZER))
-    config_obj.optimizerStopDownloadButton.clicked.connect(lambda: stop_download(config_obj, OPTIMIZER))
+    c.simulationCopySettingsButton.clicked.connect(lambda: copy_config_helper(
+        config_obj=c, caller=SIMULATION, result_label=c.simulationCopyLabel, func=copy_settings_to_simulation))
+    c.simulationSaveConfigurationButton.clicked.connect(lambda: save_config_helper(
+        config_obj=c, caller=SIMULATION, result_label=c.simulationConfigurationResult, func=save_simulation_settings))
+    c.simulationLoadConfigurationButton.clicked.connect(lambda: load_config_helper(
+        config_obj=c, caller=SIMULATION, result_label=c.simulationConfigurationResult, func=load_simulation_settings))
 
-    config_obj.testCredentialsButton.clicked.connect(lambda: test_binance_credentials(config_obj))
-    config_obj.saveCredentialsButton.clicked.connect(lambda: save_credentials(config_obj))
-    config_obj.loadCredentialsButton.clicked.connect(lambda: load_credentials(config_obj=config_obj, auto=False))
+    c.backtestImportDataButton.clicked.connect(lambda: import_data(c, BACKTEST))
+    c.backtestDownloadDataButton.clicked.connect(lambda: download_data(c, BACKTEST))
+    c.backtestStopDownloadButton.clicked.connect(lambda: stop_download(c, BACKTEST))
+    c.backtestCopySettingsButton.clicked.connect(lambda: copy_config_helper(
+        config_obj=c, caller=BACKTEST, result_label=c.backtestCopyLabel, func=copy_settings_to_backtest))
+    c.backtestSaveConfigurationButton.clicked.connect(lambda: save_config_helper(
+        config_obj=c, caller=BACKTEST, result_label=c.backtestConfigurationResult, func=save_backtest_settings))
+    c.backtestLoadConfigurationButton.clicked.connect(lambda: load_config_helper(
+        config_obj=c, caller=BACKTEST, result_label=c.backtestConfigurationResult, func=load_backtest_settings))
 
-    config_obj.testTelegramButton.clicked.connect(lambda: test_telegram(config_obj))
-    config_obj.telegramApiKey.textChanged.connect(lambda: reset_telegram_state(config_obj))
-    config_obj.telegramChatID.textChanged.connect(lambda: reset_telegram_state(config_obj))
+    c.optimizerImportDataButton.clicked.connect(lambda: import_data(c, OPTIMIZER))
+    c.optimizerDownloadDataButton.clicked.connect(lambda: download_data(c, OPTIMIZER))
+    c.optimizerStopDownloadButton.clicked.connect(lambda: stop_download(c, OPTIMIZER))
+    c.optimizerSaveConfigurationButton.clicked.connect(lambda: save_config_helper(
+        config_obj=c, caller=OPTIMIZER, result_label=c.optimizerConfigurationResult, func=save_optimizer_settings))
+    c.optimizerLoadConfigurationButton.clicked.connect(lambda: load_config_helper(
+        config_obj=c, caller=OPTIMIZER, result_label=c.optimizerConfigurationResult, func=load_optimizer_settings))
 
-    config_obj.saveConfigurationButton.clicked.connect(lambda: save_live_settings(config_obj))
-    config_obj.loadConfigurationButton.clicked.connect(lambda: load_live_settings(config_obj))
-    config_obj.graphPlotSpeedSpinBox.valueChanged.connect(config_obj.update_graph_speed)
-    config_obj.enableHoverLine.stateChanged.connect(config_obj.enable_disable_hover_line)
+    c.testCredentialsButton.clicked.connect(lambda: test_binance_credentials(c))
+    c.saveCredentialsButton.clicked.connect(lambda: save_credentials(c))
+    c.loadCredentialsButton.clicked.connect(lambda: load_credentials(config_obj=c, auto=False))
 
-    load_interval_combo_boxes(config_obj)  # Primarily used for backtester/optimizer interval changer logic.
-    load_loss_slots(config_obj)  # These slots are based on the ordering.
-    load_take_profit_slots(config_obj)
-    load_strategy_slots(config_obj)
+    c.testTelegramButton.clicked.connect(lambda: test_telegram(c))
+    c.telegramApiKey.textChanged.connect(lambda: reset_telegram_state(c))
+    c.telegramChatID.textChanged.connect(lambda: reset_telegram_state(c))
+    c.graphPlotSpeedSpinBox.valueChanged.connect(c.update_graph_speed)
+    c.enableHoverLine.stateChanged.connect(c.enable_disable_hover_line)
+
+    load_interval_combo_boxes(c)  # Primarily used for backtester/optimizer interval changer logic.
+    load_loss_slots(c)  # These slots are based on the ordering.
+    load_take_profit_slots(c)
+    load_strategy_slots(c)
