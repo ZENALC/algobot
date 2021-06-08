@@ -40,7 +40,6 @@ class OptimizerThread(QRunnable):
             'endDate': endDate,
             'symbol': config.optimizer_backtest_dict[OPTIMIZER]['dataType'],
             'precision': config.optimizerPrecisionSpinBox.value(),
-            'outputTrades': config.optimizerOutputTradesCheckBox.isChecked(),
             'marginEnabled': config.optimizerMarginTradingCheckBox.isChecked(),
             'strategies': [],
             'strategyInterval': config.optimizerStrategyIntervalCombobox.currentText(),
