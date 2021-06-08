@@ -8,7 +8,7 @@ from typing import Union
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from algobot import helpers
-from algobot.enums import BACKTEST, LIVE, SIMULATION
+from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.interface.config_utils.strategy_utils import (get_strategy_values,
                                                            set_strategy_values)
 
@@ -98,6 +98,35 @@ def save_backtest_settings(config_obj):
         config_obj.backtestConfigurationResult.setText("Could not save backtest configuration.")
 
 
+def save_optimizer_settings(config_obj):
+    """
+    Saves optimizer settings to JSON file.
+    :param config_obj: Configuration QDialog object (from configuration.py)
+    """
+    config = {
+        'type': OPTIMIZER,
+        'ticker': config_obj.optimizerTickerLineEdit.text(),
+        'interval': config_obj.optimizerIntervalComboBox.currentIndex(),
+        'strategyIntervalStart': config_obj.optimizerStrategyIntervalCombobox.currentIndex(),
+        'strategyIntervalEnd': config_obj.optimizerStrategyIntervalEndCombobox.currentIndex(),
+        'startingBalance': config_obj.optimizerStartingBalanceSpinBox.value(),
+        'precision': config_obj.optimizerPrecisionSpinBox.value(),
+        'drawdownPercentage': config_obj.drawdownPercentageSpinBox.value(),
+        'marginTrading': config_obj.optimizerMarginTradingCheckBox.isChecked()
+    }
+
+    # TODO High priority: Save the optimizer settings. The function below is broken for optimizers.
+    # config.update(config_obj.get_optimizer_settings(save=True))
+    filePath = helper_get_save_file_path(config_obj, "Optimizer")
+
+    if filePath:
+        helpers.write_json_file(filePath, **config)
+        file = os.path.basename(filePath)
+        config_obj.optimizerConfigurationResult.setText(f"Saved optimizer configuration successfully to {file}.")
+    else:
+        config_obj.optimizerConfigurationResult.setText("Could not save optimizer configuration.")
+
+
 def save_live_settings(config_obj):
     """
     Saves live settings to JSON file.
@@ -157,7 +186,7 @@ def load_live_settings(config_obj):
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
     targetPath = create_appropriate_config_folders(config_obj, 'Live')
-    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', targetPath, "JSON (*.json)")
+    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load configuration', targetPath, "JSON (*.json)")
     try:
         config = helpers.load_json_file(filePath)
         file = os.path.basename(filePath)
@@ -185,7 +214,7 @@ def load_simulation_settings(config_obj):
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
     targetPath = create_appropriate_config_folders(config_obj, 'Simulation')
-    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', targetPath, "JSON (*.json)")
+    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load configuration', targetPath, "JSON (*.json)")
     try:
         config = helpers.load_json_file(filePath)
         file = os.path.basename(filePath)
@@ -210,7 +239,7 @@ def load_backtest_settings(config_obj):
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
     targetPath = create_appropriate_config_folders(config_obj, 'Backtest')
-    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', targetPath, "JSON (*.json)")
+    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load configuration', targetPath, "JSON (*.json)")
     try:
         config = helpers.load_json_file(filePath)
         file = os.path.basename(filePath)
@@ -227,6 +256,33 @@ def load_backtest_settings(config_obj):
     except Exception as e:
         config_obj.logger.exception(str(e))
         config_obj.backtestConfigurationResult.setText("Could not load backtest configuration.")
+
+
+def load_optimizer_settings(config_obj):
+    """
+    Loads optimizer settings from JSON file and sets them to optimizer settings.
+    :param config_obj: Configuration QDialog object (from configuration.py)
+    """
+    targetPath = create_appropriate_config_folders(config_obj, 'Optimizer')
+    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load configuration', targetPath, "JSON (*.json)")
+    try:
+        config = helpers.load_json_file(filePath)
+        file = os.path.basename(filePath)
+        if config['type'] != OPTIMIZER:
+            QMessageBox.about(config_obj, 'Warning', 'Incorrect type of non-optimizer configuration provided.')
+        else:
+            config_obj.optimizerTickerLineEdit.setText(str(config['ticker']))
+            config_obj.optimizerIntervalComboBox.setCurrentIndex(config['interval'])
+            config_obj.optimizerStrategyIntervalCombobox.setCurrentIndex(config['strategyIntervalStart'])
+            config_obj.optimizerStrategyIntervalEndCombobox.setCurrentIndex(config['strategyIntervalEnd'])
+            config_obj.optimizerStartingBalanceSpinBox.setValue(config['startingBalance'])
+            config_obj.optimizerPrecisionSpinBox.setValue(config['precision'])
+            config_obj.drawdownPercentageSpinBox.setValue(config['drawdownPercentage'])
+            # helper_load(config_obj, OPTIMIZER, config)
+            config_obj.optimizerConfigurationResult.setText(f"Loaded optimizer configuration successfully from {file}.")
+    except Exception as e:
+        config_obj.logger.exception(str(e))
+        config_obj.backtestConfigurationResult.setText("Could not load optimizer configuration.")
 
 
 def copy_settings_to_simulation(config_obj):

@@ -18,8 +18,9 @@ from algobot.interface.config_utils.telegram_utils import (
     reset_telegram_state, test_telegram)
 from algobot.interface.config_utils.user_config_utils import (
     copy_settings_to_backtest, copy_settings_to_simulation,
-    load_backtest_settings, load_live_settings, load_simulation_settings,
-    save_backtest_settings, save_live_settings, save_simulation_settings)
+    load_backtest_settings, load_live_settings, load_optimizer_settings,
+    load_simulation_settings, save_backtest_settings, save_live_settings,
+    save_optimizer_settings, save_simulation_settings)
 from algobot.interface.configuration_helpers import (
     add_start_end_step_to_layout, create_inner_tab, get_default_widget,
     get_regular_groupbox_and_layout)
@@ -187,6 +188,8 @@ def load_slots(config_obj):
     config_obj.backtestDownloadDataButton.clicked.connect(lambda: download_data(config_obj, BACKTEST))
     config_obj.backtestStopDownloadButton.clicked.connect(lambda: stop_download(config_obj, BACKTEST))
 
+    config_obj.optimizerSaveConfigurationButton.clicked.connect(lambda: save_optimizer_settings(config_obj))
+    config_obj.optimizerLoadConfigurationButton.clicked.connect(lambda: load_optimizer_settings(config_obj))
     config_obj.optimizerImportDataButton.clicked.connect(lambda: import_data(config_obj, OPTIMIZER))
     config_obj.optimizerDownloadDataButton.clicked.connect(lambda: download_data(config_obj, OPTIMIZER))
     config_obj.optimizerStopDownloadButton.clicked.connect(lambda: stop_download(config_obj, OPTIMIZER))
