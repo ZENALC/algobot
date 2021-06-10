@@ -83,23 +83,16 @@ def create_folder(folder: str):
     return targetPath
 
 
-def create_folder_if_needed(targetPath: str, basePath: str = None) -> bool:
+def create_folder_if_needed(targetPath: str, basePath: str = ROOT_DIR) -> bool:
     """
     This function will create the appropriate folders in the root folder if needed.
     :param targetPath: Target path to have exist.
-    :param basePath: Base path to start from. If none, it'll be the root directory.
+    :param basePath: Base path to start from. By default, it'll be the root directory.
     :return: Boolean whether folder was created or not.
     """
-    if not basePath:
-        basePath = ROOT_DIR
-
     if not os.path.exists(targetPath):
-        # TODO: Why not os.mkdir(os.path.join(basePath, folder)) directly?
         folder = os.path.basename(targetPath)
-        cur_path = os.getcwd()
-        os.chdir(basePath)
-        os.mkdir(folder)
-        os.chdir(cur_path)
+        os.mkdir(os.path.join(basePath, folder))
         return True
     return False
 
