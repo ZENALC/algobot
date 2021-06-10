@@ -1,9 +1,13 @@
+import time
+
 import pytest
 
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.helpers import (convert_long_interval, convert_small_interval,
                              get_caller_string, get_data_from_parameter,
-                             get_label_string, get_normalized_data)
+                             get_elapsed_time, get_label_string,
+                             get_normalized_data, get_ups_and_downs,
+                             parse_strategy_name)
 
 
 @pytest.mark.parametrize(
@@ -98,3 +102,41 @@ def test_get_data_from_parameter(data, parameter, expected):
 )
 def test_get_normalized_data(data, date_in_utc, expected):
     assert get_normalized_data(data, date_in_utc) == expected
+
+
+@pytest.mark.parametrize(
+    'data, parameter, expected',
+    [
+        (
+            [{'high': 5}, {'high': 4}, {'high': 8}, {'high': 6}, {'high': 9}, {'high': 10}], 'high',
+            ([0, 0, 4, 0, 3, 1], [0, 1, 0, 2, 0, 0])
+        )
+    ]
+)
+def test_get_ups_and_downs(data, parameter, expected):
+    assert get_ups_and_downs(data, parameter) == expected
+
+
+@pytest.mark.parametrize(
+    'elapsed, expected',
+    [
+        (time.time() - 30, "30 seconds"),
+        (time.time() - 60, "60 seconds"),
+        (time.time() - 3600, "60m 0s"),
+        (time.time() - 3601, "1h 0m 1s")
+    ]
+)
+def test_get_elapsed_time(elapsed, expected):
+    assert get_elapsed_time(elapsed) == expected
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("Camel Case Strategy", "camelCaseStrategy"),
+        ("strategy", "strategy"),
+        ("Moving Average Strategy", "movingAverageStrategy")
+    ]
+)
+def test_parse_strategy_name(name, expected):
+    assert parse_strategy_name(name) == expected

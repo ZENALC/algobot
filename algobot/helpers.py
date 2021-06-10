@@ -308,18 +308,16 @@ def get_interval_strings(startingIndex: int = 0) -> List[str]:
 
 def parse_strategy_name(name: str) -> str:
     """
-    Parses strategy name for use with strategies.
+    Parses strategy name to camelCase for use with strategies.
     :param name: Name of strategy to be parsed.
     :return: Parsed strategy name.
     """
-    nameList = name.split()
-    remainingList = nameList[1:]
+    parsed_name, *remaining = name.split()
+    parsed_name = parsed_name.lower()
+    for name in remaining:
+        parsed_name += name.capitalize()
 
-    nameList = [nameList[0].lower()]
-    for name in remainingList:
-        nameList.append(name.capitalize())
-
-    return ''.join(nameList)
+    return parsed_name
 
 
 def get_normalized_data(data: List[str], date_in_utc: Union[str, datetime] = None) -> Dict[str, Union[str, float]]:
