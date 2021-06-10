@@ -322,7 +322,8 @@ class Interface(QMainWindow):
 
         self.threads[OPTIMIZER] = optimizerThread.OptimizerThread(gui=self, logger=self.logger, combos=combos)
         worker = self.threads[OPTIMIZER]
-        worker.signals.started.connect(lambda: clear_table(self.optimizerTableWidget))
+        worker.signals.started.connect(lambda: self.set_optimizer_buttons(running=True, clear=True))
+        worker.signals.restore.connect(lambda: self.set_optimizer_buttons(running=False, clear=False))
         worker.signals.error.connect(lambda x: create_popup(self, x))
         if self.configuration.enabledOptimizerNotification.isChecked():
             worker.signals.finished.connect(lambda: self.inform_telegram('Optimizer has finished running.',
@@ -330,6 +331,18 @@ class Interface(QMainWindow):
         worker.signals.activity.connect(lambda data: add_to_table(self.optimizerTableWidget, data=data,
                                                                   insertDate=False))
         self.threadPool.start(worker)
+
+    def set_optimizer_buttons(self, running: bool, clear: bool):
+        """
+        Will modify optimizer buttons based on running status and clear the table based on the clear status.
+        :param running: Optimizer running or not.
+        :param clear: Clear table or not.
+        """
+        self.runOptimizerButton.setEnabled(not running)
+        self.stopOptimizerButton.setEnabled(running)
+
+        if clear:
+            clear_table(self.optimizerTableWidget)
 
     def end_optimizer(self):
         """
