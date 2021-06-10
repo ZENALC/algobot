@@ -19,6 +19,24 @@ BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
 LOG_FOLDER = 'Logs'
 
+SHORT_INTERVAL_MAP = {
+    '1m': '1 Minute',
+    '3m': '3 Minutes',
+    '5m': '5 Minutes',
+    '15m': '15 Minutes',
+    '30m': '30 Minutes',
+    '1h': '1 Hour',
+    '2h': '2 Hours',
+    '4h': '4 Hours',
+    '6h': '6 Hours',
+    '8h': '8 Hours',
+    '12h': '12 Hours',
+    '1d': '1 Day',
+    '3d': '3 Days'
+}
+
+LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
+
 
 def is_debug() -> bool:
     return os.getenv('DEBUG') is not None
@@ -330,23 +348,7 @@ def convert_small_interval(interval: str) -> str:
     :param interval: Small interval string.
     :return: Longer interval string.
     """
-    # TODO: Why have both this and the one below? Refactor to support inverses.
-    intervals = {
-        '1m': '1 Minute',
-        '3m': '3 Minutes',
-        '5m': '5 Minutes',
-        '15m': '15 Minutes',
-        '30m': '30 Minutes',
-        '1h': '1 Hour',
-        '2h': '2 Hours',
-        '4h': '4 Hours',
-        '6h': '6 Hours',
-        '8h': '8 Hours',
-        '12h': '12 Hours',
-        '1d': '1 Day',
-        '3d': '3 Days',
-    }
-    return intervals[interval]
+    return SHORT_INTERVAL_MAP[interval]
 
 
 def convert_long_interval(interval: str) -> str:
@@ -355,22 +357,7 @@ def convert_long_interval(interval: str) -> str:
     :param interval: Long interval string.
     :return: Smaller interval string.
     """
-    intervals = {
-        '1 Minute': '1m',
-        '3 Minutes': '3m',
-        '5 Minutes': '5m',
-        '15 Minutes': '15m',
-        '30 Minutes': '30m',
-        '1 Hour': '1h',
-        '2 Hours': '2h',
-        '4 Hours': '4h',
-        '6 Hours': '6h',
-        '8 Hours': '8h',
-        '12 Hours': '12h',
-        '1 Day': '1d',
-        '3 Days': '3d',
-    }
-    return intervals[interval]
+    return LONG_INTERVAL_MAP[interval]
 
 
 def convert_all_dates_to_datetime(data: List[Dict[str, Union[float, str, datetime]]]):
