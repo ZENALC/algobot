@@ -1,9 +1,11 @@
 from typing import Tuple
 
+# TODO: Get rid of this class.
+
 
 class Option:
     """
-    Helper class object for trading options.
+    Helper class object for trading moving average options.
     """
     def __init__(self, movingAverage: str, parameter: str, initialBound: int, finalBound: int):
         self.movingAverage = movingAverage.upper()
