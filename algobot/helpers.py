@@ -116,21 +116,17 @@ def setup_and_return_log_path(fileName: str) -> str:
     :param fileName: Log filename to be created.
     :return: Absolute path to log file.
     """
-    previousPath = os.getcwd()
-    os.chdir(ROOT_DIR)
-
-    if not os.path.exists(LOG_FOLDER):
-        os.mkdir(LOG_FOLDER)
-    os.chdir(LOG_FOLDER)
+    LOG_DIR = os.path.join(ROOT_DIR, LOG_FOLDER)
+    if not os.path.exists(LOG_DIR):
+        os.mkdir(LOG_DIR)
 
     todayDate = datetime.today().strftime('%Y-%m-%d')
-    if not os.path.exists(todayDate):
-        os.mkdir(todayDate)
-    os.chdir(todayDate)
+    LOG_DATE_FOLDER = os.path.join(LOG_DIR, todayDate)
+    if not os.path.exists(LOG_DATE_FOLDER):
+        os.mkdir(LOG_DATE_FOLDER)
 
     logFileName = f'{datetime.now().strftime("%H-%M-%S")}-{fileName}.log'
-    fullPath = os.path.join(os.getcwd(), logFileName)
-    os.chdir(previousPath)
+    fullPath = os.path.join(LOG_DATE_FOLDER, logFileName)
     return fullPath
 
 
