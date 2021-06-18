@@ -109,6 +109,7 @@ class MovingAverageStrategy(Strategy):
                     parent.lowerOptionDetails.append((avg1, avg2, initialName, finalName))
 
                 if log_data:
+                    parent.output_message(f'Parameter: {option.parameter}')
                     parent.output_message(f'{option.movingAverage}({option.initialBound}) = {avg1}')
                     parent.output_message(f'{option.movingAverage}({option.finalBound}) = {avg2}')
 

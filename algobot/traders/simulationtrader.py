@@ -532,19 +532,6 @@ class SimulationTrader(Trader):
         else:
             raise ValueError(f'Unknown moving average {movingAverage}.')
 
-    def output_trade_options(self):
-        """
-        Outputs general information about current trade options.
-        """
-        if 'movingAverage' in self.strategies:
-            for option in self.strategies['movingAverage'].get_params():
-                initialAverage = self.get_average(option.movingAverage, option.parameter, option.initialBound)
-                finalAverage = self.get_average(option.movingAverage, option.parameter, option.finalBound)
-
-                self.output_message(f'Parameter: {option.parameter}')
-                self.output_message(f'{option.movingAverage}({option.initialBound}) = {initialAverage}')
-                self.output_message(f'{option.movingAverage}({option.finalBound}) = {finalAverage}')
-
     def output_no_position_information(self):
         """
         Outputs general information about status of bot when not in a position.
