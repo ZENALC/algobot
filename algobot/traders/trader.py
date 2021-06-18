@@ -7,7 +7,6 @@ from typing import Dict, List, Union
 from algobot.enums import (BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
                            EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING)
 from algobot.helpers import get_label_string, parse_strategy_name
-from algobot.option import Option
 from algobot.strategies.strategy import Strategy
 
 
@@ -201,13 +200,7 @@ class Trader:
             name = parse_strategy_name(strategyTuple[2])
 
             # TODO: Leverage kwargs to initialize strategies.
-
-            if name == 'movingAverage':
-                values = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
-                self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
-            else:
-                self.strategies[name] = strategyClass(parent=self, inputs=values, precision=self.precision)
-
+            self.strategies[name] = strategyClass(parent=self, inputs=values, precision=self.precision)
             self.minPeriod = max(self.strategies[name].get_min_option_period(), self.minPeriod)
 
     def handle_trailing_prices(self):

@@ -7,12 +7,12 @@ from algobot.strategies.strategy import Strategy
 
 
 class MovingAverageStrategy(Strategy):
-    def __init__(self, parent=None, inputs: List[Option] = None, precision: int = 2):
+    def __init__(self, parent=None, inputs: list = ("", "", "", ""), precision: int = 2):
         """
         Basic Moving Average strategy.
         """
         super().__init__(name='Moving Average', parent=parent, precision=precision)
-        self.tradingOptions: List[Option] = inputs
+        self.tradingOptions: List[Option] = self.parse_inputs(inputs)
         self.dynamic = True
         self.description = "Basic trading strategy using moving averages. If the moving average of initial is greater" \
                            " than final, a bullish trend is determined. If the moving average of final is greater, a " \
@@ -22,11 +22,15 @@ class MovingAverageStrategy(Strategy):
         if parent:  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
             self.validate_options()
 
-    def set_inputs(self, inputs: List[Option]):
+    @staticmethod
+    def parse_inputs(inputs):
+        return [Option(*inputs[x:x + 4]) for x in range(0, len(inputs), 4)]
+
+    def set_inputs(self, inputs: list):
         """
         Sets trading options provided.
         """
-        self.tradingOptions = inputs
+        self.tradingOptions = self.parse_inputs(inputs)
 
     def get_min_option_period(self) -> int:
         """

@@ -18,7 +18,6 @@ from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
                              get_ups_and_downs, parse_strategy_name)
 from algobot.interface.config_utils.strategy_utils import \
     get_strategies_dictionary
-from algobot.option import Option
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 from algobot.typing_hints import DATA_TYPE, DICT_TYPE
@@ -503,16 +502,12 @@ class Backtester(Trader):
                 self.setup_strategies([temp_strategy_tuple])
                 continue
 
+            # TODO: Leverage kwargs instead of using indexed lists.
+
             loop_strategy = self.strategies[strategy_name]
             loop_strategy.reset_strategy_dictionary()  # Mandatory for bugs in optimizer.
             loop_strategy.trend = None  # Annoying bug fix for optimizer.
-            if strategy_name != 'movingAverage':  # TODO: Leverage kwargs instead of using indexed lists.
-                loop_strategy.set_inputs(list(strategy_values.values()))
-            else:
-                loop_strategy.set_inputs([Option(movingAverage=strategy_values['Moving Average'],
-                                                 parameter=strategy_values['Parameter'],
-                                                 initialBound=strategy_values['Initial'],
-                                                 finalBound=strategy_values['Final'])])
+            loop_strategy.set_inputs(list(strategy_values.values()))
             self.minPeriod = max(loop_strategy.get_min_option_period(), self.minPeriod)
 
     def restore(self):
