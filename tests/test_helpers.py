@@ -18,7 +18,7 @@ from algobot.helpers import (convert_long_interval, convert_small_interval,
     ]
 )
 def test_convert_small_interval(interval: str, expected: str):
-    assert convert_small_interval(interval) == expected
+    assert convert_small_interval(interval) == expected, f"Expected converted interval to be: {expected}."
 
 
 @pytest.mark.parametrize(
@@ -29,7 +29,7 @@ def test_convert_small_interval(interval: str, expected: str):
     ]
 )
 def test_convert_long_interval(interval: str, expected: str):
-    assert convert_long_interval(interval) == expected
+    assert convert_long_interval(interval) == expected, f"Expected converted interval to be: {expected}."
 
 
 @pytest.mark.parametrize(
@@ -43,7 +43,7 @@ def test_convert_long_interval(interval: str, expected: str):
     ]
 )
 def test_get_label_string(label: str, expected: str):
-    assert get_label_string(label) == expected
+    assert get_label_string(label) == expected, f"Expected label string to be: {expected}."
 
 
 @pytest.mark.parametrize(
@@ -56,7 +56,7 @@ def test_get_label_string(label: str, expected: str):
     ]
 )
 def test_get_caller_string(caller: int, expected: str):
-    assert get_caller_string(caller) == expected
+    assert get_caller_string(caller) == expected, f"Expected caller string to be: {expected}."
 
 
 @pytest.mark.parametrize(
@@ -68,7 +68,7 @@ def test_get_caller_string(caller: int, expected: str):
     ]
 )
 def test_get_data_from_parameter(data, parameter, expected):
-    assert get_data_from_parameter(data, parameter) == expected
+    assert get_data_from_parameter(data, parameter) == expected, f"Expected data to be: {expected}."
 
 
 @pytest.mark.parametrize(
@@ -101,7 +101,7 @@ def test_get_data_from_parameter(data, parameter, expected):
     ]
 )
 def test_get_normalized_data(data, date_in_utc, expected):
-    assert get_normalized_data(data, date_in_utc) == expected
+    assert get_normalized_data(data, date_in_utc) == expected, f"Expected normalized data to be: {expected}."
 
 
 @pytest.mark.parametrize(
@@ -114,20 +114,20 @@ def test_get_normalized_data(data, date_in_utc, expected):
     ]
 )
 def test_get_ups_and_downs(data, parameter, expected):
-    assert get_ups_and_downs(data, parameter) == expected
+    assert get_ups_and_downs(data, parameter) == expected, f"Expected ups and downs to be: {expected}."
 
 
 @pytest.mark.parametrize(
     'elapsed, expected',
     [
-        (time.time() - 30, "30 seconds"),
-        (time.time() - 60, "60 seconds"),
-        (time.time() - 3600, "60m 0s"),
-        (time.time() - 3601, "1h 0m 1s")
+        (time.time() - 30, ("30 seconds", "31 seconds", "32 seconds")),
+        (time.time() - 60, ("60 seconds", "61 seconds", "62 seconds")),
+        (time.time() - 3600, ("60m 0s", "60m 1s", "60m 2s")),
+        (time.time() - 3601, ("1h 0m 1s", "1h 0m 2s", "1h 0m 3s"))
     ]
 )
 def test_get_elapsed_time(elapsed, expected):
-    assert get_elapsed_time(elapsed) == expected
+    assert get_elapsed_time(elapsed) in expected, f"Expected elapsed time to be in: {expected}."
 
 
 @pytest.mark.parametrize(
@@ -139,4 +139,4 @@ def test_get_elapsed_time(elapsed, expected):
     ]
 )
 def test_parse_strategy_name(name, expected):
-    assert parse_strategy_name(name) == expected
+    assert parse_strategy_name(name) == expected, f"Expected parsed strategy to be: {expected}."
