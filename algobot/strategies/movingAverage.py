@@ -24,6 +24,11 @@ class MovingAverageStrategy(Strategy):
 
     @staticmethod
     def parse_inputs(inputs):
+        """
+        Parses the inputs into options acceptable by the strategy.
+        :param inputs: List of inputs to parse.
+        :return: Parsed strategy inputs.
+        """
         return [Option(*inputs[x:x + 4]) for x in range(0, len(inputs), 4)]
 
     def set_inputs(self, inputs: list):
@@ -92,8 +97,8 @@ class MovingAverageStrategy(Strategy):
             initialName, finalName = option.get_pretty_option()
 
             if type(data) == list:  # This means it was called by the optimizer/backtester.
-                avg1 = parent.get_moving_average(data, option.movingAverage, option.initialBound, option.parameter)
-                avg2 = parent.get_moving_average(data, option.movingAverage, option.finalBound, option.parameter)
+                avg1 = parent.get_moving_average(data, movingAverage, initialBound, parameter)
+                avg2 = parent.get_moving_average(data, movingAverage, finalBound, parameter)
             else:  # This means it was called by the live bot / simulation.
                 avg1 = parent.get_average(movingAverage, parameter, initialBound, data, update=False)
                 avg2 = parent.get_average(movingAverage, parameter, finalBound, data, update=False)
@@ -109,9 +114,8 @@ class MovingAverageStrategy(Strategy):
                     parent.lowerOptionDetails.append((avg1, avg2, initialName, finalName))
 
                 if log_data:
-                    parent.output_message(f'Parameter: {option.parameter}')
-                    parent.output_message(f'{option.movingAverage}({option.initialBound}) = {avg1}')
-                    parent.output_message(f'{option.movingAverage}({option.finalBound}) = {avg2}')
+                    parent.output_message(f'{movingAverage}({initialBound}) {parameter} = {avg1}')
+                    parent.output_message(f'{movingAverage}({finalBound}) {parameter} = {avg2}')
 
             if avg1 > avg2:
                 trends.append(BULLISH)
