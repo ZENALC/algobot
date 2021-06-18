@@ -709,18 +709,6 @@ class Backtester(Trader):
                         self.sell_short("Reentered short because of smart stop loss.", smartEnter=True)
                         self.smartStopLossCounter -= 1
 
-    def print_options(self):
-        """
-        Prints out options provided in configuration.
-        """
-        if 'movingAverage' not in self.strategies:
-            return
-
-        print("\tMoving Averages Options:")
-        for index, option in enumerate(self.strategies['movingAverage'].get_params()):
-            print(f'\t\tOption {index + 1}) {option.movingAverage.upper()}{option.initialBound, option.finalBound}'
-                  f' - {option.parameter}')
-
     def print_configuration_parameters(self, stdout=None):
         """
         Prints out configuration parameters.
@@ -833,8 +821,6 @@ class Backtester(Trader):
         :param resultFile: File to write results in.
         :return: Path to file.
         """
-        currentPath = os.getcwd()
-
         if not resultFile:
             resultFile = self.get_default_result_file_name()
 
@@ -845,7 +831,4 @@ class Backtester(Trader):
             if self.outputTrades:
                 self.print_trades(f)
 
-        filePath = os.path.join(os.getcwd(), resultFile)
-
-        os.chdir(currentPath)
-        return filePath
+        return os.path.join(os.getcwd(), resultFile)
