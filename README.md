@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/ZENALC/algobot/actions/workflows/ci.yml/badge.svg)](https://github.com/ZENALC/algobot/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/ZENALC/algobot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ZENALC/algobot/actions/workflows/codeql-analysis.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Cryptocurrency trading bot that allows users to create strategies and then backtest, optimize, simulate, or run live bots using them. Telegram integration has been added to support easier and remote trading.
 
