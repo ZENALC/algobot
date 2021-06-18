@@ -1,6 +1,9 @@
+from datetime import datetime
 from typing import List
 
-from PyQt5.QtWidgets import QComboBox, QMessageBox
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QComboBox, QDialog, QMessageBox, QTableWidget,
+                             QTableWidgetItem)
 
 
 def create_popup(parent, msg: str, title='Warning'):
@@ -35,3 +38,44 @@ def get_elements_from_combobox(combobox: QComboBox) -> List[str]:
     :return: List of elements from combobox.
     """
     return [combobox.itemText(i) for i in range(combobox.count())]
+
+
+def show_and_bring_window_to_front(window: QDialog):
+    window.show()
+    window.activateWindow()
+    window.raise_()
+
+
+def add_to_table(table: QTableWidget, data: list, insertDate=True):
+    """
+    Function that will add specified data to a provided table.
+    :param insertDate: Boolean to add date to 0th index of data or not.
+    :param table: Table we will add data to.
+    :param data: Data we will add to table.
+    """
+    rowPosition = table.rowCount()
+    columns = table.columnCount()
+
+    if insertDate:
+        data.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    if len(data) != columns:
+        raise ValueError('Data needs to have the same amount of columns as table.')
+
+    table.insertRow(rowPosition)
+    for column in range(0, columns):
+        value = data[column]
+        if type(value) not in (int, float):
+            item = QTableWidgetItem(str(value))
+        else:
+            item = QTableWidgetItem()
+            item.setData(Qt.DisplayRole, value)
+        table.setItem(rowPosition, column, item)
+
+
+def clear_table(table: QTableWidget):
+    """
+    Sets table row count to 0.
+    :param table: Table which is to be cleared.
+    """
+    table.setRowCount(0)

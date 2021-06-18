@@ -22,18 +22,18 @@ from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
                                    setup_graph_plots, setup_graphs,
                                    update_backtest_graph_limits,
                                    update_main_graphs)
-from algobot.helpers import (ROOT_DIR, add_to_table, clear_table,
-                             create_folder, create_folder_if_needed,
+from algobot.helpers import (ROOT_DIR, create_folder, create_folder_if_needed,
                              get_caller_string, get_logger,
-                             open_file_or_folder,
-                             show_and_bring_window_to_front)
+                             open_file_or_folder)
 from algobot.interface.about import About
 from algobot.interface.config_utils.state_utils import load_state, save_state
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
 from algobot.interface.statistics import Statistics
-from algobot.interface.utils import create_popup, open_from_msg_box
+from algobot.interface.utils import (add_to_table, clear_table, create_popup,
+                                     open_from_msg_box,
+                                     show_and_bring_window_to_front)
 from algobot.news_scraper import scrape_news
 from algobot.option import Option
 from algobot.slots import initiate_slots
