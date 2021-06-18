@@ -205,23 +205,8 @@ class Trader:
             if name == 'movingAverage':
                 values = [Option(*values[x:x + 4]) for x in range(0, len(values), 4)]
                 self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
-            elif name == 'bollingerBand':
-                self.strategies[name] = strategyClass(parent=self,
-                                                      volatility_n=values[0],
-                                                      volatility=values[1],
-                                                      volatility_calculation_type=values[2],
-                                                      bb_coefficient=values[3],
-                                                      bb_safety=values[4],
-                                                      moving_average=values[5],
-                                                      moving_average_parameter=values[6],
-                                                      moving_average_n=values[7],
-                                                      method=values[8],
-                                                      upper_percentage_b=values[9],
-                                                      lower_percentage_b=values[10],
-                                                      stdev_type=values[11],
-                                                      precision=self.precision)
             else:
-                self.strategies[name] = strategyClass(self, inputs=values, precision=self.precision)
+                self.strategies[name] = strategyClass(parent=self, inputs=values, precision=self.precision)
 
             self.minPeriod = max(self.strategies[name].get_min_option_period(), self.minPeriod)
 
