@@ -1,17 +1,19 @@
 from datetime import datetime
 from typing import List
 
-from PyQt5.QtWidgets import QColorDialog, QLabel, QMainWindow
+from PyQt5.QtWidgets import QColorDialog, QDialog, QLabel, QMainWindow
 from pyqtgraph import InfiniteLine, PlotWidget, mkPen
 
 from algobot.enums import AVG_GRAPH, NET_GRAPH
+from algobot.interface.utils import show_and_bring_window_to_front
 from algobot.traders.trader import Trader
 
 GRAPH_LEEWAY = 10  # Amount of points to set extra for graph limits.
 
 
-def get_and_set_line_color(label: QLabel):
+def get_and_set_line_color(view: QDialog, label: QLabel):
     color = QColorDialog.getColor()
+    show_and_bring_window_to_front(view)
 
     if color.isValid():
         set_color_to_label(label, color.name())
