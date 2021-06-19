@@ -1,6 +1,7 @@
 import os
 
 from algobot import helpers
+from algobot.graph_helpers import set_color_to_label
 
 
 def load_state(config_obj):
@@ -18,12 +19,12 @@ def load_state(config_obj):
             config_obj.bullModeRadioButton.setChecked(config['bullTheme'])
             config_obj.bearModeRadioButton.setChecked(config['bearTheme'])
 
-            config_obj.balanceColor.setCurrentIndex(config['balanceColor'])
-            config_obj.avg1Color.setCurrentIndex(config['avg1Color'])
-            config_obj.avg2Color.setCurrentIndex(config['avg2Color'])
-            config_obj.avg3Color.setCurrentIndex(config['avg3Color'])
-            config_obj.avg4Color.setCurrentIndex(config['avg4Color'])
-            config_obj.hoverLineColor.setCurrentIndex(config['lineColor'])
+            set_color_to_label(config_obj.balanceColor, config['balanceColor'])
+            set_color_to_label(config_obj.movingAverage1Color, (config['avg1Color']))
+            set_color_to_label(config_obj.movingAverage2Color, (config['avg2Color']))
+            set_color_to_label(config_obj.movingAverage3Color, (config['avg3Color']))
+            set_color_to_label(config_obj.movingAverage4Color, (config['avg4Color']))
+            set_color_to_label(config_obj.hoverLineColor, (config['lineColor']))
 
             config_obj.graphIndicatorsCheckBox.setChecked(config['averagePlot'])
             config_obj.failureLimitSpinBox.setValue(int(config['failureLimit']))
@@ -68,12 +69,12 @@ def save_state(config_obj):
         'bloombergTheme': config_obj.bloombergModeRadioButton.isChecked(),
         'bullTheme': config_obj.bullModeRadioButton.isChecked(),
         'bearTheme': config_obj.bearModeRadioButton.isChecked(),
-        'balanceColor': config_obj.balanceColor.currentIndex(),
-        'avg1Color': config_obj.avg1Color.currentIndex(),
-        'avg2Color': config_obj.avg2Color.currentIndex(),
-        'avg3Color': config_obj.avg3Color.currentIndex(),
-        'avg4Color': config_obj.avg4Color.currentIndex(),
-        'lineColor': config_obj.hoverLineColor.currentIndex(),
+        'balanceColor': config_obj.balanceColor.text(),
+        'avg1Color': config_obj.movingAverage1Color.text(),
+        'avg2Color': config_obj.movingAverage2Color.text(),
+        'avg3Color': config_obj.movingAverage3Color.text(),
+        'avg4Color': config_obj.movingAverage4Color.text(),
+        'lineColor': config_obj.hoverLineColor.text(),
         'averagePlot': config_obj.graphIndicatorsCheckBox.isChecked(),
         'failureLimit': config_obj.failureLimitSpinBox.value(),
         'failureSleep': config_obj.failureSleepSpinBox.value(),

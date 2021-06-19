@@ -1,12 +1,25 @@
 from datetime import datetime
+from typing import List
 
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QColorDialog, QLabel, QMainWindow
 from pyqtgraph import InfiniteLine, PlotWidget, mkPen
 
 from algobot.enums import AVG_GRAPH, NET_GRAPH
 from algobot.traders.trader import Trader
 
 GRAPH_LEEWAY = 10  # Amount of points to set extra for graph limits.
+
+
+def get_and_set_line_color(label: QLabel):
+    color = QColorDialog.getColor()
+
+    if color.isValid():
+        set_color_to_label(label, color.name())
+
+
+def set_color_to_label(label: QLabel, color: str):
+    label.setText(color)
+    label.setStyleSheet(f"background: {color};")
 
 
 def set_backtest_graph_limits_and_empty_plots(gui: QMainWindow, limit: int = 105):
@@ -211,22 +224,18 @@ def create_graph_plot(gui: QMainWindow, graph: PlotWidget, x: tuple, y: tuple, p
     return plot
 
 
-def get_graph_colors(gui: QMainWindow) -> list:
+def get_graph_colors(gui: QMainWindow) -> List[str]:
     """
     Returns graph colors to be placed based on configuration.
     """
-    config = gui.configuration
-    colorDict = {'blue': 'b',
-                 'green': 'g',
-                 'red': 'r',
-                 'cyan': 'c',
-                 'magenta': 'm',
-                 'yellow': 'y',
-                 'black': 'k',
-                 'white': 'w'}
-    colors = [config.balanceColor.currentText(), config.avg1Color.currentText(), config.avg2Color.currentText(),
-              config.avg3Color.currentText(), config.avg4Color.currentText(), config.hoverLineColor.currentText()]
-    return [colorDict[color.lower()] for color in colors]
+    return [
+        gui.configuration.balanceColor.text(),
+        gui.configuration.movingAverage1Color.text(),
+        gui.configuration.movingAverage2Color.text(),
+        gui.configuration.movingAverage3Color.text(),
+        gui.configuration.movingAverage4Color.text(),
+        gui.configuration.hoverLineColor.text()
+    ]
 
 
 def setup_graphs(gui: QMainWindow):

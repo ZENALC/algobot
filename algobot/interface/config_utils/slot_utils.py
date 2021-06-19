@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (QCheckBox, QDoubleSpinBox, QHBoxLayout, QLabel,
 
 from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
+from algobot.graph_helpers import get_and_set_line_color
 from algobot.interface.config_utils.credential_utils import (
     load_credentials, save_credentials, test_binance_credentials)
 from algobot.interface.config_utils.data_utils import (download_data,
@@ -209,6 +210,13 @@ def load_slots(config_obj):
         config_obj=c, caller=OPTIMIZER, result_label=c.optimizerConfigurationResult, func=save_optimizer_settings))
     c.optimizerLoadConfigurationButton.clicked.connect(lambda: load_config_helper(
         config_obj=c, caller=OPTIMIZER, result_label=c.optimizerConfigurationResult, func=load_optimizer_settings))
+
+    c.setBalanceColorButton.clicked.connect(lambda: get_and_set_line_color(c.balanceColor))
+    c.setMovingAverage1ColorButton.clicked.connect(lambda: get_and_set_line_color(c.movingAverage1Color))
+    c.setMovingAverage2ColorButton.clicked.connect(lambda: get_and_set_line_color(c.movingAverage2Color))
+    c.setMovingAverage3ColorButton.clicked.connect(lambda: get_and_set_line_color(c.movingAverage3Color))
+    c.setMovingAverage4ColorButton.clicked.connect(lambda: get_and_set_line_color(c.movingAverage4Color))
+    c.setHoverLineColorButton.clicked.connect(lambda: get_and_set_line_color(c.hoverLineColor))
 
     c.testCredentialsButton.clicked.connect(lambda: test_binance_credentials(c))
     c.saveCredentialsButton.clicked.connect(lambda: save_credentials(c))
