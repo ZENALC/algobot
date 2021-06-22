@@ -4,9 +4,7 @@ from typing import Any, Dict
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 from algobot.enums import BACKTEST
-from algobot.helpers import parse_precision
-from algobot.interface.config_utils.calendar_utils import get_calendar_dates
-from algobot.interface.config_utils.strategy_utils import get_strategies
+from algobot.threads.thread_utils import get_config_helper
 from algobot.traders.backtester import Backtester
 
 
@@ -37,22 +35,7 @@ class BacktestThread(QRunnable):
         Returns configuration details from GUI in a dictionary to setup backtest.
         :return: GUI configuration details in a dictionary.
         """
-        config = self.gui.configuration
-        startDate, endDate = get_calendar_dates(config_obj=config)
-        symbol = config.optimizer_backtest_dict[BACKTEST]['dataType']
-
-        return {
-            'startingBalance': config.backtestStartingBalanceSpinBox.value(),
-            'data': config.optimizer_backtest_dict[BACKTEST]['data'],
-            'startDate': startDate,
-            'endDate': endDate,
-            'symbol': symbol,
-            'precision': parse_precision(config.backtestPrecisionComboBox.currentText(), symbol),
-            'outputTrades': config.backtestOutputTradesCheckBox.isChecked(),
-            'marginEnabled': config.backtestMarginTradingCheckBox.isChecked(),
-            'strategies': get_strategies(config, BACKTEST),
-            'strategyInterval': config.backtestStrategyIntervalCombobox.currentText()
-        }
+        return get_config_helper(self.gui, BACKTEST)
 
     def get_configuration_dictionary_for_gui(self) -> Dict[str, str]:
         """

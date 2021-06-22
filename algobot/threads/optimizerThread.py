@@ -3,8 +3,7 @@ from typing import Any, Dict
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 from algobot.enums import OPTIMIZER
-from algobot.helpers import parse_precision
-from algobot.interface.config_utils.calendar_utils import get_calendar_dates
+from algobot.threads.thread_utils import get_config_helper
 from algobot.traders.backtester import Backtester
 
 
@@ -31,22 +30,7 @@ class OptimizerThread(QRunnable):
         Returns configuration details from GUI in a dictionary to setup optimizer.
         :return: GUI configuration details in a dictionary.
         """
-        config = self.gui.configuration
-        startDate, endDate = get_calendar_dates(config_obj=config, caller=OPTIMIZER)
-        symbol = config.optimizer_backtest_dict[OPTIMIZER]['dataType']
-
-        return {
-            'startingBalance': config.optimizerStartingBalanceSpinBox.value(),
-            'data': config.optimizer_backtest_dict[OPTIMIZER]['data'],
-            'startDate': startDate,
-            'endDate': endDate,
-            'symbol': symbol,
-            'precision': parse_precision(config.optimizerPrecisionComboBox.currentText(), symbol),
-            'marginEnabled': config.optimizerMarginTradingCheckBox.isChecked(),
-            'strategies': [],
-            'strategyInterval': config.optimizerStrategyIntervalCombobox.currentText(),
-            'drawdownPercentage': config.drawdownPercentageSpinBox.value()
-        }
+        return get_config_helper(self.gui, OPTIMIZER)
 
     def setup(self):
         self.gui.optimizer = Backtester(**self.get_configuration_details())

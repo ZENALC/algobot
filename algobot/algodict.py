@@ -107,12 +107,21 @@ def get_interface_dictionary(parent, caller: int = None):
                 'precision': parent.configuration.backtestPrecisionComboBox,
                 'ticker': parent.configuration.backtestTickerLineEdit,
                 'interval': parent.configuration.backtestIntervalComboBox,
+                'startingBalance': parent.configuration.backtestStartingBalanceSpinBox,
+                'outputTrades': parent.configuration.backtestOutputTradesCheckBox,
+                'strategyInterval': parent.configuration.backtestStrategyIntervalCombobox,
+                'marginEnabled': parent.configuration.backtestMarginTradingCheckBox
             },
         },
         OPTIMIZER: {
             'configuration': {
                 'ticker': parent.configuration.optimizerTickerLineEdit,
                 'interval': parent.configuration.optimizerIntervalComboBox,
+                'strategyInterval': parent.configuration.optimizerStrategyIntervalCombobox,
+                'drawdownPercentage': parent.configuration.drawdownPercentageSpinBox,
+                'marginEnabled': parent.configuration.optimizerMarginTradingCheckBox,
+                'precision': parent.configuration.optimizerPrecisionComboBox,
+                'startingBalance': parent.configuration.optimizerStartingBalanceSpinBox
             },
         }
     }
