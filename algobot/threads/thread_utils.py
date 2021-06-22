@@ -2,14 +2,14 @@
 Some helpers for threads.
 """
 from algobot.algodict import get_interface_dictionary
-from algobot.enums import OPTIMIZER, BACKTEST
+from algobot.enums import BACKTEST, OPTIMIZER
 from algobot.helpers import parse_precision
 from algobot.interface.config_utils.calendar_utils import get_calendar_dates
 from algobot.interface.config_utils.strategy_utils import get_strategies
 
 
 def get_config_helper(gui, caller):
-    algo_dict = get_interface_dictionary(gui, caller)
+    algo_dict = get_interface_dictionary(gui, caller)['configuration']
     startDate, endDate = get_calendar_dates(config_obj=gui.configuration, caller=caller)
     precision = algo_dict['precision'].currentText()
     symbol = gui.configuration.optimizer_backtest_dict[caller]['dataType']
