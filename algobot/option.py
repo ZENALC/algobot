@@ -78,6 +78,17 @@ class Option:
             f'{self.movingAverage}({self.finalBound}) {self.parameter.capitalize()}',
         )
 
+    def get_option_info(self, trader) -> tuple:
+        """
+        Returns basic information about option provided.
+        :param trader: Trader object to be used to get averages.
+        :return: Tuple of initial average, final average, initial option name, and final option name.
+        """
+        initialAverage = trader.get_average(self.movingAverage, self.parameter, self.initialBound)
+        finalAverage = trader.get_average(self.movingAverage, self.parameter, self.finalBound)
+        initialName, finalName = self.get_pretty_option()
+        return initialAverage, finalAverage, initialName, finalName
+
     def __repr__(self) -> str:
         """
         Returns class representation of object.

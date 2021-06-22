@@ -35,7 +35,6 @@ from algobot.interface.utils import (add_to_table, clear_table, create_popup,
                                      open_from_msg_box,
                                      show_and_bring_window_to_front)
 from algobot.news_scraper import scrape_news
-from algobot.option import Option
 from algobot.slots import initiate_slots
 from algobot.telegram_bot import TelegramBot
 from algobot.threads import (backtestThread, botThread, optimizerThread,
@@ -1037,19 +1036,6 @@ class Interface(QMainWindow):
             mainDict['enableCustomStopLossButton'].setEnabled(True)
             mainDict['disableCustomStopLossButton'].setEnabled(False)
             self.add_to_monitor(caller, 'Removed custom stop loss.')
-
-    @staticmethod
-    def get_option_info(option: Option, trader: SimulationTrader) -> tuple:
-        """
-        Returns basic information about option provided.
-        :param option: Option object for whose information will be retrieved.
-        :param trader: Trader object to be used to get averages.
-        :return: Tuple of initial average, final average, initial option name, and final option name.
-        """
-        initialAverage = trader.get_average(option.movingAverage, option.parameter, option.initialBound)
-        finalAverage = trader.get_average(option.movingAverage, option.parameter, option.finalBound)
-        initialName, finalName = option.get_pretty_option()
-        return initialAverage, finalAverage, initialName, finalName
 
     def onMouseMoved(self, point, graph):
         """

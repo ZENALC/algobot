@@ -170,7 +170,7 @@ def setup_average_graph_plots(gui: QMainWindow, graph: PlotWidget, trader, color
 
     if 'movingAverage' in trader.strategies:
         for option in trader.strategies['movingAverage'].get_params():
-            initialAverage, finalAverage, initialName, finalName = gui.get_option_info(option, trader)
+            initialAverage, finalAverage, initialName, finalName = option.get_option_info(trader)
             initialPlotDict = get_plot_dictionary(gui=gui, graph=graph, color=colors[colorCounter % len(colors)],
                                                   y=initialAverage,
                                                   name=initialName, timestamp=currentDateTimestamp)
