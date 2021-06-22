@@ -111,7 +111,7 @@ class BotThread(QRunnable):
         gui = self.gui
         configDict = gui.interfaceDictionary[caller]['configuration']
         symbol = configDict['ticker'].text()
-        precision = configDict['precision'].value()
+        precision = helpers.parse_precision(configDict['precision'].currentText(), symbol)
         prettyInterval = configDict['interval'].currentText()
         interval = helpers.convert_long_interval(prettyInterval)
 

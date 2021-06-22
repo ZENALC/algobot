@@ -48,7 +48,7 @@ def get_interface_dictionary(parent, caller: int = None):
                 'ticker': parent.configuration.simulationTickerLineEdit,
                 'interval': parent.configuration.simulationIntervalComboBox,
                 'lowerIntervalCheck': parent.configuration.lowerIntervalSimulationCheck,
-                'precision': parent.configuration.simulationPrecisionSpinBox,
+                'precision': parent.configuration.simulationPrecisionComboBox,
             }
         },
         LIVE: {
@@ -89,7 +89,7 @@ def get_interface_dictionary(parent, caller: int = None):
                 'ticker': parent.configuration.tickerLineEdit,
                 'interval': parent.configuration.intervalComboBox,
                 'lowerIntervalCheck': parent.configuration.lowerIntervalCheck,
-                'precision': parent.configuration.precisionSpinBox,
+                'precision': parent.configuration.precisionComboBox,
             }
         },
         BACKTEST: {
@@ -104,7 +104,7 @@ def get_interface_dictionary(parent, caller: int = None):
             'configuration': {
                 'mainTab': parent.configuration.backtestMainTab,
                 'mainConfigurationTabWidget': parent.configuration.backtestConfigurationTabWidget,
-                'precision': parent.configuration.backtestPrecisionSpinBox,
+                'precision': parent.configuration.backtestPrecisionComboBox,
                 'ticker': parent.configuration.backtestTickerLineEdit,
                 'interval': parent.configuration.backtestIntervalComboBox,
             },

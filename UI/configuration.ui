@@ -107,7 +107,7 @@
                   <string>Live Main Options</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_13">
-                  <item row="5" column="0" colspan="3">
+                  <item row="5" column="0" colspan="4">
                    <widget class="QGroupBox" name="regionGroupBox">
                     <property name="title">
                      <string>Region</string>
@@ -139,143 +139,7 @@
                     </layout>
                    </widget>
                   </item>
-                  <item row="11" column="0" colspan="3">
-                   <widget class="QGroupBox" name="serverGroupBox">
-                    <property name="title">
-                     <string>Server</string>
-                    </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_4">
-                     <item>
-                      <widget class="QPushButton" name="updateTickers">
-                       <property name="toolTip">
-                        <string>Update tickers available.</string>
-                       </property>
-                       <property name="text">
-                        <string>Update Tickers</string>
-                       </property>
-                       <property name="autoDefault">
-                        <bool>false</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="updateBinanceValues">
-                       <property name="toolTip">
-                        <string>Update and retrieve latest bot values from Binance.</string>
-                       </property>
-                       <property name="text">
-                        <string>Update Binance Values</string>
-                       </property>
-                       <property name="autoDefault">
-                        <bool>false</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="serverResult">
-                       <property name="text">
-                        <string>Update tickers or bot values from Binance</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <spacer name="horizontalSpacer_6">
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>40</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item row="6" column="0" colspan="3">
-                   <widget class="QGroupBox" name="accountTypeGroupBox">
-                    <property name="title">
-                     <string>Account Type</string>
-                    </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_2">
-                     <item>
-                      <widget class="QRadioButton" name="isolatedMarginAccountRadio">
-                       <property name="toolTip">
-                        <string>Select this if the asset you are trading is isolated.</string>
-                       </property>
-                       <property name="text">
-                        <string>Isolated Margin</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="crossMarginAccountRadio">
-                       <property name="toolTip">
-                        <string>Select this if the asset you are trading is not isolated.</string>
-                       </property>
-                       <property name="text">
-                        <string>Cross Margin</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item row="10" column="0" colspan="3">
-                   <widget class="QGroupBox" name="configurationGroupBox">
-                    <property name="title">
-                     <string>Configuration</string>
-                    </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_5">
-                     <item>
-                      <widget class="QPushButton" name="saveConfigurationButton">
-                       <property name="text">
-                        <string>Save Configuration</string>
-                       </property>
-                       <property name="autoDefault">
-                        <bool>false</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="loadConfigurationButton">
-                       <property name="text">
-                        <string>Load Configuration</string>
-                       </property>
-                       <property name="autoDefault">
-                        <bool>false</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="configurationResult">
-                       <property name="text">
-                        <string>Save or load your bot configuration.</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <spacer name="horizontalSpacer_5">
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>40</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item row="9" column="0" colspan="3">
+                  <item row="9" column="0" colspan="4">
                    <widget class="QGroupBox" name="credentialsGroupBox">
                     <property name="title">
                      <string>Credentials</string>
@@ -349,20 +213,164 @@
                     </layout>
                    </widget>
                   </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="tickerLabel">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
+                  <item row="10" column="0" colspan="4">
+                   <widget class="QGroupBox" name="configurationGroupBox">
+                    <property name="title">
+                     <string>Configuration</string>
                     </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_5">
+                     <item>
+                      <widget class="QPushButton" name="saveConfigurationButton">
+                       <property name="text">
+                        <string>Save Configuration</string>
+                       </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="loadConfigurationButton">
+                       <property name="text">
+                        <string>Load Configuration</string>
+                       </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="configurationResult">
+                       <property name="text">
+                        <string>Save or load your bot configuration.</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_5">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item row="11" column="0" colspan="4">
+                   <widget class="QGroupBox" name="serverGroupBox">
+                    <property name="title">
+                     <string>Server</string>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_4">
+                     <item>
+                      <widget class="QPushButton" name="updateTickers">
+                       <property name="toolTip">
+                        <string>Update tickers available.</string>
+                       </property>
+                       <property name="text">
+                        <string>Update Tickers</string>
+                       </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="updateBinanceValues">
+                       <property name="toolTip">
+                        <string>Update and retrieve latest bot values from Binance.</string>
+                       </property>
+                       <property name="text">
+                        <string>Update Binance Values</string>
+                       </property>
+                       <property name="autoDefault">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="serverResult">
+                       <property name="text">
+                        <string>Update tickers or bot values from Binance</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_6">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item row="6" column="0" colspan="4">
+                   <widget class="QGroupBox" name="accountTypeGroupBox">
+                    <property name="title">
+                     <string>Account Type</string>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_2">
+                     <item>
+                      <widget class="QRadioButton" name="isolatedMarginAccountRadio">
+                       <property name="toolTip">
+                        <string>Select this if the asset you are trading is isolated.</string>
+                       </property>
+                       <property name="text">
+                        <string>Isolated Margin</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="crossMarginAccountRadio">
+                       <property name="toolTip">
+                        <string>Select this if the asset you are trading is not isolated.</string>
+                       </property>
+                       <property name="text">
+                        <string>Cross Margin</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="precisionLabel">
                     <property name="text">
-                     <string>Ticker</string>
+                     <string>Data Precision</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="8" column="0" colspan="3">
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="binanceApiKeyLabel">
+                    <property name="text">
+                     <string>Binance API Key</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="binanceSecretKeyLabel">
+                    <property name="text">
+                     <string>Binance Secret Key</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="0" colspan="4">
                    <widget class="QCheckBox" name="lowerIntervalCheck">
                     <property name="toolTip">
                      <string>Select this if you'd like to view the lower interval's moving averages trends.</string>
@@ -388,7 +396,40 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="1" colspan="2">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="tickerLabel">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Ticker</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1" colspan="3">
+                   <widget class="QComboBox" name="intervalComboBox">
+                    <property name="toolTip">
+                     <string>Select interval to trade in here.</string>
+                    </property>
+                    <property name="currentText">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1" colspan="3">
+                   <widget class="QLineEdit" name="tickerLineEdit">
+                    <property name="placeholderText">
+                     <string>Search for your ticker here.</string>
+                    </property>
+                    <property name="clearButtonEnabled">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1" colspan="3">
                    <widget class="QLineEdit" name="binanceApiKey">
                     <property name="toolTip">
                      <string>Enter your Binance API key here.</string>
@@ -404,41 +445,7 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="1" colspan="2">
-                   <widget class="QSpinBox" name="precisionSpinBox">
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>20</number>
-                    </property>
-                    <property name="value">
-                     <number>2</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="binanceApiKeyLabel">
-                    <property name="text">
-                     <string>Binance API Key</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="precisionLabel">
-                    <property name="text">
-                     <string>Data Precision</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QLabel" name="binanceSecretKeyLabel">
-                    <property name="text">
-                     <string>Binance Secret Key</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="1" colspan="2">
+                  <item row="4" column="1" colspan="3">
                    <widget class="QLineEdit" name="binanceApiSecret">
                     <property name="toolTip">
                      <string>Enter your Binance secret key here.</string>
@@ -454,25 +461,8 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1" colspan="2">
-                   <widget class="QComboBox" name="intervalComboBox">
-                    <property name="toolTip">
-                     <string>Select interval to trade in here.</string>
-                    </property>
-                    <property name="currentText">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1" colspan="2">
-                   <widget class="QLineEdit" name="tickerLineEdit">
-                    <property name="placeholderText">
-                     <string>Search for your ticker here.</string>
-                    </property>
-                    <property name="clearButtonEnabled">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
+                  <item row="2" column="1" colspan="3">
+                   <widget class="QComboBox" name="precisionComboBox"/>
                   </item>
                  </layout>
                 </widget>
@@ -613,19 +603,6 @@
                    <widget class="QLabel" name="backtestPrecisionLabel">
                     <property name="text">
                      <string>Data Precision</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="1" colspan="2">
-                   <widget class="QSpinBox" name="backtestPrecisionSpinBox">
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>20</number>
-                    </property>
-                    <property name="value">
-                     <number>2</number>
                     </property>
                    </widget>
                   </item>
@@ -820,6 +797,9 @@
                      <bool>true</bool>
                     </property>
                    </widget>
+                  </item>
+                  <item row="5" column="1" colspan="2">
+                   <widget class="QComboBox" name="backtestPrecisionComboBox"/>
                   </item>
                  </layout>
                 </widget>
@@ -1098,19 +1078,6 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="6" column="1" colspan="2">
-                   <widget class="QSpinBox" name="optimizerPrecisionSpinBox">
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>20</number>
-                    </property>
-                    <property name="value">
-                     <number>2</number>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="3" column="0">
                    <widget class="QLabel" name="optimizerStrategyIntervalLabel">
                     <property name="text">
@@ -1233,6 +1200,9 @@
                      <number>100</number>
                     </property>
                    </widget>
+                  </item>
+                  <item row="6" column="1" colspan="2">
+                   <widget class="QComboBox" name="optimizerPrecisionComboBox"/>
                   </item>
                  </layout>
                 </widget>
@@ -1493,19 +1463,6 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="1" colspan="2">
-                   <widget class="QSpinBox" name="simulationPrecisionSpinBox">
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>20</number>
-                    </property>
-                    <property name="value">
-                     <number>2</number>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="7" column="0">
                    <widget class="QPushButton" name="simulationLoadConfigurationButton">
                     <property name="sizePolicy">
@@ -1538,6 +1495,9 @@
                      <bool>true</bool>
                     </property>
                    </widget>
+                  </item>
+                  <item row="3" column="1" colspan="2">
+                   <widget class="QComboBox" name="simulationPrecisionComboBox"/>
                   </item>
                  </layout>
                 </widget>

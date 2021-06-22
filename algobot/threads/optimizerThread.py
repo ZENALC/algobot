@@ -3,6 +3,7 @@ from typing import Any, Dict
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 from algobot.enums import OPTIMIZER
+from algobot.helpers import parse_precision
 from algobot.interface.config_utils.calendar_utils import get_calendar_dates
 from algobot.traders.backtester import Backtester
 
@@ -32,14 +33,15 @@ class OptimizerThread(QRunnable):
         """
         config = self.gui.configuration
         startDate, endDate = get_calendar_dates(config_obj=config, caller=OPTIMIZER)
+        symbol = config.optimizer_backtest_dict[OPTIMIZER]['dataType']
 
         return {
             'startingBalance': config.optimizerStartingBalanceSpinBox.value(),
             'data': config.optimizer_backtest_dict[OPTIMIZER]['data'],
             'startDate': startDate,
             'endDate': endDate,
-            'symbol': config.optimizer_backtest_dict[OPTIMIZER]['dataType'],
-            'precision': config.optimizerPrecisionSpinBox.value(),
+            'symbol': symbol,
+            'precision': parse_precision(config.optimizerPrecisionComboBox.currentText(), symbol),
             'marginEnabled': config.optimizerMarginTradingCheckBox.isChecked(),
             'strategies': [],
             'strategyInterval': config.optimizerStrategyIntervalCombobox.currentText(),

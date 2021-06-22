@@ -108,7 +108,7 @@ def save_backtest_settings(config_obj):
         'ticker': config_obj.backtestTickerLineEdit.text(),
         'interval': config_obj.backtestIntervalComboBox.currentIndex(),
         'startingBalance': config_obj.backtestStartingBalanceSpinBox.value(),
-        'precision': config_obj.backtestPrecisionSpinBox.value(),
+        'precision': config_obj.backtestPrecisionComboBox.currentIndex(),
         'marginTrading': config_obj.backtestMarginTradingCheckBox.isChecked(),
     }
 
@@ -125,7 +125,7 @@ def save_optimizer_settings(config_obj):
         'strategyIntervalStart': config_obj.optimizerStrategyIntervalCombobox.currentIndex(),
         'strategyIntervalEnd': config_obj.optimizerStrategyIntervalEndCombobox.currentIndex(),
         'startingBalance': config_obj.optimizerStartingBalanceSpinBox.value(),
-        'precision': config_obj.optimizerPrecisionSpinBox.value(),
+        'precision': config_obj.optimizerPrecisionComboBox.currentIndex(),
         'drawdownPercentage': config_obj.drawdownPercentageSpinBox.value(),
         'marginTrading': config_obj.optimizerMarginTradingCheckBox.isChecked()
     }
@@ -140,7 +140,7 @@ def save_live_settings(config_obj):
         'type': LIVE,
         'ticker': config_obj.tickerLineEdit.text(),
         'interval': config_obj.intervalComboBox.currentIndex(),
-        'precision': config_obj.precisionSpinBox.value(),
+        'precision': config_obj.precisionComboBox.currentIndex(),
         'usRegion': config_obj.usRegionRadio.isChecked(),
         'otherRegion': config_obj.otherRegionRadio.isChecked(),
         'isolatedMargin': config_obj.isolatedMarginAccountRadio.isChecked(),
@@ -159,7 +159,7 @@ def save_simulation_settings(config_obj):
         'ticker': config_obj.simulationTickerLineEdit.text(),
         'interval': config_obj.simulationIntervalComboBox.currentIndex(),
         'startingBalance': config_obj.simulationStartingBalanceSpinBox.value(),
-        'precision': config_obj.simulationPrecisionSpinBox.value(),
+        'precision': config_obj.simulationPrecisionComboBox.currentIndex(),
         'lowerInterval': config_obj.lowerIntervalSimulationCheck.isChecked(),
     }
 
@@ -203,7 +203,7 @@ def load_live_settings(config_obj, config):
     """
     config_obj.tickerLineEdit.setText(str(config['ticker']))
     config_obj.intervalComboBox.setCurrentIndex(config['interval'])
-    config_obj.precisionSpinBox.setValue(config['precision'])
+    config_obj.precisionComboBox.setCurrentIndex(config['precision'])
     config_obj.usRegionRadio.setChecked(config['usRegion'])
     config_obj.otherRegionRadio.setChecked(config['otherRegion'])
     config_obj.isolatedMarginAccountRadio.setChecked(config['isolatedMargin'])
@@ -220,7 +220,7 @@ def load_simulation_settings(config_obj, config):
     config_obj.simulationTickerLineEdit.setText(str(config['ticker']))
     config_obj.simulationIntervalComboBox.setCurrentIndex(config['interval'])
     config_obj.simulationStartingBalanceSpinBox.setValue(config['startingBalance'])
-    config_obj.simulationPrecisionSpinBox.setValue(config['precision'])
+    config_obj.simulationPrecisionComboBox.setCurrentIndex(config['precision'])
     config_obj.lowerIntervalSimulationCheck.setChecked(config['lowerInterval'])
 
 
@@ -233,7 +233,7 @@ def load_backtest_settings(config_obj, config):
     config_obj.backtestTickerLineEdit.setText(str(config['ticker']))
     config_obj.backtestIntervalComboBox.setCurrentIndex(config['interval'])
     config_obj.backtestStartingBalanceSpinBox.setValue(config['startingBalance'])
-    config_obj.backtestPrecisionSpinBox.setValue(config['precision'])
+    config_obj.backtestPrecisionComboBox.setCurrentIndex(config['precision'])
     config_obj.backtestMarginTradingCheckBox.setChecked(config['marginTrading'])
 
 
@@ -248,7 +248,7 @@ def load_optimizer_settings(config_obj, config):
     config_obj.optimizerStrategyIntervalCombobox.setCurrentIndex(config['strategyIntervalStart'])
     config_obj.optimizerStrategyIntervalEndCombobox.setCurrentIndex(config['strategyIntervalEnd'])
     config_obj.optimizerStartingBalanceSpinBox.setValue(config['startingBalance'])
-    config_obj.optimizerPrecisionSpinBox.setValue(config['precision'])
+    config_obj.optimizerPrecisionComboBox.setCurrentIndex(config['precision'])
     config_obj.drawdownPercentageSpinBox.setValue(config['drawdownPercentage'])
 
 
@@ -270,7 +270,7 @@ def copy_settings_to_simulation(config_obj):
     """
     config_obj.simulationIntervalComboBox.setCurrentIndex(config_obj.intervalComboBox.currentIndex())
     config_obj.simulationTickerLineEdit.setText(config_obj.tickerLineEdit.text())
-    config_obj.simulationPrecisionSpinBox.setValue(config_obj.precisionSpinBox.value())
+    config_obj.simulationPrecisionComboBox.setCurrentIndex(config_obj.precisionComboBox.currentIndex())
 
 
 def copy_settings_to_backtest(config_obj):
@@ -280,7 +280,7 @@ def copy_settings_to_backtest(config_obj):
     """
     config_obj.backtestIntervalComboBox.setCurrentIndex(config_obj.intervalComboBox.currentIndex())
     config_obj.backtestTickerLineEdit.setText(config_obj.tickerLineEdit.text())
-    config_obj.backtestPrecisionSpinBox.setValue(config_obj.precisionSpinBox.value())
+    config_obj.backtestPrecisionComboBox.setCurrentIndex(config_obj.precisionComboBox.currentIndex())
 
 
 def copy_strategy_settings(config_obj, fromCaller: int, toCaller: int, strategyName: str):

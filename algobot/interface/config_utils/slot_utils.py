@@ -138,6 +138,13 @@ def load_strategy_slots(config_obj):
             tab.addTab(tabWidget, strategyName)
 
 
+def load_precision_combo_boxes(config_obj):
+    combo_boxes = [config_obj.precisionComboBox, config_obj.simulationPrecisionComboBox,
+                   config_obj.backtestPrecisionComboBox, config_obj.optimizerPrecisionComboBox]
+    precisions = ["Auto"] + [str(x) for x in range(2, 16)]
+    [combo_box.addItems(precisions) for combo_box in combo_boxes]
+
+
 def load_interval_combo_boxes(config_obj):
     """
     This function currently only handles combo boxes for backtester/optimizer interval logic. It'll update the
@@ -228,6 +235,7 @@ def load_slots(config_obj):
     c.graphPlotSpeedSpinBox.valueChanged.connect(c.update_graph_speed)
     c.enableHoverLine.stateChanged.connect(c.enable_disable_hover_line)
 
+    load_precision_combo_boxes(c)
     load_interval_combo_boxes(c)  # Primarily used for backtester/optimizer interval changer logic.
     load_loss_slots(c)  # These slots are based on the ordering.
     load_take_profit_slots(c)

@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import platform
 import re
@@ -8,6 +9,7 @@ import time
 from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
+from binance import Client
 from dateutil import parser
 
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
@@ -360,6 +362,14 @@ def load_from_csv(path: str, descending: bool = True) -> list:
             if firstDate > lastDate:
                 return data[::-1]
             return data
+
+
+def parse_precision(precision: str, symbol: str) -> int:
+    if precision == "Auto":
+        symbol_info = Client().get_symbol_info(symbol)
+        tickSize = float(symbol_info['filters'][0]['tickSize'])
+        precision = abs(round(math.log(tickSize, 10)))
+    return int(precision)
 
 
 def write_json_file(filePath: str = 'secret.json', **kwargs):
