@@ -143,15 +143,12 @@ class SimulationTrader(Trader):
                     'enabled': 'True',
                 }
 
-                for optionDetail in strategy.strategyDict['regular']:
-                    initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                    movingAverageDict[initialAverageLabel] = f'${round(initialAverage, self.precision)}'
-                    movingAverageDict[finalAverageLabel] = f'${round(finalAverage, self.precision)}'
-
-                for optionDetail in strategy.strategyDict['lower']:
-                    initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                    movingAverageDict[f'Lower {initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
-                    movingAverageDict[f'Lower {finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
+                for key in strategy.strategyDict:
+                    for optionDetail in strategy.strategyDict[key]:
+                        initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
+                        key = '' if key == 'regular' else key + " "  # Don't show Regular in the statistics window.
+                        movingAverageDict[f'{key}{initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
+                        movingAverageDict[f'{key}{finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
             else:
                 groupedDict[strategyName] = {
                     'trend': self.get_trend_string(strategy.trend),

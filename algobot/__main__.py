@@ -1,3 +1,7 @@
+"""
+Main Algobot application.
+"""
+
 import os
 import sys
 import time
@@ -1078,6 +1082,11 @@ class Interface(QMainWindow):
             table.setItem(rowPosition, column, cell)
 
     def get_activity_table(self, caller):
+        """
+        Returns activity table based on the caller provided.
+        :param caller: Caller enum.
+        :return: Activity table for the caller.
+        """
         if caller == LIVE:
             return self.activityMonitor
         elif caller == SIMULATION:
@@ -1224,6 +1233,9 @@ class Interface(QMainWindow):
         self.statistics.statisticsTabWidget.setCurrentIndex(index)
 
     def update_binance_values(self):
+        """
+        This will update values from Binance.
+        """
         if self.trader is not None:
             thread = workerThread.Worker(self.trader.retrieve_margin_values)
             thread.signals.finished.connect(lambda: create_popup(self, 'Successfully updated values.'))
@@ -1376,6 +1388,9 @@ class Interface(QMainWindow):
 
 
 def main():
+    """
+    Main function.
+    """
     app.setStyle('Fusion')
     interface = Interface()
     interface.showMaximized()
