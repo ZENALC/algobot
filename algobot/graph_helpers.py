@@ -286,9 +286,14 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
     averageGraphDict = get_graph_dictionary(gui, averageGraph)
     if averageGraphDict['enable']:
         averageGraph.setLimits(xMin=0, xMax=graphXSize)
-        for index, optionDetail in enumerate(valueDict['optionDetails']):
-            initialAverage, finalAverage = optionDetail[:2]
-            add_data_to_plot(gui, averageGraph, index * 2, round(initialAverage, precision), currentUTC)
-            add_data_to_plot(gui, averageGraph, index * 2 + 1, round(finalAverage, precision), currentUTC)
+
+        trader = gui.get_trader(caller=caller)
+        if 'movingAverage' in trader.strategies:
+            movingAverageDict = trader.strategies['movingAverage'].strategyDict
+            options = movingAverageDict['regular'] + movingAverageDict['lower']
+            for index, optionDetail in enumerate(options):
+                initialAverage, finalAverage = optionDetail[:2]
+                add_data_to_plot(gui, averageGraph, index * 2, round(initialAverage, precision), currentUTC)
+                add_data_to_plot(gui, averageGraph, index * 2 + 1, round(finalAverage, precision), currentUTC)
 
         add_data_to_plot(gui, averageGraph, -1, y=round(valueDict['price'], precision), timestamp=currentUTC)

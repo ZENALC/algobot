@@ -45,8 +45,6 @@ class BotThread(QRunnable):
         self.startingTime = time.time()
         self.elapsed = '1 second'  # Total elapsed run time.
         self.percentage = None  # Total percentage gain or loss.
-        self.optionDetails = []  # This list will contain all the moving averages' information.
-        self.lowerOptionDetails = []  # This list will contain all the lower interval's moving average information.
 
         self.dailyIntervalSeconds = 86400  # Interval for daily percentage.
         self.dailyPercentage = 0  # Initial change percentage.
@@ -340,8 +338,6 @@ class BotThread(QRunnable):
 
         self.percentage = trader.get_profit_percentage(trader.startingBalance, net)
         self.elapsed = helpers.get_elapsed_time(self.startingTime)
-        self.optionDetails = trader.optionDetails
-        self.lowerOptionDetails = trader.lowerOptionDetails
         self.set_daily_percentages(trader=trader, net=net)
 
         groupedDict = trader.get_grouped_statistics()
@@ -350,9 +346,7 @@ class BotThread(QRunnable):
         groupedDict['general']['elapsed'] = self.elapsed
         groupedDict['general']['totalPercentage'] = f'{round(self.percentage, 2)}%'
         groupedDict['general']['dailyPercentage'] = f'{round(self.dailyPercentage, 2)}%'
-
-        if trader.lowerOptionDetails:
-            groupedDict['general']['lowerTrend'] = self.lowerTrend
+        groupedDict['general']['lowerTrend'] = self.lowerTrend
 
         valueDict = {
             'profitLossLabel': trader.get_profit_or_loss_string(profit=profit),
@@ -364,7 +358,6 @@ class BotThread(QRunnable):
             'currentPositionValue': trader.get_position_string(),
             'net': net,
             'price': trader.currentPrice,
-            'optionDetails': self.optionDetails,
         }
 
         return valueDict, groupedDict

@@ -44,8 +44,6 @@ class SimulationTrader(Trader):
         self.lock = Lock()  # Lock to ensure a transaction doesn't occur when another one is taking place.
         self.addTradeCallback = addTradeCallback  # Callback for GUI to add trades.
         self.dailyChangeNets = []  # Daily change net list. Will contain list of all nets.
-        self.optionDetails = []  # Current option values. Holds most recent option values.
-        self.lowerOptionDetails = []  # Lower option values. Holds lower interval option values (if exist).
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
@@ -144,16 +142,16 @@ class SimulationTrader(Trader):
                     'trend': self.get_trend_string(strategy.trend),
                     'enabled': 'True',
                 }
-                for optionDetail in self.optionDetails:
+
+                for optionDetail in strategy.strategyDict['regular']:
                     initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
                     movingAverageDict[initialAverageLabel] = f'${round(initialAverage, self.precision)}'
                     movingAverageDict[finalAverageLabel] = f'${round(finalAverage, self.precision)}'
 
-                if self.lowerOptionDetails:
-                    for optionDetail in self.lowerOptionDetails:
-                        initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                        movingAverageDict[f'Lower {initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
-                        movingAverageDict[f'Lower {finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
+                for optionDetail in strategy.strategyDict['lower']:
+                    initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
+                    movingAverageDict[f'Lower {initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
+                    movingAverageDict[f'Lower {finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
             else:
                 groupedDict[strategyName] = {
                     'trend': self.get_trend_string(strategy.trend),

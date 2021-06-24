@@ -21,6 +21,7 @@ class MovingAverageStrategy(Strategy):
 
         if parent:  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
             self.validate_options()
+            self.strategyDict = {'lower': [], 'regular': []}
 
     @staticmethod
     def parse_inputs(inputs):
@@ -80,17 +81,12 @@ class MovingAverageStrategy(Strategy):
         parent = self.parent
         trends = []  # Current option trends. They all have to be the same to register a trend.
 
-        if not data:
+        if not data:  # This means that a sim or a live trader called this get trend function.
             data = parent.dataView
 
         if type(data) == Data:
-            if not data.data_is_updated():
-                data.update_data()
-
-            if data == parent.dataView:
-                parent.optionDetails = []
-            else:
-                parent.lowerOptionDetails = []
+            self.strategyDict['regular'] = []
+            self.strategyDict['lower'] = []
 
         for option in self.tradingOptions:
             movingAverage, parameter, initialBound, finalBound = option.get_all_params()
@@ -104,18 +100,13 @@ class MovingAverageStrategy(Strategy):
                 avg2 = parent.get_average(movingAverage, parameter, finalBound, data, update=False)
 
             if type(data) == Data:
-                if data == parent.dataView:
-                    if log_data:
-                        parent.output_message(f'Regular interval ({data.interval}) data:')
-                    parent.optionDetails.append((avg1, avg2, initialName, finalName))
-                else:
-                    if log_data:
-                        parent.output_message(f'Lower interval ({data.interval}) data:')
-                    parent.lowerOptionDetails.append((avg1, avg2, initialName, finalName))
-
+                interval_type = 'regular' if data == parent.dataView else 'lower'
                 if log_data:
+                    parent.output_message(f'{interval_type.capitalize()} interval ({data.interval}) data:')
                     parent.output_message(f'{movingAverage}({initialBound}) {parameter} = {avg1}')
                     parent.output_message(f'{movingAverage}({finalBound}) {parameter} = {avg2}')
+
+                self.strategyDict[interval_type].append((avg1, avg2, initialName, finalName))
 
             if avg1 > avg2:
                 trends.append(BULLISH)
