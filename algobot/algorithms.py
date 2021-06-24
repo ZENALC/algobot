@@ -1,3 +1,4 @@
+import datetime
 import math
 from typing import Dict, List, Tuple, Union
 
@@ -23,6 +24,22 @@ def validate(periods: int, data: List[Dict[str, float]]):
     """
     if periods > len(data):
         raise IndexError(f"Not enough data periods. Need {periods}, got {len(data)}.")
+
+
+def get_moving_average(moving_average: str, moving_average_parameter: str, moving_average_periods: int,
+                       data: List[Dict[str, Union[float, str, datetime]]]) -> float:
+    moving_average = moving_average.upper()
+    moving_average_parameter = moving_average_parameter.lower()
+    moving_data = data[-moving_average_periods:]
+    if moving_average == 'WMA':
+        return get_wma(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
+    elif moving_average == 'SMA':
+        return get_sma(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
+    elif moving_average == 'EMA':
+        ema, _ = get_ema(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
+        return ema
+    else:
+        raise ValueError("Invalid moving average provided. Available are: EMA, SMA, and WMA.")
 
 
 def get_wma(data: List[Dict[str, float]], prices: int, parameter: str, desc: bool = False) -> float:
@@ -329,18 +346,7 @@ def get_bollinger_bands(moving_average_periods: int, volatility_look_back_period
     :param dictionary: Optional dictionary to populate volatility data with if provided.
     :param stdev_type: Standard deviation type which can either be sample or population.
     """
-    moving_average = moving_average.upper()
-    moving_average_parameter = moving_average_parameter.lower()
-    moving_data = data[-moving_average_periods:]
-    if moving_average == 'WMA':
-        middle_band = get_wma(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
-    elif moving_average == 'SMA':
-        middle_band = get_sma(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
-    elif moving_average == 'EMA':
-        middle_band, _ = get_ema(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
-    else:
-        raise ValueError("Invalid moving average provided. Available are: EMA, SMA, and WMA.")
-
+    middle_band = get_moving_average(moving_average, moving_average_parameter, moving_average_periods, data)
     volatility = volatility.lower()
     if volatility == 'zh' or 'yang zhang' in volatility:
         volatility_measure = get_zh_volatility(periods=volatility_look_back_periods, data=data, stdev_type=stdev_type)
