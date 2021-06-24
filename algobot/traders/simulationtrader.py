@@ -146,7 +146,7 @@ class SimulationTrader(Trader):
                 for key in strategy.strategyDict:
                     for optionDetail in strategy.strategyDict[key]:
                         initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                        key = '' if key == 'regular' else key + " "  # Don't show Regular in the statistics window.
+                        key = '' if key == 'regular' else key.capitalize() + " "  # Don't show prefix regular in stats.
                         movingAverageDict[f'{key}{initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
                         movingAverageDict[f'{key}{finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
             else:
