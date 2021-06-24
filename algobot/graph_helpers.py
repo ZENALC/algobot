@@ -290,7 +290,7 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
         trader = gui.get_trader(caller=caller)
         if 'movingAverage' in trader.strategies:
             movingAverageDict = trader.strategies['movingAverage'].strategyDict
-            options = movingAverageDict['regular'] + movingAverageDict['lower']
+            options = movingAverageDict['regular']
             for index, optionDetail in enumerate(options):
                 initialAverage, finalAverage = optionDetail[:2]
                 add_data_to_plot(gui, averageGraph, index * 2, round(initialAverage, precision), currentUTC)

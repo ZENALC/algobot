@@ -81,12 +81,11 @@ class MovingAverageStrategy(Strategy):
         parent = self.parent
         trends = []  # Current option trends. They all have to be the same to register a trend.
 
+        interval_type = 'regular' if data == parent.dataView else 'lower'
+        self.strategyDict[interval_type] = []
+
         if not data:  # This means that a sim or a live trader called this get trend function.
             data = parent.dataView
-
-        if type(data) == Data:
-            self.strategyDict['regular'] = []
-            self.strategyDict['lower'] = []
 
         for option in self.tradingOptions:
             movingAverage, parameter, initialBound, finalBound = option.get_all_params()
@@ -100,7 +99,6 @@ class MovingAverageStrategy(Strategy):
                 avg2 = parent.get_average(movingAverage, parameter, finalBound, data, update=False)
 
             if type(data) == Data:
-                interval_type = 'regular' if data == parent.dataView else 'lower'
                 if log_data:
                     parent.output_message(f'{interval_type.capitalize()} interval ({data.interval}) data:')
                     parent.output_message(f'{movingAverage}({initialBound}) {parameter} = {avg1}')
