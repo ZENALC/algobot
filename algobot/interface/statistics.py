@@ -80,9 +80,9 @@ class Statistics(QDialog):
         innerLayout = QFormLayout()
         innerTabs[categoryKey] = {'tab': QTabWidget()}
 
-        for mainKey in valueDictionary[categoryKey]:
+        for mainKey, mainValue in valueDictionary[categoryKey].items():
             label = QLabel(get_label_string(str(mainKey)))
-            value = QLabel(str(valueDictionary[categoryKey][mainKey]))
+            value = QLabel(str(mainValue))
             value.setAlignment(QtCore.Qt.AlignRight)
 
             innerLayout.addRow(label, value)
@@ -128,12 +128,12 @@ class Statistics(QDialog):
                 self.add_category_and_children_keys(categoryKey, valueDictionary, innerTabs, tab)
             else:
                 innerWidgets = innerTabs[categoryKey]  # live/widgets/general
-                for mainKey in valueDictionary[categoryKey]:
+                for mainKey, mainValue in valueDictionary[categoryKey].items():
                     if mainKey in innerWidgets:
-                        innerWidgets[mainKey]['value'].setText(str(valueDictionary[categoryKey][mainKey]))
+                        innerWidgets[mainKey]['value'].setText(str(mainValue))
                     else:
                         label = QLabel(get_label_string(str(mainKey)))
-                        value = QLabel(str(valueDictionary[categoryKey][mainKey]))
+                        value = QLabel(str(mainValue))
                         value.setAlignment(QtCore.Qt.AlignRight)
 
                         layout = innerTabs[categoryKey]['tab'].layout()
