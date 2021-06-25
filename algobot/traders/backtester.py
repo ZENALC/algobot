@@ -9,7 +9,6 @@ from typing import Dict, Union
 import pandas as pd
 from dateutil import parser
 
-from algobot.algorithms import get_ema, get_sma, get_wma
 from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
                            EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT)
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
@@ -558,44 +557,6 @@ class Backtester(Trader):
                 result += 's'
         return result
 
-    def get_moving_average(self, data: list, average: str, prices: int, parameter: str, round_value=False) -> float:
-        """
-        Returns moving average of given parameters.
-        :param round_value: Boolean to round final value or not.
-        :param data: Data to get moving averages from.
-        :param average: Type of average to retrieve, i.e. -> SMA, WMA, EMA
-        :param prices: Amount of prices to get moving averages of.
-        :param parameter: Parameter to use to get moving average, i.e. - HIGH, LOW, CLOSE, OPEN
-        :return: Moving average.
-        """
-        if average.lower() == 'sma':
-            return self.get_sma(data, prices, parameter, round_value=round_value)
-        elif average.lower() == 'ema':
-            return self.get_ema(data, prices, parameter, round_value=round_value)
-        elif average.lower() == 'wma':
-            return self.get_wma(data, prices, parameter, round_value=round_value)
-        else:
-            raise ValueError('Invalid average provided.')
-
-    def get_sma(self, data: list, prices: int, parameter: str, round_value: bool = True) -> float:
-        data = data[len(data) - prices:]
-        sma = get_sma(data, prices, parameter)
-        return round(sma, self.precision) if round_value else sma
-
-    def get_wma(self, data: list, prices: int, parameter: str, round_value: bool = True) -> float:
-        data = data[len(data) - prices:]
-        wma = get_wma(data, prices, parameter, desc=False)
-        return round(wma, self.precision) if round_value else wma
-
-    def get_ema(self, data: list, prices: int, parameter: str, sma_prices: int = 5, round_value: bool = True) -> float:
-        if sma_prices <= 0:
-            raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
-        elif sma_prices > len(data):
-            sma_prices = len(data) - 1
-
-        ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict, desc=False)
-        return round(ema, self.precision) if round_value else ema
-
     def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> float:
         """
         Helper function to get the EMA for relative strength index and return the RSI.
@@ -657,8 +618,7 @@ class Backtester(Trader):
 
     def main_logic(self):
         """
-        Main logic that dictates how backtest works. It checks for stop losses and then moving averages to check for
-        upcoming trends.
+        Main logic that dictates how backtest works.
         """
         trend = self.get_trend()
         if self.currentPosition == SHORT:

@@ -1,5 +1,6 @@
 from typing import List, Union
 
+from algobot.algorithms import get_moving_average
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH
 from algobot.option import Option
@@ -94,8 +95,8 @@ class MovingAverageStrategy(Strategy):
             initialName, finalName = option.get_pretty_option()
 
             if type(data) == list:  # This means it was called by the optimizer/backtester.
-                avg1 = parent.get_moving_average(data, movingAverage, initialBound, parameter)
-                avg2 = parent.get_moving_average(data, movingAverage, finalBound, parameter)
+                avg1 = get_moving_average(movingAverage, parameter, initialBound, data, parent.ema_dict)
+                avg2 = get_moving_average(movingAverage, parameter, finalBound, data, parent.ema_dict)
             else:  # This means it was called by the live bot / simulation.
                 avg1 = parent.get_average(movingAverage, parameter, initialBound, data, update=False)
                 avg2 = parent.get_average(movingAverage, parameter, finalBound, data, update=False)

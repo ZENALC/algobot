@@ -27,7 +27,7 @@ def validate(periods: int, data: List[Dict[str, float]]):
 
 
 def get_moving_average(moving_average: str, moving_average_parameter: str, moving_average_periods: int,
-                       data: List[Dict[str, Union[float, str, datetime]]]) -> float:
+                       data: List[Dict[str, Union[float, str, datetime]]], cache: dict = None) -> float:
     moving_average = moving_average.upper()
     moving_average_parameter = moving_average_parameter.lower()
     moving_data = data[-moving_average_periods:]
@@ -36,7 +36,8 @@ def get_moving_average(moving_average: str, moving_average_parameter: str, movin
     elif moving_average == 'SMA':
         return get_sma(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
     elif moving_average == 'EMA':
-        ema, _ = get_ema(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
+        ema, _ = get_ema(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter,
+                         memo=cache)
         return ema
     else:
         raise ValueError("Invalid moving average provided. Available are: EMA, SMA, and WMA.")
@@ -96,6 +97,12 @@ def get_ema(data: List[dict], prices: int, parameter: str, sma_prices: int = 5, 
     :param memo: Memoized dictionary containing past exponential moving averages data.
     :return: A tuple containing the exponential moving average and memoized dictionary.
     """
+    if sma_prices <= 0:
+        raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
+
+    if sma_prices > len(data):
+        sma_prices = len(data) - 1
+
     multiplier = 2 / (prices + 1)
 
     if memo and prices in memo and parameter in memo[prices]:
