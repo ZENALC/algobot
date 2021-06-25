@@ -161,15 +161,10 @@ class SimulationTrader(Trader):
                     })
 
                 if 'values' in strategy.strategyDict:
-                    for key in strategy.strategyDict['values']:
-                        value = strategy.strategyDict['values'][key]
+                    for key, value in strategy.strategyDict['values'].items():
                         if type(value) == float:
                             value = round(value, self.precision)
                         groupedDict[strategyName][key] = value
-
-                for x in strategy.get_params():
-                    if x in self.dataView.rsi_data:
-                        groupedDict[strategyName][f'RSI({x})'] = round(self.dataView.rsi_data[x], self.precision)
 
     def get_remaining_safety_timer(self) -> str:
         """
