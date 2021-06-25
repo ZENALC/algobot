@@ -299,7 +299,7 @@ class BotThread(QRunnable):
             lowerTrend = trader.get_trend(dataObject=lowerData, log_data=self.gui.advancedLogging)
             self.lowerTrend = trader.get_trend_string(lowerTrend)
             if previousLowerTrend != lowerTrend:
-                message = f'({self.lowerTrend.capitalize()}) trend detected on lower interval data.'
+                message = f'{self.lowerTrend.capitalize()} trend detected on lower interval data.'
                 self.signals.activity.emit(caller, message)
                 if self.gui.configuration.enableTelegramNotification.isChecked() and caller == LIVE:
                     self.gui.telegramBot.send_message(message=message, chatID=self.telegramChatID)

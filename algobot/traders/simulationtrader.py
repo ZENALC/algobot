@@ -3,7 +3,6 @@ from datetime import datetime
 from threading import Lock
 from typing import Union
 
-from algobot.algorithms import get_moving_average
 from algobot.data import Data
 from algobot.enums import (BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
                            EXIT_LONG, EXIT_SHORT, LONG, SHORT)
@@ -503,23 +502,6 @@ class SimulationTrader(Trader):
         """
         temp = self.dataView.symbol.upper().split('USDT')
         return temp[0]
-
-    def get_average(self, movingAverage: str, parameter: str, value: int, dataObject: Data = None) -> float:
-        """
-        Returns the moving average with parameter and value provided
-        :param dataObject: Data object to be used to get moving averages.
-        :param movingAverage: Moving average to get the average from the data view.
-        :param parameter: Parameter for the data view to use in the moving average.
-        :param value: Value for the moving average to use in the moving average.
-        :return: A float value representing the moving average.
-        """
-        if not dataObject:
-            dataObject = self.dataView
-
-        data = dataObject.data + [dataObject.current_values]
-        ma = get_moving_average(movingAverage, parameter, value, data, dataObject.ema_dict)
-
-        return round(ma, self.precision)
 
     def output_no_position_information(self):
         """

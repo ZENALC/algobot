@@ -82,7 +82,7 @@ class MovingAverageStrategy(Strategy):
         parent = self.parent
         trends = []  # Current option trends. They all have to be the same to register a trend.
 
-        # Standardize this for all strategies i.e. lower/regular interval data
+        # TODO: Standardize this for all strategies i.e. lower/regular interval data
         if type(data) == Data:
             interval_type = 'regular' if data == parent.dataView else 'lower'
             self.strategyDict[interval_type] = []
@@ -98,8 +98,10 @@ class MovingAverageStrategy(Strategy):
                 avg1 = get_moving_average(movingAverage, parameter, initialBound, data, parent.ema_dict)
                 avg2 = get_moving_average(movingAverage, parameter, finalBound, data, parent.ema_dict)
             else:  # This means it was called by the live bot / simulation.
-                avg1 = parent.get_average(movingAverage, parameter, initialBound, data)
-                avg2 = parent.get_average(movingAverage, parameter, finalBound, data)
+                avg1 = round(get_moving_average(movingAverage, parameter, initialBound,
+                                                data.data + [data.current_values], data.ema_dict), parent.precision)
+                avg2 = round(get_moving_average(movingAverage, parameter, finalBound,
+                                                data.data + [data.current_values], data.ema_dict), parent.precision)
 
             if type(data) == Data:
                 interval_type = 'regular' if data == parent.dataView else 'lower'
