@@ -9,7 +9,6 @@ from typing import Dict, List, Tuple, Union
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
 
-from algobot.algorithms import get_ema, get_sma, get_wma
 from algobot.helpers import (ROOT_DIR, get_logger, get_normalized_data,
                              get_ups_and_downs)
 from algobot.typing_hints import DATA_TYPE
@@ -20,7 +19,7 @@ class Data:
                  updateData: bool = True, log: bool = False, logFile: str = 'data', logObject: Logger = None,
                  precision: int = 2, callback=None, caller=None):
         """
-        Data object that will retrieve current and historical prices from the Binance API and calculate moving averages.
+        Data object that will retrieve current and historical prices from the Binance API.
         :param: interval: Interval for which the data object will track prices.
         :param: symbol: Symbol for which the data object will track prices.
         :param: loadData: Boolean for whether data will be loaded or not.
@@ -718,76 +717,3 @@ class Data:
         if round_value:
             return round(rsi, self.precision)
         return rsi
-
-    def get_sma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True,
-                update: bool = True) -> float:
-        """
-        Returns the simple moving average with run-time data and prices provided.
-        :param update: Boolean for whether function should call API and get latest data or not.
-        :param boolean round_value: Boolean that specifies whether return value should be rounded
-        :param int prices: Number of values for average
-        :param int shift: Prices shifted from current price
-        :param str parameter: Parameter to get the average of (e.g. open, close, high or low values)
-        :return: SMA
-        """
-        if not self.is_valid_average_input(shift, prices):
-            raise ValueError('Invalid average input specified.')
-
-        data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
-        data = data[len(data) - prices - shift: len(data) - shift]
-        sma = get_sma(data, prices, parameter)
-
-        if round_value:
-            return round(sma, self.precision)
-        return sma
-
-    def get_wma(self, prices: int, parameter: str, shift: int = 0, round_value: bool = True,
-                update: bool = True) -> float:
-        """
-        Returns the weighted moving average with run-time data and prices provided.
-        :param update: Boolean for whether function should call API and get latest data or not.
-        :param shift: Prices shifted from current period.
-        :param boolean round_value: Boolean that specifies whether return value should be rounded
-        :param int prices: Number of prices to loop over for average
-        :param parameter: Parameter to get the average of (e.g. open, close, high or low values)
-        :return: WMA
-        """
-        if not self.is_valid_average_input(shift, prices):
-            raise ValueError('Invalid average input specified.')
-
-        data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
-        data = data[len(data) - prices - shift: len(data) - shift]
-        wma = get_wma(data, prices, parameter, desc=False)
-
-        if round_value:
-            return round(wma, self.precision)
-        return wma
-
-    def get_ema(self, prices: int, parameter: str, shift: int = 0, sma_prices: int = 5,
-                round_value: bool = True, update: bool = True) -> float:
-        """
-        Returns the exponential moving average with data provided.
-        :param update: Boolean for whether function should call API and get latest data or not.
-        :param shift: Prices shifted from current period.
-        :param round_value: Boolean that specifies whether return value should be rounded
-        :param int sma_prices: SMA prices to get first EMA over
-        :param int prices: Days to iterate EMA over (or the period)
-        :param str parameter: Parameter to get the average of (e.g. open, close, high, or low values)
-        :return: EMA
-        """
-        if not self.is_valid_average_input(shift, prices, sma_prices):
-            raise ValueError('Invalid average input specified.')
-        elif sma_prices <= 0:
-            raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
-
-        if not self.data_is_updated():  # Check if data is valid. If not, memoized data will be corrupted.
-            self.ema_dict = {}
-            self.update_data()
-
-        data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
-        data = data[:len(data) - shift]
-        ema, self.ema_dict = get_ema(data, prices, parameter, sma_prices, self.ema_dict, desc=False)
-
-        if round_value:
-            return round(ema, self.precision)
-        return ema

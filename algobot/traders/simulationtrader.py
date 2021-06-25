@@ -3,6 +3,7 @@ from datetime import datetime
 from threading import Lock
 from typing import Union
 
+from algobot.algorithms import get_moving_average
 from algobot.data import Data
 from algobot.enums import (BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
                            EXIT_LONG, EXIT_SHORT, LONG, SHORT)
@@ -503,12 +504,9 @@ class SimulationTrader(Trader):
         temp = self.dataView.symbol.upper().split('USDT')
         return temp[0]
 
-    def get_average(self, movingAverage: str, parameter: str, value: int, dataObject: Data = None,
-                    update: bool = True, round_value: bool = False) -> float:
+    def get_average(self, movingAverage: str, parameter: str, value: int, dataObject: Data = None) -> float:
         """
         Returns the moving average with parameter and value provided
-        :param round_value: Boolean for whether returned value should be rounded or not.
-        :param update: Boolean for whether average will call the API to get latest values or not.
         :param dataObject: Data object to be used to get moving averages.
         :param movingAverage: Moving average to get the average from the data view.
         :param parameter: Parameter for the data view to use in the moving average.
@@ -518,14 +516,10 @@ class SimulationTrader(Trader):
         if not dataObject:
             dataObject = self.dataView
 
-        if movingAverage == 'SMA':
-            return dataObject.get_sma(value, parameter, update=update, round_value=round_value)
-        elif movingAverage == 'WMA':
-            return dataObject.get_wma(value, parameter, update=update, round_value=round_value)
-        elif movingAverage == 'EMA':
-            return dataObject.get_ema(value, parameter, update=update, round_value=round_value)
-        else:
-            raise ValueError(f'Unknown moving average {movingAverage}.')
+        data = dataObject.data + [dataObject.current_values]
+        ma = get_moving_average(movingAverage, parameter, value, data, dataObject.ema_dict)
+
+        return round(ma, self.precision)
 
     def output_no_position_information(self):
         """

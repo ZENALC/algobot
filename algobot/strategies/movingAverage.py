@@ -98,8 +98,8 @@ class MovingAverageStrategy(Strategy):
                 avg1 = get_moving_average(movingAverage, parameter, initialBound, data, parent.ema_dict)
                 avg2 = get_moving_average(movingAverage, parameter, finalBound, data, parent.ema_dict)
             else:  # This means it was called by the live bot / simulation.
-                avg1 = parent.get_average(movingAverage, parameter, initialBound, data, update=False)
-                avg2 = parent.get_average(movingAverage, parameter, finalBound, data, update=False)
+                avg1 = parent.get_average(movingAverage, parameter, initialBound, data)
+                avg2 = parent.get_average(movingAverage, parameter, finalBound, data)
 
             if type(data) == Data:
                 interval_type = 'regular' if data == parent.dataView else 'lower'
