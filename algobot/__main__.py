@@ -1050,7 +1050,7 @@ class Interface(QMainWindow):
         p = graph.plotItem.vb.mapSceneToView(point)
         graphDict = get_graph_dictionary(self, graph)
 
-        if p and graphDict.get('line'):  # Ensure that the hover line is enabled.
+        if graphDict['enable'] and p and graphDict.get('line'):  # Ensure that the hover line is enabled.
             graphDict['line'].setPos(p.x())
             xValue = int(p.x())
 

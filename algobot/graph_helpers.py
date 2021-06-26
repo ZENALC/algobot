@@ -166,22 +166,36 @@ def setup_average_graph_plots(gui: QMainWindow, graph: PlotWidget, trader, color
 
     currentPrice = trader.currentPrice
     currentDateTimestamp = datetime.utcnow().timestamp()
-    colorCounter = 1
 
-    if 'movingAverage' in trader.strategies:
-        for option in trader.strategies['movingAverage'].get_params():
-            initialAverage, finalAverage, initialName, finalName = option.get_option_info(trader)
-            initialPlotDict = get_plot_dictionary(gui=gui, graph=graph, color=colors[colorCounter % len(colors)],
-                                                  y=initialAverage, name=initialName, timestamp=currentDateTimestamp)
-            secondaryPlotDict = get_plot_dictionary(gui=gui, graph=graph,
-                                                    color=colors[(colorCounter + 1) % len(colors)],
-                                                    y=finalAverage, name=finalName, timestamp=currentDateTimestamp)
-            colorCounter += 2
-            append_plot_to_graph(gui, graph, [initialPlotDict, secondaryPlotDict])
-
-    tickerPlotDict = get_plot_dictionary(gui=gui, graph=graph, color=colors[0], y=currentPrice, name=trader.symbol,
+    tickerPlotDict = get_plot_dictionary(gui=gui,
+                                         graph=graph,
+                                         color=colors[0],
+                                         y=currentPrice,
+                                         name=trader.symbol,
                                          timestamp=currentDateTimestamp)
     append_plot_to_graph(gui, graph, [tickerPlotDict])
+
+    # Every graph plot needs to have an index. We'll start from 1. (since 0 is for the price). Logically, we only need
+    # the first index for each strategy dictionary, since we can iterate through it and add to it.
+    index = 1
+
+    for strategy in trader.strategies.values():
+        strategy_plot_dict = strategy.get_plot_data()
+        strategy_plot_dict['index'] = index
+        for name, combined_data in strategy_plot_dict.items():
+
+            if name == 'index':
+                continue  # We don't want to iterate over the index.
+
+            value, color = combined_data
+            plot_dict = get_plot_dictionary(gui=gui,
+                                            graph=graph,
+                                            color=color,
+                                            y=value,
+                                            name=name,
+                                            timestamp=currentDateTimestamp)
+            append_plot_to_graph(gui, graph, [plot_dict])
+            index += 1
 
 
 def append_plot_to_graph(gui: QMainWindow, targetGraph: PlotWidget, toAdd: list):
@@ -288,12 +302,22 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
         averageGraph.setLimits(xMin=0, xMax=graphXSize)
 
         trader = gui.get_trader(caller=caller)
-        if 'movingAverage' in trader.strategies:
-            movingAverageDict = trader.strategies['movingAverage'].strategyDict
-            options = movingAverageDict['regular']
-            for index, optionDetail in enumerate(options):
-                initialAverage, finalAverage = optionDetail[:2]
-                add_data_to_plot(gui, averageGraph, index * 2, round(initialAverage, precision), currentUTC)
-                add_data_to_plot(gui, averageGraph, index * 2 + 1, round(finalAverage, precision), currentUTC)
+        for strategy in trader.strategies.values():
+            strategy_plot_dict = strategy.get_plot_data()
+            index = strategy_plot_dict['index']
+            for name, combined_data in strategy_plot_dict.items():
 
-        add_data_to_plot(gui, averageGraph, -1, y=round(valueDict['price'], precision), timestamp=currentUTC)
+                if name == 'index':
+                    continue
+
+                value, _ = combined_data
+                add_data_to_plot(
+                    gui=gui,
+                    targetGraph=averageGraph,
+                    plotIndex=index,
+                    y=round(value, trader.precision),
+                    timestamp=currentUTC
+                )
+                index += 1
+
+        add_data_to_plot(gui, averageGraph, 0, y=round(valueDict['price'], precision), timestamp=currentUTC)

@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import platform
+import random
 import re
 import subprocess
 import time
@@ -40,6 +41,18 @@ LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
 
 def is_debug() -> bool:
     return os.getenv('DEBUG') is not None
+
+
+def get_random_color() -> str:
+    """
+    Returns a random HEX color string.
+    :return: HEX color string.
+    """
+    def r():
+        randomInt = random.randint(0, 255)
+        return format(randomInt, '02x')
+
+    return r() + r() + r()
 
 
 def open_folder(folder: str):

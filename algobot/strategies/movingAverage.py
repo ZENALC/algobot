@@ -3,6 +3,7 @@ from typing import List, Union
 from algobot.algorithms import get_moving_average
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH
+from algobot.helpers import get_random_color
 from algobot.option import Option
 from algobot.strategies.strategy import Strategy
 
@@ -23,6 +24,14 @@ class MovingAverageStrategy(Strategy):
         if parent:  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
             self.validate_options()
             self.strategyDict = {'lower': [], 'regular': []}
+            self.initialize_plot_dict()
+
+    def initialize_plot_dict(self):
+        # TODO: Add support for colors in the actual program.
+        for option in self.tradingOptions:
+            initialName, finalName = option.get_pretty_option()
+            self.plotDict[initialName] = [0, get_random_color()]
+            self.plotDict[finalName] = [0, get_random_color()]
 
     @staticmethod
     def parse_inputs(inputs):
@@ -111,6 +120,8 @@ class MovingAverageStrategy(Strategy):
                     parent.output_message(f'{movingAverage}({finalBound}) {parameter} = {avg2}')
 
                 self.strategyDict[interval_type].append((avg1, avg2, initialName, finalName))
+                self.plotDict[initialName][0] = avg1
+                self.plotDict[finalName][0] = avg2
 
             if avg1 > avg2:
                 trends.append(BULLISH)

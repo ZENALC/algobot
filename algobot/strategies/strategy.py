@@ -22,6 +22,7 @@ class Strategy:
         self.trend = None
         self.dynamic = False  # Set this to true if you want to have additional slots.
         self.description = "No strategy description found. You can setup your strategy description in strategies.py."
+        self.plotDict = {}
         self.strategyDict = {}
         self.lowerIntervalDict = {}
 
@@ -44,6 +45,13 @@ class Strategy:
         This function should return the parameters of the strategy being used.
         """
         raise NotImplementedError("Implement a function to return parameters.")
+
+    def get_plot_data(self) -> dict:
+        """
+        This function should return plot data for bot. By default, it'll return an empty dictionary.
+        :return: Plot data dictionary.
+        """
+        return self.plotDict
 
     @staticmethod
     def get_param_types():
