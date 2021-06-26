@@ -300,6 +300,7 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
     averageGraphDict = get_graph_dictionary(gui, averageGraph)
     if averageGraphDict['enable']:
         averageGraph.setLimits(xMin=0, xMax=graphXSize)
+        add_data_to_plot(gui, averageGraph, 0, y=round(valueDict['price'], precision), timestamp=currentUTC)
 
         trader = gui.get_trader(caller=caller)
         for strategy in trader.strategies.values():
@@ -319,5 +320,3 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
                     timestamp=currentUTC
                 )
                 index += 1
-
-        add_data_to_plot(gui, averageGraph, 0, y=round(valueDict['price'], precision), timestamp=currentUTC)
