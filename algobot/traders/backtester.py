@@ -2,8 +2,10 @@ import copy
 import os
 import sys
 import time
+import traceback
 from datetime import datetime, timedelta
 from itertools import product
+from logging import Logger
 from typing import Dict, Union
 
 import pandas as pd
@@ -34,7 +36,8 @@ class Backtester(Trader):
                  endDate: datetime = None,
                  drawdownPercentage: int = 100,
                  precision: int = 4,
-                 outputTrades: bool = True):
+                 outputTrades: bool = True,
+                 logger: Logger = None):
         super().__init__(symbol=symbol,
                          precision=precision,
                          startingBalance=startingBalance,
@@ -48,6 +51,7 @@ class Backtester(Trader):
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
         self.drawdownPercentageDecimal = drawdownPercentage / 100  # Percentage of loss at which bot exits backtest.
         self.optimizerRows = []
+        self.logger = logger
 
         if len(strategyInterval.split()) == 1:
             strategyInterval = convert_small_interval(strategyInterval)
@@ -205,6 +209,9 @@ class Backtester(Trader):
                 strategy.get_trend(strategyData)
             except Exception as e:
                 if thread and thread.caller == OPTIMIZER:
+                    error_message = traceback.format_exc()
+                    if self.logger is not None:
+                        self.logger.exception(error_message)
                     return 'CRASHED'  # We don't want optimizer to stop.
                 else:
                     if thread:

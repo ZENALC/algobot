@@ -23,6 +23,7 @@ def get_config_helper(gui, caller):
         'precision': parse_precision(precision, symbol),
         'marginEnabled': algo_dict['marginEnabled'].isChecked(),
         'strategyInterval': algo_dict['strategyInterval'].currentText(),
+        'logger': gui.logger
     }
 
     if caller == OPTIMIZER:

@@ -103,7 +103,8 @@ class Strategy:
         """
         Clears strategy dictionary.
         """
-        self.strategyDict = {'regular': {}, 'lower': {}}
+        self.strategyDict['regular'] = {}
+        self.strategyDict['lower'] = {}
 
     def get_appropriate_dictionary(self, data: Union[list, Data]) -> Dict[str, Any]:
         """
