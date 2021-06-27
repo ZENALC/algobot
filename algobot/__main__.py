@@ -1313,7 +1313,7 @@ class Interface(QMainWindow):
 
         path = create_folder("Trade History")
 
-        if caller == SIMULATION:
+        if caller == LIVE:
             defaultFile = os.path.join(path, 'live_trades.csv')
         else:
             defaultFile = os.path.join(path, 'simulation_trades.csv')
