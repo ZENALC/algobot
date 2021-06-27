@@ -20,10 +20,6 @@ def load_state(config_obj):
             config_obj.bearModeRadioButton.setChecked(config['bearTheme'])
 
             set_color_to_label(config_obj.balanceColor, config['balanceColor'])
-            set_color_to_label(config_obj.movingAverage1Color, (config['avg1Color']))
-            set_color_to_label(config_obj.movingAverage2Color, (config['avg2Color']))
-            set_color_to_label(config_obj.movingAverage3Color, (config['avg3Color']))
-            set_color_to_label(config_obj.movingAverage4Color, (config['avg4Color']))
             set_color_to_label(config_obj.hoverLineColor, (config['lineColor']))
 
             config_obj.graphIndicatorsCheckBox.setChecked(config['averagePlot'])
@@ -70,10 +66,6 @@ def save_state(config_obj):
         'bullTheme': config_obj.bullModeRadioButton.isChecked(),
         'bearTheme': config_obj.bearModeRadioButton.isChecked(),
         'balanceColor': config_obj.balanceColor.text(),
-        'avg1Color': config_obj.movingAverage1Color.text(),
-        'avg2Color': config_obj.movingAverage2Color.text(),
-        'avg3Color': config_obj.movingAverage3Color.text(),
-        'avg4Color': config_obj.movingAverage4Color.text(),
         'lineColor': config_obj.hoverLineColor.text(),
         'averagePlot': config_obj.graphIndicatorsCheckBox.isChecked(),
         'failureLimit': config_obj.failureLimitSpinBox.value(),

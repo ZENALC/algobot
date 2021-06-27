@@ -2003,53 +2003,9 @@
                  </property>
                  <layout class="QGridLayout" name="gridLayout_11">
                   <item row="1" column="0">
-                   <widget class="QLabel" name="movingAverage1ColorLabel">
-                    <property name="text">
-                     <string>Moving Average 1 Color</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="QLabel" name="movingAverage4ColorLabel">
-                    <property name="text">
-                     <string>Moving Average 4 Color</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="0">
                    <widget class="QLabel" name="hoverLineColorLabel">
                     <property name="text">
                      <string>Hover Line Color</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QLabel" name="movingAverage2ColorLabel">
-                    <property name="text">
-                     <string>Moving Average 2 Color</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="movingAverage3ColorLabel">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Moving Average 3 Color</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="0">
-                   <widget class="QCheckBox" name="enableHoverLine">
-                    <property name="text">
-                     <string>Enable Hover Line?</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -2066,16 +2022,13 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1">
-                   <widget class="QLabel" name="movingAverage1Color">
-                    <property name="styleSheet">
-                     <string notr="true">background: #33bd78;</string>
-                    </property>
+                  <item row="2" column="0">
+                   <widget class="QCheckBox" name="enableHoverLine">
                     <property name="text">
-                     <string>#33bd78</string>
+                     <string>Enable Hover Line?</string>
                     </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
+                    <property name="checked">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -2086,58 +2039,6 @@
                     </property>
                     <property name="text">
                      <string>#14e0dd</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="QLabel" name="movingAverage3Color">
-                    <property name="styleSheet">
-                     <string notr="true">background: #027ddb;</string>
-                    </property>
-                    <property name="text">
-                     <string>#027ddb</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="1">
-                   <widget class="QLabel" name="movingAverage4Color">
-                    <property name="styleSheet">
-                     <string notr="true">background: #f0ec05;</string>
-                    </property>
-                    <property name="text">
-                     <string>#f0ec05</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="1">
-                   <widget class="QLabel" name="hoverLineColor">
-                    <property name="styleSheet">
-                     <string notr="true">background: #bf0fa2</string>
-                    </property>
-                    <property name="text">
-                     <string>#bf0fa2</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QLabel" name="movingAverage2Color">
-                    <property name="styleSheet">
-                     <string notr="true">background: #db0f0f;</string>
-                    </property>
-                    <property name="text">
-                     <string>#db0f0f</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
@@ -2163,47 +2064,20 @@
                     </property>
                    </widget>
                   </item>
+                  <item row="1" column="1">
+                   <widget class="QLabel" name="hoverLineColor">
+                    <property name="styleSheet">
+                     <string notr="true">background: #bf0fa2</string>
+                    </property>
+                    <property name="text">
+                     <string>#bf0fa2</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
                   <item row="1" column="2">
-                   <widget class="QPushButton" name="setMovingAverage1ColorButton">
-                    <property name="text">
-                     <string>Set Color</string>
-                    </property>
-                    <property name="autoDefault">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2">
-                   <widget class="QPushButton" name="setMovingAverage2ColorButton">
-                    <property name="text">
-                     <string>Set Color</string>
-                    </property>
-                    <property name="autoDefault">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="2">
-                   <widget class="QPushButton" name="setMovingAverage3ColorButton">
-                    <property name="text">
-                     <string>Set Color</string>
-                    </property>
-                    <property name="autoDefault">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="2">
-                   <widget class="QPushButton" name="setMovingAverage4ColorButton">
-                    <property name="text">
-                     <string>Set Color</string>
-                    </property>
-                    <property name="autoDefault">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="2">
                    <widget class="QPushButton" name="setHoverLineColorButton">
                     <property name="text">
                      <string>Set Color</string>

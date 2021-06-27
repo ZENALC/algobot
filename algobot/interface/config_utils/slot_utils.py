@@ -219,10 +219,6 @@ def load_slots(config_obj):
         config_obj=c, caller=OPTIMIZER, result_label=c.optimizerConfigurationResult, func=load_optimizer_settings))
 
     c.setBalanceColorButton.clicked.connect(lambda: get_and_set_line_color(c, c.balanceColor))
-    c.setMovingAverage1ColorButton.clicked.connect(lambda: get_and_set_line_color(c, c.movingAverage1Color))
-    c.setMovingAverage2ColorButton.clicked.connect(lambda: get_and_set_line_color(c, c.movingAverage2Color))
-    c.setMovingAverage3ColorButton.clicked.connect(lambda: get_and_set_line_color(c, c.movingAverage3Color))
-    c.setMovingAverage4ColorButton.clicked.connect(lambda: get_and_set_line_color(c, c.movingAverage4Color))
     c.setHoverLineColorButton.clicked.connect(lambda: get_and_set_line_color(c, c.hoverLineColor))
 
     c.testCredentialsButton.clicked.connect(lambda: test_binance_credentials(c))

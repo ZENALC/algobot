@@ -244,10 +244,6 @@ def get_graph_colors(gui: QMainWindow) -> List[str]:
     """
     return [
         gui.configuration.balanceColor.text(),
-        gui.configuration.movingAverage1Color.text(),
-        gui.configuration.movingAverage2Color.text(),
-        gui.configuration.movingAverage3Color.text(),
-        gui.configuration.movingAverage4Color.text(),
         gui.configuration.hoverLineColor.text()
     ]
 
