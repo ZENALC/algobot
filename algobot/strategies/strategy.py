@@ -5,7 +5,7 @@ Please make sure that they have some default values like None for the GUI to ini
 Visit https://github.com/ZENALC/algobot/wiki/Strategies for documentation.
 """
 
-from typing import List, Union
+from typing import Any, Dict, List, Union
 
 from algobot.data import Data
 
@@ -102,13 +102,13 @@ class Strategy:
         """
         return 0
 
-    def populate_grouped_dict(self, grouped_dict: dict):
+    def populate_grouped_dict(self, grouped_dict: Dict[str, Dict[str, Any]]):
         """
         Populate grouped dictionary for the simulation/live trader. Note that only the key where this strategy exists
         will be provided. Not the entire grouped dictionary.
         :param grouped_dict: Grouped dictionary (strategy key) to populate.
         :return: None
         """
-        for interval_key, interval_dict in self.strategyDict.items():
+        for interval_dict in self.strategyDict.values():
             for key, value in interval_dict.items():
                 grouped_dict[key] = value if type(value) != float else round(value, self.precision)
