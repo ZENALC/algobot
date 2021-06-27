@@ -5,7 +5,7 @@ Please make sure that they have some default values like None for the GUI to ini
 Visit https://github.com/ZENALC/algobot/wiki/Strategies for documentation.
 """
 
-from typing import Any, Dict, List, Union, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from algobot.data import Data
 
