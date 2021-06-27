@@ -33,8 +33,11 @@ class Strategy:
         self.dynamic: bool = False
 
         # Dictionary for plotting values in graphs. This should hold string keys and float values. If a value is
-        # non-numeric, the program will crash.
-        self.plotDict: Dict[str, List[float, str]] = {}
+        # non-numeric, the program will crash. This should hold the key of the value and then the list containing
+        # the value then the color.
+        #
+        # For example -> self.plotDict['SMA(5)'] = [13, 'ffffff'] -> SMA(5) value of 13 with a hex color of white.
+        self.plotDict: Dict[str, List[Union[float, str]]] = {}
 
         # Dictionary for the what's going on in the strategy. This needs two keys: one which is 'regular' and another
         # which is 'lower'. The two keys will then hold dictionaries for the strategies' values in lower and regular
@@ -61,7 +64,7 @@ class Strategy:
         """
         raise NotImplementedError("Implement a function to return parameters.")
 
-    def get_plot_data(self) -> Dict[str, List[float, str]]:
+    def get_plot_data(self) -> Dict[str, List[Union[float, str]]]:
         """
         This function should return plot data for bot. By default, it'll return an empty dictionary.
         :return: Plot data dictionary.
