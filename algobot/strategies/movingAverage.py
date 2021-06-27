@@ -114,8 +114,9 @@ class MovingAverageStrategy(Strategy):
                 self.strategyDict[interval_type][f'{prefix}{initialName}'] = avg1
                 self.strategyDict[interval_type][f'{prefix}{finalName}'] = avg2
 
-                self.plotDict[initialName][0] = avg1
-                self.plotDict[finalName][0] = avg2
+                if interval_type == 'regular':
+                    self.plotDict[initialName][0] = avg1
+                    self.plotDict[finalName][0] = avg2
 
             if avg1 > avg2:
                 trends.append(BULLISH)

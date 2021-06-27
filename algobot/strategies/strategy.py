@@ -5,7 +5,7 @@ Please make sure that they have some default values like None for the GUI to ini
 Visit https://github.com/ZENALC/algobot/wiki/Strategies for documentation.
 """
 
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Tuple
 
 from algobot.data import Data
 
@@ -67,6 +67,17 @@ class Strategy:
         """
         return self.plotDict
 
+    def get_interval_type(self, data) -> str:
+        if type(data) == list or data == self.parent.dataView:
+            return 'regular'
+        else:
+            return 'lower'
+
+    def get_prefix_and_interval_type(self, data) -> Tuple[str, str]:
+        interval_type = self.get_interval_type(data=data)
+        prefix = '' if interval_type == 'regular' else 'Lower Interval '
+        return prefix, interval_type
+
     @staticmethod
     def get_param_types():
         """
@@ -86,15 +97,8 @@ class Strategy:
         the strategy dict; if it's a Data type that's equal to the parent's data-view, then return the strategy dict;
         finally, if none of them are selected, then it's most likely the lower interval's dictionary.
         """
-        if type(data) == list:
-            return self.strategyDict
-        elif type(data) == Data:
-            if data == self.parent.dataView:
-                return self.strategyDict['regular']
-            else:
-                return self.strategyDict['lower']
-        else:
-            raise ValueError("Invalid type of data object.")
+        interval_type = self.get_interval_type(data)
+        return self.strategyDict[interval_type]
 
     def get_min_option_period(self):
         """
