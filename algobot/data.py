@@ -83,13 +83,15 @@ class Data:
 
         return None
 
-    def validate_interval(self, interval: str):
+    @staticmethod
+    def validate_interval(interval: str):
         """
         Validates interval. If incorrect interval, raises ValueError.
-        :param interval: Interval to be checked.
+        :param interval: Interval to be checked in short form -> e.g. 12h for 12 hours
         """
-        if not self.is_valid_interval(interval):
-            raise ValueError(f'Invalid interval {interval} specified.')
+        availableIntervals = ('12h', '15m', '1d', '1h', '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
+        if interval not in availableIntervals:
+            raise ValueError(f'Invalid interval {interval} given. Available intervals are: \n{availableIntervals}')
 
     def validate_symbol(self, symbol: str):
         """
@@ -585,30 +587,6 @@ class Data:
 
         self.output_message(f'Data saved to {path}.')
         return path
-
-    @staticmethod
-    def get_custom_csv_data(symbol: str, interval: str, descending: bool = True) -> str:
-        """
-        Creates a new CSV file with interval specified and returns the absolute path of CSV file.
-        :param symbol: Symbol to get data for.
-        :param interval: Interval to get data for.
-        :param descending: Returns data in specified sort. If descending, writes data from most recent to oldest data.
-        """
-        tempData = Data(interval=interval, symbol=symbol)
-        return tempData.create_csv_file(descending=descending)
-
-    def is_valid_interval(self, interval: str) -> bool:
-        """
-        Returns whether interval provided is valid or not.
-        :param interval: Interval argument in short form -> e.g. 12h for 12 hours
-        :return: A boolean whether the interval is valid or not.
-        """
-        availableIntervals = ('12h', '15m', '1d', '1h', '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
-        if interval in availableIntervals:
-            return True
-        else:
-            self.output_message(f'Invalid interval. Available intervals are: \n{availableIntervals}')
-            return False
 
     def is_valid_symbol(self, symbol: str) -> bool:
         """
