@@ -82,6 +82,20 @@ class MovingAverageStrategy(Strategy):
         """
         return self.tradingOptions
 
+    def populate_grouped_dict(self, grouped_dict: dict):
+        """
+        Populate grouped dictionary for the simulation/live trader. Note that only the key where this strategy exists
+        will be provided. Not the entire grouped dictionary.
+        :param grouped_dict: Grouped dictionary (strategy key) to populate.
+        :return: None
+        """
+        for key in self.strategyDict:
+            for optionDetail in self.strategyDict[key]:
+                initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
+                k = '' if key == 'regular' else key.capitalize() + " "  # Don't show prefix regular in stats.
+                grouped_dict[f'{k}{initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
+                grouped_dict[f'{k}{finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
+
     def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False) -> int:
         """
         This function should return the current trend for the Moving Average strategy with the provided data.

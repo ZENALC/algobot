@@ -18,7 +18,6 @@ class Strategy:
         self.name = name
         self.parent = parent
         self.precision = precision
-        self.showInputs = True
         self.trend = None
         self.dynamic = False  # Set this to true if you want to have additional slots.
         self.description = "No strategy description found. You can setup your strategy description in strategies.py."
@@ -87,3 +86,12 @@ class Strategy:
         This function should return the minimum amount of periods required to get a trend. It's 0 by default.
         """
         return 0
+
+    def populate_grouped_dict(self, grouped_dict):
+        """
+        Populate grouped dictionary for the simulation/live trader. Note that only the key where this strategy exists
+        will be provided. Not the entire grouped dictionary.
+        :param grouped_dict: Grouped dictionary (strategy key) to populate.
+        :return: None
+        """
+        grouped_dict['inputs'] = self.get_params()

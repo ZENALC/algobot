@@ -137,34 +137,13 @@ class SimulationTrader(Trader):
         :param groupedDict: Dictionary to add strategy information to.
         """
         for strategyName, strategy in self.strategies.items():
-            if strategyName == 'movingAverage':
-                groupedDict['movingAverages'] = movingAverageDict = {
-                    'trend': self.get_trend_string(strategy.trend),
-                    'enabled': 'True',
-                }
 
-                for key in strategy.strategyDict:
-                    for optionDetail in strategy.strategyDict[key]:
-                        initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                        k = '' if key == 'regular' else key.capitalize() + " "  # Don't show prefix regular in stats.
-                        movingAverageDict[f'{k}{initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
-                        movingAverageDict[f'{k}{finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
-            else:
-                groupedDict[strategyName] = {
-                    'trend': self.get_trend_string(strategy.trend),
-                    'enabled': 'True',
-                }
+            groupedDict[strategyName] = {
+                'trend': self.get_trend_string(strategy.trend),
+                'enabled': 'True',
+            }
 
-                if strategy.showInputs:
-                    groupedDict[strategyName].update({
-                        'inputs': strategy.get_params()  # TODO: Refactor this logic to return a dictionary.
-                    })
-
-                if 'values' in strategy.strategyDict:
-                    for key, value in strategy.strategyDict['values'].items():
-                        if type(value) == float:
-                            value = round(value, self.precision)
-                        groupedDict[strategyName][key] = value
+            strategy.populate_grouped_dict(groupedDict[strategyName])
 
     def get_remaining_safety_timer(self) -> str:
         """
