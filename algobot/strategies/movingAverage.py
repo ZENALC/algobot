@@ -81,7 +81,7 @@ class MovingAverageStrategy(Strategy):
         """
         return self.tradingOptions
 
-    def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False) -> int:
+    def get_trend(self, data: Union[List[dict], Data], log_data: bool = False) -> int:
         """
         This function should return the current trend for the Moving Average strategy with the provided data.
         :param data: Data container to get trend from - it can either be a list or a Data object.

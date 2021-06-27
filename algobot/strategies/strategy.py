@@ -5,7 +5,7 @@ Please make sure that they have some default values like None for the GUI to ini
 Visit https://github.com/ZENALC/algobot/wiki/Strategies for documentation.
 """
 
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from algobot.data import Data
 
@@ -18,27 +18,28 @@ class Strategy:
         :param parent: Parent object that'll use this strategy. This will be a trader of some sort e.g. backtester.
         :param precision: Precision to which to round float values to.
         """
-        self.name = name
+        self.name: str = name
         self.parent = parent
-        self.precision = precision
+        self.precision: int = precision
 
         # Whatever description you want to pop in in the GUI.
-        self.description = "No strategy description found. You can setup your strategy description in strategies.py."
+        self.description: str = "No strategy description found. " \
+                                "You can setup your strategy description in strategies.py."
 
         # This should hold the trend the strategy currently holds (e.g. BULLISH, BEARISH, ENTER LONG, etc)
-        self.trend = None
+        self.trend: Optional[int] = None
 
         # Set this to true if you want to have additional slots. As an example, check out the moving average strategy.
-        self.dynamic = False
+        self.dynamic: bool = False
 
         # Dictionary for plotting values in graphs. This should hold string keys and float values. If a value is
         # non-numeric, the program will crash.
-        self.plotDict = {}
+        self.plotDict: Dict[str, List[float, str]] = {}
 
         # Dictionary for the what's going on in the strategy. This needs two keys: one which is 'regular' and another
         # which is 'lower'. The two keys will then hold dictionaries for the strategies' values in lower and regular
         # interval data.
-        self.strategyDict = {'regular': {}, 'lower': {}}
+        self.strategyDict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
 
     def set_inputs(self, *args, **kwargs):
         """
@@ -46,7 +47,7 @@ class Strategy:
         """
         raise NotImplementedError("Implement a function to set new inputs to your strategy.")
 
-    def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False) -> int:
+    def get_trend(self, data: Union[List[dict], Data], log_data: bool = False) -> int:
         """
         Implement your strategy here. Based on the strategy's algorithm, this should return a trend.
         A trend can be either bullish, bearish, or neither.
@@ -60,7 +61,7 @@ class Strategy:
         """
         raise NotImplementedError("Implement a function to return parameters.")
 
-    def get_plot_data(self) -> dict:
+    def get_plot_data(self) -> Dict[str, List[float, str]]:
         """
         This function should return plot data for bot. By default, it'll return an empty dictionary.
         :return: Plot data dictionary.
@@ -68,12 +69,22 @@ class Strategy:
         return self.plotDict
 
     def get_interval_type(self, data) -> str:
+        """
+        Returns the interval type.
+        :param data: Data object.
+        :return: The interval - it can either be regular or lower.
+        """
         if type(data) == list or data == self.parent.dataView:
             return 'regular'
         else:
             return 'lower'
 
     def get_prefix_and_interval_type(self, data) -> Tuple[str, str]:
+        """
+        Returns the prefix for the group dictionary along with the interval type.
+        :param data: Data object.
+        :return: Tuple containing prefix and interval type.
+        """
         interval_type = self.get_interval_type(data=data)
         prefix = '' if interval_type == 'regular' else 'Lower Interval '
         return prefix, interval_type
@@ -91,7 +102,7 @@ class Strategy:
         """
         self.strategyDict = {'regular': {}, 'lower': {}}
 
-    def get_appropriate_dictionary(self, data: Union[list, Data]) -> dict:
+    def get_appropriate_dictionary(self, data: Union[list, Data]) -> Dict[str, Any]:
         """
         Returns dictionary regarding the strategy. If the data type is a list, it's a backtester, so we just return
         the strategy dict; if it's a Data type that's equal to the parent's data-view, then return the strategy dict;
@@ -100,7 +111,7 @@ class Strategy:
         interval_type = self.get_interval_type(data)
         return self.strategyDict[interval_type]
 
-    def get_min_option_period(self):
+    def get_min_option_period(self) -> int:
         """
         This function should return the minimum amount of periods required to get a trend. It's 0 by default.
         """
