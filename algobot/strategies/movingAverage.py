@@ -76,6 +76,11 @@ class MovingAverageStrategy(Strategy):
                 ('Final', int)
                 ]
 
+    def reset_strategy_interval_dict(self, data):
+        if type(data) == Data:
+            interval_type = 'regular' if data == self.parent.dataView else 'lower'
+            self.strategyDict[interval_type] = []
+
     def get_params(self) -> List[Option]:
         """
         This function will return all the parameters used for the Moving Average strategy.
@@ -92,9 +97,9 @@ class MovingAverageStrategy(Strategy):
         for key in self.strategyDict:
             for optionDetail in self.strategyDict[key]:
                 initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                k = '' if key == 'regular' else key.capitalize() + " "  # Don't show prefix regular in stats.
-                grouped_dict[f'{k}{initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
-                grouped_dict[f'{k}{finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
+                prefix = '' if key == 'regular' else 'Lower Interval '
+                grouped_dict[f'{prefix}{initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
+                grouped_dict[f'{prefix}{finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
 
     def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False) -> int:
         """
@@ -105,13 +110,7 @@ class MovingAverageStrategy(Strategy):
         parent = self.parent
         trends = []  # Current option trends. They all have to be the same to register a trend.
 
-        # TODO: Standardize this for all strategies i.e. lower/regular interval data
-        if type(data) == Data:
-            interval_type = 'regular' if data == parent.dataView else 'lower'
-            self.strategyDict[interval_type] = []
-
-        if not data:  # This means that a sim or a live trader called this get trend function.
-            data = parent.dataView
+        self.reset_strategy_interval_dict(data=data)
 
         for option in self.tradingOptions:
             movingAverage, parameter, initialBound, finalBound = option.get_all_params()
