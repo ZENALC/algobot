@@ -1,6 +1,8 @@
 """
-Create your strategies from this base class here then import them to configuration.py to load them to the GUI.
+Create your strategies from this base class here in this folder. You don't have to import anything.
 Please make sure that they have some default values like None for the GUI to initialize them.
+
+Visit https://github.com/ZENALC/algobot/wiki/Strategies for documentation.
 """
 
 from typing import List, Union
@@ -14,16 +16,29 @@ class Strategy:
         Create all your strategies from this parent strategy class.
         :param name: Name of strategy.
         :param parent: Parent object that'll use this strategy. This will be a trader of some sort e.g. backtester.
+        :param precision: Precision to which to round float values to.
         """
         self.name = name
         self.parent = parent
         self.precision = precision
-        self.trend = None
-        self.dynamic = False  # Set this to true if you want to have additional slots.
+
+        # Whatever description you want to pop in in the GUI.
         self.description = "No strategy description found. You can setup your strategy description in strategies.py."
+
+        # This should hold the trend the strategy currently holds (e.g. BULLISH, BEARISH, ENTER LONG, etc)
+        self.trend = None
+
+        # Set this to true if you want to have additional slots. As an example, check out the moving average strategy.
+        self.dynamic = False
+
+        # Dictionary for plotting values in graphs. This should hold string keys and float values. If a value is
+        # non-numeric, the program will crash.
         self.plotDict = {}
-        self.strategyDict = {}
-        self.lowerIntervalDict = {}
+
+        # Dictionary for the what's going on in the strategy. This needs two keys: one which is 'regular' and another
+        # which is 'lower'. The two keys will then hold dictionaries for the strategies' values in lower and regular
+        # interval data.
+        self.strategyDict = {'regular': {}, 'lower': {}}
 
     def set_inputs(self, *args, **kwargs):
         """
@@ -63,7 +78,7 @@ class Strategy:
         """
         Clears strategy dictionary.
         """
-        self.strategyDict = {}
+        self.strategyDict = {'regular': {}, 'lower': {}}
 
     def get_appropriate_dictionary(self, data: Union[list, Data]) -> dict:
         """
@@ -75,9 +90,9 @@ class Strategy:
             return self.strategyDict
         elif type(data) == Data:
             if data == self.parent.dataView:
-                return self.strategyDict
+                return self.strategyDict['regular']
             else:
-                return self.lowerIntervalDict
+                return self.strategyDict['lower']
         else:
             raise ValueError("Invalid type of data object.")
 
@@ -87,11 +102,13 @@ class Strategy:
         """
         return 0
 
-    def populate_grouped_dict(self, grouped_dict):
+    def populate_grouped_dict(self, grouped_dict: dict):
         """
         Populate grouped dictionary for the simulation/live trader. Note that only the key where this strategy exists
         will be provided. Not the entire grouped dictionary.
         :param grouped_dict: Grouped dictionary (strategy key) to populate.
         :return: None
         """
-        grouped_dict['inputs'] = self.get_params()
+        for interval_key, interval_dict in self.strategyDict.items():
+            for key, value in interval_dict.items():
+                grouped_dict[key] = value if type(value) != float else round(value, self.precision)

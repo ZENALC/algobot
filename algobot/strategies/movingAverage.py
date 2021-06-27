@@ -23,7 +23,6 @@ class MovingAverageStrategy(Strategy):
 
         if parent:  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
             self.validate_options()
-            self.strategyDict = {'lower': [], 'regular': []}
             self.initialize_plot_dict()
 
     def initialize_plot_dict(self):
@@ -76,30 +75,11 @@ class MovingAverageStrategy(Strategy):
                 ('Final', int)
                 ]
 
-    def reset_strategy_interval_dict(self, data):
-        if type(data) == Data:
-            interval_type = 'regular' if data == self.parent.dataView else 'lower'
-            self.strategyDict[interval_type] = []
-
     def get_params(self) -> List[Option]:
         """
         This function will return all the parameters used for the Moving Average strategy.
         """
         return self.tradingOptions
-
-    def populate_grouped_dict(self, grouped_dict: dict):
-        """
-        Populate grouped dictionary for the simulation/live trader. Note that only the key where this strategy exists
-        will be provided. Not the entire grouped dictionary.
-        :param grouped_dict: Grouped dictionary (strategy key) to populate.
-        :return: None
-        """
-        for key in self.strategyDict:
-            for optionDetail in self.strategyDict[key]:
-                initialAverage, finalAverage, initialAverageLabel, finalAverageLabel = optionDetail
-                prefix = '' if key == 'regular' else 'Lower Interval '
-                grouped_dict[f'{prefix}{initialAverageLabel}'] = f'${round(initialAverage, self.precision)}'
-                grouped_dict[f'{prefix}{finalAverageLabel}'] = f'${round(finalAverage, self.precision)}'
 
     def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False) -> int:
         """
@@ -109,8 +89,6 @@ class MovingAverageStrategy(Strategy):
         """
         parent = self.parent
         trends = []  # Current option trends. They all have to be the same to register a trend.
-
-        self.reset_strategy_interval_dict(data=data)
 
         for option in self.tradingOptions:
             movingAverage, parameter, initialBound, finalBound = option.get_all_params()
@@ -132,7 +110,10 @@ class MovingAverageStrategy(Strategy):
                     parent.output_message(f'{movingAverage}({initialBound}) {parameter} = {avg1}')
                     parent.output_message(f'{movingAverage}({finalBound}) {parameter} = {avg2}')
 
-                self.strategyDict[interval_type].append((avg1, avg2, initialName, finalName))
+                prefix = '' if interval_type == 'regular' else 'Lower Interval '
+                self.strategyDict[interval_type][f'{prefix}{initialName}'] = avg1
+                self.strategyDict[interval_type][f'{prefix}{finalName}'] = avg2
+
                 self.plotDict[initialName][0] = avg1
                 self.plotDict[finalName][0] = avg2
 
