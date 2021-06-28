@@ -9,7 +9,7 @@ from algobot.strategies.strategy import Strategy
 
 
 class MovingAverageStrategy(Strategy):
-    def __init__(self, parent=None, inputs: list = ("", "", "", ""), precision: int = 2):
+    def __init__(self, parent=None, inputs: list = ('',) * 4, precision: int = 2):
         """
         Basic Moving Average strategy.
         """
@@ -98,25 +98,24 @@ class MovingAverageStrategy(Strategy):
                 avg1 = get_moving_average(movingAverage, parameter, initialBound, data, parent.ema_dict)
                 avg2 = get_moving_average(movingAverage, parameter, finalBound, data, parent.ema_dict)
             else:  # This means it was called by the live bot / simulation.
-                avg1 = round(get_moving_average(movingAverage, parameter, initialBound,
-                                                data.data + [data.current_values], data.ema_dict), parent.precision)
-                avg2 = round(get_moving_average(movingAverage, parameter, finalBound,
-                                                data.data + [data.current_values], data.ema_dict), parent.precision)
+                avg1 = get_moving_average(movingAverage, parameter, initialBound, data.data + [data.current_values],
+                                          data.ema_dict)
+                avg2 = get_moving_average(movingAverage, parameter, finalBound, data.data + [data.current_values],
+                                          data.ema_dict)
 
-            if type(data) == Data:
-                interval_type = 'regular' if data == parent.dataView else 'lower'
-                if log_data:
-                    parent.output_message(f'{interval_type.capitalize()} interval ({data.interval}) data:')
-                    parent.output_message(f'{movingAverage}({initialBound}) {parameter} = {avg1}')
-                    parent.output_message(f'{movingAverage}({finalBound}) {parameter} = {avg2}')
+            prefix, interval_type = self.get_prefix_and_interval_type(data)
 
-                prefix = '' if interval_type == 'regular' else 'Lower Interval '
-                self.strategyDict[interval_type][f'{prefix}{initialName}'] = avg1
-                self.strategyDict[interval_type][f'{prefix}{finalName}'] = avg2
+            if log_data:
+                parent.output_message(f'{interval_type.capitalize()} interval ({data.interval}) data:')
+                parent.output_message(f'{movingAverage}({initialBound}) {parameter} = {avg1}')
+                parent.output_message(f'{movingAverage}({finalBound}) {parameter} = {avg2}')
 
-                if interval_type == 'regular':
-                    self.plotDict[initialName][0] = avg1
-                    self.plotDict[finalName][0] = avg2
+            self.strategyDict[interval_type][f'{prefix}{initialName}'] = avg1
+            self.strategyDict[interval_type][f'{prefix}{finalName}'] = avg2
+
+            if interval_type == 'regular':
+                self.plotDict[initialName][0] = avg1
+                self.plotDict[finalName][0] = avg2
 
             if avg1 > avg2:
                 trends.append(BULLISH)
