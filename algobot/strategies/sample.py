@@ -4,7 +4,7 @@ A super simple sample example of a strategy with Bollinger bands and moving aver
 
 from typing import List, Union
 
-from algobot.algorithms import get_moving_average, get_bollinger_bands
+from algobot.algorithms import get_bollinger_bands, get_moving_average
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH
 from algobot.helpers import get_random_color
