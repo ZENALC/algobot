@@ -71,6 +71,7 @@ def create_action_slots(gui):
     gui.binanceLiveAction.triggered.connect(lambda: gui.open_binance(LIVE))
     gui.binanceSimulationAction.triggered.connect(lambda: gui.open_binance(SIMULATION))
     gui.binanceBacktestAction.triggered.connect(lambda: gui.open_binance(BACKTEST))
+    gui.wikiAction.triggered.connect(lambda: webbrowser.open("https://github.com/ZENALC/algobot/wiki"))
 
 
 # noinspection DuplicatedCode

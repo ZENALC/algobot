@@ -2242,6 +2242,7 @@ p, li { white-space: pre-wrap; }
      <string>Help</string>
     </property>
     <addaction name="aboutAlgobotAction"/>
+    <addaction name="wikiAction"/>
    </widget>
    <widget class="QMenu" name="menuStatistics">
     <property name="title">
@@ -2421,6 +2422,11 @@ p, li { white-space: pre-wrap; }
   <action name="openVolatilityResultsFolderAction">
    <property name="text">
     <string>Volatility Results</string>
+   </property>
+  </action>
+  <action name="wikiAction">
+   <property name="text">
+    <string>Wiki</string>
    </property>
   </action>
  </widget>
