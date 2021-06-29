@@ -1,8 +1,6 @@
-import os
-
 from PyQt5.QtWidgets import QDialog, QHBoxLayout, QMainWindow, QPlainTextEdit
 
-from algobot.helpers import ROOT_DIR
+from algobot.helpers import get_current_version
 
 
 class About(QDialog):
@@ -10,7 +8,7 @@ class About(QDialog):
         super(About, self).__init__(parent)
         layout = QHBoxLayout()
 
-        version = self.get_version()
+        version = get_current_version()
         description = f"Algobot Version {version}\n\n" \
                       f"Algobot is an open-source software written in Python that enables users to create automated " \
                       f"bots that can trade, simulate, optimize, or backtest with strategies implemented.\n\n" \
@@ -26,14 +24,3 @@ class About(QDialog):
         self.setWindowTitle('About Algobot')
         self.setLayout(layout)
         self.setFixedSize(plain_text_edit.size())
-
-    @staticmethod
-    def get_version() -> str:
-        """
-        Reads version from version.txt and returns it.
-        """
-        version_file = os.path.join(ROOT_DIR, 'version.txt')
-        with open(version_file) as f:
-            version = f.read().strip()
-
-        return version

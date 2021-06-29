@@ -10,6 +10,7 @@ import time
 from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
+import requests
 from binance import Client
 from dateutil import parser
 
@@ -37,6 +38,28 @@ SHORT_INTERVAL_MAP = {
 }
 
 LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
+
+
+def get_latest_version() -> str:
+    """
+    Gets the latest Algobot version from GitHub.
+    :return: Latest version.
+    """
+    url = 'https://raw.githubusercontent.com/ZENALC/algobot/master/version.txt'
+    response = requests.get(url)
+    content = response.content.decode().strip()
+    return content
+
+
+def get_current_version() -> str:
+    """
+    Reads version from version.txt and returns it.
+    """
+    version_file = os.path.join(ROOT_DIR, 'version.txt')
+    with open(version_file) as f:
+        version = f.read().strip()
+
+    return version
 
 
 def is_debug() -> bool:
