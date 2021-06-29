@@ -1047,7 +1047,9 @@ class Interface(QMainWindow):
         :param point: Point hovering over graph.
         :param graph: Graph being hovered on.
         """
-        p = graph.plotItem.vb.mapSceneToView(point)
+        plotItem = graph.plotItem
+        legend = plotItem.legend.items
+        p = plotItem.vb.mapSceneToView(point)
         graphDict = get_graph_dictionary(self, graph)
 
         if graphDict['enable'] and p and graphDict.get('line'):  # Ensure that the hover line is enabled.
@@ -1058,8 +1060,10 @@ class Interface(QMainWindow):
                 date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][xValue])
                 total = f'X: {xValue} Datetime in UTC: {date_object.strftime("%m/%d/%Y, %H:%M:%S")}'
 
-                for plotDict in graphDict['plots']:
-                    total += f' {plotDict["name"]}: {plotDict["y"][xValue]}'
+                for index, plotDict in enumerate(graphDict['plots']):
+                    info = f' {plotDict["name"]}: {plotDict["y"][xValue]}'
+                    total += info
+                    legend[index][1].setText(info)  # The 2nd element in legend is the label, so we can just set text.
 
                 graphDict['label'].setText(total)
 
