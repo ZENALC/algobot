@@ -62,6 +62,19 @@ def get_graph_dictionary(gui: QMainWindow, targetGraph: PlotWidget) -> dict:
             return graph
 
 
+def legend_helper(graphDict, x_val):
+    legend = graphDict['graph'].plotItem.legend.items
+    date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][x_val])
+    total = f'X: {x_val} Datetime in UTC: {date_object.strftime("%m/%d/%Y, %H:%M:%S")}'
+
+    for index, plotDict in enumerate(graphDict['plots']):
+        info = f' {plotDict["name"]}: {plotDict["y"][x_val]}'
+        total += info
+        legend[index][1].setText(info)  # The 2nd element in legend is the label, so we can just set text.
+
+    graphDict['label'].setText(total)
+
+
 def onMouseMoved(gui, point, graph: PlotWidget):
     """
     Updates coordinates label when mouse is hovered over graph.
@@ -70,27 +83,25 @@ def onMouseMoved(gui, point, graph: PlotWidget):
     :param graph: Graph being hovered on.
     """
     plotItem = graph.plotItem
-    legend = plotItem.legend.items
     p = plotItem.vb.mapSceneToView(point)
     graphDict = get_graph_dictionary(gui, graph)
 
-    if graphDict['enable'] and p and graphDict.get('line'):  # Ensure that the hover line is enabled.
-        graphDict['line'].setPos(p.x())
-        xValue = int(p.x())
+    view_range = plotItem.vb.viewRange()
+    x_val, y_val = p.x(), p.y()
+    x_min, x_max = view_range[0]  # X axis.
+    y_min, y_max = view_range[1]  # Y axis.
 
-        if graphDict['plots'][0]['x'][-1] > xValue > graphDict['plots'][0]['x'][0]:
-            date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][xValue])
-            total = f'X: {xValue} Datetime in UTC: {date_object.strftime("%m/%d/%Y, %H:%M:%S")}'
+    if x_val < x_min or x_val > x_max or y_val < y_min or y_val > y_max:
+        graphDict['line'].setPos(-1)
+        legend_helper(graphDict, -1)
 
-            for index, plotDict in enumerate(graphDict['plots']):
-                info = f' {plotDict["name"]}: {plotDict["y"][xValue]}'
-                total += info
-                legend[index][1].setText(info)  # The 2nd element in legend is the label, so we can just set text.
+    elif graphDict['enable'] and p and graphDict.get('line'):  # Ensure that the hover line is enabled.
+        graphDict['line'].setPos(x_val)
 
-            graphDict['label'].setText(total)
-
+        if graphDict['plots'][0]['x'][-1] > x_val > graphDict['plots'][0]['x'][0]:
+            legend_helper(graphDict, int(x_val))
             if graph == gui.backtestGraph and gui.backtester is not None:
-                gui.update_backtest_activity_based_on_graph(xValue + 1)
+                gui.update_backtest_activity_based_on_graph(int(x_val) + 1)
 
 
 def add_data_to_plot(gui: QMainWindow, targetGraph: PlotWidget, plotIndex: int, y: float, timestamp: float):
@@ -304,6 +315,12 @@ def setup_graphs(gui: QMainWindow):
             graph.setTitle("Live Indicators")
 
 
+def smart_update(graph_dict):
+    x = graph_dict['line'].getXPos()
+    if x == -1:
+        legend_helper(graph_dict, -1)
+
+
 def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
     """
     Updates graphs and moving averages from statistics based on caller.
@@ -323,6 +340,7 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
     graphXSize = len(graphDict['plots'][0]['x']) + GRAPH_LEEWAY
     netGraph.setLimits(xMin=0, xMax=graphXSize)
     add_data_to_plot(gui, netGraph, 0, y=round(net, 2), timestamp=currentUTC)
+    smart_update(graphDict)
 
     averageGraphDict = get_graph_dictionary(gui, averageGraph)
     if averageGraphDict['enable']:
@@ -347,3 +365,4 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
                     timestamp=currentUTC
                 )
                 index += 1
+        smart_update(averageGraphDict)
