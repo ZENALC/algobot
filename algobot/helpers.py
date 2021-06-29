@@ -56,8 +56,12 @@ def get_current_version() -> str:
     Reads version from version.txt and returns it.
     """
     version_file = os.path.join(ROOT_DIR, 'version.txt')
-    with open(version_file) as f:
-        version = f.read().strip()
+
+    if not os.path.isfile(version_file):
+        version = 'not found'
+    else:
+        with open(version_file) as f:
+            version = f.read().strip()
 
     return version
 
