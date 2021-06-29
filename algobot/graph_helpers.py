@@ -222,7 +222,7 @@ def create_infinite_line(gui: QMainWindow, graphDict: dict, colors: list = None)
     graphDict['line'] = hoverLine
 
 
-def create_graph_plot(gui: QMainWindow, graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):
+def create_graph_plot(gui, graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):
     """
     Creates a graph plot with parameters provided.
     :param gui: Graphical user interface in which to set up graphs.
