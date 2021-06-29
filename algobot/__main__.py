@@ -1041,35 +1041,6 @@ class Interface(QMainWindow):
             mainDict['disableCustomStopLossButton'].setEnabled(False)
             self.add_to_monitor(caller, 'Removed custom stop loss.')
 
-    def onMouseMoved(self, point, graph):
-        """
-        Updates coordinates label when mouse is hovered over graph.
-        :param point: Point hovering over graph.
-        :param graph: Graph being hovered on.
-        """
-        plotItem = graph.plotItem
-        legend = plotItem.legend.items
-        p = plotItem.vb.mapSceneToView(point)
-        graphDict = get_graph_dictionary(self, graph)
-
-        if graphDict['enable'] and p and graphDict.get('line'):  # Ensure that the hover line is enabled.
-            graphDict['line'].setPos(p.x())
-            xValue = int(p.x())
-
-            if graphDict['plots'][0]['x'][-1] > xValue > graphDict['plots'][0]['x'][0]:
-                date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][xValue])
-                total = f'X: {xValue} Datetime in UTC: {date_object.strftime("%m/%d/%Y, %H:%M:%S")}'
-
-                for index, plotDict in enumerate(graphDict['plots']):
-                    info = f' {plotDict["name"]}: {plotDict["y"][xValue]}'
-                    total += info
-                    legend[index][1].setText(info)  # The 2nd element in legend is the label, so we can just set text.
-
-                graphDict['label'].setText(total)
-
-                if graph == self.backtestGraph and self.backtester is not None:
-                    self.update_backtest_activity_based_on_graph(xValue + 1)
-
     @staticmethod
     def test_table(table, trade: list):
         """

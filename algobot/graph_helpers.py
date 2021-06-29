@@ -62,6 +62,37 @@ def get_graph_dictionary(gui: QMainWindow, targetGraph: PlotWidget) -> dict:
             return graph
 
 
+def onMouseMoved(gui, point, graph: PlotWidget):
+    """
+    Updates coordinates label when mouse is hovered over graph.
+    :param gui: Graphical user interface in which to manipulate graphs.
+    :param point: Point hovering over graph.
+    :param graph: Graph being hovered on.
+    """
+    plotItem = graph.plotItem
+    legend = plotItem.legend.items
+    p = plotItem.vb.mapSceneToView(point)
+    graphDict = get_graph_dictionary(gui, graph)
+
+    if graphDict['enable'] and p and graphDict.get('line'):  # Ensure that the hover line is enabled.
+        graphDict['line'].setPos(p.x())
+        xValue = int(p.x())
+
+        if graphDict['plots'][0]['x'][-1] > xValue > graphDict['plots'][0]['x'][0]:
+            date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][xValue])
+            total = f'X: {xValue} Datetime in UTC: {date_object.strftime("%m/%d/%Y, %H:%M:%S")}'
+
+            for index, plotDict in enumerate(graphDict['plots']):
+                info = f' {plotDict["name"]}: {plotDict["y"][xValue]}'
+                total += info
+                legend[index][1].setText(info)  # The 2nd element in legend is the label, so we can just set text.
+
+            graphDict['label'].setText(total)
+
+            if graph == gui.backtestGraph and gui.backtester is not None:
+                gui.update_backtest_activity_based_on_graph(xValue + 1)
+
+
 def add_data_to_plot(gui: QMainWindow, targetGraph: PlotWidget, plotIndex: int, y: float, timestamp: float):
     """
     Adds data to plot in provided graph.
@@ -234,7 +265,7 @@ def create_graph_plot(gui, graph: PlotWidget, x: tuple, y: tuple, plotName: str,
     """
     pen = mkPen(color=color)
     plot = graph.plot(x, y, name=plotName, pen=pen, autoDownsample=True, downsampleMethod='subsample')
-    plot.curve.scene().sigMouseMoved.connect(lambda point: gui.onMouseMoved(point=point, graph=graph))
+    plot.curve.scene().sigMouseMoved.connect(lambda point: onMouseMoved(gui=gui, point=point, graph=graph))
     return plot
 
 
