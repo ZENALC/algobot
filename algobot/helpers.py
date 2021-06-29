@@ -46,9 +46,13 @@ def get_latest_version() -> str:
     :return: Latest version.
     """
     url = 'https://raw.githubusercontent.com/ZENALC/algobot/master/version.txt'
-    response = requests.get(url)
-    content = response.content.decode().strip()
-    return content
+    try:
+        response = requests.get(url, timeout=3)
+        version = response.content.decode().strip()
+    except Exception as e:
+        version = 'unknown'
+        print(e)  # TODO: Get centralized logging and remove all prints/stack traces and log them instead.
+    return version
 
 
 def get_current_version() -> str:
