@@ -82,9 +82,13 @@ def onMouseMoved(gui, point, graph: PlotWidget):
     :param point: Point hovering over graph.
     :param graph: Graph being hovered on.
     """
+    graphDict = get_graph_dictionary(gui, graph)
+
+    if graphDict.get('line') is None:  # No line exists, just return.
+        return
+
     plotItem = graph.plotItem
     p = plotItem.vb.mapSceneToView(point)
-    graphDict = get_graph_dictionary(gui, graph)
 
     view_range = plotItem.vb.viewRange()
     x_val, y_val = p.x(), p.y()
@@ -316,9 +320,12 @@ def setup_graphs(gui: QMainWindow):
 
 
 def smart_update(graph_dict):
-    x = graph_dict['line'].getXPos()
-    if x == -1:
+    if graph_dict.get('line') is None:  # If hover line is turned off, then just update normally.
         legend_helper(graph_dict, -1)
+    else:
+        x = graph_dict['line'].getXPos()
+        if x == -1:
+            legend_helper(graph_dict, -1)
 
 
 def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
