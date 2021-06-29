@@ -98,6 +98,7 @@ def onMouseMoved(gui, point, graph: PlotWidget):
     if x_val < x_min or x_val > x_max or y_val < y_min or y_val > y_max:
         graphDict['line'].setPos(-1)
         legend_helper(graphDict, -1)
+        gui.reset_backtest_cursor()
 
     elif graphDict['enable'] and p and graphDict.get('line'):  # Ensure that the hover line is enabled.
         graphDict['line'].setPos(x_val)
