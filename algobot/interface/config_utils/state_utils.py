@@ -23,6 +23,7 @@ def load_state(config_obj):
             set_color_to_label(config_obj.hoverLineColor, (config['lineColor']))
 
             config_obj.graphIndicatorsCheckBox.setChecked(config['averagePlot'])
+            config_obj.enableHoverLine.setChecked(config['hoverLine'])
             config_obj.failureLimitSpinBox.setValue(int(config['failureLimit']))
             config_obj.failureSleepSpinBox.setValue(int(config['failureSleep']))
             config_obj.tokenPass = config['tokenPass']
@@ -67,6 +68,7 @@ def save_state(config_obj):
         'bearTheme': config_obj.bearModeRadioButton.isChecked(),
         'balanceColor': config_obj.balanceColor.text(),
         'lineColor': config_obj.hoverLineColor.text(),
+        'hoverLine': config_obj.enableHoverLine.isChecked(),
         'averagePlot': config_obj.graphIndicatorsCheckBox.isChecked(),
         'failureLimit': config_obj.failureLimitSpinBox.value(),
         'failureSleep': config_obj.failureSleepSpinBox.value(),
