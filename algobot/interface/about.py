@@ -25,6 +25,7 @@ class About(QDialog):
 
         self.setWindowTitle('About Algobot')
         self.setLayout(layout)
+        self.setFixedSize(plain_text_edit.size())
 
     @staticmethod
     def get_version() -> str:
