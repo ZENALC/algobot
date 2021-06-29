@@ -473,15 +473,16 @@ class Interface(QMainWindow):
                 self.backtestMovingAverage3.setText(statDict['options'][1][0])
                 self.backtestMovingAverage4.setText(statDict['options'][1][1])
 
-    def update_backtest_activity_based_on_graph(self, position: int):
+    def update_backtest_activity_based_on_graph(self, position: int, aux: int = -1):
         """
         Updates backtest activity based on where the line is in the backtest graph.
         :param position: Position to show activity at.
+        :param aux: Shift position by the number provided.
         """
         if self.backtester is not None:
-            if 1 <= position <= len(self.backtester.pastActivity):
+            if 1 <= position + aux < len(self.backtester.pastActivity):
                 try:
-                    self.update_backtest_gui(self.backtester.pastActivity[position - 1], add_data=False,
+                    self.update_backtest_gui(self.backtester.pastActivity[position + aux], add_data=False,
                                              update_progress_bar=False)
                 except IndexError as e:
                     self.logger.exception(str(e))

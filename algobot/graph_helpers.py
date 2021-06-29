@@ -105,7 +105,7 @@ def onMouseMoved(gui, point, graph: PlotWidget):
         if graphDict['plots'][0]['x'][-1] > x_val > graphDict['plots'][0]['x'][0]:
             legend_helper(graphDict, int(x_val))
             if graph == gui.backtestGraph and gui.backtester is not None:
-                gui.update_backtest_activity_based_on_graph(int(x_val) + 1)
+                gui.update_backtest_activity_based_on_graph(int(x_val))
 
 
 def add_data_to_plot(gui: QMainWindow, targetGraph: PlotWidget, plotIndex: int, y: float, timestamp: float):
