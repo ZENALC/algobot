@@ -239,7 +239,7 @@ class OtherCommands(QDialog):
 
         self.volatilityThread = thread = VolatilitySnooperThread(periods=periods, interval=interval,
                                                                  volatility=volatility, tickers=self.parent.tickers,
-                                                                 logger=self.parent.logger, filter_word=ticker_filter)
+                                                                 filter_word=ticker_filter)
         thread.signals.progress.connect(progress_bar.setValue)
         thread.signals.activity.connect(status.setText)
         thread.signals.error.connect(lambda x: status.setText(f'Error: {x}'))

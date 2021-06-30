@@ -1,10 +1,10 @@
 # TODO: Standardize thread operations to fewer files by leveraging kwargs.
 import datetime
-import traceback
 
 from binance.client import Client
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
+import algobot
 from algobot.algorithms import (get_basic_volatility, get_gk_volatility,
                                 get_parkinson_volatility, get_rs_volatility,
                                 get_zh_volatility)
@@ -25,7 +25,7 @@ class VolatilitySnooperSignals(QObject):
 
 
 class VolatilitySnooperThread(QRunnable):
-    def __init__(self, periods, interval, volatility, tickers, logger=None, filter_word=None):
+    def __init__(self, periods, interval, volatility, tickers, filter_word=None):
         super(VolatilitySnooperThread, self).__init__()
         self.periods = periods
         self.long_interval = interval
@@ -36,7 +36,6 @@ class VolatilitySnooperThread(QRunnable):
         self.tickers = self.get_filtered_tickers(tickers=tickers, filter_word=filter_word)
         self.binanceClient = Client()
         self.running = True
-        self.logger = logger
         self.signals = VolatilitySnooperSignals()
 
     @staticmethod
@@ -124,11 +123,7 @@ class VolatilitySnooperThread(QRunnable):
             volatility_dict = self.snoop()
             self.signals.finished.emit(volatility_dict)
         except Exception as e:
-            error_message = traceback.format_exc()
-            if self.logger:
-                self.logger.critical(error_message)
-            else:
-                print(error_message)
+            algobot.MAIN_LOGGER.exception(repr(e))
             self.signals.error.emit(str(e))
         finally:
             self.running = False

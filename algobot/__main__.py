@@ -94,7 +94,10 @@ class Interface(QMainWindow):
         self.tickers = []  # All available tickers.
 
         if algobot.CURRENT_VERSION != algobot.LATEST_VERSION:
-            self.add_to_live_activity_monitor(f"Update {algobot.LATEST_VERSION} is available.")
+            if algobot.LATEST_VERSION != 'unknown':
+                self.add_to_live_activity_monitor(f"Update {algobot.LATEST_VERSION} is available.")
+            else:
+                self.add_to_live_activity_monitor('Failed to fetch latest version metadata.')
 
         self.add_to_live_activity_monitor('Initialized interface.')
         self.load_tickers_and_news()

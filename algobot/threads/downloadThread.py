@@ -1,7 +1,6 @@
-import traceback
-
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
+import algobot
 from algobot.data import Data
 
 
@@ -50,11 +49,7 @@ class DownloadThread(QRunnable):
                                                             startDate=self.startDate)
                     self.signals.csv_finished.emit(savedPath)
         except Exception as e:
-            error_message = traceback.format_exc()
-            if self.logger:
-                self.logger.critical(error_message)
-            else:
-                print(error_message)
+            algobot.MAIN_LOGGER.exception(repr(e))
             self.signals.error.emit(str(e), self.caller)
         finally:
             self.signals.restore.emit(self.caller)
