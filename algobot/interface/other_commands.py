@@ -4,11 +4,11 @@ from datetime import datetime, timezone
 from typing import List
 
 import pandas as pd
-from binance.client import Client
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QMessageBox
 
+import algobot
 import algobot.helpers as helpers
 from algobot.interface.utils import create_popup, open_from_msg_box
 from algobot.threads.downloadThread import DownloadThread
@@ -105,7 +105,7 @@ class OtherCommands(QDialog):
         symbol = self.csvGenerationTicker.text()
         interval = helpers.convert_long_interval(self.csvGenerationDataInterval.currentText())
 
-        ts = Client()._get_earliest_valid_timestamp(symbol, interval)
+        ts = algobot.BINANCE_CLIENT._get_earliest_valid_timestamp(symbol, interval)
         startDate = datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
         qStart = QDate(startDate.year, startDate.month, startDate.day)
 

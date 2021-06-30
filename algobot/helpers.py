@@ -11,7 +11,6 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
 import requests
-from binance import Client
 from dateutil import parser
 
 import algobot
@@ -411,7 +410,7 @@ def load_from_csv(path: str, descending: bool = True) -> list:
 
 def parse_precision(precision: str, symbol: str) -> int:
     if precision == "Auto":
-        symbol_info = Client().get_symbol_info(symbol)
+        symbol_info = algobot.BINANCE_CLIENT.get_symbol_info(symbol)
         tickSize = float(symbol_info['filters'][0]['tickSize'])
         precision = abs(round(math.log(tickSize, 10)))
     return int(precision)

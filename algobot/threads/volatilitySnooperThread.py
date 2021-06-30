@@ -1,7 +1,6 @@
 # TODO: Standardize thread operations to fewer files by leveraging kwargs.
 import datetime
 
-from binance.client import Client
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 import algobot
@@ -34,7 +33,7 @@ class VolatilitySnooperThread(QRunnable):
         self.volatility_func = self.get_volatility_func()
         self.filter_word = filter_word
         self.tickers = self.get_filtered_tickers(tickers=tickers, filter_word=filter_word)
-        self.binanceClient = Client()
+        self.binanceClient = algobot.BINANCE_CLIENT
         self.running = True
         self.signals = VolatilitySnooperSignals()
 
