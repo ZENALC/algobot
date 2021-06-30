@@ -27,9 +27,7 @@ from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
                                    update_backtest_graph_limits,
                                    update_main_graphs)
 from algobot.helpers import (ROOT_DIR, create_folder, create_folder_if_needed,
-                             get_caller_string, get_current_version,
-                             get_latest_version, get_logger,
-                             open_file_or_folder)
+                             get_caller_string, open_file_or_folder)
 from algobot.interface.about import About
 from algobot.interface.config_utils.state_utils import load_state, save_state
 from algobot.interface.config_utils.strategy_utils import get_strategies
@@ -65,9 +63,7 @@ class Interface(QMainWindow):
         algobot.assets.qInitResources()
         super(Interface, self).__init__(parent)  # Initializing object
         uic.loadUi(mainUi, self)  # Loading the main UI
-        self.logger = get_logger(log_file='algobot', logger_name='algobot')
-        self.current_version = get_current_version()
-        self.latest_version = get_latest_version()
+        self.logger = algobot.MAIN_LOGGER
         self.configuration = Configuration(parent=self, logger=self.logger)  # Loading configuration
         self.otherCommands = OtherCommands(self)  # Loading other commands
         self.about = About(self)  # Loading about information
@@ -97,8 +93,9 @@ class Interface(QMainWindow):
         self.telegramBot = None
         self.tickers = []  # All available tickers.
 
-        if self.current_version != self.latest_version:
-            self.add_to_live_activity_monitor(f"Update {self.latest_version} is available.")
+        if algobot.CURRENT_VERSION != algobot.LATEST_VERSION:
+            self.add_to_live_activity_monitor(f"Update {algobot.LATEST_VERSION} is available.")
+
         self.add_to_live_activity_monitor('Initialized interface.')
         self.load_tickers_and_news()
         self.homeTab.setCurrentIndex(0)

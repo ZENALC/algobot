@@ -1,13 +1,15 @@
 from PyQt5.QtWidgets import QDialog, QHBoxLayout, QMainWindow, QPlainTextEdit
 
+import algobot
+
 
 class About(QDialog):
     def __init__(self, parent: QMainWindow = None):
         super(About, self).__init__(parent)
         layout = QHBoxLayout()
 
-        version = parent.current_version
-        latest_version = parent.latest_version
+        version = algobot.CURRENT_VERSION
+        latest_version = algobot.LATEST_VERSION
         version_text = f"({latest_version} available)" if version != latest_version else "(latest version)"
         description = f"Algobot Version {version} {version_text}\n\n" \
                       f"Algobot is an open-source software written in Python that enables users to create automated " \

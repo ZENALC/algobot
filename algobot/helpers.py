@@ -14,6 +14,7 @@ import requests
 from binance import Client
 from dateutil import parser
 
+import algobot
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.typing_hints import DICT_TYPE
 
@@ -50,8 +51,8 @@ def get_latest_version() -> str:
         response = requests.get(url, timeout=3)
         version = response.content.decode().strip()
     except Exception as e:
+        algobot.MAIN_LOGGER.exception(repr(e))
         version = 'unknown'
-        print(e)  # TODO: Get centralized logging and remove all prints/stack traces and log them instead.
     return version
 
 
