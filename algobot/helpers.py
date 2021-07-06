@@ -49,6 +49,10 @@ def get_log_dir() -> str:
     return os.path.join(APP_DIRS.user_log_dir, 'Logs')
 
 
+def get_database_dir() -> str:
+    return os.path.join(APP_DIRS.user_data_dir, 'Databases')
+
+
 def get_latest_version() -> str:
     """
     Gets the latest Algobot version from GitHub.
@@ -140,24 +144,24 @@ def open_file_or_folder(targetPath: str):
         subprocess.Popen(["xdg-open", targetPath])
 
 
-def setup_and_return_log_path(fileName: str) -> str:
+def setup_and_return_log_path(filename: str) -> str:
     """
     Creates folders (if needed) and returns default log path.
-    :param fileName: Log filename to be created.
+    :param filename: Log filename to be created.
     :return: Absolute path to log file.
     """
-    LOG_DIR = get_log_dir()
-    if not os.path.exists(LOG_DIR):
-        os.mkdir(LOG_DIR)
+    log_dir = get_log_dir()
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)
 
-    todayDate = datetime.today().strftime('%Y-%m-%d')
-    LOG_DATE_FOLDER = os.path.join(LOG_DIR, todayDate)
-    if not os.path.exists(LOG_DATE_FOLDER):
-        os.mkdir(LOG_DATE_FOLDER)
+    today_date = datetime.today().strftime('%Y-%m-%d')
+    log_date_folder = os.path.join(log_dir, today_date)
+    if not os.path.exists(log_date_folder):
+        os.mkdir(log_date_folder)
 
-    logFileName = f'{datetime.now().strftime("%H-%M-%S")}-{fileName}.log'
-    fullPath = os.path.join(LOG_DATE_FOLDER, logFileName)
-    return fullPath
+    log_file_name = f'{datetime.now().strftime("%H-%M-%S")}-{filename}.log'
+    full_path = os.path.join(log_date_folder, log_file_name)
+    return full_path
 
 
 def get_logger(log_file: str, logger_name: str) -> logging.Logger:
