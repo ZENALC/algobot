@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
 import requests
+from appdirs import AppDirs
 from dateutil import parser
 
 import algobot
@@ -19,7 +20,11 @@ from algobot.typing_hints import DICT_TYPE
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
-LOG_FOLDER = 'Logs'
+
+APP_NAME = "algobot"
+APP_AUTHOR = "ZENALC"
+
+APP_DIRS = AppDirs(APP_NAME, APP_AUTHOR)
 
 SHORT_INTERVAL_MAP = {
     '1m': '1 Minute',
@@ -38,6 +43,10 @@ SHORT_INTERVAL_MAP = {
 }
 
 LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
+
+
+def get_log_dir() -> str:
+    return os.path.join(APP_DIRS.user_log_dir, 'Logs')
 
 
 def get_latest_version() -> str:
@@ -137,7 +146,7 @@ def setup_and_return_log_path(fileName: str) -> str:
     :param fileName: Log filename to be created.
     :return: Absolute path to log file.
     """
-    LOG_DIR = os.path.join(ROOT_DIR, LOG_FOLDER)
+    LOG_DIR = get_log_dir()
     if not os.path.exists(LOG_DIR):
         os.mkdir(LOG_DIR)
 
