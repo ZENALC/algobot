@@ -9,8 +9,8 @@ from typing import Dict, List, Tuple, Union
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
 
-from algobot.helpers import (ROOT_DIR, get_logger, get_normalized_data,
-                             get_ups_and_downs, get_database_dir)
+from algobot.helpers import (ROOT_DIR, get_database_dir, get_logger,
+                             get_normalized_data, get_ups_and_downs)
 from algobot.typing_hints import DATA_TYPE
 
 
@@ -144,10 +144,10 @@ class Data:
         """
         database_folder = get_database_dir()
         if not os.path.exists(database_folder):
-            os.mkdir(database_folder)
+            os.makedirs(database_folder)
 
-        filePath = os.path.join(database_folder, f'{self.symbol}.db')
-        return filePath
+        file_path = os.path.join(database_folder, f'{self.symbol}.db')
+        return file_path
 
     def create_table(self):
         """

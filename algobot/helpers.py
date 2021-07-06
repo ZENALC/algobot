@@ -152,7 +152,7 @@ def setup_and_return_log_path(filename: str) -> str:
     """
     log_dir = get_log_dir()
     if not os.path.exists(log_dir):
-        os.mkdir(log_dir)
+        os.makedirs(log_dir)
 
     today_date = datetime.today().strftime('%Y-%m-%d')
     log_date_folder = os.path.join(log_dir, today_date)
@@ -177,7 +177,7 @@ def get_logger(log_file: str, logger_name: str) -> logging.Logger:
         log_level = logging.DEBUG
     logger.setLevel(log_level)
     formatter = logging.Formatter('%(message)s')
-    handler = logging.FileHandler(filename=setup_and_return_log_path(fileName=log_file), delay=True)
+    handler = logging.FileHandler(filename=setup_and_return_log_path(filename=log_file), delay=True)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
