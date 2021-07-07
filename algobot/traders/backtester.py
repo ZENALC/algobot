@@ -15,7 +15,7 @@ from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
                            EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT)
 from algobot.helpers import (ROOT_DIR, convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
-                             get_log_dir, get_ups_and_downs,
+                             PATHS, get_ups_and_downs,
                              parse_strategy_name)
 from algobot.interface.config_utils.strategy_utils import \
     get_strategies_dictionary
@@ -200,7 +200,7 @@ class Backtester(Trader):
               f' different parameters, rewriting your strategy, or taking a look at ' \
               f'your strategy code again. The strategy that caused this crash is: ' \
               f'{strategy.name}. You can find more details about the crash in the ' \
-              f'logs file at {get_log_dir()}.'
+              f'logs file at {PATHS.get_log_dir()}.'
         return msg
 
     def strategy_loop(self, strategyData, thread) -> Union[None, str]:

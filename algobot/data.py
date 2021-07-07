@@ -9,7 +9,7 @@ from typing import Dict, List, Tuple, Union
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
 
-from algobot.helpers import (ROOT_DIR, get_database_dir, get_logger,
+from algobot.helpers import (ROOT_DIR, PATHS, get_logger,
                              get_normalized_data, get_ups_and_downs)
 from algobot.typing_hints import DATA_TYPE
 
@@ -142,7 +142,7 @@ class Data:
         Retrieves database file path.
         :return: Database file path.
         """
-        database_folder = get_database_dir()
+        database_folder = PATHS.get_database_dir()
         if not os.path.exists(database_folder):
             os.makedirs(database_folder)
 

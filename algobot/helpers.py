@@ -24,7 +24,6 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 APP_NAME = "algobot"
 APP_AUTHOR = "ZENALC"
 
-APP_DIRS = AppDirs(APP_NAME, APP_AUTHOR)
 
 SHORT_INTERVAL_MAP = {
     '1m': '1 Minute',
@@ -45,12 +44,22 @@ SHORT_INTERVAL_MAP = {
 LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
 
 
-def get_log_dir() -> str:
-    return os.path.join(APP_DIRS.user_log_dir, 'Logs')
+class Paths:
+
+    def __init__(self, app_dirs):
+        self.app_dirs = app_dirs
+
+    def get_log_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_log_dir, 'Logs')
+
+    def get_database_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Databases')
+
+    def get_state_path(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'state.json')
 
 
-def get_database_dir() -> str:
-    return os.path.join(APP_DIRS.user_data_dir, 'Databases')
+PATHS = Paths(AppDirs(APP_NAME, APP_AUTHOR))
 
 
 def get_latest_version() -> str:
@@ -150,7 +159,7 @@ def setup_and_return_log_path(filename: str) -> str:
     :param filename: Log filename to be created.
     :return: Absolute path to log file.
     """
-    log_dir = get_log_dir()
+    log_dir = PATHS.get_log_dir()
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
