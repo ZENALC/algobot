@@ -13,10 +13,9 @@ from dateutil import parser
 
 from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
                            EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT)
-from algobot.helpers import (ROOT_DIR, convert_all_dates_to_datetime,
+from algobot.helpers import (PATHS, ROOT_DIR, convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
-                             PATHS, get_ups_and_downs,
-                             parse_strategy_name)
+                             get_ups_and_downs, parse_strategy_name)
 from algobot.interface.config_utils.strategy_utils import \
     get_strategies_dictionary
 from algobot.strategies.strategy import Strategy
