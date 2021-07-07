@@ -33,7 +33,7 @@ def save_credentials(config_obj):
     Function that saves credentials to base path in a JSON format. Obviously not very secure, but temp fix.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    targetFolder = os.path.join(helpers.ROOT_DIR, config_obj.credentialsFolder)
+    targetFolder = config_obj.credentialsFolder
     helpers.create_folder_if_needed(targetFolder)
 
     apiKey = config_obj.binanceApiKey.text()
@@ -60,7 +60,7 @@ def load_credentials(config_obj, auto: bool = True):
     :param auto: Boolean regarding whether bot called this function or not. If bot called it, silently try to load
     credentials. If a user called it, however, open a file dialog to ask for the file path to credentials.
     """
-    targetFolder = os.path.join(helpers.ROOT_DIR, config_obj.credentialsFolder)
+    targetFolder = config_obj.credentialsFolder
     if helpers.create_folder_if_needed(targetFolder):
         config_obj.credentialResult.setText('No credentials found.')
         return

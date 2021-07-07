@@ -15,7 +15,7 @@ from algobot.threads.downloadThread import DownloadThread
 from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread
 from algobot.threads.workerThread import Worker
 
-otherCommandsUi = os.path.join(helpers.ROOT_DIR, 'UI', 'otherCommands.ui')
+otherCommandsUi = os.path.join(helpers.PATHS.get_ui_dir(), 'otherCommands.ui')
 
 
 class OtherCommands(QDialog):
@@ -56,8 +56,8 @@ class OtherCommands(QDialog):
         self.stopVolatilityButton.clicked.connect(lambda: self.stop_volatility_snooper())
 
         # Purge buttons.
-        self.purgeLogsButton.clicked.connect(lambda: self.purge('Logs'))
-        self.purgeDatabasesButton.clicked.connect(lambda: self.purge('Databases'))
+        self.purgeLogsButton.clicked.connect(lambda: self.purge(helpers.PATHS.get_log_dir()))
+        self.purgeDatabasesButton.clicked.connect(lambda: self.purge(helpers.PATHS.get_database_dir()))
         self.purgeBacktestResultsButton.clicked.connect(lambda: self.purge('Backtest Results'))
         self.purgeConfigurationFilesButton.clicked.connect(lambda: self.purge('Configuration'))
         self.purgeCredentialsButton.clicked.connect(lambda: self.purge('Credentials'))
@@ -195,7 +195,7 @@ class OtherCommands(QDialog):
     def end_snoop_generate_volatility_report(self, volatility_dict, output_type):
         self.volatilityStatus.setText("Finished snooping. Generating report...")
         self.volatilityProgressBar.setValue(100)
-        folder_path = helpers.create_folder("Volatility Results")
+        folder_path = helpers.create_folder(helpers.PATHS.get_volatility_results_dir())
         file_name = f'Volatility_Results_{datetime.now().strftime("%m_%d_%Y_%H_%M_%S")}.{output_type.lower()}'
         file_path = os.path.join(folder_path, file_name)
 

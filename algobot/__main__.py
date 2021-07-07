@@ -16,6 +16,7 @@ from PyQt5.QtWidgets import (QApplication, QCompleter, QFileDialog,
                              QMainWindow, QMessageBox, QTableWidgetItem)
 
 import algobot.assets
+from algobot import helpers
 from algobot.algodict import get_interface_dictionary
 from algobot.data import Data
 from algobot.enums import (AVG_GRAPH, BACKTEST, LIVE, LONG, NET_GRAPH,
@@ -26,7 +27,7 @@ from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
                                    setup_graph_plots, setup_graphs,
                                    update_backtest_graph_limits,
                                    update_main_graphs)
-from algobot.helpers import (ROOT_DIR, create_folder, create_folder_if_needed,
+from algobot.helpers import (PATHS, create_folder, create_folder_if_needed,
                              get_caller_string, open_file_or_folder)
 from algobot.interface.about import About
 from algobot.interface.config_utils.state_utils import load_state, save_state
@@ -47,7 +48,7 @@ from algobot.traders.realtrader import RealTrader
 from algobot.traders.simulationtrader import SimulationTrader
 
 app = QApplication(sys.argv)
-mainUi = os.path.join(ROOT_DIR, 'UI', 'algobot.ui')
+mainUi = os.path.join(PATHS.get_ui_dir(), 'algobot.ui')
 
 
 class Interface(QMainWindow):
@@ -252,7 +253,7 @@ class Interface(QMainWindow):
         """
         if self.optimizer:
             if len(self.optimizer.optimizerRows) > 0:
-                optimizerFolderPath = create_folder('Optimizer Results')
+                optimizerFolderPath = create_folder(helpers.PATHS.get_optimizer_results_dir())
                 innerPath = os.path.join(optimizerFolderPath, self.optimizer.symbol)
                 create_folder_if_needed(innerPath, optimizerFolderPath)
                 defaultFileName = self.optimizer.get_default_result_file_name('optimizer', ext=file_type.lower())
@@ -407,7 +408,7 @@ class Interface(QMainWindow):
         """
         Ends backtest and prompts user if they want to see the results.
         """
-        backtestFolderPath = create_folder('Backtest Results')
+        backtestFolderPath = create_folder(helpers.PATHS.get_backtest_results_dir())
         innerPath = os.path.join(backtestFolderPath, self.backtester.symbol)
         create_folder_if_needed(innerPath, backtestFolderPath)
         defaultFile = os.path.join(innerPath, self.backtester.get_default_result_file_name())
@@ -1293,7 +1294,7 @@ class Interface(QMainWindow):
                 trade.append(item.text())
             trades.append(trade)
 
-        path = create_folder("Trade History")
+        path = create_folder(helpers.PATHS.get_trade_history_dir())
 
         if caller == LIVE:
             defaultFile = os.path.join(path, 'live_trades.csv')
@@ -1317,7 +1318,7 @@ class Interface(QMainWindow):
         """
         table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
         label = self.interfaceDictionary[caller]['mainInterface']['historyLabel']
-        path = create_folder("Trade History")
+        path = create_folder(helpers.PATHS.get_trade_history_dir())
         path, _ = QFileDialog.getOpenFileName(self, 'Import Trades', path, "CSV (*.csv)")
 
         try:

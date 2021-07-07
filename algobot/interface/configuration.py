@@ -22,7 +22,7 @@ from algobot.interface.utils import get_elements_from_combobox
 from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
 
-configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
+configurationUi = os.path.join(helpers.PATHS.get_ui_dir(), 'configuration.ui')
 
 
 class Configuration(QDialog):
@@ -82,9 +82,9 @@ class Configuration(QDialog):
         self.chatPass = False
 
         # Folders and files
-        self.credentialsFolder = "Credentials"
-        self.configFolder = 'Configuration'
-        self.stateFilePath = os.path.join(helpers.ROOT_DIR, 'state.json')
+        self.credentialsFolder = helpers.PATHS.get_credentials_dir()
+        self.configFolder = helpers.PATHS.get_configuration_dir()
+        self.stateFilePath = helpers.PATHS.get_state_path()
 
         self.categoryTabs = [
             self.mainConfigurationTabWidget,

@@ -46,8 +46,12 @@ LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
 
 class Paths:
 
-    def __init__(self, app_dirs):
+    def __init__(self, root_dir: str, app_dirs):
+        self.root_dir = root_dir
         self.app_dirs = app_dirs
+
+    def get_ui_dir(self) -> str:
+        return os.path.join(self.root_dir, 'UI')
 
     def get_log_dir(self) -> str:
         return os.path.join(self.app_dirs.user_log_dir, 'Logs')
@@ -58,8 +62,29 @@ class Paths:
     def get_state_path(self) -> str:
         return os.path.join(self.app_dirs.user_data_dir, 'state.json')
 
+    def get_optimizer_results_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Optimizer Results')
 
-PATHS = Paths(AppDirs(APP_NAME, APP_AUTHOR))
+    def get_backtest_results_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Backtest Results')
+
+    def get_trade_history_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Trade History')
+
+    def get_volatility_results_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Volatility Results')
+
+    def get_csv_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'CSV')
+
+    def get_configuration_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'configuration')
+
+    def get_credentials_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Credentials')
+
+
+PATHS = Paths(ROOT_DIR, AppDirs(APP_NAME, APP_AUTHOR))
 
 
 def get_latest_version() -> str:
@@ -112,18 +137,17 @@ def open_folder(folder: str):
     """
     This will open a folder even if it doesn't exist. It'll create one if it doesn't exist.
     """
-    targetPath = create_folder(folder)
-    open_file_or_folder(targetPath)
+    target_path = create_folder(folder)
+    open_file_or_folder(target_path)
 
 
 def create_folder(folder: str):
     """
     This will create a folder if needed in the root directory.
     """
-    targetPath = os.path.join(ROOT_DIR, folder)
-    create_folder_if_needed(targetPath)
+    create_folder_if_needed(folder)
 
-    return targetPath
+    return folder
 
 
 def create_folder_if_needed(targetPath: str, basePath: str = ROOT_DIR) -> bool:
