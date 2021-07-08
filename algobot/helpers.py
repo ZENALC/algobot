@@ -150,31 +150,29 @@ def create_folder(folder: str):
     return folder
 
 
-def create_folder_if_needed(targetPath: str, basePath: str = ROOT_DIR) -> bool:
+def create_folder_if_needed(target_path: str) -> bool:
     """
     This function will create the appropriate folders in the root folder if needed.
-    :param targetPath: Target path to have exist.
-    :param basePath: Base path to start from. By default, it'll be the root directory.
+    :param target_path: Target path to have exist.
     :return: Boolean whether folder was created or not.
     """
-    if not os.path.exists(targetPath):
-        folder = os.path.basename(targetPath)
-        os.mkdir(os.path.join(basePath, folder))
+    if not os.path.exists(target_path):
+        os.makedirs(target_path)
         return True
     return False
 
 
-def open_file_or_folder(targetPath: str):
+def open_file_or_folder(target_path: str):
     """
     Opens a file or folder based on targetPath.
-    :param targetPath: File or folder to open with system defaults.
+    :param target_path: File or folder to open with system defaults.
     """
     if platform.system() == "Windows":
-        os.startfile(targetPath)
+        os.startfile(target_path)
     elif platform.system() == "Darwin":
-        subprocess.Popen(["open", targetPath])
+        subprocess.Popen(["open", target_path])
     else:
-        subprocess.Popen(["xdg-open", targetPath])
+        subprocess.Popen(["xdg-open", target_path])
 
 
 def setup_and_return_log_path(filename: str) -> str:

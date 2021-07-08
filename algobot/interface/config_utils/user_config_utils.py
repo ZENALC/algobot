@@ -24,10 +24,9 @@ def create_appropriate_config_folders(config_obj, folder: str) -> str:
     :return: Absolute path to new folder.
     """
     basePath = config_obj.configFolder
-    helpers.create_folder_if_needed(basePath)
 
     targetPath = os.path.join(basePath, folder)
-    helpers.create_folder_if_needed(targetPath, basePath=basePath)
+    helpers.create_folder_if_needed(targetPath)
 
     return targetPath
 
