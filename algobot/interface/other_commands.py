@@ -58,27 +58,26 @@ class OtherCommands(QDialog):
         # Purge buttons.
         self.purgeLogsButton.clicked.connect(lambda: self.purge(helpers.PATHS.get_log_dir()))
         self.purgeDatabasesButton.clicked.connect(lambda: self.purge(helpers.PATHS.get_database_dir()))
-        self.purgeBacktestResultsButton.clicked.connect(lambda: self.purge('Backtest Results'))
-        self.purgeConfigurationFilesButton.clicked.connect(lambda: self.purge('Configuration'))
-        self.purgeCredentialsButton.clicked.connect(lambda: self.purge('Credentials'))
-        self.purgeCSVFilesButton.clicked.connect(lambda: self.purge('CSV'))
+        self.purgeBacktestResultsButton.clicked.connect(lambda: self.purge(helpers.PATHS.get_backtest_results_dir()))
+        self.purgeConfigurationFilesButton.clicked.connect(lambda: self.purge(helpers.PATHS.get_configuration_dir()))
+        self.purgeCredentialsButton.clicked.connect(lambda: self.purge(helpers.PATHS.get_credentials_dir()))
+        self.purgeCSVFilesButton.clicked.connect(lambda: self.purge(helpers.PATHS.get_csv_dir()))
 
     def purge(self, directory: str):
         """
         Deletes directory provided.
         """
-        path = os.path.join(helpers.ROOT_DIR, directory)
-        if not os.path.exists(path):
+        if not os.path.exists(directory):
             create_popup(self, f"No {directory.lower()} files detected.")
             return
 
         message = f'Are you sure you want to delete your {directory.lower()} files? You might not be able to undo ' \
-                  f'this operation. \n\nThe following path will be deleted: \n{path}'
+                  f'this operation. \n\nThe following path will be deleted: \n{directory}'
         qm = QMessageBox
         ret = qm.question(self, 'Warning', message, qm.Yes | qm.No)
 
-        if ret == qm.Yes and os.path.exists(path):
-            shutil.rmtree(path)
+        if ret == qm.Yes and os.path.exists(directory):
+            shutil.rmtree(directory)
             self.infoLabel.setText(f'{directory.capitalize()} files have been successfully deleted.')
 
             if directory == 'Logs':  # Reinitialize log folder if old logs were purged.
