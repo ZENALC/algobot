@@ -19,7 +19,7 @@ def import_data(config_obj, caller: int = BACKTEST):
     action = 'backtest' if caller == BACKTEST else 'optimization'
 
     inner_dict['infoLabel'].setText("Importing data...")
-    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Open file', helpers.ROOT_DIR, "CSV (*.csv)")
+    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Open file', helpers.PATHS.get_csv_dir(), "CSV (*.csv)")
     if filePath == '':
         inner_dict['infoLabel'].setText("Data not imported.")
         inner_dict['downloadProgress'].setValue(0)

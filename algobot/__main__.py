@@ -256,7 +256,8 @@ class Interface(QMainWindow):
                 optimizerFolderPath = create_folder(helpers.PATHS.get_optimizer_results_dir())
                 innerPath = os.path.join(optimizerFolderPath, self.optimizer.symbol)
                 create_folder_if_needed(innerPath)
-                defaultFileName = self.optimizer.get_default_result_file_name('optimizer', ext=file_type.lower())
+                defaultFileName = self.optimizer.get_default_result_file_name(helpers.PATHS.get_optimizer_results_dir(),
+                                                                              'optimizer', ext=file_type.lower())
                 defaultPath = os.path.join(innerPath, defaultFileName)
                 filePath, _ = QFileDialog.getSaveFileName(self, 'Save Optimizer', defaultPath,
                                                           f'{file_type} (*.{file_type.lower()})')
@@ -411,7 +412,8 @@ class Interface(QMainWindow):
         backtestFolderPath = create_folder(helpers.PATHS.get_backtest_results_dir())
         innerPath = os.path.join(backtestFolderPath, self.backtester.symbol)
         create_folder_if_needed(innerPath)
-        defaultFile = os.path.join(innerPath, self.backtester.get_default_result_file_name())
+        defaultFile = os.path.join(innerPath, self.backtester.get_default_result_file_name(
+            helpers.PATHS.get_backtest_results_dir()))
         fileName, _ = QFileDialog.getSaveFileName(self, 'Save Result', defaultFile, 'TXT (*.txt)')
         fileName = fileName.strip()
         fileName = fileName if fileName != '' else None
