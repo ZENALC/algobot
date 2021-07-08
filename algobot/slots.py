@@ -65,7 +65,7 @@ def create_action_slots(gui):
     gui.openLogFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_log_dir()))
     gui.openCsvFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_csv_dir()))
     gui.openDatabasesFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_database_dir()))
-    gui.openCredentialsFolderAction.triggered.connect(lambda: open_folder('Credentials'))
+    gui.openCredentialsFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_credentials_dir()))
     gui.openConfigurationsFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_configuration_dir()))
     gui.sourceCodeAction.triggered.connect(lambda: webbrowser.open("https://github.com/ZENALC/algobot"))
     gui.tradingViewLiveAction.triggered.connect(lambda: gui.open_trading_view(LIVE))

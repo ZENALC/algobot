@@ -141,7 +141,7 @@ def open_folder(folder: str):
     open_file_or_folder(target_path)
 
 
-def create_folder(folder: str):
+def create_folder(folder: str) -> str:
     """
     This will create a folder if needed in the root directory.
     """
