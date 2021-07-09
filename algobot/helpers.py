@@ -45,8 +45,8 @@ LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
 
 
 class Paths:
-
-    def __init__(self, root_dir: str, app_dirs):
+    """ Encapsulates all the path information for the app to store its configuration. """
+    def __init__(self, root_dir: str, app_dirs: AppDirs):
         self.root_dir = root_dir
         self.app_dirs = app_dirs
 
