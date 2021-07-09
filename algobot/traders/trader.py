@@ -4,8 +4,18 @@ This will be the main Trader class that all other Traders will inherit from.
 from datetime import datetime
 from typing import Dict, List, Union
 
-from algobot.enums import (BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
-                           EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING)
+from algobot.enums import (
+    BEARISH,
+    BULLISH,
+    ENTER_LONG,
+    ENTER_SHORT,
+    EXIT_LONG,
+    EXIT_SHORT,
+    LONG,
+    SHORT,
+    STOP,
+    TRAILING,
+)
 from algobot.helpers import get_label_string, parse_strategy_name
 from algobot.strategies.strategy import Strategy
 
@@ -18,7 +28,9 @@ class Trader:
         self.previousNet = startingBalance  # Our previous net will just be the starting balance in the beginning.
         self.coin = 0  # Amount of coin we own.
         self.coinOwed = 0  # Amount of coin we owe.
-        self.transactionFeePercentageDecimal = 0.001  # Binance transaction fee percentage.
+        self.transactionFeePercentageDecimal = (
+            0.001  # Binance transaction fee percentage.
+        )
         self.symbol = symbol.strip()  # Symbol of ticker used for trading.
         self.commissionsPaid = 0  # Total commissions paid this bot run.
         self.precision = precision  # Precision to round data to.
@@ -27,22 +39,36 @@ class Trader:
 
         self.startingTime = datetime.utcnow()  # Starting time in UTC.
         self.endingTime = None  # Ending time for previous bot run.
-        self.currentPeriod = None  # Current time period the bot is in used for backtesting.
+        self.currentPeriod = (
+            None  # Current time period the bot is in used for backtesting.
+        )
         self.currentPosition = None  # Current position value.
         self.minPeriod = 0  # Minimum amount of periods required for trend retrieval.
         self.previousPosition = None  # Previous position to validate for a new trend.
         self.trend = None  # Current trend information.
-        self.marginEnabled = marginEnabled  # Boolean for whether margin trading is enabled or not.
+        self.marginEnabled = (
+            marginEnabled  # Boolean for whether margin trading is enabled or not.
+        )
 
-        self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
-        self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.
+        self.takeProfitPoint = (
+            None  # Price at which bot will exit trade to secure profits.
+        )
+        self.trailingTakeProfitActivated = (
+            False  # Boolean that'll turn true if a stop order is activated.
+        )
         self.takeProfitType = None  # Type of take profit: trailing or stop.
-        self.takeProfitPercentageDecimal = None  # Percentage of profit to exit trade at.
+        self.takeProfitPercentageDecimal = (
+            None  # Percentage of profit to exit trade at.
+        )
 
         # Prices information.
         self.currentPrice = None  # Current price of coin.
-        self.buyLongPrice = None  # Price we last bought our target coin at in long position.
-        self.sellShortPrice = None  # Price we last sold target coin at in short position.
+        self.buyLongPrice = (
+            None  # Price we last bought our target coin at in long position.
+        )
+        self.sellShortPrice = (
+            None  # Price we last sold target coin at in short position.
+        )
         self.longTrailingPrice = None  # Price coin has to be above for long position.
         self.shortTrailingPrice = None  # Price coin has to be below for short position.
 
@@ -52,14 +78,20 @@ class Trader:
         self.smartStopLossEnter = False  # Boolean that'll determine whether current position is from a smart stop loss.
         self.customStopLoss = None  # Custom stop loss to use if we want to exit trade before trailing or stop loss.
         self.previousStopLoss = None  # Previous stop loss for smart stop loss.
-        self.stopLoss = None  # Price at which bot will exit trade due to stop loss limits.
+        self.stopLoss = (
+            None  # Price at which bot will exit trade due to stop loss limits.
+        )
         self.stopLossExit = False  # Boolean that'll determine whether last position was exited from a stop loss.
         self.lossPercentageDecimal = None  # Loss percentage in decimal for stop loss.
         self.lossStrategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
-        self.safetyTimer = None  # Timer to check if there's a true trend towards stop loss.
+        self.safetyTimer = (
+            None  # Timer to check if there's a true trend towards stop loss.
+        )
         self.scheduledSafetyTimer = None  # Next time to check if it's a true stop loss.
 
-    def add_trade(self, message: str, stopLossExit: bool = False, smartEnter: bool = False):
+    def add_trade(
+        self, message: str, stopLossExit: bool = False, smartEnter: bool = False
+    ):
         """
         Adds a trade to list of trades
         :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
@@ -68,11 +100,13 @@ class Trader:
         """
         self.stopLossExit = stopLossExit
         self.smartStopLossEnter = smartEnter
-        self.trades.append({
-            'date': self.currentPeriod['date_utc'],
-            'action': message,
-            'net': round(self.get_net(), self.precision)
-        })
+        self.trades.append(
+            {
+                "date": self.currentPeriod["date_utc"],
+                "action": message,
+                "net": round(self.get_net(), self.precision),
+            }
+        )
 
     def reset_trades(self):
         """
@@ -132,7 +166,9 @@ class Trader:
         :param stopLossExit: Boolean that'll determine whether a position was exited from a stop loss.
         :param message: Message that specifies why it exited short.
         """
-        transactionFee = self.coinOwed * self.currentPrice * self.transactionFeePercentageDecimal
+        transactionFee = (
+            self.coinOwed * self.currentPrice * self.transactionFeePercentageDecimal
+        )
         coin = self.coinOwed
         self.commissionsPaid += transactionFee
         self.currentPosition = None
@@ -183,11 +219,11 @@ class Trader:
         self.lossStrategy = lossDict["lossType"]
         self.lossPercentageDecimal = lossDict["lossPercentage"] / 100
 
-        if 'smartStopLossCounter' in lossDict:
-            self.set_smart_stop_loss_counter(lossDict['smartStopLossCounter'])
+        if "smartStopLossCounter" in lossDict:
+            self.set_smart_stop_loss_counter(lossDict["smartStopLossCounter"])
 
-        if 'safetyTimer' in lossDict:
-            self.set_safety_timer(lossDict['safetyTimer'])
+        if "safetyTimer" in lossDict:
+            self.set_safety_timer(lossDict["safetyTimer"])
 
     def setup_strategies(self, strategies: List[tuple]):
         """
@@ -200,16 +236,26 @@ class Trader:
             name = parse_strategy_name(strategyTuple[2])
 
             # TODO: Leverage kwargs to initialize strategies.
-            self.strategies[name] = strategyClass(parent=self, inputs=values, precision=self.precision)
-            self.minPeriod = max(self.strategies[name].get_min_option_period(), self.minPeriod)
+            self.strategies[name] = strategyClass(
+                parent=self, inputs=values, precision=self.precision
+            )
+            self.minPeriod = max(
+                self.strategies[name].get_min_option_period(), self.minPeriod
+            )
 
     def handle_trailing_prices(self):
         """
         Handles trailing prices based on the current price.
         """
-        if self.longTrailingPrice is not None and self.currentPrice > self.longTrailingPrice:
+        if (
+            self.longTrailingPrice is not None
+            and self.currentPrice > self.longTrailingPrice
+        ):
             self.longTrailingPrice = self.currentPrice
-        if self.shortTrailingPrice is not None and self.currentPrice < self.shortTrailingPrice:
+        if (
+            self.shortTrailingPrice is not None
+            and self.currentPrice < self.shortTrailingPrice
+        ):
             self.shortTrailingPrice = self.currentPrice
 
     def get_stop_loss(self):
@@ -217,7 +263,11 @@ class Trader:
         This function will return the stop loss for the current position the bot is in.
         :return: Stop loss value.
         """
-        if self.lossStrategy is None or self.currentPrice is None or self.currentPosition is None:
+        if (
+            self.lossStrategy is None
+            or self.currentPrice is None
+            or self.currentPosition is None
+        ):
             return None
 
         self.handle_trailing_prices()
@@ -225,18 +275,24 @@ class Trader:
             if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
                 self.stopLoss = self.previousStopLoss
             elif self.lossStrategy == TRAILING:
-                self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
+                self.stopLoss = self.shortTrailingPrice * (
+                    1 + self.lossPercentageDecimal
+                )
             elif self.lossStrategy == STOP:
                 self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
         elif self.currentPosition == LONG:
             if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
                 self.stopLoss = self.previousStopLoss
             elif self.lossStrategy == TRAILING:
-                self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
+                self.stopLoss = self.longTrailingPrice * (
+                    1 - self.lossPercentageDecimal
+                )
             elif self.lossStrategy == STOP:
                 self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
 
-        if self.stopLoss is not None:  # This is for the smart stop loss to reenter position.
+        if (
+            self.stopLoss is not None
+        ):  # This is for the smart stop loss to reenter position.
             self.previousStopLoss = self.stopLoss
 
         return self.stopLoss
@@ -247,11 +303,11 @@ class Trader:
         :return: Stop loss strategy in string format.
         """
         if self.lossStrategy == STOP:
-            return 'Stop Loss'
+            return "Stop Loss"
         elif self.lossStrategy == TRAILING:
-            return 'Trailing Loss'
+            return "Trailing Loss"
         elif self.lossStrategy is None:
-            return 'None'
+            return "None"
         else:
             raise ValueError("Unknown type of loss strategy.")
 
@@ -261,26 +317,30 @@ class Trader:
         shorted, and the amount owned.
         :return: Net balance.
         """
-        return self.coin * self.currentPrice - self.coinOwed * self.currentPrice + self.balance
+        return (
+            self.coin * self.currentPrice
+            - self.coinOwed * self.currentPrice
+            + self.balance
+        )
 
     def get_strategy_inputs(self, strategy_name: str):
         """
         Returns provided strategy's inputs if it exists.
         """
         if strategy_name not in self.strategies:
-            return 'Strategy not found.'
+            return "Strategy not found."
         else:
             return f"{', '.join(map(str, self.strategies[strategy_name].get_params()))}"
 
-    def get_strategies_info_string(self, left: str = '\t', right: str = '\n'):
+    def get_strategies_info_string(self, left: str = "\t", right: str = "\n"):
         """
         Returns a formatted string with strategies information.
         :param left: Character to add before each new line in strategies information.
         :param right: Character to add after each new line in strategies information.
         """
-        string = f'Strategies:{right}'
+        string = f"Strategies:{right}"
         for strategyName, strategy in self.strategies.items():
-            string += f'{left}{get_label_string(strategyName)}: {self.get_strategy_inputs(strategyName)}{right}'
+            string += f"{left}{get_label_string(strategyName)}: {self.get_strategy_inputs(strategyName)}{right}"
 
         return string.rstrip()  # Remove new line in the very end.
 
@@ -328,11 +388,11 @@ class Trader:
         :return: Stop type in string format.
         """
         if stopType == STOP:
-            return 'Stop'
+            return "Stop"
         elif stopType == TRAILING:
-            return 'Trailing'
+            return "Trailing"
         elif stopType is None:
-            return 'None'
+            return "None"
         else:
             raise ValueError("Unknown type of exit position type.")
 
@@ -340,7 +400,7 @@ class Trader:
     def get_enum_from_str(string):
         if string.lower() == "trailing":
             return TRAILING
-        elif string.lower() == 'stop':
+        elif string.lower() == "stop":
             return STOP
 
     @staticmethod
@@ -353,9 +413,9 @@ class Trader:
         if trend == BULLISH:
             return "Bullish"
         elif trend == BEARISH:
-            return 'Bearish'
+            return "Bearish"
         elif trend is None:
-            return 'None'
+            return "None"
         elif trend == ENTER_LONG:
             return "Enter Long"
         elif trend == EXIT_LONG:
@@ -365,7 +425,7 @@ class Trader:
         elif trend == EXIT_SHORT:
             return "Exit Short"
         else:
-            raise ValueError('Unknown type of trend.')
+            raise ValueError("Unknown type of trend.")
 
     @staticmethod
     def get_profit_or_loss_string(profit: float) -> str:
@@ -382,11 +442,11 @@ class Trader:
         :return: Position in string format.
         """
         if self.currentPosition == LONG:
-            return 'Long'
+            return "Long"
         elif self.currentPosition == SHORT:
-            return 'Short'
+            return "Short"
         elif self.currentPosition is None:
-            return 'None'
+            return "None"
         else:
             raise ValueError("Invalid type of current position.")
 
@@ -403,10 +463,18 @@ class Trader:
         :param decimalValue: Percentage in decimal format.
         :return: Rounded percentage value in a string format.
         """
-        return self.get_safe_rounded_string(decimalValue, direction='right', multiplier=100, symbol='%')
+        return self.get_safe_rounded_string(
+            decimalValue, direction="right", multiplier=100, symbol="%"
+        )
 
-    def get_safe_rounded_string(self, value: float, roundDigits: int = None, symbol: str = '$', direction: str = 'left',
-                                multiplier: float = 1) -> str:
+    def get_safe_rounded_string(
+        self,
+        value: float,
+        roundDigits: int = None,
+        symbol: str = "$",
+        direction: str = "left",
+        multiplier: float = 1,
+    ) -> str:
         """
         Helper function that will, if exists, return value rounded with symbol provided.
         :param multiplier: Optional value to multiply final value with before return.
@@ -422,10 +490,10 @@ class Trader:
         if value is None:
             return "None"
         else:
-            if direction == 'left':
-                return f'{symbol}{round(value * multiplier, roundDigits)}'
+            if direction == "left":
+                return f"{symbol}{round(value * multiplier, roundDigits)}"
             else:
-                return f'{round(value * multiplier, roundDigits)}{symbol}'
+                return f"{round(value * multiplier, roundDigits)}{symbol}"
 
     def get_take_profit(self) -> Union[float, None]:
         """
@@ -437,12 +505,16 @@ class Trader:
 
         if self.currentPosition == SHORT:
             if self.takeProfitType == STOP:
-                self.takeProfitPoint = self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
+                self.takeProfitPoint = self.sellShortPrice * (
+                    1 - self.takeProfitPercentageDecimal
+                )
             else:
                 raise ValueError("Invalid type of take profit type provided.")
         elif self.currentPosition == LONG:
             if self.takeProfitType == STOP:
-                self.takeProfitPoint = self.buyLongPrice * (1 + self.takeProfitPercentageDecimal)
+                self.takeProfitPoint = self.buyLongPrice * (
+                    1 + self.takeProfitPercentageDecimal
+                )
             else:
                 raise ValueError("Invalid type of take profit type provided.")
         else:

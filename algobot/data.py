@@ -9,15 +9,24 @@ from typing import Dict, List, Tuple, Union
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
 
-from algobot.helpers import (ROOT_DIR, get_logger, get_normalized_data,
-                             get_ups_and_downs)
+from algobot.helpers import ROOT_DIR, get_logger, get_normalized_data, get_ups_and_downs
 from algobot.typing_hints import DATA_TYPE
 
 
 class Data:
-    def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True,
-                 updateData: bool = True, log: bool = False, logFile: str = 'data', logObject: Logger = None,
-                 precision: int = 2, callback=None, caller=None):
+    def __init__(
+        self,
+        interval: str = "1h",
+        symbol: str = "BTCUSDT",
+        loadData: bool = True,
+        updateData: bool = True,
+        log: bool = False,
+        logFile: str = "data",
+        logObject: Logger = None,
+        precision: int = 2,
+        callback=None,
+        caller=None,
+    ):
         """
         Data object that will retrieve current and historical prices from the Binance API.
         :param: interval: Interval for which the data object will track prices.
@@ -31,34 +40,45 @@ class Data:
         self.callback = callback  # Used to emit signals to GUI if provided.
         self.caller = caller  # Used to specify which caller emitted signals for GUI.
         self.binanceClient = Client()  # Initialize Binance client to retrieve data.
-        self.logger = self.get_logging_object(enable_logging=log, logFile=logFile, loggerObject=logObject)
+        self.logger = self.get_logging_object(
+            enable_logging=log, logFile=logFile, loggerObject=logObject
+        )
         self.validate_interval(interval)  # Validate the interval provided.
         self.interval = interval  # Interval to trade in.
-        self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
+        (
+            self.intervalUnit,
+            self.intervalMeasurement,
+        ) = self.get_interval_unit_and_measurement()
         self.precision = precision  # Decimal precision with which to show data.
         self.dataLimit = 2000  # Max amount of data to contain.
-        self.downloadCompleted = False  # Boolean to determine whether data download is completed or not.
-        self.downloadLoop = True  # Boolean to determine whether data is being downloaded or not.
-        self.tickers = self.binanceClient.get_all_tickers()  # A list of all the tickers on Binance.
+        self.downloadCompleted = (
+            False  # Boolean to determine whether data download is completed or not.
+        )
+        self.downloadLoop = (
+            True  # Boolean to determine whether data is being downloaded or not.
+        )
+        self.tickers = (
+            self.binanceClient.get_all_tickers()
+        )  # A list of all the tickers on Binance.
         self.symbol = symbol.upper()  # Symbol of data being used.
         self.validate_symbol(self.symbol)  # Validate symbol.
         self.data = []  # Total bot data.
         self.ema_dict = {}  # Cached past EMA data for memoization.
         self.rsi_data = {}  # Cached past RSI data for memoization.
         self.current_values = {  # This dictionary will hold current data values.
-            'date_utc': datetime.now(tz=timezone.utc),
-            'open': 0,
-            'high': 0,
-            'low': 0,
-            'close': 0,
-            'volume': 0,
-            'quote_asset_volume': 0,
-            'number_of_trades': 0,
-            'taker_buy_base_asset': 0,
-            'taker_buy_quote_asset': 0
+            "date_utc": datetime.now(tz=timezone.utc),
+            "open": 0,
+            "high": 0,
+            "low": 0,
+            "close": 0,
+            "volume": 0,
+            "quote_asset_volume": 0,
+            "number_of_trades": 0,
+            "taker_buy_base_asset": 0,
+            "taker_buy_quote_asset": 0,
         }
 
-        self.databaseTable = f'data_{self.interval}'
+        self.databaseTable = f"data_{self.interval}"
         self.databaseFile = self.get_database_file()
         self.create_table()
 
@@ -67,7 +87,9 @@ class Data:
             self.load_data(update=updateData)
 
     @staticmethod
-    def get_logging_object(enable_logging: bool, logFile: str, loggerObject: Logger) -> Union[None, Logger]:
+    def get_logging_object(
+        enable_logging: bool, logFile: str, loggerObject: Logger
+    ) -> Union[None, Logger]:
         """
         Returns a logger object.
         :param enable_logging: Boolean that determines whether logging is enabled or not.
@@ -89,19 +111,35 @@ class Data:
         Validates interval. If incorrect interval, raises ValueError.
         :param interval: Interval to be checked in short form -> e.g. 12h for 12 hours
         """
-        availableIntervals = ('12h', '15m', '1d', '1h', '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
+        availableIntervals = (
+            "12h",
+            "15m",
+            "1d",
+            "1h",
+            "1m",
+            "2h",
+            "30m",
+            "3d",
+            "3m",
+            "4h",
+            "5m",
+            "6h",
+            "8h",
+        )
         if interval not in availableIntervals:
-            raise ValueError(f'Invalid interval {interval} given. Available intervals are: \n{availableIntervals}')
+            raise ValueError(
+                f"Invalid interval {interval} given. Available intervals are: \n{availableIntervals}"
+            )
 
     def validate_symbol(self, symbol: str):
         """
         Validates symbol for data to be retrieved. Raises ValueError if symbol type is incorrect.
         :param symbol: Symbol to be checked.
         """
-        if symbol.strip() == '':
+        if symbol.strip() == "":
             raise ValueError("No symbol/ticker found.")
         if not self.is_valid_symbol(symbol):
-            raise ValueError(f'Invalid symbol/ticker {symbol} provided.')
+            raise ValueError(f"Invalid symbol/ticker {symbol} provided.")
 
     def load_data(self, update: bool = True):
         """
@@ -142,11 +180,11 @@ class Data:
         Retrieves database file path.
         :return: Database file path.
         """
-        database_folder = os.path.join(ROOT_DIR, 'Databases')
+        database_folder = os.path.join(ROOT_DIR, "Databases")
         if not os.path.exists(database_folder):
             os.mkdir(database_folder)
 
-        filePath = os.path.join(database_folder, f'{self.symbol}.db')
+        filePath = os.path.join(database_folder, f"{self.symbol}.db")
         return filePath
 
     def create_table(self):
@@ -155,7 +193,8 @@ class Data:
         """
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
-                cursor.execute(f'''
+                cursor.execute(
+                    f"""
                                 CREATE TABLE IF NOT EXISTS {self.databaseTable}(
                                 date_utc TEXT PRIMARY KEY,
                                 open_price TEXT NOT NULL,
@@ -167,7 +206,8 @@ class Data:
                                 number_of_trades TEXT NOT NULL,
                                 taker_buy_base_asset TEXT NOT NULL,
                                 taker_buy_quote_asset TEXT NOT NULL
-                                );''')
+                                );"""
+                )
                 connection.commit()
 
     def dump_to_table(self, totalData: List[dict] = None) -> bool:
@@ -178,30 +218,35 @@ class Data:
         if totalData is None:
             totalData = self.data
 
-        query = f'''INSERT INTO {self.databaseTable} (date_utc, open_price, high_price, low_price, close_price,
+        query = f"""INSERT INTO {self.databaseTable} (date_utc, open_price, high_price, low_price, close_price,
                     volume, quote_asset_volume, number_of_trades, taker_buy_base_asset, taker_buy_quote_asset)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 for data in totalData:
                     try:
-                        cursor.execute(query,
-                                       (data['date_utc'].strftime('%Y-%m-%d %H:%M:%S'),
-                                        data['open'],
-                                        data['high'],
-                                        data['low'],
-                                        data['close'],
-                                        data['volume'],
-                                        data['quote_asset_volume'],
-                                        data['number_of_trades'],
-                                        data['taker_buy_base_asset'],
-                                        data['taker_buy_quote_asset'],
-                                        ))
+                        cursor.execute(
+                            query,
+                            (
+                                data["date_utc"].strftime("%Y-%m-%d %H:%M:%S"),
+                                data["open"],
+                                data["high"],
+                                data["low"],
+                                data["close"],
+                                data["volume"],
+                                data["quote_asset_volume"],
+                                data["number_of_trades"],
+                                data["taker_buy_base_asset"],
+                                data["taker_buy_quote_asset"],
+                            ),
+                        )
                     except sqlite3.IntegrityError:
                         pass  # This just means the data already exists in the database, so ignore.
                     except sqlite3.OperationalError:
                         connection.commit()
-                        self.output_message("Insertion to database failed. Will retry next run.", 4)
+                        self.output_message(
+                            "Insertion to database failed. Will retry next run.", 4
+                        )
                         return False
             connection.commit()
         self.output_message("Successfully stored all new data to database.")
@@ -214,7 +259,9 @@ class Data:
         """
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
-                cursor.execute(f'SELECT date_utc FROM {self.databaseTable} ORDER BY date_utc DESC LIMIT 1')
+                cursor.execute(
+                    f"SELECT date_utc FROM {self.databaseTable} ORDER BY date_utc DESC LIMIT 1"
+                )
                 return cursor.fetchone()
 
     def get_data_from_database(self):
@@ -223,11 +270,13 @@ class Data:
         """
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
-                rows = cursor.execute(f'''
+                rows = cursor.execute(
+                    f"""
                         SELECT "date_utc", "open_price", "high_price", "low_price", "close_price", "volume",
                         "quote_asset_volume", "number_of_trades", "taker_buy_base_asset", "taker_buy_quote_asset"
                         FROM {self.databaseTable} ORDER BY date_utc
-                        ''').fetchall()
+                        """
+                ).fetchall()
 
         if len(rows) > 0:
             self.output_message("Retrieving data from database...")
@@ -236,7 +285,9 @@ class Data:
             return
 
         for row in rows:
-            date_utc = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            date_utc = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S").replace(
+                tzinfo=timezone.utc
+            )
             normalized_data = get_normalized_data(data=row, date_in_utc=date_utc)
             self.data.append(normalized_data)
 
@@ -248,7 +299,9 @@ class Data:
         result = self.get_latest_database_row()
         if result is None:
             return False
-        latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        latestDate = datetime.strptime(result[0], "%Y-%m-%d %H:%M:%S").replace(
+            tzinfo=timezone.utc
+        )
         return self.is_latest_date(latestDate)
 
     # noinspection PyProtectedMember
@@ -259,10 +312,16 @@ class Data:
         """
         result = self.get_latest_database_row()
         if result is None:
-            return self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
+            return self.binanceClient._get_earliest_valid_timestamp(
+                self.symbol, self.interval
+            )
         else:
-            latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            return int(latestDate.timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
+            latestDate = datetime.strptime(result[0], "%Y-%m-%d %H:%M:%S").replace(
+                tzinfo=timezone.utc
+            )
+            return (
+                int(latestDate.timestamp()) * 1000 + 1
+            )  # Converting timestamp to milliseconds
 
     # noinspection PyProtectedMember
     def update_database_and_data(self):
@@ -271,13 +330,25 @@ class Data:
         """
         result = self.get_latest_database_row()
         if result is None:  # Then get the earliest timestamp possible
-            timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
-            self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
+            timestamp = self.binanceClient._get_earliest_valid_timestamp(
+                self.symbol, self.interval
+            )
+            self.output_message(
+                f"Downloading all available historical data for {self.interval} intervals."
+            )
         else:
-            latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            timestamp = int(latestDate.timestamp()) * 1000  # Converting timestamp to milliseconds
-            dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
-            self.output_message(f"Previous data up to UTC {dateWithIntervalAdded} found.")
+            latestDate = datetime.strptime(result[0], "%Y-%m-%d %H:%M:%S").replace(
+                tzinfo=timezone.utc
+            )
+            timestamp = (
+                int(latestDate.timestamp()) * 1000
+            )  # Converting timestamp to milliseconds
+            dateWithIntervalAdded = latestDate + timedelta(
+                minutes=self.get_interval_minutes()
+            )
+            self.output_message(
+                f"Previous data up to UTC {dateWithIntervalAdded} found."
+            )
 
         if not self.database_is_updated():
             newData = self.get_new_data(timestamp)
@@ -285,13 +356,19 @@ class Data:
             self.output_message("Inserting data to live program...")
             self.insert_data(newData)
             self.output_message("Storing updated data to database...")
-            self.dump_to_table(self.data[-len(newData):])
+            self.dump_to_table(self.data[-len(newData) :])
         else:
             self.output_message("Database is up-to-date.")
 
     # noinspection PyProtectedMember
-    def custom_get_new_data(self, limit: int = 500, progress_callback=None, locked=None, removeFirst: bool = False,
-                            caller=-1) -> List[dict]:
+    def custom_get_new_data(
+        self,
+        limit: int = 500,
+        progress_callback=None,
+        locked=None,
+        removeFirst: bool = False,
+        caller=-1,
+    ) -> List[dict]:
         """
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
         :param caller: Caller that called this function. Only used for botThread.
@@ -315,7 +392,7 @@ class Data:
                 interval=self.interval,
                 limit=limit,
                 startTime=start_ts,
-                endTime=None
+                endTime=None,
             )
 
             if not len(tempData):
@@ -352,7 +429,9 @@ class Data:
 
         progress_callback.emit(95, "Saving data...", caller)
         self.insert_data(output_data)
-        progress_callback.emit(97, "This may take a while. Dumping data to database...", caller)
+        progress_callback.emit(
+            97, "This may take a while. Dumping data to database...", caller
+        )
 
         start_index_for_dump = -len(output_data)
 
@@ -366,7 +445,9 @@ class Data:
         self.downloadCompleted = True
         return self.data
 
-    def get_new_data(self, timestamp: int, limit: int = 1000, get_current: bool = False) -> list:
+    def get_new_data(
+        self, timestamp: int, limit: int = 1000, get_current: bool = False
+    ) -> list:
         """
         Returns new data from Binance API from timestamp specified.
         :param timestamp: Initial timestamp.
@@ -374,15 +455,21 @@ class Data:
         :param get_current: Boolean for whether to include current period's data.
         :return: A list of dictionaries.
         """
-        newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
+        newData = self.binanceClient.get_historical_klines(
+            self.symbol, self.interval, timestamp + 1, limit=limit
+        )
         self.downloadCompleted = True
         if len(newData[:-1]) == 0:
-            raise RuntimeError("No data was fetched from Binance. Please check Binance server.")
+            raise RuntimeError(
+                "No data was fetched from Binance. Please check Binance server."
+            )
         else:
             if get_current:
                 return newData
             else:
-                return newData[:-1]  # Up to -1st index, because we don't want current period data.
+                return newData[
+                    :-1
+                ]  # Up to -1st index, because we don't want current period data.
 
     def is_latest_date(self, latestDate: datetime) -> bool:
         """
@@ -391,7 +478,9 @@ class Data:
         :return: True or false whether date is latest period or not.
         """
         minutes = self.get_interval_minutes()
-        current_date = latestDate + timedelta(minutes=minutes) + timedelta(seconds=5)  # 5s leeway for server update
+        current_date = (
+            latestDate + timedelta(minutes=minutes) + timedelta(seconds=5)
+        )  # 5s leeway for server update
         return current_date >= datetime.now(timezone.utc) - timedelta(minutes=minutes)
 
     def data_is_updated(self) -> bool:
@@ -399,7 +488,7 @@ class Data:
         Checks whether data is fully updated or not.
         :return: A boolean whether data is updated or not with Binance values.
         """
-        latestDate = self.data[-1]['date_utc']
+        latestDate = self.data[-1]["date_utc"]
         return self.is_latest_date(latestDate)
 
     def insert_data(self, newData: List[List[str]]):
@@ -416,11 +505,15 @@ class Data:
         """
         Updates run-time data with Binance API values.
         """
-        latestDate = self.data[-1]['date_utc']
+        latestDate = self.data[-1]["date_utc"]
         timestamp = int(latestDate.timestamp()) * 1000
-        dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
+        dateWithIntervalAdded = latestDate + timedelta(
+            minutes=self.get_interval_minutes()
+        )
         if verbose:
-            self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
+            self.output_message(
+                f"Previous data found up to UTC {dateWithIntervalAdded}."
+            )
         if not self.data_is_updated():
             # self.try_callback("Found new data. Attempting to update...")
             newData = []
@@ -440,7 +533,7 @@ class Data:
         """
         if len(self.data) > self.dataLimit:  # Remove past data.
             self.dump_to_table()
-            self.data = self.data[self.dataLimit // 2:]
+            self.data = self.data[self.dataLimit // 2 :]
 
     def get_current_data(self, counter: int = 0) -> Dict[str, Union[str, float]]:
         """
@@ -453,17 +546,24 @@ class Data:
             if not self.data_is_updated():
                 self.update_data()
 
-            currentInterval = self.data[-1]['date_utc'] + timedelta(minutes=self.get_interval_minutes())
+            currentInterval = self.data[-1]["date_utc"] + timedelta(
+                minutes=self.get_interval_minutes()
+            )
             currentTimestamp = int(currentInterval.timestamp() * 1000)
 
-            nextInterval = currentInterval + timedelta(minutes=self.get_interval_minutes())
+            nextInterval = currentInterval + timedelta(
+                minutes=self.get_interval_minutes()
+            )
             nextTimestamp = int(nextInterval.timestamp() * 1000) - 1
-            currentData = self.binanceClient.get_klines(symbol=self.symbol,
-                                                        interval=self.interval,
-                                                        startTime=currentTimestamp,
-                                                        endTime=nextTimestamp,
-                                                        )[0]
-            self.current_values = get_normalized_data(data=currentData, date_in_utc=currentInterval)
+            currentData = self.binanceClient.get_klines(
+                symbol=self.symbol,
+                interval=self.interval,
+                startTime=currentTimestamp,
+                endTime=nextTimestamp,
+            )[0]
+            self.current_values = get_normalized_data(
+                data=currentData, date_in_utc=currentInterval
+            )
             if counter > 0:
                 self.try_callback("Successfully reconnected.")
             return self.current_values
@@ -471,7 +571,9 @@ class Data:
             sleepTime = 5 + counter * 2
             error_message = f"Error: {e}. Retrying in {sleepTime} seconds..."
             self.output_message(error_message, 4)
-            self.try_callback(f"Internet connectivity issue detected. Trying again in {sleepTime} seconds.")
+            self.try_callback(
+                f"Internet connectivity issue detected. Trying again in {sleepTime} seconds."
+            )
             self.ema_dict = {}  # Reset EMA cache as it could be corrupted.
             time.sleep(sleepTime)
             return self.get_current_data(counter=counter + 1)
@@ -490,9 +592,11 @@ class Data:
         :return: Ticker market price
         """
         try:
-            return float(self.binanceClient.get_symbol_ticker(symbol=self.symbol)['price'])
+            return float(
+                self.binanceClient.get_symbol_ticker(symbol=self.symbol)["price"]
+            )
         except Exception as e:
-            error_message = f'Error: {e}. Retrying in 15 seconds...'
+            error_message = f"Error: {e}. Retrying in 15 seconds..."
             self.output_message(error_message, 4)
             self.try_callback(message=error_message)
             time.sleep(15)
@@ -512,11 +616,11 @@ class Data:
         Returns interval minutes.
         :return: An integer representing the minutes for an interval.
         """
-        if self.intervalUnit == 'h':
+        if self.intervalUnit == "h":
             return self.intervalMeasurement * 60
-        elif self.intervalUnit == 'm':
+        elif self.intervalUnit == "m":
             return self.intervalMeasurement
-        elif self.intervalUnit == 'd':
+        elif self.intervalUnit == "d":
             return self.intervalMeasurement * 24 * 60
         else:
             raise ValueError("Invalid interval.", 4)
@@ -531,11 +635,15 @@ class Data:
             os.mkdir(folderName)
         os.chdir(folderName)  # Go inside the folder.
 
-        if not os.path.exists(self.symbol):  # Create symbol folder inside CSV folder if it doesn't exist.
+        if not os.path.exists(
+            self.symbol
+        ):  # Create symbol folder inside CSV folder if it doesn't exist.
             os.mkdir(self.symbol)
         os.chdir(self.symbol)  # Go inside the folder.
 
-    def write_csv_data(self, totalData: list, fileName: str, armyTime: bool = True) -> str:
+    def write_csv_data(
+        self, totalData: list, fileName: str, armyTime: bool = True
+    ) -> str:
         """
         Writes CSV data to CSV folder in root directory of application.
         :param armyTime: Boolean if date will be in army type. If false, data will be in standard type.
@@ -546,24 +654,30 @@ class Data:
         currentPath = os.getcwd()
         self.create_folders_and_change_path(folderName="CSV")
 
-        with open(fileName, 'w') as f:
-            f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
-                    "Taker_Buy_Base_Asset, Taker_Buy_Quote_Asset\n")
+        with open(fileName, "w") as f:
+            f.write(
+                "Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
+                "Taker_Buy_Base_Asset, Taker_Buy_Quote_Asset\n"
+            )
             for data in totalData:
                 if armyTime:
-                    parsedDate = data['date_utc'].strftime("%m/%d/%Y %H:%M")
+                    parsedDate = data["date_utc"].strftime("%m/%d/%Y %H:%M")
                 else:
-                    parsedDate = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
-                f.write(f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}, '
-                        f'{data["volume"]}, {data["quote_asset_volume"]}, {data["number_of_trades"]}, '
-                        f'{data["taker_buy_base_asset"]}, {data["taker_buy_quote_asset"]}\n')
+                    parsedDate = data["date_utc"].strftime("%m/%d/%Y %I:%M %p")
+                f.write(
+                    f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}, '
+                    f'{data["volume"]}, {data["quote_asset_volume"]}, {data["number_of_trades"]}, '
+                    f'{data["taker_buy_base_asset"]}, {data["taker_buy_quote_asset"]}\n'
+                )
 
         path = os.path.join(os.getcwd(), fileName)
         os.chdir(currentPath)
 
         return path
 
-    def create_csv_file(self, descending: bool = True, armyTime: bool = True, startDate: datetime = None) -> str:
+    def create_csv_file(
+        self, descending: bool = True, armyTime: bool = True, startDate: datetime = None
+    ) -> str:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
         :param startDate: Date to have CSV data from.
@@ -571,12 +685,12 @@ class Data:
         :param armyTime: Boolean that dictates whether dates will be written in army-time format or not.
         """
         self.update_database_and_data()  # Update data if updates exist.
-        fileName = f'{self.symbol}_data_{self.interval}.csv'
+        fileName = f"{self.symbol}_data_{self.interval}.csv"
 
         data = self.data
         if startDate is not None:
             for index, period in enumerate(data):
-                if period['date_utc'].date() <= startDate:
+                if period["date_utc"].date() <= startDate:
                     data = self.data[index:]
                     break
 
@@ -585,7 +699,7 @@ class Data:
         else:
             path = self.write_csv_data(data, fileName=fileName, armyTime=armyTime)
 
-        self.output_message(f'Data saved to {path}.')
+        self.output_message(f"Data saved to {path}.")
         return path
 
     def is_valid_symbol(self, symbol: str) -> bool:
@@ -595,11 +709,13 @@ class Data:
         :return: A boolean whether the symbol is valid or not.
         """
         for ticker in self.tickers:
-            if ticker['symbol'] == symbol:
+            if ticker["symbol"] == symbol:
                 return True
         return False
 
-    def is_valid_average_input(self, shift: int, prices: int, extraShift: int = 0) -> bool:
+    def is_valid_average_input(
+        self, shift: int, prices: int, extraShift: int = 0
+    ) -> bool:
         """
         Checks whether shift, prices, and (optional) extraShift are valid.
         :param shift: Periods from current period.
@@ -614,7 +730,9 @@ class Data:
             self.output_message("Prices cannot be 0 or less than 0.")
             return False
         elif shift + extraShift + prices > len(self.data) + 1:
-            self.output_message("Shift + prices period cannot be more than data available.")
+            self.output_message(
+                "Shift + prices period cannot be more than data available."
+            )
             return False
         return True
 
@@ -629,10 +747,10 @@ class Data:
 
         previousData = self.data[0]
         for data in self.data[1:]:
-            if data['date_utc'] == previousData['date_utc']:
+            if data["date_utc"] == previousData["date_utc"]:
                 self.output_message("Repeated data detected.", 4)
-                self.output_message(f'Previous data: {previousData}', 4)
-                self.output_message(f'Next data: {data}', 4)
+                self.output_message(f"Previous data: {previousData}", 4)
+                self.output_message(f"Next data: {data}", 4)
                 return False
             previousData = data
 
@@ -661,8 +779,14 @@ class Data:
 
         return emaUp, emaDown
 
-    def get_rsi(self, prices: int = 14, parameter: str = 'close', shift: int = 0, round_value: bool = True,
-                update: bool = True) -> float:
+    def get_rsi(
+        self,
+        prices: int = 14,
+        parameter: str = "close",
+        shift: int = 0,
+        round_value: bool = True,
+        update: bool = True,
+    ) -> float:
         """
         Returns relative strength index.
         :param update: Boolean for whether function should call API and get latest data or not.
@@ -673,7 +797,7 @@ class Data:
         :return: Final relative strength index.
         """
         if not self.is_valid_average_input(shift, prices):
-            raise ValueError('Invalid input specified.')
+            raise ValueError("Invalid input specified.")
 
         if shift > 0:
             updateDict = False
@@ -681,10 +805,18 @@ class Data:
             shift -= 1
         else:
             updateDict = True
-            data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
+            data = (
+                self.data + [self.get_current_data()]
+                if update
+                else self.get_total_non_updated_data()
+            )
 
-        start = len(data) - 500 - prices - shift if len(data) > 500 + prices + shift else 0
-        ups, downs = get_ups_and_downs(data=data[start:len(data) - shift], parameter=parameter)
+        start = (
+            len(data) - 500 - prices - shift if len(data) > 500 + prices + shift else 0
+        )
+        ups, downs = get_ups_and_downs(
+            data=data[start : len(data) - shift], parameter=parameter
+        )
         averageUp, averageDown = self.helper_get_ema(ups, downs, prices)
         rs = averageUp / averageDown
         rsi = 100 - 100 / (1 + rs)

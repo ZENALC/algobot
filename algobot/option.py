@@ -9,7 +9,10 @@ class Option:
     """
     Helper class object for trading moving average options.
     """
-    def __init__(self, movingAverage: str, parameter: str, initialBound: int, finalBound: int):
+
+    def __init__(
+        self, movingAverage: str, parameter: str, initialBound: int, finalBound: int
+    ):
         self.movingAverage = movingAverage.upper()
         self.parameter = parameter.lower()
         self.initialBound = initialBound
@@ -76,8 +79,8 @@ class Option:
         :return: A tuple of prettified option initial and final bound.
         """
         return (
-            f'{self.movingAverage}({self.initialBound}) {self.parameter.capitalize()}',
-            f'{self.movingAverage}({self.finalBound}) {self.parameter.capitalize()}',
+            f"{self.movingAverage}({self.initialBound}) {self.parameter.capitalize()}",
+            f"{self.movingAverage}({self.finalBound}) {self.parameter.capitalize()}",
         )
 
     def get_option_info(self, trader: SimulationTrader) -> tuple:
@@ -86,10 +89,17 @@ class Option:
         :param trader: Trader object to be used to get averages.
         :return: Tuple of initial average, final average, initial option name, and final option name.
         """
-        mv, param, initB, finB = self.movingAverage, self.parameter, self.initialBound, self.finalBound
+        mv, param, initB, finB = (
+            self.movingAverage,
+            self.parameter,
+            self.initialBound,
+            self.finalBound,
+        )
         d = trader.dataView
 
-        initialAverage = get_moving_average(mv, param, initB, d.data + [d.current_values])
+        initialAverage = get_moving_average(
+            mv, param, initB, d.data + [d.current_values]
+        )
         finalAverage = get_moving_average(mv, param, finB, d.data + [d.current_values])
         initialName, finalName = self.get_pretty_option()
 
@@ -99,4 +109,4 @@ class Option:
         """
         Returns class representation of object.
         """
-        return f'Option({self.movingAverage}, {self.parameter}, {self.initialBound}, {self.finalBound})'
+        return f"Option({self.movingAverage}, {self.parameter}, {self.initialBound}, {self.finalBound})"

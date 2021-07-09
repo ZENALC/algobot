@@ -22,22 +22,36 @@ class TelegramBot:
         # on different commands - answer in Telegram
         dp.add_handler(CommandHandler("help", self.help_telegram))
         dp.add_handler(CommandHandler("override", self.override_telegram))
-        dp.add_handler(CommandHandler('trades', self.get_trades_telegram))
-        dp.add_handler(CommandHandler('resume', self.resume_telegram))
-        dp.add_handler(CommandHandler('pause', self.pause_telegram))
-        dp.add_handler(CommandHandler('removecustomstoploss', self.remove_custom_stop_loss))
-        dp.add_handler(CommandHandler('setcustomstoploss', self.set_custom_stop_loss))
+        dp.add_handler(CommandHandler("trades", self.get_trades_telegram))
+        dp.add_handler(CommandHandler("resume", self.resume_telegram))
+        dp.add_handler(CommandHandler("pause", self.pause_telegram))
+        dp.add_handler(
+            CommandHandler("removecustomstoploss", self.remove_custom_stop_loss)
+        )
+        dp.add_handler(CommandHandler("setcustomstoploss", self.set_custom_stop_loss))
         dp.add_handler(CommandHandler("forcelong", self.force_long_telegram))
         dp.add_handler(CommandHandler("forceshort", self.force_short_telegram))
-        dp.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
-        dp.add_handler(CommandHandler('morestats', self.get_advanced_statistics_telegram))
-        dp.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
-        dp.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
-        dp.add_handler(CommandHandler(("update", 'updatevalues'), self.update_values))
-        dp.add_handler(CommandHandler(("thanks", 'thanksbot', 'thankyou'), self.thank_bot_telegram))
-        dp.add_handler(CommandHandler(("print", 'makethatbread', 'printmoney'), self.print_telegram))
-        dp.add_handler(CommandHandler('joke', self.joke))
-        dp.add_handler(CommandHandler('wisdom', self.wisdom))
+        dp.add_handler(CommandHandler("exitposition", self.exit_position_telegram))
+        dp.add_handler(
+            CommandHandler("morestats", self.get_advanced_statistics_telegram)
+        )
+        dp.add_handler(
+            CommandHandler(("stats", "statistics"), self.get_statistics_telegram)
+        )
+        dp.add_handler(
+            CommandHandler(("position", "getposition"), self.get_position_telegram)
+        )
+        dp.add_handler(CommandHandler(("update", "updatevalues"), self.update_values))
+        dp.add_handler(
+            CommandHandler(("thanks", "thanksbot", "thankyou"), self.thank_bot_telegram)
+        )
+        dp.add_handler(
+            CommandHandler(
+                ("print", "makethatbread", "printmoney"), self.print_telegram
+            )
+        )
+        dp.add_handler(CommandHandler("joke", self.joke))
+        dp.add_handler(CommandHandler("wisdom", self.wisdom))
 
     def send_message(self, chatID: str, message: str):
         """
@@ -67,9 +81,9 @@ class TelegramBot:
         trader = self.gui.trader
         trades = trader.trades
 
-        message = ''
+        message = ""
         for index, trade in enumerate(trades, start=1):
-            message += f'Trade {index}:\n'
+            message += f"Trade {index}:\n"
             message += f'Date in UTC: {trade["date"].strftime("%m/%d/%Y, %H:%M:%S")}\n'
             message += f'Order ID: {trade["orderID"]}\n'
             message += f'Pair: {trade["pair"]}\n'
@@ -79,12 +93,14 @@ class TelegramBot:
             message += f'Percentage: {trade["percentage"]}\n'
             message += f'Profit: {trade["profit"]}\n\n'
 
-        if message == '':
+        if message == "":
             message = "No trades made yet."
             update.message.reply_text(message)
         else:
             limit = constants.MAX_MESSAGE_LENGTH
-            messageParts = [message[i:i + limit] for i in range(0, len(message), limit)]
+            messageParts = [
+                message[i : i + limit] for i in range(0, len(message), limit)
+            ]
             for part in messageParts:
                 update.message.reply_text(part)
 
@@ -94,22 +110,24 @@ class TelegramBot:
         """
         Sends available /help commands when called.
         """
-        update.message.reply_text("Here are your help commands available:\n"
-                                  "/help -> To get commands available.\n"
-                                  "/forcelong  -> To force long.\n"
-                                  "/forceshort -> To force short.\n"
-                                  "/position or /getposition -> To get position.\n"
-                                  "/morestats -> To get more detailed statistics.\n"
-                                  "/stats or /statistics -> To get current statistics.\n"
-                                  "/override -> To exit trade and wait for next cross.\n"
-                                  "/resume -> To resume bot logic.\n"
-                                  "/pause -> To pause bot logic.\n"
-                                  "/removecustomstoploss -> To remove currently set custom stop loss.\n"
-                                  "/setcustomstoploss (your stop loss value here) -> To set custom stop loss.\n"
-                                  "/exitposition -> To exit position.\n"
-                                  "/trades -> To get list of trades made.\n"
-                                  "/update or /updatevalues -> To update current coin values.\n"
-                                  "/thanks or /thankyou or /thanksbot -> to thank the bot.\n")
+        update.message.reply_text(
+            "Here are your help commands available:\n"
+            "/help -> To get commands available.\n"
+            "/forcelong  -> To force long.\n"
+            "/forceshort -> To force short.\n"
+            "/position or /getposition -> To get position.\n"
+            "/morestats -> To get more detailed statistics.\n"
+            "/stats or /statistics -> To get current statistics.\n"
+            "/override -> To exit trade and wait for next cross.\n"
+            "/resume -> To resume bot logic.\n"
+            "/pause -> To pause bot logic.\n"
+            "/removecustomstoploss -> To remove currently set custom stop loss.\n"
+            "/setcustomstoploss (your stop loss value here) -> To set custom stop loss.\n"
+            "/exitposition -> To exit position.\n"
+            "/trades -> To get list of trades made.\n"
+            "/update or /updatevalues -> To update current coin values.\n"
+            "/thanks or /thankyou or /thanksbot -> to thank the bot.\n"
+        )
 
     # noinspection PyUnusedLocal
     def update_values(self, update, context):
@@ -127,13 +145,13 @@ class TelegramBot:
         trader: SimulationTrader = self.gui.trader
         statDict = trader.get_grouped_statistics()
 
-        total = ''
+        total = ""
 
         for categoryKey in statDict:
-            total += get_label_string(categoryKey) + ':\n'
+            total += get_label_string(categoryKey) + ":\n"
             for key in statDict[categoryKey]:
                 value = statDict[categoryKey][key]
-                total += f'\t\t {get_label_string(key)} : {get_label_string(value)} \n'
+                total += f"\t\t {get_label_string(key)} : {get_label_string(value)} \n"
         return total
 
     # noinspection PyUnusedLocal
@@ -143,8 +161,11 @@ class TelegramBot:
         """
         limit = constants.MAX_MESSAGE_LENGTH
 
-        message = "Here are your advanced statistics as requested: \n" + self.get_advanced_statistics()
-        messageParts = [message[i:i + limit] for i in range(0, len(message), limit)]
+        message = (
+            "Here are your advanced statistics as requested: \n"
+            + self.get_advanced_statistics()
+        )
+        messageParts = [message[i : i + limit] for i in range(0, len(message), limit)]
 
         for part in messageParts:
             update.message.reply_text(part)
@@ -156,34 +177,35 @@ class TelegramBot:
         trader: SimulationTrader = self.gui.trader
 
         if not trader or not self.botThread:
-            return 'Something went wrong. Try again in a few minutes.'
+            return "Something went wrong. Try again in a few minutes."
 
         profit = trader.get_profit()
         profitLabel = trader.get_profit_or_loss_string(profit=profit)
 
-        return (f'Symbol: {trader.symbol}\n'
-                f'Position: {trader.get_position_string()}\n'
-                f'Interval: {trader.dataView.interval}\n'
-                f'Total trades made: {len(trader.trades)}\n'
-                f"Coin owned: {trader.coin}\n"
-                f"Coin owed: {trader.coinOwed}\n"
-                f"Starting balance: ${round(trader.startingBalance, 2)}\n"
-                f"Balance: ${round(trader.balance, 2)}\n"
-                f'Net: ${round(trader.get_net(), 2)}\n'
-                f"{profitLabel}: ${round(abs(profit), 2)}\n"
-                f'{profitLabel} Percentage: {round(self.botThread.percentage, 2)}%\n'
-                f'Daily Percentage: {round(self.botThread.dailyPercentage, 2)}%\n'
-                f'Autonomous Mode: {not trader.inHumanControl}\n'
-                f'Loss Strategy: {trader.get_stop_loss_strategy_string()}\n'
-                f'Stop Loss Percentage: {round(trader.lossPercentageDecimal * 100, 2)}%\n'
-                f'Stop Loss: {trader.get_safe_rounded_string(trader.get_stop_loss())}\n'
-                f"Custom Stop Loss: {trader.get_safe_rounded_string(trader.customStopLoss)}\n"
-                f"Current {trader.coinName} price: ${trader.currentPrice}\n"
-                f'Elapsed time: {self.botThread.elapsed}\n'
-                f'Smart Stop Loss Initial Counter: {trader.smartStopLossInitialCounter}\n'
-                f'Smart Stop Loss Counter: {trader.smartStopLossCounter}\n'
-                f'Stop Loss Safety Timer: {trader.safetyTimer}\n'
-                )
+        return (
+            f"Symbol: {trader.symbol}\n"
+            f"Position: {trader.get_position_string()}\n"
+            f"Interval: {trader.dataView.interval}\n"
+            f"Total trades made: {len(trader.trades)}\n"
+            f"Coin owned: {trader.coin}\n"
+            f"Coin owed: {trader.coinOwed}\n"
+            f"Starting balance: ${round(trader.startingBalance, 2)}\n"
+            f"Balance: ${round(trader.balance, 2)}\n"
+            f"Net: ${round(trader.get_net(), 2)}\n"
+            f"{profitLabel}: ${round(abs(profit), 2)}\n"
+            f"{profitLabel} Percentage: {round(self.botThread.percentage, 2)}%\n"
+            f"Daily Percentage: {round(self.botThread.dailyPercentage, 2)}%\n"
+            f"Autonomous Mode: {not trader.inHumanControl}\n"
+            f"Loss Strategy: {trader.get_stop_loss_strategy_string()}\n"
+            f"Stop Loss Percentage: {round(trader.lossPercentageDecimal * 100, 2)}%\n"
+            f"Stop Loss: {trader.get_safe_rounded_string(trader.get_stop_loss())}\n"
+            f"Custom Stop Loss: {trader.get_safe_rounded_string(trader.customStopLoss)}\n"
+            f"Current {trader.coinName} price: ${trader.currentPrice}\n"
+            f"Elapsed time: {self.botThread.elapsed}\n"
+            f"Smart Stop Loss Initial Counter: {trader.smartStopLossInitialCounter}\n"
+            f"Smart Stop Loss Counter: {trader.smartStopLossCounter}\n"
+            f"Stop Loss Safety Timer: {trader.safetyTimer}\n"
+        )
 
     def send_statistics_telegram(self, chatID: str, period: str):
         """
@@ -216,7 +238,7 @@ class TelegramBot:
             "Don't thank me. Thank Monke.",
             "Sure thing.",
             "The pleasure is all mine.",
-            "Yes sirree."
+            "Yes sirree.",
         )
         update.message.reply_text(random.choice(messages))
 
@@ -234,7 +256,7 @@ class TelegramBot:
             "It's literally free money. Printing...",
             "P r i n t i n g",
             "Printing in progress....",
-            "Printing initialized...."
+            "Printing initialized....",
         ]
         update.message.reply_text(random.choice(messages))
 
@@ -277,7 +299,7 @@ class TelegramBot:
             "War doesn't decide who's right. War decides who's left.",
             "A year from now you will wish you had started today.",
             "Dude, sucking at something is the first step to being sorta good at something.",
-            "We all make choices in life, but in the end our choices make us."
+            "We all make choices in life, but in the end our choices make us.",
         ]
         update.message.reply_text(random.choice(quotes))
 
@@ -288,7 +310,7 @@ class TelegramBot:
         Another small easter egg. You can /joke to let bot tell you a random one-liner joke.
         """
         jokes = [
-            "My uncle once said \"Go away kid, I'm not your uncle.\"",
+            'My uncle once said "Go away kid, I\'m not your uncle."',
             "I have an inferiority complex, but it's not a very good one.",
             "I have the heart of a lion and a lifetime ban from the Toronto zoo.",
             "A man walked into his house and was delighted when he discovered that someone had stolen all his lamps.",
@@ -296,7 +318,7 @@ class TelegramBot:
             "You've gotta hand it to blind prostitutes.",
             "You'd have to be really low to pickpocket a midget.",
             "I haven’t slept for ten days, because that would be too long.",
-            "I discovered a substance that had no mass, and I was like \"0mg!\"",
+            'I discovered a substance that had no mass, and I was like "0mg!"',
             "Parallel lines have so much in common but it’s a shame they’ll never meet.",
             "They all laughed when I said I wanted to be a comedian; Well, they're not laughing now.",
             "Why do ballerinas always stand in their toes? Why don't they get taller dancers?.",
@@ -362,7 +384,9 @@ class TelegramBot:
         loss set.
         """
         if self.gui.trader.customStopLoss is None:
-            update.message.reply_text("Bot already has no custom stop loss implemented.")
+            update.message.reply_text(
+                "Bot already has no custom stop loss implemented."
+            )
         else:
             self.botThread.signals.removeCustomStopLoss.emit()
             update.message.reply_text("Bot's custom stop loss has been removed.")
@@ -377,20 +401,28 @@ class TelegramBot:
         try:
             stopLoss = float(stopLoss)
         except ValueError:
-            update.message.reply_text("Please make sure you specify a number for the custom stop loss.")
+            update.message.reply_text(
+                "Please make sure you specify a number for the custom stop loss."
+            )
             return
         except Exception as e:
-            update.message.reply_text(f'An error occurred: {e}.')
+            update.message.reply_text(f"An error occurred: {e}.")
             return
 
         if stopLoss < 0:
-            update.message.reply_text("Please make sure you specify a non-negative number for the custom stop loss.")
+            update.message.reply_text(
+                "Please make sure you specify a non-negative number for the custom stop loss."
+            )
         elif stopLoss > 10_000_000:
-            update.message.reply_text("Please make sure you specify a number that is less than 10,000,000.")
+            update.message.reply_text(
+                "Please make sure you specify a number that is less than 10,000,000."
+            )
         else:
             stopLoss = round(stopLoss, 6)
             self.botThread.signals.setCustomStopLoss.emit(LIVE, True, stopLoss)
-            update.message.reply_text(f"Stop loss has been successfully set to ${stopLoss}.")
+            update.message.reply_text(
+                f"Stop loss has been successfully set to ${stopLoss}."
+            )
 
     # noinspection PyUnusedLocal
     def force_long_telegram(self, update, context):

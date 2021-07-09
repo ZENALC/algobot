@@ -9,33 +9,37 @@ from algobot.interface.config_utils.strategy_utils import get_strategies
 
 
 def get_config_helper(gui, caller):
-    algo_dict = get_interface_dictionary(gui, caller)['configuration']
+    algo_dict = get_interface_dictionary(gui, caller)["configuration"]
     startDate, endDate = get_calendar_dates(config_obj=gui.configuration, caller=caller)
-    precision = algo_dict['precision'].currentText()
-    symbol = gui.configuration.optimizer_backtest_dict[caller]['dataType']
+    precision = algo_dict["precision"].currentText()
+    symbol = gui.configuration.optimizer_backtest_dict[caller]["dataType"]
 
     d = {
-        'startDate': startDate,
-        'endDate': endDate,
-        'symbol': symbol,
-        'startingBalance': algo_dict['startingBalance'].value(),
-        'data': gui.configuration.optimizer_backtest_dict[caller]['data'],
-        'precision': parse_precision(precision, symbol),
-        'marginEnabled': algo_dict['marginEnabled'].isChecked(),
-        'strategyInterval': algo_dict['strategyInterval'].currentText(),
-        'logger': gui.logger
+        "startDate": startDate,
+        "endDate": endDate,
+        "symbol": symbol,
+        "startingBalance": algo_dict["startingBalance"].value(),
+        "data": gui.configuration.optimizer_backtest_dict[caller]["data"],
+        "precision": parse_precision(precision, symbol),
+        "marginEnabled": algo_dict["marginEnabled"].isChecked(),
+        "strategyInterval": algo_dict["strategyInterval"].currentText(),
+        "logger": gui.logger,
     }
 
     if caller == OPTIMIZER:
-        d.update({
-            'drawdownPercentage': algo_dict['drawdownPercentage'].value(),
-            'strategies': []
-        })
+        d.update(
+            {
+                "drawdownPercentage": algo_dict["drawdownPercentage"].value(),
+                "strategies": [],
+            }
+        )
 
     if caller == BACKTEST:
-        d.update({
-            'outputTrades': algo_dict['outputTrades'].isChecked(),
-            'strategies': get_strategies(gui.configuration, BACKTEST),
-        })
+        d.update(
+            {
+                "outputTrades": algo_dict["outputTrades"].isChecked(),
+                "strategies": get_strategies(gui.configuration, BACKTEST),
+            }
+        )
 
     return d

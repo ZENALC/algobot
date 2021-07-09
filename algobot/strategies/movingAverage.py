@@ -9,19 +9,23 @@ from algobot.strategies.strategy import Strategy
 
 
 class MovingAverageStrategy(Strategy):
-    def __init__(self, parent=None, inputs: list = ('',) * 4, precision: int = 2):
+    def __init__(self, parent=None, inputs: list = ("",) * 4, precision: int = 2):
         """
         Basic Moving Average strategy.
         """
-        super().__init__(name='Moving Average', parent=parent, precision=precision)
+        super().__init__(name="Moving Average", parent=parent, precision=precision)
         self.tradingOptions: List[Option] = self.parse_inputs(inputs)
         self.dynamic = True
-        self.description = "Basic trading strategy using moving averages. If the moving average of initial is greater" \
-                           " than final, a bullish trend is determined. If the moving average of final is greater, a " \
-                           "bearish trend is determined. All moving averages have to have the same trend for an " \
-                           "overall trend to be set."
+        self.description = (
+            "Basic trading strategy using moving averages. If the moving average of initial is greater"
+            " than final, a bullish trend is determined. If the moving average of final is greater, a "
+            "bearish trend is determined. All moving averages have to have the same trend for an "
+            "overall trend to be set."
+        )
 
-        if parent:  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
+        if (
+            parent
+        ):  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
             self.validate_options()
             self.initialize_plot_dict()
 
@@ -39,7 +43,7 @@ class MovingAverageStrategy(Strategy):
         :param inputs: List of inputs to parse.
         :return: Parsed strategy inputs.
         """
-        return [Option(*inputs[x:x + 4]) for x in range(0, len(inputs), 4)]
+        return [Option(*inputs[x : x + 4]) for x in range(0, len(inputs), 4)]
 
     def set_inputs(self, inputs: list):
         """
@@ -67,13 +71,14 @@ class MovingAverageStrategy(Strategy):
         The initial value will return the int type.
         The final value will return the int type.
         """
-        movingAverages = ['SMA', 'EMA', 'WMA']
-        parameters = ['High', 'Low', 'Open', 'Close', 'High/Low', 'Open/Close']
-        return [('Moving Average', tuple, movingAverages),
-                ('Parameter', tuple, parameters),
-                ('Initial', int),
-                ('Final', int)
-                ]
+        movingAverages = ["SMA", "EMA", "WMA"]
+        parameters = ["High", "Low", "Open", "Close", "High/Low", "Open/Close"]
+        return [
+            ("Moving Average", tuple, movingAverages),
+            ("Parameter", tuple, parameters),
+            ("Initial", int),
+            ("Final", int),
+        ]
 
     def get_params(self) -> List[Option]:
         """
@@ -88,32 +93,56 @@ class MovingAverageStrategy(Strategy):
         :param log_data: Boolean specifying whether current information regarding strategy should be logged or not.
         """
         parent = self.parent
-        trends = []  # Current option trends. They all have to be the same to register a trend.
+        trends = (
+            []
+        )  # Current option trends. They all have to be the same to register a trend.
 
         for option in self.tradingOptions:
             movingAverage, parameter, initialBound, finalBound = option.get_all_params()
             initialName, finalName = option.get_pretty_option()
 
-            if type(data) == list:  # This means it was called by the optimizer/backtester.
-                avg1 = get_moving_average(movingAverage, parameter, initialBound, data, parent.ema_dict)
-                avg2 = get_moving_average(movingAverage, parameter, finalBound, data, parent.ema_dict)
+            if (
+                type(data) == list
+            ):  # This means it was called by the optimizer/backtester.
+                avg1 = get_moving_average(
+                    movingAverage, parameter, initialBound, data, parent.ema_dict
+                )
+                avg2 = get_moving_average(
+                    movingAverage, parameter, finalBound, data, parent.ema_dict
+                )
             else:  # This means it was called by the live bot / simulation.
-                avg1 = get_moving_average(movingAverage, parameter, initialBound, data.data + [data.current_values],
-                                          data.ema_dict)
-                avg2 = get_moving_average(movingAverage, parameter, finalBound, data.data + [data.current_values],
-                                          data.ema_dict)
+                avg1 = get_moving_average(
+                    movingAverage,
+                    parameter,
+                    initialBound,
+                    data.data + [data.current_values],
+                    data.ema_dict,
+                )
+                avg2 = get_moving_average(
+                    movingAverage,
+                    parameter,
+                    finalBound,
+                    data.data + [data.current_values],
+                    data.ema_dict,
+                )
 
             prefix, interval_type = self.get_prefix_and_interval_type(data)
 
             if log_data:
-                parent.output_message(f'{interval_type.capitalize()} interval ({data.interval}) data:')
-                parent.output_message(f'{movingAverage}({initialBound}) {parameter} = {avg1}')
-                parent.output_message(f'{movingAverage}({finalBound}) {parameter} = {avg2}')
+                parent.output_message(
+                    f"{interval_type.capitalize()} interval ({data.interval}) data:"
+                )
+                parent.output_message(
+                    f"{movingAverage}({initialBound}) {parameter} = {avg1}"
+                )
+                parent.output_message(
+                    f"{movingAverage}({finalBound}) {parameter} = {avg2}"
+                )
 
-            self.strategyDict[interval_type][f'{prefix}{initialName}'] = avg1
-            self.strategyDict[interval_type][f'{prefix}{finalName}'] = avg2
+            self.strategyDict[interval_type][f"{prefix}{initialName}"] = avg1
+            self.strategyDict[interval_type][f"{prefix}{finalName}"] = avg2
 
-            if interval_type == 'regular':
+            if interval_type == "regular":
                 self.plotDict[initialName][0] = avg1
                 self.plotDict[finalName][0] = avg2
 

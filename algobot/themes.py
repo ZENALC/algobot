@@ -1,6 +1,10 @@
-from algobot.interface.palettes import (bloomberg_palette, dark_palette,
-                                        green_palette, light_palette,
-                                        red_palette)
+from algobot.interface.palettes import (
+    bloomberg_palette,
+    dark_palette,
+    green_palette,
+    light_palette,
+    red_palette,
+)
 
 
 def set_dark_mode(app, gui):
@@ -9,8 +13,8 @@ def set_dark_mode(app, gui):
     """
     app.setPalette(dark_palette())
     for graph in gui.graphs:
-        graph = graph['graph']
-        graph.setBackground('k')
+        graph = graph["graph"]
+        graph.setBackground("k")
 
 
 def set_light_mode(app, gui):
@@ -19,8 +23,8 @@ def set_light_mode(app, gui):
     """
     app.setPalette(light_palette())
     for graph in gui.graphs:
-        graph = graph['graph']
-        graph.setBackground('w')
+        graph = graph["graph"]
+        graph.setBackground("w")
 
 
 def set_bloomberg_mode(app, gui):
@@ -29,8 +33,8 @@ def set_bloomberg_mode(app, gui):
     """
     app.setPalette(bloomberg_palette())
     for graph in gui.graphs:
-        graph = graph['graph']
-        graph.setBackground('k')
+        graph = graph["graph"]
+        graph.setBackground("k")
 
 
 def set_bear_mode(app, gui):
@@ -39,8 +43,8 @@ def set_bear_mode(app, gui):
     """
     app.setPalette(red_palette())
     for graph in gui.graphs:
-        graph = graph['graph']
-        graph.setBackground('k')
+        graph = graph["graph"]
+        graph.setBackground("k")
 
 
 def set_bull_mode(app, gui):
@@ -49,5 +53,5 @@ def set_bull_mode(app, gui):
     """
     app.setPalette(green_palette())
     for graph in gui.graphs:
-        graph = graph['graph']
-        graph.setBackground('k')
+        graph = graph["graph"]
+        graph.setBackground("k")

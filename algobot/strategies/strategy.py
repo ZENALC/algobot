@@ -23,8 +23,10 @@ class Strategy:
         self.precision: int = precision
 
         # Whatever description you want to pop in in the GUI.
-        self.description: str = "No strategy description found. " \
-                                "You can setup your strategy description in strategies.py."
+        self.description: str = (
+            "No strategy description found. "
+            "You can setup your strategy description in strategies.py."
+        )
 
         # This should hold the trend the strategy currently holds (e.g. BULLISH, BEARISH, ENTER LONG, etc)
         self.trend: Optional[int] = None
@@ -42,13 +44,15 @@ class Strategy:
         # Dictionary for the what's going on in the strategy. This needs two keys: one which is 'regular' and another
         # which is 'lower'. The two keys will then hold dictionaries for the strategies' values in lower and regular
         # interval data.
-        self.strategyDict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
+        self.strategyDict: Dict[str, Dict[str, Any]] = {"regular": {}, "lower": {}}
 
     def set_inputs(self, *args, **kwargs):
         """
         This function is used extensively by the optimizer. Your inputs argument will reset the strategy's inputs.
         """
-        raise NotImplementedError("Implement a function to set new inputs to your strategy.")
+        raise NotImplementedError(
+            "Implement a function to set new inputs to your strategy."
+        )
 
     def get_trend(self, data: Union[List[dict], Data], log_data: bool = False) -> int:
         """
@@ -78,9 +82,9 @@ class Strategy:
         :return: The interval - it can either be regular or lower.
         """
         if type(data) == list or data == self.parent.dataView:
-            return 'regular'
+            return "regular"
         else:
-            return 'lower'
+            return "lower"
 
     def get_prefix_and_interval_type(self, data) -> Tuple[str, str]:
         """
@@ -89,7 +93,7 @@ class Strategy:
         :return: Tuple containing prefix and interval type.
         """
         interval_type = self.get_interval_type(data=data)
-        prefix = '' if interval_type == 'regular' else 'Lower Interval '
+        prefix = "" if interval_type == "regular" else "Lower Interval "
         return prefix, interval_type
 
     @staticmethod
@@ -103,8 +107,8 @@ class Strategy:
         """
         Clears strategy dictionary.
         """
-        self.strategyDict['regular'] = {}
-        self.strategyDict['lower'] = {}
+        self.strategyDict["regular"] = {}
+        self.strategyDict["lower"] = {}
 
     def get_appropriate_dictionary(self, data: Union[list, Data]) -> Dict[str, Any]:
         """
@@ -130,4 +134,6 @@ class Strategy:
         """
         for interval_dict in self.strategyDict.values():
             for key, value in interval_dict.items():
-                grouped_dict[key] = value if type(value) != float else round(value, self.precision)
+                grouped_dict[key] = (
+                    value if type(value) != float else round(value, self.precision)
+                )

@@ -37,10 +37,11 @@ class SampleStrategy(Strategy):
     """
     Sample strategy that uses Bollinger bands and moving averages.
     """
+
     def __init__(self, parent=None, inputs: list = (None,) * 10, precision: int = 2):
 
         # Call parent class. Necessary for all strategies.
-        super().__init__(name='Sample', parent=parent, precision=precision)
+        super().__init__(name="Sample", parent=parent, precision=precision)
 
         # The GUI will show this description.
         self.description: str = "This is a sample strategy with Bollinger Bands."
@@ -77,30 +78,30 @@ class SampleStrategy(Strategy):
 
         # Creating 2 strings to show in the statistics window and graphs. For instance, if our moving average is SMA,
         # the parameter is high, and the periods is 39, this would yield -> SMA(39) - high
-        ma1 = f'{self.ma_moving_average_type}({self.ma_moving_average_1}) - {self.ma_moving_average_parameter}'
-        ma2 = f'{self.ma_moving_average_type}({self.ma_moving_average_2}) - {self.ma_moving_average_parameter}'
+        ma1 = f"{self.ma_moving_average_type}({self.ma_moving_average_1}) - {self.ma_moving_average_parameter}"
+        ma2 = f"{self.ma_moving_average_type}({self.ma_moving_average_2}) - {self.ma_moving_average_parameter}"
 
         # Populating the plot dictionary. We want to plot the moving averages, so we use the strings from above, and
         # then populate it with a list. The list's first item should be the value, and the second should be the color.
         # The color is the line on the graph.
-        self.plotDict[ma1] = [0, '00ff00']
-        self.plotDict[ma2] = [0, 'FF0000']
+        self.plotDict[ma1] = [0, "00ff00"]
+        self.plotDict[ma2] = [0, "FF0000"]
 
         # Populating same as above but for Bollinger Bands.
-        self.plotDict['Upper Band'] = [0, get_random_color()]
-        self.plotDict['Middle Band'] = [0, get_random_color()]
-        self.plotDict['Lower Band'] = [0, get_random_color()]
+        self.plotDict["Upper Band"] = [0, get_random_color()]
+        self.plotDict["Middle Band"] = [0, get_random_color()]
+        self.plotDict["Lower Band"] = [0, get_random_color()]
 
         # General purpose dict key/pair for the statistics window. The statistics window will populate it by key/pair.
-        self.strategyDict['general'] = {
-            'Moving Average Periods BB': self.moving_average_periods,
-            'Moving Average Type BB': self.moving_average_type,
-            'Moving Average parameter': self.moving_average_parameter,
-            'BB Coefficient': self.bb_coefficient,
-            'Volatility Type': self.volatility_type,
-            'Volatility Look Back Periods': self.volatility_look_back_periods,
-            'Moving Average Type MA': self.ma_moving_average_type,
-            'Moving Average Parameter MA': self.ma_moving_average_parameter,
+        self.strategyDict["general"] = {
+            "Moving Average Periods BB": self.moving_average_periods,
+            "Moving Average Type BB": self.moving_average_type,
+            "Moving Average parameter": self.moving_average_parameter,
+            "BB Coefficient": self.bb_coefficient,
+            "Volatility Type": self.volatility_type,
+            "Volatility Look Back Periods": self.volatility_look_back_periods,
+            "Moving Average Type MA": self.ma_moving_average_type,
+            "Moving Average Parameter MA": self.ma_moving_average_parameter,
         }
 
     def set_inputs(self, inputs: list) -> None:
@@ -136,7 +137,7 @@ class SampleStrategy(Strategy):
             self.ma_moving_average_type,
             self.ma_moving_average_parameter,
             self.ma_moving_average_1,
-            self.ma_moving_average_2
+            self.ma_moving_average_2,
         ]
 
     @staticmethod
@@ -146,21 +147,34 @@ class SampleStrategy(Strategy):
         order it was initialized. Order matters!
         :return: List of parameter types in a tuple.
         """
-        moving_averages = ['SMA', 'EMA', 'WMA']
-        moving_average_parameters = ['High', 'Low', 'Open', 'Close', 'High/Low', 'Open/Close']
-        volatility_types = ['Yang Zhang (ZH)', 'Rogers Satchell (RS)', 'Garman-Klass (GK)', 'Parkinson', 'Basic']
+        moving_averages = ["SMA", "EMA", "WMA"]
+        moving_average_parameters = [
+            "High",
+            "Low",
+            "Open",
+            "Close",
+            "High/Low",
+            "Open/Close",
+        ]
+        volatility_types = [
+            "Yang Zhang (ZH)",
+            "Rogers Satchell (RS)",
+            "Garman-Klass (GK)",
+            "Parkinson",
+            "Basic",
+        ]
 
         return [
-            ('Volatility Moving Average Periods', int),
-            ('Volatility Moving Average Parameter', tuple, moving_average_parameters),
-            ('Volatility Moving Average Type', tuple, moving_averages),
-            ('BB Coefficient', float),
-            ('Volatility Type', tuple, volatility_types),
-            ('Volatility Look Back Periods', int),
-            ('Moving Average', tuple, moving_averages),
-            ('Moving Average Parameter', tuple, moving_average_parameters),
-            ('Moving Average 1', int),
-            ('Moving Average 2', int),
+            ("Volatility Moving Average Periods", int),
+            ("Volatility Moving Average Parameter", tuple, moving_average_parameters),
+            ("Volatility Moving Average Type", tuple, moving_averages),
+            ("BB Coefficient", float),
+            ("Volatility Type", tuple, volatility_types),
+            ("Volatility Look Back Periods", int),
+            ("Moving Average", tuple, moving_averages),
+            ("Moving Average Parameter", tuple, moving_average_parameters),
+            ("Moving Average 1", int),
+            ("Moving Average 2", int),
         ]
 
     def get_min_option_period(self) -> int:
@@ -168,12 +182,14 @@ class SampleStrategy(Strategy):
         Returns the minimum amount of periods required for the strategy to start.
         :return: Minimum amount of periods required.
         """
-        return max([
-            self.moving_average_periods,
-            self.ma_moving_average_1,
-            self.ma_moving_average_2,
-            self.volatility_look_back_periods
-        ])
+        return max(
+            [
+                self.moving_average_periods,
+                self.ma_moving_average_1,
+                self.ma_moving_average_2,
+                self.volatility_look_back_periods,
+            ]
+        )
 
     def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False):
         """
@@ -200,15 +216,19 @@ class SampleStrategy(Strategy):
             data = data.data + [data.current_values]
 
         # Gathering moving average values.
-        ma1 = get_moving_average(moving_average=self.ma_moving_average_type,
-                                 moving_average_parameter=self.ma_moving_average_parameter,
-                                 moving_average_periods=self.ma_moving_average_1,
-                                 data=data)
+        ma1 = get_moving_average(
+            moving_average=self.ma_moving_average_type,
+            moving_average_parameter=self.ma_moving_average_parameter,
+            moving_average_periods=self.ma_moving_average_1,
+            data=data,
+        )
 
-        ma2 = get_moving_average(moving_average=self.ma_moving_average_type,
-                                 moving_average_parameter=self.ma_moving_average_parameter,
-                                 moving_average_periods=self.ma_moving_average_2,
-                                 data=data)
+        ma2 = get_moving_average(
+            moving_average=self.ma_moving_average_type,
+            moving_average_parameter=self.ma_moving_average_parameter,
+            moving_average_periods=self.ma_moving_average_2,
+            data=data,
+        )
 
         # Gathering Bollinger band values.
         lower_band, middle_band, upper_band = get_bollinger_bands(
@@ -218,7 +238,7 @@ class SampleStrategy(Strategy):
             moving_average_periods=self.moving_average_periods,
             volatility=self.volatility_type,
             volatility_look_back_periods=self.volatility_look_back_periods,
-            data=data
+            data=data,
         )
 
         # Get the prefix and interval. We need this for the strategy interval. For lower intervals, we store data
@@ -228,36 +248,38 @@ class SampleStrategy(Strategy):
         # Now, let's throw these values in the statistics window. Note that the prefix is necessary. The prefix is
         # either blank or "Lower Interval". The lower interval and regular interval keys need to be different.
         # Otherwise, they'll just override each other which would be chaos.
-        self.strategyDict[interval][f'{prefix}Lower Band'] = lower_band
-        self.strategyDict[interval][f'{prefix}Middle Band'] = middle_band
-        self.strategyDict[interval][f'{prefix}Upper Band'] = upper_band
+        self.strategyDict[interval][f"{prefix}Lower Band"] = lower_band
+        self.strategyDict[interval][f"{prefix}Middle Band"] = middle_band
+        self.strategyDict[interval][f"{prefix}Upper Band"] = upper_band
 
         # Same example as way above, but pretty much get a prettified string.
-        ma1_string = f'{self.ma_moving_average_type}({self.ma_moving_average_1}) - {self.ma_moving_average_parameter}'
-        ma2_string = f'{self.ma_moving_average_type}({self.ma_moving_average_2}) - {self.ma_moving_average_parameter}'
+        ma1_string = f"{self.ma_moving_average_type}({self.ma_moving_average_1}) - {self.ma_moving_average_parameter}"
+        ma2_string = f"{self.ma_moving_average_type}({self.ma_moving_average_2}) - {self.ma_moving_average_parameter}"
 
         # Set the values to the statistics window dictionary.
-        self.strategyDict[interval][f'{prefix}{ma1_string}'] = ma1
-        self.strategyDict[interval][f'{prefix}{ma2_string}'] = ma2
+        self.strategyDict[interval][f"{prefix}{ma1_string}"] = ma1
+        self.strategyDict[interval][f"{prefix}{ma2_string}"] = ma2
 
-        if interval == 'regular':  # Only plot for regular interval values.
+        if interval == "regular":  # Only plot for regular interval values.
             # Note that the value of this dictionary is a list. The first contains the value and the second contains
             # the color. We only want to change the value, so modify the first value (which is at the 0th index).
-            self.plotDict['Lower Band'][0] = lower_band
-            self.plotDict['Middle Band'][0] = middle_band
-            self.plotDict['Upper Band'][0] = upper_band
+            self.plotDict["Lower Band"][0] = lower_band
+            self.plotDict["Middle Band"][0] = middle_band
+            self.plotDict["Upper Band"][0] = upper_band
             self.plotDict[ma1_string][0] = ma1
             self.plotDict[ma2_string][0] = ma2
 
-        if log_data:  # If you want to log the data, set advanced logging to True. Note this will write a lot of data.
-            self.parent.output_message(f'Lower Band: {lower_band}')
-            self.parent.output_message(f'Middle Band: {middle_band}')
-            self.parent.output_message(f'Upper Band: {upper_band}')
-            self.parent.output_message(f'{ma1_string}: {ma1}')
-            self.parent.output_message(f'{ma2_string}: {ma2}')
+        if (
+            log_data
+        ):  # If you want to log the data, set advanced logging to True. Note this will write a lot of data.
+            self.parent.output_message(f"Lower Band: {lower_band}")
+            self.parent.output_message(f"Middle Band: {middle_band}")
+            self.parent.output_message(f"Upper Band: {upper_band}")
+            self.parent.output_message(f"{ma1_string}: {ma1}")
+            self.parent.output_message(f"{ma2_string}: {ma2}")
 
         # Now, finally, the trend itself. The final value in our data is the latest one.
-        open_price = data[-1]['open']  # Get the latest open price.
+        open_price = data[-1]["open"]  # Get the latest open price.
 
         # Same logic as defined in the definition of the strategy. This will set the trend.
         if open_price < lower_band and ma1 > ma2:

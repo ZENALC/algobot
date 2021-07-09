@@ -15,7 +15,9 @@ from algobot.traders.simulationtrader import SimulationTrader
 
 
 class BotSignals(QObject):
-    smallError = pyqtSignal(str)  # Signal emitted when small errors such as internet losses occur.
+    smallError = pyqtSignal(
+        str
+    )  # Signal emitted when small errors such as internet losses occur.
     started = pyqtSignal(int)  # Signal emitted when bot first starts.
     activity = pyqtSignal(int, str)  # Signal emitted to broadcast current activity.
     updated = pyqtSignal(int, dict, dict)  # Signal emitted when bot is updated.
@@ -33,7 +35,9 @@ class BotSignals(QObject):
     resume = pyqtSignal()  # Signal emitted to resume bot logic.
     pause = pyqtSignal()  # Signal emitted to pause bot logic.
     removeCustomStopLoss = pyqtSignal()  # Signal emitted to remove custom stop loss.
-    setCustomStopLoss = pyqtSignal(int, bool, float)  # Signal emitted to set a custom stop loss.
+    setCustomStopLoss = pyqtSignal(
+        int, bool, float
+    )  # Signal emitted to set a custom stop loss.
 
 
 class BotThread(QRunnable):
@@ -43,7 +47,7 @@ class BotThread(QRunnable):
         self.logger = logger
         self.gui = gui
         self.startingTime = time.time()
-        self.elapsed = '1 second'  # Total elapsed run time.
+        self.elapsed = "1 second"  # Total elapsed run time.
         self.percentage = None  # Total percentage gain or loss.
 
         self.dailyIntervalSeconds = 86400  # Interval for daily percentage.
@@ -56,7 +60,7 @@ class BotThread(QRunnable):
         self.scheduleSeconds = None  # Amount of seconds to schedule in.
 
         self.lowerIntervalNotification = False
-        self.lowerTrend = 'None'
+        self.lowerTrend = "None"
         self.telegramChatID = gui.configuration.telegramChatID.text()
         self.caller = caller
         self.trader = None
@@ -65,7 +69,7 @@ class BotThread(QRunnable):
         self.failCount = 0  # Current amount of times the bot has failed.
         self.failLimit = gui.configuration.failureLimitSpinBox.value()
         self.failSleep = gui.configuration.failureSleepSpinBox.value()
-        self.failError = ''
+        self.failError = ""
 
     def initialize_lower_interval_trading(self, caller, interval: str):
         """
@@ -73,33 +77,68 @@ class BotThread(QRunnable):
         :param caller: Caller that determines whether lower interval is for simulation or live bot.
         :param interval: Current interval for simulation or live bot.
         """
-        sortedIntervals = ('1m', '3m', '5m', '15m', '30m', '1h', '2h', '12h', '4h', '6h', '8h', '1d', '3d')
+        sortedIntervals = (
+            "1m",
+            "3m",
+            "5m",
+            "15m",
+            "30m",
+            "1h",
+            "2h",
+            "12h",
+            "4h",
+            "6h",
+            "8h",
+            "1d",
+            "3d",
+        )
         gui = self.gui
         symbol = self.trader.symbol
 
-        if interval != '1m':
+        if interval != "1m":
             lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
             intervalString = helpers.convert_small_interval(lowerInterval)
             self.lowerIntervalNotification = True
-            self.signals.activity.emit(caller, f'Retrieving {symbol} data for {intervalString.lower()} intervals...')
+            self.signals.activity.emit(
+                caller,
+                f"Retrieving {symbol} data for {intervalString.lower()} intervals...",
+            )
 
             if caller == LIVE:
-                gui.lowerIntervalData = Data(interval=lowerInterval, symbol=symbol, updateData=False)
-                gui.lowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
-                                                          caller=LIVE)
+                gui.lowerIntervalData = Data(
+                    interval=lowerInterval, symbol=symbol, updateData=False
+                )
+                gui.lowerIntervalData.custom_get_new_data(
+                    progress_callback=self.signals.progress,
+                    removeFirst=True,
+                    caller=LIVE,
+                )
             elif caller == SIMULATION:
-                gui.simulationLowerIntervalData = Data(interval=lowerInterval, symbol=symbol, updateData=False)
-                gui.simulationLowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress,
-                                                                    removeFirst=True, caller=SIMULATION)
+                gui.simulationLowerIntervalData = Data(
+                    interval=lowerInterval, symbol=symbol, updateData=False
+                )
+                gui.simulationLowerIntervalData.custom_get_new_data(
+                    progress_callback=self.signals.progress,
+                    removeFirst=True,
+                    caller=SIMULATION,
+                )
             else:
                 raise TypeError("Invalid type of caller specified.")
 
-            lowerData = gui.lowerIntervalData if caller == LIVE else gui.simulationLowerIntervalData
+            lowerData = (
+                gui.lowerIntervalData
+                if caller == LIVE
+                else gui.simulationLowerIntervalData
+            )
             if not lowerData or not lowerData.downloadCompleted:
                 raise RuntimeError("Lower interval download failed.")
-            self.signals.activity.emit(caller, "Retrieved lower interval data successfully.")
+            self.signals.activity.emit(
+                caller, "Retrieved lower interval data successfully."
+            )
         else:
-            self.signals.activity.emit(caller, "There is no lower interval than 1 minute intervals.")
+            self.signals.activity.emit(
+                caller, "There is no lower interval than 1 minute intervals."
+            )
 
     def create_trader(self, caller):
         """
@@ -107,54 +146,74 @@ class BotThread(QRunnable):
         :param caller: Caller that determines what type of trader will be created.
         """
         gui = self.gui
-        configDict = gui.interfaceDictionary[caller]['configuration']
-        symbol = configDict['ticker'].text()
-        precision = helpers.parse_precision(configDict['precision'].currentText(), symbol)
-        prettyInterval = configDict['interval'].currentText()
+        configDict = gui.interfaceDictionary[caller]["configuration"]
+        symbol = configDict["ticker"].text()
+        precision = helpers.parse_precision(
+            configDict["precision"].currentText(), symbol
+        )
+        prettyInterval = configDict["interval"].currentText()
         interval = helpers.convert_long_interval(prettyInterval)
 
         if caller == SIMULATION:
             startingBalance = gui.configuration.simulationStartingBalanceSpinBox.value()
-            self.signals.activity.emit(caller, f"Retrieving {symbol} data for {prettyInterval.lower()} intervals...")
-            gui.simulationTrader = SimulationTrader(startingBalance=startingBalance,
-                                                    symbol=symbol,
-                                                    interval=interval,
-                                                    loadData=True,
-                                                    updateData=False,
-                                                    precision=precision)
-            gui.simulationTrader.dataView.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
-                                                              caller=SIMULATION)
+            self.signals.activity.emit(
+                caller,
+                f"Retrieving {symbol} data for {prettyInterval.lower()} intervals...",
+            )
+            gui.simulationTrader = SimulationTrader(
+                startingBalance=startingBalance,
+                symbol=symbol,
+                interval=interval,
+                loadData=True,
+                updateData=False,
+                precision=precision,
+            )
+            gui.simulationTrader.dataView.custom_get_new_data(
+                progress_callback=self.signals.progress,
+                removeFirst=True,
+                caller=SIMULATION,
+            )
         elif caller == LIVE:
             apiSecret = gui.configuration.binanceApiSecret.text()
             apiKey = gui.configuration.binanceApiKey.text()
-            tld = 'com' if gui.configuration.otherRegionRadio.isChecked() else 'us'
+            tld = "com" if gui.configuration.otherRegionRadio.isChecked() else "us"
             isIsolated = gui.configuration.isolatedMarginAccountRadio.isChecked()
             self.check_api_credentials(apiKey=apiKey, apiSecret=apiSecret)
-            self.signals.activity.emit(caller, f"Retrieving {symbol} data for {prettyInterval.lower()} intervals...")
-            gui.trader = RealTrader(apiSecret=apiSecret,
-                                    apiKey=apiKey,
-                                    interval=interval,
-                                    symbol=symbol,
-                                    tld=tld,
-                                    isIsolated=isIsolated,
-                                    loadData=True,
-                                    updateData=False,
-                                    precision=precision)
-            gui.trader.dataView.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
-                                                    caller=LIVE)
+            self.signals.activity.emit(
+                caller,
+                f"Retrieving {symbol} data for {prettyInterval.lower()} intervals...",
+            )
+            gui.trader = RealTrader(
+                apiSecret=apiSecret,
+                apiKey=apiKey,
+                interval=interval,
+                symbol=symbol,
+                tld=tld,
+                isIsolated=isIsolated,
+                loadData=True,
+                updateData=False,
+                precision=precision,
+            )
+            gui.trader.dataView.custom_get_new_data(
+                progress_callback=self.signals.progress, removeFirst=True, caller=LIVE
+            )
         else:
             raise ValueError("Invalid caller.")
 
         self.trader: SimulationTrader = self.gui.get_trader(caller)
-        self.trader.addTradeCallback = self.signals.addTrade  # Passing an add trade call black.
-        self.trader.dataView.callback = self.signals.activity  # Passing activity signal to data object.
+        self.trader.addTradeCallback = (
+            self.signals.addTrade
+        )  # Passing an add trade call black.
+        self.trader.dataView.callback = (
+            self.signals.activity
+        )  # Passing activity signal to data object.
         self.trader.dataView.caller = caller  # Passing caller to data object.
         if not self.trader.dataView.downloadCompleted:
             raise RuntimeError("Download failed.")
 
         self.signals.activity.emit(caller, "Retrieved data successfully.")
 
-        if configDict['lowerIntervalCheck'].isChecked():
+        if configDict["lowerIntervalCheck"].isChecked():
             self.initialize_lower_interval_trading(caller=caller, interval=interval)
 
     @staticmethod
@@ -165,7 +224,9 @@ class BotThread(QRunnable):
         :param apiSecret: API secret for Binance. (for now)
         """
         if len(apiSecret) == 0:
-            raise ValueError('Please specify an API secret key. No API secret key found.')
+            raise ValueError(
+                "Please specify an API secret key. No API secret key found."
+            )
         elif len(apiKey) == 0:
             raise ValueError("Please specify an API key. No API key found.")
 
@@ -176,7 +237,7 @@ class BotThread(QRunnable):
         gui = self.gui
         measurement = gui.configuration.schedulingTimeUnit.value()
         unit = gui.configuration.schedulingIntervalComboBox.currentText()
-        self.schedulePeriod = f'{measurement} {unit.lower()}'
+        self.schedulePeriod = f"{measurement} {unit.lower()}"
 
         if unit == "Seconds":
             seconds = measurement
@@ -189,7 +250,9 @@ class BotThread(QRunnable):
         else:
             raise ValueError("Invalid type of unit.")
 
-        message = f'Initiated periodic statistics notification every {self.schedulePeriod}.'
+        message = (
+            f"Initiated periodic statistics notification every {self.schedulePeriod}."
+        )
         self.gui.telegramBot.send_message(self.telegramChatID, message=message)
 
         self.scheduleSeconds = seconds
@@ -201,8 +264,12 @@ class BotThread(QRunnable):
         a message is sent via Telegram.
         """
         if self.nextScheduledEvent and datetime.now() >= self.nextScheduledEvent:
-            self.gui.telegramBot.send_statistics_telegram(self.telegramChatID, self.schedulePeriod)
-            self.nextScheduledEvent = datetime.now() + timedelta(seconds=self.scheduleSeconds)
+            self.gui.telegramBot.send_statistics_telegram(
+                self.telegramChatID, self.schedulePeriod
+            )
+            self.nextScheduledEvent = datetime.now() + timedelta(
+                seconds=self.scheduleSeconds
+            )
 
     def set_parameters(self, caller: int):
         """
@@ -262,7 +329,7 @@ class BotThread(QRunnable):
         """
         trader: SimulationTrader = self.gui.get_trader(caller)
         trader.dataView.get_current_data()
-        trader.currentPrice = trader.dataView.current_values['close']
+        trader.currentPrice = trader.dataView.current_values["close"]
         trader.handle_trailing_prices()
 
     def handle_logging(self, caller):
@@ -282,9 +349,11 @@ class BotThread(QRunnable):
         apiKey = gui.configuration.telegramApiKey.text()
         gui.telegramBot = TelegramBot(gui=gui, token=apiKey, botThread=self)
         gui.telegramBot.start()
-        self.signals.activity.emit(LIVE, 'Started Telegram bot.')
+        self.signals.activity.emit(LIVE, "Started Telegram bot.")
         if self.gui.telegramBot and gui.configuration.chatPass:
-            self.gui.telegramBot.send_message(self.telegramChatID, "Started Telegram bot.")
+            self.gui.telegramBot.send_message(
+                self.telegramChatID, "Started Telegram bot."
+            )
 
     def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool or None:
         """
@@ -296,13 +365,20 @@ class BotThread(QRunnable):
             trader: SimulationTrader = self.gui.get_trader(caller)
             lowerData = self.gui.get_lower_interval_data(caller)
             lowerData.get_current_data()
-            lowerTrend = trader.get_trend(dataObject=lowerData, log_data=self.gui.advancedLogging)
+            lowerTrend = trader.get_trend(
+                dataObject=lowerData, log_data=self.gui.advancedLogging
+            )
             self.lowerTrend = trader.get_trend_string(lowerTrend)
             if previousLowerTrend != lowerTrend:
-                message = f'{self.lowerTrend.capitalize()} trend detected on lower interval data.'
+                message = f"{self.lowerTrend.capitalize()} trend detected on lower interval data."
                 self.signals.activity.emit(caller, message)
-                if self.gui.configuration.enableTelegramNotification.isChecked() and caller == LIVE:
-                    self.gui.telegramBot.send_message(message=message, chatID=self.telegramChatID)
+                if (
+                    self.gui.configuration.enableTelegramNotification.isChecked()
+                    and caller == LIVE
+                ):
+                    self.gui.telegramBot.send_message(
+                        message=message, chatID=self.telegramChatID
+                    )
             return lowerTrend
 
     def set_daily_percentages(self, trader, net):
@@ -317,15 +393,21 @@ class BotThread(QRunnable):
                 self.previousDayNet = net
                 self.dailyPercentage = 0
             else:
-                self.dailyPercentage = self.percentage  # Same as current percentage because of lack of values.
+                self.dailyPercentage = (
+                    self.percentage
+                )  # Same as current percentage because of lack of values.
         else:
             if time.time() - self.previousDayTime >= self.dailyIntervalSeconds:
-                trader.dailyChangeNets.append(trader.get_profit_percentage(self.previousDayNet, net))
+                trader.dailyChangeNets.append(
+                    trader.get_profit_percentage(self.previousDayNet, net)
+                )
                 self.previousDayTime = time.time()
                 self.previousDayNet = net
                 self.dailyPercentage = 0
             else:
-                self.dailyPercentage = trader.get_profit_percentage(self.previousDayNet, net)
+                self.dailyPercentage = trader.get_profit_percentage(
+                    self.previousDayNet, net
+                )
 
     def get_statistics(self):
         """
@@ -341,23 +423,23 @@ class BotThread(QRunnable):
         self.set_daily_percentages(trader=trader, net=net)
 
         groupedDict = trader.get_grouped_statistics()
-        groupedDict['general']['net'] = f'${round(net, 2)}'
-        groupedDict['general']['profit'] = f'${round(profit, 2)}'
-        groupedDict['general']['elapsed'] = self.elapsed
-        groupedDict['general']['totalPercentage'] = f'{round(self.percentage, 2)}%'
-        groupedDict['general']['dailyPercentage'] = f'{round(self.dailyPercentage, 2)}%'
-        groupedDict['general']['lowerTrend'] = self.lowerTrend
+        groupedDict["general"]["net"] = f"${round(net, 2)}"
+        groupedDict["general"]["profit"] = f"${round(profit, 2)}"
+        groupedDict["general"]["elapsed"] = self.elapsed
+        groupedDict["general"]["totalPercentage"] = f"{round(self.percentage, 2)}%"
+        groupedDict["general"]["dailyPercentage"] = f"{round(self.dailyPercentage, 2)}%"
+        groupedDict["general"]["lowerTrend"] = self.lowerTrend
 
         valueDict = {
-            'profitLossLabel': trader.get_profit_or_loss_string(profit=profit),
-            'profitLossValue': f'${abs(round(profit, 2))}',
-            'percentageValue': f'{round(self.percentage, 2)}%',
-            'netValue': f'${round(net, 2)}',
-            'tickerValue': f'${trader.currentPrice}',
-            'tickerLabel': trader.symbol,
-            'currentPositionValue': trader.get_position_string(),
-            'net': net,
-            'price': trader.currentPrice,
+            "profitLossLabel": trader.get_profit_or_loss_string(profit=profit),
+            "profitLossValue": f"${abs(round(profit, 2))}",
+            "percentageValue": f"{round(self.percentage, 2)}%",
+            "netValue": f"${round(net, 2)}",
+            "tickerValue": f"${trader.currentPrice}",
+            "tickerLabel": trader.symbol,
+            "currentPositionValue": trader.get_position_string(),
+            "net": net,
+            "price": trader.currentPrice,
         }
 
         return valueDict, groupedDict
@@ -368,20 +450,33 @@ class BotThread(QRunnable):
         :param caller: Caller object that determines which bot is running.
         """
         lowerTrend = None  # This variable is used for lower trend notification logic.
-        runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
+        runningLoop = (
+            self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
+        )
         trader: SimulationTrader = self.gui.get_trader(caller=caller)
 
         while runningLoop:
             trader.completedLoop = False  # This boolean is checked when bot is ended to ensure it finishes its loop.
             self.update_data(caller)  # Check for new updates.
             self.handle_logging(caller=caller)  # Handle logging.
-            self.handle_current_and_trailing_prices(caller=caller)  # Handle trailing prices.
+            self.handle_current_and_trailing_prices(
+                caller=caller
+            )  # Handle trailing prices.
             self.handle_trading(caller=caller)  # Main logic function.
             self.handle_scheduler()  # Handle periodic statistics scheduler.
-            lowerTrend = self.handle_lower_interval_cross(caller, lowerTrend)  # Check lower trend.
-            valueDict, groupedDict = self.get_statistics()  # Basic statistics of bot to update GUI.
+            lowerTrend = self.handle_lower_interval_cross(
+                caller, lowerTrend
+            )  # Check lower trend.
+            (
+                valueDict,
+                groupedDict,
+            ) = self.get_statistics()  # Basic statistics of bot to update GUI.
             self.signals.updated.emit(caller, valueDict, groupedDict)
-            runningLoop = self.gui.runningLive if caller == LIVE else self.gui.simulationRunningLive
+            runningLoop = (
+                self.gui.runningLive
+                if caller == LIVE
+                else self.gui.simulationRunningLive
+            )
             self.failCount = 0  # Reset fail count as bot fixed itself.
             trader.completedLoop = True  # Set completedLoop to True. Or else, there'll be an infinite loop in the GUI.
 
@@ -401,10 +496,12 @@ class BotThread(QRunnable):
             self.logger.critical(error_message)
 
             if trader:
-                trader.output_message(f'Bot has crashed because of :{e}')
+                trader.output_message(f"Bot has crashed because of :{e}")
                 trader.output_message(error_message)
             if self.gui.telegramBot and self.gui.configuration.chatPass:
-                self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
+                self.gui.telegramBot.send_message(
+                    self.telegramChatID, f"Bot has crashed because of :{e}."
+                )
                 self.gui.telegramBot.send_message(self.telegramChatID, error_message)
 
             self.failError = str(e)
@@ -417,29 +514,47 @@ class BotThread(QRunnable):
         :param trader: Trader object that faced the bug.
         """
         self.failed = True  # Boolean that'll let the bot know it failed.
-        self.failCount += 1  # Increment failCount by 1. There's a default limit of 10 fails.
+        self.failCount += (
+            1  # Increment failCount by 1. There's a default limit of 10 fails.
+        )
         self.failError = str(e)  # This is the fail error that led to the crash.
         error_message = traceback.format_exc()  # Get error message.
 
         attemptsLeft = self.failLimit - self.failCount
         s = self.failSleep
-        self.signals.activity.emit(self.caller, f'{e} {attemptsLeft} attempts left. Retrying in {s} seconds.')
+        self.signals.activity.emit(
+            self.caller, f"{e} {attemptsLeft} attempts left. Retrying in {s} seconds."
+        )
         self.logger.critical(error_message)
 
         if trader:  # Log this message to the trader's log.
             trader.output_message(error_message, printMessage=True)
-            trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
-            trader.output_message(f"({self.failCount})Trying again in {self.failSleep} seconds.", printMessage=True)
+            trader.output_message(f"Bot has crashed because of :{e}", printMessage=True)
+            trader.output_message(
+                f"({self.failCount})Trying again in {self.failSleep} seconds.",
+                printMessage=True,
+            )
 
         try:
-            if self.gui.telegramBot and self.gui.configuration.chatPass:  # Send crash information through Telegram.
-                self.gui.telegramBot.send_message(self.telegramChatID, f"Bot has crashed because of :{e}.")
+            if (
+                self.gui.telegramBot and self.gui.configuration.chatPass
+            ):  # Send crash information through Telegram.
+                self.gui.telegramBot.send_message(
+                    self.telegramChatID, f"Bot has crashed because of :{e}."
+                )
                 if self.failCount == self.failLimit:
-                    self.gui.telegramBot.send_message(self.telegramChatID, error_message)
-                    self.gui.telegramBot.send_message(self.telegramChatID, "Bot has died.")
+                    self.gui.telegramBot.send_message(
+                        self.telegramChatID, error_message
+                    )
+                    self.gui.telegramBot.send_message(
+                        self.telegramChatID, "Bot has died."
+                    )
                 else:
                     failCount = self.failCount
-                    self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in {s} seconds.")
+                    self.gui.telegramBot.send_message(
+                        self.telegramChatID,
+                        f"({failCount})Trying again in {s} seconds.",
+                    )
         except Exception as e:
             self.logger.critical(str(e))
 
@@ -453,7 +568,11 @@ class BotThread(QRunnable):
         :param trader: Trader trading in the current loop.
         """
         while self.failCount < self.failLimit:
-            runningLoop = self.gui.runningLive if self.caller == LIVE else self.gui.simulationRunningLive
+            runningLoop = (
+                self.gui.runningLive
+                if self.caller == LIVE
+                else self.gui.simulationRunningLive
+            )
             if not runningLoop:
                 return
             try:

@@ -7,6 +7,7 @@ class WorkerSignals(QObject):
     """
     Defines the signals available from a running worker thread.
     """
+
     restore = pyqtSignal()
     started = pyqtSignal()
     finished = pyqtSignal(object)
@@ -23,6 +24,7 @@ class Worker(QRunnable):
     :param kwargs: Keywords to pass to the callback function
 
     """
+
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
         self.fn = fn

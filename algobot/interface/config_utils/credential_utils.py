@@ -19,11 +19,13 @@ def test_binance_credentials(config_obj):
     apiSecret = config_obj.binanceApiSecret.text()
     try:
         Client(apiKey, apiSecret).get_account()
-        config_obj.credentialResult.setText('Connected successfully.')
+        config_obj.credentialResult.setText("Connected successfully.")
     except Exception as e:
         stringError = str(e)
-        if '1000ms' in stringError:
-            config_obj.credentialResult.setText('Time not synchronized. Please synchronize your system time.')
+        if "1000ms" in stringError:
+            config_obj.credentialResult.setText(
+                "Time not synchronized. Please synchronize your system time."
+            )
         else:
             config_obj.credentialResult.setText(stringError)
 
@@ -41,16 +43,25 @@ def save_credentials(config_obj):
     telegramApiKey = config_obj.telegramApiKey.text()
     telegramChatId = config_obj.telegramChatID.text()
 
-    defaultPath = os.path.join(targetFolder, 'default.json')
-    filePath, _ = QFileDialog.getSaveFileName(config_obj, 'Save Credentials', defaultPath, 'JSON (*.json)')
+    defaultPath = os.path.join(targetFolder, "default.json")
+    filePath, _ = QFileDialog.getSaveFileName(
+        config_obj, "Save Credentials", defaultPath, "JSON (*.json)"
+    )
     filePath = filePath.strip()
 
     if filePath:
-        helpers.write_json_file(filePath=filePath, apiKey=apiKey, apiSecret=apiSecret,
-                                telegramApiKey=telegramApiKey, chatID=telegramChatId)
-        config_obj.credentialResult.setText(f'Credentials saved successfully to {os.path.basename(filePath)}.')
+        helpers.write_json_file(
+            filePath=filePath,
+            apiKey=apiKey,
+            apiSecret=apiSecret,
+            telegramApiKey=telegramApiKey,
+            chatID=telegramChatId,
+        )
+        config_obj.credentialResult.setText(
+            f"Credentials saved successfully to {os.path.basename(filePath)}."
+        )
     else:
-        config_obj.credentialResult.setText('Credentials could not be saved.')
+        config_obj.credentialResult.setText("Credentials could not be saved.")
 
 
 def load_credentials(config_obj, auto: bool = True):
@@ -62,22 +73,26 @@ def load_credentials(config_obj, auto: bool = True):
     """
     targetFolder = os.path.join(helpers.ROOT_DIR, config_obj.credentialsFolder)
     if helpers.create_folder_if_needed(targetFolder):
-        config_obj.credentialResult.setText('No credentials found.')
+        config_obj.credentialResult.setText("No credentials found.")
         return
 
     if not auto:
-        filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', targetFolder, "JSON (*.json)")
+        filePath, _ = QFileDialog.getOpenFileName(
+            config_obj, "Load Credentials", targetFolder, "JSON (*.json)"
+        )
     else:
-        filePath = os.path.join(targetFolder, 'default.json')
+        filePath = os.path.join(targetFolder, "default.json")
 
     try:
         credentials = helpers.load_json_file(jsonfile=filePath)
-        config_obj.binanceApiKey.setText(credentials['apiKey'])
-        config_obj.binanceApiSecret.setText(credentials['apiSecret'])
-        config_obj.telegramApiKey.setText(credentials['telegramApiKey'])
-        config_obj.telegramChatID.setText(credentials['chatID'])
-        config_obj.credentialResult.setText(f'Credentials loaded successfully from {os.path.basename(filePath)}.')
+        config_obj.binanceApiKey.setText(credentials["apiKey"])
+        config_obj.binanceApiSecret.setText(credentials["apiSecret"])
+        config_obj.telegramApiKey.setText(credentials["telegramApiKey"])
+        config_obj.telegramChatID.setText(credentials["chatID"])
+        config_obj.credentialResult.setText(
+            f"Credentials loaded successfully from {os.path.basename(filePath)}."
+        )
     except FileNotFoundError:
-        config_obj.credentialResult.setText('Could not load credentials.')
+        config_obj.credentialResult.setText("Could not load credentials.")
     except Exception as e:
         config_obj.credentialResult.setText(str(e))

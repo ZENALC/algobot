@@ -8,6 +8,7 @@ class DownloadSignals(QObject):
     """
     Defines the signals available from a running worker thread.
     """
+
     started = pyqtSignal()
     csv_finished = pyqtSignal(str)
     finished = pyqtSignal(list, int)
@@ -18,7 +19,16 @@ class DownloadSignals(QObject):
 
 
 class DownloadThread(QRunnable):
-    def __init__(self, interval, symbol, descending=None, armyTime=None, startDate=None, caller=None, logger=None):
+    def __init__(
+        self,
+        interval,
+        symbol,
+        descending=None,
+        armyTime=None,
+        startDate=None,
+        caller=None,
+        logger=None,
+    ):
         super(DownloadThread, self).__init__()
         self.caller = caller
         self.signals = DownloadSignals()
@@ -37,16 +47,24 @@ class DownloadThread(QRunnable):
         """
         self.signals.started.emit()
         try:
-            self.client = Data(interval=self.interval, symbol=self.symbol, updateData=False)
-            data = self.client.custom_get_new_data(progress_callback=self.signals.progress, locked=self.signals.locked,
-                                                   caller=self.caller)
+            self.client = Data(
+                interval=self.interval, symbol=self.symbol, updateData=False
+            )
+            data = self.client.custom_get_new_data(
+                progress_callback=self.signals.progress,
+                locked=self.signals.locked,
+                caller=self.caller,
+            )
             if data:
                 if self.descending is None and self.armyTime is None:
                     self.signals.finished.emit(data, self.caller)
                 else:  # This means the CSV generator called this thread.
                     self.signals.progress.emit(100, "Creating CSV file...", -1)
-                    savedPath = self.client.create_csv_file(descending=self.descending, armyTime=self.armyTime,
-                                                            startDate=self.startDate)
+                    savedPath = self.client.create_csv_file(
+                        descending=self.descending,
+                        armyTime=self.armyTime,
+                        startDate=self.startDate,
+                    )
                     self.signals.csv_finished.emit(savedPath)
         except Exception as e:
             algobot.MAIN_LOGGER.exception(repr(e))

@@ -19,22 +19,22 @@ from algobot.typing_hints import DICT_TYPE
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
-LOG_FOLDER = 'Logs'
+LOG_FOLDER = "Logs"
 
 SHORT_INTERVAL_MAP = {
-    '1m': '1 Minute',
-    '3m': '3 Minutes',
-    '5m': '5 Minutes',
-    '15m': '15 Minutes',
-    '30m': '30 Minutes',
-    '1h': '1 Hour',
-    '2h': '2 Hours',
-    '4h': '4 Hours',
-    '6h': '6 Hours',
-    '8h': '8 Hours',
-    '12h': '12 Hours',
-    '1d': '1 Day',
-    '3d': '3 Days'
+    "1m": "1 Minute",
+    "3m": "3 Minutes",
+    "5m": "5 Minutes",
+    "15m": "15 Minutes",
+    "30m": "30 Minutes",
+    "1h": "1 Hour",
+    "2h": "2 Hours",
+    "4h": "4 Hours",
+    "6h": "6 Hours",
+    "8h": "8 Hours",
+    "12h": "12 Hours",
+    "1d": "1 Day",
+    "3d": "3 Days",
 }
 
 LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
@@ -45,13 +45,13 @@ def get_latest_version() -> str:
     Gets the latest Algobot version from GitHub.
     :return: Latest version.
     """
-    url = 'https://raw.githubusercontent.com/ZENALC/algobot/master/version.txt'
+    url = "https://raw.githubusercontent.com/ZENALC/algobot/master/version.txt"
     try:
         response = requests.get(url, timeout=3)
         version = response.content.decode().strip()
     except Exception as e:
         algobot.MAIN_LOGGER.exception(repr(e))
-        version = 'unknown'
+        version = "unknown"
     return version
 
 
@@ -59,10 +59,10 @@ def get_current_version() -> str:
     """
     Reads version from version.txt and returns it.
     """
-    version_file = os.path.join(ROOT_DIR, 'version.txt')
+    version_file = os.path.join(ROOT_DIR, "version.txt")
 
     if not os.path.isfile(version_file):
-        version = 'not found'
+        version = "not found"
     else:
         with open(version_file) as f:
             version = f.read().strip()
@@ -71,7 +71,7 @@ def get_current_version() -> str:
 
 
 def is_debug() -> bool:
-    return os.getenv('DEBUG') is not None
+    return os.getenv("DEBUG") is not None
 
 
 def get_random_color() -> str:
@@ -79,9 +79,10 @@ def get_random_color() -> str:
     Returns a random HEX color string.
     :return: HEX color string.
     """
+
     def r():
         randomInt = random.randint(0, 255)
-        return format(randomInt, '02x')
+        return format(randomInt, "02x")
 
     return r() + r() + r()
 
@@ -141,7 +142,7 @@ def setup_and_return_log_path(fileName: str) -> str:
     if not os.path.exists(LOG_DIR):
         os.mkdir(LOG_DIR)
 
-    todayDate = datetime.today().strftime('%Y-%m-%d')
+    todayDate = datetime.today().strftime("%Y-%m-%d")
     LOG_DATE_FOLDER = os.path.join(LOG_DIR, todayDate)
     if not os.path.exists(LOG_DATE_FOLDER):
         os.mkdir(LOG_DATE_FOLDER)
@@ -163,15 +164,19 @@ def get_logger(log_file: str, logger_name: str) -> logging.Logger:
     if is_debug():
         log_level = logging.DEBUG
     logger.setLevel(log_level)
-    formatter = logging.Formatter('%(message)s')
-    handler = logging.FileHandler(filename=setup_and_return_log_path(fileName=log_file), delay=True)
+    formatter = logging.Formatter("%(message)s")
+    handler = logging.FileHandler(
+        filename=setup_and_return_log_path(fileName=log_file), delay=True
+    )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
     return logger
 
 
-def get_ups_and_downs(data: List[Dict[str, float]], parameter: str) -> Tuple[list, list]:
+def get_ups_and_downs(
+    data: List[Dict[str, float]], parameter: str
+) -> Tuple[list, list]:
     """
     Returns lists of ups and downs from given data and parameter.
     :param data: List of dictionaries from which we get the ups and downs.
@@ -202,17 +207,17 @@ def get_elapsed_time(startingTime: float) -> str:
     """
     seconds = int(time.time() - startingTime)
     if seconds <= 60:
-        return f'{seconds} seconds'
+        return f"{seconds} seconds"
     elif seconds <= 3600:
         minutes = seconds // 60
         seconds = seconds % 60
-        return f'{minutes}m {seconds}s'
+        return f"{minutes}m {seconds}s"
     else:
         hours = seconds // 3600
         seconds = seconds % 3600
         minutes = seconds // 60
         seconds = seconds % 60
-        return f'{hours}h {minutes}m {seconds}s'
+        return f"{hours}h {minutes}m {seconds}s"
 
 
 def get_data_from_parameter(data: DICT_TYPE, parameter: str) -> float:
@@ -222,10 +227,10 @@ def get_data_from_parameter(data: DICT_TYPE, parameter: str) -> float:
     :param parameter: Data parameter to return.
     :return: Appropriate data to return.
     """
-    if parameter == 'high/low':
-        return (data['high'] + data['low']) / 2
-    elif parameter == 'open/close':
-        return (data['open'] + data['close']) / 2
+    if parameter == "high/low":
+        return (data["high"] + data["low"]) / 2
+    elif parameter == "open/close":
+        return (data["open"] + data["close"]) / 2
     else:
         return data[parameter]
 
@@ -236,13 +241,13 @@ def get_caller_string(caller: int):
     :param caller: Caller enum.
     """
     if caller == LIVE:
-        return 'live'
+        return "live"
     elif caller == SIMULATION:
-        return 'simulation'
+        return "simulation"
     elif caller == BACKTEST:
-        return 'backtest'
+        return "backtest"
     elif caller == OPTIMIZER:
-        return 'optimizer'
+        return "optimizer"
     else:
         raise ValueError("Invalid type of caller specified.")
 
@@ -259,9 +264,11 @@ def get_label_string(label: str) -> str:
         return label
 
     if not label[0].isupper():
-        separated = re.sub('([A-Z][a-z]+)', r' \1', re.sub('([A-Z]+)', r' \1', label)).split()
+        separated = re.sub(
+            "([A-Z][a-z]+)", r" \1", re.sub("([A-Z]+)", r" \1", label)
+        ).split()
         separated = list(map(lambda word: word.capitalize(), separated))
-        label = ' '.join(separated)
+        label = " ".join(separated)
     return label
 
 
@@ -271,19 +278,19 @@ def get_interval_minutes(interval: str) -> int:
     :param interval: Interval to get the amount of minutes of.
     """
     intervals = {
-        '12 Hours': 720,
-        '15 Minutes': 15,
-        '1 Day': 1440,
-        '1 Hour': 60,
-        '1 Minute': 1,
-        '2 Hours': 120,
-        '30 Minutes': 30,
-        '3 Days': 4320,
-        '3 Minutes': 3,
-        '4 Hours': 240,
-        '5 Minutes': 5,
-        '6 Hours': 360,
-        '8 Hours': 480
+        "12 Hours": 720,
+        "15 Minutes": 15,
+        "1 Day": 1440,
+        "1 Hour": 60,
+        "1 Minute": 1,
+        "2 Hours": 120,
+        "30 Minutes": 30,
+        "3 Days": 4320,
+        "3 Minutes": 3,
+        "4 Hours": 240,
+        "5 Minutes": 5,
+        "6 Hours": 360,
+        "8 Hours": 480,
     }
     return intervals[interval]
 
@@ -294,19 +301,21 @@ def get_interval_strings(startingIndex: int = 0) -> List[str]:
     :param startingIndex: Index to start getting interval strings from.
     :return: Strings in descending format.
     """
-    return ['1 Minute',
-            '3 Minutes',
-            '5 Minutes',
-            '15 Minutes',
-            '30 Minutes',
-            '1 Hour',
-            '2 Hours',
-            '4 Hours',
-            '6 Hours',
-            '8 Hours',
-            '12 Hours',
-            '1 Day',
-            '3 Days'][startingIndex:]
+    return [
+        "1 Minute",
+        "3 Minutes",
+        "5 Minutes",
+        "15 Minutes",
+        "30 Minutes",
+        "1 Hour",
+        "2 Hours",
+        "4 Hours",
+        "6 Hours",
+        "8 Hours",
+        "12 Hours",
+        "1 Day",
+        "3 Days",
+    ][startingIndex:]
 
 
 def parse_strategy_name(name: str) -> str:
@@ -323,23 +332,25 @@ def parse_strategy_name(name: str) -> str:
     return parsed_name
 
 
-def get_normalized_data(data: List[str], date_in_utc: Union[str, datetime] = None) -> Dict[str, Union[str, float]]:
+def get_normalized_data(
+    data: List[str], date_in_utc: Union[str, datetime] = None
+) -> Dict[str, Union[str, float]]:
     """
     Normalize data provided and return as an appropriate dictionary.
     :param data: Data to normalize into a dictionary.
     :param date_in_utc: Optional date to use (if provided). If not provided, it'll use the first element from data.
     """
     return {
-        'date_utc': date_in_utc if date_in_utc is not None else data[0],
-        'open': float(data[1]),
-        'high': float(data[2]),
-        'low': float(data[3]),
-        'close': float(data[4]),
-        'volume': float(data[5]),
-        'quote_asset_volume': float(data[6]),
-        'number_of_trades': float(data[7]),
-        'taker_buy_base_asset': float(data[8]),
-        'taker_buy_quote_asset': float(data[9]),
+        "date_utc": date_in_utc if date_in_utc is not None else data[0],
+        "open": float(data[1]),
+        "high": float(data[2]),
+        "low": float(data[3]),
+        "close": float(data[4]),
+        "volume": float(data[5]),
+        "quote_asset_volume": float(data[6]),
+        "number_of_trades": float(data[7]),
+        "taker_buy_base_asset": float(data[8]),
+        "taker_buy_quote_asset": float(data[9]),
     }
 
 
@@ -366,11 +377,11 @@ def convert_all_dates_to_datetime(data: List[Dict[str, Union[float, str, datetim
     Converts all available dates in the data list of dictionaries to datetime objects.
     :param data: List of data in which to convert string dates to datetime objects.
     """
-    if isinstance(data[0]['date_utc'], datetime):
+    if isinstance(data[0]["date_utc"], datetime):
         return
 
     for entry in data:
-        entry['date_utc'] = parser.parse(entry['date_utc'])
+        entry["date_utc"] = parser.parse(entry["date_utc"])
 
 
 def load_from_csv(path: str, descending: bool = True) -> list:
@@ -383,21 +394,27 @@ def load_from_csv(path: str, descending: bool = True) -> list:
     with open(path) as f:
         data = []
         readLines = f.readlines()
-        headers = list(map(str.lower, readLines[0].rstrip().split(', ')))
+        headers = list(map(str.lower, readLines[0].rstrip().split(", ")))
         for line in readLines[1:]:
             line = line.rstrip()  # strip newline character
-            splitLine = line.split(',')
+            splitLine = line.split(",")
             splitLine = [line.strip() for line in splitLine]
-            data.append({
-                headers[0]: splitLine[0],  # date in UTC
-                headers[1]: float(splitLine[1]),  # open
-                headers[2]: float(splitLine[2]),  # high
-                headers[3]: float(splitLine[3]),  # low
-                headers[4]: float(splitLine[4]),  # close
-                headers[5]: float(splitLine[5]),  # volume
-            })
-        firstDate = parser.parse(data[0]['date_utc'])  # Retrieve first date from CSV data.
-        lastDate = parser.parse(data[-1]['date_utc'])  # Retrieve last date from CSV data.
+            data.append(
+                {
+                    headers[0]: splitLine[0],  # date in UTC
+                    headers[1]: float(splitLine[1]),  # open
+                    headers[2]: float(splitLine[2]),  # high
+                    headers[3]: float(splitLine[3]),  # low
+                    headers[4]: float(splitLine[4]),  # close
+                    headers[5]: float(splitLine[5]),  # volume
+                }
+            )
+        firstDate = parser.parse(
+            data[0]["date_utc"]
+        )  # Retrieve first date from CSV data.
+        lastDate = parser.parse(
+            data[-1]["date_utc"]
+        )  # Retrieve last date from CSV data.
         if descending:
             if firstDate < lastDate:
                 return data[::-1]
@@ -411,18 +428,18 @@ def load_from_csv(path: str, descending: bool = True) -> list:
 def parse_precision(precision: str, symbol: str) -> int:
     if precision == "Auto":
         symbol_info = algobot.BINANCE_CLIENT.get_symbol_info(symbol)
-        tickSize = float(symbol_info['filters'][0]['tickSize'])
+        tickSize = float(symbol_info["filters"][0]["tickSize"])
         precision = abs(round(math.log(tickSize, 10)))
     return int(precision)
 
 
-def write_json_file(filePath: str = 'secret.json', **kwargs):
+def write_json_file(filePath: str = "secret.json", **kwargs):
     """
     Writes JSON file with **kwargs provided.
     :param filePath: Path to write **kwargs data to.
     :param kwargs: Dictionary to dump to JSON file.
     """
-    with open(filePath, 'w') as f:
+    with open(filePath, "w") as f:
         json.dump(kwargs, f, indent=4)
 
 

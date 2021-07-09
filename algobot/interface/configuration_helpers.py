@@ -1,15 +1,29 @@
 from typing import Any, Callable, Dict, List, Tuple, Union
 
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
-                             QFrame, QGroupBox, QLabel, QLayout, QLineEdit,
-                             QScrollArea, QSpinBox, QTabWidget, QVBoxLayout,
-                             QWidget)
+from PyQt5.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QDoubleSpinBox,
+    QFormLayout,
+    QFrame,
+    QGroupBox,
+    QLabel,
+    QLayout,
+    QLineEdit,
+    QScrollArea,
+    QSpinBox,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from algobot import helpers
 from algobot.enums import OPTIMIZER
 
 
-def add_start_end_step_to_layout(layout: QLayout, msg: str, start: QWidget, end: QWidget, step: QWidget):
+def add_start_end_step_to_layout(
+    layout: QLayout, msg: str, start: QWidget, end: QWidget, step: QWidget
+):
     """
     Adds start, end, and step rows to the layout provided.
     """
@@ -18,7 +32,9 @@ def add_start_end_step_to_layout(layout: QLayout, msg: str, start: QWidget, end:
     layout.addRow("End", end)
     layout.addRow("Step", step)
 
-    start.valueChanged.connect(lambda: (end.setValue(start.value()), end.setMinimum(start.value())))
+    start.valueChanged.connect(
+        lambda: (end.setValue(start.value()), end.setMinimum(start.value()))
+    )
 
 
 def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:
@@ -35,8 +51,15 @@ def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:
     return groupBox, layout
 
 
-def create_inner_tab(categoryTabs: List[QTabWidget], description: str, tabName: str, input_creator: Callable,
-                     dictionary: Dict[Any, QGroupBox], signalFunction: Callable, parent: QDialog = None):
+def create_inner_tab(
+    categoryTabs: List[QTabWidget],
+    description: str,
+    tabName: str,
+    input_creator: Callable,
+    dictionary: Dict[Any, QGroupBox],
+    signalFunction: Callable,
+    parent: QDialog = None,
+):
     """
     Creates inner tab for each category tab in list of category tabs provided.
     :param categoryTabs: Tabs to create inner tab and append to.
@@ -56,14 +79,20 @@ def create_inner_tab(categoryTabs: List[QTabWidget], description: str, tabName: 
         layout.addWidget(descriptionLabel)
 
         if parent and parent.get_caller_based_on_tab(tab) == OPTIMIZER:
-            groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()} optimization?")
+            groupBox, groupBoxLayout = get_regular_groupbox_and_layout(
+                f"Enable {tabName.lower()} optimization?"
+            )
             input_creator(tab, groupBoxLayout, isOptimizer=True)
         else:
-            groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()}?")
-            groupBox.toggled.connect(lambda _, current_tab=tab: signalFunction(tab=current_tab))
+            groupBox, groupBoxLayout = get_regular_groupbox_and_layout(
+                f"Enable {tabName.lower()}?"
+            )
+            groupBox.toggled.connect(
+                lambda _, current_tab=tab: signalFunction(tab=current_tab)
+            )
             input_creator(tab, groupBoxLayout)
 
-        dictionary[tab, 'groupBox'] = groupBox
+        dictionary[tab, "groupBox"] = groupBox
 
         scroll = QScrollArea()
         scroll.setWidget(groupBox)
@@ -89,7 +118,9 @@ def set_value(widget: QWidget, value: Union[str, int, float]):
     elif isinstance(widget, QComboBox):
         widget.setCurrentIndex(value)
     else:
-        raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
+        raise TypeError(
+            "Unknown type of instance provided. Please check load_strategy_slots() function."
+        )
 
 
 def get_input_widget_value(inputWidget: QWidget, verbose: bool = False):
@@ -109,7 +140,9 @@ def get_input_widget_value(inputWidget: QWidget, verbose: bool = False):
         else:
             return inputWidget.currentIndex()
     else:
-        raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
+        raise TypeError(
+            "Unknown type of instance provided. Please check load_strategy_slots() function."
+        )
 
 
 def get_h_line() -> QFrame:
@@ -123,8 +156,12 @@ def get_h_line() -> QFrame:
     return line
 
 
-def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, float], minimum: int = 1,
-                       maximum: int = 99) -> Union[QSpinBox, QDoubleSpinBox]:
+def get_default_widget(
+    widget: [QSpinBox, QDoubleSpinBox],
+    default: Union[int, float],
+    minimum: int = 1,
+    maximum: int = 99,
+) -> Union[QSpinBox, QDoubleSpinBox]:
     """
     Returns a default QSpinbox or QDoubleSpinbox widget with default, minimum, and maximum values provided.
     """

@@ -2,11 +2,16 @@ from datetime import datetime
 from typing import List
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QComboBox, QDialog, QMessageBox, QTableWidget,
-                             QTableWidgetItem)
+from PyQt5.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QMessageBox,
+    QTableWidget,
+    QTableWidgetItem,
+)
 
 
-def create_popup(parent, msg: str, title='Warning'):
+def create_popup(parent, msg: str, title="Warning"):
     """
     Creates a popup with message provided.
     :param parent: Parent object to create popup on.
@@ -60,7 +65,7 @@ def add_to_table(table: QTableWidget, data: list, insertDate=True):
         data.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     if len(data) != columns:
-        raise ValueError('Data needs to have the same amount of columns as table.')
+        raise ValueError("Data needs to have the same amount of columns as table.")
 
     table.insertRow(rowPosition)
     for column in range(0, columns):

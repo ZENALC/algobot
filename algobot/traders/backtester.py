@@ -11,45 +11,67 @@ from typing import Dict, Union
 import pandas as pd
 from dateutil import parser
 
-from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
-                           EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT)
-from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
-                             convert_all_dates_to_datetime,
-                             convert_small_interval, get_interval_minutes,
-                             get_ups_and_downs, parse_strategy_name)
-from algobot.interface.config_utils.strategy_utils import \
-    get_strategies_dictionary
+from algobot.enums import (
+    BACKTEST,
+    BEARISH,
+    BULLISH,
+    ENTER_LONG,
+    ENTER_SHORT,
+    EXIT_LONG,
+    EXIT_SHORT,
+    LONG,
+    OPTIMIZER,
+    SHORT,
+)
+from algobot.helpers import (
+    LOG_FOLDER,
+    ROOT_DIR,
+    convert_all_dates_to_datetime,
+    convert_small_interval,
+    get_interval_minutes,
+    get_ups_and_downs,
+    parse_strategy_name,
+)
+from algobot.interface.config_utils.strategy_utils import get_strategies_dictionary
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 from algobot.typing_hints import DATA_TYPE, DICT_TYPE
 
 
 class Backtester(Trader):
-    def __init__(self,
-                 startingBalance: float,
-                 data: list,
-                 strategies: list,
-                 strategyInterval: Union[str, None] = None,
-                 symbol: str = None,
-                 marginEnabled: bool = True,
-                 startDate: datetime = None,
-                 endDate: datetime = None,
-                 drawdownPercentage: int = 100,
-                 precision: int = 4,
-                 outputTrades: bool = True,
-                 logger: Logger = None):
-        super().__init__(symbol=symbol,
-                         precision=precision,
-                         startingBalance=startingBalance,
-                         marginEnabled=marginEnabled)
+    def __init__(
+        self,
+        startingBalance: float,
+        data: list,
+        strategies: list,
+        strategyInterval: Union[str, None] = None,
+        symbol: str = None,
+        marginEnabled: bool = True,
+        startDate: datetime = None,
+        endDate: datetime = None,
+        drawdownPercentage: int = 100,
+        precision: int = 4,
+        outputTrades: bool = True,
+        logger: Logger = None,
+    ):
+        super().__init__(
+            symbol=symbol,
+            precision=precision,
+            startingBalance=startingBalance,
+            marginEnabled=marginEnabled,
+        )
         convert_all_dates_to_datetime(data)
         self.data = data
         self.check_data()
         self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
-        self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
-        self.drawdownPercentageDecimal = drawdownPercentage / 100  # Percentage of loss at which bot exits backtest.
+        self.pastActivity = (
+            []
+        )  # We'll add previous data here when hovering through graph in GUI.
+        self.drawdownPercentageDecimal = (
+            drawdownPercentage / 100
+        )  # Percentage of loss at which bot exits backtest.
         self.optimizerRows = []
         self.logger = logger
 
@@ -57,13 +79,19 @@ class Backtester(Trader):
             strategyInterval = convert_small_interval(strategyInterval)
 
         self.allStrategies = get_strategies_dictionary(Strategy.__subclasses__())
-        self.strategyInterval = self.interval if strategyInterval is None else strategyInterval
+        self.strategyInterval = (
+            self.interval if strategyInterval is None else strategyInterval
+        )
         self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
         self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
-        self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
+        self.intervalGapMultiplier = (
+            self.strategyIntervalMinutes // self.intervalMinutes
+        )
         if self.intervalMinutes > self.strategyIntervalMinutes:
-            raise RuntimeError(f"Your strategy interval ({self.strategyIntervalMinutes} minute(s)) can't be smaller "
-                               f"than the data interval ({self.intervalMinutes} minute(s)).")
+            raise RuntimeError(
+                f"Your strategy interval ({self.strategyIntervalMinutes} minute(s)) can't be smaller "
+                f"than the data interval ({self.intervalMinutes} minute(s))."
+            )
 
         self.ema_dict = {}
         self.rsi_dictionary = {}
@@ -82,9 +110,13 @@ class Backtester(Trader):
         self.strategyInterval = self.interval if interval is None else interval
         self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
         self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
-        self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
+        self.intervalGapMultiplier = (
+            self.strategyIntervalMinutes // self.intervalMinutes
+        )
         if self.intervalMinutes > self.strategyIntervalMinutes:
-            raise RuntimeError("Your strategy interval can't be smaller than the data interval.")
+            raise RuntimeError(
+                "Your strategy interval can't be smaller than the data interval."
+            )
 
     def get_gap_data(self, data: DATA_TYPE, check: bool = True) -> DICT_TYPE:
         """
@@ -96,15 +128,17 @@ class Backtester(Trader):
         if check:
             expected_length = self.strategyIntervalMinutes / self.intervalMinutes
             if expected_length != len(data):
-                raise AssertionError(f"Expected {expected_length} data length. Received {len(data)} data.")
+                raise AssertionError(
+                    f"Expected {expected_length} data length. Received {len(data)} data."
+                )
 
         return {
-            'date_utc': data[0]['date_utc'],
-            'open': data[0]['open'],
-            'high': max([d['high'] for d in data]),
-            'low': min([d['low'] for d in data]),
-            'close': data[-1]['close'],
-            'volume': sum([d['volume'] for d in data])
+            "date_utc": data[0]["date_utc"],
+            "open": data[0]["open"],
+            "high": max([d["high"] for d in data]),
+            "low": min([d["low"] for d in data]),
+            "close": data[-1]["close"],
+            "volume": sum([d["volume"] for d in data]),
         }
 
     def check_data(self):
@@ -112,8 +146,8 @@ class Backtester(Trader):
         Checks data sorting. If descending, it reverses data, so we can mimic backtest as if we are starting from the
         beginning.
         """
-        firstDate = self.data[0]['date_utc']
-        lastDate = self.data[-1]['date_utc']
+        firstDate = self.data[0]["date_utc"]
+        lastDate = self.data[-1]["date_utc"]
 
         if firstDate > lastDate:
             self.data = self.data[::-1]
@@ -134,7 +168,7 @@ class Backtester(Trader):
             iterator = reversed(list(enumerate(self.data)))
 
         for index, data in iterator:
-            if data['date_utc'].date() == targetDate:
+            if data["date_utc"].date() == targetDate:
                 return index
         return -1
 
@@ -166,7 +200,9 @@ class Backtester(Trader):
             elif endDateIndex < 1:
                 raise IndexError("You need at least one data period.")
             elif endDateIndex <= self.startDateIndex:
-                raise IndexError("Ending date index cannot be less than or equal to start date index.")
+                raise IndexError(
+                    "Ending date index cannot be less than or equal to start date index."
+                )
             else:
                 return endDateIndex
         else:
@@ -178,7 +214,7 @@ class Backtester(Trader):
         :param index: Index of data to set as current period.
         """
         self.currentPeriod = self.data[index]
-        self.currentPrice = self.data[index]['open']
+        self.currentPrice = self.data[index]["open"]
 
     def set_priced_current_price_and_period(self, price):
         """
@@ -186,21 +222,23 @@ class Backtester(Trader):
         :param price: Price to set to current period and price.
         """
         self.currentPeriod = {
-            'date_utc': None,
-            'open': price,
-            'close': price,
-            'high': price,
-            'low': price
+            "date_utc": None,
+            "open": price,
+            "close": price,
+            "high": price,
+            "low": price,
         }
         self.currentPrice = price
 
     @staticmethod
     def generate_error_message(error: Exception, strategy: Strategy) -> str:
-        msg = f'It looks like your strategy has crashed because of: "{str(error)}". Try using' \
-              f' different parameters, rewriting your strategy, or taking a look at ' \
-              f'your strategy code again. The strategy that caused this crash is: ' \
-              f'{strategy.name}. You can find more details about the crash in the ' \
-              f'logs file at {os.path.join(ROOT_DIR, LOG_FOLDER)}.'
+        msg = (
+            f'It looks like your strategy has crashed because of: "{str(error)}". Try using'
+            f" different parameters, rewriting your strategy, or taking a look at "
+            f"your strategy code again. The strategy that caused this crash is: "
+            f"{strategy.name}. You can find more details about the crash in the "
+            f"logs file at {os.path.join(ROOT_DIR, LOG_FOLDER)}."
+        )
         return msg
 
     def strategy_loop(self, strategyData, thread) -> Union[None, str]:
@@ -212,7 +250,7 @@ class Backtester(Trader):
                     error_message = traceback.format_exc()
                     if self.logger is not None:
                         self.logger.exception(error_message)
-                    return 'CRASHED'  # We don't want optimizer to stop.
+                    return "CRASHED"  # We don't want optimizer to stop.
                 else:
                     if thread:
                         thread.signals.updateGraphLimits.emit(len(self.pastActivity))
@@ -247,7 +285,7 @@ class Backtester(Trader):
             index = self.endDateIndex
 
         self.currentPeriod = self.data[index]
-        self.currentPrice = self.currentPeriod['close']
+        self.currentPrice = self.currentPeriod["close"]
 
         if self.currentPosition == SHORT:
             self.buy_short("Exited short position because backtest ended.")
@@ -269,16 +307,20 @@ class Backtester(Trader):
                     raise RuntimeError("Optimizer was canceled.")
 
             self.currentPeriod = self.data[index]
-            self.currentPrice = self.currentPeriod['open']
+            self.currentPrice = self.currentPeriod["open"]
 
             if self.currentPosition != LONG:
                 self.buy_long("Entered long to simulate a hold.")
 
             if thread and thread.caller == BACKTEST:
-                thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
+                thread.signals.activity.emit(
+                    thread.get_activity_dictionary(
+                        self.currentPeriod, index, testLength
+                    )
+                )
 
         self.exit_backtest()
-        return 'HOLD'
+        return "HOLD"
 
     def strategy_backtest(self, testLength: int, divisor: int, thread=None) -> str:
         """
@@ -287,9 +329,13 @@ class Backtester(Trader):
         :param testLength: Length of backtest.
         :param thread: Optional thread that called this function that'll be used for emitting signals.
         """
-        seenData = self.data[:self.startDateIndex]
-        strategyData = seenData if self.strategyIntervalMinutes == self.intervalMinutes else []
-        nextInsertion = self.data[self.startDateIndex]['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
+        seenData = self.data[: self.startDateIndex]
+        strategyData = (
+            seenData if self.strategyIntervalMinutes == self.intervalMinutes else []
+        )
+        nextInsertion = self.data[self.startDateIndex]["date_utc"] + timedelta(
+            minutes=self.strategyIntervalMinutes
+        )
         index = None
         for index in range(self.startDateIndex, self.endDateIndex + 1):
             if thread and not thread.running:
@@ -304,35 +350,55 @@ class Backtester(Trader):
             self.main_logic()
             if self.get_net() < 10:
                 if thread and thread.caller == BACKTEST:
-                    thread.signals.message.emit("Backtester ran out of money. Change your strategy or date interval.")
+                    thread.signals.message.emit(
+                        "Backtester ran out of money. Change your strategy or date interval."
+                    )
                 self.exit_backtest(index)
-                return 'OUT OF MONEY'
-            elif self.get_net() < (1 - self.drawdownPercentageDecimal) * self.startingBalance:
-                return 'DRAWDOWN'
+                return "OUT OF MONEY"
+            elif (
+                self.get_net()
+                < (1 - self.drawdownPercentageDecimal) * self.startingBalance
+            ):
+                return "DRAWDOWN"
 
             result = None  # Result of strategy loop to ensure nothing crashed -> None is good, anything else is bad.
             if strategyData is seenData:
                 if len(strategyData) >= self.minPeriod:
-                    result = self.strategy_loop(strategyData=strategyData, thread=thread)
+                    result = self.strategy_loop(
+                        strategyData=strategyData, thread=thread
+                    )
             else:
                 if len(strategyData) + 1 >= self.minPeriod:
                     strategyData.append(self.currentPeriod)
-                    result = self.strategy_loop(strategyData=strategyData, thread=thread)
+                    result = self.strategy_loop(
+                        strategyData=strategyData, thread=thread
+                    )
                     strategyData.pop()
 
             if result is not None:
                 return result
 
-            if seenData is not strategyData and self.currentPeriod['date_utc'] >= nextInsertion:
-                nextInsertion = self.currentPeriod['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
-                gapData = self.get_gap_data(seenData[-self.intervalGapMultiplier - 1: -1])
+            if (
+                seenData is not strategyData
+                and self.currentPeriod["date_utc"] >= nextInsertion
+            ):
+                nextInsertion = self.currentPeriod["date_utc"] + timedelta(
+                    minutes=self.strategyIntervalMinutes
+                )
+                gapData = self.get_gap_data(
+                    seenData[-self.intervalGapMultiplier - 1 : -1]
+                )
                 strategyData.append(gapData)
 
             if thread and thread.caller == BACKTEST and index % divisor == 0:
-                thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
+                thread.signals.activity.emit(
+                    thread.get_activity_dictionary(
+                        self.currentPeriod, index, testLength
+                    )
+                )
 
         self.exit_backtest(index)
-        return 'PASSED'
+        return "PASSED"
 
     @staticmethod
     def extend_helper(x_tuple: tuple, temp_dict: Dict[str, list], temp_key: str):
@@ -369,7 +435,12 @@ class Backtester(Trader):
         :param combos: Combos with ranges for the permutations.
         :return: List of all permutations.
         """
-        for key, value_range in combos.items():  # This will handle steps -> (5, 10, 1) start = 5, end = 10, step = 1
+        for (
+            key,
+            value_range,
+        ) in (
+            combos.items()
+        ):  # This will handle steps -> (5, 10, 1) start = 5, end = 10, step = 1
             if type(value_range) == tuple and len(value_range) == 3:
                 self.extend_helper(value_range, combos, key)
             elif key == "strategies":
@@ -380,17 +451,23 @@ class Backtester(Trader):
             elif type(value_range) == list:
                 continue
             else:
-                raise ValueError("Invalid type of value provided to combos. Make sure to use a list or a tuple.")
+                raise ValueError(
+                    "Invalid type of value provided to combos. Make sure to use a list or a tuple."
+                )
 
-        for strategyKey, strategyItems in combos['strategies'].items():  # Create cartesian product of strategies
-            combos['strategies'][strategyKey] = [dict(zip(strategyItems, v)) for v in product(*strategyItems.values())]
+        for strategyKey, strategyItems in combos[
+            "strategies"
+        ].items():  # Create cartesian product of strategies
+            combos["strategies"][strategyKey] = [
+                dict(zip(strategyItems, v)) for v in product(*strategyItems.values())
+            ]
 
         permutations = []
-        strategies = combos.pop('strategies')
+        strategies = combos.pop("strategies")
         for v in product(*combos.values()):
             permutations_dict = dict(zip(combos, v))
             for z in product(*strategies.values()):
-                permutations_dict['strategies'] = dict(zip(strategies, z))
+                permutations_dict["strategies"] = dict(zip(strategies, z))
                 permutations.append(copy.deepcopy(permutations_dict))
         return permutations
 
@@ -418,10 +495,14 @@ class Backtester(Trader):
                 result = self.start_backtest(thread)
             else:
                 self.currentPrice = 0  # Or else it'll crash.
-                result = 'SKIPPED'
+                result = "SKIPPED"
 
             if thread:
-                thread.signals.activity.emit(self.get_basic_optimize_info(index, len(settings_list), result=result))
+                thread.signals.activity.emit(
+                    self.get_basic_optimize_info(
+                        index, len(settings_list), result=result
+                    )
+                )
 
             self.restore()
 
@@ -430,29 +511,35 @@ class Backtester(Trader):
         Simple check to see if a moving average strategy needs to be run or not. If the initial bound is greater than
         or equal to the final bound, then it should be skipped.
         """
-        if 'movingAverage' in self.strategies:
-            for option in self.strategies['movingAverage'].get_params():
+        if "movingAverage" in self.strategies:
+            for option in self.strategies["movingAverage"].get_params():
                 if option.initialBound >= option.finalBound:
                     return True
         return False
 
-    def get_basic_optimize_info(self, run: int, totalRuns: int, result: str = 'PASSED') -> tuple:
+    def get_basic_optimize_info(
+        self, run: int, totalRuns: int, result: str = "PASSED"
+    ) -> tuple:
         """
         Return basic information in a tuple for emitting to the trades table in the GUI.
         """
         row = (
             round(self.get_net() / self.startingBalance * 100 - 100, 2),
             self.get_stop_loss_strategy_string(),
-            self.get_safe_rounded_string(self.lossPercentageDecimal, multiplier=100, symbol='%'),
+            self.get_safe_rounded_string(
+                self.lossPercentageDecimal, multiplier=100, symbol="%"
+            ),
             self.get_trailing_or_stop_type_string(self.takeProfitType),
-            self.get_safe_rounded_string(self.takeProfitPercentageDecimal, multiplier=100, symbol='%'),
+            self.get_safe_rounded_string(
+                self.takeProfitPercentageDecimal, multiplier=100, symbol="%"
+            ),
             self.symbol,
             self.interval,
             self.strategyInterval,
             len(self.trades),
-            f'{run}/{totalRuns}',
+            f"{run}/{totalRuns}",
             result,  # PASSED / DRAWDOWN / CRASHED
-            self.get_strategies_info_string(left=' ', right=' ')
+            self.get_strategies_info_string(left=" ", right=" "),
         )
         self.optimizerRows.append(row)
         return row
@@ -461,16 +548,27 @@ class Backtester(Trader):
         """
         Exports optimizer rows to file path provided using Pandas.
         """
-        headers = ['Profit Percentage', 'Stop Loss Strategy', 'Stop Loss Percentage', 'Take Profit Strategy',
-                   'Take Profit Percentage', 'Ticker', 'Interval', 'Strategy Interval', 'Trades', 'Run',
-                   'Result', 'Strategy']
+        headers = [
+            "Profit Percentage",
+            "Stop Loss Strategy",
+            "Stop Loss Percentage",
+            "Take Profit Strategy",
+            "Take Profit Percentage",
+            "Ticker",
+            "Interval",
+            "Strategy Interval",
+            "Trades",
+            "Run",
+            "Result",
+            "Strategy",
+        ]
         df = pd.DataFrame(self.optimizerRows)
         df.columns = headers
-        df.set_index('Run', inplace=True)
+        df.set_index("Run", inplace=True)
 
-        if file_type == 'CSV':
+        if file_type == "CSV":
             df.to_csv(file_path)
-        elif file_type == 'XLSX':
+        elif file_type == "XLSX":
             df.to_excel(file_path)
         else:
             raise TypeError("Invalid type of file type provided.")
@@ -480,19 +578,19 @@ class Backtester(Trader):
         Apples settings provided from the settings argument to the backtester object.
         :param settings: Dictionary with keys and values to set.
         """
-        if 'takeProfitType' in settings:
-            self.takeProfitType = self.get_enum_from_str(settings['takeProfitType'])
-            self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
+        if "takeProfitType" in settings:
+            self.takeProfitType = self.get_enum_from_str(settings["takeProfitType"])
+            self.takeProfitPercentageDecimal = settings["takeProfitPercentage"] / 100
 
-        if 'lossType' in settings:
-            self.lossStrategy = self.get_enum_from_str(settings['lossType'])
-            self.lossPercentageDecimal = settings['lossPercentage'] / 100
+        if "lossType" in settings:
+            self.lossStrategy = self.get_enum_from_str(settings["lossType"])
+            self.lossPercentageDecimal = settings["lossPercentage"] / 100
 
-            if 'stopLossCounter' in settings:
-                self.smartStopLossCounter = settings['stopLossCounter']
+            if "stopLossCounter" in settings:
+                self.smartStopLossCounter = settings["stopLossCounter"]
 
-        self.change_strategy_interval(settings['strategyIntervals'])
-        for strategy_name, strategy_values in settings['strategies'].items():
+        self.change_strategy_interval(settings["strategyIntervals"])
+        for strategy_name, strategy_values in settings["strategies"].items():
             pretty_strategy_name = strategy_name
             strategy_name = parse_strategy_name(strategy_name)
 
@@ -503,7 +601,7 @@ class Backtester(Trader):
                 temp_strategy_tuple = (
                     self.allStrategies[pretty_strategy_name],
                     strategy_values,
-                    pretty_strategy_name
+                    pretty_strategy_name,
                 )
                 self.setup_strategies([temp_strategy_tuple])
                 continue
@@ -536,9 +634,11 @@ class Backtester(Trader):
         Attempts to parse interval from loaded data.
         :return: Interval in str format.
         """
-        assert len(self.data) >= 2, "Not enough data gathered. Change your data interval."
-        period1 = self.data[0]['date_utc']
-        period2 = self.data[1]['date_utc']
+        assert (
+            len(self.data) >= 2
+        ), "Not enough data gathered. Change your data interval."
+        period1 = self.data[0]["date_utc"]
+        period2 = self.data[1]["date_utc"]
 
         if type(period1) == str:
             period1 = parser.parse(period1)
@@ -549,19 +649,19 @@ class Backtester(Trader):
         seconds = difference.total_seconds()
         if seconds < 3600:  # This will assume the interval is in minutes.
             minutes = seconds / 60
-            result = f'{int(minutes)} Minute'
+            result = f"{int(minutes)} Minute"
             if minutes > 1:
-                result += 's'
+                result += "s"
         elif seconds < 86400:  # This will assume the interval is in hours.
             hours = seconds / 3600
-            result = f'{int(hours)} Hour'
+            result = f"{int(hours)} Hour"
             if hours > 1:
-                result += 's'
+                result += "s"
         else:  # This will assume the interval is in days.
             days = seconds / 86400
-            result = f'{int(days)} Day'
+            result = f"{int(days)} Day"
             if days > 1:
-                result += 's'
+                result += "s"
         return result
 
     def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> float:
@@ -584,14 +684,20 @@ class Backtester(Trader):
             rsi_values.append((rsi, emaUp, emaDown))
 
         if periods in self.rsi_dictionary:
-            rsi_values = self.rsi_dictionary[periods]['close'] + rsi_values
+            rsi_values = self.rsi_dictionary[periods]["close"] + rsi_values
 
-        self.rsi_dictionary[periods] = {'close': rsi_values}
+        self.rsi_dictionary[periods] = {"close": rsi_values}
         return rsi_values[-1][0]
 
     # noinspection DuplicatedCode
-    def get_rsi(self, data: list, prices: int, parameter: str = 'close', shift: int = 0,
-                round_value: bool = False) -> float:
+    def get_rsi(
+        self,
+        data: list,
+        prices: int,
+        parameter: str = "close",
+        shift: int = 0,
+        round_value: bool = False,
+    ) -> float:
         """
         Returns relative strength index.
         :param data: Data values.
@@ -602,19 +708,23 @@ class Backtester(Trader):
         :return: Final relative strength index.
         """
         if shift > 0 and prices in self.rsi_dictionary:
-            rsi = self.rsi_dictionary[prices]['close'][-shift][0]
+            rsi = self.rsi_dictionary[prices]["close"][-shift][0]
         elif prices in self.rsi_dictionary:
             alpha = 1 / prices
             difference = data[-1][parameter] - data[-2][parameter]
             if difference > 0:
-                up = difference * alpha + self.rsi_dictionary[prices]['close'][-1][1] * (1 - alpha)
-                down = self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
+                up = difference * alpha + self.rsi_dictionary[prices]["close"][-1][
+                    1
+                ] * (1 - alpha)
+                down = self.rsi_dictionary[prices]["close"][-1][2] * (1 - alpha)
             else:
-                up = self.rsi_dictionary[prices]['close'][-1][1] * (1 - alpha)
-                down = -difference * alpha + self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
+                up = self.rsi_dictionary[prices]["close"][-1][1] * (1 - alpha)
+                down = -difference * alpha + self.rsi_dictionary[prices]["close"][-1][
+                    2
+                ] * (1 - alpha)
 
             rsi = 100 if down == 0 else 100 - 100 / (1 + up / down)
-            self.rsi_dictionary[prices]['close'].append((rsi, up, down))
+            self.rsi_dictionary[prices]["close"].append((rsi, up, down))
         else:
             if shift > 0:
                 data = data[:-shift]
@@ -629,51 +739,93 @@ class Backtester(Trader):
         """
         trend = self.get_trend()
         if self.currentPosition == SHORT:
-            if self.lossStrategy is not None and self.currentPrice > self.get_stop_loss():
-                self.buy_short('Exited short because a stop loss was triggered.', stopLossExit=True)
-            elif self.takeProfitType is not None and self.currentPrice <= self.get_take_profit():
+            if (
+                self.lossStrategy is not None
+                and self.currentPrice > self.get_stop_loss()
+            ):
+                self.buy_short(
+                    "Exited short because a stop loss was triggered.", stopLossExit=True
+                )
+            elif (
+                self.takeProfitType is not None
+                and self.currentPrice <= self.get_take_profit()
+            ):
                 self.buy_short("Exited short because of take profit.")
             elif trend == BULLISH:
-                self.buy_short('Exited short because a bullish trend was detected.')
-                self.buy_long('Entered long because a bullish trend was detected.')
+                self.buy_short("Exited short because a bullish trend was detected.")
+                self.buy_long("Entered long because a bullish trend was detected.")
             elif trend == EXIT_SHORT:
-                self.buy_short('Bought short because an exit-short trend was detected.')
+                self.buy_short("Bought short because an exit-short trend was detected.")
         elif self.currentPosition == LONG:
-            if self.lossStrategy is not None and self.currentPrice < self.get_stop_loss():
-                self.sell_long('Exited long because a stop loss was triggered.', stopLossExit=True)
-            elif self.takeProfitType is not None and self.currentPrice >= self.get_take_profit():
+            if (
+                self.lossStrategy is not None
+                and self.currentPrice < self.get_stop_loss()
+            ):
+                self.sell_long(
+                    "Exited long because a stop loss was triggered.", stopLossExit=True
+                )
+            elif (
+                self.takeProfitType is not None
+                and self.currentPrice >= self.get_take_profit()
+            ):
                 self.sell_long("Exited long because of take profit.")
             elif trend == BEARISH:
-                self.sell_long('Exited long because a bearish trend was detected.')
+                self.sell_long("Exited long because a bearish trend was detected.")
                 if self.marginEnabled:
-                    self.sell_short('Entered short because a bearish trend was detected.')
+                    self.sell_short(
+                        "Entered short because a bearish trend was detected."
+                    )
             elif trend == EXIT_LONG:
                 self.sell_long("Exited long because an exit-long trend was detected.")
         else:
-            if not self.marginEnabled and self.previousStopLoss is not None and self.currentPrice is not None:
+            if (
+                not self.marginEnabled
+                and self.previousStopLoss is not None
+                and self.currentPrice is not None
+            ):
                 if self.previousStopLoss < self.currentPrice:
                     self.stopLossExit = False  # Hotfix for margin-disabled backtests.
 
-            if trend == BULLISH and (self.previousPosition != LONG or not self.stopLossExit):
-                self.buy_long('Entered long because a bullish trend was detected.')
+            if trend == BULLISH and (
+                self.previousPosition != LONG or not self.stopLossExit
+            ):
+                self.buy_long("Entered long because a bullish trend was detected.")
                 self.reset_smart_stop_loss()
-            elif self.marginEnabled and trend == BEARISH and self.previousPosition != SHORT:
-                self.sell_short('Entered short because a bearish trend was detected.')
+            elif (
+                self.marginEnabled
+                and trend == BEARISH
+                and self.previousPosition != SHORT
+            ):
+                self.sell_short("Entered short because a bearish trend was detected.")
                 self.reset_smart_stop_loss()
             elif trend == ENTER_LONG:
                 self.buy_long("Entered long because an enter-long trend was detected.")
                 self.reset_smart_stop_loss()
             elif trend == ENTER_SHORT:
-                self.sell_short("Entered short because an enter-short trend was detected.")
+                self.sell_short(
+                    "Entered short because an enter-short trend was detected."
+                )
                 self.reset_smart_stop_loss()
             else:
                 if self.previousPosition == LONG and self.stopLossExit:
-                    if self.currentPrice > self.previousStopLoss and self.smartStopLossCounter > 0:
-                        self.buy_long("Reentered long because of smart stop loss.", smartEnter=True)
+                    if (
+                        self.currentPrice > self.previousStopLoss
+                        and self.smartStopLossCounter > 0
+                    ):
+                        self.buy_long(
+                            "Reentered long because of smart stop loss.",
+                            smartEnter=True,
+                        )
                         self.smartStopLossCounter -= 1
                 elif self.previousPosition == SHORT and self.stopLossExit:
-                    if self.currentPrice < self.previousStopLoss and self.smartStopLossCounter > 0:
-                        self.sell_short("Reentered short because of smart stop loss.", smartEnter=True)
+                    if (
+                        self.currentPrice < self.previousStopLoss
+                        and self.smartStopLossCounter > 0
+                    ):
+                        self.sell_short(
+                            "Reentered short because of smart stop loss.",
+                            smartEnter=True,
+                        )
                         self.smartStopLossCounter -= 1
 
     def print_configuration_parameters(self, stdout=None):
@@ -685,17 +837,21 @@ class Backtester(Trader):
             sys.stdout = stdout
 
         print("Backtest configuration:")
-        print(f'\tInterval: {self.interval}')
-        print(f'\tDrawdown Percentage: {self.drawdownPercentageDecimal * 100}')
-        print(f'\tMargin Enabled: {self.marginEnabled}')
+        print(f"\tInterval: {self.interval}")
+        print(f"\tDrawdown Percentage: {self.drawdownPercentageDecimal * 100}")
+        print(f"\tMargin Enabled: {self.marginEnabled}")
         print(f"\tStarting Balance: ${self.startingBalance}")
 
         if self.takeProfitType is not None:
-            print(f'\tTake Profit Percentage: {round(self.takeProfitPercentageDecimal * 100, 2)}%')
+            print(
+                f"\tTake Profit Percentage: {round(self.takeProfitPercentageDecimal * 100, 2)}%"
+            )
 
         if self.lossStrategy is not None:
-            print(f'\tStop Loss Strategy: {self.get_stop_loss_strategy_string()}')
-            print(f'\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%')
+            print(f"\tStop Loss Strategy: {self.get_stop_loss_strategy_string()}")
+            print(
+                f"\tStop Loss Percentage: {round(self.lossPercentageDecimal * 100, 2)}%"
+            )
             print(f"\tSmart Stop Loss Counter: {self.smartStopLossInitialCounter}")
 
         print(self.get_strategies_info_string())
@@ -710,22 +866,28 @@ class Backtester(Trader):
             sys.stdout = stdout
 
         print("\nBacktest results:")
-        print(f'\tSymbol: {"Unknown/Imported Data" if self.symbol is None else self.symbol}')
-        print(f'\tElapsed: {round(self.endingTime - self.startingTime, 2)} seconds')
+        print(
+            f'\tSymbol: {"Unknown/Imported Data" if self.symbol is None else self.symbol}'
+        )
+        print(f"\tElapsed: {round(self.endingTime - self.startingTime, 2)} seconds")
         print(f'\tStart Period: {self.data[self.startDateIndex]["date_utc"]}')
         print(f"\tEnd Period: {self.currentPeriod['date_utc']}")
-        print(f'\tStarting balance: ${round(self.startingBalance, self.precision)}')
-        print(f'\tNet: ${round(self.get_net(), self.precision)}')
-        print(f'\tCommissions paid: ${round(self.commissionsPaid, self.precision)}')
-        print(f'\tTrades made: {len(self.trades)}')
+        print(f"\tStarting balance: ${round(self.startingBalance, self.precision)}")
+        print(f"\tNet: ${round(self.get_net(), self.precision)}")
+        print(f"\tCommissions paid: ${round(self.commissionsPaid, self.precision)}")
+        print(f"\tTrades made: {len(self.trades)}")
         net = self.get_net()
         difference = round(net - self.startingBalance, self.precision)
         if difference > 0:
-            print(f'\tProfit: ${difference}')
-            print(f'\tProfit Percentage: {round(net / self.startingBalance * 100 - 100, 2)}%')
+            print(f"\tProfit: ${difference}")
+            print(
+                f"\tProfit Percentage: {round(net / self.startingBalance * 100 - 100, 2)}%"
+            )
         elif difference < 0:
-            print(f'\tLoss: ${-difference}')
-            print(f'\tLoss Percentage: {round(100 - net / self.startingBalance * 100, 2)}%')
+            print(f"\tLoss: ${-difference}")
+            print(
+                f"\tLoss Percentage: {round(100 - net / self.startingBalance * 100, 2)}%"
+            )
         else:
             print("\tNo profit or loss incurred.")
         # print(f'Balance: ${round(self.balance, 2)}')
@@ -752,17 +914,19 @@ class Backtester(Trader):
 
         print("\nTrades made:")
         for trade in self.trades:
-            print(f'\t{trade["date"].strftime("%Y-%m-%d %H:%M")}: (${trade["net"]}) {trade["action"]}')
+            print(
+                f'\t{trade["date"].strftime("%Y-%m-%d %H:%M")}: (${trade["net"]}) {trade["action"]}'
+            )
 
         sys.stdout = previous_stdout  # revert stdout back to normal
 
-    def get_default_result_file_name(self, name: str = 'backtest', ext: str = 'txt'):
+    def get_default_result_file_name(self, name: str = "backtest", ext: str = "txt"):
         """
         Returns a default backtest/optimizer result file name.
         :return: String filename.
         """
-        resultsFolder = os.path.join(ROOT_DIR, f'{name.capitalize()} Results')
-        symbol = 'Imported' if not self.symbol else self.symbol
+        resultsFolder = os.path.join(ROOT_DIR, f"{name.capitalize()} Results")
+        symbol = "Imported" if not self.symbol else self.symbol
         dateString = datetime.now().strftime("%Y-%m-%d_%H-%M")
         resultFile = f'{symbol}_{name}_results_{"_".join(self.interval.lower().split())}-{dateString}.{ext}'
 
@@ -777,7 +941,7 @@ class Backtester(Trader):
         previousFile = resultFile
 
         while os.path.exists(os.path.join(innerFolder, resultFile)):
-            resultFile = f'({counter}){previousFile}'  # (1), (2)
+            resultFile = f"({counter}){previousFile}"  # (1), (2)
             counter += 1
 
         return resultFile
@@ -791,7 +955,7 @@ class Backtester(Trader):
         if not resultFile:
             resultFile = self.get_default_result_file_name()
 
-        with open(resultFile, 'w') as f:
+        with open(resultFile, "w") as f:
             self.print_configuration_parameters(f)
             self.print_backtest_results(f)
 

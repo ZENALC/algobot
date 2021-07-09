@@ -16,20 +16,22 @@ def import_data(config_obj, caller: int = BACKTEST):
     :param caller: Caller that'll determine who called this function -> OPTIMIZER or BACKTEST
     """
     inner_dict = config_obj.optimizer_backtest_dict[caller]
-    action = 'backtest' if caller == BACKTEST else 'optimization'
+    action = "backtest" if caller == BACKTEST else "optimization"
 
-    inner_dict['infoLabel'].setText("Importing data...")
-    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Open file', helpers.ROOT_DIR, "CSV (*.csv)")
-    if filePath == '':
-        inner_dict['infoLabel'].setText("Data not imported.")
-        inner_dict['downloadProgress'].setValue(0)
+    inner_dict["infoLabel"].setText("Importing data...")
+    filePath, _ = QFileDialog.getOpenFileName(
+        config_obj, "Open file", helpers.ROOT_DIR, "CSV (*.csv)"
+    )
+    if filePath == "":
+        inner_dict["infoLabel"].setText("Data not imported.")
+        inner_dict["downloadProgress"].setValue(0)
     else:
-        inner_dict['data'] = helpers.load_from_csv(filePath, descending=False)
-        inner_dict['dataType'] = "Imported"
-        inner_dict['dataInterval'] = inner_dict['dataIntervalComboBox'].currentText()
-        inner_dict['infoLabel'].setText("Imported data successfully.")
-        inner_dict['dataLabel'].setText(f'Using imported data to conduct {action}.')
-        inner_dict['downloadProgress'].setValue(100)
+        inner_dict["data"] = helpers.load_from_csv(filePath, descending=False)
+        inner_dict["dataType"] = "Imported"
+        inner_dict["dataInterval"] = inner_dict["dataIntervalComboBox"].currentText()
+        inner_dict["infoLabel"].setText("Imported data successfully.")
+        inner_dict["dataLabel"].setText(f"Using imported data to conduct {action}.")
+        inner_dict["downloadProgress"].setValue(100)
         setup_calendar(config_obj=config_obj, caller=caller)
 
 
@@ -39,22 +41,44 @@ def download_data(config_obj, caller: int = BACKTEST):
     :param config_obj: Configuration QDialog object (from configuration.py)
     :param caller: Caller that'll determine who called this function -> OPTIMIZER or BACKTEST
     """
-    config_obj.optimizer_backtest_dict[caller]['downloadButton'].setEnabled(False)
-    config_obj.optimizer_backtest_dict[caller]['importButton'].setEnabled(False)
-    set_download_progress(config_obj, progress=0, message="Attempting to download...", caller=caller, enableStop=False)
+    config_obj.optimizer_backtest_dict[caller]["downloadButton"].setEnabled(False)
+    config_obj.optimizer_backtest_dict[caller]["importButton"].setEnabled(False)
+    set_download_progress(
+        config_obj,
+        progress=0,
+        message="Attempting to download...",
+        caller=caller,
+        enableStop=False,
+    )
 
-    symbol = config_obj.optimizer_backtest_dict[caller]['tickers'].text()
-    interval = helpers.convert_long_interval(config_obj.optimizer_backtest_dict[caller]['intervals'].currentText())
+    symbol = config_obj.optimizer_backtest_dict[caller]["tickers"].text()
+    interval = helpers.convert_long_interval(
+        config_obj.optimizer_backtest_dict[caller]["intervals"].currentText()
+    )
 
-    thread = downloadThread.DownloadThread(symbol=symbol, interval=interval, caller=caller, logger=config_obj.logger)
-    thread.signals.progress.connect(lambda progress, msg: set_download_progress(config_obj=config_obj, message=msg,
-                                                                                progress=progress,  caller=caller))
-    thread.signals.finished.connect(lambda data, *_: set_downloaded_data(config_obj, data=data, caller=caller))
-    thread.signals.error.connect(lambda e, *_: handle_download_failure(config_obj=config_obj, caller=caller, e=e))
-    thread.signals.restore.connect(lambda: restore_download_state(config_obj=config_obj, caller=caller))
-    thread.signals.locked.connect(lambda:
-                                  config_obj.optimizer_backtest_dict[caller]['stopDownloadButton'].setEnabled(False))
-    config_obj.optimizer_backtest_dict[caller]['downloadThread'] = thread
+    thread = downloadThread.DownloadThread(
+        symbol=symbol, interval=interval, caller=caller, logger=config_obj.logger
+    )
+    thread.signals.progress.connect(
+        lambda progress, msg: set_download_progress(
+            config_obj=config_obj, message=msg, progress=progress, caller=caller
+        )
+    )
+    thread.signals.finished.connect(
+        lambda data, *_: set_downloaded_data(config_obj, data=data, caller=caller)
+    )
+    thread.signals.error.connect(
+        lambda e, *_: handle_download_failure(config_obj=config_obj, caller=caller, e=e)
+    )
+    thread.signals.restore.connect(
+        lambda: restore_download_state(config_obj=config_obj, caller=caller)
+    )
+    thread.signals.locked.connect(
+        lambda: config_obj.optimizer_backtest_dict[caller][
+            "stopDownloadButton"
+        ].setEnabled(False)
+    )
+    config_obj.optimizer_backtest_dict[caller]["downloadThread"] = thread
     config_obj.threadPool.start(thread)
 
 
@@ -66,16 +90,16 @@ def set_downloaded_data(config_obj, data, caller: int = BACKTEST):
     :param data: Data to be used for backtesting.
     """
     inner_dict = config_obj.optimizer_backtest_dict[caller]
-    action = 'backtest' if caller == BACKTEST else 'optimization'
+    action = "backtest" if caller == BACKTEST else "optimization"
 
-    symbol = inner_dict['tickers'].text()
-    interval = inner_dict['intervals'].currentText().lower()
+    symbol = inner_dict["tickers"].text()
+    interval = inner_dict["intervals"].currentText().lower()
 
-    inner_dict['dataInterval'] = inner_dict['dataIntervalComboBox'].currentText()
-    inner_dict['data'] = data
-    inner_dict['dataType'] = symbol
-    inner_dict['infoLabel'].setText(f"Downloaded {interval} {symbol} data.")
-    inner_dict['dataLabel'].setText(f'Using {interval} {symbol} data to run {action}.')
+    inner_dict["dataInterval"] = inner_dict["dataIntervalComboBox"].currentText()
+    inner_dict["data"] = data
+    inner_dict["dataType"] = symbol
+    inner_dict["infoLabel"].setText(f"Downloaded {interval} {symbol} data.")
+    inner_dict["dataLabel"].setText(f"Using {interval} {symbol} data to run {action}.")
     setup_calendar(config_obj=config_obj, caller=caller)
 
 
@@ -85,12 +109,20 @@ def stop_download(config_obj, caller: int = BACKTEST):
     :param config_obj: Configuration QDialog object (from configuration.py)
     :param caller: Caller that'll determine who called this function -> OPTIMIZER or BACKTEST
     """
-    if config_obj.optimizer_backtest_dict[caller]['downloadThread'] is not None:
-        config_obj.optimizer_backtest_dict[caller]['downloadLabel'].setText("Canceling download...")
-        config_obj.optimizer_backtest_dict[caller]['downloadThread'].stop()
+    if config_obj.optimizer_backtest_dict[caller]["downloadThread"] is not None:
+        config_obj.optimizer_backtest_dict[caller]["downloadLabel"].setText(
+            "Canceling download..."
+        )
+        config_obj.optimizer_backtest_dict[caller]["downloadThread"].stop()
 
 
-def set_download_progress(config_obj, progress: int, message: str, caller: int = BACKTEST, enableStop: bool = True):
+def set_download_progress(
+    config_obj,
+    progress: int,
+    message: str,
+    caller: int = BACKTEST,
+    enableStop: bool = True,
+):
     """
     Sets download progress and message with parameters passed.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -100,11 +132,15 @@ def set_download_progress(config_obj, progress: int, message: str, caller: int =
     :param message: Message to display in label.
     """
     if enableStop:
-        config_obj.optimizer_backtest_dict[caller]['stopDownloadButton'].setEnabled(True)
+        config_obj.optimizer_backtest_dict[caller]["stopDownloadButton"].setEnabled(
+            True
+        )
 
     if progress != -1:
-        config_obj.optimizer_backtest_dict[caller]['downloadProgress'].setValue(progress)
-    config_obj.optimizer_backtest_dict[caller]['downloadLabel'].setText(message)
+        config_obj.optimizer_backtest_dict[caller]["downloadProgress"].setValue(
+            progress
+        )
+    config_obj.optimizer_backtest_dict[caller]["downloadLabel"].setText(message)
 
 
 def handle_download_failure(config_obj, e, caller: int = BACKTEST):
@@ -114,8 +150,16 @@ def handle_download_failure(config_obj, e, caller: int = BACKTEST):
     :param caller: Caller that'll determine which caller was used.
     :param e: Error for why download failed.
     """
-    set_download_progress(config_obj, progress=-1, message='Download failed.', caller=caller, enableStop=False)
-    config_obj.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Error occurred during download: {e}")
+    set_download_progress(
+        config_obj,
+        progress=-1,
+        message="Download failed.",
+        caller=caller,
+        enableStop=False,
+    )
+    config_obj.optimizer_backtest_dict[caller]["infoLabel"].setText(
+        f"Error occurred during download: {e}"
+    )
 
 
 def restore_download_state(config_obj, caller: int = BACKTEST):
@@ -124,7 +168,7 @@ def restore_download_state(config_obj, caller: int = BACKTEST):
     :param config_obj: Configuration QDialog object (from configuration.py)
     :param caller: Caller that'll determine who called this function -> OPTIMIZER or BACKTEST
     """
-    config_obj.optimizer_backtest_dict[caller]['downloadThread'] = None
-    config_obj.optimizer_backtest_dict[caller]['stopDownloadButton'].setEnabled(False)
-    config_obj.optimizer_backtest_dict[caller]['importButton'].setEnabled(True)
-    config_obj.optimizer_backtest_dict[caller]['downloadButton'].setEnabled(True)
+    config_obj.optimizer_backtest_dict[caller]["downloadThread"] = None
+    config_obj.optimizer_backtest_dict[caller]["stopDownloadButton"].setEnabled(False)
+    config_obj.optimizer_backtest_dict[caller]["importButton"].setEnabled(True)
+    config_obj.optimizer_backtest_dict[caller]["downloadButton"].setEnabled(True)
