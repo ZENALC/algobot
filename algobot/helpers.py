@@ -6,6 +6,7 @@ import platform
 import random
 import re
 import subprocess
+import tempfile
 import time
 from datetime import datetime
 from typing import Dict, List, Tuple, Union
@@ -44,9 +45,22 @@ SHORT_INTERVAL_MAP = {
 LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
 
 
+class AppDirTemp:
+    def __init__(self):
+        self.root = tempfile.mkdtemp()
+
+    @property
+    def user_data_dir(self):
+        return os.path.join(self.root, "UserData")
+
+    @property
+    def user_log_dir(self):
+        return os.path.join(self.root, "UserLog")
+
+
 class Paths:
     """ Encapsulates all the path information for the app to store its configuration. """
-    def __init__(self, root_dir: str, app_dirs: AppDirs):
+    def __init__(self, root_dir: str, app_dirs):
         self.root_dir = root_dir
         self.app_dirs = app_dirs
 
@@ -84,7 +98,14 @@ class Paths:
         return os.path.join(self.app_dirs.user_data_dir, 'Credentials')
 
 
-PATHS = Paths(ROOT_DIR, AppDirs(APP_NAME, APP_AUTHOR))
+def _get_app_dirs():
+    if os.getenv("ALGOBOT_TESTING"):
+        return AppDirTemp()
+
+    return AppDirs(APP_NAME, APP_AUTHOR)
+
+
+PATHS = Paths(ROOT_DIR, _get_app_dirs())
 
 
 def get_latest_version() -> str:
