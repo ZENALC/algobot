@@ -148,7 +148,7 @@ def create_folder_if_needed(target_path: str) -> bool:
     :return: Boolean whether folder was created or not.
     """
     if not os.path.exists(target_path):
-        os.makedirs(target_path)
+        os.makedirs(target_path, exist_ok=True)
         return True
     return False
 
