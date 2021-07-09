@@ -137,17 +137,8 @@ def open_folder(folder: str):
     """
     This will open a folder even if it doesn't exist. It'll create one if it doesn't exist.
     """
-    target_path = create_folder(folder)
-    open_file_or_folder(target_path)
-
-
-def create_folder(folder: str) -> str:
-    """
-    This will create a folder if needed in the root directory.
-    """
     create_folder_if_needed(folder)
-
-    return folder
+    open_file_or_folder(folder)
 
 
 def create_folder_if_needed(target_path: str) -> bool:

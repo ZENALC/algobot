@@ -27,8 +27,8 @@ from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
                                    setup_graph_plots, setup_graphs,
                                    update_backtest_graph_limits,
                                    update_main_graphs)
-from algobot.helpers import (PATHS, create_folder, create_folder_if_needed,
-                             get_caller_string, open_file_or_folder)
+from algobot.helpers import (PATHS, create_folder_if_needed, get_caller_string,
+                             open_file_or_folder)
 from algobot.interface.about import About
 from algobot.interface.config_utils.state_utils import load_state, save_state
 from algobot.interface.config_utils.strategy_utils import get_strategies
@@ -253,22 +253,23 @@ class Interface(QMainWindow):
         """
         if self.optimizer:
             if len(self.optimizer.optimizerRows) > 0:
-                optimizerFolderPath = create_folder(helpers.PATHS.get_optimizer_results_dir())
-                innerPath = os.path.join(optimizerFolderPath, self.optimizer.symbol)
-                create_folder_if_needed(innerPath)
-                defaultFileName = self.optimizer.get_default_result_file_name(helpers.PATHS.get_optimizer_results_dir(),
-                                                                              'optimizer', ext=file_type.lower())
-                defaultPath = os.path.join(innerPath, defaultFileName)
-                filePath, _ = QFileDialog.getSaveFileName(self, 'Save Optimizer', defaultPath,
-                                                          f'{file_type} (*.{file_type.lower()})')
-                if not filePath:
+                optimizer_folder_path = helpers.PATHS.get_optimizer_results_dir()
+                create_folder_if_needed(optimizer_folder_path)
+                inner_path = os.path.join(optimizer_folder_path, self.optimizer.symbol)
+                create_folder_if_needed(inner_path)
+                default_file_name = self.optimizer.get_default_result_file_name(optimizer_folder_path,
+                                                                                'optimizer', ext=file_type.lower())
+                default_path = os.path.join(inner_path, default_file_name)
+                file_path, _ = QFileDialog.getSaveFileName(self, 'Save Optimizer', default_path,
+                                                           f'{file_type} (*.{file_type.lower()})')
+                if not file_path:
                     create_popup(self, "Export cancelled.")
                 else:
-                    self.optimizer.export_optimizer_rows(filePath, file_type)
-                    create_popup(self, f'Exported successfully to {filePath}.')
+                    self.optimizer.export_optimizer_rows(file_path, file_type)
+                    create_popup(self, f'Exported successfully to {file_path}.')
 
                 if open_from_msg_box(text='Do you want to open the optimization report?', title='Optimizer Report'):
-                    open_file_or_folder(filePath)
+                    open_file_or_folder(file_path)
 
             else:
                 create_popup(self, "No table rows found.")
@@ -409,19 +410,19 @@ class Interface(QMainWindow):
         """
         Ends backtest and prompts user if they want to see the results.
         """
-        backtestFolderPath = create_folder(helpers.PATHS.get_backtest_results_dir())
-        innerPath = os.path.join(backtestFolderPath, self.backtester.symbol)
-        create_folder_if_needed(innerPath)
-        defaultFile = os.path.join(innerPath, self.backtester.get_default_result_file_name(
-            helpers.PATHS.get_backtest_results_dir()))
-        fileName, _ = QFileDialog.getSaveFileName(self, 'Save Result', defaultFile, 'TXT (*.txt)')
-        fileName = fileName.strip()
-        fileName = fileName if fileName != '' else None
+        backtest_folder_path = helpers.PATHS.get_backtest_results_dir()
+        create_folder_if_needed(backtest_folder_path)
+        inner_path = os.path.join(backtest_folder_path, self.backtester.symbol)
+        create_folder_if_needed(inner_path)
+        default_file = os.path.join(inner_path, self.backtester.get_default_result_file_name(backtest_folder_path))
+        file_name, _ = QFileDialog.getSaveFileName(self, 'Save Result', default_file, 'TXT (*.txt)')
+        file_name = file_name.strip()
+        file_name = file_name if file_name != '' else None
 
-        if not fileName:
+        if not file_name:
             self.add_to_backtest_monitor('Ended backtest.')
         else:
-            path = self.backtester.write_results(resultFile=fileName)
+            path = self.backtester.write_results(resultFile=file_name)
             self.add_to_backtest_monitor(f'Ended backtest and saved results to {path}.')
 
             if open_from_msg_box(text=f"Backtest results have been saved to {path}.", title="Backtest Results"):
@@ -1296,12 +1297,13 @@ class Interface(QMainWindow):
                 trade.append(item.text())
             trades.append(trade)
 
-        path = create_folder(helpers.PATHS.get_trade_history_dir())
+        trade_history_dir = helpers.PATHS.get_trade_history_dir()
+        create_folder_if_needed(trade_history_dir)
 
         if caller == LIVE:
-            defaultFile = os.path.join(path, 'live_trades.csv')
+            defaultFile = os.path.join(trade_history_dir, 'live_trades.csv')
         else:
-            defaultFile = os.path.join(path, 'simulation_trades.csv')
+            defaultFile = os.path.join(trade_history_dir, 'simulation_trades.csv')
 
         path, _ = QFileDialog.getSaveFileName(self, 'Export Trades', defaultFile, 'CSV (*.csv)')
 
@@ -1320,8 +1322,9 @@ class Interface(QMainWindow):
         """
         table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
         label = self.interfaceDictionary[caller]['mainInterface']['historyLabel']
-        path = create_folder(helpers.PATHS.get_trade_history_dir())
-        path, _ = QFileDialog.getOpenFileName(self, 'Import Trades', path, "CSV (*.csv)")
+        trade_history_dir = helpers.PATHS.get_trade_history_dir()
+        create_folder_if_needed(trade_history_dir)
+        path, _ = QFileDialog.getOpenFileName(self, 'Import Trades', trade_history_dir, "CSV (*.csv)")
 
         try:
             with open(path, 'r') as f:

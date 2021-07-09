@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QMessageBox
 
 import algobot
 import algobot.helpers as helpers
+from algobot.helpers import create_folder_if_needed
 from algobot.interface.utils import create_popup, open_from_msg_box
 from algobot.threads.downloadThread import DownloadThread
 from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread
@@ -194,7 +195,8 @@ class OtherCommands(QDialog):
     def end_snoop_generate_volatility_report(self, volatility_dict, output_type):
         self.volatilityStatus.setText("Finished snooping. Generating report...")
         self.volatilityProgressBar.setValue(100)
-        folder_path = helpers.create_folder(helpers.PATHS.get_volatility_results_dir())
+        folder_path = helpers.PATHS.get_volatility_results_dir()
+        create_folder_if_needed(folder_path)
         file_name = f'Volatility_Results_{datetime.now().strftime("%m_%d_%Y_%H_%M_%S")}.{output_type.lower()}'
         file_path = os.path.join(folder_path, file_name)
 
