@@ -1,13 +1,15 @@
+import os
+import tempfile
 import time
 
 import pytest
 
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.helpers import (convert_long_interval, convert_small_interval,
-                             get_caller_string, get_data_from_parameter,
-                             get_elapsed_time, get_label_string,
-                             get_normalized_data, get_ups_and_downs,
-                             parse_strategy_name)
+                             create_folder_if_needed, get_caller_string,
+                             get_data_from_parameter, get_elapsed_time,
+                             get_label_string, get_normalized_data,
+                             get_ups_and_downs, parse_strategy_name)
 
 
 @pytest.mark.parametrize(
@@ -108,8 +110,8 @@ def test_get_normalized_data(data, date_in_utc, expected):
     'data, parameter, expected',
     [
         (
-            [{'high': 5}, {'high': 4}, {'high': 8}, {'high': 6}, {'high': 9}, {'high': 10}], 'high',
-            ([0, 0, 4, 0, 3, 1], [0, 1, 0, 2, 0, 0])
+                [{'high': 5}, {'high': 4}, {'high': 8}, {'high': 6}, {'high': 9}, {'high': 10}], 'high',
+                ([0, 0, 4, 0, 3, 1], [0, 1, 0, 2, 0, 0])
         )
     ]
 )
@@ -140,3 +142,10 @@ def test_get_elapsed_time(elapsed, expected):
 )
 def test_parse_strategy_name(name, expected):
     assert parse_strategy_name(name) == expected, f"Expected parsed strategy to be: {expected}."
+
+
+def test_create_folder_if_needed():
+    with tempfile.TemporaryDirectory() as td:
+        path = os.path.join(td, 'my-dir')
+        assert create_folder_if_needed(path)
+        assert not create_folder_if_needed(path)
