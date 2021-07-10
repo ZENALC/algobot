@@ -45,7 +45,7 @@ SHORT_INTERVAL_MAP = {
 LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
 
 
-class AppDirTemp:
+class AppDirTemp(AppDirs):
     def __init__(self):
         self.root = tempfile.mkdtemp()
 
@@ -57,10 +57,30 @@ class AppDirTemp:
     def user_log_dir(self):
         return os.path.join(self.root, "UserLog")
 
+    @property
+    def site_data_dir(self):
+        return os.path.join(self.root, "SiteData")
+
+    @property
+    def user_config_dir(self):
+        return os.path.join(self.root, "UserConfig")
+
+    @property
+    def site_config_dir(self):
+        return os.path.join(self.root, "SiteConfig")
+
+    @property
+    def user_cache_dir(self):
+        return os.path.join(self.root, "UserCache")
+
+    @property
+    def user_state_dir(self):
+        return os.path.join(self.root, "UserState")
+
 
 class Paths:
     """ Encapsulates all the path information for the app to store its configuration. """
-    def __init__(self, root_dir: str, app_dirs):
+    def __init__(self, root_dir: str, app_dirs: AppDirs):
         self.root_dir = root_dir
         self.app_dirs = app_dirs
 
