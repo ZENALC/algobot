@@ -112,13 +112,13 @@ class Paths:
         return os.path.join(self.app_dirs.user_data_dir, 'CSV')
 
     def get_configuration_dir(self) -> str:
-        return os.path.join(self.app_dirs.user_data_dir, 'configuration')
+        return os.path.join(self.app_dirs.user_data_dir, 'Configuration')
 
     def get_credentials_dir(self) -> str:
         return os.path.join(self.app_dirs.user_data_dir, 'Credentials')
 
 
-def _get_app_dirs():
+def _get_app_dirs() -> AppDirs:
     if os.getenv("ALGOBOT_TESTING"):
         return AppDirTemp()
 
