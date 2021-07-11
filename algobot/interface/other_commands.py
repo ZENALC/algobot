@@ -81,7 +81,7 @@ class OtherCommands(QDialog):
             shutil.rmtree(directory)
             self.infoLabel.setText(f'{directory.capitalize()} files have been successfully deleted.')
 
-            if directory == 'Logs':  # Reinitialize log folder if old logs were purged.
+            if directory.endswith('Logs'):  # Reinitialize log folder if old logs were purged.
                 self.parent.logger = helpers.get_logger(log_file='algobot', logger_name='algobot')
 
     def start_date_thread(self):
