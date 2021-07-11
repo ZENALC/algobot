@@ -1,6 +1,9 @@
 [FORMAT]
 max-line-length = 120
 
+[MASTER]
+jobs=4
+
 [MESSAGES CONTROL]
 disable=
     too-many-instance-attributes,
