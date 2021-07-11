@@ -166,7 +166,8 @@ class BotThread(QRunnable):
         """
         if len(apiSecret) == 0:
             raise ValueError('Please specify an API secret key. No API secret key found.')
-        elif len(apiKey) == 0:
+
+        if len(apiKey) == 0:
             raise ValueError("Please specify an API key. No API key found.")
 
     def initialize_scheduler(self):

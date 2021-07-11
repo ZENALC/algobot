@@ -148,8 +148,8 @@ class Backtester(Trader):
             startDateIndex = self.find_date_index(startDate)
             if startDateIndex == -1:
                 raise IndexError("Date not found.")
-            else:
-                return startDateIndex
+
+            return startDateIndex
         else:
             return 0
 
@@ -163,12 +163,12 @@ class Backtester(Trader):
             endDateIndex = self.find_date_index(endDate, starting=False)
             if endDateIndex == -1:
                 raise IndexError("Date not found.")
-            elif endDateIndex < 1:
+            if endDateIndex < 1:
                 raise IndexError("You need at least one data period.")
-            elif endDateIndex <= self.startDateIndex:
+            if endDateIndex <= self.startDateIndex:
                 raise IndexError("Ending date index cannot be less than or equal to start date index.")
-            else:
-                return endDateIndex
+
+            return endDateIndex
         else:
             return len(self.data) - 1
 
@@ -265,7 +265,7 @@ class Backtester(Trader):
             if thread and not thread.running:
                 if thread.caller == BACKTEST:
                     raise RuntimeError("Backtest was canceled.")
-                elif thread.caller == OPTIMIZER:
+                if thread.caller == OPTIMIZER:
                     raise RuntimeError("Optimizer was canceled.")
 
             self.currentPeriod = self.data[index]
@@ -295,7 +295,7 @@ class Backtester(Trader):
             if thread and not thread.running:
                 if thread.caller == BACKTEST:
                     raise RuntimeError("Backtest was canceled.")
-                elif thread.caller == OPTIMIZER:
+                if thread.caller == OPTIMIZER:
                     raise RuntimeError("Optimizer was canceled.")
 
             self.set_indexed_current_price_and_period(index)

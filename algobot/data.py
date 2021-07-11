@@ -378,11 +378,11 @@ class Data:
         self.downloadCompleted = True
         if len(newData[:-1]) == 0:
             raise RuntimeError("No data was fetched from Binance. Please check Binance server.")
+
+        if get_current:
+            return newData
         else:
-            if get_current:
-                return newData
-            else:
-                return newData[:-1]  # Up to -1st index, because we don't want current period data.
+            return newData[:-1]  # Up to -1st index, because we don't want current period data.
 
     def is_latest_date(self, latestDate: datetime) -> bool:
         """
