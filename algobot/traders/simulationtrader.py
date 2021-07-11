@@ -221,7 +221,8 @@ class SimulationTrader(Trader):
 
             if usd <= 0:
                 raise ValueError(f"You cannot buy with ${usd}.")
-            elif usd > self.balance:
+
+            if usd > self.balance:
                 raise ValueError(f'You currently have ${self.balance}. You cannot invest ${usd}.')
 
             self.currentPrice = self.dataView.get_current_price()
@@ -251,7 +252,8 @@ class SimulationTrader(Trader):
 
             if coin <= 0:
                 raise ValueError(f"You cannot sell {coin} {self.coinName}.")
-            elif coin > self.coin:
+
+            if coin > self.coin:
                 raise ValueError(f'You have {self.coin} {self.coinName}. You cannot sell {coin} {self.coinName}.')
 
             self.currentPrice = self.dataView.get_current_price()
