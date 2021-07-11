@@ -9,7 +9,8 @@ from typing import Dict, List, Tuple, Union
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
 
-from algobot.helpers import (ROOT_DIR, get_logger, get_normalized_data,
+from algobot import helpers
+from algobot.helpers import (PATHS, get_logger, get_normalized_data,
                              get_ups_and_downs)
 from algobot.typing_hints import DATA_TYPE
 
@@ -142,12 +143,12 @@ class Data:
         Retrieves database file path.
         :return: Database file path.
         """
-        database_folder = os.path.join(ROOT_DIR, 'Databases')
+        database_folder = PATHS.get_database_dir()
         if not os.path.exists(database_folder):
-            os.mkdir(database_folder)
+            os.makedirs(database_folder)
 
-        filePath = os.path.join(database_folder, f'{self.symbol}.db')
-        return filePath
+        file_path = os.path.join(database_folder, f'{self.symbol}.db')
+        return file_path
 
     def create_table(self):
         """
@@ -521,19 +522,20 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
-    def create_folders_and_change_path(self, folderName: str):
+    def create_folders_and_change_path(self, folder_name: str):
         """
         Creates appropriate folders for data storage then changes current working directory to it.
-        :param folderName: Folder to create.
+        :param folder_name: Folder to create.
         """
-        os.chdir(ROOT_DIR)
-        if not os.path.exists(folderName):  # Create CSV folder if it doesn't exist
-            os.mkdir(folderName)
-        os.chdir(folderName)  # Go inside the folder.
+        if not os.path.exists(folder_name):
+            helpers.create_folder_if_needed(folder_name)
 
-        if not os.path.exists(self.symbol):  # Create symbol folder inside CSV folder if it doesn't exist.
+        os.chdir(folder_name)
+
+        if not os.path.exists(self.symbol):
             os.mkdir(self.symbol)
-        os.chdir(self.symbol)  # Go inside the folder.
+
+        os.chdir(self.symbol)
 
     def write_csv_data(self, totalData: list, fileName: str, armyTime: bool = True) -> str:
         """
@@ -544,7 +546,7 @@ class Data:
         :return: Absolute path to CSV file.
         """
         currentPath = os.getcwd()
-        self.create_folders_and_change_path(folderName="CSV")
+        self.create_folders_and_change_path(PATHS.get_csv_dir())
 
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "

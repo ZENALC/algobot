@@ -13,8 +13,7 @@ from dateutil import parser
 
 from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
                            EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT)
-from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
-                             convert_all_dates_to_datetime,
+from algobot.helpers import (PATHS, convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
                              get_ups_and_downs, parse_strategy_name)
 from algobot.interface.config_utils.strategy_utils import \
@@ -200,7 +199,7 @@ class Backtester(Trader):
               f' different parameters, rewriting your strategy, or taking a look at ' \
               f'your strategy code again. The strategy that caused this crash is: ' \
               f'{strategy.name}. You can find more details about the crash in the ' \
-              f'logs file at {os.path.join(ROOT_DIR, LOG_FOLDER)}.'
+              f'logs file at {PATHS.get_log_dir()}.'
         return msg
 
     def strategy_loop(self, strategyData, thread) -> Union[None, str]:
@@ -756,20 +755,19 @@ class Backtester(Trader):
 
         sys.stdout = previous_stdout  # revert stdout back to normal
 
-    def get_default_result_file_name(self, name: str = 'backtest', ext: str = 'txt'):
+    def get_default_result_file_name(self, results_folder: str, name: str = 'backtest', ext: str = 'txt'):
         """
         Returns a default backtest/optimizer result file name.
         :return: String filename.
         """
-        resultsFolder = os.path.join(ROOT_DIR, f'{name.capitalize()} Results')
         symbol = 'Imported' if not self.symbol else self.symbol
         dateString = datetime.now().strftime("%Y-%m-%d_%H-%M")
         resultFile = f'{symbol}_{name}_results_{"_".join(self.interval.lower().split())}-{dateString}.{ext}'
 
-        if not os.path.exists(resultsFolder):
+        if not os.path.exists(results_folder):
             return resultFile
 
-        innerFolder = os.path.join(resultsFolder, self.symbol)
+        innerFolder = os.path.join(results_folder, self.symbol)
         if not os.path.exists(innerFolder):
             return resultFile
 

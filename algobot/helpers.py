@@ -6,11 +6,13 @@ import platform
 import random
 import re
 import subprocess
+import tempfile
 import time
 from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
 import requests
+from appdirs import AppDirs
 from dateutil import parser
 
 import algobot
@@ -19,7 +21,10 @@ from algobot.typing_hints import DICT_TYPE
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
-LOG_FOLDER = 'Logs'
+
+APP_NAME = "algobot"
+APP_AUTHOR = "ZENALC"
+
 
 SHORT_INTERVAL_MAP = {
     '1m': '1 Minute',
@@ -38,6 +43,89 @@ SHORT_INTERVAL_MAP = {
 }
 
 LONG_INTERVAL_MAP = {v: k for k, v in SHORT_INTERVAL_MAP.items()}
+
+
+class AppDirTemp(AppDirs):
+    def __init__(self):
+        self.root = tempfile.mkdtemp()
+
+    @property
+    def user_data_dir(self):
+        return os.path.join(self.root, "UserData")
+
+    @property
+    def user_log_dir(self):
+        return os.path.join(self.root, "UserLog")
+
+    @property
+    def site_data_dir(self):
+        return os.path.join(self.root, "SiteData")
+
+    @property
+    def user_config_dir(self):
+        return os.path.join(self.root, "UserConfig")
+
+    @property
+    def site_config_dir(self):
+        return os.path.join(self.root, "SiteConfig")
+
+    @property
+    def user_cache_dir(self):
+        return os.path.join(self.root, "UserCache")
+
+    @property
+    def user_state_dir(self):
+        return os.path.join(self.root, "UserState")
+
+
+class Paths:
+    """ Encapsulates all the path information for the app to store its configuration. """
+    def __init__(self, root_dir: str, app_dirs: AppDirs):
+        self.root_dir = root_dir
+        self.app_dirs = app_dirs
+
+    def get_ui_dir(self) -> str:
+        return os.path.join(self.root_dir, 'UI')
+
+    def get_log_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_log_dir, 'Logs')
+
+    def get_database_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Databases')
+
+    def get_state_path(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'state.json')
+
+    def get_optimizer_results_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Optimizer Results')
+
+    def get_backtest_results_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Backtest Results')
+
+    def get_trade_history_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Trade History')
+
+    def get_volatility_results_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Volatility Results')
+
+    def get_csv_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'CSV')
+
+    def get_configuration_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Configuration')
+
+    def get_credentials_dir(self) -> str:
+        return os.path.join(self.app_dirs.user_data_dir, 'Credentials')
+
+
+def _get_app_dirs() -> AppDirs:
+    if os.getenv("ALGOBOT_TESTING"):
+        return AppDirTemp()
+
+    return AppDirs(APP_NAME, APP_AUTHOR)
+
+
+PATHS = Paths(ROOT_DIR, _get_app_dirs())
 
 
 def get_latest_version() -> str:
@@ -90,65 +178,53 @@ def open_folder(folder: str):
     """
     This will open a folder even if it doesn't exist. It'll create one if it doesn't exist.
     """
-    targetPath = create_folder(folder)
-    open_file_or_folder(targetPath)
+    create_folder_if_needed(folder)
+    open_file_or_folder(folder)
 
 
-def create_folder(folder: str):
-    """
-    This will create a folder if needed in the root directory.
-    """
-    targetPath = os.path.join(ROOT_DIR, folder)
-    create_folder_if_needed(targetPath)
-
-    return targetPath
-
-
-def create_folder_if_needed(targetPath: str, basePath: str = ROOT_DIR) -> bool:
+def create_folder_if_needed(target_path: str) -> bool:
     """
     This function will create the appropriate folders in the root folder if needed.
-    :param targetPath: Target path to have exist.
-    :param basePath: Base path to start from. By default, it'll be the root directory.
+    :param target_path: Target path to have exist.
     :return: Boolean whether folder was created or not.
     """
-    if not os.path.exists(targetPath):
-        folder = os.path.basename(targetPath)
-        os.mkdir(os.path.join(basePath, folder))
+    if not os.path.exists(target_path):
+        os.makedirs(target_path, exist_ok=True)
         return True
     return False
 
 
-def open_file_or_folder(targetPath: str):
+def open_file_or_folder(target_path: str):
     """
     Opens a file or folder based on targetPath.
-    :param targetPath: File or folder to open with system defaults.
+    :param target_path: File or folder to open with system defaults.
     """
     if platform.system() == "Windows":
-        os.startfile(targetPath)
+        os.startfile(target_path)
     elif platform.system() == "Darwin":
-        subprocess.Popen(["open", targetPath])
+        subprocess.Popen(["open", target_path])
     else:
-        subprocess.Popen(["xdg-open", targetPath])
+        subprocess.Popen(["xdg-open", target_path])
 
 
-def setup_and_return_log_path(fileName: str) -> str:
+def setup_and_return_log_path(filename: str) -> str:
     """
     Creates folders (if needed) and returns default log path.
-    :param fileName: Log filename to be created.
+    :param filename: Log filename to be created.
     :return: Absolute path to log file.
     """
-    LOG_DIR = os.path.join(ROOT_DIR, LOG_FOLDER)
-    if not os.path.exists(LOG_DIR):
-        os.mkdir(LOG_DIR)
+    log_dir = PATHS.get_log_dir()
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
-    todayDate = datetime.today().strftime('%Y-%m-%d')
-    LOG_DATE_FOLDER = os.path.join(LOG_DIR, todayDate)
-    if not os.path.exists(LOG_DATE_FOLDER):
-        os.mkdir(LOG_DATE_FOLDER)
+    today_date = datetime.today().strftime('%Y-%m-%d')
+    log_date_folder = os.path.join(log_dir, today_date)
+    if not os.path.exists(log_date_folder):
+        os.mkdir(log_date_folder)
 
-    logFileName = f'{datetime.now().strftime("%H-%M-%S")}-{fileName}.log'
-    fullPath = os.path.join(LOG_DATE_FOLDER, logFileName)
-    return fullPath
+    log_file_name = f'{datetime.now().strftime("%H-%M-%S")}-{filename}.log'
+    full_path = os.path.join(log_date_folder, log_file_name)
+    return full_path
 
 
 def get_logger(log_file: str, logger_name: str) -> logging.Logger:
@@ -164,7 +240,7 @@ def get_logger(log_file: str, logger_name: str) -> logging.Logger:
         log_level = logging.DEBUG
     logger.setLevel(log_level)
     formatter = logging.Formatter('%(message)s')
-    handler = logging.FileHandler(filename=setup_and_return_log_path(fileName=log_file), delay=True)
+    handler = logging.FileHandler(filename=setup_and_return_log_path(filename=log_file), delay=True)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 

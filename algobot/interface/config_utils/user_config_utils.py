@@ -23,11 +23,10 @@ def create_appropriate_config_folders(config_obj, folder: str) -> str:
     :param folder: Folder to create inside configuration folder.
     :return: Absolute path to new folder.
     """
-    basePath = os.path.join(helpers.ROOT_DIR, config_obj.configFolder)
-    helpers.create_folder_if_needed(basePath)
+    basePath = config_obj.configFolder
 
     targetPath = os.path.join(basePath, folder)
-    helpers.create_folder_if_needed(targetPath, basePath=basePath)
+    helpers.create_folder_if_needed(targetPath)
 
     return targetPath
 

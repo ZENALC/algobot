@@ -3,8 +3,8 @@ Data download and import helper functions for configuration.py can be found here
 """
 from PyQt5.QtWidgets import QFileDialog
 
-from algobot import helpers
 from algobot.enums import BACKTEST
+from algobot.helpers import PATHS, convert_long_interval, load_from_csv
 from algobot.interface.config_utils.calendar_utils import setup_calendar
 from algobot.threads import downloadThread
 
@@ -19,12 +19,12 @@ def import_data(config_obj, caller: int = BACKTEST):
     action = 'backtest' if caller == BACKTEST else 'optimization'
 
     inner_dict['infoLabel'].setText("Importing data...")
-    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Open file', helpers.ROOT_DIR, "CSV (*.csv)")
+    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Open file', PATHS.get_csv_dir(), "CSV (*.csv)")
     if filePath == '':
         inner_dict['infoLabel'].setText("Data not imported.")
         inner_dict['downloadProgress'].setValue(0)
     else:
-        inner_dict['data'] = helpers.load_from_csv(filePath, descending=False)
+        inner_dict['data'] = load_from_csv(filePath, descending=False)
         inner_dict['dataType'] = "Imported"
         inner_dict['dataInterval'] = inner_dict['dataIntervalComboBox'].currentText()
         inner_dict['infoLabel'].setText("Imported data successfully.")
@@ -44,7 +44,7 @@ def download_data(config_obj, caller: int = BACKTEST):
     set_download_progress(config_obj, progress=0, message="Attempting to download...", caller=caller, enableStop=False)
 
     symbol = config_obj.optimizer_backtest_dict[caller]['tickers'].text()
-    interval = helpers.convert_long_interval(config_obj.optimizer_backtest_dict[caller]['intervals'].currentText())
+    interval = convert_long_interval(config_obj.optimizer_backtest_dict[caller]['intervals'].currentText())
 
     thread = downloadThread.DownloadThread(symbol=symbol, interval=interval, caller=caller, logger=config_obj.logger)
     thread.signals.progress.connect(lambda progress, msg: set_download_progress(config_obj=config_obj, message=msg,

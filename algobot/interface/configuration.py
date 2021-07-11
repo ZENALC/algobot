@@ -7,9 +7,9 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QLabel, QLayout, QMainWindow, QSpinBox,
                              QTabWidget)
 
-import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
+from algobot.helpers import PATHS
 from algobot.interface.config_utils.credential_utils import load_credentials
 from algobot.interface.config_utils.slot_utils import load_slots
 from algobot.interface.config_utils.strategy_utils import (
@@ -22,7 +22,7 @@ from algobot.interface.utils import get_elements_from_combobox
 from algobot.strategies import *  # noqa: F403, F401
 from algobot.strategies.strategy import Strategy
 
-configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
+configurationUi = os.path.join(PATHS.get_ui_dir(), 'configuration.ui')
 
 
 class Configuration(QDialog):
@@ -82,9 +82,9 @@ class Configuration(QDialog):
         self.chatPass = False
 
         # Folders and files
-        self.credentialsFolder = "Credentials"
-        self.configFolder = 'Configuration'
-        self.stateFilePath = os.path.join(helpers.ROOT_DIR, 'state.json')
+        self.credentialsFolder = PATHS.get_credentials_dir()
+        self.configFolder = PATHS.get_configuration_dir()
+        self.stateFilePath = PATHS.get_state_path()
 
         self.categoryTabs = [
             self.mainConfigurationTabWidget,

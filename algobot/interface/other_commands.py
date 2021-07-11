@@ -9,13 +9,15 @@ from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QMessageBox
 
 import algobot
-import algobot.helpers as helpers
+from algobot.helpers import (PATHS, convert_long_interval,
+                             create_folder_if_needed, get_logger,
+                             open_file_or_folder)
 from algobot.interface.utils import create_popup, open_from_msg_box
 from algobot.threads.downloadThread import DownloadThread
 from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread
 from algobot.threads.workerThread import Worker
 
-otherCommandsUi = os.path.join(helpers.ROOT_DIR, 'UI', 'otherCommands.ui')
+otherCommandsUi = os.path.join(PATHS.get_ui_dir(), 'otherCommands.ui')
 
 
 class OtherCommands(QDialog):
@@ -56,33 +58,32 @@ class OtherCommands(QDialog):
         self.stopVolatilityButton.clicked.connect(lambda: self.stop_volatility_snooper())
 
         # Purge buttons.
-        self.purgeLogsButton.clicked.connect(lambda: self.purge('Logs'))
-        self.purgeDatabasesButton.clicked.connect(lambda: self.purge('Databases'))
-        self.purgeBacktestResultsButton.clicked.connect(lambda: self.purge('Backtest Results'))
-        self.purgeConfigurationFilesButton.clicked.connect(lambda: self.purge('Configuration'))
-        self.purgeCredentialsButton.clicked.connect(lambda: self.purge('Credentials'))
-        self.purgeCSVFilesButton.clicked.connect(lambda: self.purge('CSV'))
+        self.purgeLogsButton.clicked.connect(lambda: self.purge(PATHS.get_log_dir()))
+        self.purgeDatabasesButton.clicked.connect(lambda: self.purge(PATHS.get_database_dir()))
+        self.purgeBacktestResultsButton.clicked.connect(lambda: self.purge(PATHS.get_backtest_results_dir()))
+        self.purgeConfigurationFilesButton.clicked.connect(lambda: self.purge(PATHS.get_configuration_dir()))
+        self.purgeCredentialsButton.clicked.connect(lambda: self.purge(PATHS.get_credentials_dir()))
+        self.purgeCSVFilesButton.clicked.connect(lambda: self.purge(PATHS.get_csv_dir()))
 
     def purge(self, directory: str):
         """
         Deletes directory provided.
         """
-        path = os.path.join(helpers.ROOT_DIR, directory)
-        if not os.path.exists(path):
+        if not os.path.exists(directory):
             create_popup(self, f"No {directory.lower()} files detected.")
             return
 
         message = f'Are you sure you want to delete your {directory.lower()} files? You might not be able to undo ' \
-                  f'this operation. \n\nThe following path will be deleted: \n{path}'
+                  f'this operation. \n\nThe following path will be deleted: \n{directory}'
         qm = QMessageBox
         ret = qm.question(self, 'Warning', message, qm.Yes | qm.No)
 
-        if ret == qm.Yes and os.path.exists(path):
-            shutil.rmtree(path)
+        if ret == qm.Yes and os.path.exists(directory):
+            shutil.rmtree(directory)
             self.infoLabel.setText(f'{directory.capitalize()} files have been successfully deleted.')
 
-            if directory == 'Logs':  # Reinitialize log folder if old logs were purged.
-                self.parent.logger = helpers.get_logger(log_file='algobot', logger_name='algobot')
+            if directory.endswith('Logs'):  # Reinitialize log folder if old logs were purged.
+                self.parent.logger = get_logger(log_file='algobot', logger_name='algobot')
 
     def start_date_thread(self):
         """
@@ -103,7 +104,7 @@ class OtherCommands(QDialog):
         Find start date by instantiating a Data object and fetching the Binance API.
         """
         symbol = self.csvGenerationTicker.text()
-        interval = helpers.convert_long_interval(self.csvGenerationDataInterval.currentText())
+        interval = convert_long_interval(self.csvGenerationDataInterval.currentText())
 
         ts = algobot.BINANCE_CLIENT._get_earliest_valid_timestamp(symbol, interval)
         startDate = datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
@@ -137,7 +138,7 @@ class OtherCommands(QDialog):
         symbol = self.csvGenerationTicker.text()
         descending = self.descendingDateRadio.isChecked()
         armyTime = self.armyDateRadio.isChecked()
-        interval = helpers.convert_long_interval(self.csvGenerationDataInterval.currentText())
+        interval = convert_long_interval(self.csvGenerationDataInterval.currentText())
 
         selectedDate = self.startDateCalendar.selectedDate().toPyDate()
         startDate = None if selectedDate == self.currentDateList[0] else selectedDate
@@ -175,7 +176,7 @@ class OtherCommands(QDialog):
         self.generateCSVButton.setEnabled(True)
 
         if open_from_msg_box(text=f"Successfully saved CSV data to {savedPath}.", title="Data saved successfully."):
-            helpers.open_file_or_folder(savedPath)
+            open_file_or_folder(savedPath)
 
     def modify_csv_ui(self, running: bool, reset: bool = False):
         self.generateCSVButton.setEnabled(not running)
@@ -195,7 +196,8 @@ class OtherCommands(QDialog):
     def end_snoop_generate_volatility_report(self, volatility_dict, output_type):
         self.volatilityStatus.setText("Finished snooping. Generating report...")
         self.volatilityProgressBar.setValue(100)
-        folder_path = helpers.create_folder("Volatility Results")
+        folder_path = PATHS.get_volatility_results_dir()
+        create_folder_if_needed(folder_path)
         file_name = f'Volatility_Results_{datetime.now().strftime("%m_%d_%Y_%H_%M_%S")}.{output_type.lower()}'
         file_path = os.path.join(folder_path, file_name)
 
@@ -210,7 +212,7 @@ class OtherCommands(QDialog):
         self.volatilityStatus.setText(f"Generated report at {file_path}.")
 
         if open_from_msg_box(text='Do you want to open the volatility report?', title='Volatility Report'):
-            helpers.open_file_or_folder(file_path)
+            open_file_or_folder(file_path)
 
     def stop_volatility_snooper(self):
         if self.volatilityThread:
