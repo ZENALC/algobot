@@ -1,8 +1,7 @@
 import webbrowser
 
-from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, SIMULATION
-from algobot.helpers import open_folder
+from algobot.helpers import PATHS, open_folder
 from algobot.interface.utils import clear_table, show_and_bring_window_to_front
 from algobot.themes import (set_bear_mode, set_bloomberg_mode, set_bull_mode,
                             set_dark_mode, set_light_mode)
@@ -55,18 +54,18 @@ def create_action_slots(gui):
     gui.aboutAlgobotAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.about))
     gui.liveStatisticsAction.triggered.connect(lambda: gui.show_statistics(0))
     gui.simulationStatisticsAction.triggered.connect(lambda: gui.show_statistics(1))
-    gui.openBacktestResultsFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_backtest_results_dir()))
+    gui.openBacktestResultsFolderAction.triggered.connect(lambda: open_folder(PATHS.get_backtest_results_dir()))
     gui.openOptimizerResultsFolderAction.triggered.connect(
-        lambda: open_folder(helpers.PATHS.get_optimizer_results_dir())
+        lambda: open_folder(PATHS.get_optimizer_results_dir())
     )
     gui.openVolatilityResultsFolderAction.triggered.connect(
-        lambda: open_folder(helpers.PATHS.get_volatility_results_dir())
+        lambda: open_folder(PATHS.get_volatility_results_dir())
     )
-    gui.openLogFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_log_dir()))
-    gui.openCsvFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_csv_dir()))
-    gui.openDatabasesFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_database_dir()))
-    gui.openCredentialsFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_credentials_dir()))
-    gui.openConfigurationsFolderAction.triggered.connect(lambda: open_folder(helpers.PATHS.get_configuration_dir()))
+    gui.openLogFolderAction.triggered.connect(lambda: open_folder(PATHS.get_log_dir()))
+    gui.openCsvFolderAction.triggered.connect(lambda: open_folder(PATHS.get_csv_dir()))
+    gui.openDatabasesFolderAction.triggered.connect(lambda: open_folder(PATHS.get_database_dir()))
+    gui.openCredentialsFolderAction.triggered.connect(lambda: open_folder(PATHS.get_credentials_dir()))
+    gui.openConfigurationsFolderAction.triggered.connect(lambda: open_folder(PATHS.get_configuration_dir()))
     gui.sourceCodeAction.triggered.connect(lambda: webbrowser.open("https://github.com/ZENALC/algobot"))
     gui.tradingViewLiveAction.triggered.connect(lambda: gui.open_trading_view(LIVE))
     gui.tradingViewSimulationAction.triggered.connect(lambda: gui.open_trading_view(SIMULATION))
@@ -129,7 +128,7 @@ def create_backtest_slots(gui):
     gui.runBacktestButton.clicked.connect(gui.initiate_backtest)
     gui.endBacktestButton.clicked.connect(gui.end_backtest_thread)
     gui.clearBacktestTableButton.clicked.connect(lambda: clear_table(gui.backtestTable))
-    gui.viewBacktestsButton.clicked.connect(lambda: open_folder(helpers.PATHS.get_backtest_results_dir()))
+    gui.viewBacktestsButton.clicked.connect(lambda: open_folder(PATHS.get_backtest_results_dir()))
     gui.backtestResetCursorButton.clicked.connect(gui.reset_backtest_cursor)
 
 

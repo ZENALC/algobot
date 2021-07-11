@@ -546,7 +546,7 @@ class Data:
         :return: Absolute path to CSV file.
         """
         currentPath = os.getcwd()
-        self.create_folders_and_change_path(helpers.PATHS.get_csv_dir())
+        self.create_folders_and_change_path(PATHS.get_csv_dir())
 
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
