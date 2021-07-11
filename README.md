@@ -34,6 +34,10 @@ To run Algobot, run `python -m algobot` from within the activated virtual enviro
 
 Set `DEBUG=1` to enable debug level logging.
 
+# Community
+
+Join our [Discord](https://discord.gg/ZWdHxhVbNP) today for contributions or help!
+
 # Features
 
 - View real time data.
