@@ -14,7 +14,6 @@ jobs=4
 disable=
     no-else-return,
     too-many-arguments,
-    bad-inline-option,
     duplicate-code,
     arguments-differ,
     missing-docstring,
