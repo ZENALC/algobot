@@ -1,6 +1,6 @@
 # Contributing
 
-We would love to see others collaborate on this project, to make Algobot the most advanced cryptocurrency trading bot on the planet. 
+We would love to see others collaborate on this project, to make Algobot the most advanced cryptocurrency trading bot on the planet.
 
 If you'd like to help out, feel free to submit pull requests. Or if you'd like to see new features, please do so using [GitHub's issues](https://github.com/ZENALC/algobot/issues).
 
