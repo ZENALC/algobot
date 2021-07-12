@@ -259,6 +259,7 @@ class Data:
         """
         result = self.get_latest_database_row()
         if result is None:
+            # pylint: disable=protected-access
             return self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
         else:
             latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
@@ -270,7 +271,8 @@ class Data:
         Updates database by retrieving information from Binance API
         """
         result = self.get_latest_database_row()
-        if result is None:  # Then get the earliest timestamp possible
+        if result is None:  # Then get the earliest timestamp possible.
+            # pylint: disable = protected-access
             timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
             self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
         else:
@@ -309,7 +311,7 @@ class Data:
         end_progress = time.time() * 1000 - total_beginning_timestamp
         idx = 0
 
-        while True and self.downloadLoop:
+        while self.downloadLoop:
             tempData = self.binanceClient.get_klines(
                 symbol=self.symbol,
                 interval=self.interval,

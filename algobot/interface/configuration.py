@@ -7,9 +7,9 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QLabel, QLayout, QMainWindow, QSpinBox,
                              QTabWidget)
 
-import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
+from algobot.helpers import ROOT_DIR
 from algobot.interface.config_utils.credential_utils import load_credentials
 from algobot.interface.config_utils.slot_utils import load_slots
 from algobot.interface.config_utils.strategy_utils import (
@@ -19,10 +19,10 @@ from algobot.interface.configuration_helpers import (
     add_start_end_step_to_layout, get_default_widget, set_value)
 # noinspection PyUnresolvedReferences
 from algobot.interface.utils import get_elements_from_combobox
-from algobot.strategies import *  # noqa: F403, F401
+from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import
 from algobot.strategies.strategy import Strategy
 
-configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
+configurationUi = os.path.join(ROOT_DIR, 'UI', 'configuration.ui')
 
 
 class Configuration(QDialog):
@@ -84,7 +84,7 @@ class Configuration(QDialog):
         # Folders and files
         self.credentialsFolder = "Credentials"
         self.configFolder = 'Configuration'
-        self.stateFilePath = os.path.join(helpers.ROOT_DIR, 'state.json')
+        self.stateFilePath = os.path.join(ROOT_DIR, 'state.json')
 
         self.categoryTabs = [
             self.mainConfigurationTabWidget,

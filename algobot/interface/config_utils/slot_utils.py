@@ -145,7 +145,8 @@ def load_precision_combo_boxes(config_obj):
     combo_boxes = [config_obj.precisionComboBox, config_obj.simulationPrecisionComboBox,
                    config_obj.backtestPrecisionComboBox, config_obj.optimizerPrecisionComboBox]
     precisions = ["Auto"] + [str(x) for x in range(2, 16)]
-    [combo_box.addItems(precisions) for combo_box in combo_boxes]
+    for combo_box in combo_boxes:
+        combo_box.addItems(precisions)
 
 
 def load_interval_combo_boxes(config_obj):

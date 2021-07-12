@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
-import algobot.helpers as helpers
 from algobot.data import Data
 from algobot.enums import LIVE, SIMULATION
+from algobot.helpers import (convert_long_interval, convert_small_interval,
+                             get_elapsed_time, parse_precision)
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.config_utils.telegram_utils import test_telegram
 from algobot.telegram_bot import TelegramBot
@@ -79,7 +80,7 @@ class BotThread(QRunnable):
 
         if interval != '1m':
             lowerInterval = sortedIntervals[sortedIntervals.index(interval) - 1]
-            intervalString = helpers.convert_small_interval(lowerInterval)
+            intervalString = convert_small_interval(lowerInterval)
             self.lowerIntervalNotification = True
             self.signals.activity.emit(caller, f'Retrieving {symbol} data for {intervalString.lower()} intervals...')
 
@@ -109,9 +110,9 @@ class BotThread(QRunnable):
         gui = self.gui
         configDict = gui.interfaceDictionary[caller]['configuration']
         symbol = configDict['ticker'].text()
-        precision = helpers.parse_precision(configDict['precision'].currentText(), symbol)
+        precision = parse_precision(configDict['precision'].currentText(), symbol)
         prettyInterval = configDict['interval'].currentText()
-        interval = helpers.convert_long_interval(prettyInterval)
+        interval = convert_long_interval(prettyInterval)
 
         if caller == SIMULATION:
             startingBalance = gui.configuration.simulationStartingBalanceSpinBox.value()
@@ -338,7 +339,7 @@ class BotThread(QRunnable):
         profit = trader.get_profit()
 
         self.percentage = trader.get_profit_percentage(trader.startingBalance, net)
-        self.elapsed = helpers.get_elapsed_time(self.startingTime)
+        self.elapsed = get_elapsed_time(self.startingTime)
         self.set_daily_percentages(trader=trader, net=net)
 
         groupedDict = trader.get_grouped_statistics()
