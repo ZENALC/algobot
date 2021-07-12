@@ -7,6 +7,7 @@ class WorkerSignals(QObject):
     """
     Defines the signals available from a running worker thread.
     """
+    # pylint: disable=too-few-public-methods
     restore = pyqtSignal()
     started = pyqtSignal()
     finished = pyqtSignal(object)

@@ -123,7 +123,7 @@ def open_file_or_folder(targetPath: str):
     Opens a file or folder based on targetPath.
     :param targetPath: File or folder to open with system defaults.
     """
-    # pylint: disable=consider-using-with
+    # pylint: disable=consider-using-with, no-member
     if platform.system() == "Windows":
         os.startfile(targetPath)
     elif platform.system() == "Darwin":
