@@ -318,7 +318,7 @@ class Data:
                 endTime=None
             )
 
-            if not len(tempData):
+            if len(tempData) == 0:
                 break
 
             output_data += tempData

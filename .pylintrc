@@ -1,13 +1,14 @@
 [FORMAT]
 max-line-length = 120
+extension-pkg-whitelist=PyQt5
 
 [MASTER]
+ignore=assets.py
 jobs=4
 
 [MESSAGES CONTROL]
 disable=
     too-many-instance-attributes,
-    len-as-condition,
     too-few-public-methods,
     anomalous-backslash-in-string,
     no-else-return,
