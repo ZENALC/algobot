@@ -339,7 +339,6 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
     precision = gui.get_trader(caller=caller).precision
     interfaceDict = gui.interfaceDictionary[caller]
     currentUTC = datetime.utcnow().timestamp()
-    net = valueDict['net']
 
     netGraph = interfaceDict['mainInterface']['graph']
     averageGraph = interfaceDict['mainInterface']['averageGraph']
@@ -347,7 +346,7 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
     graphDict = get_graph_dictionary(gui, netGraph)
     graphXSize = len(graphDict['plots'][0]['x']) + GRAPH_LEEWAY
     netGraph.setLimits(xMin=0, xMax=graphXSize)
-    add_data_to_plot(gui, netGraph, 0, y=round(net, 2), timestamp=currentUTC)
+    add_data_to_plot(gui, netGraph, 0, y=round(valueDict['net'], 2), timestamp=currentUTC)
     smart_update(graphDict)
 
     averageGraphDict = get_graph_dictionary(gui, averageGraph)

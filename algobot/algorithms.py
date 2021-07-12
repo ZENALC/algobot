@@ -388,7 +388,7 @@ def get_percent_b(data: List[Dict[str, float]], bollinger_bands: Tuple[float, fl
     :param bollinger_bands: Bollinger bands.
     :param data: :param data: List containing previous periods' data.
     """
-    lower_band, middle_band, upper_band = bollinger_bands
+    lower_band, _, upper_band = bollinger_bands
     current_price = data[-1]['close']
     return (current_price - lower_band) / (upper_band - lower_band)
 
