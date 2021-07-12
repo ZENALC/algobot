@@ -12,7 +12,7 @@ Cryptocurrency trading bot that allows users to create strategies and then backt
 
 Algobot requires at least Python 3.7.
 
-Once you have cloned or unpacked the source code locally. Run the following commands from your terminal in that directory.
+Once you have cloned or unpacked the source code locally, run the following commands from your terminal in that directory.
 
 For Linux/MacOS:
 
