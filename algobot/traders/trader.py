@@ -290,6 +290,9 @@ class Trader:
         Returns cumulative trend based on the trends provided.
         :return: Integer trend in the form of an enum.
         """
+        # pylint: disable=too-many-return-statements
+        if len(trends) == 0:
+            return None
         if all(trend == BEARISH for trend in trends):
             return BEARISH
         if all(trend == BULLISH for trend in trends):
@@ -302,6 +305,7 @@ class Trader:
             return EXIT_SHORT
         if all(trend in (BEARISH, ENTER_SHORT) for trend in trends):
             return ENTER_SHORT
+        return None
 
     @staticmethod
     def get_profit_percentage(initialNet: float, finalNet: float) -> float:
