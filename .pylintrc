@@ -5,6 +5,7 @@ extension-pkg-whitelist=PyQt5
 [DESIGN]
 max-attributes=40  # TODO: refactor classes as needed to have default at 7
 max-locals=20  # TODO: refactor so it's 15 by default.
+max-public-methods=100  # TODO: Refactor classes into smaller classes as needed.
 
 [MASTER]
 ignore=assets.py
@@ -19,11 +20,9 @@ disable=
     missing-docstring,
     invalid-name,
     broad-except,
-    no-else-break,
     import-error,
     fixme,
     redefined-argument-from-local,
-    too-many-public-methods,
     arguments-renamed,
     super-with-arguments,
     inconsistent-return-statements,

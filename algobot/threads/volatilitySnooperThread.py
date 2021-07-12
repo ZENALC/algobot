@@ -102,8 +102,8 @@ class VolatilitySnooperThread(QRunnable):
                 if len(data) == data_length:
                     impossible = True
                     break
-                else:
-                    data_length = len(data)
+
+                data_length = len(data)
 
             if impossible:
                 volatility_dict[ticker] = "Not enough data. Maybe the ticker is too new."
