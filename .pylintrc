@@ -21,6 +21,7 @@ disable=
     invalid-name,
     broad-except,
     no-else-break,
+    import-error,
     fixme,
     redefined-argument-from-local,
     too-many-public-methods,
