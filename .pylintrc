@@ -1,6 +1,6 @@
 [FORMAT]
 max-line-length = 120
-extension-pkg-whitelist=PyQt5
+extension-pkg-whitelist=PyQt5,QtGui
 
 [DESIGN]
 max-attributes=40  # TODO: refactor classes as needed to have default at 7

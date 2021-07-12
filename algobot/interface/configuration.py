@@ -203,6 +203,8 @@ class Configuration(QDialog):
         self.get_strategy_intervals_for_optimizer(settings)
 
         settings['strategies'] = {}
+        # TODO: Refactor so it's not as nested and remove pylint disable below.
+        # pylint: disable=too-many-nested-blocks
         for strategy in self.strategies.values():
             temp = strategy()
             strategyName = temp.name
@@ -210,8 +212,9 @@ class Configuration(QDialog):
             if self.strategyDict[tab, strategyName].isChecked():
                 current = {}
                 for index, parameter in enumerate(parameters, start=1):
-                    if type(parameter) == tuple and parameter[1] in (int, float) or type(parameter) != tuple:
-                        if type(parameter) == type:
+                    if isinstance(parameter, tuple) and parameter[1] in (int, float) or \
+                            not isinstance(parameter, tuple):
+                        if not isinstance(parameter, tuple):
                             key = strategyName.lower() + str(index)
                         else:
                             key = parameter[0]

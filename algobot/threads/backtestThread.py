@@ -12,6 +12,7 @@ class BacktestSignals(QObject):
     """
     Possible signals to emit in backtest thread.
     """
+    # pylint: disable=too-few-public-methods
     finished = pyqtSignal()
     message = pyqtSignal(str)
     activity = pyqtSignal(dict)

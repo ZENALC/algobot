@@ -53,7 +53,7 @@ class OtherCommands(QDialog):
 
         # Volatility snooper slots.
         self.volatilityGenerateButton.clicked.connect(self.volatility_snooper)
-        self.stopVolatilityButton.clicked.connect(lambda: self.stop_volatility_snooper())
+        self.stopVolatilityButton.clicked.connect(self.stop_volatility_snooper)
 
         # Purge buttons.
         self.purgeLogsButton.clicked.connect(lambda: self.purge('Logs'))

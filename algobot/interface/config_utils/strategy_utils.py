@@ -136,7 +136,7 @@ def create_strategy_inputs(parameters: List[Union[int, tuple]], strategyName: st
     labels = []
     values = []
     for paramIndex, parameter in enumerate(parameters):
-        if type(parameter) == tuple:
+        if isinstance(parameter, tuple):
             label = QLabel(parameter[0])
             parameter = parameter[1:]  # Set parameter to just the last element so we can use this later.
         elif parameter == int:

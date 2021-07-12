@@ -23,6 +23,7 @@ class Worker(QRunnable):
     :param kwargs: Keywords to pass to the callback function
 
     """
+    # pylint: disable=too-few-public-methods
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
         self.fn = fn
