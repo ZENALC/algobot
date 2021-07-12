@@ -69,7 +69,7 @@ class Trader:
         self.stopLossExit = stopLossExit
         self.smartStopLossEnter = smartEnter
         self.trades.append({
-            'date': self.currentPeriod['date_utc'],
+            'date': self.currentPeriod['date_utc'],  # pylint: disable=unsubscriptable-object
             'action': message,
             'net': round(self.get_net(), self.precision)
         })
@@ -279,7 +279,7 @@ class Trader:
         :param right: Character to add after each new line in strategies information.
         """
         string = f'Strategies:{right}'
-        for strategyName, strategy in self.strategies.items():
+        for strategyName in self.strategies:
             string += f'{left}{get_label_string(strategyName)}: {self.get_strategy_inputs(strategyName)}{right}'
 
         return string.rstrip()  # Remove new line in the very end.

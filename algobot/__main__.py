@@ -240,7 +240,7 @@ class Interface(QMainWindow):
         elif not isinstance(combos, dict):
             return True
 
-        for key, value in combos.items():
+        for value in combos.values():
             if not self.check_combos(value):
                 return False
         return True

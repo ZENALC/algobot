@@ -1,6 +1,6 @@
 [FORMAT]
 max-line-length = 120
-extension-pkg-whitelist=PyQt5,QtGui
+extension-pkg-whitelist=PyQt5
 
 [DESIGN]
 max-attributes=40  # TODO: refactor classes as needed to have default at 7
@@ -14,33 +14,27 @@ jobs=4
 disable=
     no-else-return,
     too-many-arguments,
-    duplicate-code,
-    no-name-in-module,
-    no-member,
     import-star-module-level,
     bad-inline-option,
     import-error,
+    duplicate-code,
+    arguments-differ,
     missing-docstring,
     invalid-name,
     cyclic-import,
     broad-except,
     no-else-break,
     super-with-arguments,
-    consider-merging-isinstance,
     protected-access,
     fixme,
     redefined-argument-from-local,
-    arguments-differ,
     too-many-public-methods,
     simplifiable-condition,
     arguments-renamed,
     inconsistent-return-statements,
     unused-argument,
-    unused-variable,
-    unsubscriptable-object,
     too-many-return-statements,
     unnecessary-pass,
-    no-self-use,
     too-many-branches,
     consider-using-from-import,
     unused-wildcard-import,

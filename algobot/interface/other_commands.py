@@ -38,6 +38,7 @@ class OtherCommands(QDialog):
         Overrides QDialog to detect click events. Used mainly to clear focus from QLineEdits.
         """
         # noinspection PyUnresolvedReferences
+        # pylint: disable=c-extension-no-member, no-self-use
         focused_widget = QtGui.QApplication.focusWidget()
         if isinstance(focused_widget, QLineEdit):
             focused_widget.clearFocus()

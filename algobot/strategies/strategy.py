@@ -119,6 +119,7 @@ class Strategy:
         """
         This function should return the minimum amount of periods required to get a trend. It's 0 by default.
         """
+        # pylint: disable=no-self-use
         return 0
 
     def populate_grouped_dict(self, grouped_dict: Dict[str, Dict[str, Any]]):
