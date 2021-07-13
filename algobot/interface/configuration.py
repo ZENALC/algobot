@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QTabWidget)
 
 import algobot.helpers as helpers
-from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
+from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, StopType
 from algobot.graph_helpers import create_infinite_line
 from algobot.interface.config_utils.credential_utils import load_credentials
 from algobot.interface.config_utils.slot_utils import load_slots
@@ -341,9 +341,9 @@ class Configuration(QDialog):
         dictionary = self.takeProfitDict
         if dictionary[tab, 'groupBox'].isChecked():
             if dictionary[tab, 'takeProfitType'].currentText() == "Trailing":
-                takeProfitType = TRAILING
+                takeProfitType = StopType.TRAILING
             else:
-                takeProfitType = STOP
+                takeProfitType = StopType.STOP
         else:
             takeProfitType = None
 
@@ -378,7 +378,7 @@ class Configuration(QDialog):
         tab = self.get_category_tab(caller)
         dictionary = self.lossDict
         if dictionary[tab, 'groupBox'].isChecked():
-            lossType = TRAILING if dictionary[tab, "lossType"].currentText() == "Trailing" else STOP
+            lossType = StopType.TRAILING if dictionary[tab, "lossType"].currentText() == "Trailing" else StopType.STOP
         else:
             lossType = None
 

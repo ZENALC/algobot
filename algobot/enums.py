@@ -13,8 +13,21 @@ AVG_GRAPH = 2
 LONG = 1
 SHORT = -1
 
-TRAILING = 2
-STOP = 1
+
+class StopType:
+    TRAILING = 2
+    STOP = 1
+
+
+class LossStrategy:
+    TRAILING = 2
+    STOP = 1
+
+
+class ProfitType:
+    TRAILING = 2
+    STOP = 1
+
 
 BACKTEST = 2
 SIMULATION = 3
