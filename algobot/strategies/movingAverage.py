@@ -2,7 +2,7 @@ from typing import List, Union
 
 from algobot.algorithms import get_moving_average
 from algobot.data import Data
-from algobot.enums import Trends
+from algobot.enums import Trend
 from algobot.helpers import get_random_color
 from algobot.option import Option
 from algobot.strategies.strategy import Strategy
@@ -118,16 +118,16 @@ class MovingAverageStrategy(Strategy):
                 self.plotDict[finalName][0] = avg2
 
             if avg1 > avg2:
-                trends.append(Trends.BULLISH)
+                trends.append(Trend.BULLISH)
             elif avg1 < avg2:
-                trends.append(Trends.BEARISH)
+                trends.append(Trend.BEARISH)
             else:  # If they're the same, that means no trend.
                 trends.append(None)
 
-        if all(trend == Trends.BULLISH for trend in trends):
-            self.trend = Trends.BULLISH
-        elif all(trend == Trends.BEARISH for trend in trends):
-            self.trend = Trends.BEARISH
+        if all(trend == Trend.BULLISH for trend in trends):
+            self.trend = Trend.BULLISH
+        elif all(trend == Trend.BEARISH for trend in trends):
+            self.trend = Trend.BEARISH
         else:
             self.trend = None
 

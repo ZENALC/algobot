@@ -28,7 +28,7 @@ from typing import List, Union
 
 from algobot.algorithms import get_bollinger_bands, get_moving_average
 from algobot.data import Data
-from algobot.enums import Trends
+from algobot.enums import Trend
 from algobot.helpers import get_random_color
 from algobot.strategies.strategy import Strategy
 
@@ -261,9 +261,9 @@ class SampleStrategy(Strategy):
 
         # Same logic as defined in the definition of the strategy. This will set the trend.
         if open_price < lower_band and ma1 > ma2:
-            self.trend = Trends.BULLISH
+            self.trend = Trend.BULLISH
         elif open_price > upper_band and ma1 < ma2:
-            self.trend = Trends.BEARISH
+            self.trend = Trend.BEARISH
         else:
             self.trend = None
 

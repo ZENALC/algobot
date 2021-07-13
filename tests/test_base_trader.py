@@ -2,7 +2,7 @@ import unittest
 
 import pytest
 
-from algobot.enums import LONG, SHORT, STOP, TRAILING, Trends
+from algobot.enums import LONG, SHORT, STOP, TRAILING, Trend
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 
@@ -232,40 +232,40 @@ class TestBaseTrader(unittest.TestCase):
         self.assertEqual(self.trader.get_trend(), None)
 
         bullish_strategy1 = Strategy(name='b1', parent=None)
-        bullish_strategy1.trend = Trends.BULLISH
+        bullish_strategy1.trend = Trend.BULLISH
 
         self.trader.strategies['b1'] = bullish_strategy1
-        self.assertEqual(self.trader.get_trend(), Trends.BULLISH)
+        self.assertEqual(self.trader.get_trend(), Trend.BULLISH)
 
         bullish_strategy2 = Strategy(name='b2', parent=None)
-        bullish_strategy2.trend = Trends.BULLISH
+        bullish_strategy2.trend = Trend.BULLISH
 
         self.trader.strategies['b2'] = bullish_strategy2
-        self.assertEqual(self.trader.get_trend(), Trends.BULLISH)
+        self.assertEqual(self.trader.get_trend(), Trend.BULLISH)
 
         bearish_strategy = Strategy(name='b3', parent=None)
-        bearish_strategy.trend = Trends.BEARISH
+        bearish_strategy.trend = Trend.BEARISH
 
         self.trader.strategies['b3'] = bearish_strategy
         self.assertEqual(self.trader.get_trend(), None)
 
         for strategy in self.trader.strategies:
-            self.trader.strategies[strategy].trend = Trends.BEARISH
+            self.trader.strategies[strategy].trend = Trend.BEARISH
 
-        self.assertEqual(self.trader.get_trend(), Trends.BEARISH)
+        self.assertEqual(self.trader.get_trend(), Trend.BEARISH)
 
     def test_setup_strategies(self):
         pass
 
     def test_get_cumulative_trend(self):
-        trends = [Trends.BEARISH, Trends.BULLISH, Trends.BEARISH, None]
+        trends = [Trend.BEARISH, Trend.BULLISH, Trend.BEARISH, None]
         self.assertEqual(self.trader.get_cumulative_trend(trends), None)
 
-        trends = [Trends.BEARISH, Trends.BEARISH, Trends.BEARISH]
-        self.assertEqual(self.trader.get_cumulative_trend(trends), Trends.BEARISH)
+        trends = [Trend.BEARISH, Trend.BEARISH, Trend.BEARISH]
+        self.assertEqual(self.trader.get_cumulative_trend(trends), Trend.BEARISH)
 
-        trends = [Trends.BULLISH, Trends.BULLISH, Trends.BULLISH, Trends.BULLISH, Trends.BULLISH]
-        self.assertEqual(self.trader.get_cumulative_trend(trends), Trends.BULLISH)
+        trends = [Trend.BULLISH, Trend.BULLISH, Trend.BULLISH, Trend.BULLISH, Trend.BULLISH]
+        self.assertEqual(self.trader.get_cumulative_trend(trends), Trend.BULLISH)
 
     def test_get_profit_percentage(self):
         self.assertEqual(self.trader.get_profit_percentage(100, 200), 100)
@@ -280,8 +280,8 @@ class TestBaseTrader(unittest.TestCase):
 
     def test_get_trend_string(self):
         self.assertEqual(self.trader.get_trend_string(None), str(None))
-        self.assertEqual(self.trader.get_trend_string(Trends.BEARISH), "Bearish")
-        self.assertEqual(self.trader.get_trend_string(Trends.BULLISH), "Bullish")
+        self.assertEqual(self.trader.get_trend_string(Trend.BEARISH), "Bearish")
+        self.assertEqual(self.trader.get_trend_string(Trend.BULLISH), "Bullish")
 
     def test_get_profit_or_loss_string(self):
         self.assertEqual(self.trader.get_profit_or_loss_string(0), 'Profit')

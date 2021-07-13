@@ -4,7 +4,7 @@ from threading import Lock
 from typing import Union
 
 from algobot.data import Data
-from algobot.enums import LONG, SHORT, Trends
+from algobot.enums import LONG, SHORT, Trend
 from algobot.helpers import convert_small_interval, get_logger
 from algobot.traders.trader import Trader
 
@@ -362,10 +362,10 @@ class SimulationTrader(Trader):
         elif self.get_take_profit() is not None and self.currentPrice <= self.get_take_profit():
             self.buy_short('Bought short because of take profit.')
         elif not self.inHumanControl:
-            if trend == Trends.BULLISH:
+            if trend == Trend.BULLISH:
                 self.buy_short('Bought short because a bullish trend was detected.')
                 self.buy_long('Bought long because a bullish trend was detected.')
-            elif trend == Trends.EXIT_SHORT:
+            elif trend == Trend.EXIT_SHORT:
                 self.buy_short('Bought short because an exit-short trend was detected.')
 
     def long_position_logic(self, trend):
@@ -387,10 +387,10 @@ class SimulationTrader(Trader):
         elif self.get_take_profit() is not None and self.currentPrice >= self.get_take_profit():
             self.sell_long('Sold long because of take profit.')
         elif not self.inHumanControl:
-            if trend == Trends.BEARISH:
+            if trend == Trend.BEARISH:
                 self.sell_long('Sold long because a cross was detected.')
                 self.sell_short('Sold short because a cross was detected.')
-            elif trend == Trends.EXIT_LONG:
+            elif trend == Trend.EXIT_LONG:
                 self.sell_long("Sold long because an exit-long trend was detected.")
 
     def no_position_logic(self, trend):
@@ -411,16 +411,16 @@ class SimulationTrader(Trader):
                     return
 
         if not self.inHumanControl:
-            if trend == Trends.BULLISH and self.previousPosition != LONG:
+            if trend == Trend.BULLISH and self.previousPosition != LONG:
                 self.buy_long('Bought long because a bullish trend was detected.')
                 self.reset_smart_stop_loss()
-            elif trend == Trends.BEARISH and self.previousPosition != SHORT:
+            elif trend == Trend.BEARISH and self.previousPosition != SHORT:
                 self.sell_short('Sold short because a bearish trend was detected.')
                 self.reset_smart_stop_loss()
-            elif trend == Trends.ENTER_LONG:
+            elif trend == Trend.ENTER_LONG:
                 self.buy_long("Bought long because an enter-long trend was detected.")
                 self.reset_smart_stop_loss()
-            elif trend == Trends.ENTER_SHORT:
+            elif trend == Trend.ENTER_SHORT:
                 self.sell_short("Sold short because an enter-short trend was detected.")
                 self.reset_smart_stop_loss()
 

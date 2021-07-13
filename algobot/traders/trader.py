@@ -4,7 +4,7 @@ This will be the main Trader class that all other Traders will inherit from.
 from datetime import datetime
 from typing import Dict, List, Union
 
-from algobot.enums import LONG, SHORT, STOP, TRAILING, Trends
+from algobot.enums import LONG, SHORT, STOP, TRAILING, Trend
 from algobot.helpers import get_label_string, parse_strategy_name
 from algobot.strategies.strategy import Strategy
 
@@ -292,18 +292,18 @@ class Trader:
         if len(trends) == 0:
             return None
 
-        if all(trend == Trends.BEARISH for trend in trends):
-            return Trends.BEARISH
-        elif all(trend == Trends.BULLISH for trend in trends):
-            return Trends.BULLISH
-        elif all(trend in (Trends.BULLISH, Trends.ENTER_LONG) for trend in trends):
-            return Trends.ENTER_LONG
-        elif all(trend in (Trends.BEARISH, Trends.EXIT_LONG) for trend in trends):
-            return Trends.EXIT_LONG
-        elif all(trend in (Trends.BULLISH, Trends.EXIT_SHORT) for trend in trends):
-            return Trends.EXIT_SHORT
-        elif all(trend in (Trends.BEARISH, Trends.ENTER_SHORT) for trend in trends):
-            return Trends.ENTER_SHORT
+        if all(trend == Trend.BEARISH for trend in trends):
+            return Trend.BEARISH
+        elif all(trend == Trend.BULLISH for trend in trends):
+            return Trend.BULLISH
+        elif all(trend in (Trend.BULLISH, Trend.ENTER_LONG) for trend in trends):
+            return Trend.ENTER_LONG
+        elif all(trend in (Trend.BEARISH, Trend.EXIT_LONG) for trend in trends):
+            return Trend.EXIT_LONG
+        elif all(trend in (Trend.BULLISH, Trend.EXIT_SHORT) for trend in trends):
+            return Trend.EXIT_SHORT
+        elif all(trend in (Trend.BEARISH, Trend.ENTER_SHORT) for trend in trends):
+            return Trend.ENTER_SHORT
         else:
             return None
 
@@ -349,19 +349,19 @@ class Trader:
         :param trend: Current trend enum.
         :return: Current trend in a string format.
         """
-        if trend == Trends.BULLISH:
+        if trend == Trend.BULLISH:
             return "Bullish"
-        elif trend == Trends.BEARISH:
+        elif trend == Trend.BEARISH:
             return 'Bearish'
         elif trend is None:
             return 'None'
-        elif trend == Trends.ENTER_LONG:
+        elif trend == Trend.ENTER_LONG:
             return "Enter Long"
-        elif trend == Trends.EXIT_LONG:
+        elif trend == Trend.EXIT_LONG:
             return "Exit Long"
-        elif trend == Trends.ENTER_SHORT:
+        elif trend == Trend.ENTER_SHORT:
             return "Enter Short"
-        elif trend == Trends.EXIT_SHORT:
+        elif trend == Trend.EXIT_SHORT:
             return "Exit Short"
         else:
             raise ValueError('Unknown type of trend.')

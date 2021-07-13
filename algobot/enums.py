@@ -1,6 +1,6 @@
 # TODO: Add unit tests.
 
-class Trends:
+class Trend:
     BULLISH = 1
     BEARISH = -1
     ENTER_LONG = 2
