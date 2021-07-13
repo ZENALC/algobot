@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from algobot.enums import LONG, SHORT, LossStrategy, ProfitType, StopType
+from algobot.enums import LONG, SHORT, LossStrategy, ProfitType
 from algobot.helpers import convert_all_dates_to_datetime, load_from_csv
 from algobot.traders.backtester import Backtester
 
@@ -25,8 +25,8 @@ class TestBacktester(unittest.TestCase):
             symbol="1INCHUSDT",
             marginEnabled=True,
         )
-        self.backtester.apply_take_profit_settings({'takeProfitType': StopType.TRAILING, 'takeProfitPercentage': 5})
-        self.backtester.apply_loss_settings({'lossType': StopType.TRAILING, 'lossPercentage': 5})
+        self.backtester.apply_take_profit_settings({'takeProfitType': ProfitType.TRAILING, 'takeProfitPercentage': 5})
+        self.backtester.apply_loss_settings({'lossType': LossStrategy.TRAILING, 'lossPercentage': 5})
 
     def test_initialization(self):
         """

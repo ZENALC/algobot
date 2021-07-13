@@ -8,7 +8,8 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QTabWidget)
 
 import algobot.helpers as helpers
-from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, StopType
+from algobot.enums import (BACKTEST, LIVE, OPTIMIZER, SIMULATION, LossStrategy,
+                           StopType)
 from algobot.graph_helpers import create_infinite_line
 from algobot.interface.config_utils.credential_utils import load_credentials
 from algobot.interface.config_utils.slot_utils import load_slots
@@ -378,21 +379,22 @@ class Configuration(QDialog):
         tab = self.get_category_tab(caller)
         dictionary = self.lossDict
         if dictionary[tab, 'groupBox'].isChecked():
-            lossType = StopType.TRAILING if dictionary[tab, "lossType"].currentText() == "Trailing" else StopType.STOP
+            loss_type = dictionary[tab, "lossType"].currentText()
+            loss_strategy = LossStrategy.TRAILING if loss_type == "Trailing" else LossStrategy.STOP
         else:
-            lossType = None
+            loss_strategy = None
 
-        lossSettings = {
-            'lossType': lossType,
+        loss_settings = {
+            'lossType': loss_strategy,
             'lossTypeIndex': dictionary[tab, "lossType"].currentIndex(),
             'lossPercentage': dictionary[tab, 'lossPercentage'].value(),
             'smartStopLossCounter': dictionary[tab, 'smartStopLossCounter'].value()
         }
 
         if tab != self.backtestConfigurationTabWidget:
-            lossSettings['safetyTimer'] = dictionary[tab, 'safetyTimer'].value()
+            loss_settings['safetyTimer'] = dictionary[tab, 'safetyTimer'].value()
 
-        return lossSettings
+        return loss_settings
 
     def add_strategy_to_config(self, caller: int, strategyName: str, config: dict):
         """

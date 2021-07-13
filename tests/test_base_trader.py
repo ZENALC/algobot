@@ -165,14 +165,14 @@ class TestBaseTrader(unittest.TestCase):
         }
         self.trader.apply_loss_settings(loss_settings)
 
-        self.assertEqual(self.trader.lossStrategy, StopType.STOP)
+        self.assertEqual(self.trader.lossStrategy, LossStrategy.STOP)
         self.assertEqual(self.trader.lossPercentageDecimal, 0.055)
         self.assertEqual(self.trader.smartStopLossInitialCounter, 15)
         self.assertEqual(self.trader.smartStopLossCounter, 15)
         self.assertEqual(self.trader.safetyTimer, 45)
 
     def test_get_stop_loss(self):
-        self.trader.lossStrategy = StopType.STOP
+        self.trader.lossStrategy = LossStrategy.STOP
         self.trader.lossPercentageDecimal = 0.1
         self.trader.currentPrice = 5
 
