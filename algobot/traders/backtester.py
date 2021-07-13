@@ -11,8 +11,7 @@ from typing import Dict, Union
 import pandas as pd
 from dateutil import parser
 
-from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
-                           EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT)
+from algobot.enums import BACKTEST, LONG, OPTIMIZER, SHORT, Trends
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
                              convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
@@ -633,37 +632,37 @@ class Backtester(Trader):
                 self.buy_short('Exited short because a stop loss was triggered.', stopLossExit=True)
             elif self.takeProfitType is not None and self.currentPrice <= self.get_take_profit():
                 self.buy_short("Exited short because of take profit.")
-            elif trend == BULLISH:
+            elif trend == Trends.BULLISH:
                 self.buy_short('Exited short because a bullish trend was detected.')
                 self.buy_long('Entered long because a bullish trend was detected.')
-            elif trend == EXIT_SHORT:
+            elif trend == Trends.EXIT_SHORT:
                 self.buy_short('Bought short because an exit-short trend was detected.')
         elif self.currentPosition == LONG:
             if self.lossStrategy is not None and self.currentPrice < self.get_stop_loss():
                 self.sell_long('Exited long because a stop loss was triggered.', stopLossExit=True)
             elif self.takeProfitType is not None and self.currentPrice >= self.get_take_profit():
                 self.sell_long("Exited long because of take profit.")
-            elif trend == BEARISH:
+            elif trend == Trends.BEARISH:
                 self.sell_long('Exited long because a bearish trend was detected.')
                 if self.marginEnabled:
                     self.sell_short('Entered short because a bearish trend was detected.')
-            elif trend == EXIT_LONG:
+            elif trend == Trends.EXIT_LONG:
                 self.sell_long("Exited long because an exit-long trend was detected.")
         else:
             if not self.marginEnabled and self.previousStopLoss is not None and self.currentPrice is not None:
                 if self.previousStopLoss < self.currentPrice:
                     self.stopLossExit = False  # Hotfix for margin-disabled backtests.
 
-            if trend == BULLISH and (self.previousPosition != LONG or not self.stopLossExit):
+            if trend == Trends.BULLISH and (self.previousPosition != LONG or not self.stopLossExit):
                 self.buy_long('Entered long because a bullish trend was detected.')
                 self.reset_smart_stop_loss()
-            elif self.marginEnabled and trend == BEARISH and self.previousPosition != SHORT:
+            elif self.marginEnabled and trend == Trends.BEARISH and self.previousPosition != SHORT:
                 self.sell_short('Entered short because a bearish trend was detected.')
                 self.reset_smart_stop_loss()
-            elif trend == ENTER_LONG:
+            elif trend == Trends.ENTER_LONG:
                 self.buy_long("Entered long because an enter-long trend was detected.")
                 self.reset_smart_stop_loss()
-            elif trend == ENTER_SHORT:
+            elif trend == Trends.ENTER_SHORT:
                 self.sell_short("Entered short because an enter-short trend was detected.")
                 self.reset_smart_stop_loss()
             else:
