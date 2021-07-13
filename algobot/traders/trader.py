@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Union
 
 from algobot.enums import (BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
                            EXIT_LONG, EXIT_SHORT, LONG, SHORT, LossStrategy,
-                           ProfitType, StopType)
+                           ProfitType)
 from algobot.helpers import get_label_string, parse_strategy_name
 from algobot.strategies.strategy import Strategy
 
@@ -323,26 +323,26 @@ class Trader:
             return -1 * (100 - finalNet / initialNet * 100)
 
     @staticmethod
-    def get_trailing_or_stop_type_string(stop_type: Optional[int]) -> str:
+    def get_trailing_or_stop_type_string(profit_type: Optional[int]) -> str:
         """
         Returns stop type in string format instead of integer enum.
         :return: Stop type in string format.
         """
-        if stop_type == StopType.STOP:
+        if profit_type == ProfitType.STOP:
             return 'Stop'
-        elif stop_type == StopType.TRAILING:
+        elif profit_type == ProfitType.TRAILING:
             return 'Trailing'
-        elif stop_type is None:
+        elif profit_type is None:
             return 'None'
         else:
             raise ValueError("Unknown type of exit position type.")
 
     @staticmethod
-    def get_enum_from_str(string):
-        if string.lower() == "trailing":
-            return StopType.TRAILING
-        elif string.lower() == 'stop':
-            return StopType.STOP
+    def get_enum_from_str(value: str) -> int:
+        if value.lower() == "trailing":
+            return ProfitType.TRAILING
+        elif value.lower() == 'stop':
+            return ProfitType.STOP
 
     @staticmethod
     def get_trend_string(trend) -> str:

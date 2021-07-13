@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
 
 import algobot.helpers as helpers
 from algobot.enums import (BACKTEST, LIVE, OPTIMIZER, SIMULATION, LossStrategy,
-                           StopType)
+                           ProfitType)
 from algobot.graph_helpers import create_infinite_line
 from algobot.interface.config_utils.credential_utils import load_credentials
 from algobot.interface.config_utils.slot_utils import load_slots
@@ -342,9 +342,9 @@ class Configuration(QDialog):
         dictionary = self.takeProfitDict
         if dictionary[tab, 'groupBox'].isChecked():
             if dictionary[tab, 'takeProfitType'].currentText() == "Trailing":
-                takeProfitType = StopType.TRAILING
+                takeProfitType = ProfitType.TRAILING
             else:
-                takeProfitType = StopType.STOP
+                takeProfitType = ProfitType.STOP
         else:
             takeProfitType = None
 

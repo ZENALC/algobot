@@ -2,7 +2,8 @@ import unittest
 
 import pytest
 
-from algobot.enums import BEARISH, BULLISH, LONG, SHORT, LossStrategy, StopType
+from algobot.enums import (BEARISH, BULLISH, LONG, SHORT, LossStrategy,
+                           ProfitType, StopType)
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 
@@ -274,8 +275,8 @@ class TestBaseTrader(unittest.TestCase):
         self.assertEqual(self.trader.get_profit_percentage(100, 130), 30)
 
     def test_get_trailing_or_stop_loss_string(self):
-        self.assertEqual(self.trader.get_trailing_or_stop_type_string(StopType.STOP), 'Stop')
-        self.assertEqual(self.trader.get_trailing_or_stop_type_string(StopType.TRAILING), 'Trailing')
+        self.assertEqual(self.trader.get_trailing_or_stop_type_string(ProfitType.STOP), 'Stop')
+        self.assertEqual(self.trader.get_trailing_or_stop_type_string(ProfitType.TRAILING), 'Trailing')
         self.assertEqual(self.trader.get_trailing_or_stop_type_string(None), 'None')
 
     def test_get_trend_string(self):
@@ -321,7 +322,7 @@ class TestBaseTrader(unittest.TestCase):
                                                              multiplier=5), '6.15*')
 
     def test_get_take_profit(self):
-        self.trader.takeProfitType = StopType.STOP
+        self.trader.takeProfitType = ProfitType.STOP
         self.trader.takeProfitPercentageDecimal = 0.05
 
         self.trader.currentPosition = LONG
