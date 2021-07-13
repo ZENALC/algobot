@@ -3,7 +3,7 @@ import unittest
 import pytest
 
 from algobot.enums import (BEARISH, BULLISH, LONG, SHORT, LossStrategy,
-                           ProfitType, StopType)
+                           ProfitType)
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 
@@ -150,16 +150,16 @@ class TestBaseTrader(unittest.TestCase):
     def test_apply_take_profit_settings(self):
         take_profit_settings = {
             'takeProfitPercentage': 25,
-            'takeProfitType': StopType.STOP
+            'takeProfitType': ProfitType.STOP
         }
         self.trader.apply_take_profit_settings(take_profit_settings)
 
         self.assertEqual(self.trader.takeProfitPercentageDecimal, 0.25)
-        self.assertEqual(self.trader.takeProfitType, StopType.STOP)
+        self.assertEqual(self.trader.takeProfitType, ProfitType.STOP)
 
     def test_apply_loss_settings(self):
         loss_settings = {
-            'lossType': StopType.STOP,
+            'lossType': LossStrategy.STOP,
             'lossPercentage': 5.5,
             'smartStopLossCounter': 15,
             'safetyTimer': 45

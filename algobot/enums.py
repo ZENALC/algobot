@@ -14,11 +14,6 @@ LONG = 1
 SHORT = -1
 
 
-class StopType:
-    TRAILING = 2
-    STOP = 1
-
-
 class LossStrategy:
     TRAILING = 2
     STOP = 1
