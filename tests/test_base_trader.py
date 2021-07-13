@@ -274,11 +274,6 @@ class TestBaseTrader(unittest.TestCase):
         self.assertEqual(self.trader.get_profit_percentage(100, 50), -50)
         self.assertEqual(self.trader.get_profit_percentage(100, 130), 30)
 
-    def test_get_trailing_or_stop_loss_string(self):
-        self.assertEqual(self.trader.get_trailing_or_stop_type_string(ProfitType.STOP), 'Stop')
-        self.assertEqual(self.trader.get_trailing_or_stop_type_string(ProfitType.TRAILING), 'Trailing')
-        self.assertEqual(self.trader.get_trailing_or_stop_type_string(None), 'None')
-
     def test_get_trend_string(self):
         self.assertEqual(self.trader.get_trend_string(None), str(None))
         self.assertEqual(self.trader.get_trend_string(BEARISH), "Bearish")

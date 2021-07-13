@@ -12,7 +12,8 @@ import pandas as pd
 from dateutil import parser
 
 from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
-                           EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT)
+                           EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT,
+                           LossStrategy, ProfitType)
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
                              convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
@@ -444,7 +445,7 @@ class Backtester(Trader):
             round(self.get_net() / self.startingBalance * 100 - 100, 2),
             self.get_stop_loss_strategy_string(),
             self.get_safe_rounded_string(self.lossPercentageDecimal, multiplier=100, symbol='%'),
-            self.get_trailing_or_stop_type_string(self.takeProfitType),
+            ProfitType.to_str(self.takeProfitType),
             self.get_safe_rounded_string(self.takeProfitPercentageDecimal, multiplier=100, symbol='%'),
             self.symbol,
             self.interval,
@@ -481,11 +482,11 @@ class Backtester(Trader):
         :param settings: Dictionary with keys and values to set.
         """
         if 'takeProfitType' in settings:
-            self.takeProfitType = self.get_enum_from_str(settings['takeProfitType'])
+            self.takeProfitType = ProfitType.from_str(settings['takeProfitType'])
             self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
 
         if 'lossType' in settings:
-            self.lossStrategy = self.get_enum_from_str(settings['lossType'])
+            self.lossStrategy = LossStrategy.from_str(settings['lossType'])
             self.lossPercentageDecimal = settings['lossPercentage'] / 100
 
             if 'stopLossCounter' in settings:
