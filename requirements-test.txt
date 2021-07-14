@@ -1,6 +1,6 @@
 -r requirements.txt
-flake8==3.9.0
-isort==5.8.0
+flake8==3.9.2
+isort==5.9.2
 pytest==6.2.4
 pylint==2.9.3
 pytest-socket==0.4.0

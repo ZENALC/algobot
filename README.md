@@ -4,12 +4,15 @@
 [![CodeQL](https://github.com/ZENALC/algobot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ZENALC/algobot/actions/workflows/codeql-analysis.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/)
+![Discord](https://img.shields.io/discord/863916085832974346)
 
 Cryptocurrency trading bot that allows users to create strategies and then backtest, optimize, simulate, or run live bots using them. Telegram integration has been added to support easier and remote trading.
 
 # Installation
 
-Please make sure you have an installation of at least Python 3.7 and are in the same directory as Algobot when running the commands below.
+Algobot requires at least Python 3.7.
+
+Once you have cloned or unpacked the source code locally, run the following commands from your terminal in that directory.
 
 For Linux/MacOS:
 
@@ -20,6 +23,7 @@ pip install -r requirements.txt
 ```
 
 For Windows:
+
 ```bash
 python -m venv venv
 call venv/Scripts/activate
@@ -74,22 +78,18 @@ Mihir Shrestha
 
 koutsie, Malachi Soord (inverse)
 
-# Wiki
-
-You can find documentation regarding Algobot [here](https://github.com/ZENALC/algobot/wiki).
-
 # Special Contributors
 
 Peter Motin for being the founder and head of strategic development throughout the entirety of this project.
 
 # Contribution
 
-The project is open-source. Please feel free to support it as supporters are always welcome.
+Check our [contributing guidelines](CONTRIBUTING.md) to get started.
 
 # Feature Requests
 
 For any feature requests, feel free to add a feature request through Github's Issues. We would love to hear your ideas and implement them on the application.
 
-# Compatibility
+# Wiki
 
-Works fine on Python versions 3.7 and up.
+You can find documentation regarding Algobot [here](https://github.com/ZENALC/algobot/wiki).

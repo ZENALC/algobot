@@ -4,7 +4,7 @@ from typing import List
 from PyQt5.QtWidgets import QColorDialog, QDialog, QLabel, QMainWindow
 from pyqtgraph import InfiniteLine, PlotWidget, mkPen
 
-from algobot.enums import AVG_GRAPH, NET_GRAPH
+from algobot.enums import GraphType
 from algobot.interface.utils import show_and_bring_window_to_front
 from algobot.traders.trader import Trader
 
@@ -133,24 +133,24 @@ def add_data_to_plot(gui: QMainWindow, targetGraph: PlotWidget, plotIndex: int, 
     plot['plot'].setData(plot['x'], plot['y'])
 
 
-def setup_graph_plots(gui: QMainWindow, graph: PlotWidget, trader: Trader, graphType: int):
+def setup_graph_plots(gui: QMainWindow, graph: PlotWidget, trader: Trader, graph_type: int):
     """
     Setups graph plots for graph, trade, and graphType specified.
     :param gui: Graphical user interface in which to set up graphs.
     :param graph: Graph that will be setup.
     :param trader: Trade object that will use this graph.
-    :param graphType: Graph type; i.e. moving average or net balance.
+    :param graph_type: Graph type; i.e. moving average or net balance.
     """
     colors = get_graph_colors(gui=gui)
     if gui.configuration.enableHoverLine.isChecked():
         create_infinite_line(gui, get_graph_dictionary(gui, graph), colors=colors)
 
-    if graphType == NET_GRAPH:
+    if graph_type == GraphType.NET:
         setup_net_graph_plot(gui, graph=graph, trader=trader, color=colors[0])
-    elif graphType == AVG_GRAPH:
+    elif graph_type == GraphType.AVG:
         setup_average_graph_plots(gui, graph=graph, trader=trader, colors=colors)
     else:
-        raise TypeError("Invalid type of graph provided.")
+        raise TypeError(f"Invalid type ({graph_type}) of graph provided.")
 
 
 def get_plot_dictionary(gui: QMainWindow, graph: PlotWidget, color: str, y: float, name: str, timestamp: float) -> dict:
