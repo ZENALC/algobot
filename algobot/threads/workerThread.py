@@ -1,3 +1,7 @@
+"""
+Worker thread file used for basic threading operations across the GUI.
+"""
+
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 import algobot

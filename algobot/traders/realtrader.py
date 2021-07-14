@@ -1,5 +1,10 @@
+"""
+File for real trader. TODO: Add support for CCXT.
+"""
+
 import math
 import time
+from typing import Any, Dict
 
 from binance.client import Client
 from binance.enums import ORDER_TYPE_MARKET, SIDE_BUY, SIDE_SELL
@@ -9,6 +14,9 @@ from algobot.traders.simulationtrader import SimulationTrader
 
 
 class RealTrader(SimulationTrader):
+    """
+    Class for real traders.
+    """
     def __init__(
             self,
             apiKey: str,
@@ -57,7 +65,12 @@ class RealTrader(SimulationTrader):
         self.validate_minimum_funds()
 
     @staticmethod
-    def get_min_notional(symbolInfo) -> float:
+    def get_min_notional(symbolInfo: Dict[str, Any]) -> float:
+        """
+        Get the minimum notional based on the symbol provided.
+        :param symbolInfo: Dictionary containing symbol info.
+        :return: Minimum notional in a float.
+        """
         filters = symbolInfo['filters']
         for filterDict in filters:
             if 'minNotional' in filterDict:
@@ -66,7 +79,12 @@ class RealTrader(SimulationTrader):
         return 10  # Default value of $10.
 
     @staticmethod
-    def get_purchase_precision(symbolInfo) -> int:
+    def get_purchase_precision(symbolInfo: Dict[str, Any]) -> int:
+        """
+        Get precision required for purchases.
+        :param symbolInfo: Dictionary containing symbol info.
+        :return: Integer containing purchase precision required.
+        """
         filters = symbolInfo['filters']
         for filterDict in filters:
             if 'stepSize' in filterDict:

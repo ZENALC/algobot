@@ -1,3 +1,7 @@
+"""
+File containing utility functions for the GUI.
+"""
+
 from datetime import datetime
 from typing import List
 

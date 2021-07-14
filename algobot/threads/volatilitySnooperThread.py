@@ -1,3 +1,7 @@
+"""
+Volatility Snooper.
+"""
+
 # TODO: Standardize thread operations to fewer files by leveraging kwargs.
 import datetime
 
@@ -25,6 +29,9 @@ class VolatilitySnooperSignals(QObject):
 
 
 class VolatilitySnooperThread(QRunnable):
+    """
+    Volatility Snooper class.
+    """
     def __init__(self, periods, interval, volatility, tickers, filter_word=None):
         super(VolatilitySnooperThread, self).__init__()
         self.periods = periods

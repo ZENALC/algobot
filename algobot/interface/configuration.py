@@ -1,3 +1,7 @@
+"""
+Configuration window.
+"""
+
 import os
 from logging import Logger
 

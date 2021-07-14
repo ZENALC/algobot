@@ -1,3 +1,7 @@
+"""
+Backtester thread for Algobot GUI.
+"""
+
 from datetime import datetime
 from typing import Any, Dict
 
@@ -23,6 +27,9 @@ class BacktestSignals(QObject):
 
 
 class BacktestThread(QRunnable):
+    """
+    Backtest thread used during backtests in the GUI.
+    """
     def __init__(self, gui, logger):
         super(BacktestThread, self).__init__()
         self.signals = BacktestSignals()

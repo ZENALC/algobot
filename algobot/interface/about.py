@@ -1,3 +1,7 @@
+"""
+About window in the GUI.
+"""
+
 from PyQt5.QtWidgets import QDialog, QHBoxLayout, QMainWindow, QPlainTextEdit
 
 import algobot

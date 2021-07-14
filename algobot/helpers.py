@@ -1,3 +1,7 @@
+"""
+Miscellaneous helper functions and constants.
+"""
+
 import json
 import logging
 import math
@@ -71,6 +75,10 @@ def get_current_version() -> str:
 
 
 def is_debug() -> bool:
+    """
+    Returns a boolean whether Algobot is running in debug mode or not.
+    :return: Boolean whether in debug mode or not.
+    """
     return os.getenv('DEBUG') is not None
 
 
@@ -410,6 +418,12 @@ def load_from_csv(path: str, descending: bool = True) -> list:
 
 
 def parse_precision(precision: str, symbol: str) -> int:
+    """
+    Parses precision based on the precision provided.
+    :param precision: Precision string.
+    :param symbol: Symbol to get precision of.
+    :return: Precision in an integer format.
+    """
     if precision == "Auto":
         symbol_info = algobot.BINANCE_CLIENT.get_symbol_info(symbol)
         tickSize = float(symbol_info['filters'][0]['tickSize'])

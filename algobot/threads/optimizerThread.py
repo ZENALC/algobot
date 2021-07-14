@@ -1,3 +1,7 @@
+"""
+Optimizer thread.
+"""
+
 from typing import Any, Dict
 
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot

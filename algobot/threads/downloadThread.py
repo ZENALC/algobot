@@ -1,3 +1,7 @@
+"""
+Download thread used for downloads.
+"""
+
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 import algobot

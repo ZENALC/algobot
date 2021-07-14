@@ -1,3 +1,7 @@
+"""
+Basic indicators. TODO: Deprecate and move to TA-LIB.
+"""
+
 import math
 from datetime import datetime
 from typing import Dict, List, Tuple, Union
@@ -28,6 +32,15 @@ def validate(periods: int, data: List[Dict[str, float]]):
 
 def get_moving_average(moving_average: str, moving_average_parameter: str, moving_average_periods: int,
                        data: List[Dict[str, Union[float, str, datetime]]], cache: dict = None) -> float:
+    """
+    Get the moving average value based on the arguments provided.
+    :param moving_average: Moving average (SMA, WMA, EMA).
+    :param moving_average_parameter: Parameter (high, low, open, close, high-low, open-close)
+    :param moving_average_periods: Number of periods.
+    :param data: Data to use to get the moving average.
+    :param cache: Cache dictionary to use for EMA (not required).
+    :return: Moving average value.
+    """
     moving_average = moving_average.upper()
     moving_average_parameter = moving_average_parameter.lower()
     moving_data = data[-moving_average_periods:]
@@ -148,6 +161,9 @@ def get_ema(data: List[dict], prices: int, parameter: str, sma_prices: int = 5, 
 
 
 def get_rsi():
+    """
+    Function to get the RSI. # TODO: Deprecate the get_rsi() functions in the traders' and rewrite here or use TA-LIB.
+    """
     pass
 
 

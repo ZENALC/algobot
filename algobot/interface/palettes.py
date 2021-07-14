@@ -1,7 +1,15 @@
+"""
+File containing theme palettes.
+"""
+
 from PyQt5.QtGui import QColor, QPalette
 
 
-def bloomberg_palette():
+def bloomberg_palette() -> QPalette:
+    """
+    Returns a Bloomberg palette.
+    :return: Bloomberg palette.
+    """
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
     palette.setColor(QPalette.WindowText, QColor(255, 140, 0))
@@ -24,7 +32,11 @@ def bloomberg_palette():
     return palette
 
 
-def green_palette():
+def green_palette() -> QPalette:
+    """
+    Returns a green plate.
+    :return: Green palette.
+    """
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
     palette.setColor(QPalette.Base, QColor(25, 25, 25))
@@ -47,7 +59,11 @@ def green_palette():
     return palette
 
 
-def red_palette():
+def red_palette() -> QPalette:
+    """
+    Returns a red palette.
+    :return: Red palette.
+    """
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
     palette.setColor(QPalette.WindowText, QColor(255, 0, 0))  # change
@@ -70,7 +86,11 @@ def red_palette():
     return palette
 
 
-def dark_palette():
+def dark_palette() -> QPalette:
+    """
+    Returns a dark palette.
+    :return: Dark palette.
+    """
     palette = QPalette()  # These below were taken from qtModern.
     palette.setColor(QPalette.WindowText, QColor(180, 180, 180))
     palette.setColor(QPalette.Button, QColor(53, 53, 53))
@@ -98,6 +118,10 @@ def dark_palette():
     return palette
 
 
-def light_palette():
+def light_palette() -> QPalette:
+    """
+    Returns light palette (default).
+    :return: Light palette.
+    """
     palette = QPalette()
     return palette

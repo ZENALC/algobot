@@ -1,3 +1,7 @@
+"""
+Moving Average strategy.
+"""
+
 from typing import List, Union
 
 from algobot.algorithms import get_moving_average

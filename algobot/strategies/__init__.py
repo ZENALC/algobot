@@ -1,3 +1,7 @@
+"""
+Initialization of all strategies.
+"""
+
 from os import listdir
 from os.path import basename, dirname
 

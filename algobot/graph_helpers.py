@@ -1,3 +1,7 @@
+"""
+File containing helper functions for graphs.
+"""
+
 from datetime import datetime
 from typing import List
 

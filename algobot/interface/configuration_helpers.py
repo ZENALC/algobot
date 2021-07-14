@@ -1,3 +1,7 @@
+"""
+Helpers for the configuration object.
+"""
+
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,

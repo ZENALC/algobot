@@ -1,3 +1,7 @@
+"""
+Slots for Algobot GUI.
+"""
+
 import webbrowser
 
 from algobot.enums import BACKTEST, LIVE, SIMULATION
