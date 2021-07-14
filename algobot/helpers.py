@@ -123,6 +123,7 @@ def open_file_or_folder(targetPath: str):
     Opens a file or folder based on targetPath.
     :param targetPath: File or folder to open with system defaults.
     """
+    # pylint: disable=consider-using-with, no-member
     if platform.system() == "Windows":
         os.startfile(targetPath)
     elif platform.system() == "Darwin":
@@ -317,8 +318,8 @@ def parse_strategy_name(name: str) -> str:
     """
     parsed_name, *remaining = name.split()
     parsed_name = parsed_name.lower()
-    for name in remaining:
-        parsed_name += name.capitalize()
+    for remaining_name in remaining:
+        parsed_name += remaining_name.capitalize()
 
     return parsed_name
 

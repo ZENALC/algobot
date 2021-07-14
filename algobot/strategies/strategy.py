@@ -77,7 +77,7 @@ class Strategy:
         :param data: Data object.
         :return: The interval - it can either be regular or lower.
         """
-        if type(data) == list or data == self.parent.dataView:
+        if isinstance(data, list) or data == self.parent.dataView:
             return 'regular'
         else:
             return 'lower'
@@ -119,6 +119,7 @@ class Strategy:
         """
         This function should return the minimum amount of periods required to get a trend. It's 0 by default.
         """
+        # pylint: disable=no-self-use
         return 0
 
     def populate_grouped_dict(self, grouped_dict: Dict[str, Dict[str, Any]]):
@@ -130,4 +131,4 @@ class Strategy:
         """
         for interval_dict in self.strategyDict.values():
             for key, value in interval_dict.items():
-                grouped_dict[key] = value if type(value) != float else round(value, self.precision)
+                grouped_dict[key] = value if not isinstance(value, float) else round(value, self.precision)

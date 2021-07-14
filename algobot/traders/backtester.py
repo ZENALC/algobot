@@ -126,7 +126,7 @@ class Backtester(Trader):
         :param targetDate: Object to compare date-time with.
         :return: Index from self.data if found, else -1.
         """
-        if type(targetDate) == datetime:
+        if isinstance(targetDate, datetime):
             targetDate = targetDate.date()
 
         if starting:
@@ -217,7 +217,7 @@ class Backtester(Trader):
                 else:
                     if thread:
                         thread.signals.updateGraphLimits.emit(len(self.pastActivity))
-                    raise RuntimeError(self.generate_error_message(e, strategy))
+                    raise RuntimeError(self.generate_error_message(e, strategy)) from e
 
     def start_backtest(self, thread=None):
         """
@@ -225,9 +225,7 @@ class Backtester(Trader):
         :param thread: Thread to pass to other functions to emit signals to.
         """
         testLength = self.endDateIndex - self.startDateIndex
-        divisor = testLength // 100
-        if divisor < 1:
-            divisor = 1
+        divisor = max(testLength // 100, 1)
 
         if thread and thread.caller == BACKTEST:
             thread.signals.updateGraphLimits.emit(testLength // divisor + 1)
@@ -348,9 +346,9 @@ class Backtester(Trader):
             raise ValueError("Your start can't have a bigger value than the end.")
 
         if step > 0:
-            if type(step) == int:
-                temp = [x for x in range(start, end + 1, step)]
-            elif type(step) == float:
+            if isinstance(step, int):
+                temp = list(range(start, end + 1, step))
+            elif isinstance(step, float):
                 temp = [start]
                 current = start
                 while current < end:
@@ -371,14 +369,14 @@ class Backtester(Trader):
         :return: List of all permutations.
         """
         for key, value_range in combos.items():  # This will handle steps -> (5, 10, 1) start = 5, end = 10, step = 1
-            if type(value_range) == tuple and len(value_range) == 3:
+            if isinstance(value_range, tuple) and len(value_range) == 3:
                 self.extend_helper(value_range, combos, key)
             elif key == "strategies":
                 for strategyKey, strategyDict in value_range.items():
                     for inputKey, step_tuple in strategyDict.items():
-                        if type(step_tuple) == tuple and len(step_tuple) == 3:
+                        if isinstance(step_tuple, tuple) and len(step_tuple) == 3:
                             self.extend_helper(step_tuple, strategyDict, inputKey)
-            elif type(value_range) == list:
+            elif isinstance(value_range, list):
                 continue
             else:
                 raise ValueError("Invalid type of value provided to combos. Make sure to use a list or a tuple.")
@@ -498,7 +496,7 @@ class Backtester(Trader):
             strategy_name = parse_strategy_name(strategy_name)
 
             if strategy_name not in self.strategies:
-                if type(strategy_values) == dict:
+                if isinstance(strategy_values, dict):
                     strategy_values = list(strategy_values.values())
 
                 temp_strategy_tuple = (
@@ -541,9 +539,9 @@ class Backtester(Trader):
         period1 = self.data[0]['date_utc']
         period2 = self.data[1]['date_utc']
 
-        if type(period1) == str:
+        if isinstance(period1, str):
             period1 = parser.parse(period1)
-        if type(period2) == str:
+        if isinstance(period2, str):
             period2 = parser.parse(period2)
 
         difference = period2 - period1

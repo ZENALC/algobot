@@ -121,7 +121,7 @@ def test_get_ups_and_downs(data, parameter, expected):
     'elapsed, expected',
     [
         (time.time() - 30, ("30 seconds", "31 seconds", "32 seconds")),
-        (time.time() - 60, ("60 seconds", "61 seconds", "62 seconds")),
+        (time.time() - 60, ("60 seconds", "1m 1s", "1m 2s")),
         (time.time() - 3600, ("60m 0s", "1h 0m 1s", "1h 0m 2s")),
         (time.time() - 3601, ("1h 0m 1s", "1h 0m 2s", "1h 0m 3s"))
     ]

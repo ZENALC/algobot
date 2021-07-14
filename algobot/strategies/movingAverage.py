@@ -94,7 +94,7 @@ class MovingAverageStrategy(Strategy):
             movingAverage, parameter, initialBound, finalBound = option.get_all_params()
             initialName, finalName = option.get_pretty_option()
 
-            if type(data) == list:  # This means it was called by the optimizer/backtester.
+            if isinstance(data, list):  # This means it was called by the optimizer/backtester.
                 avg1 = get_moving_average(movingAverage, parameter, initialBound, data, parent.ema_dict)
                 avg2 = get_moving_average(movingAverage, parameter, finalBound, data, parent.ema_dict)
             else:  # This means it was called by the live bot / simulation.
@@ -141,5 +141,5 @@ class MovingAverageStrategy(Strategy):
             raise ValueError("No trading options provided.")
 
         for option in self.tradingOptions:
-            if type(option) != Option:
+            if not isinstance(option, Option):
                 raise TypeError(f"'{option}' is not a valid option type.")

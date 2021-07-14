@@ -69,7 +69,7 @@ class Trader:
         self.stopLossExit = stopLossExit
         self.smartStopLossEnter = smartEnter
         self.trades.append({
-            'date': self.currentPeriod['date_utc'],
+            'date': self.currentPeriod['date_utc'],  # pylint: disable=unsubscriptable-object
             'action': message,
             'net': round(self.get_net(), self.precision)
         })
@@ -279,7 +279,7 @@ class Trader:
         :param right: Character to add after each new line in strategies information.
         """
         string = f'Strategies:{right}'
-        for strategyName, strategy in self.strategies.items():
+        for strategyName in self.strategies:
             string += f'{left}{get_label_string(strategyName)}: {self.get_strategy_inputs(strategyName)}{right}'
 
         return string.rstrip()  # Remove new line in the very end.
@@ -290,23 +290,22 @@ class Trader:
         Returns cumulative trend based on the trends provided.
         :return: Integer trend in the form of an enum.
         """
+        # pylint: disable=too-many-return-statements
         if len(trends) == 0:
             return None
-
         if all(trend == BEARISH for trend in trends):
             return BEARISH
-        elif all(trend == BULLISH for trend in trends):
+        if all(trend == BULLISH for trend in trends):
             return BULLISH
-        elif all(trend in (BULLISH, ENTER_LONG) for trend in trends):
+        if all(trend in (BULLISH, ENTER_LONG) for trend in trends):
             return ENTER_LONG
-        elif all(trend in (BEARISH, EXIT_LONG) for trend in trends):
+        if all(trend in (BEARISH, EXIT_LONG) for trend in trends):
             return EXIT_LONG
-        elif all(trend in (BULLISH, EXIT_SHORT) for trend in trends):
+        if all(trend in (BULLISH, EXIT_SHORT) for trend in trends):
             return EXIT_SHORT
-        elif all(trend in (BEARISH, ENTER_SHORT) for trend in trends):
+        if all(trend in (BEARISH, ENTER_SHORT) for trend in trends):
             return ENTER_SHORT
-        else:
-            return None
+        return None
 
     @staticmethod
     def get_profit_percentage(initialNet: float, finalNet: float) -> float:
@@ -328,6 +327,7 @@ class Trader:
         :param trend: Current trend enum.
         :return: Current trend in a string format.
         """
+        # pylint: disable=too-many-return-statements
         if trend == BULLISH:
             return "Bullish"
         elif trend == BEARISH:
