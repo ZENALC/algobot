@@ -26,3 +26,5 @@ __pycache__/
 
 # Miscellaneous
 state.json
+.coverage
+/coverage/

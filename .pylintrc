@@ -1,67 +1,30 @@
 [FORMAT]
 max-line-length = 120
+extension-pkg-whitelist=PyQt5
+
+[DESIGN]
+max-attributes=40  # TODO: refactor classes as needed to have default at 7
+max-locals=20  # TODO: refactor so it's 15 by default.
+max-public-methods=100  # TODO: Refactor classes into smaller classes as needed.
 
 [MASTER]
+ignore=assets.py
 jobs=4
 
 [MESSAGES CONTROL]
 disable=
-    too-many-instance-attributes,
-    len-as-condition,
-    too-few-public-methods,
-    anomalous-backslash-in-string,
     no-else-return,
-    simplifiable-if-statement,
-    too-many-arguments,
+    too-many-branches,
     duplicate-code,
-    no-name-in-module,
-    no-member,
-    import-star-module-level,
-    raw-checker-failed,
-    bad-inline-option,
-    locally-disabled,
-    locally-enabled,
-    file-ignored,
-    suppressed-message,
-    useless-suppression,
-    import-error,
+    arguments-differ,
+    too-many-arguments,
     missing-docstring,
     invalid-name,
-    consider-using-enumerate,
-    unidiomatic-typecheck,
-    cyclic-import,
     broad-except,
-    no-else-break,
-    super-with-arguments,
-    consider-merging-isinstance,
-    protected-access,
-    unnecessary-lambda,
-    unused-argument,
+    import-error,
     fixme,
-    redefined-argument-from-local,
-    consider-using-with,
-    arguments-differ,
-    too-many-public-methods,
-    simplifiable-if-expression,
-    consider-iterating-dictionary,
-    simplifiable-condition,
-    too-many-locals,
-    too-many-nested-blocks,
-    arguments-renamed,
+    super-with-arguments,
     inconsistent-return-statements,
-    unused-variable,
-    unsubscriptable-object,
-    too-many-return-statements,
+    unused-argument,
     unnecessary-pass,
-    no-self-use,
-    consider-using-dict-items,
-    raise-missing-from,
-    consider-using-max-builtin,
-    unnecessary-comprehension,
-    too-many-branches,
-    consider-using-from-import,
-    unused-wildcard-import,
-    expression-not-assigned,
-    too-many-statements,
-    wildcard-import,
     too-many-lines

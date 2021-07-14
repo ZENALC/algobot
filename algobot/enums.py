@@ -9,8 +9,12 @@ class Trend:
     EXIT_SHORT = 3
 
 
-NET_GRAPH = 1
-AVG_GRAPH = 2
+
+class GraphType:
+    # pylint: disable=too-few-public-methods
+    NET = 1
+    AVG = 2
+
 
 LONG = 1
 SHORT = -1

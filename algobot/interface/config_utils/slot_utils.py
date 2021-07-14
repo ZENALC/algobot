@@ -67,6 +67,8 @@ def load_strategy_slots(config_obj):
     :param config_obj: Configuration QDialog object (from configuration.py)
     :return: None
     """
+    # TODO: Refactor to remove pylint disable below.
+    # pylint: disable=too-many-locals, too-many-statements, too-many-nested-blocks
     for strategy in config_obj.strategies.values():
         temp = strategy()
         strategyName = temp.name
@@ -87,8 +89,9 @@ def load_strategy_slots(config_obj):
                 config_obj.strategyDict[tab, strategyName] = groupBox
                 for index, parameter in enumerate(parameters, start=1):
                     # TODO: Refactor this logic.
-                    if type(parameter) != tuple or type(parameter) == tuple and parameter[1] in [int, float]:
-                        if type(parameter) == tuple:
+                    if not isinstance(parameter, tuple) or \
+                            isinstance(parameter, tuple) and parameter[1] in [int, float]:
+                        if isinstance(parameter, tuple):
                             widget = QSpinBox if parameter[1] == int else QDoubleSpinBox
                             step_val = 1 if widget == QSpinBox else 0.1
                         else:
@@ -98,12 +101,12 @@ def load_strategy_slots(config_obj):
                         config_obj.strategyDict[strategyName, index, 'end'] = end = get_default_widget(widget, 1)
                         config_obj.strategyDict[strategyName, index, 'step'] = step = get_default_widget(widget,
                                                                                                          step_val)
-                        if type(parameter) == tuple:
+                        if isinstance(parameter, tuple):
                             message = parameter[0]
                         else:
                             message = f"{strategyName} {index}"
                         add_start_end_step_to_layout(groupBoxLayout, message, start, end, step)
-                    elif type(parameter) == tuple and parameter[1] == tuple:
+                    elif isinstance(parameter, tuple) and parameter[1] == tuple:
                         groupBoxLayout.addRow(QLabel(parameter[0]))
                         for option in parameter[2]:
                             config_obj.strategyDict[strategyName, option] = checkBox = QCheckBox(option)
@@ -142,7 +145,8 @@ def load_precision_combo_boxes(config_obj):
     combo_boxes = [config_obj.precisionComboBox, config_obj.simulationPrecisionComboBox,
                    config_obj.backtestPrecisionComboBox, config_obj.optimizerPrecisionComboBox]
     precisions = ["Auto"] + [str(x) for x in range(2, 16)]
-    [combo_box.addItems(precisions) for combo_box in combo_boxes]
+    for combo_box in combo_boxes:
+        combo_box.addItems(precisions)
 
 
 def load_interval_combo_boxes(config_obj):

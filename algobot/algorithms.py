@@ -65,8 +65,8 @@ def get_wma(data: List[Dict[str, float]], prices: int, parameter: str, desc: boo
         total = get_data_from_parameter(data=data[-1], parameter=parameter) * prices
         data = data[:-1]
 
-        for index, data in enumerate(data, start=1):
-            total += index * get_data_from_parameter(data, parameter)
+        for index, period_data in enumerate(data, start=1):
+            total += index * get_data_from_parameter(period_data, parameter)
 
     divisor = prices * (prices + 1) / 2
     wma = total / divisor
@@ -388,7 +388,7 @@ def get_percent_b(data: List[Dict[str, float]], bollinger_bands: Tuple[float, fl
     :param bollinger_bands: Bollinger bands.
     :param data: :param data: List containing previous periods' data.
     """
-    lower_band, middle_band, upper_band = bollinger_bands
+    lower_band, _, upper_band = bollinger_bands
     current_price = data[-1]['close']
     return (current_price - lower_band) / (upper_band - lower_band)
 

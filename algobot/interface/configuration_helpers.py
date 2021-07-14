@@ -82,7 +82,7 @@ def set_value(widget: QWidget, value: Union[str, int, float]):
     :param value: Value to modify widget with.
     :return: None
     """
-    if isinstance(widget, QSpinBox) or isinstance(widget, QDoubleSpinBox):
+    if isinstance(widget, (QSpinBox, QDoubleSpinBox)):
         widget.setValue(value)
     elif isinstance(widget, QLineEdit):
         widget.setText(value)
@@ -99,7 +99,7 @@ def get_input_widget_value(inputWidget: QWidget, verbose: bool = False):
     :param inputWidget: Input widget to try to get the value of.
     :return: Value of inputWidget object.
     """
-    if isinstance(inputWidget, QSpinBox) or isinstance(inputWidget, QDoubleSpinBox):
+    if isinstance(inputWidget, (QSpinBox, QDoubleSpinBox)):
         return inputWidget.value()
     elif isinstance(inputWidget, QLineEdit):
         return inputWidget.text()

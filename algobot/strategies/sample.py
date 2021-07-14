@@ -193,7 +193,7 @@ class SampleStrategy(Strategy):
         # data object (Data), or the data from backtests/optimizer which are lists containing dictionaries.
         data_obj = data
 
-        if type(data) == Data:
+        if isinstance(data, Data):
             # Get a copy of the data + the current values. Note we create a copy because we don't want to mutate the
             # actual Data object. We limit data objects to hold 1000 items at a time, so this is not a very expensive
             # operation.

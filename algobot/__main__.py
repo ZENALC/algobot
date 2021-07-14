@@ -18,8 +18,8 @@ from PyQt5.QtWidgets import (QApplication, QCompleter, QFileDialog,
 import algobot.assets
 from algobot.algodict import get_interface_dictionary
 from algobot.data import Data
-from algobot.enums import (AVG_GRAPH, BACKTEST, LIVE, LONG, NET_GRAPH,
-                           OPTIMIZER, SHORT, SIMULATION)
+from algobot.enums import (BACKTEST, LIVE, LONG, OPTIMIZER, SHORT, SIMULATION,
+                           GraphType)
 from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
                                    get_graph_dictionary,
                                    set_backtest_graph_limits_and_empty_plots,
@@ -237,10 +237,10 @@ class Interface(QMainWindow):
         """
         if not combos:
             return False
-        elif type(combos) != dict:
+        elif not isinstance(combos, dict):
             return True
 
-        for key, value in combos.items():
+        for value in combos.values():
             if not self.check_combos(value):
                 return False
         return True
@@ -512,7 +512,7 @@ class Interface(QMainWindow):
         symbol = configurationDictionary['symbol']
         interval = configurationDictionary['interval']
         destroy_graph_plots(self, interfaceDict['graph'])
-        setup_graph_plots(self, interfaceDict['graph'], self.backtester, NET_GRAPH)
+        setup_graph_plots(self, interfaceDict['graph'], self.backtester, GraphType.NET)
         set_backtest_graph_limits_and_empty_plots(self)
         self.update_backtest_configuration_gui(configurationDictionary)
         self.add_to_backtest_monitor(f"Started backtest with {symbol} data and {interval.lower()} interval periods.")
@@ -734,12 +734,12 @@ class Interface(QMainWindow):
         destroy_graph_plots(self, interfaceDict['graph'])
         destroy_graph_plots(self, interfaceDict['averageGraph'])
         self.statistics.initialize_tab(trader.get_grouped_statistics(), tabType=get_caller_string(caller))
-        setup_graph_plots(self, interfaceDict['graph'], trader, NET_GRAPH)
+        setup_graph_plots(self, interfaceDict['graph'], trader, GraphType.NET)
 
         averageGraphDict = get_graph_dictionary(self, interfaceDict['averageGraph'])
         if self.configuration.graphIndicatorsCheckBox.isChecked():
             averageGraphDict['enable'] = True
-            setup_graph_plots(self, interfaceDict['averageGraph'], trader, AVG_GRAPH)
+            setup_graph_plots(self, interfaceDict['averageGraph'], trader, GraphType.AVG)
         else:
             averageGraphDict['enable'] = False
 
@@ -755,7 +755,7 @@ class Interface(QMainWindow):
         self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(disable)
 
         tab = self.configuration.get_category_tab(caller)
-        for strategy_name in self.configuration.strategies.keys():
+        for strategy_name in self.configuration.strategies:
             self.configuration.strategyDict[tab, strategy_name, 'groupBox'].setEnabled(disable)
 
         if everything:
@@ -840,7 +840,7 @@ class Interface(QMainWindow):
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         trader = self.get_trader(caller)
 
-        inPosition = False if trader.currentPosition is None else True
+        inPosition = trader.currentPosition is not None
         interfaceDict['exitPositionButton'].setEnabled(inPosition)
         interfaceDict['waitOverrideButton'].setEnabled(inPosition)
 

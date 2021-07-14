@@ -4,6 +4,7 @@ import algobot
 
 
 class About(QDialog):
+    # pylint: disable=too-few-public-methods
     def __init__(self, parent: QMainWindow = None):
         super(About, self).__init__(parent)
         layout = QHBoxLayout()

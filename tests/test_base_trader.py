@@ -249,8 +249,8 @@ class TestBaseTrader(unittest.TestCase):
         self.trader.strategies['b3'] = bearish_strategy
         self.assertEqual(self.trader.get_trend(), None)
 
-        for strategy in self.trader.strategies:
-            self.trader.strategies[strategy].trend = Trend.BEARISH
+        for strategy in self.trader.strategies.values():
+            strategy.trend = Trend.BEARISH
 
         self.assertEqual(self.trader.get_trend(), Trend.BEARISH)
 
