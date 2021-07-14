@@ -65,8 +65,8 @@ def get_wma(data: List[Dict[str, float]], prices: int, parameter: str, desc: boo
         total = get_data_from_parameter(data=data[-1], parameter=parameter) * prices
         data = data[:-1]
 
-        for index, data in enumerate(data, start=1):
-            total += index * get_data_from_parameter(data, parameter)
+        for index, period_data in enumerate(data, start=1):
+            total += index * get_data_from_parameter(period_data, parameter)
 
     divisor = prices * (prices + 1) / 2
     wma = total / divisor

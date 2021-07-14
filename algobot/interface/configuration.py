@@ -19,7 +19,7 @@ from algobot.interface.configuration_helpers import (
     add_start_end_step_to_layout, get_default_widget, set_value)
 # noinspection PyUnresolvedReferences
 from algobot.interface.utils import get_elements_from_combobox
-from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import
+from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import,unused-wildcard-import
 from algobot.strategies.strategy import Strategy
 
 configurationUi = os.path.join(ROOT_DIR, 'UI', 'configuration.ui')

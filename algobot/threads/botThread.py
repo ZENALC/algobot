@@ -443,8 +443,8 @@ class BotThread(QRunnable):
                 else:
                     failCount = self.failCount
                     self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in {s} seconds.")
-        except Exception as e:
-            self.logger.critical(str(e))
+        except Exception as telegram_error:
+            self.logger.critical(str(telegram_error))
 
         time.sleep(self.failSleep)  # Sleep for some seconds before reattempting a fix.
         trader.retrieve_margin_values()  # Update bot margin values.

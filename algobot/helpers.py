@@ -318,8 +318,8 @@ def parse_strategy_name(name: str) -> str:
     """
     parsed_name, *remaining = name.split()
     parsed_name = parsed_name.lower()
-    for name in remaining:
-        parsed_name += name.capitalize()
+    for remaining_name in remaining:
+        parsed_name += remaining_name.capitalize()
 
     return parsed_name
 

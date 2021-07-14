@@ -22,12 +22,10 @@ disable=
     broad-except,
     import-error,
     fixme,
-    redefined-argument-from-local,
     arguments-renamed,
     super-with-arguments,
     inconsistent-return-statements,
     unused-argument,
     unnecessary-pass,
     too-many-branches,
-    unused-wildcard-import,
     too-many-lines
