@@ -32,7 +32,7 @@ def setup_calendar(config_obj, caller: int = BACKTEST):
     :param caller: Caller object that called this function.
     """
     data = config_obj.optimizer_backtest_dict[caller]['data']
-    if type(data[0]['date_utc']) == str:
+    if isinstance(data[0]['date_utc'], str):
         startDate = parser.parse(data[0]['date_utc'])
         endDate = parser.parse(data[-1]['date_utc'])
     else:

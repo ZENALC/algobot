@@ -7,9 +7,9 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QLabel, QLayout, QMainWindow, QSpinBox,
                              QTabWidget)
 
-import algobot.helpers as helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
+from algobot.helpers import ROOT_DIR
 from algobot.interface.config_utils.credential_utils import load_credentials
 from algobot.interface.config_utils.slot_utils import load_slots
 from algobot.interface.config_utils.strategy_utils import (
@@ -19,10 +19,10 @@ from algobot.interface.configuration_helpers import (
     add_start_end_step_to_layout, get_default_widget, set_value)
 # noinspection PyUnresolvedReferences
 from algobot.interface.utils import get_elements_from_combobox
-from algobot.strategies import *  # noqa: F403, F401
+from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import,unused-wildcard-import
 from algobot.strategies.strategy import Strategy
 
-configurationUi = os.path.join(helpers.ROOT_DIR, 'UI', 'configuration.ui')
+configurationUi = os.path.join(ROOT_DIR, 'UI', 'configuration.ui')
 
 
 class Configuration(QDialog):
@@ -84,7 +84,7 @@ class Configuration(QDialog):
         # Folders and files
         self.credentialsFolder = "Credentials"
         self.configFolder = 'Configuration'
-        self.stateFilePath = os.path.join(helpers.ROOT_DIR, 'state.json')
+        self.stateFilePath = os.path.join(ROOT_DIR, 'state.json')
 
         self.categoryTabs = [
             self.mainConfigurationTabWidget,
@@ -203,6 +203,8 @@ class Configuration(QDialog):
         self.get_strategy_intervals_for_optimizer(settings)
 
         settings['strategies'] = {}
+        # TODO: Refactor so it's not as nested and remove pylint disable below.
+        # pylint: disable=too-many-nested-blocks
         for strategy in self.strategies.values():
             temp = strategy()
             strategyName = temp.name
@@ -210,8 +212,9 @@ class Configuration(QDialog):
             if self.strategyDict[tab, strategyName].isChecked():
                 current = {}
                 for index, parameter in enumerate(parameters, start=1):
-                    if type(parameter) == tuple and parameter[1] in (int, float) or type(parameter) != tuple:
-                        if type(parameter) == type:
+                    if isinstance(parameter, tuple) and parameter[1] in (int, float) or \
+                            not isinstance(parameter, tuple):
+                        if not isinstance(parameter, tuple):
                             key = strategyName.lower() + str(index)
                         else:
                             key = parameter[0]

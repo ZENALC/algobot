@@ -224,6 +224,7 @@ class RealTrader(SimulationTrader):
         :param params: **kwargs that normally go to binanceClient's request_margin_api function.
         :return: Margin isolated account information
         """
+        # pylint: disable=protected-access
         return self.binanceClient._request_margin_api('get', 'margin/isolated/account', True, data=params)
 
     def get_starting_balance(self) -> float:
@@ -345,6 +346,8 @@ class RealTrader(SimulationTrader):
         :param coin: Amount used to enter long position.
         :param force: Boolean that determines whether bot executed action or human.
         """
+        # TODO: Refactor to get rid of this pylint disable.
+        # pylint: disable=arguments-renamed
         with self.lock:
             if self.currentPosition == LONG:
                 return

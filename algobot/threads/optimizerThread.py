@@ -8,6 +8,7 @@ from algobot.traders.backtester import Backtester
 
 
 class OptimizerSignals(QObject):
+    # pylint: disable=too-few-public-methods
     activity = pyqtSignal(tuple)
     error = pyqtSignal(str)
     restore = pyqtSignal()

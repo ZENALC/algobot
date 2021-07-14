@@ -9,6 +9,7 @@ EXIT_SHORT = 3
 
 
 class GraphType:
+    # pylint: disable=too-few-public-methods
     NET = 1
     AVG = 2
 

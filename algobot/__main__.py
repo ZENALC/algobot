@@ -237,10 +237,10 @@ class Interface(QMainWindow):
         """
         if not combos:
             return False
-        elif type(combos) != dict:
+        elif not isinstance(combos, dict):
             return True
 
-        for key, value in combos.items():
+        for value in combos.values():
             if not self.check_combos(value):
                 return False
         return True
@@ -755,7 +755,7 @@ class Interface(QMainWindow):
         self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(disable)
 
         tab = self.configuration.get_category_tab(caller)
-        for strategy_name in self.configuration.strategies.keys():
+        for strategy_name in self.configuration.strategies:
             self.configuration.strategyDict[tab, strategy_name, 'groupBox'].setEnabled(disable)
 
         if everything:
@@ -840,7 +840,7 @@ class Interface(QMainWindow):
         interfaceDict = self.interfaceDictionary[caller]['mainInterface']
         trader = self.get_trader(caller)
 
-        inPosition = False if trader.currentPosition is None else True
+        inPosition = trader.currentPosition is not None
         interfaceDict['exitPositionButton'].setEnabled(inPosition)
         interfaceDict['waitOverrideButton'].setEnabled(inPosition)
 
