@@ -30,7 +30,7 @@ class OrderType:
         elif value.lower() == "stop":
             return OrderType.STOP
         else:
-            ValueError(f"{value} is unsupported")
+            raise ValueError(f"{value} is unsupported")
 
     @staticmethod
     def to_str(order_type: Optional[int]) -> str:
