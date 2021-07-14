@@ -346,6 +346,8 @@ class RealTrader(SimulationTrader):
         :param coin: Amount used to enter long position.
         :param force: Boolean that determines whether bot executed action or human.
         """
+        # TODO: Refactor to get rid of this pylint disable.
+        # pylint: disable=arguments-renamed
         with self.lock:
             if self.currentPosition == LONG:
                 return

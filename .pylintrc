@@ -14,18 +14,17 @@ jobs=4
 [MESSAGES CONTROL]
 disable=
     no-else-return,
-    too-many-arguments,
+    too-many-branches,
     duplicate-code,
     arguments-differ,
+    too-many-arguments,
     missing-docstring,
     invalid-name,
     broad-except,
     import-error,
     fixme,
-    arguments-renamed,
     super-with-arguments,
     inconsistent-return-statements,
     unused-argument,
     unnecessary-pass,
-    too-many-branches,
     too-many-lines
