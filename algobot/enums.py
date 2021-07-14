@@ -1,4 +1,5 @@
 # TODO: Add unit tests.
+from enum import IntEnum
 
 BULLISH = 1
 BEARISH = -1
@@ -8,8 +9,7 @@ ENTER_SHORT = -3
 EXIT_SHORT = 3
 
 
-class GraphType:
-    # pylint: disable=too-few-public-methods
+class GraphType(IntEnum):
     NET = 1
     AVG = 2
 
