@@ -29,15 +29,15 @@ class OrderType:
             ValueError(f"{value} is unsupported")
 
     @staticmethod
-    def to_str(loss_strategy: Optional[int]) -> str:
-        if loss_strategy == OrderType.STOP:
+    def to_str(order_type: Optional[int]) -> str:
+        if order_type == OrderType.STOP:
             return "Stop"
-        elif loss_strategy == OrderType.TRAILING:
+        elif order_type == OrderType.TRAILING:
             return "Trailing"
-        elif loss_strategy is None:
+        elif order_type is None:
             return "None"
         else:
-            raise ValueError(f"Unknown type {loss_strategy}")
+            raise ValueError(f"Unknown OrderType with value {order_type}")
 
 
 BACKTEST = 2
