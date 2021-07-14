@@ -5,7 +5,7 @@ from typing import Union
 
 from algobot.data import Data
 from algobot.enums import (BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
-                           EXIT_LONG, EXIT_SHORT, LONG, SHORT, ProfitType)
+                           EXIT_LONG, EXIT_SHORT, LONG, SHORT, OrderType)
 from algobot.helpers import convert_small_interval, get_logger
 from algobot.traders.trader import Trader
 
@@ -105,9 +105,9 @@ class SimulationTrader(Trader):
                 'scheduledTimerRemaining': self.get_remaining_safety_timer(),
             }
 
-        if self.takeProfitType is not None:
+        if self.takeOrderType is not None:
             groupedDict['takeProfit'] = {
-                'takeProfitType': ProfitType.to_str(self.takeProfitType),
+                'takeOrderType': OrderType.to_str(self.takeOrderType),
                 'takeProfitPercentage': self.get_safe_rounded_percentage(self.takeProfitPercentageDecimal),
                 'trailingTakeProfitActivated': str(self.trailingTakeProfitActivated),
                 'takeProfitPoint': self.get_safe_rounded_string(self.takeProfitPoint),

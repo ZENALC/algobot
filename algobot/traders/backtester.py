@@ -13,7 +13,7 @@ from dateutil import parser
 
 from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
                            EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT,
-                           LossStrategy, ProfitType)
+                           OrderType)
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
                              convert_all_dates_to_datetime,
                              convert_small_interval, get_interval_minutes,
@@ -445,7 +445,7 @@ class Backtester(Trader):
             round(self.get_net() / self.startingBalance * 100 - 100, 2),
             self.get_stop_loss_strategy_string(),
             self.get_safe_rounded_string(self.lossPercentageDecimal, multiplier=100, symbol='%'),
-            ProfitType.to_str(self.takeProfitType),
+            OrderType.to_str(self.takeOrderType),
             self.get_safe_rounded_string(self.takeProfitPercentageDecimal, multiplier=100, symbol='%'),
             self.symbol,
             self.interval,
@@ -481,12 +481,12 @@ class Backtester(Trader):
         Apples settings provided from the settings argument to the backtester object.
         :param settings: Dictionary with keys and values to set.
         """
-        if 'takeProfitType' in settings:
-            self.takeProfitType = ProfitType.from_str(settings['takeProfitType'])
+        if 'takeOrderType' in settings:
+            self.takeOrderType = OrderType.from_str(settings['takeOrderType'])
             self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
 
         if 'lossType' in settings:
-            self.lossStrategy = LossStrategy.from_str(settings['lossType'])
+            self.lossStrategy = OrderType.from_str(settings['lossType'])
             self.lossPercentageDecimal = settings['lossPercentage'] / 100
 
             if 'stopLossCounter' in settings:
@@ -632,7 +632,7 @@ class Backtester(Trader):
         if self.currentPosition == SHORT:
             if self.lossStrategy is not None and self.currentPrice > self.get_stop_loss():
                 self.buy_short('Exited short because a stop loss was triggered.', stopLossExit=True)
-            elif self.takeProfitType is not None and self.currentPrice <= self.get_take_profit():
+            elif self.takeOrderType is not None and self.currentPrice <= self.get_take_profit():
                 self.buy_short("Exited short because of take profit.")
             elif trend == BULLISH:
                 self.buy_short('Exited short because a bullish trend was detected.')
@@ -642,7 +642,7 @@ class Backtester(Trader):
         elif self.currentPosition == LONG:
             if self.lossStrategy is not None and self.currentPrice < self.get_stop_loss():
                 self.sell_long('Exited long because a stop loss was triggered.', stopLossExit=True)
-            elif self.takeProfitType is not None and self.currentPrice >= self.get_take_profit():
+            elif self.takeOrderType is not None and self.currentPrice >= self.get_take_profit():
                 self.sell_long("Exited long because of take profit.")
             elif trend == BEARISH:
                 self.sell_long('Exited long because a bearish trend was detected.')
@@ -691,7 +691,7 @@ class Backtester(Trader):
         print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")
 
-        if self.takeProfitType is not None:
+        if self.takeOrderType is not None:
             print(f'\tTake Profit Percentage: {round(self.takeProfitPercentageDecimal * 100, 2)}%')
 
         if self.lossStrategy is not None:

@@ -5,8 +5,7 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 from algobot.enums import (BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
-                           EXIT_LONG, EXIT_SHORT, LONG, SHORT, LossStrategy,
-                           ProfitType)
+                           EXIT_LONG, EXIT_SHORT, LONG, SHORT, OrderType)
 from algobot.helpers import get_label_string, parse_strategy_name
 from algobot.strategies.strategy import Strategy
 
@@ -37,7 +36,7 @@ class Trader:
 
         self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
         self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.
-        self.takeProfitType = None  # Type of take profit: trailing or stop.
+        self.takeOrderType = None  # Type of take profit: trailing or stop.
         self.takeProfitPercentageDecimal = None  # Percentage of profit to exit trade at.
 
         # Prices information.
@@ -173,7 +172,7 @@ class Trader:
         :return: None
         """
         self.takeProfitPercentageDecimal = takeProfitDict["takeProfitPercentage"] / 100
-        self.takeProfitType = takeProfitDict["takeProfitType"]
+        self.takeOrderType = takeProfitDict["takeOrderType"]
 
     def apply_loss_settings(self, lossDict: Dict[str, int]):
         """
@@ -225,16 +224,16 @@ class Trader:
         if self.currentPosition == SHORT:
             if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
                 self.stopLoss = self.previousStopLoss
-            elif self.lossStrategy == LossStrategy.TRAILING:
+            elif self.lossStrategy == OrderType.TRAILING:
                 self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
-            elif self.lossStrategy == LossStrategy.STOP:
+            elif self.lossStrategy == OrderType.STOP:
                 self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
         elif self.currentPosition == LONG:
             if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
                 self.stopLoss = self.previousStopLoss
-            elif self.lossStrategy == LossStrategy.TRAILING:
+            elif self.lossStrategy == OrderType.TRAILING:
                 self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
-            elif self.lossStrategy == LossStrategy.STOP:
+            elif self.lossStrategy == OrderType.STOP:
                 self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
 
         if self.stopLoss is not None:  # This is for the smart stop loss to reenter position.
@@ -247,9 +246,9 @@ class Trader:
         Returns stop loss strategy in string format, instead of integer enum.
         :return: Stop loss strategy in string format.
         """
-        if self.lossStrategy == LossStrategy.STOP:
+        if self.lossStrategy == OrderType.STOP:
             return 'Stop Loss'
-        elif self.lossStrategy == LossStrategy.TRAILING:
+        elif self.lossStrategy == OrderType.TRAILING:
             return 'Trailing Loss'
         elif self.lossStrategy is None:
             return 'None'
@@ -411,16 +410,16 @@ class Trader:
         Returns price at which position will be exited to secure profits.
         :return: Price at which to exit position.
         """
-        if self.takeProfitType is None:
+        if self.takeOrderType is None:
             return None
 
         if self.currentPosition == SHORT:
-            if self.takeProfitType == ProfitType.STOP:
+            if self.takeOrderType == OrderType.STOP:
                 self.takeProfitPoint = self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
             else:
                 raise ValueError("Invalid type of take profit type provided.")
         elif self.currentPosition == LONG:
-            if self.takeProfitType == ProfitType.STOP:
+            if self.takeOrderType == OrderType.STOP:
                 self.takeProfitPoint = self.buyLongPrice * (1 + self.takeProfitPercentageDecimal)
             else:
                 raise ValueError("Invalid type of take profit type provided.")

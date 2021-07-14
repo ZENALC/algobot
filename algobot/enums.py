@@ -15,49 +15,24 @@ LONG = 1
 SHORT = -1
 
 
-class LossStrategy:
+class OrderType:
     TRAILING = 2
     STOP = 1
 
     @staticmethod
     def from_str(value: str) -> int:
         if value.lower() == "trailing":
-            return LossStrategy.TRAILING
+            return OrderType.TRAILING
         elif value.lower() == "stop":
-            return LossStrategy.STOP
+            return OrderType.STOP
         else:
             ValueError(f"{value} is unsupported")
 
     @staticmethod
     def to_str(loss_strategy: Optional[int]) -> str:
-        if loss_strategy == LossStrategy.STOP:
+        if loss_strategy == OrderType.STOP:
             return "Stop"
-        elif loss_strategy == LossStrategy.TRAILING:
-            return "Trailing"
-        elif loss_strategy is None:
-            return "None"
-        else:
-            raise ValueError(f"Unknown type {loss_strategy}")
-
-
-class ProfitType:
-    TRAILING = 2
-    STOP = 1
-
-    @staticmethod
-    def from_str(value: str) -> int:
-        if value.lower() == "trailing":
-            return ProfitType.TRAILING
-        elif value.lower() == "stop":
-            return ProfitType.STOP
-        else:
-            ValueError(f"{value} is unsupported")
-
-    @staticmethod
-    def to_str(loss_strategy: Optional[int]) -> str:
-        if loss_strategy == LossStrategy.STOP:
-            return "Stop"
-        elif loss_strategy == LossStrategy.TRAILING:
+        elif loss_strategy == OrderType.TRAILING:
             return "Trailing"
         elif loss_strategy is None:
             return "None"

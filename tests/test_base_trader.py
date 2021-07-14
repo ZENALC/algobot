@@ -2,8 +2,7 @@ import unittest
 
 import pytest
 
-from algobot.enums import (BEARISH, BULLISH, LONG, SHORT, LossStrategy,
-                           ProfitType)
+from algobot.enums import BEARISH, BULLISH, LONG, SHORT, OrderType
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 
@@ -150,30 +149,30 @@ class TestBaseTrader(unittest.TestCase):
     def test_apply_take_profit_settings(self):
         take_profit_settings = {
             'takeProfitPercentage': 25,
-            'takeProfitType': ProfitType.STOP
+            'takeOrderType': OrderType.STOP
         }
         self.trader.apply_take_profit_settings(take_profit_settings)
 
         self.assertEqual(self.trader.takeProfitPercentageDecimal, 0.25)
-        self.assertEqual(self.trader.takeProfitType, ProfitType.STOP)
+        self.assertEqual(self.trader.takeOrderType, OrderType.STOP)
 
     def test_apply_loss_settings(self):
         loss_settings = {
-            'lossType': LossStrategy.STOP,
+            'lossType': OrderType.STOP,
             'lossPercentage': 5.5,
             'smartStopLossCounter': 15,
             'safetyTimer': 45
         }
         self.trader.apply_loss_settings(loss_settings)
 
-        self.assertEqual(self.trader.lossStrategy, LossStrategy.STOP)
+        self.assertEqual(self.trader.lossStrategy, OrderType.STOP)
         self.assertEqual(self.trader.lossPercentageDecimal, 0.055)
         self.assertEqual(self.trader.smartStopLossInitialCounter, 15)
         self.assertEqual(self.trader.smartStopLossCounter, 15)
         self.assertEqual(self.trader.safetyTimer, 45)
 
     def test_get_stop_loss(self):
-        self.trader.lossStrategy = LossStrategy.STOP
+        self.trader.lossStrategy = OrderType.STOP
         self.trader.lossPercentageDecimal = 0.1
         self.trader.currentPrice = 5
 
@@ -191,10 +190,10 @@ class TestBaseTrader(unittest.TestCase):
         # TODO implement trailing stop loss test
 
     def test_get_stop_loss_strategy_string(self):
-        self.trader.lossStrategy = LossStrategy.STOP
+        self.trader.lossStrategy = OrderType.STOP
         self.assertEqual(self.trader.get_stop_loss_strategy_string(), "Stop Loss")
 
-        self.trader.lossStrategy = LossStrategy.TRAILING
+        self.trader.lossStrategy = OrderType.TRAILING
         self.assertEqual(self.trader.get_stop_loss_strategy_string(), "Trailing Loss")
 
         self.trader.lossStrategy = None
@@ -317,7 +316,7 @@ class TestBaseTrader(unittest.TestCase):
                                                              multiplier=5), '6.15*')
 
     def test_get_take_profit(self):
-        self.trader.takeProfitType = ProfitType.STOP
+        self.trader.takeOrderType = OrderType.STOP
         self.trader.takeProfitPercentageDecimal = 0.05
 
         self.trader.currentPosition = LONG
@@ -328,10 +327,10 @@ class TestBaseTrader(unittest.TestCase):
         self.trader.sellShortPrice = 10
         self.assertEqual(self.trader.get_take_profit(), 10 * (1 - 0.05))
 
-        self.trader.takeProfitType = None
+        self.trader.takeOrderType = None
         self.assertEqual(self.trader.get_take_profit(), None)
 
-        self.trader.takeProfitType = 5
+        self.trader.takeOrderType = 5
         with pytest.raises(ValueError, match="Invalid type of take profit type provided."):
             self.trader.get_take_profit()
 

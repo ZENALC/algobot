@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from algobot.enums import LONG, SHORT, LossStrategy, ProfitType
+from algobot.enums import LONG, SHORT, OrderType
 from algobot.helpers import convert_all_dates_to_datetime, load_from_csv
 from algobot.traders.backtester import Backtester
 
@@ -25,8 +25,8 @@ class TestBacktester(unittest.TestCase):
             symbol="1INCHUSDT",
             marginEnabled=True,
         )
-        self.backtester.apply_take_profit_settings({'takeProfitType': ProfitType.TRAILING, 'takeProfitPercentage': 5})
-        self.backtester.apply_loss_settings({'lossType': LossStrategy.TRAILING, 'lossPercentage': 5})
+        self.backtester.apply_take_profit_settings({'takeOrderType': OrderType.TRAILING, 'takeProfitPercentage': 5})
+        self.backtester.apply_loss_settings({'lossType': OrderType.TRAILING, 'lossPercentage': 5})
 
     def test_initialization(self):
         """
@@ -281,7 +281,7 @@ class TestBacktester(unittest.TestCase):
         Test backtester stop loss logic in a long position.
         """
         backtester = self.backtester
-        backtester.lossStrategy = LossStrategy.STOP
+        backtester.lossStrategy = OrderType.STOP
         backtester.set_priced_current_price_and_period(5)
         backtester.buy_long("Test purchase.")
         self.assertEqual(backtester.get_stop_loss(), 5 * (1 - backtester.lossPercentageDecimal))
@@ -289,7 +289,7 @@ class TestBacktester(unittest.TestCase):
         backtester.set_priced_current_price_and_period(10)
         self.assertEqual(backtester.get_stop_loss(), 5 * (1 - backtester.lossPercentageDecimal))
 
-        backtester.lossStrategy = LossStrategy.TRAILING
+        backtester.lossStrategy = OrderType.TRAILING
         self.assertEqual(backtester.get_stop_loss(), 10 * (1 - backtester.lossPercentageDecimal))
 
     def test_short_stop_loss(self):
@@ -297,7 +297,7 @@ class TestBacktester(unittest.TestCase):
         Test backtester stop loss logic in a short position.
         """
         backtester = self.backtester
-        backtester.lossStrategy = LossStrategy.STOP
+        backtester.lossStrategy = OrderType.STOP
         backtester.set_priced_current_price_and_period(5)
         backtester.sell_short("Test short.")
         self.assertEqual(backtester.get_stop_loss(), 5 * (1 + backtester.lossPercentageDecimal))
@@ -305,7 +305,7 @@ class TestBacktester(unittest.TestCase):
         backtester.set_priced_current_price_and_period(3)
         self.assertEqual(backtester.get_stop_loss(), 5 * (1 + backtester.lossPercentageDecimal))
 
-        backtester.lossStrategy = LossStrategy.TRAILING
+        backtester.lossStrategy = OrderType.TRAILING
         self.assertEqual(backtester.get_stop_loss(), 3 * (1 + backtester.lossPercentageDecimal))
 
     def test_stop_take_profit(self):
@@ -313,7 +313,7 @@ class TestBacktester(unittest.TestCase):
         Test backtester take profit logic.
         """
         backtester = self.backtester
-        backtester.takeProfitType = ProfitType.STOP
+        backtester.takeOrderType = OrderType.STOP
         backtester.set_priced_current_price_and_period(10)
         backtester.buy_long("Test purchase.")
         self.assertEqual(backtester.get_take_profit(), 10 * (1 + backtester.takeProfitPercentageDecimal))
