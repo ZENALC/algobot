@@ -1,5 +1,5 @@
 aiohttp==3.7.4.post0
-APScheduler==3.6.3
+APScheduler==3.7.0
 async-timeout==3.0.1
 attrs==21.2.0
 beautifulsoup4==4.9.3
