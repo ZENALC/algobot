@@ -105,9 +105,9 @@ class SimulationTrader(Trader):
                 'scheduledTimerRemaining': self.get_remaining_safety_timer(),
             }
 
-        if self.takeOrderType is not None:
+        if self.takeProfitType is not None:
             groupedDict['takeProfit'] = {
-                'takeOrderType': OrderType.to_str(self.takeOrderType),
+                'takeProfitType': OrderType.to_str(self.takeProfitType),
                 'takeProfitPercentage': self.get_safe_rounded_percentage(self.takeProfitPercentageDecimal),
                 'trailingTakeProfitActivated': str(self.trailingTakeProfitActivated),
                 'takeProfitPoint': self.get_safe_rounded_string(self.takeProfitPoint),

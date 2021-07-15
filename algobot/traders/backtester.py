@@ -443,7 +443,7 @@ class Backtester(Trader):
             round(self.get_net() / self.startingBalance * 100 - 100, 2),
             self.get_stop_loss_strategy_string(),
             self.get_safe_rounded_string(self.lossPercentageDecimal, multiplier=100, symbol='%'),
-            OrderType.to_str(self.takeOrderType),
+            OrderType.to_str(self.takeProfitType),
             self.get_safe_rounded_string(self.takeProfitPercentageDecimal, multiplier=100, symbol='%'),
             self.symbol,
             self.interval,
@@ -479,8 +479,8 @@ class Backtester(Trader):
         Apples settings provided from the settings argument to the backtester object.
         :param settings: Dictionary with keys and values to set.
         """
-        if 'takeOrderType' in settings:
-            self.takeOrderType = OrderType.from_str(settings['takeOrderType'])
+        if 'takeProfitType' in settings:
+            self.takeProfitType = OrderType.from_str(settings['takeProfitType'])
             self.takeProfitPercentageDecimal = settings['takeProfitPercentage'] / 100
 
         if 'lossType' in settings:
@@ -630,7 +630,7 @@ class Backtester(Trader):
         if self.currentPosition == SHORT:
             if self.lossStrategy is not None and self.currentPrice > self.get_stop_loss():
                 self.buy_short('Exited short because a stop loss was triggered.', stopLossExit=True)
-            elif self.takeOrderType is not None and self.currentPrice <= self.get_take_profit():
+            elif self.takeProfitType is not None and self.currentPrice <= self.get_take_profit():
                 self.buy_short("Exited short because of take profit.")
             elif trend == BULLISH:
                 self.buy_short('Exited short because a bullish trend was detected.')
@@ -640,7 +640,7 @@ class Backtester(Trader):
         elif self.currentPosition == LONG:
             if self.lossStrategy is not None and self.currentPrice < self.get_stop_loss():
                 self.sell_long('Exited long because a stop loss was triggered.', stopLossExit=True)
-            elif self.takeOrderType is not None and self.currentPrice >= self.get_take_profit():
+            elif self.takeProfitType is not None and self.currentPrice >= self.get_take_profit():
                 self.sell_long("Exited long because of take profit.")
             elif trend == BEARISH:
                 self.sell_long('Exited long because a bearish trend was detected.')
@@ -689,7 +689,7 @@ class Backtester(Trader):
         print(f'\tMargin Enabled: {self.marginEnabled}')
         print(f"\tStarting Balance: ${self.startingBalance}")
 
-        if self.takeOrderType is not None:
+        if self.takeProfitType is not None:
             print(f'\tTake Profit Percentage: {round(self.takeProfitPercentageDecimal * 100, 2)}%')
 
         if self.lossStrategy is not None:

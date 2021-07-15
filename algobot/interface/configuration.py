@@ -73,7 +73,7 @@ class Configuration(QDialog):
         }
 
         self.lossTypes = ("Trailing", "Stop")
-        self.takeOrderTypes = ('Stop',)
+        self.takeProfitTypes = ('Stop',)
         self.lossOptimizerTypes = ('lossPercentage', 'stopLossCounter')
         self.takeProfitOptimizerTypes = ('takeProfitPercentage',)
 
@@ -199,7 +199,7 @@ class Configuration(QDialog):
         settings = {}
 
         self.helper_get_optimizer(tab, self.lossDict, 'lossType', self.lossOptimizerTypes, settings)
-        self.helper_get_optimizer(tab, self.takeProfitDict, 'takeOrderType', self.takeProfitOptimizerTypes, settings)
+        self.helper_get_optimizer(tab, self.takeProfitDict, 'takeProfitType', self.takeProfitOptimizerTypes, settings)
         self.get_strategy_intervals_for_optimizer(settings)
 
         settings['strategies'] = {}
@@ -282,10 +282,10 @@ class Configuration(QDialog):
         if isOptimizer:
             self.takeProfitDict['optimizerTypes'] = []
             innerLayout.addRow(QLabel("Take Profit Types"))
-            for takeOrderType in self.takeOrderTypes:
-                checkbox = QCheckBox(f'Enable {takeOrderType} take profit?')
+            for takeProfitType in self.takeProfitTypes:
+                checkbox = QCheckBox(f'Enable {takeProfitType} take profit?')
                 innerLayout.addRow(checkbox)
-                self.takeProfitDict['optimizerTypes'].append((takeOrderType, checkbox))
+                self.takeProfitDict['optimizerTypes'].append((takeProfitType, checkbox))
 
             for optimizerType in self.takeProfitOptimizerTypes:
                 self.takeProfitDict[optimizerType, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
@@ -293,15 +293,15 @@ class Configuration(QDialog):
                 self.takeProfitDict[optimizerType, 'step'] = step = get_default_widget(QSpinBox, 1)
                 add_start_end_step_to_layout(innerLayout, optimizerType, start, end, step)
         else:
-            self.takeProfitDict[tab, 'takeOrderType'] = takeOrderTypeComboBox = QComboBox()
+            self.takeProfitDict[tab, 'takeProfitType'] = takeProfitTypeComboBox = QComboBox()
             self.takeProfitDict[tab, 'takeProfitPercentage'] = takeProfitPercentage = QDoubleSpinBox()
 
-            takeOrderTypeComboBox.addItems(self.takeOrderTypes)
-            takeOrderTypeComboBox.currentIndexChanged.connect(lambda: self.update_take_profit_settings(tab))
+            takeProfitTypeComboBox.addItems(self.takeProfitTypes)
+            takeProfitTypeComboBox.currentIndexChanged.connect(lambda: self.update_take_profit_settings(tab))
             takeProfitPercentage.setValue(5)
             takeProfitPercentage.valueChanged.connect(lambda: self.update_take_profit_settings(tab))
 
-            innerLayout.addRow(QLabel("Take Profit Type"), takeOrderTypeComboBox)
+            innerLayout.addRow(QLabel("Take Profit Type"), takeProfitTypeComboBox)
             innerLayout.addRow(QLabel('Take Profit Percentage'), takeProfitPercentage)
 
     def set_loss_settings(self, caller: int, config: dict):
@@ -327,11 +327,11 @@ class Configuration(QDialog):
         :param caller: This caller's tab's GUI will be modified by this function.
         :param config: Configuration dictionary from which to get take profit settings.
         """
-        if "takeOrderTypeIndex" not in config:  # We don't have this data in config, so just return.
+        if "takeProfitTypeIndex" not in config:  # We don't have this data in config, so just return.
             return
 
         tab = self.get_category_tab(caller)
-        self.takeProfitDict[tab, 'takeOrderType'].setCurrentIndex(config["takeOrderTypeIndex"])
+        self.takeProfitDict[tab, 'takeProfitType'].setCurrentIndex(config["takeProfitTypeIndex"])
         self.takeProfitDict[tab, 'takeProfitPercentage'].setValue(config["takeProfitPercentage"])
 
     def get_take_profit_settings(self, caller) -> dict:
@@ -343,16 +343,16 @@ class Configuration(QDialog):
         tab = self.get_category_tab(caller)
         dictionary = self.takeProfitDict
         if dictionary[tab, 'groupBox'].isChecked():
-            if dictionary[tab, 'takeOrderType'].currentText() == "Trailing":
-                takeOrderType = OrderType.TRAILING
+            if dictionary[tab, 'takeProfitType'].currentText() == "Trailing":
+                takeProfitType = OrderType.TRAILING
             else:
-                takeOrderType = OrderType.STOP
+                takeProfitType = OrderType.STOP
         else:
-            takeOrderType = None
+            takeProfitType = None
 
         return {
-            'takeOrderType': takeOrderType,
-            'takeOrderTypeIndex': dictionary[tab, 'takeOrderType'].currentIndex(),
+            'takeProfitType': takeProfitType,
+            'takeProfitTypeIndex': dictionary[tab, 'takeProfitType'].currentIndex(),
             'takeProfitPercentage': dictionary[tab, 'takeProfitPercentage'].value()
         }
 

@@ -36,7 +36,7 @@ class Trader:
 
         self.takeProfitPoint = None  # Price at which bot will exit trade to secure profits.
         self.trailingTakeProfitActivated = False  # Boolean that'll turn true if a stop order is activated.
-        self.takeOrderType = None  # Type of take profit: trailing or stop.
+        self.takeProfitType = None  # Type of take profit: trailing or stop.
         self.takeProfitPercentageDecimal = None  # Percentage of profit to exit trade at.
 
         # Prices information.
@@ -172,7 +172,7 @@ class Trader:
         :return: None
         """
         self.takeProfitPercentageDecimal = takeProfitDict["takeProfitPercentage"] / 100
-        self.takeOrderType = takeProfitDict["takeOrderType"]
+        self.takeProfitType = takeProfitDict["takeProfitType"]
 
     def apply_loss_settings(self, lossDict: Dict[str, int]):
         """
@@ -410,16 +410,16 @@ class Trader:
         Returns price at which position will be exited to secure profits.
         :return: Price at which to exit position.
         """
-        if self.takeOrderType is None:
+        if self.takeProfitType is None:
             return None
 
         if self.currentPosition == SHORT:
-            if self.takeOrderType == OrderType.STOP:
+            if self.takeProfitType == OrderType.STOP:
                 self.takeProfitPoint = self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
             else:
                 raise ValueError("Invalid type of take profit type provided.")
         elif self.currentPosition == LONG:
-            if self.takeOrderType == OrderType.STOP:
+            if self.takeProfitType == OrderType.STOP:
                 self.takeProfitPoint = self.buyLongPrice * (1 + self.takeProfitPercentageDecimal)
             else:
                 raise ValueError("Invalid type of take profit type provided.")
