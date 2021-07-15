@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox,
                              QLabel, QLayout, QMainWindow, QSpinBox,
                              QTabWidget)
 
-from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
+from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, OrderType
 from algobot.graph_helpers import create_infinite_line
 from algobot.helpers import ROOT_DIR
 from algobot.interface.config_utils.credential_utils import load_credentials
@@ -344,9 +344,9 @@ class Configuration(QDialog):
         dictionary = self.takeProfitDict
         if dictionary[tab, 'groupBox'].isChecked():
             if dictionary[tab, 'takeProfitType'].currentText() == "Trailing":
-                takeProfitType = TRAILING
+                takeProfitType = OrderType.TRAILING
             else:
-                takeProfitType = STOP
+                takeProfitType = OrderType.STOP
         else:
             takeProfitType = None
 
@@ -381,21 +381,22 @@ class Configuration(QDialog):
         tab = self.get_category_tab(caller)
         dictionary = self.lossDict
         if dictionary[tab, 'groupBox'].isChecked():
-            lossType = TRAILING if dictionary[tab, "lossType"].currentText() == "Trailing" else STOP
+            loss_type = dictionary[tab, "lossType"].currentText()
+            loss_strategy = OrderType.TRAILING if loss_type == "Trailing" else OrderType.STOP
         else:
-            lossType = None
+            loss_strategy = None
 
-        lossSettings = {
-            'lossType': lossType,
+        loss_settings = {
+            'lossType': loss_strategy,
             'lossTypeIndex': dictionary[tab, "lossType"].currentIndex(),
             'lossPercentage': dictionary[tab, 'lossPercentage'].value(),
             'smartStopLossCounter': dictionary[tab, 'smartStopLossCounter'].value()
         }
 
         if tab != self.backtestConfigurationTabWidget:
-            lossSettings['safetyTimer'] = dictionary[tab, 'safetyTimer'].value()
+            loss_settings['safetyTimer'] = dictionary[tab, 'safetyTimer'].value()
 
-        return lossSettings
+        return loss_settings
 
     def add_strategy_to_config(self, caller: int, strategyName: str, config: dict):
         """

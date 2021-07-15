@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 from algobot.enums import (BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
-                           EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING)
+                           EXIT_LONG, EXIT_SHORT, LONG, SHORT, OrderType)
 from algobot.helpers import get_label_string, parse_strategy_name
 from algobot.strategies.strategy import Strategy
 
@@ -224,16 +224,16 @@ class Trader:
         if self.currentPosition == SHORT:
             if self.smartStopLossEnter and self.previousStopLoss > self.currentPrice:
                 self.stopLoss = self.previousStopLoss
-            elif self.lossStrategy == TRAILING:
+            elif self.lossStrategy == OrderType.TRAILING:
                 self.stopLoss = self.shortTrailingPrice * (1 + self.lossPercentageDecimal)
-            elif self.lossStrategy == STOP:
+            elif self.lossStrategy == OrderType.STOP:
                 self.stopLoss = self.sellShortPrice * (1 + self.lossPercentageDecimal)
         elif self.currentPosition == LONG:
             if self.smartStopLossEnter and self.previousStopLoss < self.currentPrice:
                 self.stopLoss = self.previousStopLoss
-            elif self.lossStrategy == TRAILING:
+            elif self.lossStrategy == OrderType.TRAILING:
                 self.stopLoss = self.longTrailingPrice * (1 - self.lossPercentageDecimal)
-            elif self.lossStrategy == STOP:
+            elif self.lossStrategy == OrderType.STOP:
                 self.stopLoss = self.buyLongPrice * (1 - self.lossPercentageDecimal)
 
         if self.stopLoss is not None:  # This is for the smart stop loss to reenter position.
@@ -246,9 +246,9 @@ class Trader:
         Returns stop loss strategy in string format, instead of integer enum.
         :return: Stop loss strategy in string format.
         """
-        if self.lossStrategy == STOP:
+        if self.lossStrategy == OrderType.STOP:
             return 'Stop Loss'
-        elif self.lossStrategy == TRAILING:
+        elif self.lossStrategy == OrderType.TRAILING:
             return 'Trailing Loss'
         elif self.lossStrategy is None:
             return 'None'
@@ -319,28 +319,6 @@ class Trader:
             return finalNet / initialNet * 100 - 100
         else:
             return -1 * (100 - finalNet / initialNet * 100)
-
-    @staticmethod
-    def get_trailing_or_stop_type_string(stopType: Union[int, None]) -> str:
-        """
-        Returns stop type in string format instead of integer enum.
-        :return: Stop type in string format.
-        """
-        if stopType == STOP:
-            return 'Stop'
-        elif stopType == TRAILING:
-            return 'Trailing'
-        elif stopType is None:
-            return 'None'
-        else:
-            raise ValueError("Unknown type of exit position type.")
-
-    @staticmethod
-    def get_enum_from_str(string):
-        if string.lower() == "trailing":
-            return TRAILING
-        elif string.lower() == 'stop':
-            return STOP
 
     @staticmethod
     def get_trend_string(trend) -> str:
@@ -436,12 +414,12 @@ class Trader:
             return None
 
         if self.currentPosition == SHORT:
-            if self.takeProfitType == STOP:
+            if self.takeProfitType == OrderType.STOP:
                 self.takeProfitPoint = self.sellShortPrice * (1 - self.takeProfitPercentageDecimal)
             else:
                 raise ValueError("Invalid type of take profit type provided.")
         elif self.currentPosition == LONG:
-            if self.takeProfitType == STOP:
+            if self.takeProfitType == OrderType.STOP:
                 self.takeProfitPoint = self.buyLongPrice * (1 + self.takeProfitPercentageDecimal)
             else:
                 raise ValueError("Invalid type of take profit type provided.")
