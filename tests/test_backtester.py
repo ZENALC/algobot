@@ -25,7 +25,7 @@ class TestBacktester(unittest.TestCase):
             symbol="1INCHUSDT",
             marginEnabled=True,
         )
-        self.backtester.apply_take_profit_settings({'takeOrderType': OrderType.TRAILING, 'takeProfitPercentage': 5})
+        self.backtester.apply_take_profit_settings({'takeProfitType': OrderType.TRAILING, 'takeProfitPercentage': 5})
         self.backtester.apply_loss_settings({'lossType': OrderType.TRAILING, 'lossPercentage': 5})
 
     def test_initialization(self):
@@ -313,7 +313,7 @@ class TestBacktester(unittest.TestCase):
         Test backtester take profit logic.
         """
         backtester = self.backtester
-        backtester.takeOrderType = OrderType.STOP
+        backtester.takeProfitType = OrderType.STOP
         backtester.set_priced_current_price_and_period(10)
         backtester.buy_long("Test purchase.")
         self.assertEqual(backtester.get_take_profit(), 10 * (1 + backtester.takeProfitPercentageDecimal))

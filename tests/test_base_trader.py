@@ -149,12 +149,12 @@ class TestBaseTrader(unittest.TestCase):
     def test_apply_take_profit_settings(self):
         take_profit_settings = {
             'takeProfitPercentage': 25,
-            'takeOrderType': OrderType.STOP
+            'takeProfitType': OrderType.STOP
         }
         self.trader.apply_take_profit_settings(take_profit_settings)
 
         self.assertEqual(self.trader.takeProfitPercentageDecimal, 0.25)
-        self.assertEqual(self.trader.takeOrderType, OrderType.STOP)
+        self.assertEqual(self.trader.takeProfitType, OrderType.STOP)
 
     def test_apply_loss_settings(self):
         loss_settings = {
@@ -316,7 +316,7 @@ class TestBaseTrader(unittest.TestCase):
                                                              multiplier=5), '6.15*')
 
     def test_get_take_profit(self):
-        self.trader.takeOrderType = OrderType.STOP
+        self.trader.takeProfitType = OrderType.STOP
         self.trader.takeProfitPercentageDecimal = 0.05
 
         self.trader.currentPosition = LONG
@@ -327,10 +327,10 @@ class TestBaseTrader(unittest.TestCase):
         self.trader.sellShortPrice = 10
         self.assertEqual(self.trader.get_take_profit(), 10 * (1 - 0.05))
 
-        self.trader.takeOrderType = None
+        self.trader.takeProfitType = None
         self.assertEqual(self.trader.get_take_profit(), None)
 
-        self.trader.takeOrderType = 5
+        self.trader.takeProfitType = 5
         with pytest.raises(ValueError, match="Invalid type of take profit type provided."):
             self.trader.get_take_profit()
 
