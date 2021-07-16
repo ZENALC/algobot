@@ -155,7 +155,7 @@ def test_buy_short(trader: Trader):
     assert trader.commissionsPaid == previous_transaction_fee + transaction_fee
     assert trader.coin == 0
     assert trader.coinOwed == 0
-    assert trader.trades[-1], {
+    assert trader.trades[-1] == {
         'date': 'test_date',
         'action': 'test_end_short',
         'net': round(trader.get_net(), trader.precision)
