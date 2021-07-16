@@ -17,6 +17,9 @@ convert_all_dates_to_datetime(test_data)
 
 
 class TestBacktester(unittest.TestCase):
+    """
+    Backtester test.
+    """
     def setUp(self) -> None:
         """
         Sets up a backtester object.
