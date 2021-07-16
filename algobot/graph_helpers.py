@@ -133,7 +133,7 @@ def add_data_to_plot(gui: QMainWindow, targetGraph: PlotWidget, plotIndex: int, 
     plot['plot'].setData(plot['x'], plot['y'])
 
 
-def setup_graph_plots(gui: QMainWindow, graph: PlotWidget, trader: Trader, graph_type: int):
+def setup_graph_plots(gui: QMainWindow, graph: PlotWidget, trader: Trader, graph_type: GraphType):
     """
     Setups graph plots for graph, trade, and graphType specified.
     :param gui: Graphical user interface in which to set up graphs.
