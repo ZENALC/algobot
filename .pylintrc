@@ -20,6 +20,7 @@ disable=
     too-many-arguments,
     invalid-name,
     broad-except,
+    import-error,
     fixme,
     super-with-arguments,
     inconsistent-return-statements,
