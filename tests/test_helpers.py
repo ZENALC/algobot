@@ -155,24 +155,6 @@ def test_get_ups_and_downs(data, parameter, expected):
 
 
 @pytest.mark.parametrize(
-    'elapsed, expected',
-    [
-        (time.time() - 30, ("30 seconds", "31 seconds", "32 seconds")),
-        (time.time() - 60, ("60 seconds", "1m 1s", "1m 2s")),
-        (time.time() - 3600, ("60m 0s", "1h 0m 1s", "1h 0m 2s")),
-        (time.time() - 3601, ("1h 0m 1s", "1h 0m 2s", "1h 0m 3s"))
-    ]
-)
-def test_get_elapsed_time(elapsed, expected):
-    """
-    Test get elapsed time functionality.
-    :param elapsed: Elapsed time.
-    :param expected: Expected parsed elapsed time.
-    """
-    assert get_elapsed_time(elapsed) in expected, f"Expected elapsed time to be in: {expected}."
-
-
-@pytest.mark.parametrize(
     "name, expected",
     [
         ("Camel Case Strategy", "camelCaseStrategy"),
