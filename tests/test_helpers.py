@@ -2,7 +2,6 @@
 Test helper functions.
 """
 
-import time
 from typing import Any, Dict
 
 import pytest
@@ -10,9 +9,8 @@ import pytest
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.helpers import (convert_long_interval, convert_small_interval,
                              get_caller_string, get_data_from_parameter,
-                             get_elapsed_time, get_label_string,
-                             get_normalized_data, get_ups_and_downs,
-                             parse_strategy_name)
+                             get_label_string, get_normalized_data,
+                             get_ups_and_downs, parse_strategy_name)
 
 
 @pytest.mark.parametrize(
