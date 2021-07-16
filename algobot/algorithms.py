@@ -12,6 +12,11 @@ from algobot.helpers import get_data_from_parameter
 
 
 def get_ddof_from_stdev(stdev_type: str) -> int:
+    """
+    Get the DDOF from standard deviation (used for numpy).
+    :param stdev_type: Standard deviation type.
+    :return: DDOF integer.
+    """
     if stdev_type.lower() == 'population':
         return 0
     elif stdev_type.lower() == 'sample':

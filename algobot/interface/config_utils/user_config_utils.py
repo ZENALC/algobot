@@ -253,6 +253,13 @@ def load_optimizer_settings(config_obj, config):
 
 
 def copy_config_helper(config_obj, caller, result_label, func: Callable):
+    """
+    Helper function to copy configurations from live bot to caller provided.
+    :param config_obj: Configuration object.
+    :param caller: Caller to copy settings to from live bot.
+    :param result_label: Result label to modify after successful copy.
+    :param func: Callback function that will copy base settings specific to the caller.
+    """
     # TODO: Create copy function for optimizer.
     func(config_obj)
     copy_loss_settings(config_obj, LIVE, caller)

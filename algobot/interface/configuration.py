@@ -30,6 +30,9 @@ configurationUi = os.path.join(ROOT_DIR, 'UI', 'configuration.ui')
 
 
 class Configuration(QDialog):
+    """
+    Configuration window.
+    """
     def __init__(self, parent: QMainWindow, logger: Logger = None):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
@@ -189,6 +192,11 @@ class Configuration(QDialog):
                 del settings[key]
 
     def get_strategy_intervals_for_optimizer(self, settings: dict):
+        """
+        This will return the strategy intervals for the optimizer to leverage.
+        :param settings: Settings dictionary to populate.
+        :return: None
+        """
         combobox = self.optimizerStrategyIntervalEndCombobox
         intervals = get_elements_from_combobox(combobox)
         end_index = intervals.index(combobox.currentText())
@@ -361,6 +369,10 @@ class Configuration(QDialog):
         }
 
     def update_loss_settings(self, tab: QTabWidget):
+        """
+        Update loss settings based on the tab provided.
+        :param tab: Tab to update loss settings for.
+        """
         caller = self.get_caller_based_on_tab(tab)
         trader = self.parent.get_trader(caller)
 
@@ -369,6 +381,10 @@ class Configuration(QDialog):
             trader.apply_loss_settings(settings)
 
     def update_take_profit_settings(self, tab: QTabWidget):
+        """
+        Update take profit settings based on the tab provided.
+        :param tab: Tab to update take profit settings for.
+        """
         caller = self.get_caller_based_on_tab(tab)
         trader = self.parent.get_trader(caller)
 

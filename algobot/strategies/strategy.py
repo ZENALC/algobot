@@ -11,6 +11,9 @@ from algobot.data import Data
 
 
 class Strategy:
+    """
+    Base strategy class.
+    """
     def __init__(self, name: str = None, parent=None, precision: int = 2):
         """
         Create all your strategies from this parent strategy class.

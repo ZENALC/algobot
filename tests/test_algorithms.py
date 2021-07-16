@@ -3,7 +3,7 @@ Unit tests for algorithms or technical indicators.
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import pytest
 
@@ -23,7 +23,11 @@ DATA_HINT = List[Dict[str, float]]
 
 
 @pytest.fixture(name='dummy_data')
-def get_dummy_data():
+def get_dummy_data() -> List[Dict[str, Union[datetime, float]]]:
+    """
+    Get dummy data for testing.
+    :return: List with dictionaries containing dummy data.
+    """
     return [
         {
             'open': 1,
@@ -68,6 +72,9 @@ def get_dummy_data():
     ]
 )
 def test_sma(dummy_data: DATA_HINT, prices: int, parameter: str, expected: float):
+    """
+    Test SMA.
+    """
     assert get_sma(data=dummy_data, prices=prices, parameter=parameter) == expected
 
 
@@ -79,6 +86,9 @@ def test_sma(dummy_data: DATA_HINT, prices: int, parameter: str, expected: float
     )
 )
 def test_wma(dummy_data: DATA_HINT, prices: int, parameter: str, desc: bool, expected: float):
+    """
+    Test WMA.
+    """
     assert get_wma(data=dummy_data, prices=prices, parameter=parameter, desc=desc) == expected
 
 
@@ -90,6 +100,9 @@ def test_wma(dummy_data: DATA_HINT, prices: int, parameter: str, desc: bool, exp
     ]
 )
 def test_ema(dummy_data: DATA_HINT, prices: int, parameter: str, sma_prices: int, expected: float):
+    """
+    Test EMA.
+    """
     ema, _ = get_ema(data=dummy_data, prices=prices, parameter=parameter, sma_prices=sma_prices, desc=False)
     assert ema == expected
 
@@ -118,6 +131,9 @@ def test_ema(dummy_data: DATA_HINT, prices: int, parameter: str, sma_prices: int
     ]
 )
 def test_accumulation_distribution_indicator(data: Dict[str, float], expected: float):
+    """
+    Test accumulation distribution indicator.
+    """
     assert get_accumulation_distribution_indicator(data) == expected
 
 
@@ -130,6 +146,9 @@ def test_accumulation_distribution_indicator(data: Dict[str, float], expected: f
 )
 def test_normal_volume_oscillator(dummy_data: DATA_HINT, ad_cache: List[float], periods: int,
                                   expected: float):
+    """
+    Test normal value oscillator.
+    """
     assert get_normal_volume_oscillator(data=dummy_data, ad_cache=ad_cache, periods=periods) == expected
 
 
@@ -143,6 +162,9 @@ def test_normal_volume_oscillator(dummy_data: DATA_HINT, ad_cache: List[float], 
     ]
 )
 def test_intraday_intensity_indicator(dummy_data: DATA_HINT, index: int, expected: float):
+    """
+    Test intraday intensity indicator.
+    """
     assert get_intraday_intensity_indicator(dummy_data[index]) == expected
 
 
@@ -155,12 +177,19 @@ def test_intraday_intensity_indicator(dummy_data: DATA_HINT, index: int, expecte
 )
 def test_normalized_intraday_intensity(dummy_data: DATA_HINT, periods: int, intraday_cache: List[float],
                                        expected: float):
+    """
+    Test normalized intraday intensity.
+    """
     assert get_normalized_intraday_intensity(periods=periods, data=dummy_data,
                                              intraday_intensity_cache=intraday_cache) == expected
 
 
 @pytest.fixture(name='volatility_data')
-def get_volatility_data():
+def get_volatility_data() -> DATA_HINT:
+    """
+    Get dummy volatility data to test with.
+    :return: List of volatility data in a dictionary.
+    """
     return [
         {
             'high': 0.0082,
@@ -243,6 +272,9 @@ def get_volatility_data():
 )
 def test_basic_volatility(volatility_data: DATA_HINT, periods: int, expected: float, use_returns: bool,
                           stdev_type: str):
+    """
+    Test basic volatility.
+    """
     assert get_basic_volatility(periods=periods, data=volatility_data,
                                 use_returns=use_returns, stdev_type=stdev_type) == expected
 
@@ -255,6 +287,9 @@ def test_basic_volatility(volatility_data: DATA_HINT, periods: int, expected: fl
     ]
 )
 def test_parkinson_volatility(volatility_data: DATA_HINT, periods: int, expected: float):
+    """
+    Test Parkinson volatility.
+    """
     assert get_parkinson_volatility(periods=periods, data=volatility_data) == expected
 
 
@@ -266,6 +301,9 @@ def test_parkinson_volatility(volatility_data: DATA_HINT, periods: int, expected
     ]
 )
 def test_gk_volatility(volatility_data: DATA_HINT, periods: int, expected: float):
+    """
+    Test GK volatility.
+    """
     assert get_gk_volatility(data=volatility_data, periods=periods) == expected
 
 
@@ -277,6 +315,9 @@ def test_gk_volatility(volatility_data: DATA_HINT, periods: int, expected: float
     ]
 )
 def test_rs_volatility(volatility_data: DATA_HINT, periods: int, expected: float):
+    """
+    Test RS volatility.
+    """
     assert get_rs_volatility(data=volatility_data, periods=periods) == expected
 
 
@@ -290,11 +331,18 @@ def test_rs_volatility(volatility_data: DATA_HINT, periods: int, expected: float
     ]
 )
 def test_zh_volatility(volatility_data: DATA_HINT, periods: int, expected: float, stdev_type: str):
+    """
+    Test ZH volatility.
+    """
     assert get_zh_volatility(periods=periods, data=volatility_data, stdev_type=stdev_type) == expected
 
 
 @pytest.fixture(name='money_flow_fixture')
-def get_money_flow_fixture():
+def get_money_flow_fixture() -> DATA_HINT:
+    """
+    Get list of data periods for testing money flow.
+    :return: List of data periods for testing.
+    """
     return [
         {
             'open': 10,
@@ -384,11 +432,17 @@ def get_money_flow_fixture():
     ]
 )
 def test_money_flow_index(money_flow_fixture, periods: int, expected: float):
+    """
+    Test money flow index.
+    """
     assert get_money_flow_index(data=money_flow_fixture, periods=periods) == expected
 
 
 @pytest.fixture(name='bollinger_fixture')
-def get_bollinger_fixture():
+def get_bollinger_fixture() -> DATA_HINT:
+    """
+    Get data for Bollinger Bands.
+    """
     return [
         {'close': 10},
         {'close': 13},
@@ -412,6 +466,9 @@ def get_bollinger_fixture():
 def test_bollinger_bands(bollinger_fixture: DATA_HINT, moving_average_n: int, moving_average: str,
                          moving_average_param: str, volatility_look_back_n: int, volatility: str, bb: float,
                          expected: float):
+    """
+    Test Bollinger Bands.
+    """
     bollinger_bands = get_bollinger_bands(
         moving_average_periods=moving_average_n,
         moving_average=moving_average,
@@ -432,6 +489,9 @@ def test_bollinger_bands(bollinger_fixture: DATA_HINT, moving_average_n: int, mo
     ]
 )
 def test_get_percent_b(bollinger_bands: Tuple[float, float, float], data: DATA_HINT, expected: float):
+    """
+    Test get percent B.
+    """
     assert get_percent_b(bollinger_bands=bollinger_bands, data=data) == expected
 
 
@@ -442,4 +502,7 @@ def test_get_percent_b(bollinger_bands: Tuple[float, float, float], data: DATA_H
     ]
 )
 def test_get_bandwidth(bollinger_bands: Tuple[float, float, float], expected: float):
+    """
+    Test get bandwidth.
+    """
     assert get_bandwidth(bollinger_bands) == expected

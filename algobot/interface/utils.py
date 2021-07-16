@@ -45,6 +45,10 @@ def get_elements_from_combobox(combobox: QComboBox) -> List[str]:
 
 
 def show_and_bring_window_to_front(window: QDialog):
+    """
+    This will bring the window provided to the very front of the screen.
+    :param window: Window object to bring to front.
+    """
     window.show()
     window.activateWindow()
     window.raise_()

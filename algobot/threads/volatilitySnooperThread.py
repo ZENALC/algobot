@@ -4,6 +4,7 @@ Volatility Snooper.
 
 # TODO: Standardize thread operations to fewer files by leveraging kwargs.
 import datetime
+from typing import Callable, List
 
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
@@ -46,7 +47,13 @@ class VolatilitySnooperThread(QRunnable):
         self.signals = VolatilitySnooperSignals()
 
     @staticmethod
-    def get_filtered_tickers(tickers, filter_word):
+    def get_filtered_tickers(tickers, filter_word) -> List[str]:
+        """
+        Function to get filtered tickers based on the list of tickers and filter word provided.
+        :param tickers: List of tickers to filter from.
+        :param filter_word: Filter for the list of tickers.
+        :return: Filtered tickers.
+        """
         if filter_word == '':
             filter_word = None
 
@@ -55,7 +62,11 @@ class VolatilitySnooperThread(QRunnable):
 
         return tickers
 
-    def get_volatility_func(self):
+    def get_volatility_func(self) -> Callable:
+        """
+        Get volatility function based on the volatility picked.
+        :return: Volatility function.
+        """
         volatility_map = {
             'basic': get_basic_volatility,
             'yang zhang': get_zh_volatility,
@@ -66,7 +77,11 @@ class VolatilitySnooperThread(QRunnable):
         return volatility_map[self.volatility.lower()]
 
     @staticmethod
-    def get_current_timestamp():
+    def get_current_timestamp() -> float:
+        """
+        Get current timestamp in UTC.
+        :return: Current UTC timestamp.
+        """
         dt = datetime.datetime.now(datetime.timezone.utc)
         utc_time = dt.replace(tzinfo=datetime.timezone.utc)
         utc_timestamp = utc_time.timestamp()
@@ -74,6 +89,11 @@ class VolatilitySnooperThread(QRunnable):
         return utc_timestamp
 
     def get_starting_timestamp(self, multiplier: int = 1) -> int:
+        """
+        Get starting timestamp for the snooping.
+        :param multiplier: Multiplier to use for the starting timestamp. The bigger, the further back the timestamp.
+        :return: Starting timestamp in an integer format.
+        """
         current_timestamp = self.get_current_timestamp() * 1000
         period_minutes = get_interval_minutes(self.long_interval)
         period_microseconds = period_minutes * 60 * 1000 * (self.periods + 1)  # Using +1 for safety.
@@ -81,10 +101,16 @@ class VolatilitySnooperThread(QRunnable):
         return int(current_timestamp - period_microseconds * multiplier)
 
     def validate(self):
+        """
+        Validation to perform before running the snooper.
+        """
         if len(self.tickers) < 1:
             raise RuntimeError(f"No tickers found with the filter: {self.filter_word}.")
 
     def snoop(self):
+        """
+        Run snooper functionality.
+        """
         self.validate()
         self.signals.activity.emit('Starting the volatility snooper...')
         volatility_dict = {}
@@ -121,10 +147,16 @@ class VolatilitySnooperThread(QRunnable):
         return volatility_dict
 
     def stop(self):
+        """
+        Stop the snooper thread.
+        """
         self.running = False
 
     @pyqtSlot()
     def run(self):
+        """
+        Run the snooper thread.
+        """
         try:
             self.signals.started.emit()
             volatility_dict = self.snoop()

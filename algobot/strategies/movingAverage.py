@@ -13,6 +13,9 @@ from algobot.strategies.strategy import Strategy
 
 
 class MovingAverageStrategy(Strategy):
+    """
+    Moving Average Strategy class.
+    """
     def __init__(self, parent=None, inputs: list = ('',) * 4, precision: int = 2):
         """
         Basic Moving Average strategy.
@@ -30,6 +33,9 @@ class MovingAverageStrategy(Strategy):
             self.initialize_plot_dict()
 
     def initialize_plot_dict(self):
+        """
+        Initializes plot dictionary for the Moving Average class.
+        """
         # TODO: Add support for colors in the actual program.
         for option in self.tradingOptions:
             initialName, finalName = option.get_pretty_option()

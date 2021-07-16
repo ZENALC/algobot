@@ -3,7 +3,7 @@ File containing helper functions for graphs.
 """
 
 from datetime import datetime
-from typing import List
+from typing import Any, Dict, List
 
 from PyQt5.QtWidgets import QColorDialog, QDialog, QLabel, QMainWindow
 from pyqtgraph import InfiniteLine, PlotWidget, mkPen
@@ -16,6 +16,11 @@ GRAPH_LEEWAY = 10  # Amount of points to set extra for graph limits.
 
 
 def get_and_set_line_color(view: QDialog, label: QLabel):
+    """
+    This function will open a dialog for the user to select a color then set it to the label provided.
+    :param view: Parent view to use for the color selector to be on top of.
+    :param label: Label to modify color with.
+    """
     color = QColorDialog.getColor()
     show_and_bring_window_to_front(view)
 
@@ -24,6 +29,11 @@ def get_and_set_line_color(view: QDialog, label: QLabel):
 
 
 def set_color_to_label(label: QLabel, color: str):
+    """
+    Set a color to label provided.
+    :param label: Label object to set color and color's text to.
+    :param color: Color to use.
+    """
     label.setText(color)
     label.setStyleSheet(f"background: {color};")
 
@@ -67,6 +77,11 @@ def get_graph_dictionary(gui: QMainWindow, targetGraph: PlotWidget) -> dict:
 
 
 def legend_helper(graphDict, x_val):
+    """
+    Helper for setting graph legends based on the graph dictionary and x value provided.
+    :param graphDict: Graph dictionary.
+    :param x_val: X value in the graph.
+    """
     legend = graphDict['graph'].plotItem.legend.items
     date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][x_val])
     total = f'X: {x_val} Datetime in UTC: {date_object.strftime("%m/%d/%Y, %H:%M:%S")}'
@@ -324,7 +339,13 @@ def setup_graphs(gui: QMainWindow):
             graph.setTitle("Live Indicators")
 
 
-def smart_update(graph_dict):
+def smart_update(graph_dict: Dict[str, Any]):
+    """
+    Smartly update the legend based on the graph dictionary provided. If the graph dictionary doesn't have a hover-line
+    enabled, then just update the legend with the latest data. If the hover-line is enabled, show what the graph
+    dictionary holds at the hover-line's X position.
+    :param graph_dict: Graph dictionary to use to smart update.
+    """
     if graph_dict.get('line') is None:  # If hover line is turned off, then just update normally.
         legend_helper(graph_dict, -1)
     else:

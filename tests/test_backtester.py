@@ -1,3 +1,7 @@
+"""
+Test backtester object.
+"""
+
 import os
 import unittest
 from datetime import datetime
@@ -323,6 +327,9 @@ class TestBacktester(unittest.TestCase):
         self.assertEqual(backtester.get_take_profit(), 10 * (1 - backtester.takeProfitPercentageDecimal))
 
     def test_trailing_take_profit(self):
+        """
+        Test trailing take profit.
+        """
         pass
 
 

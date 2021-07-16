@@ -1,5 +1,8 @@
-import unittest
+"""
+Test base trader.
+"""
 
+import unittest
 import pytest
 
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
