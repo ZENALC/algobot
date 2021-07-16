@@ -3,6 +3,7 @@ Enum classes and constants.
 """
 
 # TODO: Add unit tests.
+from enum import IntEnum
 
 BULLISH = 1
 BEARISH = -1
@@ -12,11 +13,10 @@ ENTER_SHORT = -3
 EXIT_SHORT = 3
 
 
-class GraphType:
+class GraphType(IntEnum):
     """
     Graph type enums.
     """
-    # pylint: disable=too-few-public-methods
     NET = 1
     AVG = 2
 
