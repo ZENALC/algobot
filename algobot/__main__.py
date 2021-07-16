@@ -1382,6 +1382,9 @@ def main():
 
 
 def except_hook(cls, exception, trace_back):
+    """
+    Exception hook.
+    """
     sys.__excepthook__(cls, exception, trace_back)
 
 

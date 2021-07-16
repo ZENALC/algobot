@@ -18,7 +18,6 @@ disable=
     duplicate-code,
     arguments-differ,
     too-many-arguments,
-    missing-docstring,
     invalid-name,
     broad-except,
     import-error,

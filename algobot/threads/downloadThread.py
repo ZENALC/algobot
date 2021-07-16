@@ -1,3 +1,7 @@
+"""
+Download thread used for downloads.
+"""
+
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 import algobot
@@ -19,6 +23,9 @@ class DownloadSignals(QObject):
 
 
 class DownloadThread(QRunnable):
+    """
+    Thread to use for downloads.
+    """
     def __init__(self, interval, symbol, descending=None, armyTime=None, startDate=None, caller=None, logger=None):
         super(DownloadThread, self).__init__()
         self.caller = caller

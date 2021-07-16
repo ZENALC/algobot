@@ -1,3 +1,7 @@
+"""
+Simulation Trader file. Real Trader will create a subclass out of this.
+"""
+
 import time
 from datetime import datetime
 from threading import Lock
@@ -11,6 +15,9 @@ from algobot.traders.trader import Trader
 
 
 class SimulationTrader(Trader):
+    """
+    Simulation trader class.
+    """
     def __init__(self,
                  startingBalance: float = 1000,
                  interval: str = '1h',
@@ -595,6 +602,9 @@ class SimulationTrader(Trader):
         self.output_message("")
 
     def output_configuration(self):
+        """
+        Messages to output for configuration.
+        """
         self.output_message('---------------------------------------------------')
         self.output_message('Bot Configuration:')
         self.output_message(f'\tStarting time: {self.startingTime.strftime("%Y-%m-%d %H:%M:%S")}')

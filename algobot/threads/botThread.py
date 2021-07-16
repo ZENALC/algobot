@@ -1,3 +1,7 @@
+"""
+Main bot thread (sim or live bot).
+"""
+
 import time
 import traceback
 from datetime import datetime, timedelta
@@ -16,6 +20,9 @@ from algobot.traders.simulationtrader import SimulationTrader
 
 
 class BotSignals(QObject):
+    """
+    Signals available for the BotThread.
+    """
     # pylint: disable=too-few-public-methods
     smallError = pyqtSignal(str)  # Signal emitted when small errors such as internet losses occur.
     started = pyqtSignal(int)  # Signal emitted when bot first starts.
@@ -39,6 +46,9 @@ class BotSignals(QObject):
 
 
 class BotThread(QRunnable):
+    """
+    Main bot thread to run simulations and live bots.
+    """
     def __init__(self, caller: int, gui, logger):
         super(BotThread, self).__init__()
         self.signals = BotSignals()

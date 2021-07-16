@@ -11,6 +11,9 @@ from algobot.strategies.strategy import Strategy
 
 
 class Trader:
+    """
+    Main Trader class that all other traders (sim, live, backtester) will subclass.
+    """
     def __init__(self, symbol, precision, startingBalance, marginEnabled: bool = True):
         # Initialize initial values.
         self.startingBalance = startingBalance  # Balance we started bot with.
@@ -336,7 +339,12 @@ class Trader:
             raise ValueError("Unknown type of exit position type.")
 
     @staticmethod
-    def get_enum_from_str(string):
+    def get_enum_from_str(string: str):
+        """
+        Get enum from string. # TODO: Deprecate. (inverse will handle this).
+        :param string: String to convert to an enum.
+        :return: Enum from string provided.
+        """
         if string.lower() == "trailing":
             return TRAILING
         elif string.lower() == 'stop':

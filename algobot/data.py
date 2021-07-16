@@ -1,3 +1,7 @@
+"""
+Data object.
+"""
+
 import os
 import sqlite3
 import time
@@ -15,11 +19,13 @@ from algobot.typing_hints import DATA_TYPE
 
 
 class Data:
+    """
+    Data object that will retrieve current and historical prices from the Binance API.
+    """
     def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True,
                  updateData: bool = True, log: bool = False, logFile: str = 'data', logObject: Logger = None,
                  precision: int = 2, callback=None, caller=None):
         """
-        Data object that will retrieve current and historical prices from the Binance API.
         :param: interval: Interval for which the data object will track prices.
         :param: symbol: Symbol for which the data object will track prices.
         :param: loadData: Boolean for whether data will be loaded or not.
@@ -642,6 +648,10 @@ class Data:
         return True
 
     def get_total_non_updated_data(self) -> DATA_TYPE:
+        """
+        Get total non-updated data. TODO: Deprecate this function.
+        :return: Total non-updated data.
+        """
         return self.data + [self.current_values]
 
     @staticmethod

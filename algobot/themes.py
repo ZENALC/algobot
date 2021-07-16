@@ -1,3 +1,7 @@
+"""
+Algobot GUI themes.
+"""
+
 from algobot.interface.palettes import (bloomberg_palette, dark_palette,
                                         green_palette, light_palette,
                                         red_palette)

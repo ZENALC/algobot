@@ -1,3 +1,7 @@
+"""
+Optimizer thread.
+"""
+
 from typing import Any, Dict
 
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
@@ -8,6 +12,9 @@ from algobot.traders.backtester import Backtester
 
 
 class OptimizerSignals(QObject):
+    """
+    Optimizer signals the optimizer thread will leverage.
+    """
     # pylint: disable=too-few-public-methods
     activity = pyqtSignal(tuple)
     error = pyqtSignal(str)
@@ -17,6 +24,9 @@ class OptimizerSignals(QObject):
 
 
 class OptimizerThread(QRunnable):
+    """
+    Optimizer thread to use for running optimizers.
+    """
     def __init__(self, gui, logger, combos):
         super(OptimizerThread, self).__init__()
         self.signals = OptimizerSignals()
@@ -34,12 +44,21 @@ class OptimizerThread(QRunnable):
         return get_config_helper(self.gui, OPTIMIZER)
 
     def setup(self):
+        """
+        Setup and instantiate object to run the optimization.
+        """
         self.gui.optimizer = Backtester(**self.get_configuration_details())
 
     def stop(self):
+        """
+        Halt the optimizer thread.
+        """
         self.running = False
 
     def run_optimizer(self):
+        """
+        Execute the optimizer thread.
+        """
         optimizer = self.gui.optimizer
         optimizer.optimize(combos=self.combos, thread=self)
         self.running = False
@@ -47,6 +66,9 @@ class OptimizerThread(QRunnable):
 
     @pyqtSlot()
     def run(self):
+        """
+        Function to execute the optimizer.
+        """
         try:
             self.setup()
             self.run_optimizer()

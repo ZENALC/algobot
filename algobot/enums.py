@@ -1,3 +1,7 @@
+"""
+Enum classes and constants.
+"""
+
 # TODO: Add unit tests.
 from enum import IntEnum
 
@@ -10,6 +14,9 @@ EXIT_SHORT = 3
 
 
 class GraphType(IntEnum):
+    """
+    Graph type enums.
+    """
     NET = 1
     AVG = 2
 

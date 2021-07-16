@@ -1,3 +1,7 @@
+"""
+File for the statistics window.
+"""
+
 import os
 from typing import Any, Dict
 
@@ -11,6 +15,9 @@ statisticsUi = os.path.join(ROOT_DIR, 'UI', 'statistics.ui')
 
 
 class Statistics(QDialog):
+    """
+    Class for statistics window.
+    """
     def __init__(self, parent: QMainWindow = None):
         super(Statistics, self).__init__(parent)  # Initializing object
         uic.loadUi(statisticsUi, self)  # Loading the main UI

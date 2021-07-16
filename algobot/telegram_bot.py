@@ -1,3 +1,7 @@
+"""
+Telegram bot file.
+"""
+
 import random
 
 from telegram import Bot, constants
@@ -9,6 +13,9 @@ from algobot.traders.simulationtrader import SimulationTrader
 
 
 class TelegramBot:
+    """
+    Telegram bot class.
+    """
     def __init__(self, gui, token: str, botThread):
         self.token = token
         self.gui = gui

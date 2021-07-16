@@ -1,7 +1,11 @@
+"""
+Other commands window.
+"""
+
 import os
 import shutil
 from datetime import datetime, timezone
-from typing import List
+from typing import Any, Dict, List
 
 import pandas as pd
 from PyQt5 import QtGui, uic
@@ -20,6 +24,9 @@ otherCommandsUi = os.path.join(ROOT_DIR, 'UI', 'otherCommands.ui')
 
 
 class OtherCommands(QDialog):
+    """
+    Other commands window.
+    """
     def __init__(self, parent: QMainWindow = None):
         """
         Initializer for other commands QDialog. This is the main QDialog that supports CSV creation and data purges.
@@ -181,6 +188,11 @@ class OtherCommands(QDialog):
             open_file_or_folder(savedPath)
 
     def modify_csv_ui(self, running: bool, reset: bool = False):
+        """
+        Modify CSV tab UI based on the running and reset boolean statuses'.
+        :param running: Boolean whether CSV is being generated or not.
+        :param reset: Flag for whether to kill the CSV thread.
+        """
         self.generateCSVButton.setEnabled(not running)
         self.stopButton.setEnabled(running)
 
@@ -195,7 +207,12 @@ class OtherCommands(QDialog):
             self.csvGenerationStatus.setText("Canceling download...")
             self.csvThread.stop()
 
-    def end_snoop_generate_volatility_report(self, volatility_dict, output_type):
+    def end_snoop_generate_volatility_report(self, volatility_dict: Dict[str, Any], output_type: str):
+        """
+        End the snooping process and generate a volatility report.
+        :param volatility_dict: Volatility dictionary containing snooped information.
+        :param output_type: Output type in which to generate a report. (xlsx and csv supported)
+        """
         self.volatilityStatus.setText("Finished snooping. Generating report...")
         self.volatilityProgressBar.setValue(100)
         folder_path = create_folder("Volatility Results")
@@ -216,6 +233,9 @@ class OtherCommands(QDialog):
             open_file_or_folder(file_path)
 
     def stop_volatility_snooper(self):
+        """
+        Stop the snooping process.
+        """
         if self.volatilityThread:
             self.volatilityStatus.setText("Stopping volatility snooper...")
             self.volatilityThread.stop()
@@ -225,6 +245,10 @@ class OtherCommands(QDialog):
             self.volatilityStatus.setText("No volatility snooper running.")
 
     def modify_snooper_ui(self, running: bool):
+        """
+        Modify snooper UI's buttons based on running status.
+        :param running: Boolean whether snooper is running or not.
+        """
         self.volatilityGenerateButton.setEnabled(not running)
         self.stopVolatilityButton.setEnabled(running)
 

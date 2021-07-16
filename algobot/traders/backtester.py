@@ -1,3 +1,7 @@
+"""
+Backtester object.
+"""
+
 import copy
 import os
 import sys
@@ -25,6 +29,9 @@ from algobot.typing_hints import DATA_TYPE, DICT_TYPE
 
 
 class Backtester(Trader):
+    """
+    Backtester class.
+    """
     def __init__(self,
                  startingBalance: float,
                  data: list,
@@ -196,6 +203,12 @@ class Backtester(Trader):
 
     @staticmethod
     def generate_error_message(error: Exception, strategy: Strategy) -> str:
+        """
+        Error message generator when running a backtest.
+        :param error: Error object.
+        :param strategy: Strategy that caused this error.
+        :return: String containing error message.
+        """
         msg = f'It looks like your strategy has crashed because of: "{str(error)}". Try using' \
               f' different parameters, rewriting your strategy, or taking a look at ' \
               f'your strategy code again. The strategy that caused this crash is: ' \
@@ -204,6 +217,12 @@ class Backtester(Trader):
         return msg
 
     def strategy_loop(self, strategyData, thread) -> Union[None, str]:
+        """
+        This will traverse through all strategies and attempt to get their trends.
+        :param strategyData: Data to use to get the strategy trend.
+        :param thread: Thread object (if exists).
+        :return: String "CRASHED" if an error is raised, else None if everything goes smoothly.
+        """
         for strategy in self.strategies.values():
             try:
                 strategy.get_trend(strategyData)

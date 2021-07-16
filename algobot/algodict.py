@@ -1,3 +1,7 @@
+"""
+Base Algobot interface dictionary.
+"""
+
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 
 

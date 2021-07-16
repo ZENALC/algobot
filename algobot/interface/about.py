@@ -1,9 +1,16 @@
+"""
+About window in the GUI.
+"""
+
 from PyQt5.QtWidgets import QDialog, QHBoxLayout, QMainWindow, QPlainTextEdit
 
 import algobot
 
 
 class About(QDialog):
+    """
+    About window.
+    """
     # pylint: disable=too-few-public-methods
     def __init__(self, parent: QMainWindow = None):
         super(About, self).__init__(parent)

@@ -142,6 +142,10 @@ def load_strategy_slots(config_obj):
 
 
 def load_precision_combo_boxes(config_obj):
+    """
+    Load precision combo boxes on the config object provided.
+    :param config_obj: Configuration object to load precision combo boxes on.
+    """
     combo_boxes = [config_obj.precisionComboBox, config_obj.simulationPrecisionComboBox,
                    config_obj.backtestPrecisionComboBox, config_obj.optimizerPrecisionComboBox]
     precisions = ["Auto"] + [str(x) for x in range(2, 16)]

@@ -1,3 +1,7 @@
+"""
+Various utility functions for Algobot state.
+"""
+
 import os
 
 from algobot import helpers

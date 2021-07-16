@@ -1,13 +1,16 @@
-import time
+"""
+Test helper functions.
+"""
+
+from typing import Any, Dict
 
 import pytest
 
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.helpers import (convert_long_interval, convert_small_interval,
                              get_caller_string, get_data_from_parameter,
-                             get_elapsed_time, get_label_string,
-                             get_normalized_data, get_ups_and_downs,
-                             parse_strategy_name)
+                             get_label_string, get_normalized_data,
+                             get_ups_and_downs, parse_strategy_name)
 
 
 @pytest.mark.parametrize(
@@ -18,6 +21,11 @@ from algobot.helpers import (convert_long_interval, convert_small_interval,
     ]
 )
 def test_convert_small_interval(interval: str, expected: str):
+    """
+    Test conversions from small interval to big interval.
+    :param interval: Small interval.
+    :param expected: Converted big interval.
+    """
     assert convert_small_interval(interval) == expected, f"Expected converted interval to be: {expected}."
 
 
@@ -29,6 +37,11 @@ def test_convert_small_interval(interval: str, expected: str):
     ]
 )
 def test_convert_long_interval(interval: str, expected: str):
+    """
+    Test conversions from big interval to small interval.
+    :param interval: Big interval.
+    :param expected: Converted small interval.
+    """
     assert convert_long_interval(interval) == expected, f"Expected converted interval to be: {expected}."
 
 
@@ -43,6 +56,11 @@ def test_convert_long_interval(interval: str, expected: str):
     ]
 )
 def test_get_label_string(label: str, expected: str):
+    """
+    Test get label string functionality.
+    :param label: Label to convert.
+    :param expected: Expected converted label.
+    """
     assert get_label_string(label) == expected, f"Expected label string to be: {expected}."
 
 
@@ -56,6 +74,11 @@ def test_get_label_string(label: str, expected: str):
     ]
 )
 def test_get_caller_string(caller: int, expected: str):
+    """
+    Test get caller string functionality.
+    :param caller: Caller int.
+    :param expected: Expected caller string.
+    """
     assert get_caller_string(caller) == expected, f"Expected caller string to be: {expected}."
 
 
@@ -67,7 +90,13 @@ def test_get_caller_string(caller: int, expected: str):
         ({'high': 5}, 'high', 5)
     ]
 )
-def test_get_data_from_parameter(data, parameter, expected):
+def test_get_data_from_parameter(data: Dict[str, Any], parameter: str, expected: float):
+    """
+    Test get data from parameter functionality.
+    :param data: Data dictionary to use.
+    :param parameter: Parameter from data dictionary.
+    :param expected: Expected data.
+    """
     assert get_data_from_parameter(data, parameter) == expected, f"Expected data to be: {expected}."
 
 
@@ -101,6 +130,9 @@ def test_get_data_from_parameter(data, parameter, expected):
     ]
 )
 def test_get_normalized_data(data, date_in_utc, expected):
+    """
+    Test get normalized data functionality.
+    """
     assert get_normalized_data(data, date_in_utc) == expected, f"Expected normalized data to be: {expected}."
 
 
@@ -114,20 +146,10 @@ def test_get_normalized_data(data, date_in_utc, expected):
     ]
 )
 def test_get_ups_and_downs(data, parameter, expected):
+    """
+    Test get ups and down functionality.
+    """
     assert get_ups_and_downs(data, parameter) == expected, f"Expected ups and downs to be: {expected}."
-
-
-@pytest.mark.parametrize(
-    'elapsed, expected',
-    [
-        (time.time() - 30, ("30 seconds", "31 seconds", "32 seconds")),
-        (time.time() - 60, ("60 seconds", "1m 1s", "1m 2s")),
-        (time.time() - 3600, ("60m 0s", "1h 0m 1s", "1h 0m 2s")),
-        (time.time() - 3601, ("1h 0m 1s", "1h 0m 2s", "1h 0m 3s"))
-    ]
-)
-def test_get_elapsed_time(elapsed, expected):
-    assert get_elapsed_time(elapsed) in expected, f"Expected elapsed time to be in: {expected}."
 
 
 @pytest.mark.parametrize(
@@ -139,4 +161,9 @@ def test_get_elapsed_time(elapsed, expected):
     ]
 )
 def test_parse_strategy_name(name, expected):
+    """
+    Test parse strategy name functionality.
+    :param name: Strategy name.
+    :param expected: Parsed strategy name to be expected.
+    """
     assert parse_strategy_name(name) == expected, f"Expected parsed strategy to be: {expected}."
