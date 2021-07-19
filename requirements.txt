@@ -28,6 +28,6 @@ tornado==6.1
 typing-extensions==3.10.0.0
 tzlocal==2.1
 ujson==4.0.2
-urllib3==1.26.5
+urllib3==1.26.6
 websockets==9.1
 yarl==1.6.3
