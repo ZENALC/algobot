@@ -116,8 +116,7 @@ class Data:
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
-        I need to research the logging module better, but in essence, this function just logs and optionally prints
-        message provided.
+        This function will log and optionally print the message provided.
         :param message: Messaged to be logged and potentially printed.
         :param level: Level message will be logged at.
         :param printMessage: Boolean that decides whether message will also be printed or not.
@@ -245,8 +244,8 @@ class Data:
         result = self.get_latest_database_row()
         if result is None:
             return False
-        latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-        return self.is_latest_date(latestDate)
+        latest_date = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        return self.is_latest_date(latest_date)
 
     # noinspection PyProtectedMember
     def get_latest_timestamp(self) -> int:
@@ -275,16 +274,16 @@ class Data:
         else:
             latest_date = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
             timestamp = int(latest_date.timestamp()) * 1000  # Converting timestamp to milliseconds
-            dateWithIntervalAdded = latest_date + timedelta(minutes=self.get_interval_minutes())
-            self.output_message(f"Previous data up to UTC {dateWithIntervalAdded} found.")
+            date_with_interval_added = latest_date + timedelta(minutes=self.get_interval_minutes())
+            self.output_message(f"Previous data up to UTC {date_with_interval_added} found.")
 
         if not self.database_is_updated():
-            newData = self.get_new_data(timestamp)
+            new_data = self.get_new_data(timestamp)
             self.output_message("Successfully downloaded all new data.")
             self.output_message("Inserting data to live program...")
-            self.insert_data(newData)
+            self.insert_data(new_data)
             self.output_message("Storing updated data to database...")
-            self.dump_to_table(self.data[-len(newData):])
+            self.dump_to_table(self.data[-len(new_data):])
         else:
             self.output_message("Database is up-to-date.")
 
@@ -309,7 +308,7 @@ class Data:
         idx = 0
 
         while self.downloadLoop:
-            tempData = self.binanceClient.get_klines(
+            temp_data = self.binanceClient.get_klines(
                 symbol=self.symbol,
                 interval=self.interval,
                 limit=limit,
@@ -317,18 +316,18 @@ class Data:
                 endTime=None
             )
 
-            if len(tempData) == 0:
+            if len(temp_data) == 0:
                 break
 
-            output_data += tempData
-            start_ts = tempData[-1][0]
+            output_data += temp_data
+            start_ts = temp_data[-1][0]
             if progress_callback:
                 progress = (start_ts - total_beginning_timestamp) / end_progress * 94
                 progress_callback.emit(int(progress), "Downloading data...", caller)
 
             idx += 1
             # check if we received less than the required limit and exit the loop
-            if len(tempData) < limit:
+            if len(temp_data) < limit:
                 # exit the while loop
                 break
 
@@ -455,24 +454,24 @@ class Data:
             current_interval = self.data[-1]['date_utc'] + timedelta(minutes=self.get_interval_minutes())
             current_timestamp = int(current_interval.timestamp() * 1000)
 
-            nextInterval = current_interval + timedelta(minutes=self.get_interval_minutes())
-            nextTimestamp = int(nextInterval.timestamp() * 1000) - 1
+            next_interval = current_interval + timedelta(minutes=self.get_interval_minutes())
+            next_timestamp = int(next_interval.timestamp() * 1000) - 1
             currentData = self.binanceClient.get_klines(symbol=self.symbol,
                                                         interval=self.interval,
                                                         startTime=current_timestamp,
-                                                        endTime=nextTimestamp,
+                                                        endTime=next_timestamp,
                                                         )[0]
             self.current_values = get_normalized_data(data=currentData, date_in_utc=current_interval)
             if counter > 0:
                 self.try_callback("Successfully reconnected.")
             return self.current_values
         except Exception as e:
-            sleepTime = 5 + counter * 2
-            error_message = f"Error: {e}. Retrying in {sleepTime} seconds..."
+            sleep_time = 5 + counter * 2
+            error_message = f"Error: {e}. Retrying in {sleep_time} seconds..."
             self.output_message(error_message, 4)
-            self.try_callback(f"Internet connectivity issue detected. Trying again in {sleepTime} seconds.")
+            self.try_callback(f"Internet connectivity issue detected. Trying again in {sleep_time} seconds.")
             self.ema_dict = {}  # Reset EMA cache as it could be corrupted.
-            time.sleep(sleepTime)
+            time.sleep(sleep_time)
             return self.get_current_data(counter=counter + 1)
 
     def try_callback(self, message: str):
@@ -542,7 +541,7 @@ class Data:
         :param file_name: Filename to name CSV in.
         :return: Absolute path to CSV file.
         """
-        currentPath = os.getcwd()
+        current_path = os.getcwd()
         self.create_folders_and_change_path(folder_name="CSV")
 
         with open(file_name, 'w') as f:
@@ -558,7 +557,7 @@ class Data:
                         f'{data["taker_buy_base_asset"]}, {data["taker_buy_quote_asset"]}\n')
 
         path = os.path.join(os.getcwd(), file_name)
-        os.chdir(currentPath)
+        os.chdir(current_path)
 
         return path
 
