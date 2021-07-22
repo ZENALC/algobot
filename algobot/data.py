@@ -21,9 +21,17 @@ class Data:
     """
     Data object that will retrieve current and historical prices from the Binance API.
     """
-    def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True,
-                 updateData: bool = True, log: bool = False, logFile: str = 'data', logObject: Logger = None,
-                 precision: int = 2, callback=None, caller=None):
+    def __init__(self,
+                 interval: str = '1h',
+                 symbol: str = 'BTCUSDT',
+                 loadData: bool = True,
+                 updateData: bool = True,
+                 log: bool = False,
+                 logFile: str = 'data',
+                 logObject: Logger = None,
+                 precision: int = 2,
+                 callback=None, 
+                 caller=None):
         """
         :param: interval: Interval for which the data object will track prices.
         :param: symbol: Symbol for which the data object will track prices.
