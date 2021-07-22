@@ -534,22 +534,22 @@ class Data:
             os.mkdir(self.symbol)
         os.chdir(self.symbol)  # Go inside the folder.
 
-    def write_csv_data(self, totalData: list, fileName: str, armyTime: bool = True) -> str:
+    def write_csv_data(self, total_data: list, file_name: str, army_time: bool = True) -> str:
         """
         Writes CSV data to CSV folder in root directory of application.
-        :param armyTime: Boolean if date will be in army type. If false, data will be in standard type.
-        :param totalData: Data to write to CSV file.
-        :param fileName: Filename to name CSV in.
+        :param army_time: Boolean if date will be in army type. If false, data will be in standard type.
+        :param total_data: Data to write to CSV file.
+        :param file_name: Filename to name CSV in.
         :return: Absolute path to CSV file.
         """
         currentPath = os.getcwd()
         self.create_folders_and_change_path(folder_name="CSV")
 
-        with open(fileName, 'w') as f:
+        with open(file_name, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
                     "Taker_Buy_Base_Asset, Taker_Buy_Quote_Asset\n")
-            for data in totalData:
-                if armyTime:
+            for data in total_data:
+                if army_time:
                     parsed_date = data['date_utc'].strftime("%m/%d/%Y %H:%M")
                 else:
                     parsed_date = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
@@ -557,32 +557,32 @@ class Data:
                         f'{data["volume"]}, {data["quote_asset_volume"]}, {data["number_of_trades"]}, '
                         f'{data["taker_buy_base_asset"]}, {data["taker_buy_quote_asset"]}\n')
 
-        path = os.path.join(os.getcwd(), fileName)
+        path = os.path.join(os.getcwd(), file_name)
         os.chdir(currentPath)
 
         return path
 
-    def create_csv_file(self, descending: bool = True, armyTime: bool = True, startDate: datetime = None) -> str:
+    def create_csv_file(self, descending: bool = True, army_time: bool = True, start_date: datetime = None) -> str:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
-        :param startDate: Date to have CSV data from.
+        :param start_date: Date to have CSV data from.
         :param descending: Boolean that decides whether values in CSV are in descending format or not.
-        :param armyTime: Boolean that dictates whether dates will be written in army-time format or not.
+        :param army_time: Boolean that dictates whether dates will be written in army-time format or not.
         """
         self.update_database_and_data()  # Update data if updates exist.
-        fileName = f'{self.symbol}_data_{self.interval}.csv'
+        file_name = f'{self.symbol}_data_{self.interval}.csv'
 
         data = self.data
-        if startDate is not None:
+        if start_date is not None:
             for index, period in enumerate(data):
-                if period['date_utc'].date() <= startDate:
+                if period['date_utc'].date() <= start_date:
                     data = self.data[index:]
                     break
 
         if descending:
-            path = self.write_csv_data(data[::-1], fileName=fileName, armyTime=armyTime)
+            path = self.write_csv_data(data[::-1], file_name=file_name, army_time=army_time)
         else:
-            path = self.write_csv_data(data, fileName=fileName, armyTime=armyTime)
+            path = self.write_csv_data(data, file_name=file_name, army_time=army_time)
 
         self.output_message(f'Data saved to {path}.')
         return path
