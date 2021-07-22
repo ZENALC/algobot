@@ -1,31 +1,26 @@
 """
 Slots helper functions for configuration.py can be found here.
 """
-from PyQt5.QtWidgets import (QCheckBox, QDoubleSpinBox, QHBoxLayout, QLabel,
-                             QScrollArea, QSpinBox, QTabWidget, QVBoxLayout)
+from PyQt5.QtWidgets import (QCheckBox, QDoubleSpinBox, QHBoxLayout, QLabel, QScrollArea, QSpinBox, QTabWidget,
+                             QVBoxLayout)
 
 from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.graph_helpers import get_and_set_line_color
-from algobot.interface.config_utils.credential_utils import (
-    load_credentials, save_credentials, test_binance_credentials)
-from algobot.interface.config_utils.data_utils import (download_data,
-                                                       import_data,
-                                                       stop_download)
-from algobot.interface.config_utils.strategy_utils import (
-    add_strategy_buttons, create_strategy_inputs,
-    reset_strategy_interval_comboBox)
-from algobot.interface.config_utils.telegram_utils import (
-    reset_telegram_state, test_telegram)
-from algobot.interface.config_utils.user_config_utils import (
-    copy_config_helper, copy_settings_to_backtest, copy_settings_to_simulation,
-    load_backtest_settings, load_config_helper, load_live_settings,
-    load_optimizer_settings, load_simulation_settings, save_backtest_settings,
-    save_config_helper, save_live_settings, save_optimizer_settings,
-    save_simulation_settings)
-from algobot.interface.configuration_helpers import (
-    add_start_end_step_to_layout, create_inner_tab, get_default_widget,
-    get_regular_groupbox_and_layout)
+from algobot.interface.config_utils.credential_utils import load_credentials, save_credentials, test_binance_credentials
+from algobot.interface.config_utils.data_utils import download_data, import_data, stop_download
+from algobot.interface.config_utils.strategy_utils import (add_strategy_buttons, create_strategy_inputs,
+                                                           reset_strategy_interval_comboBox)
+from algobot.interface.config_utils.telegram_utils import reset_telegram_state, test_telegram
+from algobot.interface.config_utils.user_config_utils import (copy_config_helper, copy_settings_to_backtest,
+                                                              copy_settings_to_simulation, load_backtest_settings,
+                                                              load_config_helper, load_live_settings,
+                                                              load_optimizer_settings, load_simulation_settings,
+                                                              save_backtest_settings, save_config_helper,
+                                                              save_live_settings, save_optimizer_settings,
+                                                              save_simulation_settings)
+from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, create_inner_tab, get_default_widget,
+                                                     get_regular_groupbox_and_layout)
 
 
 def load_loss_slots(config_obj):

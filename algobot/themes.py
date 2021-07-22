@@ -2,9 +2,7 @@
 Algobot GUI themes.
 """
 
-from algobot.interface.palettes import (bloomberg_palette, dark_palette,
-                                        green_palette, light_palette,
-                                        red_palette)
+from algobot.interface.palettes import bloomberg_palette, dark_palette, green_palette, light_palette, red_palette
 
 
 def set_dark_mode(app, gui):

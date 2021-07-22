@@ -9,11 +9,9 @@ from typing import Callable, List
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 import algobot
-from algobot.algorithms import (get_basic_volatility, get_gk_volatility,
-                                get_parkinson_volatility, get_rs_volatility,
+from algobot.algorithms import (get_basic_volatility, get_gk_volatility, get_parkinson_volatility, get_rs_volatility,
                                 get_zh_volatility)
-from algobot.helpers import (convert_long_interval, get_interval_minutes,
-                             get_normalized_data)
+from algobot.helpers import convert_long_interval, get_interval_minutes, get_normalized_data
 
 
 class VolatilitySnooperSignals(QObject):

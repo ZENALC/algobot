@@ -10,8 +10,7 @@ from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
 from algobot.data import Data
 from algobot.enums import LIVE, SIMULATION
-from algobot.helpers import (convert_long_interval, convert_small_interval,
-                             get_elapsed_time, parse_precision)
+from algobot.helpers import convert_long_interval, convert_small_interval, get_elapsed_time, parse_precision
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.config_utils.telegram_utils import test_telegram
 from algobot.telegram_bot import TelegramBot

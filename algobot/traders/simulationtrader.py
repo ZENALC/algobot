@@ -8,8 +8,7 @@ from threading import Lock
 from typing import Union
 
 from algobot.data import Data
-from algobot.enums import (BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
-                           EXIT_LONG, EXIT_SHORT, LONG, SHORT)
+from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT
 from algobot.helpers import convert_small_interval, get_logger
 from algobot.traders.trader import Trader
 

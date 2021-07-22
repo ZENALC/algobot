@@ -12,36 +12,28 @@ from typing import Dict, List, Union
 from PyQt5 import QtCore, uic
 from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5.QtGui import QIcon, QTextCursor
-from PyQt5.QtWidgets import (QApplication, QCompleter, QFileDialog,
-                             QMainWindow, QMessageBox, QTableWidgetItem)
+from PyQt5.QtWidgets import QApplication, QCompleter, QFileDialog, QMainWindow, QMessageBox, QTableWidgetItem
 
 import algobot.assets
 from algobot.algodict import get_interface_dictionary
 from algobot.data import Data
-from algobot.enums import (BACKTEST, LIVE, LONG, OPTIMIZER, SHORT, SIMULATION,
-                           GraphType)
-from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots,
-                                   get_graph_dictionary,
-                                   set_backtest_graph_limits_and_empty_plots,
-                                   setup_graph_plots, setup_graphs,
-                                   update_backtest_graph_limits,
-                                   update_main_graphs)
-from algobot.helpers import (ROOT_DIR, create_folder, create_folder_if_needed,
-                             get_caller_string, open_file_or_folder)
+from algobot.enums import BACKTEST, LIVE, LONG, OPTIMIZER, SHORT, SIMULATION, GraphType
+from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots, get_graph_dictionary,
+                                   set_backtest_graph_limits_and_empty_plots, setup_graph_plots, setup_graphs,
+                                   update_backtest_graph_limits, update_main_graphs)
+from algobot.helpers import ROOT_DIR, create_folder, create_folder_if_needed, get_caller_string, open_file_or_folder
 from algobot.interface.about import About
 from algobot.interface.config_utils.state_utils import load_state, save_state
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
 from algobot.interface.statistics import Statistics
-from algobot.interface.utils import (add_to_table, clear_table, create_popup,
-                                     open_from_msg_box,
+from algobot.interface.utils import (add_to_table, clear_table, create_popup, open_from_msg_box,
                                      show_and_bring_window_to_front)
 from algobot.news_scraper import scrape_news
 from algobot.slots import initiate_slots
 from algobot.telegram_bot import TelegramBot
-from algobot.threads import (backtestThread, botThread, optimizerThread,
-                             workerThread)
+from algobot.threads import backtestThread, botThread, optimizerThread, workerThread
 from algobot.traders.backtester import Backtester
 from algobot.traders.realtrader import RealTrader
 from algobot.traders.simulationtrader import SimulationTrader

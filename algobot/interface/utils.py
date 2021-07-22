@@ -6,8 +6,7 @@ from datetime import datetime
 from typing import List
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QComboBox, QDialog, QMessageBox, QTableWidget,
-                             QTableWidgetItem)
+from PyQt5.QtWidgets import QComboBox, QDialog, QMessageBox, QTableWidget, QTableWidgetItem
 
 
 def create_popup(parent, msg: str, title='Warning'):

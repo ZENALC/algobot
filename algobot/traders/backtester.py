@@ -15,14 +15,11 @@ from typing import Dict, Union
 import pandas as pd
 from dateutil import parser
 
-from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT,
-                           EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER, SHORT)
-from algobot.helpers import (LOG_FOLDER, ROOT_DIR,
-                             convert_all_dates_to_datetime,
-                             convert_small_interval, get_interval_minutes,
-                             get_ups_and_downs, parse_strategy_name)
-from algobot.interface.config_utils.strategy_utils import \
-    get_strategies_dictionary
+from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER,
+                           SHORT)
+from algobot.helpers import (LOG_FOLDER, ROOT_DIR, convert_all_dates_to_datetime, convert_small_interval,
+                             get_interval_minutes, get_ups_and_downs, parse_strategy_name)
+from algobot.interface.config_utils.strategy_utils import get_strategies_dictionary
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 from algobot.typing_hints import DATA_TYPE, DICT_TYPE

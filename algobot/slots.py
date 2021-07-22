@@ -7,8 +7,7 @@ import webbrowser
 from algobot.enums import BACKTEST, LIVE, SIMULATION
 from algobot.helpers import open_folder
 from algobot.interface.utils import clear_table, show_and_bring_window_to_front
-from algobot.themes import (set_bear_mode, set_bloomberg_mode, set_bull_mode,
-                            set_dark_mode, set_light_mode)
+from algobot.themes import set_bear_mode, set_bloomberg_mode, set_bull_mode, set_dark_mode, set_light_mode
 
 
 def initiate_slots(app, gui):

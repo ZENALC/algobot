@@ -6,8 +6,7 @@ import os
 from typing import Any, Dict
 
 from PyQt5 import QtCore, uic
-from PyQt5.QtWidgets import (QDialog, QFormLayout, QLabel, QMainWindow,
-                             QTabWidget)
+from PyQt5.QtWidgets import QDialog, QFormLayout, QLabel, QMainWindow, QTabWidget
 
 from algobot.helpers import ROOT_DIR, get_label_string
 

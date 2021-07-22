@@ -13,8 +13,7 @@ from PyQt5.QtCore import QDate, QThreadPool
 from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QMessageBox
 
 import algobot
-from algobot.helpers import (ROOT_DIR, convert_long_interval, create_folder,
-                             get_logger, open_file_or_folder)
+from algobot.helpers import ROOT_DIR, convert_long_interval, create_folder, get_logger, open_file_or_folder
 from algobot.interface.utils import create_popup, open_from_msg_box
 from algobot.threads.downloadThread import DownloadThread
 from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread

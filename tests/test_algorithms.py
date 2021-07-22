@@ -7,16 +7,10 @@ from typing import Dict, List, Tuple, Union
 
 import pytest
 
-from algobot.algorithms import (get_accumulation_distribution_indicator,
-                                get_bandwidth, get_basic_volatility,
-                                get_bollinger_bands, get_ema,
-                                get_gk_volatility,
-                                get_intraday_intensity_indicator,
-                                get_money_flow_index,
-                                get_normal_volume_oscillator,
-                                get_normalized_intraday_intensity,
-                                get_parkinson_volatility, get_percent_b,
-                                get_rs_volatility, get_sma, get_wma,
+from algobot.algorithms import (get_accumulation_distribution_indicator, get_bandwidth, get_basic_volatility,
+                                get_bollinger_bands, get_ema, get_gk_volatility, get_intraday_intensity_indicator,
+                                get_money_flow_index, get_normal_volume_oscillator, get_normalized_intraday_intensity,
+                                get_parkinson_volatility, get_percent_b, get_rs_volatility, get_sma, get_wma,
                                 get_zh_volatility)
 
 DATA_HINT = List[Dict[str, float]]

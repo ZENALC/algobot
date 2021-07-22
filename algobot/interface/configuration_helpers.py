@@ -4,10 +4,8 @@ Helpers for the configuration object.
 
 from typing import Any, Callable, Dict, List, Tuple, Union
 
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
-                             QFrame, QGroupBox, QLabel, QLayout, QLineEdit,
-                             QScrollArea, QSpinBox, QTabWidget, QVBoxLayout,
-                             QWidget)
+from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QFrame, QGroupBox, QLabel, QLayout,
+                             QLineEdit, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from algobot import helpers
 from algobot.enums import OPTIMIZER

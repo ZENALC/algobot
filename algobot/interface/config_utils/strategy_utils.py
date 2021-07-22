@@ -3,13 +3,10 @@ Strategy helper functions for configuration.py can be found here.
 """
 from typing import Any, Dict, List, Tuple, Type, Union
 
-from PyQt5.QtWidgets import (QComboBox, QDoubleSpinBox, QLabel, QLayout,
-                             QLineEdit, QPushButton, QSpinBox, QTabWidget)
+from PyQt5.QtWidgets import QComboBox, QDoubleSpinBox, QLabel, QLayout, QLineEdit, QPushButton, QSpinBox, QTabWidget
 
 from algobot.helpers import get_interval_minutes, get_interval_strings
-from algobot.interface.configuration_helpers import (get_h_line,
-                                                     get_input_widget_value,
-                                                     set_value)
+from algobot.interface.configuration_helpers import get_h_line, get_input_widget_value, set_value
 from algobot.strategies.strategy import Strategy
 
 
