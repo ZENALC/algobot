@@ -654,15 +654,15 @@ class Data:
         :param periods: Number of periods to iterate through.
         :return: EMA
         """
-        emaUp = up_data[0]
-        emaDown = down_data[0]
+        ema_up = up_data[0]
+        ema_down = down_data[0]
         alpha = 1 / periods
 
         for index in range(1, len(up_data)):
-            emaUp = up_data[index] * alpha + emaUp * (1 - alpha)
-            emaDown = down_data[index] * alpha + emaDown * (1 - alpha)
+            ema_up = up_data[index] * alpha + ema_up * (1 - alpha)
+            ema_down = down_data[index] * alpha + ema_down * (1 - alpha)
 
-        return emaUp, emaDown
+        return ema_up, ema_down
 
     def get_rsi(self, prices: int = 14, parameter: str = 'close', shift: int = 0, round_value: bool = True,
                 update: bool = True) -> float:
@@ -679,20 +679,20 @@ class Data:
             raise ValueError('Invalid input specified.')
 
         if shift > 0:
-            updateDict = False
+            update_dict = False
             data = self.data
             shift -= 1
         else:
-            updateDict = True
+            update_dict = True
             data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
 
         start = len(data) - 500 - prices - shift if len(data) > 500 + prices + shift else 0
         ups, downs = get_ups_and_downs(data=data[start:len(data) - shift], parameter=parameter)
-        averageUp, averageDown = self.helper_get_ema(ups, downs, prices)
-        rs = averageUp / averageDown
+        average_up, average_down = self.helper_get_ema(ups, downs, prices)
+        rs = average_up / average_down
         rsi = 100 - 100 / (1 + rs)
 
-        if shift == 0 and updateDict:
+        if shift == 0 and update_dict:
             self.rsi_data[prices] = rsi
 
         if round_value:
