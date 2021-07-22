@@ -24,19 +24,19 @@ class Data:
     def __init__(self,
                  interval: str = '1h',
                  symbol: str = 'BTCUSDT',
-                 loadData: bool = True,
-                 updateData: bool = True,
+                 load_data: bool = True,
+                 update: bool = True,
                  log: bool = False,
-                 logFile: str = 'data',
-                 logObject: Logger = None,
+                 log_file: str = 'data',
+                 log_object: Logger = None,
                  precision: int = 2,
-                 callback=None, 
+                 callback=None,
                  caller=None):
         """
         :param: interval: Interval for which the data object will track prices.
         :param: symbol: Symbol for which the data object will track prices.
-        :param: loadData: Boolean for whether data will be loaded or not.
-        :param: updateData: Boolean for whether data will be updated if it is loaded.
+        :param: load_data: Boolean for whether data will be loaded or not.
+        :param: update: Boolean for whether data will be updated if it is loaded.
         :param: precision: Precision to round data to.
         :param: callback: Signal for GUI to emit back to (if passed).
         :param: caller: Caller of callback (if passed).
@@ -44,7 +44,7 @@ class Data:
         self.callback = callback  # Used to emit signals to GUI if provided.
         self.caller = caller  # Used to specify which caller emitted signals for GUI.
         self.binanceClient = Client()  # Initialize Binance client to retrieve data.
-        self.logger = get_logging_object(enable_logging=log, logFile=logFile, loggerObject=logObject)
+        self.logger = get_logging_object(enable_logging=log, logFile=log_file, loggerObject=log_object)
         self.validate_interval(interval)  # Validate the interval provided.
         self.interval = interval  # Interval to trade in.
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
@@ -75,9 +75,9 @@ class Data:
         self.databaseFile = self.get_database_file()
         self.create_table()
 
-        if loadData:
+        if load_data:
             # Create, initialize, store, and get values from database.
-            self.load_data(update=updateData)
+            self.load_data(update=update)
 
     @staticmethod
     def validate_interval(interval: str):

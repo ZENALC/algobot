@@ -18,7 +18,7 @@ def get_data_object() -> Data:
     :return: Data object.
     """
     pytest_socket.enable_socket()
-    return Data(interval='1h', symbol='YFIUSDT', loadData=True)
+    return Data(interval='1h', symbol='YFIUSDT', load_data=True)
 
 
 def test_initialization(data_object: Data):

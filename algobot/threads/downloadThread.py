@@ -45,7 +45,7 @@ class DownloadThread(QRunnable):
         """
         self.signals.started.emit()
         try:
-            self.client = Data(interval=self.interval, symbol=self.symbol, updateData=False)
+            self.client = Data(interval=self.interval, symbol=self.symbol, update=False)
             data = self.client.custom_get_new_data(progress_callback=self.signals.progress, locked=self.signals.locked,
                                                    caller=self.caller)
             if data:

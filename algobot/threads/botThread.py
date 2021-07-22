@@ -95,11 +95,11 @@ class BotThread(QRunnable):
             self.signals.activity.emit(caller, f'Retrieving {symbol} data for {intervalString.lower()} intervals...')
 
             if caller == LIVE:
-                gui.lowerIntervalData = Data(interval=lowerInterval, symbol=symbol, updateData=False)
+                gui.lowerIntervalData = Data(interval=lowerInterval, symbol=symbol, update=False)
                 gui.lowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
                                                           caller=LIVE)
             elif caller == SIMULATION:
-                gui.simulationLowerIntervalData = Data(interval=lowerInterval, symbol=symbol, updateData=False)
+                gui.simulationLowerIntervalData = Data(interval=lowerInterval, symbol=symbol, update=False)
                 gui.simulationLowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress,
                                                                     removeFirst=True, caller=SIMULATION)
             else:

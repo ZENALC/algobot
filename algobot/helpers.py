@@ -169,7 +169,7 @@ def setup_and_return_log_path(fileName: str) -> str:
 
 def get_logger(log_file: str, logger_name: str) -> logging.Logger:
     """
-    Returns a logger object with loggerName provided and that'll log to logFile.
+    Returns a logger object with loggerName provided and that'll log to log_file.
     :param log_file: File to log to.
     :param logger_name: Name logger will have.
     :return: A logger object.
