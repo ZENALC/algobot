@@ -104,8 +104,8 @@ def open_folder(folder: str):
     """
     This will open a folder even if it doesn't exist. It'll create one if it doesn't exist.
     """
-    targetPath = create_folder(folder)
-    open_file_or_folder(targetPath)
+    target_path = create_folder(folder)
+    open_file_or_folder(target_path)
 
 
 def create_folder(folder: str) -> str:
@@ -114,10 +114,10 @@ def create_folder(folder: str) -> str:
     :param folder: Folder to create in the root directory.
     :return: Path to the directory.
     """
-    targetPath = os.path.join(ROOT_DIR, folder)
-    create_folder_if_needed(targetPath)
+    target_path = os.path.join(ROOT_DIR, folder)
+    create_folder_if_needed(target_path)
 
-    return targetPath
+    return target_path
 
 
 def create_folder_if_needed(targetPath: str, basePath: str = ROOT_DIR) -> bool:
