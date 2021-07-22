@@ -11,6 +11,7 @@ from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.helpers import (ROOT_DIR, convert_long_interval, convert_small_interval, get_caller_string,
                              get_data_from_parameter, get_label_string, get_normalized_data, get_ups_and_downs,
                              load_from_csv, parse_precision, parse_strategy_name)
+from tests.binance_client_mocker import BinanceMockClient
 
 
 @pytest.mark.parametrize(
@@ -253,24 +254,6 @@ def test_parse_precision(precision: Union[str, float, int], expected: int):
     """
     Test parse precision functionality.
     """
-
-    class DummyClient:
-        @staticmethod
-        def get_symbol_info(symbol: str):
-            """
-            Mock symbol info.
-            :param symbol: Symbol for which to get information.
-            :return: Dictionary with symbol information.
-            """
-            return {
-                'symbol': symbol,
-                'filters': [
-                    {
-                        'tickSize': 1000
-                    }
-                ]
-            }
-
-    with mock.patch('algobot.BINANCE_CLIENT', DummyClient):
+    with mock.patch('algobot.BINANCE_CLIENT', BinanceMockClient):
         result = parse_precision(precision=precision, symbol="some_symbol")
         assert result == expected, f"Expected: {expected} | Got: {result}."
