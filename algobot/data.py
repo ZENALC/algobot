@@ -13,7 +13,7 @@ from typing import Dict, List, Tuple, Union
 from binance.client import Client
 from binance.helpers import interval_to_milliseconds
 
-from algobot.helpers import ROOT_DIR, get_logger, get_normalized_data, get_ups_and_downs
+from algobot.helpers import ROOT_DIR, get_logging_object, get_normalized_data, get_ups_and_downs
 from algobot.typing_hints import DATA_TYPE
 
 
@@ -36,7 +36,7 @@ class Data:
         self.callback = callback  # Used to emit signals to GUI if provided.
         self.caller = caller  # Used to specify which caller emitted signals for GUI.
         self.binanceClient = Client()  # Initialize Binance client to retrieve data.
-        self.logger = self.get_logging_object(enable_logging=log, logFile=logFile, loggerObject=logObject)
+        self.logger = get_logging_object(enable_logging=log, logFile=logFile, loggerObject=logObject)
         self.validate_interval(interval)  # Validate the interval provided.
         self.interval = interval  # Interval to trade in.
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
@@ -70,23 +70,6 @@ class Data:
         if loadData:
             # Create, initialize, store, and get values from database.
             self.load_data(update=updateData)
-
-    @staticmethod
-    def get_logging_object(enable_logging: bool, logFile: str, loggerObject: Logger) -> Union[None, Logger]:
-        """
-        Returns a logger object.
-        :param enable_logging: Boolean that determines whether logging is enabled or not.
-        :param logFile: File to log to.
-        :param loggerObject: Logger object to return if there is one already specified.
-        :return: Logger object or None.
-        """
-        if loggerObject:
-            return loggerObject
-
-        if enable_logging:
-            return get_logger(log_file=logFile, logger_name=logFile)
-
-        return None
 
     @staticmethod
     def validate_interval(interval: str):

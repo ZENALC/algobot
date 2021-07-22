@@ -180,6 +180,23 @@ def get_logger(log_file: str, logger_name: str) -> logging.Logger:
     return logger
 
 
+def get_logging_object(enable_logging: bool, logFile: str, loggerObject: Logger) -> Union[None, Logger]:
+    """
+    Returns a logger object.
+    :param enable_logging: Boolean that determines whether logging is enabled or not.
+    :param logFile: File to log to.
+    :param loggerObject: Logger object to return if there is one already specified.
+    :return: Logger object or None.
+    """
+    if loggerObject:
+        return loggerObject
+
+    if enable_logging:
+        return get_logger(log_file=logFile, logger_name=logFile)
+
+    return None
+
+
 def get_ups_and_downs(data: List[Dict[str, float]], parameter: str) -> Tuple[list, list]:
     """
     Returns lists of ups and downs from given data and parameter.
