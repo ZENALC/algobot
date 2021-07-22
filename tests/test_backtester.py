@@ -11,7 +11,8 @@ from algobot.enums import LONG, SHORT, STOP, TRAILING
 from algobot.helpers import convert_all_dates_to_datetime, load_from_csv
 from algobot.traders.backtester import Backtester
 
-test_data = load_from_csv(path=f'{os.path.dirname(__file__)}/1INCHUSDT_data_1m.csv', descending=False)
+data_path = os.path.join(os.path.dirname(__file__), 'data', '1INCHUSDT_data_1m.csv')
+test_data = load_from_csv(path=data_path, descending=False)
 convert_all_dates_to_datetime(test_data)
 
 

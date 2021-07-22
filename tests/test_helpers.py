@@ -235,7 +235,7 @@ def test_load_from_csv(descending: bool, expected: List[Dict[str, Union[str, flo
     :param descending: Boolean whether data is in descending format or not.
     :param expected: Expected data to return from function.
     """
-    data_path = os.path.join(ROOT_DIR, 'tests', 'small_csv_data.csv')
+    data_path = os.path.join(ROOT_DIR, 'tests', 'data/small_csv_data.csv')
     loaded_data = load_from_csv(data_path, descending=descending)
 
     assert loaded_data == expected, f"Expected: {expected} Got: {loaded_data}"
