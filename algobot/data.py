@@ -33,13 +33,16 @@ class Data:
                  callback=None,
                  caller=None):
         """
-        :param: interval: Interval for which the data object will track prices.
-        :param: symbol: Symbol for which the data object will track prices.
-        :param: load_data: Boolean for whether data will be loaded or not.
-        :param: update: Boolean for whether data will be updated if it is loaded.
-        :param: precision: Precision to round data to.
-        :param: callback: Signal for GUI to emit back to (if passed).
-        :param: caller: Caller of callback (if passed).
+        :param interval: Interval for which the data object will track prices.
+        :param symbol: Symbol for which the data object will track prices.
+        :param load_data: Boolean for whether data will be loaded or not.
+        :param update: Boolean for whether data will be updated if it is loaded.
+        :param log: Boolean for whether to log or not.
+        :param log_file: Name of the logger file.
+        :param log_object: Log object to use to log if provided.
+        :param precision: Precision to round data to.
+        :param callback: Signal for GUI to emit back to (if passed).
+        :param caller: Caller of callback (if passed).
         """
         self.callback = callback  # Used to emit signals to GUI if provided.
         self.caller = caller  # Used to specify which caller emitted signals for GUI.
