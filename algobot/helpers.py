@@ -21,9 +21,11 @@ import algobot
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.typing_hints import DICT_TYPE
 
+LOG_FOLDER = 'Logs'
+
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
-LOG_FOLDER = 'Logs'
+LOG_DIR = os.path.join(ROOT_DIR, LOG_FOLDER)
 
 SHORT_INTERVAL_MAP = {
     '1m': '1 Minute',
@@ -106,9 +108,11 @@ def open_folder(folder: str):
     open_file_or_folder(targetPath)
 
 
-def create_folder(folder: str):
+def create_folder(folder: str) -> str:
     """
-    This will create a folder if needed in the root directory.
+    This will create a folder if needed in the root directory and return the full path of the directory created.
+    :param folder: Folder to create in the root directory.
+    :return: Path to the directory.
     """
     targetPath = os.path.join(ROOT_DIR, folder)
     create_folder_if_needed(targetPath)
@@ -150,17 +154,16 @@ def setup_and_return_log_path(fileName: str) -> str:
     :param fileName: Log filename to be created.
     :return: Absolute path to log file.
     """
-    LOG_DIR = os.path.join(ROOT_DIR, LOG_FOLDER)
     if not os.path.exists(LOG_DIR):
         os.mkdir(LOG_DIR)
 
-    todayDate = datetime.today().strftime('%Y-%m-%d')
-    LOG_DATE_FOLDER = os.path.join(LOG_DIR, todayDate)
-    if not os.path.exists(LOG_DATE_FOLDER):
-        os.mkdir(LOG_DATE_FOLDER)
+    today_date = datetime.today().strftime('%Y-%m-%d')
+    log_date_folder = os.path.join(LOG_DIR, today_date)
+    if not os.path.exists(log_date_folder):
+        os.mkdir(log_date_folder)
 
-    logFileName = f'{datetime.now().strftime("%H-%M-%S")}-{fileName}.log'
-    fullPath = os.path.join(LOG_DATE_FOLDER, logFileName)
+    log_file_name = f'{datetime.now().strftime("%H-%M-%S")}-{fileName}.log'
+    fullPath = os.path.join(log_date_folder, log_file_name)
     return fullPath
 
 
@@ -173,8 +176,10 @@ def get_logger(log_file: str, logger_name: str) -> logging.Logger:
     """
     logger = logging.getLogger(logger_name)
     log_level = logging.INFO
+
     if is_debug():
         log_level = logging.DEBUG
+
     logger.setLevel(log_level)
     formatter = logging.Formatter('%(message)s')
     handler = logging.FileHandler(filename=setup_and_return_log_path(fileName=log_file), delay=True)
@@ -403,39 +408,40 @@ def convert_all_dates_to_datetime(data: List[Dict[str, Union[float, str, datetim
         entry['date_utc'] = parser.parse(entry['date_utc'])
 
 
-def load_from_csv(path: str, descending: bool = True) -> list:
+def load_from_csv(path: str, descending: bool = True) -> List[Dict[str, Union[float, str]]]:
     """
-    Returns data from CSV.
+    Returns data from CSV in a list of dictionaries.
     :param path: Path to CSV file.
-    :param descending: Boolean representing where data is return in descending or ascending format.
-    :return: List of data.
+    :param descending: Boolean representing whether data is returned in descending or ascending format by date.
+    :return: List of dictionaries containing open, high, low, close, and date information.
     """
     with open(path) as f:
         data = []
-        readLines = f.readlines()
-        headers = list(map(str.lower, readLines[0].rstrip().split(', ')))
-        for line in readLines[1:]:
-            line = line.rstrip()  # strip newline character
-            splitLine = line.split(',')
-            splitLine = [line.strip() for line in splitLine]
+        lines = f.readlines()
+        headers = list(map(str.lower, lines[0].rstrip().split(', ')))
+        for line in lines[1:]:
+            line = line.rstrip()  # Strip off newline character.
+            split_line = line.split(',')
+            split_line = [line.strip() for line in split_line]
             data.append({
-                headers[0]: splitLine[0],  # date in UTC
-                headers[1]: float(splitLine[1]),  # open
-                headers[2]: float(splitLine[2]),  # high
-                headers[3]: float(splitLine[3]),  # low
-                headers[4]: float(splitLine[4]),  # close
-                headers[5]: float(splitLine[5]),  # volume
+                headers[0]: split_line[0],  # Date in UTC.
+                headers[1]: float(split_line[1]),  # open
+                headers[2]: float(split_line[2]),  # high
+                headers[3]: float(split_line[3]),  # low
+                headers[4]: float(split_line[4]),  # close
+                headers[5]: float(split_line[5]),  # volume
             })
-        firstDate = parser.parse(data[0]['date_utc'])  # Retrieve first date from CSV data.
-        lastDate = parser.parse(data[-1]['date_utc'])  # Retrieve last date from CSV data.
-        if descending:
-            if firstDate < lastDate:
-                return data[::-1]
-            return data
-        else:  # This assumes the sort is ascending.
-            if firstDate > lastDate:
-                return data[::-1]
-            return data
+
+        first_date = parser.parse(data[0]['date_utc'])  # Retrieve first date from CSV data.
+        last_date = parser.parse(data[-1]['date_utc'])  # Retrieve last date from CSV data.
+
+        if descending and first_date < last_date:
+            return data[::-1]
+
+        if not descending and first_date > last_date:
+            return data[::-1]
+
+        return data
 
 
 def parse_precision(precision: str, symbol: str) -> int:
