@@ -151,8 +151,7 @@ class Data:
         if not os.path.exists(database_folder):
             os.mkdir(database_folder)
 
-        filePath = os.path.join(database_folder, f'{self.symbol}.db')
-        return filePath
+        return os.path.join(database_folder, f'{self.symbol}.db')
 
     def create_table(self):
         """
