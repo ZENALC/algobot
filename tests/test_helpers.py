@@ -3,13 +3,14 @@ Test helper functions.
 """
 import os
 from typing import Any, Dict, List, Union
+from unittest import mock
 
 import pytest
 
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.helpers import (ROOT_DIR, convert_long_interval, convert_small_interval, get_caller_string,
                              get_data_from_parameter, get_label_string, get_normalized_data, get_ups_and_downs,
-                             load_from_csv, parse_strategy_name)
+                             load_from_csv, parse_precision, parse_strategy_name)
 
 
 @pytest.mark.parametrize(
@@ -237,3 +238,39 @@ def test_load_from_csv(descending: bool, expected: List[Dict[str, Union[str, flo
     loaded_data = load_from_csv(data_path, descending=descending)
 
     assert loaded_data == expected, f"Expected: {expected} Got: {loaded_data}"
+
+
+@pytest.mark.parametrize(
+    'precision, expected',
+    [
+        ('Auto', 3),
+        (5, 5),
+        (5.1, 5),
+        (-5, -5)
+    ]
+)
+def test_parse_precision(precision: Union[str, float, int], expected: int):
+    """
+    Test parse precision functionality.
+    """
+
+    class DummyClient:
+        @staticmethod
+        def get_symbol_info(symbol: str):
+            """
+            Mock symbol info.
+            :param symbol: Symbol for which to get information.
+            :return: Dictionary with symbol information.
+            """
+            return {
+                'symbol': symbol,
+                'filters': [
+                    {
+                        'tickSize': 1000
+                    }
+                ]
+            }
+
+    with mock.patch('algobot.BINANCE_CLIENT', DummyClient):
+        result = parse_precision(precision=precision, symbol="some_symbol")
+        assert result == expected, f"Expected: {expected} | Got: {result}."
