@@ -10,8 +10,7 @@ from datetime import datetime, timedelta, timezone
 from logging import Logger
 from typing import Dict, List, Tuple, Union
 
-from binance.client import Client
-from binance.helpers import interval_to_milliseconds
+import binance
 
 from algobot.helpers import ROOT_DIR, get_logging_object, get_normalized_data, get_ups_and_downs
 from algobot.typing_hints import DATA_TYPE
@@ -46,7 +45,7 @@ class Data:
         """
         self.callback = callback  # Used to emit signals to GUI if provided.
         self.caller = caller  # Used to specify which caller emitted signals for GUI.
-        self.binanceClient = Client()  # Initialize Binance client to retrieve data.
+        self.binanceClient = binance.client.Client()  # Initialize Binance client to retrieve data.
         self.logger = get_logging_object(enable_logging=log, logFile=log_file, loggerObject=log_object)
         self.validate_interval(interval)  # Validate the interval provided.
         self.interval = interval  # Interval to trade in.
@@ -304,7 +303,7 @@ class Data:
         # This code below is taken from binance client and slightly refactored to make usage of completion percentages.
         self.downloadLoop = True
         output_data = []  # Initialize our list
-        timeframe = interval_to_milliseconds(self.interval)
+        timeframe = binance.client.interval_to_milliseconds(self.interval)
         start_ts = total_beginning_timestamp = self.get_latest_timestamp()
         end_progress = time.time() * 1000 - total_beginning_timestamp
         idx = 0
