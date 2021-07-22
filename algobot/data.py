@@ -520,15 +520,15 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
-    def create_folders_and_change_path(self, folderName: str):
+    def create_folders_and_change_path(self, folder_name: str):
         """
         Creates appropriate folders for data storage then changes current working directory to it.
-        :param folderName: Folder to create.
+        :param folder_name: Folder to create.
         """
         os.chdir(ROOT_DIR)
-        if not os.path.exists(folderName):  # Create CSV folder if it doesn't exist
-            os.mkdir(folderName)
-        os.chdir(folderName)  # Go inside the folder.
+        if not os.path.exists(folder_name):  # Create CSV folder if it doesn't exist
+            os.mkdir(folder_name)
+        os.chdir(folder_name)  # Go inside the folder.
 
         if not os.path.exists(self.symbol):  # Create symbol folder inside CSV folder if it doesn't exist.
             os.mkdir(self.symbol)
@@ -543,7 +543,7 @@ class Data:
         :return: Absolute path to CSV file.
         """
         currentPath = os.getcwd()
-        self.create_folders_and_change_path(folderName="CSV")
+        self.create_folders_and_change_path(folder_name="CSV")
 
         with open(fileName, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
