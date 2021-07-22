@@ -87,9 +87,9 @@ class Data:
         Validates interval. If incorrect interval, raises ValueError.
         :param interval: Interval to be checked in short form -> e.g. 12h for 12 hours
         """
-        availableIntervals = ('12h', '15m', '1d', '1h', '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
-        if interval not in availableIntervals:
-            raise ValueError(f'Invalid interval {interval} given. Available intervals are: \n{availableIntervals}')
+        available_intervals = ('12h', '15m', '1d', '1h', '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
+        if interval not in available_intervals:
+            raise ValueError(f'Invalid interval {interval} given. Available intervals are: \n{available_intervals}')
 
     def validate_symbol(self, symbol: str):
         """
@@ -273,9 +273,9 @@ class Data:
             timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
             self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
         else:
-            latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            timestamp = int(latestDate.timestamp()) * 1000  # Converting timestamp to milliseconds
-            dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
+            latest_date = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            timestamp = int(latest_date.timestamp()) * 1000  # Converting timestamp to milliseconds
+            dateWithIntervalAdded = latest_date + timedelta(minutes=self.get_interval_minutes())
             self.output_message(f"Previous data up to UTC {dateWithIntervalAdded} found.")
 
         if not self.database_is_updated():
@@ -373,15 +373,15 @@ class Data:
         :param get_current: Boolean for whether to include current period's data.
         :return: A list of dictionaries.
         """
-        newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
+        new_data = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
         self.downloadCompleted = True
-        if len(newData[:-1]) == 0:
+        if len(new_data[:-1]) == 0:
             raise RuntimeError("No data was fetched from Binance. Please check Binance server.")
 
         if get_current:
-            return newData
+            return new_data
         else:
-            return newData[:-1]  # Up to -1st index, because we don't want current period data.
+            return new_data[:-1]  # Up to -1st index, because we don't want current period data.
 
     def is_latest_date(self, latestDate: datetime) -> bool:
         """
@@ -398,8 +398,8 @@ class Data:
         Checks whether data is fully updated or not.
         :return: A boolean whether data is updated or not with Binance values.
         """
-        latestDate = self.data[-1]['date_utc']
-        return self.is_latest_date(latestDate)
+        latest_date = self.data[-1]['date_utc']
+        return self.is_latest_date(latest_date)
 
     def insert_data(self, newData: List[List[str]]):
         """
@@ -407,26 +407,26 @@ class Data:
         :param newData: List with new data values.
         """
         for data in newData:
-            parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
-            current_dict = get_normalized_data(data=data, date_in_utc=parsedDate)
+            parsed_date = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
+            current_dict = get_normalized_data(data=data, date_in_utc=parsed_date)
             self.data.append(current_dict)
 
     def update_data(self, verbose: bool = False):
         """
         Updates run-time data with Binance API values.
         """
-        latestDate = self.data[-1]['date_utc']
-        timestamp = int(latestDate.timestamp()) * 1000
-        dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
+        latest_date = self.data[-1]['date_utc']
+        timestamp = int(latest_date.timestamp()) * 1000
+        date_with_interval_added = latest_date + timedelta(minutes=self.get_interval_minutes())
         if verbose:
-            self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
+            self.output_message(f"Previous data found up to UTC {date_with_interval_added}.")
         if not self.data_is_updated():
             # self.try_callback("Found new data. Attempting to update...")
-            newData = []
-            while len(newData) == 0:
+            new_data = []
+            while len(new_data) == 0:
                 time.sleep(0.5)  # Sleep half a second for server to refresh new values.
-                newData = self.get_new_data(timestamp)
-            self.insert_data(newData)
+                new_data = self.get_new_data(timestamp)
+            self.insert_data(new_data)
             if verbose:
                 self.output_message("Data has been updated successfully.\n")
             # self.try_callback("Updated data successfully.")
@@ -452,17 +452,17 @@ class Data:
             if not self.data_is_updated():
                 self.update_data()
 
-            currentInterval = self.data[-1]['date_utc'] + timedelta(minutes=self.get_interval_minutes())
-            currentTimestamp = int(currentInterval.timestamp() * 1000)
+            current_interval = self.data[-1]['date_utc'] + timedelta(minutes=self.get_interval_minutes())
+            current_timestamp = int(current_interval.timestamp() * 1000)
 
-            nextInterval = currentInterval + timedelta(minutes=self.get_interval_minutes())
+            nextInterval = current_interval + timedelta(minutes=self.get_interval_minutes())
             nextTimestamp = int(nextInterval.timestamp() * 1000) - 1
             currentData = self.binanceClient.get_klines(symbol=self.symbol,
                                                         interval=self.interval,
-                                                        startTime=currentTimestamp,
+                                                        startTime=current_timestamp,
                                                         endTime=nextTimestamp,
                                                         )[0]
-            self.current_values = get_normalized_data(data=currentData, date_in_utc=currentInterval)
+            self.current_values = get_normalized_data(data=currentData, date_in_utc=current_interval)
             if counter > 0:
                 self.try_callback("Successfully reconnected.")
             return self.current_values
@@ -550,10 +550,10 @@ class Data:
                     "Taker_Buy_Base_Asset, Taker_Buy_Quote_Asset\n")
             for data in totalData:
                 if armyTime:
-                    parsedDate = data['date_utc'].strftime("%m/%d/%Y %H:%M")
+                    parsed_date = data['date_utc'].strftime("%m/%d/%Y %H:%M")
                 else:
-                    parsedDate = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
-                f.write(f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}, '
+                    parsed_date = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
+                f.write(f'{parsed_date}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}, '
                         f'{data["volume"]}, {data["quote_asset_volume"]}, {data["number_of_trades"]}, '
                         f'{data["taker_buy_base_asset"]}, {data["taker_buy_quote_asset"]}\n')
 
@@ -626,14 +626,14 @@ class Data:
             self.output_message("No data found.", 4)
             return False
 
-        previousData = self.data[0]
+        previous_data = self.data[0]
         for data in self.data[1:]:
-            if data['date_utc'] == previousData['date_utc']:
+            if data['date_utc'] == previous_data['date_utc']:
                 self.output_message("Repeated data detected.", 4)
-                self.output_message(f'Previous data: {previousData}', 4)
+                self.output_message(f'Previous data: {previous_data}', 4)
                 self.output_message(f'Next data: {data}', 4)
                 return False
-            previousData = data
+            previous_data = data
 
         self.output_message("Data has been verified to be correct.")
         return True
