@@ -12,7 +12,7 @@ import re
 import subprocess
 import time
 from datetime import datetime
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import requests
 from dateutil import parser
@@ -88,6 +88,10 @@ def get_random_color() -> str:
     :return: HEX color string.
     """
     def r():
+        """
+        Generates a random integer between 0 and 255 and returns in a hexadecimal format.
+        :return: Hexadecimal between 0 and 255.
+        """
         randomInt = random.randint(0, 255)
         return format(randomInt, '02x')
 
@@ -180,7 +184,7 @@ def get_logger(log_file: str, logger_name: str) -> logging.Logger:
     return logger
 
 
-def get_logging_object(enable_logging: bool, logFile: str, loggerObject: Logger) -> Union[None, Logger]:
+def get_logging_object(enable_logging: bool, logFile: str, loggerObject: logging.Logger) -> Optional[logging.Logger]:
     """
     Returns a logger object.
     :param enable_logging: Boolean that determines whether logging is enabled or not.
