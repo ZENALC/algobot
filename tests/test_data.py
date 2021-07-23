@@ -3,7 +3,7 @@ Test data object.
 
 TODO: Write more tests.
 """
-
+from typing import Callable
 from unittest import mock
 
 import pytest
@@ -41,7 +41,7 @@ def test_initialization(data_object: Data):
         ['51m', pytest.raises(ValueError)]
     ]
 )
-def test_validate_interval(data_object: Data, interval: str, expectation):
+def test_validate_interval(data_object: Data, interval: str, expectation: Callable):
     """
     Test validate interval function.
     :param data_object: Data object to leverage to check interval validation.
@@ -60,7 +60,7 @@ def test_validate_interval(data_object: Data, interval: str, expectation):
         ['BAD', pytest.raises(ValueError, match="Invalid symbol/ticker BAD provided.")]
     ]
 )
-def test_validate_symbol(data_object: Data, symbol: str, expectation):
+def test_validate_symbol(data_object: Data, symbol: str, expectation: Callable):
     """
     Test validate symbol function.
     :param data_object: Data object to leverage to check symbol validation.
@@ -79,13 +79,12 @@ def test_validate_symbol(data_object: Data, symbol: str, expectation):
         ('BANANAUSDT', False)
     ]
 )
-def test_is_valid_symbol(data_object, symbol, expected):
+def test_is_valid_symbol(data_object: Data, symbol: str, expected: bool):
     """
     Test to ensure is_valid_symbol works as intended.
     :param data_object: Data object to leverage to check symbol validation.
-    :param symbol:
-    :param expected:
-    :return:
+    :param symbol: Symbol value.
+    :param expected: Expected value.
     """
     result = data_object.is_valid_symbol(symbol)
     assert result is expected, f"Expected: {expected} | Got: {result}"
