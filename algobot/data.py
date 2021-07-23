@@ -565,7 +565,7 @@ class Data:
         file_name = f'{self.symbol}_data_{self.interval}.csv'
 
         data = self.data
-        if start_date is not None:
+        if start_date is not None:  # Getting data to start from.
             for index, period in enumerate(data):
                 if period['date_utc'].date() <= start_date:
                     data = self.data[index:]
@@ -590,13 +590,14 @@ class Data:
                 return True
         return False
 
-    def is_valid_average_input(self, shift: int, prices: int, extraShift: int = 0) -> bool:
+    def is_valid_average_input(self, shift: int, prices: int, extra_shift: int = 0) -> bool:
         """
         Checks whether shift, prices, and (optional) extraShift are valid.
         :param shift: Periods from current period.
         :param prices: Amount of prices to iterate over.
-        :param extraShift: Extra shift for EMA.
+        :param extra_shift: Extra shift for EMA.
         :return: A boolean whether shift, prices, and extraShift are logical or not.
+        TODO: Deprecate along with helper get EMA and RSI.
         """
         if shift < 0:
             self.output_message("Shift cannot be less than 0.")
@@ -604,7 +605,7 @@ class Data:
         elif prices <= 0:
             self.output_message("Prices cannot be 0 or less than 0.")
             return False
-        elif shift + extraShift + prices > len(self.data) + 1:
+        elif shift + extra_shift + prices > len(self.data) + 1:
             self.output_message("Shift + prices period cannot be more than data available.")
             return False
         return True
