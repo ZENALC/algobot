@@ -20,6 +20,7 @@ INTERVAL = '1h'
 ALGOBOT_TICKER = "ALGOBOTUSDT"
 
 DATABASE_FILE = "ALGOBOTUSDT.db"
+DATABASE_TABLE = "data_1h"
 DATABASE_FILE_PATH = os.path.join(ROOT_DIR, "Databases", DATABASE_FILE)
 
 
@@ -29,6 +30,34 @@ def remove_test_data():
     """
     if os.path.isfile(DATABASE_FILE_PATH):
         os.remove(DATABASE_FILE_PATH)
+
+
+def insert_test_data_to_database():
+    """
+    Insert test data into the database.
+    """
+    with open('data/small_csv_data.csv') as f:
+        total_data = f.readlines()[1:]
+
+    query = f'''INSERT INTO {DATABASE_TABLE} (
+                date_utc,
+                open_price,
+                high_price,
+                low_price,
+                close_price,
+                volume,
+                quote_asset_volume,
+                number_of_trades,
+                taker_buy_base_asset,
+                taker_buy_quote_asset
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
+
+    with closing(sqlite3.connect(DATABASE_FILE_PATH)) as connection:
+        with closing(connection.cursor()) as cursor:
+            for data in total_data:
+                cursor.execute(query, data.split(', '))
+        connection.commit()
 
 
 def setup_module():
@@ -62,7 +91,7 @@ def test_initialization(data_object: Data):
     """
     assert data_object.data is not None, "Data was not initialized properly."
     assert data_object.databaseFile == DATABASE_FILE_PATH
-    assert data_object.databaseTable == 'data_1h'
+    assert data_object.databaseTable == DATABASE_TABLE
 
 
 @pytest.mark.parametrize(
@@ -162,3 +191,17 @@ def test_create_table(data_object: Data):
     table_columns = {col[1] for col in table_info}
     assert table_columns == expected_columns, f"Expected: {expected_columns}. Got: {table_columns}"
     assert all(col[2] == 'TEXT' for col in table_info), "Expected all columns to have the TEXT data type."
+
+
+def test_get_latest_database_row(data_object: Data):
+    """
+    Test get latest database row functionality.
+    :param data_object: Data object to leverage to test this function.
+    """
+    data_object.create_table()
+    result = data_object.get_latest_database_row()
+    assert result is None, "Expected a null return."
+
+    insert_test_data_to_database()
+    result, = data_object.get_latest_database_row()
+    assert result == '03/06/2021 01:43 AM', f'Expected: "03/06/2021 01:43 AM". Got: {result}'
