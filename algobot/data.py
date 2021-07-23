@@ -400,12 +400,12 @@ class Data:
         latest_date = self.data[-1]['date_utc']
         return self.is_latest_date(latest_date)
 
-    def insert_data(self, newData: List[List[str]]):
+    def insert_data(self, new_data: List[List[str]]):
         """
         Inserts data from newData to run-time data.
-        :param newData: List with new data values.
+        :param new_data: List with new data values.
         """
-        for data in newData:
+        for data in new_data:
             parsed_date = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
             current_dict = get_normalized_data(data=data, date_in_utc=parsed_date)
             self.data.append(current_dict)
@@ -456,14 +456,16 @@ class Data:
 
             next_interval = current_interval + timedelta(minutes=self.get_interval_minutes())
             next_timestamp = int(next_interval.timestamp() * 1000) - 1
-            currentData = self.binanceClient.get_klines(symbol=self.symbol,
-                                                        interval=self.interval,
-                                                        startTime=current_timestamp,
-                                                        endTime=next_timestamp,
-                                                        )[0]
-            self.current_values = get_normalized_data(data=currentData, date_in_utc=current_interval)
+            current_data = self.binanceClient.get_klines(symbol=self.symbol,
+                                                         interval=self.interval,
+                                                         startTime=current_timestamp,
+                                                         endTime=next_timestamp,
+                                                         )[0]
+            self.current_values = get_normalized_data(data=current_data, date_in_utc=current_interval)
+
             if counter > 0:
                 self.try_callback("Successfully reconnected.")
+
             return self.current_values
         except Exception as e:
             sleep_time = 5 + counter * 2
@@ -519,21 +521,8 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
-    def create_folders_and_change_path(self, folder_name: str):
-        """
-        Creates appropriate folders for data storage then changes current working directory to it.
-        :param folder_name: Folder to create.
-        """
-        os.chdir(ROOT_DIR)
-        if not os.path.exists(folder_name):  # Create CSV folder if it doesn't exist
-            os.mkdir(folder_name)
-        os.chdir(folder_name)  # Go inside the folder.
-
-        if not os.path.exists(self.symbol):  # Create symbol folder inside CSV folder if it doesn't exist.
-            os.mkdir(self.symbol)
-        os.chdir(self.symbol)  # Go inside the folder.
-
-    def write_csv_data(self, total_data: list, file_name: str, army_time: bool = True) -> str:
+    @staticmethod
+    def write_csv_data(total_data: list, file_name: str, army_time: bool = True) -> str:
         """
         Writes CSV data to CSV folder in root directory of application.
         :param army_time: Boolean if date will be in army type. If false, data will be in standard type.
@@ -541,10 +530,10 @@ class Data:
         :param file_name: Filename to name CSV in.
         :return: Absolute path to CSV file.
         """
-        current_path = os.getcwd()
-        self.create_folders_and_change_path(folder_name="CSV")
+        file_path = os.path.join(ROOT_DIR, "CSV", file_name)
+        os.makedirs(file_path, exist_ok=True)
 
-        with open(file_name, 'w') as f:
+        with open(file_path, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
                     "Taker_Buy_Base_Asset, Taker_Buy_Quote_Asset\n")
             for data in total_data:
@@ -556,10 +545,7 @@ class Data:
                         f'{data["volume"]}, {data["quote_asset_volume"]}, {data["number_of_trades"]}, '
                         f'{data["taker_buy_base_asset"]}, {data["taker_buy_quote_asset"]}\n')
 
-        path = os.path.join(os.getcwd(), file_name)
-        os.chdir(current_path)
-
-        return path
+        return file_path
 
     def create_csv_file(self, descending: bool = True, army_time: bool = True, start_date: datetime = None) -> str:
         """
@@ -616,26 +602,23 @@ class Data:
             return False
         return True
 
-    def verify_integrity(self) -> bool:
+    def verify_integrity(self) -> DATA_TYPE:
         """
         Verifies integrity of data by checking if there's any repeated data.
-        :return: A boolean whether the data contains no repeated data or not.
+        :return: List of duplicate data found.
         """
         if len(self.data) < 1:
-            self.output_message("No data found.", 4)
-            return False
+            return []
 
+        errored_data = []
         previous_data = self.data[0]
         for data in self.data[1:]:
-            if data['date_utc'] == previous_data['date_utc']:
-                self.output_message("Repeated data detected.", 4)
-                self.output_message(f'Previous data: {previous_data}', 4)
-                self.output_message(f'Next data: {data}', 4)
-                return False
+            if data['date_utc'] != previous_data['date_utc']:
+                errored_data.append(data)
+
             previous_data = data
 
-        self.output_message("Data has been verified to be correct.")
-        return True
+        return errored_data
 
     def get_total_non_updated_data(self) -> DATA_TYPE:
         """
