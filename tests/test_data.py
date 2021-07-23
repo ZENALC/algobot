@@ -14,25 +14,27 @@ from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP
 from tests.binance_client_mocker import BinanceMockClient
 from tests.utils_for_tests import does_not_raise
 
-ALGOBOT_TICKER = "ALGOBOTUSDT"
 INTERVAL = '1h'
-DATABASE_FILE = os.path.join(ROOT_DIR, "Databases", "ALGOBOTUSDT.db")
+ALGOBOT_TICKER = "ALGOBOTUSDT"
+
+DATABASE_FILE = "ALGOBOTUSDT.db"
+DATABASE_FILE_PATH = os.path.join(ROOT_DIR, "Databases", DATABASE_FILE)
 
 
 def setup_module():
     """
     Setup module for testing by removing the test DB file.
     """
-    if os.path.isfile(DATABASE_FILE):
-        os.remove(DATABASE_FILE)
+    if os.path.isfile(DATABASE_FILE_PATH):
+        os.remove(DATABASE_FILE_PATH)
 
 
-def teardown_module():
-    """
-    Teardown module by removing the test DB file.
-    """
-    if os.path.isfile(DATABASE_FILE):
-        os.remove(DATABASE_FILE)
+# def teardown_module():
+#     """
+#     Teardown module by removing the test DB file.
+#     """
+#     if os.path.isfile(DATABASE_FILE_PATH):
+#         os.remove(DATABASE_FILE_PATH)
 
 
 @pytest.fixture(name="data_object")
@@ -47,12 +49,12 @@ def get_data_object() -> Data:
 
 def test_initialization(data_object: Data):
     """
-    TODO: Actually test it. This is doing nothing.
-
     Test data object initialization.
     :param data_object: Data object to check if initialized properly.
     """
     assert data_object.data is not None, "Data was not initialized properly."
+    assert data_object.databaseFile == DATABASE_FILE_PATH
+    assert data_object.databaseTable == 'data_1h'
 
 
 @pytest.mark.parametrize(
@@ -112,3 +114,12 @@ def test_is_valid_symbol(data_object: Data, symbol: str, expected: bool):
     """
     result = data_object.is_valid_symbol(symbol)
     assert result is expected, f"Expected: {expected} | Got: {result}"
+
+
+def test_get_database_file(data_object: Data):
+    """
+    Test to ensure get database file works as intended.
+    :param data_object: Data object to leverage to test get database file.
+    """
+    result = data_object.get_database_file()
+    assert result == DATABASE_FILE_PATH, f"Expected: {DATABASE_FILE_PATH}. Got: {result}"

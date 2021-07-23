@@ -101,19 +101,6 @@ class Data:
         if not self.is_valid_symbol(symbol):
             raise ValueError(f'Invalid symbol/ticker {symbol} provided.')
 
-    def load_data(self, update: bool = True):
-        """
-        Loads data to Data object.
-        :param update: Boolean that determines whether data is updated or not.
-        """
-        self.get_data_from_database()
-        if update:
-            if not self.database_is_updated():
-                self.output_message("Updating data...")
-                self.update_database_and_data()
-            else:
-                self.output_message("Database is up-to-date.")
-
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
         This function will log and optionally print the message provided.
@@ -268,6 +255,19 @@ class Data:
         else:
             latest_date = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
             return int(latest_date.timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
+
+    def load_data(self, update: bool = True):
+        """
+        Loads data to Data object.
+        :param update: Boolean that determines whether data is updated or not.
+        """
+        self.get_data_from_database()
+        if update:
+            if not self.database_is_updated():
+                self.output_message("Updating data...")
+                self.update_database_and_data()
+            else:
+                self.output_message("Database is up-to-date.")
 
     # noinspection PyProtectedMember
     def update_database_and_data(self):
