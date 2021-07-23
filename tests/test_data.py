@@ -3,6 +3,7 @@ Test data object.
 """
 
 import os
+import re
 from typing import Callable
 from unittest import mock
 
@@ -59,8 +60,8 @@ def test_initialization(data_object: Data):
     [
         ['15m', does_not_raise()],
         ['30m', does_not_raise()],
-        ['51m', pytest.raises(ValueError, match=f'Invalid interval 51m given. Available intervals are: '
-                                                f'\n{SHORT_INTERVAL_MAP.keys()}')]
+        ['51m', pytest.raises(ValueError, match=re.escape(f'Invalid interval 51m given. Available intervals are: '
+                                                          f'\n{SHORT_INTERVAL_MAP.keys()}'))]
     ]
 )
 def test_validate_interval(data_object: Data, interval: str, expectation: Callable):
