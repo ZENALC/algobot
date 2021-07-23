@@ -529,8 +529,7 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
-    @staticmethod
-    def write_csv_data(total_data: list, file_name: str, army_time: bool = True) -> str:
+    def write_csv_data(self, total_data: list, file_name: str, army_time: bool = True) -> str:
         """
         Writes CSV data to CSV folder in root directory of application.
         :param army_time: Boolean if date will be in army type. If false, data will be in standard type.
@@ -538,7 +537,7 @@ class Data:
         :param file_name: Filename to name CSV in.
         :return: Absolute path to CSV file.
         """
-        file_path = os.path.join(ROOT_DIR, "CSV", file_name)
+        file_path = os.path.join(ROOT_DIR, "CSV", self.symbol, file_name)
         os.makedirs(file_path, exist_ok=True)
 
         with open(file_path, 'w') as f:
@@ -562,7 +561,6 @@ class Data:
         :param descending: Boolean that decides whether values in CSV are in descending format or not.
         :param army_time: Boolean that dictates whether dates will be written in army-time format or not.
         """
-        self.update_database_and_data()  # Update data if updates exist.
         file_name = f'{self.symbol}_data_{self.interval}.csv'
 
         data = self.data
