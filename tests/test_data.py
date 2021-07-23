@@ -161,4 +161,4 @@ def test_create_table(data_object: Data):
 
     table_columns = {col[1] for col in table_info}
     assert table_columns == expected_columns, f"Expected: {expected_columns}. Got: {table_columns}"
-    assert all([col[2] == 'TEXT' for col in table_info]), "Expected all columns to have the TEXT data type."
+    assert all(col[2] == 'TEXT' for col in table_info), "Expected all columns to have the TEXT data type."
