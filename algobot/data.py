@@ -162,15 +162,15 @@ class Data:
             total_data = self.data
 
         query = f'''INSERT INTO {self.databaseTable} (
-                    date_utc, 
-                    open_price, 
-                    high_price, 
-                    low_price, 
+                    date_utc,
+                    open_price,
+                    high_price,
+                    low_price,
                     close_price,
-                    volume, 
-                    quote_asset_volume, 
-                    number_of_trades, 
-                    taker_buy_base_asset, 
+                    volume,
+                    quote_asset_volume,
+                    number_of_trades,
+                    taker_buy_base_asset,
                     taker_buy_quote_asset
                     )
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
@@ -219,15 +219,15 @@ class Data:
             with closing(connection.cursor()) as cursor:
                 rows = cursor.execute(f'''
                         SELECT 
-                        "date_utc", 
-                        "open_price", 
-                        "high_price", 
-                        "low_price", 
-                        "close_price", 
+                        "date_utc",
+                        "open_price",
+                        "high_price",
+                        "low_price",
+                        "close_price",
                         "volume",
-                        "quote_asset_volume", 
-                        "number_of_trades", 
-                        "taker_buy_base_asset", 
+                        "quote_asset_volume",
+                        "number_of_trades",
+                        "taker_buy_base_asset",
                         "taker_buy_quote_asset"
                         FROM {self.databaseTable} ORDER BY date_utc
                         ''').fetchall()
