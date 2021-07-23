@@ -537,9 +537,10 @@ class Data:
         :param file_name: Filename to name CSV in.
         :return: Absolute path to CSV file.
         """
-        file_path = os.path.join(ROOT_DIR, "CSV", self.symbol, file_name)
-        os.makedirs(file_path, exist_ok=True)
+        dir_path = os.path.join(ROOT_DIR, "CSV", self.symbol)
+        os.makedirs(dir_path, exist_ok=True)
 
+        file_path = os.path.join(dir_path, file_name)
         with open(file_path, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
                     "Taker_Buy_Base_Asset, Taker_Buy_Quote_Asset\n")
