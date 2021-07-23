@@ -99,7 +99,7 @@ class OtherCommands(QDialog):
         self.csvGenerationTicker.clearFocus()  # Shift focus to next element.
         self.csvGenerationStatus.setText("Searching for earliest start date..")
         self.csvGenerationProgressBar.setValue(0)
-        self.setDateThread = Worker(self.get_start_date_for_csv, logger=self.parent.logger)
+        self.setDateThread = Worker(self.get_start_date_for_csv)
         self.setDateThread.signals.finished.connect(self.set_start_date_for_csv)
         self.setDateThread.signals.started.connect(lambda: self.generateCSVButton.setEnabled(False))
         self.setDateThread.signals.error.connect(self.error_handle_for_csv_start_date)
