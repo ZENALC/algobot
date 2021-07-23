@@ -12,7 +12,7 @@ from typing import Dict, List, Tuple, Union
 
 import binance
 
-from algobot.helpers import ROOT_DIR, get_logging_object, get_normalized_data, get_ups_and_downs
+from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data, get_ups_and_downs
 from algobot.typing_hints import DATA_TYPE
 
 
@@ -87,7 +87,7 @@ class Data:
         Validates interval. If incorrect interval, raises ValueError.
         :param interval: Interval to be checked in short form -> e.g. 12h for 12 hours
         """
-        available_intervals = ('12h', '15m', '1d', '1h', '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
+        available_intervals = SHORT_INTERVAL_MAP.keys()
         if interval not in available_intervals:
             raise ValueError(f'Invalid interval {interval} given. Available intervals are: \n{available_intervals}')
 

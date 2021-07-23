@@ -49,6 +49,7 @@ class BinanceMockClient:
             {"symbol": "LUNAUSDT", "price": '6.940'},
             {"symbol": "XRPUSDT", "price": '0.5710'},
             {"symbol": "DOGEUSDT", "price": '0.19326'},
+            {"symbol": "ALGOBOTUSDT", "price": "1209.54"}
         ]
 
     def get_symbol_ticker(self, symbol: str = None) -> Union[Dict[str, str], List[Dict[str, str]]]:

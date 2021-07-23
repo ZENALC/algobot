@@ -1,16 +1,37 @@
 """
 Test data object.
-
-TODO: Write more tests.
 """
+
+import os
 from typing import Callable
 from unittest import mock
 
 import pytest
 
 from algobot.data import Data
+from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP
 from tests.binance_client_mocker import BinanceMockClient
 from tests.utils_for_tests import does_not_raise
+
+ALGOBOT_TICKER = "ALGOBOTUSDT"
+INTERVAL = '1h'
+DATABASE_FILE = os.path.join(ROOT_DIR, "Databases", "ALGOBOTUSDT.db")
+
+
+def setup_module():
+    """
+    Setup module for testing by removing the test DB file.
+    """
+    if os.path.isfile(DATABASE_FILE):
+        os.remove(DATABASE_FILE)
+
+
+def teardown_module():
+    """
+    Teardown module by removing the test DB file.
+    """
+    if os.path.isfile(DATABASE_FILE):
+        os.remove(DATABASE_FILE)
 
 
 @pytest.fixture(name="data_object")
@@ -20,7 +41,7 @@ def get_data_object() -> Data:
     :return: Data object.
     """
     with mock.patch('binance.client.Client', BinanceMockClient):
-        return Data(interval='1h', symbol='YFIUSDT', load_data=False)
+        return Data(interval=INTERVAL, symbol=ALGOBOT_TICKER, load_data=False)
 
 
 def test_initialization(data_object: Data):
@@ -38,7 +59,8 @@ def test_initialization(data_object: Data):
     [
         ['15m', does_not_raise()],
         ['30m', does_not_raise()],
-        ['51m', pytest.raises(ValueError)]
+        ['51m', pytest.raises(ValueError, match=f'Invalid interval 51m given. Available intervals are: '
+                                                f'\n{SHORT_INTERVAL_MAP.keys()}')]
     ]
 )
 def test_validate_interval(data_object: Data, interval: str, expectation: Callable):
@@ -57,6 +79,7 @@ def test_validate_interval(data_object: Data, interval: str, expectation: Callab
     [
         ['BTCUSDT', does_not_raise()],
         ['YFIUSDT', does_not_raise()],
+        ['   ', pytest.raises(ValueError, match="No symbol/ticker found.")],
         ['BAD', pytest.raises(ValueError, match="Invalid symbol/ticker BAD provided.")]
     ]
 )
