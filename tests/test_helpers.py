@@ -1,14 +1,17 @@
 """
 Test helper functions.
 """
-
-from typing import Any, Dict
+import os
+from typing import Any, Dict, List, Union
+from unittest import mock
 
 import pytest
 
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
-from algobot.helpers import (convert_long_interval, convert_small_interval, get_caller_string, get_data_from_parameter,
-                             get_label_string, get_normalized_data, get_ups_and_downs, parse_strategy_name)
+from algobot.helpers import (ROOT_DIR, convert_long_interval, convert_small_interval, get_caller_string,
+                             get_data_from_parameter, get_label_string, get_normalized_data, get_ups_and_downs,
+                             load_from_csv, parse_precision, parse_strategy_name)
+from tests.binance_client_mocker import BinanceMockClient
 
 
 @pytest.mark.parametrize(
@@ -165,3 +168,92 @@ def test_parse_strategy_name(name, expected):
     :param expected: Parsed strategy name to be expected.
     """
     assert parse_strategy_name(name) == expected, f"Expected parsed strategy to be: {expected}."
+
+
+def helper_for_test_load_from_csv(descending: bool) -> List[Dict[str, Union[str, float]]]:
+    """
+    Helper function for testing load from CSV.
+    :param descending: Boolean whether data is to be returned in descending format or not.
+    :return: List of dictionaries containing sample data.
+    """
+    data = [
+        {
+            'date_utc': '03/06/2021 01:43 AM',
+            'open': 3.7729,
+            'high': 3.7763,
+            'low': 3.7729,
+            'close': 3.7763,
+            'volume': 1640.75
+        },
+        {
+            'date_utc': '03/06/2021 01:42 AM',
+            'open': 3.774,
+            'high': 3.775,
+            'low': 3.7688,
+            'close': 3.7732,
+            'volume': 2263.93
+        },
+        {
+            'date_utc': '03/06/2021 01:41 AM',
+            'open': 3.7749,
+            'high': 3.7753,
+            'low': 3.774,
+            'close': 3.774,
+            'volume': 343.73
+        },
+        {
+            'date_utc': '03/06/2021 01:40 AM',
+            'open': 3.7751,
+            'high': 3.7754,
+            'low': 3.7751,
+            'close': 3.7751,
+            'volume': 213.51
+        },
+        {
+            'date_utc': '03/06/2021 01:39 AM',
+            'open': 3.7667,
+            'high': 3.7754,
+            'low': 3.7657,
+            'close': 3.7754,
+            'volume': 2067.17
+        },
+    ]
+
+    return data if descending else data[::-1]
+
+
+@pytest.mark.parametrize(
+    'descending, expected',
+    [
+        (True, helper_for_test_load_from_csv(descending=True)),
+        (False, helper_for_test_load_from_csv(descending=False))
+    ]
+)
+def test_load_from_csv(descending: bool, expected: List[Dict[str, Union[str, float]]]):
+    """
+    Test load from CSV function works as intended.
+    :param descending: Boolean whether data is in descending format or not.
+    :param expected: Expected data to return from function.
+    """
+    data_path = os.path.join(ROOT_DIR, 'tests', 'data/small_csv_data.csv')
+    loaded_data = load_from_csv(data_path, descending=descending)
+
+    assert loaded_data == expected, f"Expected: {expected} Got: {loaded_data}"
+
+
+@pytest.mark.parametrize(
+    'precision, expected',
+    [
+        ('Auto', 3),
+        (5, 5),
+        (5.1, 5),
+        (-5, -5)
+    ]
+)
+def test_parse_precision(precision: Union[str, float, int], expected: int):
+    """
+    Test parse precision functionality.
+    """
+    with mock.patch('algobot.BINANCE_CLIENT', BinanceMockClient):
+        result = parse_precision(precision=precision, symbol="some_symbol")
+        assert result == expected, f"Expected: {expected} | Got: {result}."

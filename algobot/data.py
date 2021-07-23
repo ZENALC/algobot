@@ -10,10 +10,9 @@ from datetime import datetime, timedelta, timezone
 from logging import Logger
 from typing import Dict, List, Tuple, Union
 
-from binance.client import Client
-from binance.helpers import interval_to_milliseconds
+import binance
 
-from algobot.helpers import ROOT_DIR, get_logger, get_normalized_data, get_ups_and_downs
+from algobot.helpers import ROOT_DIR, get_logging_object, get_normalized_data, get_ups_and_downs
 from algobot.typing_hints import DATA_TYPE
 
 
@@ -21,22 +20,33 @@ class Data:
     """
     Data object that will retrieve current and historical prices from the Binance API.
     """
-    def __init__(self, interval: str = '1h', symbol: str = 'BTCUSDT', loadData: bool = True,
-                 updateData: bool = True, log: bool = False, logFile: str = 'data', logObject: Logger = None,
-                 precision: int = 2, callback=None, caller=None):
+    def __init__(self,
+                 interval: str = '1h',
+                 symbol: str = 'BTCUSDT',
+                 load_data: bool = True,
+                 update: bool = True,
+                 log: bool = False,
+                 log_file: str = 'data',
+                 log_object: Logger = None,
+                 precision: int = 2,
+                 callback=None,
+                 caller=None):
         """
-        :param: interval: Interval for which the data object will track prices.
-        :param: symbol: Symbol for which the data object will track prices.
-        :param: loadData: Boolean for whether data will be loaded or not.
-        :param: updateData: Boolean for whether data will be updated if it is loaded.
-        :param: precision: Precision to round data to.
-        :param: callback: Signal for GUI to emit back to (if passed).
-        :param: caller: Caller of callback (if passed).
+        :param interval: Interval for which the data object will track prices.
+        :param symbol: Symbol for which the data object will track prices.
+        :param load_data: Boolean for whether data will be loaded or not.
+        :param update: Boolean for whether data will be updated if it is loaded.
+        :param log: Boolean for whether to log or not.
+        :param log_file: Name of the logger file.
+        :param log_object: Log object to use to log if provided.
+        :param precision: Precision to round data to.
+        :param callback: Signal for GUI to emit back to (if passed).
+        :param caller: Caller of callback (if passed).
         """
         self.callback = callback  # Used to emit signals to GUI if provided.
         self.caller = caller  # Used to specify which caller emitted signals for GUI.
-        self.binanceClient = Client()  # Initialize Binance client to retrieve data.
-        self.logger = self.get_logging_object(enable_logging=log, logFile=logFile, loggerObject=logObject)
+        self.binanceClient = binance.client.Client()  # Initialize Binance client to retrieve data.
+        self.logger = get_logging_object(enable_logging=log, logFile=log_file, loggerObject=log_object)
         self.validate_interval(interval)  # Validate the interval provided.
         self.interval = interval  # Interval to trade in.
         self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
@@ -67,26 +77,9 @@ class Data:
         self.databaseFile = self.get_database_file()
         self.create_table()
 
-        if loadData:
+        if load_data:
             # Create, initialize, store, and get values from database.
-            self.load_data(update=updateData)
-
-    @staticmethod
-    def get_logging_object(enable_logging: bool, logFile: str, loggerObject: Logger) -> Union[None, Logger]:
-        """
-        Returns a logger object.
-        :param enable_logging: Boolean that determines whether logging is enabled or not.
-        :param logFile: File to log to.
-        :param loggerObject: Logger object to return if there is one already specified.
-        :return: Logger object or None.
-        """
-        if loggerObject:
-            return loggerObject
-
-        if enable_logging:
-            return get_logger(log_file=logFile, logger_name=logFile)
-
-        return None
+            self.load_data(update=update)
 
     @staticmethod
     def validate_interval(interval: str):
@@ -94,9 +87,9 @@ class Data:
         Validates interval. If incorrect interval, raises ValueError.
         :param interval: Interval to be checked in short form -> e.g. 12h for 12 hours
         """
-        availableIntervals = ('12h', '15m', '1d', '1h', '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
-        if interval not in availableIntervals:
-            raise ValueError(f'Invalid interval {interval} given. Available intervals are: \n{availableIntervals}')
+        available_intervals = ('12h', '15m', '1d', '1h', '1m', '2h', '30m', '3d', '3m', '4h', '5m', '6h', '8h')
+        if interval not in available_intervals:
+            raise ValueError(f'Invalid interval {interval} given. Available intervals are: \n{available_intervals}')
 
     def validate_symbol(self, symbol: str):
         """
@@ -123,8 +116,7 @@ class Data:
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
-        I need to research the logging module better, but in essence, this function just logs and optionally prints
-        message provided.
+        This function will log and optionally print the message provided.
         :param message: Messaged to be logged and potentially printed.
         :param level: Level message will be logged at.
         :param printMessage: Boolean that decides whether message will also be printed or not.
@@ -252,8 +244,8 @@ class Data:
         result = self.get_latest_database_row()
         if result is None:
             return False
-        latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-        return self.is_latest_date(latestDate)
+        latest_date = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        return self.is_latest_date(latest_date)
 
     # noinspection PyProtectedMember
     def get_latest_timestamp(self) -> int:
@@ -280,18 +272,18 @@ class Data:
             timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
             self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
         else:
-            latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            timestamp = int(latestDate.timestamp()) * 1000  # Converting timestamp to milliseconds
-            dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
-            self.output_message(f"Previous data up to UTC {dateWithIntervalAdded} found.")
+            latest_date = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            timestamp = int(latest_date.timestamp()) * 1000  # Converting timestamp to milliseconds
+            date_with_interval_added = latest_date + timedelta(minutes=self.get_interval_minutes())
+            self.output_message(f"Previous data up to UTC {date_with_interval_added} found.")
 
         if not self.database_is_updated():
-            newData = self.get_new_data(timestamp)
+            new_data = self.get_new_data(timestamp)
             self.output_message("Successfully downloaded all new data.")
             self.output_message("Inserting data to live program...")
-            self.insert_data(newData)
+            self.insert_data(new_data)
             self.output_message("Storing updated data to database...")
-            self.dump_to_table(self.data[-len(newData):])
+            self.dump_to_table(self.data[-len(new_data):])
         else:
             self.output_message("Database is up-to-date.")
 
@@ -310,13 +302,13 @@ class Data:
         # This code below is taken from binance client and slightly refactored to make usage of completion percentages.
         self.downloadLoop = True
         output_data = []  # Initialize our list
-        timeframe = interval_to_milliseconds(self.interval)
+        timeframe = binance.client.interval_to_milliseconds(self.interval)
         start_ts = total_beginning_timestamp = self.get_latest_timestamp()
         end_progress = time.time() * 1000 - total_beginning_timestamp
         idx = 0
 
         while self.downloadLoop:
-            tempData = self.binanceClient.get_klines(
+            temp_data = self.binanceClient.get_klines(
                 symbol=self.symbol,
                 interval=self.interval,
                 limit=limit,
@@ -324,18 +316,18 @@ class Data:
                 endTime=None
             )
 
-            if len(tempData) == 0:
+            if len(temp_data) == 0:
                 break
 
-            output_data += tempData
-            start_ts = tempData[-1][0]
+            output_data += temp_data
+            start_ts = temp_data[-1][0]
             if progress_callback:
                 progress = (start_ts - total_beginning_timestamp) / end_progress * 94
                 progress_callback.emit(int(progress), "Downloading data...", caller)
 
             idx += 1
             # check if we received less than the required limit and exit the loop
-            if len(tempData) < limit:
+            if len(temp_data) < limit:
                 # exit the while loop
                 break
 
@@ -380,15 +372,15 @@ class Data:
         :param get_current: Boolean for whether to include current period's data.
         :return: A list of dictionaries.
         """
-        newData = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
+        new_data = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
         self.downloadCompleted = True
-        if len(newData[:-1]) == 0:
+        if len(new_data[:-1]) == 0:
             raise RuntimeError("No data was fetched from Binance. Please check Binance server.")
 
         if get_current:
-            return newData
+            return new_data
         else:
-            return newData[:-1]  # Up to -1st index, because we don't want current period data.
+            return new_data[:-1]  # Up to -1st index, because we don't want current period data.
 
     def is_latest_date(self, latestDate: datetime) -> bool:
         """
@@ -405,8 +397,8 @@ class Data:
         Checks whether data is fully updated or not.
         :return: A boolean whether data is updated or not with Binance values.
         """
-        latestDate = self.data[-1]['date_utc']
-        return self.is_latest_date(latestDate)
+        latest_date = self.data[-1]['date_utc']
+        return self.is_latest_date(latest_date)
 
     def insert_data(self, newData: List[List[str]]):
         """
@@ -414,26 +406,26 @@ class Data:
         :param newData: List with new data values.
         """
         for data in newData:
-            parsedDate = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
-            current_dict = get_normalized_data(data=data, date_in_utc=parsedDate)
+            parsed_date = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
+            current_dict = get_normalized_data(data=data, date_in_utc=parsed_date)
             self.data.append(current_dict)
 
     def update_data(self, verbose: bool = False):
         """
         Updates run-time data with Binance API values.
         """
-        latestDate = self.data[-1]['date_utc']
-        timestamp = int(latestDate.timestamp()) * 1000
-        dateWithIntervalAdded = latestDate + timedelta(minutes=self.get_interval_minutes())
+        latest_date = self.data[-1]['date_utc']
+        timestamp = int(latest_date.timestamp()) * 1000
+        date_with_interval_added = latest_date + timedelta(minutes=self.get_interval_minutes())
         if verbose:
-            self.output_message(f"Previous data found up to UTC {dateWithIntervalAdded}.")
+            self.output_message(f"Previous data found up to UTC {date_with_interval_added}.")
         if not self.data_is_updated():
             # self.try_callback("Found new data. Attempting to update...")
-            newData = []
-            while len(newData) == 0:
+            new_data = []
+            while len(new_data) == 0:
                 time.sleep(0.5)  # Sleep half a second for server to refresh new values.
-                newData = self.get_new_data(timestamp)
-            self.insert_data(newData)
+                new_data = self.get_new_data(timestamp)
+            self.insert_data(new_data)
             if verbose:
                 self.output_message("Data has been updated successfully.\n")
             # self.try_callback("Updated data successfully.")
@@ -459,27 +451,27 @@ class Data:
             if not self.data_is_updated():
                 self.update_data()
 
-            currentInterval = self.data[-1]['date_utc'] + timedelta(minutes=self.get_interval_minutes())
-            currentTimestamp = int(currentInterval.timestamp() * 1000)
+            current_interval = self.data[-1]['date_utc'] + timedelta(minutes=self.get_interval_minutes())
+            current_timestamp = int(current_interval.timestamp() * 1000)
 
-            nextInterval = currentInterval + timedelta(minutes=self.get_interval_minutes())
-            nextTimestamp = int(nextInterval.timestamp() * 1000) - 1
+            next_interval = current_interval + timedelta(minutes=self.get_interval_minutes())
+            next_timestamp = int(next_interval.timestamp() * 1000) - 1
             currentData = self.binanceClient.get_klines(symbol=self.symbol,
                                                         interval=self.interval,
-                                                        startTime=currentTimestamp,
-                                                        endTime=nextTimestamp,
+                                                        startTime=current_timestamp,
+                                                        endTime=next_timestamp,
                                                         )[0]
-            self.current_values = get_normalized_data(data=currentData, date_in_utc=currentInterval)
+            self.current_values = get_normalized_data(data=currentData, date_in_utc=current_interval)
             if counter > 0:
                 self.try_callback("Successfully reconnected.")
             return self.current_values
         except Exception as e:
-            sleepTime = 5 + counter * 2
-            error_message = f"Error: {e}. Retrying in {sleepTime} seconds..."
+            sleep_time = 5 + counter * 2
+            error_message = f"Error: {e}. Retrying in {sleep_time} seconds..."
             self.output_message(error_message, 4)
-            self.try_callback(f"Internet connectivity issue detected. Trying again in {sleepTime} seconds.")
+            self.try_callback(f"Internet connectivity issue detected. Trying again in {sleep_time} seconds.")
             self.ema_dict = {}  # Reset EMA cache as it could be corrupted.
-            time.sleep(sleepTime)
+            time.sleep(sleep_time)
             return self.get_current_data(counter=counter + 1)
 
     def try_callback(self, message: str):
@@ -527,69 +519,69 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
-    def create_folders_and_change_path(self, folderName: str):
+    def create_folders_and_change_path(self, folder_name: str):
         """
         Creates appropriate folders for data storage then changes current working directory to it.
-        :param folderName: Folder to create.
+        :param folder_name: Folder to create.
         """
         os.chdir(ROOT_DIR)
-        if not os.path.exists(folderName):  # Create CSV folder if it doesn't exist
-            os.mkdir(folderName)
-        os.chdir(folderName)  # Go inside the folder.
+        if not os.path.exists(folder_name):  # Create CSV folder if it doesn't exist
+            os.mkdir(folder_name)
+        os.chdir(folder_name)  # Go inside the folder.
 
         if not os.path.exists(self.symbol):  # Create symbol folder inside CSV folder if it doesn't exist.
             os.mkdir(self.symbol)
         os.chdir(self.symbol)  # Go inside the folder.
 
-    def write_csv_data(self, totalData: list, fileName: str, armyTime: bool = True) -> str:
+    def write_csv_data(self, total_data: list, file_name: str, army_time: bool = True) -> str:
         """
         Writes CSV data to CSV folder in root directory of application.
-        :param armyTime: Boolean if date will be in army type. If false, data will be in standard type.
-        :param totalData: Data to write to CSV file.
-        :param fileName: Filename to name CSV in.
+        :param army_time: Boolean if date will be in army type. If false, data will be in standard type.
+        :param total_data: Data to write to CSV file.
+        :param file_name: Filename to name CSV in.
         :return: Absolute path to CSV file.
         """
-        currentPath = os.getcwd()
-        self.create_folders_and_change_path(folderName="CSV")
+        current_path = os.getcwd()
+        self.create_folders_and_change_path(folder_name="CSV")
 
-        with open(fileName, 'w') as f:
+        with open(file_name, 'w') as f:
             f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
                     "Taker_Buy_Base_Asset, Taker_Buy_Quote_Asset\n")
-            for data in totalData:
-                if armyTime:
-                    parsedDate = data['date_utc'].strftime("%m/%d/%Y %H:%M")
+            for data in total_data:
+                if army_time:
+                    parsed_date = data['date_utc'].strftime("%m/%d/%Y %H:%M")
                 else:
-                    parsedDate = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
-                f.write(f'{parsedDate}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}, '
+                    parsed_date = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
+                f.write(f'{parsed_date}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}, '
                         f'{data["volume"]}, {data["quote_asset_volume"]}, {data["number_of_trades"]}, '
                         f'{data["taker_buy_base_asset"]}, {data["taker_buy_quote_asset"]}\n')
 
-        path = os.path.join(os.getcwd(), fileName)
-        os.chdir(currentPath)
+        path = os.path.join(os.getcwd(), file_name)
+        os.chdir(current_path)
 
         return path
 
-    def create_csv_file(self, descending: bool = True, armyTime: bool = True, startDate: datetime = None) -> str:
+    def create_csv_file(self, descending: bool = True, army_time: bool = True, start_date: datetime = None) -> str:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
-        :param startDate: Date to have CSV data from.
+        :param start_date: Date to have CSV data from.
         :param descending: Boolean that decides whether values in CSV are in descending format or not.
-        :param armyTime: Boolean that dictates whether dates will be written in army-time format or not.
+        :param army_time: Boolean that dictates whether dates will be written in army-time format or not.
         """
         self.update_database_and_data()  # Update data if updates exist.
-        fileName = f'{self.symbol}_data_{self.interval}.csv'
+        file_name = f'{self.symbol}_data_{self.interval}.csv'
 
         data = self.data
-        if startDate is not None:
+        if start_date is not None:
             for index, period in enumerate(data):
-                if period['date_utc'].date() <= startDate:
+                if period['date_utc'].date() <= start_date:
                     data = self.data[index:]
                     break
 
         if descending:
-            path = self.write_csv_data(data[::-1], fileName=fileName, armyTime=armyTime)
+            path = self.write_csv_data(data[::-1], file_name=file_name, army_time=army_time)
         else:
-            path = self.write_csv_data(data, fileName=fileName, armyTime=armyTime)
+            path = self.write_csv_data(data, file_name=file_name, army_time=army_time)
 
         self.output_message(f'Data saved to {path}.')
         return path
@@ -633,14 +625,14 @@ class Data:
             self.output_message("No data found.", 4)
             return False
 
-        previousData = self.data[0]
+        previous_data = self.data[0]
         for data in self.data[1:]:
-            if data['date_utc'] == previousData['date_utc']:
+            if data['date_utc'] == previous_data['date_utc']:
                 self.output_message("Repeated data detected.", 4)
-                self.output_message(f'Previous data: {previousData}', 4)
+                self.output_message(f'Previous data: {previous_data}', 4)
                 self.output_message(f'Next data: {data}', 4)
                 return False
-            previousData = data
+            previous_data = data
 
         self.output_message("Data has been verified to be correct.")
         return True
@@ -661,15 +653,15 @@ class Data:
         :param periods: Number of periods to iterate through.
         :return: EMA
         """
-        emaUp = up_data[0]
-        emaDown = down_data[0]
+        ema_up = up_data[0]
+        ema_down = down_data[0]
         alpha = 1 / periods
 
         for index in range(1, len(up_data)):
-            emaUp = up_data[index] * alpha + emaUp * (1 - alpha)
-            emaDown = down_data[index] * alpha + emaDown * (1 - alpha)
+            ema_up = up_data[index] * alpha + ema_up * (1 - alpha)
+            ema_down = down_data[index] * alpha + ema_down * (1 - alpha)
 
-        return emaUp, emaDown
+        return ema_up, ema_down
 
     def get_rsi(self, prices: int = 14, parameter: str = 'close', shift: int = 0, round_value: bool = True,
                 update: bool = True) -> float:
@@ -686,20 +678,20 @@ class Data:
             raise ValueError('Invalid input specified.')
 
         if shift > 0:
-            updateDict = False
+            update_dict = False
             data = self.data
             shift -= 1
         else:
-            updateDict = True
+            update_dict = True
             data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
 
         start = len(data) - 500 - prices - shift if len(data) > 500 + prices + shift else 0
         ups, downs = get_ups_and_downs(data=data[start:len(data) - shift], parameter=parameter)
-        averageUp, averageDown = self.helper_get_ema(ups, downs, prices)
-        rs = averageUp / averageDown
+        average_up, average_down = self.helper_get_ema(ups, downs, prices)
+        rs = average_up / average_down
         rsi = 100 - 100 / (1 + rs)
 
-        if shift == 0 and updateDict:
+        if shift == 0 and update_dict:
             self.rsi_data[prices] = rsi
 
         if round_value:

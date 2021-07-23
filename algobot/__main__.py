@@ -181,7 +181,7 @@ class Interface(QMainWindow):
         Returns all available tickers from Binance API.
         :return: List of all available tickers.
         """
-        tickers = [ticker['symbol'] for ticker in Data(loadData=False, log=False).binanceClient.get_all_tickers()]
+        tickers = [ticker['symbol'] for ticker in Data(load_data=False, log=False).binanceClient.get_all_tickers()]
         return sorted(tickers)
 
     def setup_tickers(self, tickers: List[str]):
