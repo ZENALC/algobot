@@ -166,20 +166,20 @@ class Data:
                                 );''')
                 connection.commit()
 
-    def dump_to_table(self, totalData: List[dict] = None) -> bool:
+    def dump_to_table(self, total_data: List[dict] = None) -> bool:
         """
         Dumps date and price information to database.
         :return: A boolean whether data entry was successful or not.
         """
-        if totalData is None:
-            totalData = self.data
+        if total_data is None:
+            total_data = self.data
 
         query = f'''INSERT INTO {self.databaseTable} (date_utc, open_price, high_price, low_price, close_price,
                     volume, quote_asset_volume, number_of_trades, taker_buy_base_asset, taker_buy_quote_asset)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
-                for data in totalData:
+                for data in total_data:
                     try:
                         cursor.execute(query,
                                        (data['date_utc'].strftime('%Y-%m-%d %H:%M:%S'),
@@ -220,8 +220,17 @@ class Data:
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 rows = cursor.execute(f'''
-                        SELECT "date_utc", "open_price", "high_price", "low_price", "close_price", "volume",
-                        "quote_asset_volume", "number_of_trades", "taker_buy_base_asset", "taker_buy_quote_asset"
+                        SELECT 
+                        "date_utc", 
+                        "open_price", 
+                        "high_price", 
+                        "low_price", 
+                        "close_price", 
+                        "volume",
+                        "quote_asset_volume", 
+                        "number_of_trades", 
+                        "taker_buy_base_asset", 
+                        "taker_buy_quote_asset"
                         FROM {self.databaseTable} ORDER BY date_utc
                         ''').fetchall()
 
@@ -229,7 +238,6 @@ class Data:
             self.output_message("Retrieving data from database...")
         else:
             self.output_message("No data found in database.")
-            return
 
         for row in rows:
             date_utc = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
@@ -258,8 +266,8 @@ class Data:
             # pylint: disable=protected-access
             return self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
         else:
-            latestDate = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            return int(latestDate.timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
+            latest_date = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            return int(latest_date.timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
 
     # noinspection PyProtectedMember
     def update_database_and_data(self):
@@ -382,14 +390,14 @@ class Data:
         else:
             return new_data[:-1]  # Up to -1st index, because we don't want current period data.
 
-    def is_latest_date(self, latestDate: datetime) -> bool:
+    def is_latest_date(self, latest_date: datetime) -> bool:
         """
         Checks whether the latest date available is the latest period available.
-        :param latestDate: Datetime object.
+        :param latest_date: Datetime object.
         :return: True or false whether date is latest period or not.
         """
         minutes = self.get_interval_minutes()
-        current_date = latestDate + timedelta(minutes=minutes) + timedelta(seconds=5)  # 5s leeway for server update
+        current_date = latest_date + timedelta(minutes=minutes) + timedelta(seconds=5)  # 5s leeway for server update
         return current_date >= datetime.now(timezone.utc) - timedelta(minutes=minutes)
 
     def data_is_updated(self) -> bool:
