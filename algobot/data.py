@@ -161,9 +161,20 @@ class Data:
         if total_data is None:
             total_data = self.data
 
-        query = f'''INSERT INTO {self.databaseTable} (date_utc, open_price, high_price, low_price, close_price,
-                    volume, quote_asset_volume, number_of_trades, taker_buy_base_asset, taker_buy_quote_asset)
+        query = f'''INSERT INTO {self.databaseTable} (
+                    date_utc, 
+                    open_price, 
+                    high_price, 
+                    low_price, 
+                    close_price,
+                    volume, 
+                    quote_asset_volume, 
+                    number_of_trades, 
+                    taker_buy_base_asset, 
+                    taker_buy_quote_asset
+                    )
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
+
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 for data in total_data:

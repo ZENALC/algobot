@@ -4,6 +4,8 @@ Test data object.
 
 import os
 import re
+import sqlite3
+from contextlib import closing
 from typing import Callable
 from unittest import mock
 
@@ -21,20 +23,26 @@ DATABASE_FILE = "ALGOBOTUSDT.db"
 DATABASE_FILE_PATH = os.path.join(ROOT_DIR, "Databases", DATABASE_FILE)
 
 
+def remove_test_data():
+    """
+    Remove test data.
+    """
+    if os.path.isfile(DATABASE_FILE_PATH):
+        os.remove(DATABASE_FILE_PATH)
+
+
 def setup_module():
     """
     Setup module for testing by removing the test DB file.
     """
-    if os.path.isfile(DATABASE_FILE_PATH):
-        os.remove(DATABASE_FILE_PATH)
+    remove_test_data()
 
 
 # def teardown_module():
 #     """
 #     Teardown module by removing the test DB file.
 #     """
-#     if os.path.isfile(DATABASE_FILE_PATH):
-#         os.remove(DATABASE_FILE_PATH)
+#     remove_test_data()
 
 
 @pytest.fixture(name="data_object")
@@ -123,3 +131,34 @@ def test_get_database_file(data_object: Data):
     """
     result = data_object.get_database_file()
     assert result == DATABASE_FILE_PATH, f"Expected: {DATABASE_FILE_PATH}. Got: {result}"
+
+
+def test_create_table(data_object: Data):
+    """
+    Test to ensure create table works as intended.
+    """
+    remove_test_data()
+    assert os.path.exists(DATABASE_FILE_PATH) is False, f"Expected {DATABASE_FILE_PATH} to not exist for testing."
+
+    data_object.create_table()
+    with closing(sqlite3.connect(data_object.databaseFile)) as connection:
+        with closing(connection.cursor()) as cursor:
+            table_info = cursor.execute(f'PRAGMA TABLE_INFO({data_object.databaseTable})').fetchall()
+
+    # Each tuple in table_info contains one column's information like this: (0, 'date_utc', 'TEXT', 0, None, 1)
+    expected_columns = {
+        'date_utc',
+        'open_price',
+        'high_price',
+        'low_price',
+        'close_price',
+        'volume',
+        'quote_asset_volume',
+        'number_of_trades',
+        'taker_buy_base_asset',
+        'taker_buy_quote_asset'
+    }
+
+    table_columns = {col[1] for col in table_info}
+    assert table_columns == expected_columns, f"Expected: {expected_columns}. Got: {table_columns}"
+    assert all([col[2] == 'TEXT' for col in table_info]), "Expected all columns to have the TEXT data type."
