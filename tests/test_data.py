@@ -204,4 +204,4 @@ def test_get_latest_database_row(data_object: Data):
 
     insert_test_data_to_database()
     result, = data_object.get_latest_database_row()
-    assert result == '03/06/2021 01:43 AM', f'Expected: "03/06/2021 01:43 AM". Got: {result}'
+    assert result == '03/06/2021 01:43 AM', f'Expected: 03/06/2021 01:43 AM. Got: {result}'
