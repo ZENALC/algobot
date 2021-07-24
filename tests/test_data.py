@@ -1,18 +1,19 @@
 """
 Test data object.
 """
-
 import os
 import re
 import sqlite3
 from contextlib import closing
-from typing import Callable
+from datetime import datetime
+from typing import Callable, Dict, List, Union
 from unittest import mock
 
 import pytest
+from dateutil import parser
 
 from algobot.data import Data
-from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP
+from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_normalized_data
 from tests.binance_client_mocker import BinanceMockClient
 from tests.utils_for_tests import does_not_raise
 
@@ -32,14 +33,43 @@ def remove_test_data():
         os.remove(DATABASE_FILE_PATH)
 
 
+def get_csv_data(headers: bool = False) -> List[str]:
+    """
+    Open and get CSV data.
+    :param headers: Boolean for whether you want the headers in the list of data or not.
+    """
+    data_file = os.path.join(ROOT_DIR, 'tests', 'data', 'small_csv_data.csv')
+    with open(data_file) as f:
+        index = 0 if headers else 1
+        return f.readlines()[index:]
+
+
+def get_normalized_csv_data() -> List[Dict[str, Union[float, datetime]]]:
+    """
+    Get normalized CSV data in typical Algobot fashion.
+    :return: Normalized list of dictionaries.
+    """
+    csv_data = get_csv_data(headers=True)
+    headers = csv_data[0].strip().split(', ')
+
+    normalized_data = []
+    for data in csv_data[1:]:
+        split_data = data.strip().split(', ')
+        normalized_dict = {}
+        for index in range(len(split_data)):
+            header = headers[index].lower()
+            value = split_data[index]
+            normalized_dict[header] = parser.parse(value) if header == 'date_utc' else float(value)
+        normalized_data.append(normalized_dict)
+
+    return normalized_data
+
+
 def insert_test_data_to_database():
     """
     Insert test data into the database.
     """
-    data_file = os.path.join(ROOT_DIR, 'tests', 'data', 'small_csv_data.csv')
-    with open(data_file) as f:
-        total_data = f.readlines()[1:]
-
+    total_data = get_csv_data()
     query = f'''INSERT INTO {DATABASE_TABLE} (
                 date_utc,
                 open_price,
@@ -75,7 +105,7 @@ def setup_module():
 #     remove_test_data()
 
 
-@pytest.fixture(name="data_object")
+@pytest.fixture(name="data_object", scope="function")
 def get_data_object() -> Data:
     """
     Fixture to get a data object with a mocked Binance client.
@@ -206,3 +236,22 @@ def test_get_latest_database_row(data_object: Data):
     insert_test_data_to_database()
     result, = data_object.get_latest_database_row()
     assert result == '03/06/2021 01:43 AM', f'Expected: 03/06/2021 01:43 AM. Got: {result}'
+
+
+def test_dump_to_table(data_object: Data):
+    """
+    Testing dumping to table functionality.
+    """
+    remove_test_data()
+    data_object.create_table()
+
+    normalized_csv_data = get_normalized_csv_data()
+    result = data_object.dump_to_table(normalized_csv_data)
+    assert result is True, "Expected all data to dump successfully."
+
+    with closing(sqlite3.connect(DATABASE_FILE_PATH)) as connection:
+        with closing(connection.cursor()) as cursor:
+            db_rows = cursor.execute(f"SELECT * FROM {DATABASE_TABLE} ORDER BY date_utc DESC").fetchall()
+            rows = [get_normalized_data(row, parse_date=True) for row in db_rows]
+
+    assert normalized_csv_data == rows, "Values entered are not equal."
