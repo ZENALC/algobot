@@ -275,3 +275,22 @@ def test_get_data_from_database(data_object: Data):
 
     # Reverse because data is in ascending order whereas CSV data is not.
     assert normalized_csv_data == result[::-1], "Expected data to equal."
+
+
+@pytest.mark.parametrize(
+    'data, expected',
+    [
+        ([], []),
+        ([{'date_utc': 1}, {'date_utc': 1}, {'date_utc': 5}], [{'date_utc': 1}]),
+        ([{'date_utc': 1}, {'date_utc': 5}], [])
+    ]
+)
+def test_verify_integrity(data_object, data, expected):
+    """
+    Test verify integrity functionality.
+    :param data_object: Data object to leverage to test this function.
+    :param data: Data to use to check integrity.
+    :param expected: Errored data.
+    """
+    result = data_object.verify_integrity(data)
+    assert result == expected, f"Expected: {expected}. Got: {result}."

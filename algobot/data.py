@@ -620,17 +620,18 @@ class Data:
             return False
         return True
 
-    def verify_integrity(self) -> DATA_TYPE:
+    @staticmethod
+    def verify_integrity(data: List[Dict[str, Union[float, datetime]]]) -> DATA_TYPE:
         """
         Verifies integrity of data by checking if there's any repeated data.
         :return: List of duplicate data found.
         """
-        if len(self.data) < 1:
+        if len(data) < 1:
             return []
 
         errored_data = []
-        previous_data = self.data[0]
-        for data in self.data[1:]:
+        previous_data = data[0]
+        for data in data[1:]:
             if data['date_utc'] == previous_data['date_utc']:
                 errored_data.append(data)
 
