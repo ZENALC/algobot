@@ -11,7 +11,7 @@ import random
 import re
 import subprocess
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple, Union
 
 import requests
@@ -367,7 +367,7 @@ def get_normalized_data(data: List[str], date_in_utc: Union[str, datetime] = Non
     :param parse_date: Boolean whether to parse date or not if date in UTC is not provided.
     """
     if date_in_utc is None:
-        date_in_utc = parser.parse(data[0]) if parse_date else data[0]
+        date_in_utc = parser.parse(data[0]).replace(tzinfo=timezone.utc) if parse_date else data[0]
 
     return {
         'date_utc': date_in_utc,

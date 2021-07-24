@@ -234,6 +234,7 @@ def test_get_latest_database_row(data_object: Data):
 def test_dump_to_table(data_object: Data):
     """
     Testing dumping to table functionality.
+    :param data_object: Data object to leverage to test this function.
     """
     remove_test_data()
     data_object.create_table()
@@ -242,9 +243,35 @@ def test_dump_to_table(data_object: Data):
     result = data_object.dump_to_table(normalized_csv_data)
     assert result is True, "Expected all data to dump successfully."
 
-    with closing(sqlite3.connect(DATABASE_FILE_PATH)) as connection:
-        with closing(connection.cursor()) as cursor:
-            db_rows = cursor.execute(f"SELECT * FROM {DATABASE_TABLE} ORDER BY date_utc DESC").fetchall()
-            rows = [get_normalized_data(row, parse_date=True) for row in db_rows]
+    def get_rows():
+        with closing(sqlite3.connect(DATABASE_FILE_PATH)) as connection:
+            with closing(connection.cursor()) as cursor:
+                db_rows = cursor.execute(f"SELECT * FROM {DATABASE_TABLE} ORDER BY date_utc DESC").fetchall()
+                return [get_normalized_data(row, parse_date=True) for row in db_rows]
 
+    rows = get_rows()
     assert normalized_csv_data == rows, "Values entered are not equal."
+
+    # Dumping several, duplicate values multiple times. Nothing should be dumped due to duplicates.
+    data_object.dump_to_table(normalized_csv_data)
+    data_object.dump_to_table(normalized_csv_data)
+
+    assert len(rows) == len(get_rows()), "Expected count of data to be the same."
+
+
+def test_get_data_from_database(data_object: Data):
+    """
+    Test to ensure get data from database works appropriately.
+    :param data_object: Data object to leverage to test this function.
+    """
+    normalized_csv_data = get_normalized_csv_data()
+
+    remove_test_data()
+    data_object.create_table()
+    data_object.dump_to_table(normalized_csv_data)
+    data_object.get_data_from_database()
+
+    result = data_object.data
+
+    # Reverse because data is in ascending order whereas CSV data is not.
+    assert normalized_csv_data == result[::-1], "Expected data to equal."
