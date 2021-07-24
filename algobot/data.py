@@ -172,8 +172,7 @@ class Data:
                     number_of_trades,
                     taker_buy_base_asset,
                     taker_buy_quote_asset
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
 
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
@@ -218,7 +217,7 @@ class Data:
         with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 rows = cursor.execute(f'''
-                        SELECT 
+                        SELECT
                         "date_utc",
                         "open_price",
                         "high_price",

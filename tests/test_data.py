@@ -36,7 +36,8 @@ def insert_test_data_to_database():
     """
     Insert test data into the database.
     """
-    with open('data/small_csv_data.csv') as f:
+    data_file = os.path.join(ROOT_DIR, 'tests', 'data', 'small_csv_data.csv')
+    with open(data_file) as f:
         total_data = f.readlines()[1:]
 
     query = f'''INSERT INTO {DATABASE_TABLE} (
