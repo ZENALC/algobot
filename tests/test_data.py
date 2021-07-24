@@ -10,7 +10,6 @@ from typing import Callable, Dict, List, Union
 from unittest import mock
 
 import pytest
-from dateutil import parser
 
 from algobot.data import Data
 from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_normalized_data
