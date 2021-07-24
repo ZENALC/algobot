@@ -627,16 +627,11 @@ class Data:
         :param total_data: Total data to verify integrity of.
         :return: List of duplicate data found.
         """
-        if len(total_data) < 1:
-            return []
-
         errored_data = []
-        previous_data = total_data[0]
-        for data in total_data[1:]:
-            if data['date_utc'] == previous_data['date_utc']:
+        for index, data in enumerate(total_data[:-1]):
+            next_data = total_data[index + 1]
+            if next_data['date_utc'] == data['date_utc']:
                 errored_data.append(data)
-
-            previous_data = data
 
         return errored_data
 
