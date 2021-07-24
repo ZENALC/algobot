@@ -49,17 +49,11 @@ def get_normalized_csv_data() -> List[Dict[str, Union[float, datetime]]]:
     Get normalized CSV data in typical Algobot fashion.
     :return: Normalized list of dictionaries.
     """
-    csv_data = get_csv_data(headers=True)
-    headers = csv_data[0].strip().split(', ')
-
+    csv_data = get_csv_data(headers=False)
     normalized_data = []
     for data in csv_data[1:]:
         split_data = data.strip().split(', ')
-        normalized_dict = {}
-        for index in range(len(split_data)):
-            header = headers[index].lower()
-            value = split_data[index]
-            normalized_dict[header] = parser.parse(value) if header == 'date_utc' else float(value)
+        normalized_dict = get_normalized_data(split_data, parse_date=True)
         normalized_data.append(normalized_dict)
 
     return normalized_data
