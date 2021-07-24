@@ -17,9 +17,9 @@ from tests.binance_client_mocker import BinanceMockClient
 from tests.utils_for_tests import does_not_raise
 
 INTERVAL = '1h'
-ALGOBOT_TICKER = "ALGOBOTUSDT"
+TICKER = 'ALGOBOTUSDT'
 
-DATABASE_FILE = "ALGOBOTUSDT.db"
+DATABASE_FILE = f'{TICKER}.db'
 DATABASE_TABLE = "data_1h"
 DATABASE_FILE_PATH = os.path.join(ROOT_DIR, "Databases", DATABASE_FILE)
 
@@ -50,7 +50,7 @@ def get_normalized_csv_data() -> List[Dict[str, Union[float, datetime]]]:
     """
     csv_data = get_csv_data(headers=False)
     normalized_data = []
-    for data in csv_data[1:]:
+    for data in csv_data:
         split_data = data.strip().split(', ')
         normalized_dict = get_normalized_data(split_data, parse_date=True)
         normalized_data.append(normalized_dict)
@@ -105,7 +105,7 @@ def get_data_object() -> Data:
     :return: Data object.
     """
     with mock.patch('binance.client.Client', BinanceMockClient):
-        return Data(interval=INTERVAL, symbol=ALGOBOT_TICKER, load_data=False)
+        return Data(interval=INTERVAL, symbol=TICKER, load_data=False)
 
 
 def test_initialization(data_object: Data):

@@ -631,7 +631,7 @@ class Data:
         errored_data = []
         previous_data = self.data[0]
         for data in self.data[1:]:
-            if data['date_utc'] != previous_data['date_utc']:
+            if data['date_utc'] == previous_data['date_utc']:
                 errored_data.append(data)
 
             previous_data = data
