@@ -49,11 +49,11 @@ class Data:
         self.logger = get_logging_object(enable_logging=log, logFile=log_file, loggerObject=log_object)
         self.validate_interval(interval)  # Validate the interval provided.
         self.interval = interval  # Interval to trade in.
-        self.interval_unit, self.interval_measurement = self.get_interval_unit_and_measurement()
+        self.intervalUnit, self.intervalMeasurement = self.get_interval_unit_and_measurement()
         self.precision = precision  # Decimal precision with which to show data.
-        self.data_limit = 2000  # Max amount of data to contain.
-        self.download_completed = False  # Boolean to determine whether data download is completed or not.
-        self.download_loop = True  # Boolean to determine whether data is being downloaded or not.
+        self.dataLimit = 2000  # Max amount of data to contain.
+        self.downloadCompleted = False  # Boolean to determine whether data download is completed or not.
+        self.downloadLoop = True  # Boolean to determine whether data is being downloaded or not.
         self.tickers = self.binanceClient.get_all_tickers()  # A list of all the tickers on Binance.
         self.symbol = symbol.upper()  # Symbol of data being used.
         self.validate_symbol(self.symbol)  # Validate symbol.
@@ -73,8 +73,8 @@ class Data:
             'taker_buy_quote_asset': 0
         }
 
-        self.database_table = f'data_{self.interval}'
-        self.database_file = self.get_database_file()
+        self.databaseTable = f'data_{self.interval}'
+        self.databaseFile = self.get_database_file()
         self.create_table()
 
         if load_data:
@@ -136,10 +136,10 @@ class Data:
         """
         Creates a new table with interval if it does not exist.
         """
-        with closing(sqlite3.connect(self.database_file)) as connection:
+        with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 cursor.execute(f'''
-                                CREATE TABLE IF NOT EXISTS {self.database_table}(
+                                CREATE TABLE IF NOT EXISTS {self.databaseTable}(
                                 date_utc TEXT PRIMARY KEY,
                                 open_price TEXT NOT NULL,
                                 high_price TEXT NOT NULL,
@@ -161,7 +161,7 @@ class Data:
         if total_data is None:
             total_data = self.data
 
-        query = f'''INSERT INTO {self.database_table} (
+        query = f'''INSERT INTO {self.databaseTable} (
                     date_utc,
                     open_price,
                     high_price,
@@ -174,7 +174,7 @@ class Data:
                     taker_buy_quote_asset
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'''
 
-        with closing(sqlite3.connect(self.database_file)) as connection:
+        with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 for data in total_data:
                     try:
@@ -205,16 +205,16 @@ class Data:
         Returns the latest row from database table.
         :return: Row data or None depending on if value exists.
         """
-        with closing(sqlite3.connect(self.database_file)) as connection:
+        with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
-                cursor.execute(f'SELECT date_utc FROM {self.database_table} ORDER BY date_utc DESC LIMIT 1')
+                cursor.execute(f'SELECT date_utc FROM {self.databaseTable} ORDER BY date_utc DESC LIMIT 1')
                 return cursor.fetchone()
 
     def get_data_from_database(self):
         """
         Loads data from database and appends it to run-time data.
         """
-        with closing(sqlite3.connect(self.database_file)) as connection:
+        with closing(sqlite3.connect(self.databaseFile)) as connection:
             with closing(connection.cursor()) as cursor:
                 rows = cursor.execute(f'''
                         SELECT
@@ -228,7 +228,7 @@ class Data:
                         "number_of_trades",
                         "taker_buy_base_asset",
                         "taker_buy_quote_asset"
-                        FROM {self.database_table} ORDER BY date_utc
+                        FROM {self.databaseTable} ORDER BY date_utc
                         ''').fetchall()
 
         if len(rows) > 0:
@@ -318,14 +318,14 @@ class Data:
         :return: A list of dictionaries.
         """
         # This code below is taken from binance client and slightly refactored to make usage of completion percentages.
-        self.download_loop = True
+        self.downloadLoop = True
         output_data = []  # Initialize our list
         timeframe = binance.client.interval_to_milliseconds(self.interval)
         start_ts = total_beginning_timestamp = self.get_latest_timestamp()
         end_progress = time.time() * 1000 - total_beginning_timestamp
         idx = 0
 
-        while self.download_loop:
+        while self.downloadLoop:
             temp_data = self.binanceClient.get_klines(
                 symbol=self.symbol,
                 interval=self.interval,
@@ -356,7 +356,7 @@ class Data:
             if idx % 5 == 0:
                 time.sleep(1)
 
-        if not self.download_loop:
+        if not self.downloadLoop:
             progress_callback.emit(-1, "Download canceled.", caller)
             return []
 
@@ -378,8 +378,8 @@ class Data:
             self.dump_to_table(self.data[start_index_for_dump:-1])
 
         progress_callback.emit(100, "Downloaded all new data successfully.", caller)
-        self.download_loop = False
-        self.download_completed = True
+        self.downloadLoop = False
+        self.downloadCompleted = True
         return self.data
 
     def get_new_data(self, timestamp: int, limit: int = 1000, get_current: bool = False) -> list:
@@ -391,7 +391,7 @@ class Data:
         :return: A list of dictionaries.
         """
         new_data = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
-        self.download_completed = True
+        self.downloadCompleted = True
         if len(new_data[:-1]) == 0:
             raise RuntimeError("No data was fetched from Binance. Please check Binance server.")
 
@@ -454,9 +454,9 @@ class Data:
         """
         Remove past data when over data limit.
         """
-        if len(self.data) > self.data_limit:  # Remove past data.
+        if len(self.data) > self.dataLimit:  # Remove past data.
             self.dump_to_table()
-            self.data = self.data[self.data_limit // 2:]
+            self.data = self.data[self.dataLimit // 2:]
 
     def get_current_data(self, counter: int = 0) -> Dict[str, Union[str, float]]:
         """
@@ -530,12 +530,12 @@ class Data:
         Returns interval minutes.
         :return: An integer representing the minutes for an interval.
         """
-        if self.interval_unit == 'h':
-            return self.interval_measurement * 60
-        elif self.interval_unit == 'm':
-            return self.interval_measurement
-        elif self.interval_unit == 'd':
-            return self.interval_measurement * 24 * 60
+        if self.intervalUnit == 'h':
+            return self.intervalMeasurement * 60
+        elif self.intervalUnit == 'm':
+            return self.intervalMeasurement
+        elif self.intervalUnit == 'd':
+            return self.intervalMeasurement * 24 * 60
         else:
             raise ValueError("Invalid interval.", 4)
 

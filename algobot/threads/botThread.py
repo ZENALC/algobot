@@ -106,7 +106,7 @@ class BotThread(QRunnable):
                 raise TypeError("Invalid type of caller specified.")
 
             lowerData = gui.lowerIntervalData if caller == LIVE else gui.simulationLowerIntervalData
-            if not lowerData or not lowerData.download_completed:
+            if not lowerData or not lowerData.downloadCompleted:
                 raise RuntimeError("Lower interval download failed.")
             self.signals.activity.emit(caller, "Retrieved lower interval data successfully.")
         else:
@@ -160,7 +160,7 @@ class BotThread(QRunnable):
         self.trader.addTradeCallback = self.signals.addTrade  # Passing an add trade call black.
         self.trader.dataView.callback = self.signals.activity  # Passing activity signal to data object.
         self.trader.dataView.caller = caller  # Passing caller to data object.
-        if not self.trader.dataView.download_completed:
+        if not self.trader.dataView.downloadCompleted:
             raise RuntimeError("Download failed.")
 
         self.signals.activity.emit(caller, "Retrieved data successfully.")

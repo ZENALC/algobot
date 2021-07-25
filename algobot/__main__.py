@@ -632,10 +632,10 @@ class Interface(QMainWindow):
         if caller == SIMULATION:
             self.simulationRunningLive = False
             if self.simulationTrader:
-                self.simulationTrader.dataView.download_loop = False
+                self.simulationTrader.dataView.downloadLoop = False
 
                 if self.simulationLowerIntervalData:
-                    self.simulationLowerIntervalData.download_loop = False
+                    self.simulationLowerIntervalData.downloadLoop = False
 
                 while not self.simulationTrader.completedLoop:
                     self.simulationRunningLive = False
@@ -649,10 +649,10 @@ class Interface(QMainWindow):
         elif caller == LIVE:
             self.runningLive = False
             if self.trader:
-                self.trader.dataView.download_loop = False
+                self.trader.dataView.downloadLoop = False
 
                 if self.lowerIntervalData:
-                    self.lowerIntervalData.download_loop = False
+                    self.lowerIntervalData.downloadLoop = False
 
                 if self.configuration.chatPass:
                     self.telegramBot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended.")
@@ -688,15 +688,15 @@ class Interface(QMainWindow):
         """
         if caller == LIVE:
             self.runningLive = False
-            if self.lowerIntervalData and not self.lowerIntervalData.download_completed:
+            if self.lowerIntervalData and not self.lowerIntervalData.downloadCompleted:
                 self.download_progress_update(value=0, message="Lower interval data download failed.", caller=caller)
         elif caller == SIMULATION:
             self.simulationRunningLive = False
-            if self.simulationLowerIntervalData and not self.simulationLowerIntervalData.download_completed:
+            if self.simulationLowerIntervalData and not self.simulationLowerIntervalData.downloadCompleted:
                 self.download_progress_update(value=0, message="Lower interval data download failed.", caller=caller)
 
         trader = self.get_trader(caller=caller)
-        if trader and caller != BACKTEST and not trader.dataView.download_completed:
+        if trader and caller != BACKTEST and not trader.dataView.downloadCompleted:
             self.download_progress_update(value=0, message="Download failed.", caller=caller)
 
         if '-1021' in msg:

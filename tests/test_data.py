@@ -114,8 +114,8 @@ def test_initialization(data_object: Data):
     :param data_object: Data object to check if initialized properly.
     """
     assert data_object.data is not None, "Data was not initialized properly."
-    assert data_object.database_file == DATABASE_FILE_PATH
-    assert data_object.database_table == DATABASE_TABLE
+    assert data_object.databaseFile == DATABASE_FILE_PATH
+    assert data_object.databaseTable == DATABASE_TABLE
 
 
 @pytest.mark.parametrize(
@@ -194,9 +194,9 @@ def test_create_table(data_object: Data):
     assert os.path.exists(DATABASE_FILE_PATH) is False, f"Expected {DATABASE_FILE_PATH} to not exist for testing."
 
     data_object.create_table()
-    with closing(sqlite3.connect(data_object.database_file)) as connection:
+    with closing(sqlite3.connect(data_object.databaseFile)) as connection:
         with closing(connection.cursor()) as cursor:
-            table_info = cursor.execute(f'PRAGMA TABLE_INFO({data_object.database_table})').fetchall()
+            table_info = cursor.execute(f'PRAGMA TABLE_INFO({data_object.databaseTable})').fetchall()
 
     # Each tuple in table_info contains one column's information like this: (0, 'date_utc', 'TEXT', 0, None, 1)
     expected_columns = {
