@@ -30,7 +30,7 @@ jobs:
           pip install pipenv
           pipenv install --dev
       - name: Test with pytest
-        run: pytest -v tests/
+        run: pipenv run pytest -v tests/
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -51,4 +51,4 @@ jobs:
           pip install pipenv
           pipenv install --dev
       - name: Lint
-        run: pre-commit run --all
+        run: pipenv run pre-commit run --all
