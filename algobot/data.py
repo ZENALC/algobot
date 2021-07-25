@@ -9,7 +9,6 @@ from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from logging import Logger
 from typing import Dict, List, Tuple, Union
-import pandas as pd
 
 import binance
 
@@ -124,7 +123,7 @@ class Data:
 
     def get_database_file(self) -> str:
         """
-        Retrieves database file path.
+        Creates a database folders if necessary then returns database file path based on the symbol being used.
         :return: Database file path.
         """
         database_folder = os.path.join(ROOT_DIR, 'Databases')
