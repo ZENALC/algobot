@@ -1,6 +1,7 @@
 """
 Test data object.
 """
+import filecmp
 import os
 import re
 import sqlite3
@@ -10,6 +11,7 @@ from typing import Callable, Dict, List, Union
 from unittest import mock
 
 import pytest
+from dateutil import parser
 
 from algobot.data import Data
 from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_normalized_data
@@ -246,7 +248,7 @@ def test_dump_to_table(data_object: Data):
     def get_rows():
         with closing(sqlite3.connect(DATABASE_FILE_PATH)) as connection:
             with closing(connection.cursor()) as cursor:
-                db_rows = cursor.execute(f"SELECT * FROM {DATABASE_TABLE} ORDER BY date_utc ASC").fetchall()
+                db_rows = cursor.execute(f"SELECT * FROM {DATABASE_TABLE} ORDER BY date_utc").fetchall()
                 return [get_normalized_data(row, parse_date=True) for row in db_rows]
 
     rows = get_rows()
@@ -312,3 +314,33 @@ def test_write_csv_data(data_object: Data):
         generated_data = f.readlines()
 
     assert generated_data == get_csv_data(headers=True), "Expected data to be equal."
+
+
+@pytest.mark.parametrize(
+    'descending, army_time, start_date, expected_file_to_match',
+    [
+        (False, False, '03/06/2021', 'asc_non_army_middle.csv'),
+        (True, False, '03/05/2021', 'desc_non_army_middle.csv'),
+        (True, True, '03/07/2022', 'non_existent.csv')
+    ]
+)
+def test_create_csv_file(data_object: Data, descending, army_time, start_date, expected_file_to_match):
+    """
+    Test create CSV file functionality.
+    :param data_object: Data object to leverage to test this function.
+    :param descending: Boolean that decides whether values in CSV are in descending format or not.
+    :param army_time: Boolean that dictates whether dates will be written in army-time format or not.
+    :param start_date: Date to have CSV data from.
+    """
+    remove_test_data()
+    data_object.create_table()
+
+    insert_test_data_to_database()
+    data_object.get_data_from_database()
+
+    start_date = parser.parse(start_date).date()
+
+    path = data_object.create_csv_file(descending=descending, army_time=army_time, start_date=start_date)
+    path_to_equal = os.path.join(ROOT_DIR, 'tests', 'data', 'test_create_csv_file_data', expected_file_to_match)
+
+    assert filecmp.cmp(path, path_to_equal)

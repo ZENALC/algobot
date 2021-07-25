@@ -566,7 +566,7 @@ class Data:
 
         return file_path
 
-    def create_csv_file(self, descending: bool = True, army_time: bool = True, start_date: datetime = None) -> str:
+    def create_csv_file(self, descending: bool = True, army_time: bool = True, start_date: datetime.date = None) -> str:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
         :param start_date: Date to have CSV data from.
@@ -574,13 +574,18 @@ class Data:
         :param army_time: Boolean that dictates whether dates will be written in army-time format or not.
         """
         file_name = f'{self.symbol}_data_{self.interval}.csv'
-
         data = self.data
-        if start_date is not None:  # Getting data to start from.
+
+        if start_date is not None:  # Getting date to start from.
+            found_start = False
             for index, period in enumerate(data):
-                if period['date_utc'].date() <= start_date:
+                if period['date_utc'].date() >= start_date:
                     data = self.data[index:]
+                    found_start = True
                     break
+
+            if not found_start:  # If no starting date was found, then data list is empty.
+                data = []
 
         if descending:
             path = self.write_csv_data(data[::-1], file_name=file_name, army_time=army_time)
