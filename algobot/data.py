@@ -11,6 +11,7 @@ from logging import Logger
 from typing import Dict, List, Tuple, Union
 
 import binance
+from dateutil import parser
 
 from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data, get_ups_and_downs
 from algobot.typing_hints import DATA_TYPE
@@ -237,7 +238,7 @@ class Data:
             self.output_message("No data found in database.")
 
         for row in rows:
-            date_utc = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            date_utc = parser.parse(row[0]).replace(tzinfo=timezone.utc)
             normalized_data = get_normalized_data(data=row, date_in_utc=date_utc)
             self.data.append(normalized_data)
 

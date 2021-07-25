@@ -285,7 +285,7 @@ def test_get_data_from_database(data_object: Data):
         ([{'date_utc': 1}, {'date_utc': 5}], [])
     ]
 )
-def test_verify_integrity(data_object, data, expected):
+def test_verify_integrity(data_object: Data, data, expected: List[Dict[str, float]]):
     """
     Test verify integrity functionality.
     :param data_object: Data object to leverage to test this function.
@@ -294,3 +294,21 @@ def test_verify_integrity(data_object, data, expected):
     """
     result = data_object.verify_integrity(data)
     assert result == expected, f"Expected: {expected}. Got: {result}."
+
+
+def test_write_csv_data(data_object: Data):
+    """
+    Test to ensure write CSV data functionality is sound.
+    :param data_object: Data object to leverage to test this function.
+    """
+    remove_test_data()
+    data_object.create_table()
+
+    insert_test_data_to_database()
+    data_object.get_data_from_database()
+
+    csv_path = data_object.write_csv_data(data_object.data[::-1], file_name='ALGOBOT_TEST_DATA.csv', army_time=False)
+    with open(csv_path) as f:
+        generated_data = f.readlines()
+
+    assert generated_data == get_csv_data(headers=True), "Expected data to be equal."
