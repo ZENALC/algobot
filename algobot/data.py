@@ -9,7 +9,6 @@ from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from logging import Logger
 from typing import Dict, List, Tuple, Union
-import pandas as pd
 
 import binance
 
