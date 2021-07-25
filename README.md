@@ -14,27 +14,16 @@ Algobot requires at least Python 3.7.
 
 Once you have cloned or unpacked the source code locally, run the following commands from your terminal in that directory.
 
-For Linux/MacOS:
-
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-For Windows:
-
-```bash
-python -m venv venv
-call venv/Scripts/activate
-pip install -r requirements.txt
+pip install pipenv
+pipenv install --dev
 ```
 
 If your install fails, please make sure to have [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019) installed.
 
 # Execution
 
-To run Algobot, run `python -m algobot` from within the activated virtual environment.
+To run Algobot, run `python -m algobot` from within the activated virtual environment. (use `pipenv shell` to activate.)
 
 Set `DEBUG=1` to enable debug level logging.
 
@@ -52,7 +41,7 @@ Join our [Discord](https://discord.gg/ZWdHxhVbNP) today for contributions or hel
 - Telegram integration that allows users to trade or view statistics.
 - Create custom, trailing, or limit stop losses.
 - Create take profits.
-- Optimize your strategies using the built-in optimizer. \
+- Optimize your strategies using the built-in optimizer.
 - Ability to create your own custom strategies.
 
 # User Interface
