@@ -246,7 +246,7 @@ def test_dump_to_table(data_object: Data):
     def get_rows():
         with closing(sqlite3.connect(DATABASE_FILE_PATH)) as connection:
             with closing(connection.cursor()) as cursor:
-                db_rows = cursor.execute(f"SELECT * FROM {DATABASE_TABLE} ORDER BY date_utc DESC").fetchall()
+                db_rows = cursor.execute(f"SELECT * FROM {DATABASE_TABLE} ORDER BY date_utc ASC").fetchall()
                 return [get_normalized_data(row, parse_date=True) for row in db_rows]
 
     rows = get_rows()
@@ -274,7 +274,7 @@ def test_get_data_from_database(data_object: Data):
     result = data_object.data
 
     # Reverse because data is in ascending order whereas CSV data is not.
-    assert normalized_csv_data == result[::-1], "Expected data to equal."
+    assert normalized_csv_data == result, "Expected data to equal."
 
 
 @pytest.mark.parametrize(
@@ -307,7 +307,7 @@ def test_write_csv_data(data_object: Data):
     insert_test_data_to_database()
     data_object.get_data_from_database()
 
-    csv_path = data_object.write_csv_data(data_object.data[::-1], file_name='ALGOBOT_TEST_DATA.csv', army_time=False)
+    csv_path = data_object.write_csv_data(data_object.data, file_name='ALGOBOT_TEST_DATA.csv', army_time=False)
     with open(csv_path) as f:
         generated_data = f.readlines()
 
