@@ -60,7 +60,7 @@ def add_to_table(table: QTableWidget, data: list, insertDate=True):
     :param table: Table we will add data to.
     :param data: Data we will add to table.
     """
-    rowPosition = table.rowCount()
+    row_position = table.rowCount()
     columns = table.columnCount()
 
     if insertDate:
@@ -69,7 +69,7 @@ def add_to_table(table: QTableWidget, data: list, insertDate=True):
     if len(data) != columns:
         raise ValueError('Data needs to have the same amount of columns as table.')
 
-    table.insertRow(rowPosition)
+    table.insertRow(row_position)
     for column in range(0, columns):
         value = data[column]
         if type(value) not in (int, float):
@@ -77,7 +77,7 @@ def add_to_table(table: QTableWidget, data: list, insertDate=True):
         else:
             item = QTableWidgetItem()
             item.setData(Qt.DisplayRole, value)
-        table.setItem(rowPosition, column, item)
+        table.setItem(row_position, column, item)
 
 
 def clear_table(table: QTableWidget):
