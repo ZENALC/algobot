@@ -21,26 +21,26 @@ def scrape_news() -> List[str]:
     soup = BeautifulSoup(page.content, 'html.parser')
     links = soup.find('div', class_='api_article_include').find_all('a')
 
-    htmlRows = []
+    html_rows = []
     for link in links:
         hyperlink = link['href']
         title = link.find('div', class_='api_article_title_sm').text
         source = link.find('span', class_='api_article_source').text
 
-        eventDate = link.find('time', class_='timeago')['datetime']
-        parsedDate = parser.parse(eventDate).astimezone(tz=None)
-        if parsedDate.date() == date.today():
-            dateString = f'today {parsedDate.strftime("%m/%d/%Y %H:%M:%S")}'
-        elif parsedDate.date() == date.today() - timedelta(days=1):
-            dateString = f'yesterday {parsedDate.strftime("%m/%d/%Y %H:%M:%S")}'
+        event_date = link.find('time', class_='timeago')['datetime']
+        parsed_date = parser.parse(event_date).astimezone(tz=None)
+        if parsed_date.date() == date.today():
+            date_string = f'today {parsed_date.strftime("%m/%d/%Y %H:%M:%S")}'
+        elif parsed_date.date() == date.today() - timedelta(days=1):
+            date_string = f'yesterday {parsed_date.strftime("%m/%d/%Y %H:%M:%S")}'
         else:
-            dateString = parsedDate.strftime("%A %m/%d/%Y %H:%M:%S")
+            date_string = parsed_date.strftime("%A %m/%d/%Y %H:%M:%S")
 
-        htmlRow = f'<a href="{hyperlink}">{title}</a>' \
-                  f'<p>Post from {source} published {dateString} local time.</p>'
-        htmlRows.append(htmlRow)
+        html_row = f'<a href="{hyperlink}">{title}</a>' \
+                   f'<p>Post from {source} published {date_string} local time.</p>'
+        html_rows.append(html_row)
 
-    return htmlRows
+    return html_rows
 
 
 if __name__ == '__main__':
