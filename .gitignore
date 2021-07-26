@@ -21,7 +21,7 @@ __pycache__/
 # Strategies
 /algobot/strategies
 !algobot/strategies/sample.py
-!algobot/strategies/movingAverage.py
+!algobot/strategies/moving_average.py
 !algobot/strategies/strategy.py
 
 # Miscellaneous
