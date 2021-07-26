@@ -1,6 +1,7 @@
 """
 Test data object.
 """
+import filecmp
 import os
 import re
 import sqlite3
@@ -10,6 +11,7 @@ from typing import Callable, Dict, List, Union
 from unittest import mock
 
 import pytest
+from dateutil import parser
 
 from algobot.data import Data
 from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_normalized_data
@@ -114,8 +116,8 @@ def test_initialization(data_object: Data):
     :param data_object: Data object to check if initialized properly.
     """
     assert data_object.data is not None, "Data was not initialized properly."
-    assert data_object.databaseFile == DATABASE_FILE_PATH
-    assert data_object.databaseTable == DATABASE_TABLE
+    assert data_object.database_file == DATABASE_FILE_PATH
+    assert data_object.database_table == DATABASE_TABLE
 
 
 @pytest.mark.parametrize(
@@ -194,9 +196,9 @@ def test_create_table(data_object: Data):
     assert os.path.exists(DATABASE_FILE_PATH) is False, f"Expected {DATABASE_FILE_PATH} to not exist for testing."
 
     data_object.create_table()
-    with closing(sqlite3.connect(data_object.databaseFile)) as connection:
+    with closing(sqlite3.connect(data_object.database_file)) as connection:
         with closing(connection.cursor()) as cursor:
-            table_info = cursor.execute(f'PRAGMA TABLE_INFO({data_object.databaseTable})').fetchall()
+            table_info = cursor.execute(f'PRAGMA TABLE_INFO({data_object.database_table})').fetchall()
 
     # Each tuple in table_info contains one column's information like this: (0, 'date_utc', 'TEXT', 0, None, 1)
     expected_columns = {
@@ -246,7 +248,7 @@ def test_dump_to_table(data_object: Data):
     def get_rows():
         with closing(sqlite3.connect(DATABASE_FILE_PATH)) as connection:
             with closing(connection.cursor()) as cursor:
-                db_rows = cursor.execute(f"SELECT * FROM {DATABASE_TABLE} ORDER BY date_utc DESC").fetchall()
+                db_rows = cursor.execute(f"SELECT * FROM {DATABASE_TABLE} ORDER BY date_utc").fetchall()
                 return [get_normalized_data(row, parse_date=True) for row in db_rows]
 
     rows = get_rows()
@@ -274,7 +276,7 @@ def test_get_data_from_database(data_object: Data):
     result = data_object.data
 
     # Reverse because data is in ascending order whereas CSV data is not.
-    assert normalized_csv_data == result[::-1], "Expected data to equal."
+    assert normalized_csv_data == result, "Expected data to equal."
 
 
 @pytest.mark.parametrize(
@@ -285,7 +287,7 @@ def test_get_data_from_database(data_object: Data):
         ([{'date_utc': 1}, {'date_utc': 5}], [])
     ]
 )
-def test_verify_integrity(data_object, data, expected):
+def test_verify_integrity(data_object: Data, data, expected: List[Dict[str, float]]):
     """
     Test verify integrity functionality.
     :param data_object: Data object to leverage to test this function.
@@ -294,3 +296,51 @@ def test_verify_integrity(data_object, data, expected):
     """
     result = data_object.verify_integrity(data)
     assert result == expected, f"Expected: {expected}. Got: {result}."
+
+
+def test_write_csv_data(data_object: Data):
+    """
+    Test to ensure write CSV data functionality is sound.
+    :param data_object: Data object to leverage to test this function.
+    """
+    remove_test_data()
+    data_object.create_table()
+
+    insert_test_data_to_database()
+    data_object.get_data_from_database()
+
+    csv_path = data_object.write_csv_data(data_object.data, file_name='ALGOBOT_TEST_DATA.csv', army_time=False)
+    with open(csv_path) as f:
+        generated_data = f.readlines()
+
+    assert generated_data == get_csv_data(headers=True), "Expected data to be equal."
+
+
+@pytest.mark.parametrize(
+    'descending, army_time, start_date, expected_file_to_match',
+    [
+        (False, False, '03/06/2021', 'asc_non_army_middle.csv'),
+        (True, False, '03/05/2021', 'desc_non_army_middle.csv'),
+        (True, True, '03/07/2022', 'non_existent.csv')
+    ]
+)
+def test_create_csv_file(data_object: Data, descending, army_time, start_date, expected_file_to_match):
+    """
+    Test create CSV file functionality.
+    :param data_object: Data object to leverage to test this function.
+    :param descending: Boolean that decides whether values in CSV are in descending format or not.
+    :param army_time: Boolean that dictates whether dates will be written in army-time format or not.
+    :param start_date: Date to have CSV data from.
+    """
+    remove_test_data()
+    data_object.create_table()
+
+    insert_test_data_to_database()
+    data_object.get_data_from_database()
+
+    start_date = parser.parse(start_date).date()
+
+    path = data_object.create_csv_file(descending=descending, army_time=army_time, start_date=start_date)
+    path_to_equal = os.path.join(ROOT_DIR, 'tests', 'data', 'test_create_csv_file_data', expected_file_to_match)
+
+    assert filecmp.cmp(path, path_to_equal)

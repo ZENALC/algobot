@@ -67,4 +67,4 @@ class DownloadThread(QRunnable):
         Stop the download loop if it's running.
         """
         if self.client is not None:
-            self.client.downloadLoop = False
+            self.client.download_loop = False
