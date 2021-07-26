@@ -108,7 +108,7 @@ class Interface(QMainWindow):
         try:
             if self.telegramBot is None:
                 apiKey = self.configuration.telegramApiKey.text()
-                self.telegramBot = TelegramBot(gui=self, token=apiKey, botThread=None)
+                self.telegramBot = TelegramBot(gui=self, token=apiKey, bot_thread=None)
 
             chatID = self.configuration.telegramChatID.text()
             if self.configuration.chatPass:

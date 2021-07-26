@@ -16,10 +16,10 @@ class TelegramBot:
     """
     Telegram bot class.
     """
-    def __init__(self, gui, token: str, botThread):
+    def __init__(self, gui, token: str, bot_thread):
         self.token = token
         self.gui = gui
-        self.botThread = botThread
+        self.bot_thread = bot_thread
         self.updater = Updater(token, use_context=True)
         self.bot = Bot(token=self.token)
 
@@ -46,13 +46,13 @@ class TelegramBot:
         dp.add_handler(CommandHandler('joke', self.joke))
         dp.add_handler(CommandHandler('wisdom', self.wisdom))
 
-    def send_message(self, chatID: str, message: str):
+    def send_message(self, chat_id: str, message: str):
         """
         Sends provided message to specified chat ID using Telegram.
-        :param chatID: Chat ID in Telegram to send message to.
+        :param chat_id: Chat ID in Telegram to send message to.
         :param message: Message to send.
         """
-        self.bot.send_message(chat_id=chatID, text=message)
+        self.bot.send_message(chat_id=chat_id, text=message)
 
     def start(self):
         """
@@ -162,7 +162,7 @@ class TelegramBot:
         """
         trader: SimulationTrader = self.gui.trader
 
-        if not trader or not self.botThread:
+        if not trader or not self.bot_thread:
             return 'Something went wrong. Try again in a few minutes.'
 
         profit = trader.get_profit()
@@ -178,15 +178,15 @@ class TelegramBot:
                 f"Balance: ${round(trader.balance, 2)}\n"
                 f'Net: ${round(trader.get_net(), 2)}\n'
                 f"{profitLabel}: ${round(abs(profit), 2)}\n"
-                f'{profitLabel} Percentage: {round(self.botThread.percentage, 2)}%\n'
-                f'Daily Percentage: {round(self.botThread.dailyPercentage, 2)}%\n'
+                f'{profitLabel} Percentage: {round(self.bot_thread.percentage, 2)}%\n'
+                f'Daily Percentage: {round(self.bot_thread.dailyPercentage, 2)}%\n'
                 f'Autonomous Mode: {not trader.inHumanControl}\n'
                 f'Loss Strategy: {trader.get_stop_loss_strategy_string()}\n'
                 f'Stop Loss Percentage: {round(trader.lossPercentageDecimal * 100, 2)}%\n'
                 f'Stop Loss: {trader.get_safe_rounded_string(trader.get_stop_loss())}\n'
                 f"Custom Stop Loss: {trader.get_safe_rounded_string(trader.customStopLoss)}\n"
                 f"Current {trader.coinName} price: ${trader.currentPrice}\n"
-                f'Elapsed time: {self.botThread.elapsed}\n'
+                f'Elapsed time: {self.bot_thread.elapsed}\n'
                 f'Smart Stop Loss Initial Counter: {trader.smartStopLossInitialCounter}\n'
                 f'Smart Stop Loss Counter: {trader.smartStopLossCounter}\n'
                 f'Stop Loss Safety Timer: {trader.safetyTimer}\n'
@@ -337,7 +337,7 @@ class TelegramBot:
         Function called when /override is called. As the name suggests, it overrides the bot.
         """
         update.message.reply_text("Overriding.")
-        self.botThread.signals.waitOverride.emit()
+        self.bot_thread.signals.waitOverride.emit()
         update.message.reply_text("Successfully overrode.")
 
     # noinspection PyUnusedLocal
@@ -348,7 +348,7 @@ class TelegramBot:
         if self.gui.trader.inHumanControl:
             update.message.reply_text("Bot is already in human control.")
         else:
-            self.botThread.signals.pause.emit()
+            self.bot_thread.signals.pause.emit()
             update.message.reply_text("Bot has been paused successfully.")
 
     # noinspection PyUnusedLocal
@@ -359,7 +359,7 @@ class TelegramBot:
         if not self.gui.trader.inHumanControl:
             update.message.reply_text("Bot is already in autonomous mode.")
         else:
-            self.botThread.signals.resume.emit()
+            self.bot_thread.signals.resume.emit()
             update.message.reply_text("Bot logic has been resumed.")
 
     # noinspection PyUnusedLocal
@@ -371,7 +371,7 @@ class TelegramBot:
         if self.gui.trader.customStopLoss is None:
             update.message.reply_text("Bot already has no custom stop loss implemented.")
         else:
-            self.botThread.signals.removeCustomStopLoss.emit()
+            self.bot_thread.signals.removeCustomStopLoss.emit()
             update.message.reply_text("Bot's custom stop loss has been removed.")
 
     def set_custom_stop_loss(self, update, context):
@@ -396,7 +396,7 @@ class TelegramBot:
             update.message.reply_text("Please make sure you specify a number that is less than 10,000,000.")
         else:
             stopLoss = round(stopLoss, 6)
-            self.botThread.signals.setCustomStopLoss.emit(LIVE, True, stopLoss)
+            self.bot_thread.signals.setCustomStopLoss.emit(LIVE, True, stopLoss)
             update.message.reply_text(f"Stop loss has been successfully set to ${stopLoss}.")
 
     # noinspection PyUnusedLocal
@@ -409,7 +409,7 @@ class TelegramBot:
             update.message.reply_text("Bot is already in a long position.")
         else:
             update.message.reply_text("Forcing long.")
-            self.botThread.signals.forceLong.emit()
+            self.bot_thread.signals.forceLong.emit()
             update.message.reply_text("Successfully forced long.")
 
     # noinspection PyUnusedLocal
@@ -422,7 +422,7 @@ class TelegramBot:
             update.message.reply_text("Bot is already in a short position.")
         else:
             update.message.reply_text("Forcing short.")
-            self.botThread.signals.forceShort.emit()
+            self.bot_thread.signals.forceShort.emit()
             update.message.reply_text("Successfully forced short.")
 
     # noinspection PyUnusedLocal
@@ -434,7 +434,7 @@ class TelegramBot:
             update.message.reply_text("Bot is not in a position.")
         else:
             update.message.reply_text("Exiting position.")
-            self.botThread.signals.exitPosition.emit()
+            self.bot_thread.signals.exitPosition.emit()
             update.message.reply_text("Successfully exited position.")
 
     # noinspection PyUnusedLocal

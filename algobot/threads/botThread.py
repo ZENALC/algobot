@@ -292,7 +292,7 @@ class BotThread(QRunnable):
         gui = self.gui
         test_telegram(config_obj=gui.configuration)
         apiKey = gui.configuration.telegramApiKey.text()
-        gui.telegramBot = TelegramBot(gui=gui, token=apiKey, botThread=self)
+        gui.telegramBot = TelegramBot(gui=gui, token=apiKey, bot_thread=self)
         gui.telegramBot.start()
         self.signals.activity.emit(LIVE, 'Started Telegram bot.')
         if self.gui.telegramBot and gui.configuration.chatPass:
@@ -314,7 +314,7 @@ class BotThread(QRunnable):
                 message = f'{self.lowerTrend.capitalize()} trend detected on lower interval data.'
                 self.signals.activity.emit(caller, message)
                 if self.gui.configuration.enableTelegramNotification.isChecked() and caller == LIVE:
-                    self.gui.telegramBot.send_message(message=message, chatID=self.telegramChatID)
+                    self.gui.telegramBot.send_message(message=message, chat_id=self.telegramChatID)
             return lowerTrend
 
     def set_daily_percentages(self, trader, net):
