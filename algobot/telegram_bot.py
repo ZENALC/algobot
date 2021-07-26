@@ -69,10 +69,9 @@ class TelegramBot:
     # noinspection PyUnusedLocal
     def get_trades_telegram(self, update, context):
         """
-        Sends trades information using Telegram bot to chat that requested the trades using /trades.
+        Sends trades information using Telegram bot to the chat that requested the trades using /trades.
         """
-        trader = self.gui.trader
-        trades = trader.trades
+        trades = self.gui.trader.trades
 
         message = ''
         for index, trade in enumerate(trades, start=1):
@@ -91,8 +90,8 @@ class TelegramBot:
             update.message.reply_text(message)
         else:
             limit = constants.MAX_MESSAGE_LENGTH
-            messageParts = [message[i:i + limit] for i in range(0, len(message), limit)]
-            for part in messageParts:
+            message_parts = [message[i:i + limit] for i in range(0, len(message), limit)]
+            for part in message_parts:
                 update.message.reply_text(part)
 
     # noinspection PyUnusedLocal
@@ -132,14 +131,14 @@ class TelegramBot:
         :return: String of huge statistics.
         """
         trader: SimulationTrader = self.gui.trader
-        statDict = trader.get_grouped_statistics()
+        stat_dict = trader.get_grouped_statistics()
 
         total = ''
 
-        for categoryKey in statDict:
-            total += get_label_string(categoryKey) + ':\n'
-            for key in statDict[categoryKey]:
-                value = statDict[categoryKey][key]
+        for category_key in stat_dict:
+            total += get_label_string(category_key) + ':\n'
+            for key in stat_dict[category_key]:
+                value = stat_dict[category_key][key]
                 total += f'\t\t {get_label_string(key)} : {get_label_string(value)} \n'
         return total
 
@@ -151,9 +150,9 @@ class TelegramBot:
         limit = constants.MAX_MESSAGE_LENGTH
 
         message = "Here are your advanced statistics as requested: \n" + self.get_advanced_statistics()
-        messageParts = [message[i:i + limit] for i in range(0, len(message), limit)]
+        message_parts = [message[i:i + limit] for i in range(0, len(message), limit)]
 
-        for part in messageParts:
+        for part in message_parts:
             update.message.reply_text(part)
 
     def get_statistics(self) -> str:
@@ -192,14 +191,14 @@ class TelegramBot:
                 f'Stop Loss Safety Timer: {trader.safetyTimer}\n'
                 )
 
-    def send_statistics_telegram(self, chatID: str, period: str):
+    def send_statistics_telegram(self, chat_id: str, period: str):
         """
         This function is used to periodically send statistics if enabled.
-        :param chatID: Chat ID to send statistics to.
+        :param chat_id: Chat ID to send statistics to.
         :param period: Time period within which to send statistics.
         """
         message = f"Periodic statistics every {period}: \n"
-        self.send_message(chatID, message + self.get_statistics())
+        self.send_message(chat_id, message + self.get_statistics())
 
     # noinspection PyUnusedLocal
     def get_statistics_telegram(self, update, context):
@@ -379,10 +378,10 @@ class TelegramBot:
         Function called when /setcustomstoploss {value} is called. As the name suggests, it sets the custom stop
         loss with the value provided.
         """
-        stopLoss = context.args[0]
+        stop_loss = context.args[0]
 
         try:
-            stopLoss = float(stopLoss)
+            stop_loss = float(stop_loss)
         except ValueError:
             update.message.reply_text("Please make sure you specify a number for the custom stop loss.")
             return
@@ -390,14 +389,14 @@ class TelegramBot:
             update.message.reply_text(f'An error occurred: {e}.')
             return
 
-        if stopLoss < 0:
+        if stop_loss < 0:
             update.message.reply_text("Please make sure you specify a non-negative number for the custom stop loss.")
-        elif stopLoss > 10_000_000:
+        elif stop_loss > 10_000_000:
             update.message.reply_text("Please make sure you specify a number that is less than 10,000,000.")
         else:
-            stopLoss = round(stopLoss, 6)
-            self.bot_thread.signals.setCustomStopLoss.emit(LIVE, True, stopLoss)
-            update.message.reply_text(f"Stop loss has been successfully set to ${stopLoss}.")
+            stop_loss = round(stop_loss, 6)
+            self.bot_thread.signals.setCustomStopLoss.emit(LIVE, True, stop_loss)
+            update.message.reply_text(f"Stop loss has been successfully set to ${stop_loss}.")
 
     # noinspection PyUnusedLocal
     def force_long_telegram(self, update, context):
