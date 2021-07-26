@@ -41,7 +41,7 @@ def download_data(config_obj, caller: int = BACKTEST):
     """
     config_obj.optimizer_backtest_dict[caller]['downloadButton'].setEnabled(False)
     config_obj.optimizer_backtest_dict[caller]['importButton'].setEnabled(False)
-    set_download_progress(config_obj, progress=0, message="Attempting to download...", caller=caller, enableStop=False)
+    set_download_progress(config_obj, progress=0, message="Attempting to download...", caller=caller, enable_stop=False)
 
     symbol = config_obj.optimizer_backtest_dict[caller]['tickers'].text()
     interval = helpers.convert_long_interval(config_obj.optimizer_backtest_dict[caller]['intervals'].currentText())
@@ -90,16 +90,16 @@ def stop_download(config_obj, caller: int = BACKTEST):
         config_obj.optimizer_backtest_dict[caller]['downloadThread'].stop()
 
 
-def set_download_progress(config_obj, progress: int, message: str, caller: int = BACKTEST, enableStop: bool = True):
+def set_download_progress(config_obj, progress: int, message: str, caller: int = BACKTEST, enable_stop: bool = True):
     """
     Sets download progress and message with parameters passed.
     :param config_obj: Configuration QDialog object (from configuration.py)
-    :param enableStop: Boolean that'll determine if download can be stopped or not.
+    :param enable_stop: Boolean that'll determine if download can be stopped or not.
     :param caller: Caller that'll determine which caller was used.
     :param progress: Progress value to set bar at.
     :param message: Message to display in label.
     """
-    if enableStop:
+    if enable_stop:
         config_obj.optimizer_backtest_dict[caller]['stopDownloadButton'].setEnabled(True)
 
     if progress != -1:
@@ -114,7 +114,7 @@ def handle_download_failure(config_obj, e, caller: int = BACKTEST):
     :param caller: Caller that'll determine which caller was used.
     :param e: Error for why download failed.
     """
-    set_download_progress(config_obj, progress=-1, message='Download failed.', caller=caller, enableStop=False)
+    set_download_progress(config_obj, progress=-1, message='Download failed.', caller=caller, enable_stop=False)
     config_obj.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Error occurred during download: {e}")
 
 
