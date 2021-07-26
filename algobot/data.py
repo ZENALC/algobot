@@ -577,15 +577,11 @@ class Data:
         data = self.data
 
         if start_date is not None:  # Getting date to start from.
-            found_start = False
+            data = []
             for index, period in enumerate(data):
                 if period['date_utc'].date() >= start_date:
                     data = self.data[index:]
-                    found_start = True
                     break
-
-            if not found_start:  # If no starting date was found, then data list is empty.
-                data = []
 
         if descending:
             path = self.write_csv_data(data[::-1], file_name=file_name, army_time=army_time)
