@@ -311,7 +311,7 @@ class Data:
                             caller=-1) -> List[dict]:
         """
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
-        :param caller: Caller that called this function. Only used for botThread.
+        :param caller: Caller that called this function. Only used for bot_thread.
         :param removeFirst: Boolean whether newest data is removed or not.
         :param locked: Signal to emit back to GUI when storing data. Cannot be canceled once here. Used for databases.
         :param progress_callback: Signal to emit back to GUI to show progress.
