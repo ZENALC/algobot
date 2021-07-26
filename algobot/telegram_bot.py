@@ -165,7 +165,7 @@ class TelegramBot:
             return 'Something went wrong. Try again in a few minutes.'
 
         profit = trader.get_profit()
-        profitLabel = trader.get_profit_or_loss_string(profit=profit)
+        profit_label = trader.get_profit_or_loss_string(profit=profit)
 
         return (f'Symbol: {trader.symbol}\n'
                 f'Position: {trader.get_position_string()}\n'
@@ -176,8 +176,8 @@ class TelegramBot:
                 f"Starting balance: ${round(trader.startingBalance, 2)}\n"
                 f"Balance: ${round(trader.balance, 2)}\n"
                 f'Net: ${round(trader.get_net(), 2)}\n'
-                f"{profitLabel}: ${round(abs(profit), 2)}\n"
-                f'{profitLabel} Percentage: {round(self.bot_thread.percentage, 2)}%\n'
+                f"{profit_label}: ${round(abs(profit), 2)}\n"
+                f'{profit_label} Percentage: {round(self.bot_thread.percentage, 2)}%\n'
                 f'Daily Percentage: {round(self.bot_thread.dailyPercentage, 2)}%\n'
                 f'Autonomous Mode: {not trader.inHumanControl}\n'
                 f'Loss Strategy: {trader.get_stop_loss_strategy_string()}\n'
