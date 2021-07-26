@@ -22,13 +22,13 @@ def create_appropriate_config_folders(config_obj, folder: str) -> str:
     :param folder: Folder to create inside configuration folder.
     :return: Absolute path to new folder.
     """
-    basePath = os.path.join(helpers.ROOT_DIR, config_obj.configFolder)
-    helpers.create_folder_if_needed(basePath)
+    base_path = os.path.join(helpers.ROOT_DIR, config_obj.configFolder)
+    helpers.create_folder_if_needed(base_path)
 
-    targetPath = os.path.join(basePath, folder)
-    helpers.create_folder_if_needed(targetPath, basePath=basePath)
+    target_path = os.path.join(base_path, folder)
+    helpers.create_folder_if_needed(target_path, basePath=base_path)
 
-    return targetPath
+    return target_path
 
 
 def helper_load(config_obj, caller: int, config: dict):
@@ -67,10 +67,10 @@ def helper_get_save_file_path(config_obj, name: str) -> Union[str]:
     :return: Absolute path to file.
     """
     name = name.capitalize()
-    targetPath = create_appropriate_config_folders(config_obj, name)
-    defaultPath = os.path.join(targetPath, f'{name.lower()}_configuration.json')
-    filePath, _ = QFileDialog.getSaveFileName(config_obj, f'Save {name} Configuration', defaultPath, 'JSON (*.json)')
-    return filePath
+    target_path = create_appropriate_config_folders(config_obj, name)
+    default_path = os.path.join(target_path, f'{name.lower()}_configuration.json')
+    file_path, _ = QFileDialog.getSaveFileName(config_obj, f'Save {name} Configuration', default_path, 'JSON (*.json)')
+    return file_path
 
 
 def save_config_helper(config_obj, caller, result_label: QLabel, func: Callable):
@@ -88,10 +88,10 @@ def save_config_helper(config_obj, caller, result_label: QLabel, func: Callable)
     if caller != OPTIMIZER:
         helper_save(config_obj, caller, config)
 
-    filePath = helper_get_save_file_path(config_obj, caller_str.capitalize())
-    if filePath:
-        helpers.write_json_file(filePath, **config)
-        file = os.path.basename(filePath)
+    file_path = helper_get_save_file_path(config_obj, caller_str.capitalize())
+    if file_path:
+        helpers.write_json_file(file_path, **config)
+        file = os.path.basename(file_path)
         result_label.setText(f"Saved {caller_str} configuration successfully to {file}.")
     else:
         result_label.setText(f"Could not save {caller_str} configuration.")
@@ -172,12 +172,12 @@ def load_config_helper(config_obj, caller, result_label: QLabel, func: Callable)
     :param func: Function to call for remaining configuration loading.
     """
     caller_str = get_caller_string(caller)
-    targetPath = create_appropriate_config_folders(config_obj, caller_str.capitalize())
-    filePath, _ = QFileDialog.getOpenFileName(config_obj, f'Load {caller_str} config', targetPath, "JSON (*.json)")
+    target_path = create_appropriate_config_folders(config_obj, caller_str.capitalize())
+    file_path, _ = QFileDialog.getOpenFileName(config_obj, f'Load {caller_str} config', target_path, "JSON (*.json)")
 
     try:
-        config = helpers.load_json_file(filePath)
-        file = os.path.basename(filePath)
+        config = helpers.load_json_file(file_path)
+        file = os.path.basename(file_path)
 
         if config['type'] != caller:
             QMessageBox.about(config_obj, 'Warning', f'Incorrect type of non-{caller_str} configuration provided.')
@@ -263,8 +263,8 @@ def copy_config_helper(config_obj, caller, result_label, func: Callable):
     func(config_obj)
     copy_loss_settings(config_obj, LIVE, caller)
 
-    for strategyName in config_obj.strategies.keys():
-        copy_strategy_settings(config_obj, LIVE, caller, strategyName)
+    for strategy_name in config_obj.strategies.keys():
+        copy_strategy_settings(config_obj, LIVE, caller, strategy_name)
 
     result_label.setText(f"Copied all viable settings from main to {get_caller_string(caller)} settings successfully.")
 
@@ -297,11 +297,11 @@ def copy_strategy_settings(config_obj, fromCaller: int, toCaller: int, strategyN
     :param toCaller: Function will copy settings to this caller.
     :param strategyName: This strategy's settings will be copied.
     """
-    fromCallerTab = config_obj.get_category_tab(fromCaller)
-    toCallerTab = config_obj.get_category_tab(toCaller)
+    from_caller_tab = config_obj.get_category_tab(fromCaller)
+    to_caller_tab = config_obj.get_category_tab(toCaller)
 
-    fromCallerGroupBox = config_obj.strategyDict[fromCallerTab, strategyName, 'groupBox']
-    config_obj.strategyDict[toCallerTab, strategyName, 'groupBox'].setChecked(fromCallerGroupBox.isChecked())
+    from_caller_group_box = config_obj.strategyDict[from_caller_tab, strategyName, 'groupBox']
+    config_obj.strategyDict[to_caller_tab, strategyName, 'groupBox'].setChecked(from_caller_group_box.isChecked())
     set_strategy_values(config_obj, strategyName, toCaller, get_strategy_values(config_obj, strategyName, fromCaller))
 
 
@@ -312,13 +312,13 @@ def copy_loss_settings(config_obj, fromCaller: int, toCaller: int):
     :param fromCaller: Loss settings will be copied from this trader.
     :param toCaller: Loss settings will be copied to this trader.
     """
-    fromTab = config_obj.get_category_tab(fromCaller)
-    toTab = config_obj.get_category_tab(toCaller)
+    from_tab = config_obj.get_category_tab(fromCaller)
+    to_tab = config_obj.get_category_tab(toCaller)
 
-    config_obj.lossDict[toTab, "lossType"].setCurrentIndex(config_obj.lossDict[fromTab, "lossType"].currentIndex())
-    config_obj.lossDict[toTab, "lossPercentage"].setValue(config_obj.lossDict[fromTab, "lossPercentage"].value())
-    config_obj.lossDict[toTab, "smartStopLossCounter"].setValue(config_obj.lossDict[fromTab,
-                                                                "smartStopLossCounter"].value())
+    config_obj.lossDict[to_tab, "lossType"].setCurrentIndex(config_obj.lossDict[from_tab, "lossType"].currentIndex())
+    config_obj.lossDict[to_tab, "lossPercentage"].setValue(config_obj.lossDict[from_tab, "lossPercentage"].value())
+    config_obj.lossDict[to_tab, "smartStopLossCounter"].setValue(config_obj.lossDict[from_tab,
+                                                                                     "smartStopLossCounter"].value())
 
-    if toTab != config_obj.backtestConfigurationTabWidget:
-        config_obj.lossDict[toTab, "safetyTimer"].setValue(config_obj.lossDict[fromTab, "safetyTimer"].value())
+    if to_tab != config_obj.backtestConfigurationTabWidget:
+        config_obj.lossDict[to_tab, "safetyTimer"].setValue(config_obj.lossDict[from_tab, "safetyTimer"].value())
