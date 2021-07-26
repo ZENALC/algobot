@@ -578,7 +578,7 @@ class Data:
 
         if start_date is not None:  # Getting date to start from.
             data = []
-            for index, period in enumerate(data):
+            for index, period in enumerate(self.data):
                 if period['date_utc'].date() >= start_date:
                     data = self.data[index:]
                     break
