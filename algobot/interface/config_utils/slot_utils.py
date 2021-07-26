@@ -69,7 +69,7 @@ def load_strategy_slots(config_obj):
         strategy_name = temp.name
         parameters = temp.get_param_types()
         for tab in config_obj.categoryTabs:
-            config_obj.strategyDict[tab, strategy_name] = tabWidget = QTabWidget()
+            config_obj.strategyDict[tab, strategy_name] = tab_widget = QTabWidget()
             description_label = QLabel(f'Strategy description: {temp.description}')
             description_label.setWordWrap(True)
 
@@ -116,12 +116,12 @@ def load_strategy_slots(config_obj):
                 if temp.dynamic:
                     addButton, deleteButton = add_strategy_buttons(config_obj.strategyDict, parameters, strategy_name,
                                                                    group_box_layout, tab)
-                    horizontalLayout = QHBoxLayout()
-                    horizontalLayout.addWidget(addButton)
-                    horizontalLayout.addWidget(deleteButton)
-                    horizontalLayout.addWidget(status)
-                    horizontalLayout.addStretch()
-                    layout.addLayout(horizontalLayout)
+                    horizontal_layout = QHBoxLayout()
+                    horizontal_layout.addWidget(addButton)
+                    horizontal_layout.addWidget(deleteButton)
+                    horizontal_layout.addWidget(status)
+                    horizontal_layout.addStretch()
+                    layout.addLayout(horizontal_layout)
 
                 values, labels = create_strategy_inputs(parameters, strategy_name, group_box_layout)
                 config_obj.strategyDict[tab, strategy_name, 'values'] = values
@@ -132,8 +132,8 @@ def load_strategy_slots(config_obj):
 
             layout.addWidget(scroll)
             scroll.setWidget(groupBox)
-            tabWidget.setLayout(layout)
-            tab.addTab(tabWidget, strategy_name)
+            tab_widget.setLayout(layout)
+            tab.addTab(tab_widget, strategy_name)
 
 
 def load_precision_combo_boxes(config_obj):
