@@ -102,6 +102,15 @@ class Data:
         if not self.is_valid_symbol(symbol):
             raise ValueError(f'Invalid symbol/ticker {symbol} provided.')
 
+    @staticmethod
+    def convert_str_to_utc_datetime(str_datetime: str):
+        """
+        Convert string datetime to actual datetime object in UTC.
+        :param str_datetime: Datetime in string.
+        :return: Datetime object.
+        """
+        return parser.parse(str_datetime).replace(tzinfo=timezone.utc)
+
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
         This function will log and optionally print the message provided.
@@ -238,7 +247,7 @@ class Data:
             self.output_message("No data found in database.")
 
         for row in rows:
-            date_utc = parser.parse(row[0]).replace(tzinfo=timezone.utc)
+            date_utc = self.convert_str_to_utc_datetime(row[0])
             normalized_data = get_normalized_data(data=row, date_in_utc=date_utc)
             self.data.append(normalized_data)
 
@@ -250,7 +259,7 @@ class Data:
         result = self.get_latest_database_row()
         if result is None:
             return False
-        latest_date = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        latest_date = self.convert_str_to_utc_datetime(result[0])
         return self.is_latest_date(latest_date)
 
     # noinspection PyProtectedMember
@@ -264,7 +273,7 @@ class Data:
             # pylint: disable=protected-access
             return self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
         else:
-            latest_date = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            latest_date = self.convert_str_to_utc_datetime(result[0])
             return int(latest_date.timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
 
     def load_data(self, update: bool = True):
@@ -291,7 +300,7 @@ class Data:
             timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
             self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
         else:
-            latest_date = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            latest_date = self.convert_str_to_utc_datetime(result[0])
             timestamp = int(latest_date.timestamp()) * 1000  # Converting timestamp to milliseconds
             date_with_interval_added = latest_date + timedelta(minutes=self.get_interval_minutes())
             self.output_message(f"Previous data up to UTC {date_with_interval_added} found.")
