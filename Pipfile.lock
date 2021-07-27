@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "91987c7dbf0135164f713d2a876377b56e5f660e8c624a45241fe268b70ce6c8"
+            "sha256": "03e72522d85cb60797d3d51e4ccf9a68eea82eaf41722dd5445d078d92c7e728"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -119,7 +119,7 @@
                 "sha256:88fce3fa5b1a84fdcb3f603d889f723d1dd89b26059d0123ca435570e848d5e1",
                 "sha256:c46c3ace2d744cfbdebceaa3c19ae691f53ae621b39fd7570f59d14fb7f2fd12"
             ],
-            "markers": "python_version >= '3'",
+            "markers": "python_version >= '3.0'",
             "version": "==2.0.3"
         },
         "dateparser": {
@@ -302,11 +302,11 @@
         },
         "pyqtgraph": {
             "hashes": [
-                "sha256:174a57300751bc41148a654d735218f3d6c76590b3107c9a43b9514294045b80",
-                "sha256:d2ef3b5289184fb48dfe5f44ccb58d9d64ffb5452fc524a2bd7a640a36b3874d"
+                "sha256:151f2616c75353fdfffa9915ad37b9391af86e5d42ec1e99cb1d1b3062e6353e",
+                "sha256:fd0cf0678267b65ec28fb4908a7393424978a8c4b369e5749daf8861478fa4ca"
             ],
             "index": "pypi",
-            "version": "==0.12.1"
+            "version": "==0.12.2"
         },
         "python-binance": {
             "hashes": [
@@ -602,6 +602,14 @@
             "markers": "python_version ~= '3.6'",
             "version": "==2.6.5"
         },
+        "atomicwrites": {
+            "hashes": [
+                "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197",
+                "sha256:ae70396ad1a434f9c7046fd2dd196fc04b12f9e91ffb859164193be8b6168a7a"
+            ],
+            "markers": "sys_platform == 'win32'",
+            "version": "==1.4.0"
+        },
         "attrs": {
             "hashes": [
                 "sha256:149e90d6d8ac20db7a955ad60cf0e6881a3f20d37096140088356da6c716b0b1",
@@ -625,6 +633,14 @@
             ],
             "markers": "python_full_version >= '3.6.1'",
             "version": "==3.3.0"
+        },
+        "colorama": {
+            "hashes": [
+                "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b",
+                "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"
+            ],
+            "markers": "sys_platform == 'win32' and sys_platform == 'win32'",
+            "version": "==0.4.4"
         },
         "coverage": {
             "hashes": [
