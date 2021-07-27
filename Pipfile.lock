@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b4f6b71574cd9fb1b8d039cca9f0f15aef0f27d2f78252fa5cfcdc5cd0c7d8ab"
+            "sha256": "76144fb586d58758d3a6249ff3978e085fac031672c320701c637ab848d737d7"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -299,11 +299,11 @@
         },
         "pyqtgraph": {
             "hashes": [
-                "sha256:174a57300751bc41148a654d735218f3d6c76590b3107c9a43b9514294045b80",
-                "sha256:d2ef3b5289184fb48dfe5f44ccb58d9d64ffb5452fc524a2bd7a640a36b3874d"
+                "sha256:151f2616c75353fdfffa9915ad37b9391af86e5d42ec1e99cb1d1b3062e6353e",
+                "sha256:fd0cf0678267b65ec28fb4908a7393424978a8c4b369e5749daf8861478fa4ca"
             ],
             "index": "pypi",
-            "version": "==0.12.1"
+            "version": "==0.12.2"
         },
         "python-binance": {
             "hashes": [
