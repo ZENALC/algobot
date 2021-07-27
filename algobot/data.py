@@ -579,8 +579,7 @@ class Data:
 
         df = pd.DataFrame(data)
         df['date_utc'] = df['date_utc'].apply(lambda x: x.strftime(date_formatting))
-        df = df.set_index('date_utc')
-        df.to_csv(file_path)
+        df.to_csv(file_path, index=False)
 
         return file_path
 
