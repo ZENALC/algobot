@@ -283,9 +283,7 @@ def test_get_data_from_database(data_object: Data):
     remove_test_data()
     data_object.create_table()
     data_object.dump_to_table(normalized_csv_data)
-    data_object.get_data_from_database()
-
-    result = data_object.data
+    result = data_object.get_data_from_database()
 
     # Reverse because data is in ascending order whereas CSV data is not.
     assert normalized_csv_data == result, "Expected data to equal."
@@ -319,7 +317,7 @@ def test_write_csv_data(data_object: Data):
     data_object.create_table()
 
     insert_test_data_to_database()
-    data_object.get_data_from_database()
+    data_object.data = data_object.get_data_from_database()
 
     csv_path = data_object.write_csv_data(data_object.data, file_name='ALGOBOT_TEST_DATA.csv', army_time=False)
     with open(csv_path) as f:
@@ -348,7 +346,7 @@ def test_create_csv_file(data_object: Data, descending, army_time, start_date, e
     data_object.create_table()
 
     insert_test_data_to_database()
-    data_object.get_data_from_database()
+    data_object.data = data_object.get_data_from_database()
 
     start_date = parser.parse(start_date).date()
 

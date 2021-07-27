@@ -358,17 +358,22 @@ def parse_strategy_name(name: str) -> str:
     return parsed_name
 
 
-def get_normalized_data(data: List[str], date_in_utc: Union[str, datetime] = None, parse_date: bool = False) \
-        -> Dict[str, Union[str, float]]:
+def convert_str_to_utc_datetime(str_datetime: str) -> datetime:
+    """
+    Convert string datetime to actual datetime object in UTC.
+    :param str_datetime: Datetime in string.
+    :return: Datetime object.
+    """
+    return parser.parse(str_datetime).replace(tzinfo=timezone.utc)
+
+
+def get_normalized_data(data: List[str], parse_date: bool = False) -> Dict[str, Union[str, float]]:
     """
     Normalize data provided and return as an appropriate dictionary.
     :param data: Data to normalize into a dictionary.
-    :param date_in_utc: Optional date to use (if provided). If not provided, it'll use the first element from data.
     :param parse_date: Boolean whether to parse date or not if date in UTC is not provided.
     """
-    if date_in_utc is None:
-        date_in_utc = parser.parse(data[0]).replace(tzinfo=timezone.utc) if parse_date else data[0]
-
+    date_in_utc = convert_str_to_utc_datetime(data[0]) if parse_date else data[0]
     return {
         'date_utc': date_in_utc,
         'open': float(data[1]),

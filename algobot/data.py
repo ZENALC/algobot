@@ -11,9 +11,9 @@ from logging import Logger
 from typing import Dict, List, Tuple, Union
 
 import binance
-from dateutil import parser
 
-from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data, get_ups_and_downs
+from algobot.helpers import (ROOT_DIR, SHORT_INTERVAL_MAP, convert_str_to_utc_datetime, get_logging_object,
+                             get_normalized_data, get_ups_and_downs)
 from algobot.typing_hints import DATA_TYPE
 
 
@@ -106,15 +106,6 @@ class Data:
             raise ValueError("No symbol/ticker found.")
         if not self.is_valid_symbol(symbol):
             raise ValueError(f'Invalid symbol/ticker {symbol} provided.')
-
-    @staticmethod
-    def convert_str_to_utc_datetime(str_datetime: str):
-        """
-        Convert string datetime to actual datetime object in UTC.
-        :param str_datetime: Datetime in string.
-        :return: Datetime object.
-        """
-        return parser.parse(str_datetime).replace(tzinfo=timezone.utc)
 
     def output_message(self, message: str, level: int = 2, printMessage: bool = False):
         """
@@ -234,10 +225,11 @@ class Data:
 
                 return dict(zip(cols, values))
 
-    def get_data_from_database(self, limit: int = None):
+    def get_data_from_database(self, limit: int = None) -> List[Dict[str, Union[float, datetime]]]:
         """
         Loads data from database and appends it to run-time data.
         :param limit: Limit amount of rows to fetch.
+        :return: Data from database in a list of dictionaries.
         """
         with closing(sqlite3.connect(self.database_file)) as connection:
             with closing(connection.cursor()) as cursor:
@@ -251,15 +243,7 @@ class Data:
                 if limit is not None:
                     rows = rows[::-1]  # Reverse data because we want latest dates in the end.
 
-        if len(rows) > 0:
-            self.output_message("Retrieving data from database...")
-        else:
-            self.output_message("No data found in database.")
-
-        for row in rows:
-            date_utc = self.convert_str_to_utc_datetime(row[0])
-            normalized_data = get_normalized_data(data=row, date_in_utc=date_utc)
-            self.data.append(normalized_data)
+        return [get_normalized_data(data=row, parse_date=True) for row in rows]
 
     def database_is_updated(self) -> bool:
         """
@@ -271,7 +255,7 @@ class Data:
         if not result:
             return False
 
-        latest_date = self.convert_str_to_utc_datetime(result['date_utc'])
+        latest_date = convert_str_to_utc_datetime(result['date_utc'])
         return self.is_latest_date(latest_date)
 
     # noinspection PyProtectedMember
@@ -285,7 +269,7 @@ class Data:
             # pylint: disable=protected-access
             return self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
         else:
-            latest_date = self.convert_str_to_utc_datetime(result['date_utc'])
+            latest_date = convert_str_to_utc_datetime(result['date_utc'])
             return int(latest_date.timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
 
     def load_data(self, update: bool = True, limit_fetch: bool = False):
@@ -295,7 +279,7 @@ class Data:
         :param limit_fetch: Limit amount of data retrieved from the database.
         """
         limit = None if not limit_fetch else self.data_limit
-        self.get_data_from_database(limit=limit)
+        self.data = self.get_data_from_database(limit=limit)
         if update:
             if not self.database_is_updated():
                 self.output_message("Updating data...")
@@ -314,7 +298,7 @@ class Data:
             timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
             self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
         else:
-            latest_date = self.convert_str_to_utc_datetime(result['date_utc'])
+            latest_date = convert_str_to_utc_datetime(result['date_utc'])
             timestamp = int(latest_date.timestamp()) * 1000  # Converting timestamp to milliseconds
             date_with_interval_added = latest_date + timedelta(minutes=self.interval_minutes)
             self.output_message(f"Previous data up to UTC {date_with_interval_added} found.")
@@ -442,14 +426,14 @@ class Data:
         latest_date = self.data[-1]['date_utc']
         return self.is_latest_date(latest_date)
 
-    def insert_data(self, new_data: List[List[str]]):
+    def insert_data(self, new_data: List[List[Union[str, datetime]]]):
         """
-        Inserts data from newData to run-time data.
+        Inserts data from new_data to run-time data.
         :param new_data: List with new data values.
         """
         for data in new_data:
-            parsed_date = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
-            current_dict = get_normalized_data(data=data, date_in_utc=parsed_date)
+            data[0] = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
+            current_dict = get_normalized_data(data=data)
             self.data.append(current_dict)
 
     def update_data(self, verbose: bool = False):
@@ -498,12 +482,12 @@ class Data:
 
             next_interval = current_interval + timedelta(minutes=self.interval_minutes)
             next_timestamp = int(next_interval.timestamp() * 1000) - 1
-            current_data = self.binanceClient.get_klines(symbol=self.symbol,
-                                                         interval=self.interval,
-                                                         startTime=current_timestamp,
-                                                         endTime=next_timestamp,
-                                                         )[0]
-            self.current_values = get_normalized_data(data=current_data, date_in_utc=current_interval)
+            current_data = [current_interval] + self.binanceClient.get_klines(symbol=self.symbol,
+                                                                              interval=self.interval,
+                                                                              startTime=current_timestamp,
+                                                                              endTime=next_timestamp,
+                                                                              )[0]
+            self.current_values = get_normalized_data(data=current_data)
 
             if counter > 0:
                 self.try_callback("Successfully reconnected.")

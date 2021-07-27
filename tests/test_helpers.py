@@ -102,9 +102,9 @@ def test_get_data_from_parameter(data: Dict[str, Any], parameter: str, expected:
 
 
 @pytest.mark.parametrize(
-    'data, date_in_utc, expected',
+    'data, expected',
     [
-        (['01/01/21', 5, 15, 3, 8, 9, 10, 15, 9, 15], None, {
+        (['01/01/21', 5, 15, 3, 8, 9, 10, 15, 9, 15], {
             'date_utc': '01/01/21',
             'open': 5,
             'high': 15,
@@ -116,7 +116,7 @@ def test_get_data_from_parameter(data: Dict[str, Any], parameter: str, expected:
             'taker_buy_base_asset': 9,
             'taker_buy_quote_asset': 15
         }),
-        (['01/01/21', 5, 15, 3, 8, 9, 10, 15, 9, 15], "January 1st 2021", {
+        (['January 1st 2021', 5, 15, 3, 8, 9, 10, 15, 9, 15], {
             'date_utc': 'January 1st 2021',
             'open': 5.0,
             'high': 15.0,
@@ -130,11 +130,11 @@ def test_get_data_from_parameter(data: Dict[str, Any], parameter: str, expected:
         }),
     ]
 )
-def test_get_normalized_data(data, date_in_utc, expected):
+def test_get_normalized_data(data, expected):
     """
     Test get normalized data functionality.
     """
-    assert get_normalized_data(data, date_in_utc) == expected, f"Expected normalized data to be: {expected}."
+    assert get_normalized_data(data) == expected, f"Expected normalized data to be: {expected}."
 
 
 @pytest.mark.parametrize(
