@@ -29,6 +29,7 @@ class Data:
                  log: bool = False,
                  log_file: str = 'data',
                  log_object: Logger = None,
+                 limit_fetch: bool = False,
                  precision: int = 2,
                  callback=None,
                  caller=None):
@@ -40,6 +41,7 @@ class Data:
         :param log: Boolean for whether to log or not.
         :param log_file: Name of the logger file.
         :param log_object: Log object to use to log if provided.
+        :param limit_fetch: Limit rows fetched from the database.
         :param precision: Precision to round data to.
         :param callback: Signal for GUI to emit back to (if passed).
         :param caller: Caller of callback (if passed).
@@ -48,9 +50,12 @@ class Data:
         self.caller = caller  # Used to specify which caller emitted signals for GUI.
         self.binanceClient = binance.client.Client()  # Initialize Binance client to retrieve data.
         self.logger = get_logging_object(enable_logging=log, logFile=log_file, loggerObject=log_object)
+
         self.validate_interval(interval)  # Validate the interval provided.
         self.interval = interval  # Interval to trade in.
         self.interval_unit, self.interval_measurement = self.get_interval_unit_and_measurement()
+        self.interval_minutes = self.get_interval_minutes()
+
         self.precision = precision  # Decimal precision with which to show data.
         self.data_limit = 2000  # Max amount of data to contain.
         self.download_completed = False  # Boolean to determine whether data download is completed or not.
@@ -80,7 +85,7 @@ class Data:
 
         if load_data:
             # Create, initialize, store, and get values from database.
-            self.load_data(update=update)
+            self.load_data(update=update, limit_fetch=limit_fetch)
 
     @staticmethod
     def validate_interval(interval: str):
@@ -229,26 +234,22 @@ class Data:
 
                 return dict(zip(cols, values))
 
-    def get_data_from_database(self):
+    def get_data_from_database(self, limit: int = None):
         """
         Loads data from database and appends it to run-time data.
+        :param limit: Limit amount of rows to fetch.
         """
         with closing(sqlite3.connect(self.database_file)) as connection:
             with closing(connection.cursor()) as cursor:
-                rows = cursor.execute(f'''
-                        SELECT
-                        "date_utc",
-                        "open_price",
-                        "high_price",
-                        "low_price",
-                        "close_price",
-                        "volume",
-                        "quote_asset_volume",
-                        "number_of_trades",
-                        "taker_buy_base_asset",
-                        "taker_buy_quote_asset"
-                        FROM {self.database_table} ORDER BY date_utc
-                        ''').fetchall()
+                query = f'SELECT * FROM {self.database_table} ORDER BY date_utc'
+
+                if limit is not None:
+                    query += f' DESC LIMIT {limit}'
+
+                rows = cursor.execute(query).fetchall()
+
+                if limit is not None:
+                    rows = rows[::-1]  # Reverse data because we want latest dates in the end.
 
         if len(rows) > 0:
             self.output_message("Retrieving data from database...")
@@ -287,12 +288,14 @@ class Data:
             latest_date = self.convert_str_to_utc_datetime(result['date_utc'])
             return int(latest_date.timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
 
-    def load_data(self, update: bool = True):
+    def load_data(self, update: bool = True, limit_fetch: bool = False):
         """
         Loads data to Data object.
         :param update: Boolean that determines whether data is updated or not.
+        :param limit_fetch: Limit amount of data retrieved from the database.
         """
-        self.get_data_from_database()
+        limit = None if not limit_fetch else self.data_limit
+        self.get_data_from_database(limit=limit)
         if update:
             if not self.database_is_updated():
                 self.output_message("Updating data...")
@@ -313,7 +316,7 @@ class Data:
         else:
             latest_date = self.convert_str_to_utc_datetime(result['date_utc'])
             timestamp = int(latest_date.timestamp()) * 1000  # Converting timestamp to milliseconds
-            date_with_interval_added = latest_date + timedelta(minutes=self.get_interval_minutes())
+            date_with_interval_added = latest_date + timedelta(minutes=self.interval_minutes)
             self.output_message(f"Previous data up to UTC {date_with_interval_added} found.")
 
         if not self.database_is_updated():
@@ -427,7 +430,7 @@ class Data:
         :param latest_date: Datetime object.
         :return: True or false whether date is latest period or not.
         """
-        minutes = self.get_interval_minutes()
+        minutes = self.interval_minutes
         current_date = latest_date + timedelta(minutes=minutes) + timedelta(seconds=5)  # 5s leeway for server update
         return current_date >= datetime.now(timezone.utc) - timedelta(minutes=minutes)
 
@@ -455,7 +458,7 @@ class Data:
         """
         latest_date = self.data[-1]['date_utc']
         timestamp = int(latest_date.timestamp()) * 1000
-        date_with_interval_added = latest_date + timedelta(minutes=self.get_interval_minutes())
+        date_with_interval_added = latest_date + timedelta(minutes=self.interval_minutes)
         if verbose:
             self.output_message(f"Previous data found up to UTC {date_with_interval_added}.")
         if not self.data_is_updated():
@@ -490,10 +493,10 @@ class Data:
             if not self.data_is_updated():
                 self.update_data()
 
-            current_interval = self.data[-1]['date_utc'] + timedelta(minutes=self.get_interval_minutes())
+            current_interval = self.data[-1]['date_utc'] + timedelta(minutes=self.interval_minutes)
             current_timestamp = int(current_interval.timestamp() * 1000)
 
-            next_interval = current_interval + timedelta(minutes=self.get_interval_minutes())
+            next_interval = current_interval + timedelta(minutes=self.interval_minutes)
             next_timestamp = int(next_interval.timestamp() * 1000) - 1
             current_data = self.binanceClient.get_klines(symbol=self.symbol,
                                                          interval=self.interval,

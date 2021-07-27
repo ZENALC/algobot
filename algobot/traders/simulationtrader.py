@@ -40,7 +40,7 @@ class SimulationTrader(Trader):
         super().__init__(precision=precision, symbol=symbol, startingBalance=startingBalance)
         self.logger = get_logger(log_file=logFile, logger_name=logFile)  # Get logger.
         self.dataView: Data = Data(interval=interval, symbol=symbol, load_data=loadData,
-                                   update=updateData, log_object=self.logger, precision=precision)
+                                   update=updateData, log_object=self.logger, precision=precision, limit_fetch=True)
         self.binanceClient = self.dataView.binanceClient  # Retrieve Binance client.
         self.symbol = self.dataView.symbol  # Retrieve symbol from data-view object.
         self.coinName = self.get_coin_name()  # Retrieve primary coin to trade.
