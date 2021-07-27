@@ -11,6 +11,7 @@ from logging import Logger
 from typing import Dict, List, Tuple, Union
 
 import binance
+import pandas as pd
 
 from algobot.helpers import (ROOT_DIR, SHORT_INTERVAL_MAP, convert_str_to_utc_datetime, get_logging_object,
                              get_normalized_data, get_ups_and_downs)
@@ -547,32 +548,6 @@ class Data:
         else:
             raise ValueError("Invalid interval.", 4)
 
-    def write_csv_data(self, total_data: list, file_name: str, army_time: bool = True) -> str:
-        """
-        Writes CSV data to CSV folder in root directory of application.
-        :param army_time: Boolean if date will be in army type. If false, data will be in standard type.
-        :param total_data: Data to write to CSV file.
-        :param file_name: Filename to name CSV in.
-        :return: Absolute path to CSV file.
-        """
-        dir_path = os.path.join(ROOT_DIR, "CSV", self.symbol)
-        os.makedirs(dir_path, exist_ok=True)
-
-        file_path = os.path.join(dir_path, file_name)
-        with open(file_path, 'w') as f:
-            f.write("Date_UTC, Open, High, Low, Close, Volume, Quote_Asset_Volume, Number_of_Trades, "
-                    "Taker_Buy_Base_Asset, Taker_Buy_Quote_Asset\n")
-            for data in total_data:
-                if army_time:
-                    parsed_date = data['date_utc'].strftime("%m/%d/%Y %H:%M")
-                else:
-                    parsed_date = data['date_utc'].strftime("%m/%d/%Y %I:%M %p")
-                f.write(f'{parsed_date}, {data["open"]}, {data["high"]}, {data["low"]}, {data["close"]}, '
-                        f'{data["volume"]}, {data["quote_asset_volume"]}, {data["number_of_trades"]}, '
-                        f'{data["taker_buy_base_asset"]}, {data["taker_buy_quote_asset"]}\n')
-
-        return file_path
-
     def create_csv_file(self, descending: bool = True, army_time: bool = True, start_date: datetime.date = None) -> str:
         """
         Creates a new CSV file with current interval and returns the absolute path to file.
@@ -580,9 +555,13 @@ class Data:
         :param descending: Boolean that decides whether values in CSV are in descending format or not.
         :param army_time: Boolean that dictates whether dates will be written in army-time format or not.
         """
-        file_name = f'{self.symbol}_data_{self.interval}.csv'
-        data = self.data
+        dir_path = os.path.join(ROOT_DIR, "CSV", self.symbol)
+        os.makedirs(dir_path, exist_ok=True)
 
+        file_name = f'{self.symbol}_data_{self.interval}.csv'
+        file_path = os.path.join(dir_path, file_name)
+
+        data = self.data
         if start_date is not None:  # Getting date to start from.
             data = []
             for index, period in enumerate(self.data):
@@ -590,13 +569,20 @@ class Data:
                     data = self.data[index:]
                     break
 
-        if descending:
-            path = self.write_csv_data(data[::-1], file_name=file_name, army_time=army_time)
-        else:
-            path = self.write_csv_data(data, file_name=file_name, army_time=army_time)
+        if not data:
+            raise RuntimeError("No data to create CSV with found.")
 
-        self.output_message(f'Data saved to {path}.')
-        return path
+        if descending:
+            data = data[::-1]
+
+        date_formatting = "%m/%d/%Y %H:%M" if army_time else "%m/%d/%Y %I:%M %p"
+
+        df = pd.DataFrame(data)
+        df['date_utc'] = df['date_utc'].apply(lambda x: x.strftime(date_formatting))
+        df = df.set_index('date_utc')
+        df.to_csv(file_path)
+
+        return file_path
 
     def is_valid_symbol(self, symbol: str) -> bool:
         """
