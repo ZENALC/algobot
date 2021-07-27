@@ -66,22 +66,22 @@ def load_strategy_slots(config_obj):
     # pylint: disable=too-many-locals, too-many-statements, too-many-nested-blocks
     for strategy in config_obj.strategies.values():
         temp = strategy()
-        strategyName = temp.name
+        strategy_name = temp.name
         parameters = temp.get_param_types()
         for tab in config_obj.categoryTabs:
-            config_obj.strategyDict[tab, strategyName] = tabWidget = QTabWidget()
-            descriptionLabel = QLabel(f'Strategy description: {temp.description}')
-            descriptionLabel.setWordWrap(True)
+            config_obj.strategyDict[tab, strategy_name] = tab_widget = QTabWidget()
+            description_label = QLabel(f'Strategy description: {temp.description}')
+            description_label.setWordWrap(True)
 
             layout = QVBoxLayout()
-            layout.addWidget(descriptionLabel)
+            layout.addWidget(description_label)
 
             scroll = QScrollArea()  # Added a scroll area so user can scroll when additional slots are added.
             scroll.setWidgetResizable(True)
 
             if config_obj.get_caller_based_on_tab(tab) == OPTIMIZER:
-                groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f'Enable {strategyName} optimization?')
-                config_obj.strategyDict[tab, strategyName] = groupBox
+                groupBox, group_box_layout = get_regular_groupbox_and_layout(f'Enable {strategy_name} optimization?')
+                config_obj.strategyDict[tab, strategy_name] = groupBox
                 for index, parameter in enumerate(parameters, start=1):
                     # TODO: Refactor this logic.
                     if not isinstance(parameter, tuple) or \
@@ -92,48 +92,48 @@ def load_strategy_slots(config_obj):
                         else:
                             widget = QSpinBox if parameter == int else QDoubleSpinBox
                             step_val = 1 if widget == QSpinBox else 0.1
-                        config_obj.strategyDict[strategyName, index, 'start'] = start = get_default_widget(widget, 1)
-                        config_obj.strategyDict[strategyName, index, 'end'] = end = get_default_widget(widget, 1)
-                        config_obj.strategyDict[strategyName, index, 'step'] = step = get_default_widget(widget,
-                                                                                                         step_val)
+                        config_obj.strategyDict[strategy_name, index, 'start'] = start = get_default_widget(widget, 1)
+                        config_obj.strategyDict[strategy_name, index, 'end'] = end = get_default_widget(widget, 1)
+                        config_obj.strategyDict[strategy_name, index, 'step'] = step = get_default_widget(widget,
+                                                                                                          step_val)
                         if isinstance(parameter, tuple):
                             message = parameter[0]
                         else:
-                            message = f"{strategyName} {index}"
-                        add_start_end_step_to_layout(groupBoxLayout, message, start, end, step)
+                            message = f"{strategy_name} {index}"
+                        add_start_end_step_to_layout(group_box_layout, message, start, end, step)
                     elif isinstance(parameter, tuple) and parameter[1] == tuple:
-                        groupBoxLayout.addRow(QLabel(parameter[0]))
+                        group_box_layout.addRow(QLabel(parameter[0]))
                         for option in parameter[2]:
-                            config_obj.strategyDict[strategyName, option] = checkBox = QCheckBox(option)
-                            groupBoxLayout.addRow(checkBox)
+                            config_obj.strategyDict[strategy_name, option] = checkBox = QCheckBox(option)
+                            group_box_layout.addRow(checkBox)
                     else:
                         raise ValueError("Invalid type of parameter type provided.")
             else:
-                groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {strategyName}?")
-                config_obj.strategyDict[tab, strategyName, 'groupBox'] = groupBox
+                groupBox, group_box_layout = get_regular_groupbox_and_layout(f"Enable {strategy_name}?")
+                config_obj.strategyDict[tab, strategy_name, 'groupBox'] = groupBox
 
                 status = QLabel()
                 if temp.dynamic:
-                    addButton, deleteButton = add_strategy_buttons(config_obj.strategyDict, parameters, strategyName,
-                                                                   groupBoxLayout, tab)
-                    horizontalLayout = QHBoxLayout()
-                    horizontalLayout.addWidget(addButton)
-                    horizontalLayout.addWidget(deleteButton)
-                    horizontalLayout.addWidget(status)
-                    horizontalLayout.addStretch()
-                    layout.addLayout(horizontalLayout)
+                    addButton, deleteButton = add_strategy_buttons(config_obj.strategyDict, parameters, strategy_name,
+                                                                   group_box_layout, tab)
+                    horizontal_layout = QHBoxLayout()
+                    horizontal_layout.addWidget(addButton)
+                    horizontal_layout.addWidget(deleteButton)
+                    horizontal_layout.addWidget(status)
+                    horizontal_layout.addStretch()
+                    layout.addLayout(horizontal_layout)
 
-                values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
-                config_obj.strategyDict[tab, strategyName, 'values'] = values
-                config_obj.strategyDict[tab, strategyName, 'labels'] = labels
-                config_obj.strategyDict[tab, strategyName, 'parameters'] = parameters
-                config_obj.strategyDict[tab, strategyName, 'layout'] = groupBoxLayout
-                config_obj.strategyDict[tab, strategyName, 'status'] = status
+                values, labels = create_strategy_inputs(parameters, strategy_name, group_box_layout)
+                config_obj.strategyDict[tab, strategy_name, 'values'] = values
+                config_obj.strategyDict[tab, strategy_name, 'labels'] = labels
+                config_obj.strategyDict[tab, strategy_name, 'parameters'] = parameters
+                config_obj.strategyDict[tab, strategy_name, 'layout'] = group_box_layout
+                config_obj.strategyDict[tab, strategy_name, 'status'] = status
 
             layout.addWidget(scroll)
             scroll.setWidget(groupBox)
-            tabWidget.setLayout(layout)
-            tab.addTab(tabWidget, strategyName)
+            tab_widget.setLayout(layout)
+            tab.addTab(tab_widget, strategy_name)
 
 
 def load_precision_combo_boxes(config_obj):

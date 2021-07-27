@@ -20,27 +20,27 @@ def test_telegram(config_obj):
     Tests Telegram connection and updates respective GUI elements.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    tokenPass = chatPass = False
+    token_pass = chat_pass = False
     message = error = ''
 
     try:
-        telegramApikey = config_obj.telegramApiKey.text()
-        chatID = config_obj.telegramChatID.text()
-        Updater(telegramApikey, use_context=True)
-        tokenPass = True
-        telegram.Bot(token=telegramApikey).send_message(chat_id=chatID, text='Testing connection with Chat ID.')
-        chatPass = True
+        telegram_api_key = config_obj.telegramApiKey.text()
+        chat_id = config_obj.telegramChatID.text()
+        Updater(telegram_api_key, use_context=True)
+        token_pass = True
+        telegram.Bot(token=telegram_api_key).send_message(chat_id=chat_id, text='Testing connection with Chat ID.')
+        chat_pass = True
     except Exception as e:
         error = repr(e)
         if 'ConnectionError' in error:
             error = 'There was a connection error. Please check your connection.'
 
-    if tokenPass:
+    if token_pass:
         if 'Unauthorized' in error:
             message = 'Token authorization was unsuccessful. Please recheck your token.'
         else:
             message += "Token authorization was successful. "
-            if chatPass:
+            if chat_pass:
                 message += "Chat ID checked and connected to successfully. "
             else:
                 if 'Chat not found' in error:
@@ -51,5 +51,5 @@ def test_telegram(config_obj):
         message = f'Error: {error}'
 
     config_obj.telegrationConnectionResult.setText(message)
-    config_obj.chatPass = chatPass
-    config_obj.tokenPass = tokenPass
+    config_obj.chatPass = chat_pass
+    config_obj.tokenPass = token_pass

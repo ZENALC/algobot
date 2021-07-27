@@ -15,17 +15,17 @@ def test_binance_credentials(config_obj):
     Tests Binance credentials provided in configuration.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    apiKey = config_obj.binanceApiKey.text()
-    apiSecret = config_obj.binanceApiSecret.text()
+    api_key = config_obj.binanceApiKey.text()
+    api_secret = config_obj.binanceApiSecret.text()
     try:
-        Client(apiKey, apiSecret).get_account()
+        Client(api_key, api_secret).get_account()
         config_obj.credentialResult.setText('Connected successfully.')
     except Exception as e:
-        stringError = str(e)
-        if '1000ms' in stringError:
+        string_error = str(e)
+        if '1000ms' in string_error:
             config_obj.credentialResult.setText('Time not synchronized. Please synchronize your system time.')
         else:
-            config_obj.credentialResult.setText(stringError)
+            config_obj.credentialResult.setText(string_error)
 
 
 def save_credentials(config_obj):
@@ -33,22 +33,22 @@ def save_credentials(config_obj):
     Function that saves credentials to base path in a JSON format. Obviously not very secure, but temp fix.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    targetFolder = os.path.join(helpers.ROOT_DIR, config_obj.credentialsFolder)
-    helpers.create_folder_if_needed(targetFolder)
+    target_folder = os.path.join(helpers.ROOT_DIR, config_obj.credentialsFolder)
+    helpers.create_folder_if_needed(target_folder)
 
-    apiKey = config_obj.binanceApiKey.text()
-    apiSecret = config_obj.binanceApiSecret.text()
-    telegramApiKey = config_obj.telegramApiKey.text()
-    telegramChatId = config_obj.telegramChatID.text()
+    api_key = config_obj.binanceApiKey.text()
+    api_secret = config_obj.binanceApiSecret.text()
+    telegram_api_key = config_obj.telegramApiKey.text()
+    telegram_chat_id = config_obj.telegramChatID.text()
 
-    defaultPath = os.path.join(targetFolder, 'default.json')
-    filePath, _ = QFileDialog.getSaveFileName(config_obj, 'Save Credentials', defaultPath, 'JSON (*.json)')
-    filePath = filePath.strip()
+    default_path = os.path.join(target_folder, 'default.json')
+    file_path, _ = QFileDialog.getSaveFileName(config_obj, 'Save Credentials', default_path, 'JSON (*.json)')
+    file_path = file_path.strip()
 
-    if filePath:
-        helpers.write_json_file(filePath=filePath, apiKey=apiKey, apiSecret=apiSecret,
-                                telegramApiKey=telegramApiKey, chatID=telegramChatId)
-        config_obj.credentialResult.setText(f'Credentials saved successfully to {os.path.basename(filePath)}.')
+    if file_path:
+        helpers.write_json_file(filePath=file_path, apiKey=api_key, apiSecret=api_secret,
+                                telegramApiKey=telegram_api_key, chatID=telegram_chat_id)
+        config_obj.credentialResult.setText(f'Credentials saved successfully to {os.path.basename(file_path)}.')
     else:
         config_obj.credentialResult.setText('Credentials could not be saved.')
 
@@ -60,15 +60,15 @@ def load_credentials(config_obj, auto: bool = True):
     :param auto: Boolean regarding whether bot called this function or not. If bot called it, silently try to load
     credentials. If a user called it, however, open a file dialog to ask for the file path to credentials.
     """
-    targetFolder = os.path.join(helpers.ROOT_DIR, config_obj.credentialsFolder)
-    if helpers.create_folder_if_needed(targetFolder):
+    target_folder = os.path.join(helpers.ROOT_DIR, config_obj.credentialsFolder)
+    if helpers.create_folder_if_needed(target_folder):
         config_obj.credentialResult.setText('No credentials found.')
         return
 
     if not auto:
-        filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', targetFolder, "JSON (*.json)")
+        filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', target_folder, "JSON (*.json)")
     else:
-        filePath = os.path.join(targetFolder, 'default.json')
+        filePath = os.path.join(target_folder, 'default.json')
 
     try:
         credentials = helpers.load_json_file(jsonfile=filePath)
