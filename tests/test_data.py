@@ -226,11 +226,23 @@ def test_get_latest_database_row(data_object: Data):
     """
     data_object.create_table()
     result = data_object.get_latest_database_row()
-    assert result is None, "Expected a null return."
+    assert result == {}, "Expected an empty dictionary."
 
     insert_test_data_to_database()
-    result, = data_object.get_latest_database_row()
-    assert result == '03/06/2021 01:43 AM', f'Expected: 03/06/2021 01:43 AM. Got: {result}'
+    result = data_object.get_latest_database_row()
+    expected = {
+        'close_price': '3.7763',
+        'date_utc': '03/06/2021 01:43 AM',
+        'high_price': '3.7763',
+        'low_price': '3.7729',
+        'number_of_trades': '6192.345082',
+        'open_price': '3.7729',
+        'quote_asset_volume': '1614995039999.0',
+        'taker_buy_base_asset': '25.0',
+        'taker_buy_quote_asset': '1635.85',
+        'volume': '1640.75'
+    }
+    assert result == expected, f'Expected: {expected}. Got: {result}'
 
 
 def test_dump_to_table(data_object: Data):

@@ -210,15 +210,24 @@ class Data:
         self.output_message("Successfully stored all new data to database.")
         return True
 
-    def get_latest_database_row(self) -> list:
+    def get_latest_database_row(self) -> Dict[str, str]:
         """
         Returns the latest row from database table.
-        :return: Row data or None depending on if value exists.
+        :return: Latest row data in a dictionary.
         """
         with closing(sqlite3.connect(self.database_file)) as connection:
             with closing(connection.cursor()) as cursor:
-                cursor.execute(f'SELECT date_utc FROM {self.database_table} ORDER BY date_utc DESC LIMIT 1')
-                return cursor.fetchone()
+                cursor.execute(f'SELECT * FROM {self.database_table} ORDER BY date_utc DESC LIMIT 1')
+
+                cols = [col[0] for col in cursor.description]
+                fetched_values = cursor.fetchone()
+
+                if fetched_values is not None:  # Necessary to strip because of \n characters.
+                    values = [val.strip() for val in fetched_values]
+                else:
+                    values = []
+
+                return dict(zip(cols, values))
 
     def get_data_from_database(self):
         """
@@ -257,9 +266,11 @@ class Data:
         :return: A boolean whether data is updated or not.
         """
         result = self.get_latest_database_row()
-        if result is None:
+
+        if not result:
             return False
-        latest_date = self.convert_str_to_utc_datetime(result[0])
+
+        latest_date = self.convert_str_to_utc_datetime(result['date_utc'])
         return self.is_latest_date(latest_date)
 
     # noinspection PyProtectedMember
@@ -269,11 +280,11 @@ class Data:
         :return: Latest timestamp.
         """
         result = self.get_latest_database_row()
-        if result is None:
+        if not result:
             # pylint: disable=protected-access
             return self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
         else:
-            latest_date = self.convert_str_to_utc_datetime(result[0])
+            latest_date = self.convert_str_to_utc_datetime(result['date_utc'])
             return int(latest_date.timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
 
     def load_data(self, update: bool = True):
@@ -295,12 +306,12 @@ class Data:
         Updates database by retrieving information from Binance API
         """
         result = self.get_latest_database_row()
-        if result is None:  # Then get the earliest timestamp possible.
+        if not result:  # Then get the earliest timestamp possible.
             # pylint: disable = protected-access
             timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
             self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
         else:
-            latest_date = self.convert_str_to_utc_datetime(result[0])
+            latest_date = self.convert_str_to_utc_datetime(result['date_utc'])
             timestamp = int(latest_date.timestamp()) * 1000  # Converting timestamp to milliseconds
             date_with_interval_added = latest_date + timedelta(minutes=self.get_interval_minutes())
             self.output_message(f"Previous data up to UTC {date_with_interval_added} found.")
