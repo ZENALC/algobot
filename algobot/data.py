@@ -215,16 +215,12 @@ class Data:
         with closing(sqlite3.connect(self.database_file)) as connection:
             with closing(connection.cursor()) as cursor:
                 cursor.execute(f'SELECT * FROM {self.database_table} ORDER BY date_utc DESC LIMIT 1')
-
-                cols = [col[0] for col in cursor.description]
                 fetched_values = cursor.fetchone()
 
-                if fetched_values is not None:  # Necessary to strip because of \n characters.
-                    values = [val.strip() for val in fetched_values]
-                else:
-                    values = []
+                if fetched_values is not None:
+                    return get_normalized_data(fetched_values, parse_date=True)
 
-                return dict(zip(cols, values))
+                return {}
 
     def get_data_from_database(self, limit: int = None) -> List[Dict[str, Union[float, datetime]]]:
         """

@@ -14,7 +14,7 @@ import pytest
 from dateutil import parser
 
 from algobot.data import Data
-from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_normalized_data
+from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, convert_str_to_utc_datetime, get_normalized_data
 from tests.binance_client_mocker import BinanceMockClient
 from tests.utils_for_tests import does_not_raise
 
@@ -231,16 +231,16 @@ def test_get_latest_database_row(data_object: Data):
     insert_test_data_to_database()
     result = data_object.get_latest_database_row()
     expected = {
-        'close_price': '3.7763',
-        'date_utc': '03/06/2021 01:43 AM',
-        'high_price': '3.7763',
-        'low_price': '3.7729',
-        'number_of_trades': '6192.345082',
-        'open_price': '3.7729',
-        'quote_asset_volume': '1614995039999.0',
-        'taker_buy_base_asset': '25.0',
-        'taker_buy_quote_asset': '1635.85',
-        'volume': '1640.75'
+        'close': 3.7763,
+        'date_utc': convert_str_to_utc_datetime('03/06/2021 01:43 AM'),
+        'high': 3.7763,
+        'low': 3.7729,
+        'number_of_trades': 6192.345082,
+        'open': 3.7729,
+        'quote_asset_volume': 1614995039999.0,
+        'taker_buy_base_asset': 25.0,
+        'taker_buy_quote_asset': 1635.85,
+        'volume': 1640.75
     }
     assert result == expected, f'Expected: {expected}. Got: {result}'
 
