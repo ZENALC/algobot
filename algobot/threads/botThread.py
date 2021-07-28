@@ -134,8 +134,8 @@ class BotThread(QRunnable):
                                                     loadData=True,
                                                     updateData=False,
                                                     precision=precision)
-            gui.simulationTrader.dataView.custom_get_new_data(progress_callback=self.signals.progress, remove_first=True,
-                                                              caller=SIMULATION)
+            gui.simulationTrader.dataView.custom_get_new_data(progress_callback=self.signals.progress,
+                                                              remove_first=True, caller=SIMULATION)
         elif caller == LIVE:
             apiSecret = gui.configuration.binanceApiSecret.text()
             apiKey = gui.configuration.binanceApiKey.text()
