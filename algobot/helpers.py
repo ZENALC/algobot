@@ -428,7 +428,7 @@ def load_from_csv(path: str, descending: bool = True) -> List[Dict[str, Union[fl
     with open(path) as f:
         data = []
         lines = f.readlines()
-        headers = list(map(str.lower, lines[0].rstrip().split(', ')))
+        headers = list(map(str.lower, lines[0].rstrip().split(',')))
         for line in lines[1:]:
             line = line.rstrip()  # Strip off newline character.
             split_line = line.split(',')
