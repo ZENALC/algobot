@@ -87,6 +87,29 @@ class Data:
             # Create, initialize, store, and get values from database.
             self.load_data(update=update, limit_fetch=limit_fetch)
 
+    def get_interval_unit_and_measurement(self) -> Tuple[str, int]:
+        """
+        Returns interval unit and measurement.
+        :return: A tuple with interval unit and measurement respectively.
+        """
+        unit = self.interval[-1]  # Gets the unit of the interval. eg 12h = h
+        measurement = int(self.interval[:-1])  # Gets the measurement, eg 12h = 12
+        return unit, measurement
+
+    def get_interval_minutes(self) -> int:
+        """
+        Returns interval minutes.
+        :return: An integer representing the minutes for an interval.
+        """
+        if self.interval_unit == 'h':
+            return self.interval_measurement * 60
+        elif self.interval_unit == 'm':
+            return self.interval_measurement
+        elif self.interval_unit == 'd':
+            return self.interval_measurement * 24 * 60
+        else:
+            raise ValueError("Invalid interval.", 4)
+
     @staticmethod
     def validate_interval(interval: str):
         """
@@ -277,42 +300,17 @@ class Data:
         if update:
             if not self.database_is_updated():
                 self.output_message("Updating data...")
-                self.update_database_and_data()
+                self.custom_get_new_data(remove_first=True)
             else:
                 self.output_message("Database is up-to-date.")
 
     # noinspection PyProtectedMember
-    def update_database_and_data(self):
-        """
-        Updates database by retrieving information from Binance API
-        """
-        result = self.get_latest_database_row()
-        if not result:  # Then get the earliest timestamp possible.
-            # pylint: disable = protected-access
-            timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
-            self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
-        else:
-            timestamp = int(result['date_utc'].timestamp()) * 1000  # Converting timestamp to milliseconds
-            date_with_interval_added = result['date_utc'] + timedelta(minutes=self.interval_minutes)
-            self.output_message(f"Previous data up to UTC {date_with_interval_added} found.")
-
-        if not self.database_is_updated():
-            new_data = self.get_new_data(timestamp)
-            self.output_message("Successfully downloaded all new data.")
-            self.output_message("Inserting data to live program...")
-            self.insert_data(new_data)
-            self.output_message("Storing updated data to database...")
-            self.dump_to_table(self.data[-len(new_data):])
-        else:
-            self.output_message("Database is up-to-date.")
-
-    # noinspection PyProtectedMember
-    def custom_get_new_data(self, limit: int = 500, progress_callback=None, locked=None, removeFirst: bool = False,
+    def custom_get_new_data(self, limit: int = 500, progress_callback=None, locked=None, remove_first: bool = False,
                             caller=-1) -> List[dict]:
         """
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
         :param caller: Caller that called this function. Only used for bot_thread.
-        :param removeFirst: Boolean whether newest data is removed or not.
+        :param remove_first: Boolean whether newest data is removed or not.
         :param locked: Signal to emit back to GUI when storing data. Cannot be canceled once here. Used for databases.
         :param progress_callback: Signal to emit back to GUI to show progress.
         :param limit: Limit per pull.
@@ -358,27 +356,34 @@ class Data:
                 time.sleep(1)
 
         if not self.download_loop:
-            progress_callback.emit(-1, "Download canceled.", caller)
+            if progress_callback:
+                progress_callback.emit(-1, "Download canceled.", caller)
             return []
 
         if locked:  # If we have a callback for emitting lock signals.
             locked.emit()
 
-        if removeFirst:
+        if remove_first:
             output_data.pop()
 
-        progress_callback.emit(95, "Saving data...", caller)
+        if progress_callback:
+            progress_callback.emit(95, "Saving data...", caller)
+
         self.insert_data(output_data)
-        progress_callback.emit(97, "This may take a while. Dumping data to database...", caller)
+
+        if progress_callback:
+            progress_callback.emit(97, "This may take a while. Dumping data to database...", caller)
 
         start_index_for_dump = -len(output_data)
 
-        if removeFirst:  # We don't want current data as it's not the latest data.
+        if remove_first:  # We don't want current data as it's not the latest data.
             self.dump_to_table(self.data[start_index_for_dump:])
         else:  # Strip off last element because it contains current info which we don't want to store.
             self.dump_to_table(self.data[start_index_for_dump:-1])
 
-        progress_callback.emit(100, "Downloaded all new data successfully.", caller)
+        if progress_callback:
+            progress_callback.emit(100, "Downloaded all new data successfully.", caller)
+
         self.download_loop = False
         self.download_completed = True
         return self.data
@@ -398,8 +403,8 @@ class Data:
 
         if get_current:
             return new_data
-        else:
-            return new_data[:-1]  # Up to -1st index, because we don't want current period data.
+
+        return new_data[:-1]  # Up to -1st index, because we don't want current period data.
 
     def is_latest_date(self, latest_date: datetime) -> bool:
         """
@@ -436,15 +441,19 @@ class Data:
         latest_date = self.data[-1]['date_utc']
         timestamp = int(latest_date.timestamp()) * 1000
         date_with_interval_added = latest_date + timedelta(minutes=self.interval_minutes)
+
         if verbose:
             self.output_message(f"Previous data found up to UTC {date_with_interval_added}.")
+
         if not self.data_is_updated():
             # self.try_callback("Found new data. Attempting to update...")
             new_data = []
             while len(new_data) == 0:
                 time.sleep(0.5)  # Sleep half a second for server to refresh new values.
                 new_data = self.get_new_data(timestamp)
+
             self.insert_data(new_data)
+
             if verbose:
                 self.output_message("Data has been updated successfully.\n")
             # self.try_callback("Updated data successfully.")
@@ -516,29 +525,6 @@ class Data:
             self.try_callback(message=error_message)
             time.sleep(15)
             return self.get_current_price()
-
-    def get_interval_unit_and_measurement(self) -> Tuple[str, int]:
-        """
-        Returns interval unit and measurement.
-        :return: A tuple with interval unit and measurement respectively.
-        """
-        unit = self.interval[-1]  # Gets the unit of the interval. eg 12h = h
-        measurement = int(self.interval[:-1])  # Gets the measurement, eg 12h = 12
-        return unit, measurement
-
-    def get_interval_minutes(self) -> int:
-        """
-        Returns interval minutes.
-        :return: An integer representing the minutes for an interval.
-        """
-        if self.interval_unit == 'h':
-            return self.interval_measurement * 60
-        elif self.interval_unit == 'm':
-            return self.interval_measurement
-        elif self.interval_unit == 'd':
-            return self.interval_measurement * 24 * 60
-        else:
-            raise ValueError("Invalid interval.", 4)
 
     def create_csv_file(self, descending: bool = True, army_time: bool = True, start_date: datetime.date = None) -> str:
         """
