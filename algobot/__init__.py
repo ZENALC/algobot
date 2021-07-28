@@ -9,4 +9,9 @@ MAIN_LOGGER = get_logger(log_file='algobot', logger_name='algobot')
 
 CURRENT_VERSION = get_current_version()
 LATEST_VERSION = get_latest_version()
-BINANCE_CLIENT = Client()
+
+try:
+    BINANCE_CLIENT = Client()
+except Exception as e:
+    MAIN_LOGGER.exception(repr(e))
+    BINANCE_CLIENT = None
