@@ -98,6 +98,7 @@ class MovingAverageStrategy(Strategy):
         :param log_data: Boolean specifying whether current information regarding strategy should be logged or not.
         """
         parent = self.parent
+        data_object = data
         trends = []  # Current option trends. They all have to be the same to register a trend.
 
         for option in self.tradingOptions:
@@ -123,7 +124,7 @@ class MovingAverageStrategy(Strategy):
             self.strategyDict[interval_type][f'{prefix}{initialName}'] = avg1
             self.strategyDict[interval_type][f'{prefix}{finalName}'] = avg2
 
-            if interval_type == 'regular':
+            if interval_type == 'regular' and not isinstance(data_object, list):
                 self.plotDict[initialName][0] = avg1
                 self.plotDict[finalName][0] = avg2
 

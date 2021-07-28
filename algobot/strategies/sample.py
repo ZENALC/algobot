@@ -240,7 +240,7 @@ class SampleStrategy(Strategy):
         self.strategyDict[interval][f'{prefix}{ma1_string}'] = ma1
         self.strategyDict[interval][f'{prefix}{ma2_string}'] = ma2
 
-        if interval == 'regular':  # Only plot for regular interval values.
+        if interval == 'regular' and not isinstance(data_obj, list):  # Only plot for regular interval values.
             # Note that the value of this dictionary is a list. The first contains the value and the second contains
             # the color. We only want to change the value, so modify the first value (which is at the 0th index).
             self.plotDict['Lower Band'][0] = lower_band
