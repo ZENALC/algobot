@@ -14,6 +14,7 @@ import time
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple, Union
 
+import pandas as pd
 import requests
 from dateutil import parser
 
@@ -425,33 +426,20 @@ def load_from_csv(path: str, descending: bool = True) -> List[Dict[str, Union[fl
     :param descending: Boolean representing whether data is returned in descending or ascending format by date.
     :return: List of dictionaries containing open, high, low, close, and date information.
     """
-    with open(path) as f:
-        data = []
-        lines = f.readlines()
-        headers = list(map(str.lower, lines[0].rstrip().split(',')))
-        for line in lines[1:]:
-            line = line.rstrip()  # Strip off newline character.
-            split_line = line.split(',')
-            split_line = [line.strip() for line in split_line]
-            data.append({
-                headers[0]: split_line[0],  # Date in UTC.
-                headers[1]: float(split_line[1]),  # open
-                headers[2]: float(split_line[2]),  # high
-                headers[3]: float(split_line[3]),  # low
-                headers[4]: float(split_line[4]),  # close
-                headers[5]: float(split_line[5]),  # volume
-            })
+    df = pd.read_csv(path)
+    df.columns = [col.lower().strip() for col in df.columns]  # To support backwards compatibility.
+    data = df.to_dict('records')
 
-        first_date = parser.parse(data[0]['date_utc'])  # Retrieve first date from CSV data.
-        last_date = parser.parse(data[-1]['date_utc'])  # Retrieve last date from CSV data.
+    first_date = parser.parse(data[0]['date_utc'])  # Retrieve first date from CSV data.
+    last_date = parser.parse(data[-1]['date_utc'])  # Retrieve last date from CSV data.
 
-        if descending and first_date < last_date:
-            return data[::-1]
+    if descending and first_date < last_date:
+        return data[::-1]
 
-        if not descending and first_date > last_date:
-            return data[::-1]
+    if not descending and first_date > last_date:
+        return data[::-1]
 
-        return data
+    return data
 
 
 def parse_precision(precision: str, symbol: str) -> int:
