@@ -102,9 +102,9 @@ def test_get_data_from_parameter(data: Dict[str, Any], parameter: str, expected:
 
 
 @pytest.mark.parametrize(
-    'data, date_in_utc, expected',
+    'data, expected',
     [
-        (['01/01/21', 5, 15, 3, 8, 9, 10, 15, 9, 15], None, {
+        (['01/01/21', 5, 15, 3, 8, 9, 10, 15, 9, 15], {
             'date_utc': '01/01/21',
             'open': 5,
             'high': 15,
@@ -116,7 +116,7 @@ def test_get_data_from_parameter(data: Dict[str, Any], parameter: str, expected:
             'taker_buy_base_asset': 9,
             'taker_buy_quote_asset': 15
         }),
-        (['01/01/21', 5, 15, 3, 8, 9, 10, 15, 9, 15], "January 1st 2021", {
+        (['January 1st 2021', 5, 15, 3, 8, 9, 10, 15, 9, 15], {
             'date_utc': 'January 1st 2021',
             'open': 5.0,
             'high': 15.0,
@@ -130,11 +130,11 @@ def test_get_data_from_parameter(data: Dict[str, Any], parameter: str, expected:
         }),
     ]
 )
-def test_get_normalized_data(data, date_in_utc, expected):
+def test_get_normalized_data(data, expected):
     """
     Test get normalized data functionality.
     """
-    assert get_normalized_data(data, date_in_utc) == expected, f"Expected normalized data to be: {expected}."
+    assert get_normalized_data(data) == expected, f"Expected normalized data to be: {expected}."
 
 
 @pytest.mark.parametrize(
@@ -178,48 +178,68 @@ def helper_for_test_load_from_csv(descending: bool) -> List[Dict[str, Union[str,
     """
     data = [
         {
-            'date_utc': '03/06/2021 01:43 AM',
-            'open': 3.7729,
-            'high': 3.7763,
-            'low': 3.7729,
-            'close': 3.7763,
-            'volume': 1640.75
-        },
-        {
-            'date_utc': '03/06/2021 01:42 AM',
-            'open': 3.774,
-            'high': 3.775,
-            'low': 3.7688,
-            'close': 3.7732,
-            'volume': 2263.93
-        },
-        {
-            'date_utc': '03/06/2021 01:41 AM',
-            'open': 3.7749,
-            'high': 3.7753,
-            'low': 3.774,
-            'close': 3.774,
-            'volume': 343.73
+            'date_utc': '03/06/2021 01:39 AM',
+            'open': 3.7667,
+            'close': 3.7754,
+            'high': 3.7754,
+            'low': 3.7657,
+            'number_of_trades': 7788.621466,
+            'quote_asset_volume': 1614994799999.0,
+            'taker_buy_base_asset': 28.0,
+            'taker_buy_quote_asset': 716.76,
+            'volume': 2067.17
         },
         {
             'date_utc': '03/06/2021 01:40 AM',
             'open': 3.7751,
+            'close': 3.7751,
             'high': 3.7754,
             'low': 3.7751,
-            'close': 3.7751,
+            'number_of_trades': 806.036601,
+            'quote_asset_volume': 1614994859999.0,
+            'taker_buy_base_asset': 3.0,
+            'taker_buy_quote_asset': 213.51,
             'volume': 213.51
         },
         {
-            'date_utc': '03/06/2021 01:39 AM',
-            'open': 3.7667,
-            'high': 3.7754,
-            'low': 3.7657,
-            'close': 3.7754,
-            'volume': 2067.17
+            'date_utc': '03/06/2021 01:41 AM',
+            'open': 3.7749,
+            'close': 3.774,
+            'high': 3.7753,
+            'low': 3.774,
+            'number_of_trades': 1297.482873,
+            'quote_asset_volume': 1614994919999.0,
+            'taker_buy_base_asset': 15.0,
+            'taker_buy_quote_asset': 343.73,
+            'volume': 343.73
         },
+        {
+            'date_utc': '03/06/2021 01:42 AM',
+            'open': 3.774,
+            'close': 3.7732,
+            'high': 3.775,
+            'low': 3.7688,
+            'number_of_trades': 8544.069182,
+            'quote_asset_volume': 1614994979999.0,
+            'taker_buy_base_asset': 33.0,
+            'taker_buy_quote_asset': 360.2,
+            'volume': 2263.93
+        },
+        {
+            'date_utc': '03/06/2021 01:43 AM',
+            'open': 3.7729,
+            'close': 3.7763,
+            'high': 3.7763,
+            'low': 3.7729,
+            'number_of_trades': 6192.345082,
+            'quote_asset_volume': 1614995039999.0,
+            'taker_buy_base_asset': 25.0,
+            'taker_buy_quote_asset': 1635.85,
+            'volume': 1640.75
+        }
     ]
 
-    return data if descending else data[::-1]
+    return data[::-1] if descending else data
 
 
 @pytest.mark.parametrize(

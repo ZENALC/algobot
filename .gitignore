@@ -28,3 +28,4 @@ __pycache__/
 state.json
 .coverage
 /coverage/
+/Notebooks/

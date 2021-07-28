@@ -14,7 +14,7 @@ import pytest
 from dateutil import parser
 
 from algobot.data import Data
-from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_normalized_data
+from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, convert_str_to_utc_datetime, get_normalized_data
 from tests.binance_client_mocker import BinanceMockClient
 from tests.utils_for_tests import does_not_raise
 
@@ -53,7 +53,7 @@ def get_normalized_csv_data() -> List[Dict[str, Union[float, datetime]]]:
     csv_data = get_csv_data(headers=False)
     normalized_data = []
     for data in csv_data:
-        split_data = data.strip().split(', ')
+        split_data = data.split(',')
         normalized_dict = get_normalized_data(split_data, parse_date=True)
         normalized_data.append(normalized_dict)
 
@@ -82,7 +82,7 @@ def insert_test_data_to_database():
     with closing(sqlite3.connect(DATABASE_FILE_PATH)) as connection:
         with closing(connection.cursor()) as cursor:
             for data in total_data:
-                cursor.execute(query, data.split(', '))
+                cursor.execute(query, data.split(','))
         connection.commit()
 
 
@@ -226,11 +226,23 @@ def test_get_latest_database_row(data_object: Data):
     """
     data_object.create_table()
     result = data_object.get_latest_database_row()
-    assert result is None, "Expected a null return."
+    assert result == {}, "Expected an empty dictionary."
 
     insert_test_data_to_database()
-    result, = data_object.get_latest_database_row()
-    assert result == '03/06/2021 01:43 AM', f'Expected: 03/06/2021 01:43 AM. Got: {result}'
+    result = data_object.get_latest_database_row()
+    expected = {
+        'close': 3.7763,
+        'date_utc': convert_str_to_utc_datetime('03/06/2021 01:43 AM'),
+        'high': 3.7763,
+        'low': 3.7729,
+        'number_of_trades': 6192.345082,
+        'open': 3.7729,
+        'quote_asset_volume': 1614995039999.0,
+        'taker_buy_base_asset': 25.0,
+        'taker_buy_quote_asset': 1635.85,
+        'volume': 1640.75
+    }
+    assert result == expected, f'Expected: {expected}. Got: {result}'
 
 
 def test_dump_to_table(data_object: Data):
@@ -271,9 +283,7 @@ def test_get_data_from_database(data_object: Data):
     remove_test_data()
     data_object.create_table()
     data_object.dump_to_table(normalized_csv_data)
-    data_object.get_data_from_database()
-
-    result = data_object.data
+    result = data_object.get_data_from_database()
 
     # Reverse because data is in ascending order whereas CSV data is not.
     assert normalized_csv_data == result, "Expected data to equal."
@@ -298,30 +308,11 @@ def test_verify_integrity(data_object: Data, data, expected: List[Dict[str, floa
     assert result == expected, f"Expected: {expected}. Got: {result}."
 
 
-def test_write_csv_data(data_object: Data):
-    """
-    Test to ensure write CSV data functionality is sound.
-    :param data_object: Data object to leverage to test this function.
-    """
-    remove_test_data()
-    data_object.create_table()
-
-    insert_test_data_to_database()
-    data_object.get_data_from_database()
-
-    csv_path = data_object.write_csv_data(data_object.data, file_name='ALGOBOT_TEST_DATA.csv', army_time=False)
-    with open(csv_path) as f:
-        generated_data = f.readlines()
-
-    assert generated_data == get_csv_data(headers=True), "Expected data to be equal."
-
-
 @pytest.mark.parametrize(
     'descending, army_time, start_date, expected_file_to_match',
     [
         (False, False, '03/06/2021', 'asc_non_army_middle.csv'),
         (True, False, '03/05/2021', 'desc_non_army_middle.csv'),
-        (True, True, '03/07/2022', 'non_existent.csv')
     ]
 )
 def test_create_csv_file(data_object: Data, descending, army_time, start_date, expected_file_to_match):
@@ -336,7 +327,7 @@ def test_create_csv_file(data_object: Data, descending, army_time, start_date, e
     data_object.create_table()
 
     insert_test_data_to_database()
-    data_object.get_data_from_database()
+    data_object.data = data_object.get_data_from_database()
 
     start_date = parser.parse(start_date).date()
 

@@ -95,13 +95,14 @@ class BotThread(QRunnable):
             self.signals.activity.emit(caller, f'Retrieving {symbol} data for {intervalString.lower()} intervals...')
 
             if caller == LIVE:
-                gui.lowerIntervalData = Data(interval=lowerInterval, symbol=symbol, update=False)
-                gui.lowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
+                gui.lowerIntervalData = Data(interval=lowerInterval, symbol=symbol, update=False, limit_fetch=True)
+                gui.lowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress, remove_first=True,
                                                           caller=LIVE)
             elif caller == SIMULATION:
-                gui.simulationLowerIntervalData = Data(interval=lowerInterval, symbol=symbol, update=False)
+                gui.simulationLowerIntervalData = Data(interval=lowerInterval, symbol=symbol, update=False,
+                                                       limit_fetch=True)
                 gui.simulationLowerIntervalData.custom_get_new_data(progress_callback=self.signals.progress,
-                                                                    removeFirst=True, caller=SIMULATION)
+                                                                    remove_first=True, caller=SIMULATION)
             else:
                 raise TypeError("Invalid type of caller specified.")
 
@@ -133,8 +134,8 @@ class BotThread(QRunnable):
                                                     loadData=True,
                                                     updateData=False,
                                                     precision=precision)
-            gui.simulationTrader.dataView.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
-                                                              caller=SIMULATION)
+            gui.simulationTrader.dataView.custom_get_new_data(progress_callback=self.signals.progress,
+                                                              remove_first=True, caller=SIMULATION)
         elif caller == LIVE:
             apiSecret = gui.configuration.binanceApiSecret.text()
             apiKey = gui.configuration.binanceApiKey.text()
@@ -151,7 +152,7 @@ class BotThread(QRunnable):
                                     loadData=True,
                                     updateData=False,
                                     precision=precision)
-            gui.trader.dataView.custom_get_new_data(progress_callback=self.signals.progress, removeFirst=True,
+            gui.trader.dataView.custom_get_new_data(progress_callback=self.signals.progress, remove_first=True,
                                                     caller=LIVE)
         else:
             raise ValueError("Invalid caller.")

@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 import pandas as pd
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QDate, QThreadPool
-from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QApplication, QDialog, QLineEdit, QMainWindow, QMessageBox
 
 import algobot
 from algobot.helpers import ROOT_DIR, convert_long_interval, create_folder, get_logger, open_file_or_folder
@@ -44,9 +44,8 @@ class OtherCommands(QDialog):
         """
         Overrides QDialog to detect click events. Used mainly to clear focus from QLineEdits.
         """
-        # noinspection PyUnresolvedReferences
         # pylint: disable=c-extension-no-member, no-self-use
-        focused_widget = QtGui.QApplication.focusWidget()
+        focused_widget = QApplication.focusWidget()
         if isinstance(focused_widget, QLineEdit):
             focused_widget.clearFocus()
 
