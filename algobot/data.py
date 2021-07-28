@@ -13,8 +13,7 @@ from typing import Dict, List, Tuple, Union
 import binance
 import pandas as pd
 
-from algobot.helpers import (ROOT_DIR, SHORT_INTERVAL_MAP, convert_str_to_utc_datetime, get_logging_object,
-                             get_normalized_data, get_ups_and_downs)
+from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data, get_ups_and_downs
 from algobot.typing_hints import DATA_TYPE
 
 
@@ -207,7 +206,7 @@ class Data:
         self.output_message("Successfully stored all new data to database.")
         return True
 
-    def get_latest_database_row(self) -> Dict[str, str]:
+    def get_latest_database_row(self) -> Dict[str, Union[float, datetime]]:
         """
         Returns the latest row from database table.
         :return: Latest row data in a dictionary.
@@ -252,8 +251,7 @@ class Data:
         if not result:
             return False
 
-        latest_date = convert_str_to_utc_datetime(result['date_utc'])
-        return self.is_latest_date(latest_date)
+        return self.is_latest_date(result['date_utc'])
 
     # noinspection PyProtectedMember
     def get_latest_timestamp(self) -> int:
@@ -266,8 +264,7 @@ class Data:
             # pylint: disable=protected-access
             return self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
         else:
-            latest_date = convert_str_to_utc_datetime(result['date_utc'])
-            return int(latest_date.timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
+            return int(result['date_utc'].timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
 
     def load_data(self, update: bool = True, limit_fetch: bool = False):
         """
@@ -295,9 +292,8 @@ class Data:
             timestamp = self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
             self.output_message(f'Downloading all available historical data for {self.interval} intervals.')
         else:
-            latest_date = convert_str_to_utc_datetime(result['date_utc'])
-            timestamp = int(latest_date.timestamp()) * 1000  # Converting timestamp to milliseconds
-            date_with_interval_added = latest_date + timedelta(minutes=self.interval_minutes)
+            timestamp = int(result['date_utc'].timestamp()) * 1000  # Converting timestamp to milliseconds
+            date_with_interval_added = result['date_utc'] + timedelta(minutes=self.interval_minutes)
             self.output_message(f"Previous data up to UTC {date_with_interval_added} found.")
 
         if not self.database_is_updated():
