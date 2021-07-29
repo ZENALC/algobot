@@ -413,7 +413,7 @@ class Data:
         :return: True or false whether date is latest period or not.
         """
         minutes = self.interval_minutes
-        current_date = latest_date + timedelta(minutes=minutes) + timedelta(seconds=5)  # 5s leeway for server update
+        current_date = latest_date + timedelta(minutes=minutes) + timedelta(seconds=15)  # 15s leeway for server update
         return current_date >= datetime.now(timezone.utc) - timedelta(minutes=minutes)
 
     def data_is_updated(self) -> bool:
@@ -488,7 +488,7 @@ class Data:
                                                                               interval=self.interval,
                                                                               startTime=current_timestamp,
                                                                               endTime=next_timestamp,
-                                                                              )[0]
+                                                                              )[0][1:]  # We don't need timestamp.
             self.current_values = get_normalized_data(data=current_data)
 
             if counter > 0:
