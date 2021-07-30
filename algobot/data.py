@@ -309,6 +309,7 @@ class Data:
                             caller=-1) -> List[dict]:
         """
         Returns new data from Binance API from timestamp specified, however this one is custom-made.
+        This code below is taken from binance client and slightly refactored to make usage of completion percentages.
         :param caller: Caller that called this function. Only used for bot_thread.
         :param remove_first: Boolean whether newest data is removed or not.
         :param locked: Signal to emit back to GUI when storing data. Cannot be canceled once here. Used for databases.
@@ -316,13 +317,16 @@ class Data:
         :param limit: Limit per pull.
         :return: A list of dictionaries.
         """
-        # This code below is taken from binance client and slightly refactored to make usage of completion percentages.
         self.download_loop = True
-        output_data = []  # Initialize our list
+        output_data = []  # Initialize our list.
         timeframe = binance.client.interval_to_milliseconds(self.interval)
         start_ts = total_beginning_timestamp = self.get_latest_timestamp()
         end_progress = time.time() * 1000 - total_beginning_timestamp
         idx = 0
+
+        def callback(percentage, msg):
+            if progress_callback:
+                progress_callback.emit(int(percentage), msg, caller)
 
         while self.download_loop:
             temp_data = self.binanceClient.get_klines(
@@ -333,31 +337,29 @@ class Data:
                 endTime=None
             )
 
-            if len(temp_data) == 0:
+            if len(temp_data) == 0:  # Downloaded all data possible, if no data was fetched.
                 break
 
             output_data += temp_data
             start_ts = temp_data[-1][0]
-            if progress_callback:
-                progress = (start_ts - total_beginning_timestamp) / end_progress * 94
-                progress_callback.emit(int(progress), "Downloading data...", caller)
+            progress = (start_ts - total_beginning_timestamp) / end_progress * 94
+            callback(progress, "Downloading data...")
 
-            idx += 1
-            # check if we received less than the required limit and exit the loop
+            # Check if we received less than the required limit and exit the loop.
             if len(temp_data) < limit:
                 # exit the while loop
                 break
 
-            # increment next call by our timeframe
+            # Increment next call by our timeframe.
             start_ts += timeframe
 
-            # sleep after every 5th call to be kind to the API
+            idx += 1
+            # Sleep after every 5th call to be kind to the API.
             if idx % 5 == 0:
                 time.sleep(1)
 
         if not self.download_loop:
-            if progress_callback:
-                progress_callback.emit(-1, "Download canceled.", caller)
+            callback(-1, "Download canceled.")
             return []
 
         if locked:  # If we have a callback for emitting lock signals.
@@ -366,14 +368,10 @@ class Data:
         if remove_first:
             output_data.pop()
 
-        if progress_callback:
-            progress_callback.emit(95, "Saving data...", caller)
-
+        callback(95, "Saving data...")
         self.insert_data(output_data)
 
-        if progress_callback:
-            progress_callback.emit(97, "This may take a while. Dumping data to database...", caller)
-
+        callback(97, "This may take a while. Dumping data to database...")
         start_index_for_dump = -len(output_data)
 
         if remove_first:  # We don't want current data as it's not the latest data.
@@ -381,9 +379,7 @@ class Data:
         else:  # Strip off last element because it contains current info which we don't want to store.
             self.dump_to_table(self.data[start_index_for_dump:-1])
 
-        if progress_callback:
-            progress_callback.emit(100, "Downloaded all new data successfully.", caller)
-
+        callback(100, "Downloaded all new data successfully.")
         self.download_loop = False
         self.download_completed = True
         return self.data
