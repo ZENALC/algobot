@@ -37,6 +37,7 @@ APScheduler = "==3.6.3"
 PyQt5 = "==5.15.4"
 PyQt5-Qt5 = "==5.15.2"
 PyQt5-sip = "==12.9.0"
+ta-lib = "*"
 
 [dev-packages]
 flake8 = "*"
