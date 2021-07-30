@@ -7,8 +7,24 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
 import numpy as np
+from talib import stream
 
 from algobot.helpers import get_data_from_parameter
+
+MA_MAP = {
+    'DEMA': stream.DEMA,
+    'EMA': stream.EMA,
+    'KAMA': stream.KAMA,
+    'WMA': stream.WMA,
+    'MAMA': stream.MAMA,
+    'MAVP': stream.MAVP,
+    'SMA': stream.SMA,
+    'TEMA': stream.TEMA,
+    'TRIMA': stream.TRIMA,
+    'MA': stream.MA
+}
+
+MA_PARAMS = ['High', 'Low', 'Open', 'Close', 'High/Low', 'Open/Close']
 
 
 def get_ddof_from_stdev(stdev_type: str) -> int:

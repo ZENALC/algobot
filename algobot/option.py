@@ -5,8 +5,6 @@ Option class for moving averages. TODO: Deprecate.
 from typing import Tuple
 
 # TODO: Get rid of this class.
-from algobot.algorithms import get_moving_average
-from algobot.traders.simulationtrader import SimulationTrader
 
 
 class Option:
@@ -83,21 +81,6 @@ class Option:
             f'{self.movingAverage}({self.initialBound}) {self.parameter.capitalize()}',
             f'{self.movingAverage}({self.finalBound}) {self.parameter.capitalize()}',
         )
-
-    def get_option_info(self, trader: SimulationTrader) -> tuple:
-        """
-        Returns basic information about option provided.
-        :param trader: Trader object to be used to get averages.
-        :return: Tuple of initial average, final average, initial option name, and final option name.
-        """
-        mv, param, initB, finB = self.movingAverage, self.parameter, self.initialBound, self.finalBound
-        d = trader.dataView
-
-        initialAverage = get_moving_average(mv, param, initB, d.data + [d.current_values])
-        finalAverage = get_moving_average(mv, param, finB, d.data + [d.current_values])
-        initialName, finalName = self.get_pretty_option()
-
-        return initialAverage, finalAverage, initialName, finalName
 
     def __repr__(self) -> str:
         """

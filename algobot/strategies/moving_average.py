@@ -5,8 +5,8 @@ Moving Average strategy.
 from typing import List, Union
 
 import pandas as pd
-from talib import stream
 
+from algobot.algorithms import MA_MAP, MA_PARAMS
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH
 from algobot.helpers import get_random_color
@@ -79,13 +79,12 @@ class MovingAverageStrategy(Strategy):
         The initial value will return the int type.
         The final value will return the int type.
         """
-        movingAverages = ['SMA', 'EMA', 'WMA']
-        parameters = ['High', 'Low', 'Open', 'Close', 'High/Low', 'Open/Close']
-        return [('Moving Average', tuple, movingAverages),
-                ('Parameter', tuple, parameters),
-                ('Initial', int),
-                ('Final', int)
-                ]
+        return [
+            ('Moving Average', tuple, MA_MAP.keys()),
+            ('Parameter', tuple, MA_PARAMS),
+            ('Initial', int),
+            ('Final', int)
+        ]
 
     def get_params(self) -> List[Option]:
         """
@@ -113,15 +112,7 @@ class MovingAverageStrategy(Strategy):
             movingAverage, parameter, initialBound, finalBound = option.get_all_params()
             initial_name, final_name = option.get_pretty_option()
 
-            if movingAverage == 'SMA':
-                func = stream.SMA
-            elif movingAverage == 'EMA':
-                func = stream.EMA
-            elif movingAverage == 'WMA':
-                func = stream.WMA
-            else:
-                raise ValueError('invalid ma')
-
+            func = MA_MAP[movingAverage.upper()]
             avg1 = func(df[parameter], initialBound)
             avg2 = func(df[parameter], finalBound)
 
