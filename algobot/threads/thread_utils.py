@@ -18,13 +18,13 @@ def get_config_helper(gui, caller) -> Dict[str, Any]:
     :return: Dictionary containing configuration settings.
     """
     algo_dict = get_interface_dictionary(gui, caller)['configuration']
-    startDate, endDate = get_calendar_dates(config_obj=gui.configuration, caller=caller)
+    start_date, end_date = get_calendar_dates(config_obj=gui.configuration, caller=caller)
     precision = algo_dict['precision'].currentText()
     symbol = gui.configuration.optimizer_backtest_dict[caller]['dataType']
 
     d = {
-        'startDate': startDate,
-        'endDate': endDate,
+        'startDate': start_date,
+        'endDate': end_date,
         'symbol': symbol,
         'startingBalance': algo_dict['startingBalance'].value(),
         'data': gui.configuration.optimizer_backtest_dict[caller]['data'],

@@ -49,9 +49,9 @@ class RealTrader(SimulationTrader):
         self.transactionFeePercentage = 0.002  # Added 0.001 for volatility safety.
         self.isolated = isIsolated
 
-        symbolInfo = self.binanceClient.get_symbol_info(self.symbol)
-        self.purchasePrecision = self.get_purchase_precision(symbolInfo)
-        self.minNotional = self.get_min_notional(symbolInfo)
+        symbol_info = self.binanceClient.get_symbol_info(self.symbol)
+        self.purchasePrecision = self.get_purchase_precision(symbol_info)
+        self.minNotional = self.get_min_notional(symbol_info)
 
         self.spot_usdt = self.get_spot_usdt()
         self.spot_coin = self.get_spot_coin()
@@ -65,30 +65,30 @@ class RealTrader(SimulationTrader):
         self.validate_minimum_funds()
 
     @staticmethod
-    def get_min_notional(symbolInfo: Dict[str, Any]) -> float:
+    def get_min_notional(symbol_info: Dict[str, Any]) -> float:
         """
         Get the minimum notional based on the symbol provided.
-        :param symbolInfo: Dictionary containing symbol info.
+        :param symbol_info: Dictionary containing symbol info.
         :return: Minimum notional in a float.
         """
-        filters = symbolInfo['filters']
-        for filterDict in filters:
-            if 'minNotional' in filterDict:
-                min_notional = float(filterDict['minNotional'])
+        filters = symbol_info['filters']
+        for filter_dict in filters:
+            if 'minNotional' in filter_dict:
+                min_notional = float(filter_dict['minNotional'])
                 return min_notional  # Get the default min_notional value from Binance if found.
         return 10  # Default value of $10.
 
     @staticmethod
-    def get_purchase_precision(symbolInfo: Dict[str, Any]) -> int:
+    def get_purchase_precision(symbol_info: Dict[str, Any]) -> int:
         """
         Get precision required for purchases.
-        :param symbolInfo: Dictionary containing symbol info.
+        :param symbol_info: Dictionary containing symbol info.
         :return: Integer containing purchase precision required.
         """
-        filters = symbolInfo['filters']
-        for filterDict in filters:
-            if 'stepSize' in filterDict:
-                stepSize = float(filterDict['stepSize'])
+        filters = symbol_info['filters']
+        for filter_dict in filters:
+            if 'stepSize' in filter_dict:
+                stepSize = float(filter_dict['stepSize'])
                 return int(round(-math.log(stepSize, 10), 0))
         return 6  # Default value if no step size found.
 

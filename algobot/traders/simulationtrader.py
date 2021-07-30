@@ -142,14 +142,14 @@ class SimulationTrader(Trader):
         Adds strategy information to the dictionary provided.
         :param groupedDict: Dictionary to add strategy information to.
         """
-        for strategyName, strategy in self.strategies.items():
+        for strategy_name, strategy in self.strategies.items():
 
-            groupedDict[strategyName] = {
+            groupedDict[strategy_name] = {
                 'trend': self.get_trend_string(strategy.trend),
                 'enabled': 'True',
             }
 
-            strategy.populate_grouped_dict(groupedDict[strategyName])
+            strategy.populate_grouped_dict(groupedDict[strategy_name])
 
     def get_remaining_safety_timer(self) -> str:
         """
@@ -171,10 +171,10 @@ class SimulationTrader(Trader):
         :param force: Boolean that determines whether trade was conducted autonomously or by hand.
         :param message: Message used for conducting trade.
         """
-        initialNet = self.previousNet
-        finalNet = self.get_net()
-        profit = finalNet - initialNet
-        profitPercentage = self.get_profit_percentage(initialNet, finalNet)
+        initial_net = self.previousNet
+        final_net = self.get_net()
+        profit = final_net - initial_net
+        profit_percentage = self.get_profit_percentage(initial_net, final_net)
         method = "Manual" if force else "Automation"
 
         trade = {
@@ -184,7 +184,7 @@ class SimulationTrader(Trader):
             'pair': self.symbol,
             'price': f'${round(self.currentPrice, self.precision)}',
             'method': method,
-            'percentage': f'{round(profitPercentage, 2)}%',
+            'percentage': f'{round(profit_percentage, 2)}%',
             'profit': f'${round(profit, self.precision)}'
         }
 
@@ -195,7 +195,7 @@ class SimulationTrader(Trader):
                 pass
 
         self.trades.append(trade)
-        self.previousNet = finalNet
+        self.previousNet = final_net
         self.stopLossExit = stopLossExit
         self.smartStopLossEnter = smartEnter
         self.scheduledSafetyTimer = None
@@ -206,7 +206,7 @@ class SimulationTrader(Trader):
                             f'Pair: {self.symbol}\n'
                             f'Price: {round(self.currentPrice, self.precision)}\n'
                             f'Method: {method}\n'
-                            f'Percentage: {round(profitPercentage, 2)}%\n'
+                            f'Percentage: {round(profit_percentage, 2)}%\n'
                             f'Profit: ${round(profit, self.precision)}\n')
 
     def buy_long(self, msg: str, usd: float = None, force: bool = False, smartEnter: bool = False):
@@ -232,11 +232,11 @@ class SimulationTrader(Trader):
                 raise ValueError(f'You currently have ${self.balance}. You cannot invest ${usd}.')
 
             self.currentPrice = self.dataView.get_current_price()
-            transactionFee = usd * self.transactionFeePercentageDecimal
-            self.commissionPaid += transactionFee
+            transaction_fee = usd * self.transactionFeePercentageDecimal
+            self.commissionPaid += transaction_fee
             self.currentPosition = LONG
             self.buyLongPrice = self.longTrailingPrice = self.currentPrice
-            self.coin += (usd - transactionFee) / self.currentPrice
+            self.coin += (usd - transaction_fee) / self.currentPrice
             self.balance -= usd
             self.add_trade(msg, force=force, smartEnter=smartEnter)
 
