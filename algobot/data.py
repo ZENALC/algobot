@@ -424,13 +424,24 @@ class Data:
         latest_date = self.data[-1]['date_utc']
         return self.is_latest_date(latest_date)
 
+    @staticmethod
+    def get_utc_datetime_from_timestamp(timestamp: Union[str, float], milliseconds: bool = True) -> datetime:
+        """
+        Returns a UTC datetime object from timestamp.
+        :param timestamp: Timestamp value.
+        :param milliseconds: Boolean whether the timestamp is in milliseconds or not.
+        :return: Datetime in UTC based on the timestamp.
+        """
+        timestamp = int(timestamp) if not milliseconds else int(timestamp) / 1000
+        return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+
     def insert_data(self, new_data: List[List[Union[str, datetime]]]):
         """
         Inserts data from new_data to run-time data.
         :param new_data: List with new data values.
         """
         for data in new_data:
-            data[0] = datetime.fromtimestamp(int(data[0]) / 1000, tz=timezone.utc)
+            data[0] = self.get_utc_datetime_from_timestamp(data[0])
             current_dict = get_normalized_data(data=data)
             self.data.append(current_dict)
 
