@@ -9,7 +9,7 @@ import pytest
 
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.helpers import (ROOT_DIR, convert_long_interval, convert_small_interval, get_caller_string,
-                             get_data_from_parameter, get_label_string, get_normalized_data, get_ups_and_downs,
+                             get_data_from_parameter, get_label_string, get_normalized_data,
                              load_from_csv, parse_precision, parse_strategy_name)
 from tests.binance_client_mocker import BinanceMockClient
 
@@ -135,22 +135,6 @@ def test_get_normalized_data(data, expected):
     Test get normalized data functionality.
     """
     assert get_normalized_data(data) == expected, f"Expected normalized data to be: {expected}."
-
-
-@pytest.mark.parametrize(
-    'data, parameter, expected',
-    [
-        (
-            [{'high': 5}, {'high': 4}, {'high': 8}, {'high': 6}, {'high': 9}, {'high': 10}], 'high',
-            ([0, 0, 4, 0, 3, 1], [0, 1, 0, 2, 0, 0])
-        )
-    ]
-)
-def test_get_ups_and_downs(data, parameter, expected):
-    """
-    Test get ups and down functionality.
-    """
-    assert get_ups_and_downs(data, parameter) == expected, f"Expected ups and downs to be: {expected}."
 
 
 @pytest.mark.parametrize(

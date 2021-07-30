@@ -13,7 +13,7 @@ from typing import Dict, List, Tuple, Union
 import binance
 import pandas as pd
 
-from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data, get_ups_and_downs
+from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data
 from algobot.typing_hints import DATA_TYPE
 
 

@@ -3,13 +3,11 @@ Basic indicators. TODO: Deprecate and move to TA-LIB.
 """
 
 import math
-from datetime import datetime
 from typing import Dict, List, Tuple, Union
 
 import numpy as np
 from talib import stream
 
-from algobot.helpers import get_data_from_parameter
 
 MA_MAP = {
     'DEMA': stream.DEMA,
@@ -49,143 +47,6 @@ def validate(periods: int, data: List[Dict[str, float]]):
     """
     if periods > len(data):
         raise IndexError(f"Not enough data periods. Need {periods}, got {len(data)}.")
-
-
-def get_moving_average(moving_average: str, moving_average_parameter: str, moving_average_periods: int,
-                       data: List[Dict[str, Union[float, str, datetime]]], cache: dict = None) -> float:
-    """
-    Get the moving average value based on the arguments provided.
-    :param moving_average: Moving average (SMA, WMA, EMA).
-    :param moving_average_parameter: Parameter (high, low, open, close, high-low, open-close)
-    :param moving_average_periods: Number of periods.
-    :param data: Data to use to get the moving average.
-    :param cache: Cache dictionary to use for EMA (not required).
-    :return: Moving average value.
-    """
-    moving_average = moving_average.upper()
-    moving_average_parameter = moving_average_parameter.lower()
-    moving_data = data[-moving_average_periods:]
-    if moving_average == 'WMA':
-        return get_wma(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
-    elif moving_average == 'SMA':
-        return get_sma(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter)
-    elif moving_average == 'EMA':
-        ema, _ = get_ema(data=moving_data, prices=moving_average_periods, parameter=moving_average_parameter,
-                         memo=cache)
-        return ema
-    else:
-        raise ValueError("Invalid moving average provided. Available are: EMA, SMA, and WMA.")
-
-
-def get_wma(data: List[Dict[str, float]], prices: int, parameter: str, desc: bool = False) -> float:
-    """
-    Calculates the weighted moving average from data provided.
-    The data is assumed to be in descending order - meaning newer dates are in the front of the list.
-    :param desc: Order data is in. If descending, this will be true, else false.
-    :param data: Data to calculate weighted moving average.
-    :param prices: Periods of data to get weighted moving average.
-    :param parameter: Parameter from data dictionary with which to get the weighted moving average.
-    :return: Weighted moving average.
-    """
-    if desc:
-        total = get_data_from_parameter(data=data[0], parameter=parameter) * prices
-        data = data[1:]
-
-        index = 0
-        for x in range(prices - 1, 0, -1):
-            total += x * get_data_from_parameter(data=data[index], parameter=parameter)
-            index += 1
-    else:
-        total = get_data_from_parameter(data=data[-1], parameter=parameter) * prices
-        data = data[:-1]
-
-        for index, period_data in enumerate(data, start=1):
-            total += index * get_data_from_parameter(period_data, parameter)
-
-    divisor = prices * (prices + 1) / 2
-    wma = total / divisor
-    return wma
-
-
-def get_sma(data: List[Dict[str, float]], prices: int, parameter: str) -> float:
-    """
-    Calculates the simple moving average from data provided.
-    :param data: Data to calculate simple moving average.
-    :param prices: Periods of data to get simple moving average.
-    :param parameter: Parameter from data dictionary with which to get the simple moving average.
-    :return: Simple moving average.
-    """
-    return sum([get_data_from_parameter(data=period, parameter=parameter) for period in data]) / prices
-
-
-def get_ema(data: List[dict], prices: int, parameter: str, sma_prices: int = 5, memo: dict = None,
-            desc: bool = False) -> Tuple[float, dict]:
-    """
-    Calculates the exponential moving average from data provided.
-    The data is assumed to be in descending order - meaning newer dates are in the front of the list.
-    :param desc: Order data is in. If descending, this will be true, else false.
-    :param data: Data to calculate exponential moving average.
-    :param prices: Periods to data to get exponential moving average.
-    :param parameter: Parameter from data dictionary with which to get the exponential moving average.
-    :param sma_prices: Initial SMA periods to use to calculate first exponential moving average.
-    :param memo: Memoized dictionary containing past exponential moving averages data.
-    :return: A tuple containing the exponential moving average and memoized dictionary.
-    """
-    if sma_prices <= 0:
-        raise ValueError("Initial amount of SMA values for initial EMA must be greater than 0.")
-
-    if sma_prices > len(data):
-        sma_prices = len(data) - 1
-
-    multiplier = 2 / (prices + 1)
-
-    if memo and prices in memo and parameter in memo[prices]:
-        index = 0 if desc else -1
-        current_price = get_data_from_parameter(data[index], parameter)
-        if memo[prices][parameter][-1][1] == data[index]['date_utc']:
-            previous_ema = memo[prices][parameter][-2][0]
-            ema = current_price * multiplier + previous_ema * (1 - multiplier)
-            memo[prices][parameter][-1][0] = ema
-        elif memo[prices][parameter][-1][1] < data[index]['date_utc']:
-            previous_ema = memo[prices][parameter][-1][0]
-            ema = current_price * multiplier + previous_ema * (1 - multiplier)
-            memo[prices][parameter].append([ema, data[index]['date_utc']])
-        else:
-            raise ValueError("Something went wrong in the calculation of the EMA.")
-    else:
-        if desc:
-            sma_data = data[len(data) - sma_prices:]
-        else:
-            sma_data = data[:sma_prices]
-
-        ema = get_sma(sma_data, sma_prices, parameter)
-        if desc:
-            values = [[ema, data[len(data) - sma_prices]['date_utc']]]
-            data = data[:len(data) - sma_prices][::-1]  # Reverse the data to start from back to front.
-        else:
-            values = [[ema, data[sma_prices - 1]['date_utc']]]
-            data = data[sma_prices:]
-
-        for period in data:
-            current_price = get_data_from_parameter(period, parameter=parameter)
-            ema = current_price * multiplier + ema * (1 - multiplier)
-            values.append([ema, period['date_utc']])
-
-        if not memo:
-            memo = {prices: {parameter: values}}
-        elif memo and prices not in memo:
-            memo[prices] = {parameter: values}
-        else:
-            memo[prices][parameter] = values
-
-    return ema, memo
-
-
-def get_rsi():
-    """
-    Function to get the RSI. # TODO: Deprecate the get_rsi() functions in the traders' and rewrite here or use TA-LIB.
-    """
-    pass
 
 
 # Volume Indicators
@@ -390,7 +251,7 @@ def get_bollinger_bands(moving_average_periods: int, volatility_look_back_period
     :param dictionary: Optional dictionary to populate volatility data with if provided.
     :param stdev_type: Standard deviation type which can either be sample or population.
     """
-    middle_band = get_moving_average(moving_average, moving_average_parameter, moving_average_periods, data)
+    middle_band = 5
     volatility = volatility.lower()
     if volatility == 'zh' or 'yang zhang' in volatility:
         volatility_measure = get_zh_volatility(periods=volatility_look_back_periods, data=data, stdev_type=stdev_type)
