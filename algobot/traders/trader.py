@@ -119,12 +119,12 @@ class Trader:
         :param smartEnter: Boolean that'll determine whether backtester is entering from a smart stop loss or not.
         :param message: Message that specifies why it entered short.
         """
-        transactionFee = self.balance * self.transactionFeePercentageDecimal
+        transaction_fee = self.balance * self.transactionFeePercentageDecimal
         coin = self.balance / self.currentPrice
-        self.commissionsPaid += transactionFee
+        self.commissionsPaid += transaction_fee
         self.currentPosition = SHORT
         self.coinOwed += coin
-        self.balance += self.currentPrice * coin - transactionFee
+        self.balance += self.currentPrice * coin - transaction_fee
         self.sellShortPrice = self.shortTrailingPrice = self.currentPrice
         self.add_trade(message, smartEnter=smartEnter)
 
@@ -134,13 +134,13 @@ class Trader:
         :param stopLossExit: Boolean that'll determine whether a position was exited from a stop loss.
         :param message: Message that specifies why it exited short.
         """
-        transactionFee = self.coinOwed * self.currentPrice * self.transactionFeePercentageDecimal
+        transaction_fee = self.coinOwed * self.currentPrice * self.transactionFeePercentageDecimal
         coin = self.coinOwed
-        self.commissionsPaid += transactionFee
+        self.commissionsPaid += transaction_fee
         self.currentPosition = None
         self.previousPosition = SHORT
         self.coinOwed -= coin
-        self.balance -= self.currentPrice * coin + transactionFee
+        self.balance -= self.currentPrice * coin + transaction_fee
         self.sellShortPrice = self.shortTrailingPrice = None
         self.add_trade(message, stopLossExit=stopLossExit)
 
@@ -196,13 +196,13 @@ class Trader:
         Sets up strategies from list of strategies provided.
         :param strategies: List of strategies to set up and apply to bot.
         """
-        for strategyTuple in strategies:
-            strategyClass = strategyTuple[0]
-            values = strategyTuple[1]
-            name = parse_strategy_name(strategyTuple[2])
+        for strategy_tuple in strategies:
+            strategy_class = strategy_tuple[0]
+            values = strategy_tuple[1]
+            name = parse_strategy_name(strategy_tuple[2])
 
             # TODO: Leverage kwargs to initialize strategies.
-            self.strategies[name] = strategyClass(parent=self, inputs=values, precision=self.precision)
+            self.strategies[name] = strategy_class(parent=self, inputs=values, precision=self.precision)
             self.minPeriod = max(self.strategies[name].get_min_option_period(), self.minPeriod)
 
     def handle_trailing_prices(self):

@@ -239,17 +239,17 @@ class Backtester(Trader):
         Main function to start a backtest.
         :param thread: Thread to pass to other functions to emit signals to.
         """
-        testLength = self.endDateIndex - self.startDateIndex
-        divisor = max(testLength // 100, 1)
+        test_length = self.endDateIndex - self.startDateIndex
+        divisor = max(test_length // 100, 1)
 
         if thread and thread.caller == BACKTEST:
-            thread.signals.updateGraphLimits.emit(testLength // divisor + 1)
+            thread.signals.updateGraphLimits.emit(test_length // divisor + 1)
 
         self.startingTime = time.time()
         if len(self.strategies) == 0:
-            result = self.simulate_hold(testLength, divisor, thread)
+            result = self.simulate_hold(test_length, divisor, thread)
         else:
-            result = self.strategy_backtest(testLength, divisor, thread)
+            result = self.strategy_backtest(test_length, divisor, thread)
         self.endingTime = time.time()
         return result
 
@@ -301,9 +301,9 @@ class Backtester(Trader):
         :param testLength: Length of backtest.
         :param thread: Optional thread that called this function that'll be used for emitting signals.
         """
-        seenData = self.data[:self.startDateIndex]
-        strategyData = seenData if self.strategyIntervalMinutes == self.intervalMinutes else []
-        nextInsertion = self.data[self.startDateIndex]['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
+        seen_data = self.data[:self.startDateIndex]
+        strategy_data = seen_data if self.strategyIntervalMinutes == self.intervalMinutes else []
+        next_insertion = self.data[self.startDateIndex]['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
         index = None
         for index in range(self.startDateIndex, self.endDateIndex + 1):
             if thread and not thread.running:
@@ -313,7 +313,7 @@ class Backtester(Trader):
                     raise RuntimeError("Optimizer was canceled.")
 
             self.set_indexed_current_price_and_period(index)
-            seenData.append(self.currentPeriod)
+            seen_data.append(self.currentPeriod)
 
             self.main_logic()
             if self.get_net() < 10:
@@ -325,22 +325,22 @@ class Backtester(Trader):
                 return 'DRAWDOWN'
 
             result = None  # Result of strategy loop to ensure nothing crashed -> None is good, anything else is bad.
-            if strategyData is seenData:
-                if len(strategyData) >= self.minPeriod:
-                    result = self.strategy_loop(strategyData=strategyData, thread=thread)
+            if strategy_data is seen_data:
+                if len(strategy_data) >= self.minPeriod:
+                    result = self.strategy_loop(strategyData=strategy_data, thread=thread)
             else:
-                if len(strategyData) + 1 >= self.minPeriod:
-                    strategyData.append(self.currentPeriod)
-                    result = self.strategy_loop(strategyData=strategyData, thread=thread)
-                    strategyData.pop()
+                if len(strategy_data) + 1 >= self.minPeriod:
+                    strategy_data.append(self.currentPeriod)
+                    result = self.strategy_loop(strategyData=strategy_data, thread=thread)
+                    strategy_data.pop()
 
             if result is not None:
                 return result
 
-            if seenData is not strategyData and self.currentPeriod['date_utc'] >= nextInsertion:
-                nextInsertion = self.currentPeriod['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
-                gapData = self.get_gap_data(seenData[-self.intervalGapMultiplier - 1: -1])
-                strategyData.append(gapData)
+            if seen_data is not strategy_data and self.currentPeriod['date_utc'] >= next_insertion:
+                next_insertion = self.currentPeriod['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
+                gapData = self.get_gap_data(seen_data[-self.intervalGapMultiplier - 1: -1])
+                strategy_data.append(gapData)
 
             if thread and thread.caller == BACKTEST and index % divisor == 0:
                 thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
@@ -387,17 +387,18 @@ class Backtester(Trader):
             if isinstance(value_range, tuple) and len(value_range) == 3:
                 self.extend_helper(value_range, combos, key)
             elif key == "strategies":
-                for strategyKey, strategyDict in value_range.items():
-                    for inputKey, step_tuple in strategyDict.items():
+                for strategy_key, strategy_dict in value_range.items():
+                    for inputKey, step_tuple in strategy_dict.items():
                         if isinstance(step_tuple, tuple) and len(step_tuple) == 3:
-                            self.extend_helper(step_tuple, strategyDict, inputKey)
+                            self.extend_helper(step_tuple, strategy_dict, inputKey)
             elif isinstance(value_range, list):
                 continue
             else:
                 raise ValueError("Invalid type of value provided to combos. Make sure to use a list or a tuple.")
 
-        for strategyKey, strategyItems in combos['strategies'].items():  # Create cartesian product of strategies
-            combos['strategies'][strategyKey] = [dict(zip(strategyItems, v)) for v in product(*strategyItems.values())]
+        for strategy_key, strategy_items in combos['strategies'].items():  # Create cartesian product of strategies
+            combos['strategies'][strategy_key] = [
+                dict(zip(strategy_items, v)) for v in product(*strategy_items.values())]
 
         permutations = []
         strategies = combos.pop('strategies')

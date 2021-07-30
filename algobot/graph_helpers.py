@@ -44,13 +44,13 @@ def set_backtest_graph_limits_and_empty_plots(gui: QMainWindow, limit: int = 105
     :param gui: Graphical user interface in which to set up graphs.
     :param limit: Maximum x-axis limit to set in the graph.
     """
-    initialTimeStamp = gui.backtester.data[0]['date_utc'].timestamp()
-    graphDict = get_graph_dictionary(gui, gui.backtestGraph)
-    graphDict['graph'].setLimits(xMin=0, xMax=limit)
-    plot = graphDict['plots'][0]
+    initial_timestamp = gui.backtester.data[0]['date_utc'].timestamp()
+    graph_dict = get_graph_dictionary(gui, gui.backtestGraph)
+    graph_dict['graph'].setLimits(xMin=0, xMax=limit)
+    plot = graph_dict['plots'][0]
     plot['x'] = [0]
     plot['y'] = [gui.backtester.startingBalance]
-    plot['z'] = [initialTimeStamp]
+    plot['z'] = [initial_timestamp]
     plot['plot'].setData(plot['x'], plot['y'])
 
 
@@ -60,8 +60,8 @@ def update_backtest_graph_limits(gui: QMainWindow, limit: int = 105):
     :param gui: Graphical user interface in which to set up graphs.
     :param limit: Maximum x-axis limit to set in the graph.
     """
-    graphDict = get_graph_dictionary(gui, gui.backtestGraph)
-    graphDict['graph'].setLimits(xMin=0, xMax=limit)
+    graph_dict = get_graph_dictionary(gui, gui.backtestGraph)
+    graph_dict['graph'].setLimits(xMin=0, xMax=limit)
 
 
 def get_graph_dictionary(gui: QMainWindow, targetGraph: PlotWidget) -> dict:
@@ -101,29 +101,28 @@ def onMouseMoved(gui, point, graph: PlotWidget):
     :param point: Point hovering over graph.
     :param graph: Graph being hovered on.
     """
-    graphDict = get_graph_dictionary(gui, graph)
-
-    if graphDict.get('line') is None:  # No line exists, just return.
+    graph_dict = get_graph_dictionary(gui, graph)
+    if graph_dict.get('line') is None:  # No line exists, just return.
         return
 
-    plotItem = graph.plotItem
-    p = plotItem.vb.mapSceneToView(point)
+    plot_item = graph.plotItem
+    p = plot_item.vb.mapSceneToView(point)
 
-    view_range = plotItem.vb.viewRange()
+    view_range = plot_item.vb.viewRange()
     x_val, y_val = p.x(), p.y()
     x_min, x_max = view_range[0]  # X axis.
     y_min, y_max = view_range[1]  # Y axis.
 
     if x_val < x_min or x_val > x_max or y_val < y_min or y_val > y_max:
-        graphDict['line'].setPos(-1)
-        legend_helper(graphDict, -1)
+        graph_dict['line'].setPos(-1)
+        legend_helper(graph_dict, -1)
         gui.reset_backtest_cursor()
 
-    elif graphDict['enable'] and p and graphDict.get('line'):  # Ensure that the hover line is enabled.
-        graphDict['line'].setPos(x_val)
+    elif graph_dict['enable'] and p and graph_dict.get('line'):  # Ensure that the hover line is enabled.
+        graph_dict['line'].setPos(x_val)
 
-        if graphDict['plots'][0]['x'][-1] > x_val > graphDict['plots'][0]['x'][0]:
-            legend_helper(graphDict, int(x_val))
+        if graph_dict['plots'][0]['x'][-1] > x_val > graph_dict['plots'][0]['x'][0]:
+            legend_helper(graph_dict, int(x_val))
             if graph == gui.backtestGraph and gui.backtester is not None:
                 gui.update_backtest_activity_based_on_graph(int(x_val))
 
@@ -137,8 +136,8 @@ def add_data_to_plot(gui: QMainWindow, targetGraph: PlotWidget, plotIndex: int, 
     :param y: Y value to add.
     :param timestamp: Timestamp value to add.
     """
-    graphDict = get_graph_dictionary(gui, targetGraph=targetGraph)
-    plot = graphDict['plots'][plotIndex]
+    graph_dict = get_graph_dictionary(gui, targetGraph=targetGraph)
+    plot = graph_dict['plots'][plotIndex]
 
     secondsInDay = 86400  # Reset graph every 24 hours (assuming data is updated only once a second).
     if len(plot['x']) >= secondsInDay:
@@ -199,9 +198,9 @@ def destroy_graph_plots(gui: QMainWindow, targetGraph: PlotWidget):
     :param gui: Graphical user interface in which to set up graphs.
     :param targetGraph: Graph to destroy plots for.
     """
-    graphDict = get_graph_dictionary(gui, targetGraph=targetGraph)
-    graphDict['graph'].clear()
-    graphDict['plots'] = []
+    graph_dict = get_graph_dictionary(gui, targetGraph=targetGraph)
+    graph_dict['graph'].clear()
+    graph_dict['plots'] = []
 
 
 def setup_net_graph_plot(gui: QMainWindow, graph: PlotWidget, trader: Trader, color: str):
@@ -213,8 +212,8 @@ def setup_net_graph_plot(gui: QMainWindow, graph: PlotWidget, trader: Trader, co
     :param color: Color plot will be setup in.
     """
     net = trader.startingBalance
-    currentDateTimestamp = datetime.utcnow().timestamp()
-    plot = get_plot_dictionary(gui, graph=graph, color=color, y=net, name='Net', timestamp=currentDateTimestamp)
+    current_date_timestamp = datetime.utcnow().timestamp()
+    plot = get_plot_dictionary(gui, graph=graph, color=color, y=net, name='Net', timestamp=current_date_timestamp)
 
     append_plot_to_graph(gui, graph, [plot])
 
@@ -230,16 +229,16 @@ def setup_average_graph_plots(gui: QMainWindow, graph: PlotWidget, trader, color
     if trader.currentPrice is None:
         trader.currentPrice = trader.dataView.get_current_price()
 
-    currentPrice = trader.currentPrice
-    currentDateTimestamp = datetime.utcnow().timestamp()
+    current_price = trader.currentPrice
+    current_date_timestamp = datetime.utcnow().timestamp()
 
-    tickerPlotDict = get_plot_dictionary(gui=gui,
-                                         graph=graph,
-                                         color=colors[0],
-                                         y=currentPrice,
-                                         name=trader.symbol,
-                                         timestamp=currentDateTimestamp)
-    append_plot_to_graph(gui, graph, [tickerPlotDict])
+    ticker_plot_dict = get_plot_dictionary(gui=gui,
+                                           graph=graph,
+                                           color=colors[0],
+                                           y=current_price,
+                                           name=trader.symbol,
+                                           timestamp=current_date_timestamp)
+    append_plot_to_graph(gui, graph, [ticker_plot_dict])
 
     # Every graph plot needs to have an index. We'll start from 1. (since 0 is for the price). Logically, we only need
     # the first index for each strategy dictionary, since we can iterate through it and add to it.
@@ -259,7 +258,7 @@ def setup_average_graph_plots(gui: QMainWindow, graph: PlotWidget, trader, color
                                             color=color,
                                             y=value,
                                             name=name,
-                                            timestamp=currentDateTimestamp)
+                                            timestamp=current_date_timestamp)
             append_plot_to_graph(gui, graph, [plot_dict])
             index += 1
 
@@ -271,8 +270,8 @@ def append_plot_to_graph(gui: QMainWindow, targetGraph: PlotWidget, toAdd: list)
     :param targetGraph: Graph to add plot to.
     :param toAdd: List of plots to add to target graph.
     """
-    graphDict = get_graph_dictionary(gui, targetGraph=targetGraph)
-    graphDict['plots'] += toAdd
+    graph_dict = get_graph_dictionary(gui, targetGraph=targetGraph)
+    graph_dict['plots'] += toAdd
 
 
 def create_infinite_line(gui: QMainWindow, graphDict: dict, colors: list = None):
@@ -283,9 +282,9 @@ def create_infinite_line(gui: QMainWindow, graphDict: dict, colors: list = None)
     :param graphDict: A reference to this infinite line will be added to this graph dictionary.
     """
     colors = get_graph_colors(gui=gui) if colors is None else colors
-    hoverLine = InfiniteLine(pos=0, pen=mkPen(colors[-1], width=1), movable=False)
-    graphDict['graph'].addItem(hoverLine)
-    graphDict['line'] = hoverLine
+    hover_line = InfiniteLine(pos=0, pen=mkPen(colors[-1], width=1), movable=False)
+    graphDict['graph'].addItem(hover_line)
+    graphDict['line'] = hover_line
 
 
 def create_graph_plot(gui, graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):
@@ -362,22 +361,22 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
     :param caller: Caller that decides which graphs get updated.
     """
     precision = gui.get_trader(caller=caller).precision
-    interfaceDict = gui.interfaceDictionary[caller]
-    currentUTC = datetime.utcnow().timestamp()
+    interface_dict = gui.interfaceDictionary[caller]
+    current_utc = datetime.utcnow().timestamp()
 
-    netGraph = interfaceDict['mainInterface']['graph']
-    averageGraph = interfaceDict['mainInterface']['averageGraph']
+    net_graph = interface_dict['mainInterface']['graph']
+    average_graph = interface_dict['mainInterface']['averageGraph']
 
-    graphDict = get_graph_dictionary(gui, netGraph)
-    graphXSize = len(graphDict['plots'][0]['x']) + GRAPH_LEEWAY
-    netGraph.setLimits(xMin=0, xMax=graphXSize)
-    add_data_to_plot(gui, netGraph, 0, y=round(valueDict['net'], 2), timestamp=currentUTC)
-    smart_update(graphDict)
+    graph_dict = get_graph_dictionary(gui, net_graph)
+    graph_x_size = len(graph_dict['plots'][0]['x']) + GRAPH_LEEWAY
+    net_graph.setLimits(xMin=0, xMax=graph_x_size)
+    add_data_to_plot(gui, net_graph, 0, y=round(valueDict['net'], 2), timestamp=current_utc)
+    smart_update(graph_dict)
 
-    averageGraphDict = get_graph_dictionary(gui, averageGraph)
-    if averageGraphDict['enable']:
-        averageGraph.setLimits(xMin=0, xMax=graphXSize)
-        add_data_to_plot(gui, averageGraph, 0, y=round(valueDict['price'], precision), timestamp=currentUTC)
+    average_graph_dict = get_graph_dictionary(gui, average_graph)
+    if average_graph_dict['enable']:
+        average_graph.setLimits(xMin=0, xMax=graph_x_size)
+        add_data_to_plot(gui, average_graph, 0, y=round(valueDict['price'], precision), timestamp=current_utc)
 
         trader = gui.get_trader(caller=caller)
         for strategy in trader.strategies.values():
@@ -391,10 +390,10 @@ def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
                 value, _ = combined_data
                 add_data_to_plot(
                     gui=gui,
-                    targetGraph=averageGraph,
+                    targetGraph=average_graph,
                     plotIndex=index,
                     y=round(value, trader.precision),
-                    timestamp=currentUTC
+                    timestamp=current_utc
                 )
                 index += 1
-        smart_update(averageGraphDict)
+        smart_update(average_graph_dict)

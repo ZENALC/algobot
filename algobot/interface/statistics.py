@@ -53,10 +53,10 @@ class Statistics(QDialog):
         tab.setTabPosition(QTabWidget.West)
 
         index = self.get_index_from_tab_type(tabType)
-        innerTabs = self.tabs[tabType]['innerTabs']
+        inner_tabs = self.tabs[tabType]['innerTabs']
 
         for categoryKey in valueDictionary:
-            self.add_category_and_children_keys(categoryKey, valueDictionary, innerTabs, tab)
+            self.add_category_and_children_keys(categoryKey, valueDictionary, inner_tabs, tab)
 
         self.statisticsTabWidget.insertTab(index, tab, f"{tabType.capitalize()}")
         self.statisticsTabWidget.setCurrentIndex(index)
@@ -83,7 +83,7 @@ class Statistics(QDialog):
         :param innerTabs: Inner tabs of tab to tbe modified. E.g. Simulation's inner tabs can be general, averages, etc.
         :param tab: Tab to be modified. For instance, this tab can be the simulation tab.
         """
-        innerLayout = QFormLayout()
+        inner_layout = QFormLayout()
         innerTabs[categoryKey] = {'tab': QTabWidget()}
 
         for mainKey, mainValue in valueDictionary[categoryKey].items():
@@ -91,10 +91,10 @@ class Statistics(QDialog):
             value = QLabel(str(mainValue))
             value.setAlignment(QtCore.Qt.AlignRight)
 
-            innerLayout.addRow(label, value)
+            inner_layout.addRow(label, value)
             innerTabs[categoryKey][mainKey] = {'label': label, 'value': value}
 
-        innerTabs[categoryKey]['tab'].setLayout(innerLayout)
+        innerTabs[categoryKey]['tab'].setLayout(inner_layout)
         tab.addTab(innerTabs[categoryKey]['tab'], get_label_string(categoryKey))
 
     @staticmethod
@@ -120,28 +120,28 @@ class Statistics(QDialog):
         :param valueDictionary: Dictionary with values.
         :param tabType: Tab type to be modified.
         """
-        innerTabs = self.tabs[tabType]['innerTabs']  # live/widgets
-        self.set_profit_or_loss_label(valueDictionary=valueDictionary, innerTabs=innerTabs)
+        inner_tabs = self.tabs[tabType]['innerTabs']  # live/widgets
+        self.set_profit_or_loss_label(valueDictionary=valueDictionary, innerTabs=inner_tabs)
 
-        for key in innerTabs:  # If there's a change in the value dictionary, re-initialize the tab.
+        for key in inner_tabs:  # If there's a change in the value dictionary, re-initialize the tab.
             if key not in valueDictionary:
                 self.initialize_tab(valueDictionary=valueDictionary, tabType=tabType)
                 break
 
-        for categoryKey in valueDictionary:
-            if categoryKey not in innerTabs:
+        for category_key in valueDictionary:
+            if category_key not in inner_tabs:
                 tab = self.tabs[tabType]['tab']
-                self.add_category_and_children_keys(categoryKey, valueDictionary, innerTabs, tab)
+                self.add_category_and_children_keys(category_key, valueDictionary, inner_tabs, tab)
             else:
-                innerWidgets = innerTabs[categoryKey]  # live/widgets/general
-                for mainKey, mainValue in valueDictionary[categoryKey].items():
-                    if mainKey in innerWidgets:
-                        innerWidgets[mainKey]['value'].setText(str(mainValue))
+                inner_widgets = inner_tabs[category_key]  # live/widgets/general
+                for mainKey, mainValue in valueDictionary[category_key].items():
+                    if mainKey in inner_widgets:
+                        inner_widgets[mainKey]['value'].setText(str(mainValue))
                     else:
                         label = QLabel(get_label_string(str(mainKey)))
                         value = QLabel(str(mainValue))
                         value.setAlignment(QtCore.Qt.AlignRight)
 
-                        layout = innerTabs[categoryKey]['tab'].layout()
+                        layout = inner_tabs[category_key]['tab'].layout()
                         layout.addRow(label, value)
-                        innerWidgets[mainKey] = {'label': label, 'value': value}
+                        inner_widgets[mainKey] = {'label': label, 'value': value}

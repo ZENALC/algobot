@@ -29,12 +29,12 @@ def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:
     :param name: Title to put for the groupbox.
     """
     layout = QFormLayout()
-    groupBox = QGroupBox(name)
-    groupBox.setCheckable(True)
-    groupBox.setChecked(False)
-    groupBox.setLayout(layout)
+    group_box = QGroupBox(name)
+    group_box.setCheckable(True)
+    group_box.setChecked(False)
+    group_box.setLayout(layout)
 
-    return groupBox, layout
+    return group_box, layout
 
 
 def create_inner_tab(categoryTabs: List[QTabWidget], description: str, tabName: str, input_creator: Callable,
@@ -51,30 +51,30 @@ def create_inner_tab(categoryTabs: List[QTabWidget], description: str, tabName: 
     :return: None
     """
     for tab in categoryTabs:
-        descriptionLabel = QLabel(description)
-        descriptionLabel.setWordWrap(True)
+        description_label = QLabel(description)
+        description_label.setWordWrap(True)
 
         layout = QVBoxLayout()
-        layout.addWidget(descriptionLabel)
+        layout.addWidget(description_label)
 
         if parent and parent.get_caller_based_on_tab(tab) == OPTIMIZER:
-            groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()} optimization?")
-            input_creator(tab, groupBoxLayout, isOptimizer=True)
+            group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()} optimization?")
+            input_creator(tab, group_box_layout, isOptimizer=True)
         else:
-            groupBox, groupBoxLayout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()}?")
-            groupBox.toggled.connect(lambda _, current_tab=tab: signalFunction(tab=current_tab))
-            input_creator(tab, groupBoxLayout)
+            group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()}?")
+            group_box.toggled.connect(lambda _, current_tab=tab: signalFunction(tab=current_tab))
+            input_creator(tab, group_box_layout)
 
-        dictionary[tab, 'groupBox'] = groupBox
+        dictionary[tab, 'groupBox'] = group_box
 
         scroll = QScrollArea()
-        scroll.setWidget(groupBox)
+        scroll.setWidget(group_box)
         scroll.setWidgetResizable(True)
         layout.addWidget(scroll)
 
-        tabWidget = QTabWidget()
-        tabWidget.setLayout(layout)
-        tab.addTab(tabWidget, tabName)
+        tab_widget = QTabWidget()
+        tab_widget.setLayout(layout)
+        tab.addTab(tab_widget, tabName)
 
 
 def set_value(widget: QWidget, value: Union[str, int, float]):

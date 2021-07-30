@@ -26,12 +26,12 @@ def open_from_msg_box(text: str, title: str):
     :param text: Text to put in message box.
     :param title: Title to put in message box.
     """
-    msgBox = QMessageBox()
-    msgBox.setIcon(QMessageBox.Information)
-    msgBox.setText(text)
-    msgBox.setWindowTitle(title)
-    msgBox.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
-    return msgBox.exec_() == QMessageBox.Open
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Information)
+    msg_box.setText(text)
+    msg_box.setWindowTitle(title)
+    msg_box.setStandardButtons(QMessageBox.Open | QMessageBox.Close)
+    return msg_box.exec_() == QMessageBox.Open
 
 
 def get_elements_from_combobox(combobox: QComboBox) -> List[str]:
