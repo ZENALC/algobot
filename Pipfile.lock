@@ -1034,11 +1034,11 @@
         },
         "jupyterlab": {
             "hashes": [
-                "sha256:7ad4fbe1f6d38255869410fd151a8b15692a663ca97c0a8146b3f5c40e275c23",
-                "sha256:88f6e7580c15cf731d96495fda362e786753e18d1e3e7e735915862efb602a92"
+                "sha256:a181184b1000a550c38da35471dcf91ce11e96750de56430be3fc93ca01dde1e",
+                "sha256:f6b04b5cfbe1fab79dbcecd58c941cbc73b0da5e1ccc5d4333a36860d37789b0"
             ],
             "index": "pypi",
-            "version": "==3.0.16"
+            "version": "==3.1.1"
         },
         "jupyterlab-pygments": {
             "hashes": [
