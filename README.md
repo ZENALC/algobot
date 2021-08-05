@@ -10,7 +10,11 @@ Cryptocurrency trading bot that allows users to create strategies and then backt
 
 Algobot requires at least Python 3.7.
 
+<hr>
+
 Please note that Algobot requires TA-LIB. You can view instructions on how to download TA-LIB from [here](https://github.com/mrjbq7/ta-lib). For Windows users, it's best to download the .whl package for your Python install and `pip install it`. For Linux and MacOS users, there's excellent documenation available in the link provided above.
+
+<hr>
 
 Once you have cloned or unpacked the source code locally, run the following commands from your terminal in that directory.
 
