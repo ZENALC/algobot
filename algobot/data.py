@@ -13,7 +13,7 @@ from typing import Dict, List, Tuple, Union
 import binance
 import pandas as pd
 
-from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data
+from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data, get_ups_and_downs
 from algobot.typing_hints import DATA_TYPE
 
 
@@ -579,6 +579,26 @@ class Data:
                 return True
         return False
 
+    def is_valid_average_input(self, shift: int, prices: int, extra_shift: int = 0) -> bool:
+        """
+        Checks whether shift, prices, and (optional) extraShift are valid.
+        :param shift: Periods from current period.
+        :param prices: Amount of prices to iterate over.
+        :param extra_shift: Extra shift for EMA.
+        :return: A boolean whether shift, prices, and extraShift are logical or not.
+        TODO: Deprecate along with helper get EMA and RSI.
+        """
+        if shift < 0:
+            self.output_message("Shift cannot be less than 0.")
+            return False
+        elif prices <= 0:
+            self.output_message("Prices cannot be 0 or less than 0.")
+            return False
+        elif shift + extra_shift + prices > len(self.data) + 1:
+            self.output_message("Shift + prices period cannot be more than data available.")
+            return False
+        return True
+
     @staticmethod
     def verify_integrity(total_data: List[Dict[str, Union[float, datetime]]]) -> DATA_TYPE:
         """
@@ -593,3 +613,64 @@ class Data:
                 errored_data.append(data)
 
         return errored_data
+
+    def get_total_non_updated_data(self) -> DATA_TYPE:
+        """
+        Get total non-updated data. TODO: Deprecate this function.
+        :return: Total non-updated data.
+        """
+        return self.data + [self.current_values]
+
+    @staticmethod
+    def helper_get_ema(up_data: list, down_data: list, periods: int) -> tuple:
+        """
+        Helper function to get the EMA for relative strength index.
+        :param down_data: Other data to get EMA of.
+        :param up_data: Data to get EMA of.
+        :param periods: Number of periods to iterate through.
+        :return: EMA
+        """
+        ema_up = up_data[0]
+        ema_down = down_data[0]
+        alpha = 1 / periods
+
+        for index in range(1, len(up_data)):
+            ema_up = up_data[index] * alpha + ema_up * (1 - alpha)
+            ema_down = down_data[index] * alpha + ema_down * (1 - alpha)
+
+        return ema_up, ema_down
+
+    def get_rsi(self, prices: int = 14, parameter: str = 'close', shift: int = 0, round_value: bool = True,
+                update: bool = True) -> float:
+        """
+        Returns relative strength index.
+        :param update: Boolean for whether function should call API and get latest data or not.
+        :param prices: Amount of prices to iterate through.
+        :param parameter: Parameter to use for iterations. By default, it's close.
+        :param shift: Amount of prices to shift prices by.
+        :param round_value: Boolean that determines whether final value is rounded or not.
+        :return: Final relative strength index.
+        """
+        if not self.is_valid_average_input(shift, prices):
+            raise ValueError('Invalid input specified.')
+
+        if shift > 0:
+            update_dict = False
+            data = self.data
+            shift -= 1
+        else:
+            update_dict = True
+            data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
+
+        start = len(data) - 500 - prices - shift if len(data) > 500 + prices + shift else 0
+        ups, downs = get_ups_and_downs(data=data[start:len(data) - shift], parameter=parameter)
+        average_up, average_down = self.helper_get_ema(ups, downs, prices)
+        rs = average_up / average_down
+        rsi = 100 - 100 / (1 + rs)
+
+        if shift == 0 and update_dict:
+            self.rsi_data[prices] = rsi
+
+        if round_value:
+            return round(rsi, self.precision)
+        return rsi
