@@ -8,9 +8,9 @@ from typing import Dict, List, Tuple, Union
 import pytest
 
 from algobot.algorithms import (get_accumulation_distribution_indicator, get_bandwidth, get_basic_volatility,
-                                get_bollinger_bands, get_gk_volatility, get_intraday_intensity_indicator,
+                                get_bollinger_bands, get_ema, get_gk_volatility, get_intraday_intensity_indicator,
                                 get_money_flow_index, get_normal_volume_oscillator, get_normalized_intraday_intensity,
-                                get_parkinson_volatility, get_percent_b, get_rs_volatility,
+                                get_parkinson_volatility, get_percent_b, get_rs_volatility, get_sma, get_wma,
                                 get_zh_volatility)
 
 DATA_HINT = List[Dict[str, float]]
@@ -56,6 +56,49 @@ def get_dummy_data() -> List[Dict[str, Union[datetime, float]]]:
             'date_utc': datetime.now() - timedelta(minutes=4)
         },
     ]
+
+
+@pytest.mark.parametrize(
+    'prices, parameter, expected',
+    [
+        (4, 'open', 2.5),
+        (4, 'close', 4.25)
+    ]
+)
+def test_sma(dummy_data: DATA_HINT, prices: int, parameter: str, expected: float):
+    """
+    Test SMA.
+    """
+    assert get_sma(data=dummy_data, prices=prices, parameter=parameter) == expected
+
+
+@pytest.mark.parametrize(
+    'prices, parameter, desc, expected',
+    (
+            (4, 'open', False, 3.0),
+            (4, 'close', False, 4.5)
+    )
+)
+def test_wma(dummy_data: DATA_HINT, prices: int, parameter: str, desc: bool, expected: float):
+    """
+    Test WMA.
+    """
+    assert get_wma(data=dummy_data, prices=prices, parameter=parameter, desc=desc) == expected
+
+
+@pytest.mark.parametrize(
+    'prices, parameter, sma_prices, expected',
+    [
+        (3, 'open', 2, 3.125),
+        (2, 'close', 1, 5.518518518518518)
+    ]
+)
+def test_ema(dummy_data: DATA_HINT, prices: int, parameter: str, sma_prices: int, expected: float):
+    """
+    Test EMA.
+    """
+    ema, _ = get_ema(data=dummy_data, prices=prices, parameter=parameter, sma_prices=sma_prices, desc=False)
+    assert ema == expected
 
 
 @pytest.mark.parametrize(
