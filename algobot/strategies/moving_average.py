@@ -4,9 +4,7 @@ Moving Average strategy.
 
 from typing import List, Union
 
-import pandas as pd
-
-from algobot.algorithms import MA_MAP, MA_PARAMS
+from algobot.algorithms import get_moving_average
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH
 from algobot.helpers import get_random_color
@@ -40,9 +38,9 @@ class MovingAverageStrategy(Strategy):
         """
         # TODO: Add support for colors in the actual program.
         for option in self.tradingOptions:
-            initial_name, final_name = option.get_pretty_option()
-            self.plotDict[initial_name] = [0, get_random_color()]
-            self.plotDict[final_name] = [0, get_random_color()]
+            initialName, finalName = option.get_pretty_option()
+            self.plotDict[initialName] = [0, get_random_color()]
+            self.plotDict[finalName] = [0, get_random_color()]
 
     @staticmethod
     def parse_inputs(inputs):
@@ -79,12 +77,13 @@ class MovingAverageStrategy(Strategy):
         The initial value will return the int type.
         The final value will return the int type.
         """
-        return [
-            ('Moving Average', tuple, MA_MAP.keys()),
-            ('Parameter', tuple, MA_PARAMS),
-            ('Initial', int),
-            ('Final', int)
-        ]
+        movingAverages = ['SMA', 'EMA', 'WMA']
+        parameters = ['High', 'Low', 'Open', 'Close', 'High/Low', 'Open/Close']
+        return [('Moving Average', tuple, movingAverages),
+                ('Parameter', tuple, parameters),
+                ('Initial', int),
+                ('Final', int)
+                ]
 
     def get_params(self) -> List[Option]:
         """
@@ -102,19 +101,18 @@ class MovingAverageStrategy(Strategy):
         data_object = data
         trends = []  # Current option trends. They all have to be the same to register a trend.
 
-        run_data = data_object.data + [data_object.current_values] if isinstance(data_object, Data) else data_object
-
-        df = pd.DataFrame(run_data)
-        df['high/low'] = (df['high'] + df['low']) / 2
-        df['open/close'] = (df['open'] + df['close']) / 2
-
         for option in self.tradingOptions:
             movingAverage, parameter, initialBound, finalBound = option.get_all_params()
-            initial_name, final_name = option.get_pretty_option()
+            initialName, finalName = option.get_pretty_option()
 
-            func = MA_MAP[movingAverage.upper()]
-            avg1 = func(df[parameter], initialBound)
-            avg2 = func(df[parameter], finalBound)
+            if isinstance(data, list):  # This means it was called by the optimizer/backtester.
+                avg1 = get_moving_average(movingAverage, parameter, initialBound, data, parent.ema_dict)
+                avg2 = get_moving_average(movingAverage, parameter, finalBound, data, parent.ema_dict)
+            else:  # This means it was called by the live bot / simulation.
+                avg1 = get_moving_average(movingAverage, parameter, initialBound, data.data + [data.current_values],
+                                          data.ema_dict)
+                avg2 = get_moving_average(movingAverage, parameter, finalBound, data.data + [data.current_values],
+                                          data.ema_dict)
 
             prefix, interval_type = self.get_prefix_and_interval_type(data)
 
@@ -123,12 +121,12 @@ class MovingAverageStrategy(Strategy):
                 parent.output_message(f'{movingAverage}({initialBound}) {parameter} = {avg1}')
                 parent.output_message(f'{movingAverage}({finalBound}) {parameter} = {avg2}')
 
-            self.strategyDict[interval_type][f'{prefix}{initial_name}'] = avg1
-            self.strategyDict[interval_type][f'{prefix}{final_name}'] = avg2
+            self.strategyDict[interval_type][f'{prefix}{initialName}'] = avg1
+            self.strategyDict[interval_type][f'{prefix}{finalName}'] = avg2
 
             if interval_type == 'regular' and not isinstance(data_object, list):
-                self.plotDict[initial_name][0] = avg1
-                self.plotDict[final_name][0] = avg2
+                self.plotDict[initialName][0] = avg1
+                self.plotDict[finalName][0] = avg2
 
             if avg1 > avg2:
                 trends.append(BULLISH)
