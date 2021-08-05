@@ -13,6 +13,7 @@ __pycache__/
 /Configuration/
 /Credentials/
 /CSV/
+/data/
 /Databases/
 /Logs/
 /other/
