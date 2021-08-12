@@ -7,6 +7,8 @@ from datetime import datetime
 from threading import Lock
 from typing import Union
 
+import pandas as pd
+
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT
 from algobot.helpers import convert_small_interval, get_logger
@@ -347,7 +349,10 @@ class SimulationTrader(Trader):
         if not dataObject:  # We usually only pass the dataObject for a lower interval.
             dataObject = self.dataView
 
-        trends = [strategy.get_trend(data=dataObject, log_data=log_data) for strategy in self.strategies.values()]
+        df = pd.DataFrame(dataObject.data + [dataObject.current_values])
+
+        trends = [strategy.get_trend(df=df, data=dataObject, log_data=log_data)
+                  for strategy in self.strategies.values()]
         return self.get_cumulative_trend(trends=trends)
 
     def short_position_logic(self, trend):
