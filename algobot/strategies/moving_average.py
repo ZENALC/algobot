@@ -9,7 +9,7 @@ import pandas as pd
 from algobot.enums import BEARISH, BULLISH
 from algobot.helpers import get_random_color
 from algobot.option import Option
-from algobot.strategies import MA_STREAM_MAP
+from algobot.strategies import MA_STREAM_MAP, STREAM, TALIB
 from algobot.strategies.strategy import Strategy
 
 
@@ -101,12 +101,13 @@ class MovingAverageStrategy(Strategy):
         """
         parent = self.parent
         trends = []  # Current option trends. They all have to be the same to register a trend.
+        func_type = TALIB if isinstance(data, list) else STREAM
 
         for option in self.tradingOptions:
             moving_average, parameter, initial_bound, final_bound = option.get_all_params()
             initial_name, final_name = option.get_pretty_option()
 
-            ma_func = MA_STREAM_MAP[moving_average]
+            ma_func = MA_STREAM_MAP[moving_average][func_type]
             avg1 = ma_func(df[parameter], initial_bound)
             avg2 = ma_func(df[parameter], final_bound)
 
