@@ -99,6 +99,7 @@ class Configuration(QDialog):
         ]
 
         self.strategies = get_strategies_dictionary(Strategy.__subclasses__())
+        self.hiddenStrategies = set()  # Hidden strategies dynamically populated.
         self.strategyDict = {}  # We will store all the strategy slot information in this dictionary.
         self.lossDict = {}  # We will store stop loss settings here.
         self.takeProfitDict = {}  # We will store take profit settings here.

@@ -61,7 +61,7 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>4</number>
          </property>
          <property name="movable">
           <bool>false</bool>
@@ -1531,7 +1531,7 @@
               <enum>QTabWidget::Rounded</enum>
              </property>
              <property name="currentIndex">
-              <number>3</number>
+              <number>4</number>
              </property>
              <property name="tabsClosable">
               <bool>false</bool>
@@ -2096,14 +2096,52 @@
               <attribute name="title">
                <string>Miscellaneous</string>
               </attribute>
-              <layout class="QFormLayout" name="formLayout">
+              <layout class="QGridLayout" name="gridLayout_4">
+               <item row="3" column="0" colspan="2">
+                <widget class="QScrollArea" name="hideStrategiesScrollArea">
+                 <property name="widgetResizable">
+                  <bool>true</bool>
+                 </property>
+                 <widget class="QWidget" name="hideStrategiesScrollAreaWidget">
+                  <property name="geometry">
+                   <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>1020</width>
+                    <height>587</height>
+                   </rect>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_4">
+                   <item>
+                    <layout class="QFormLayout" name="hideStrategiesFormLayout"/>
+                   </item>
+                  </layout>
+                 </widget>
+                </widget>
+               </item>
                <item row="0" column="0">
                 <widget class="QLabel" name="failLimitLabel">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="toolTip">
                   <string>Amount of times to retry after a fail while running a simulation or bot.</string>
                  </property>
                  <property name="text">
                   <string>Failure Limit</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QSpinBox" name="failureSleepSpinBox">
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="value">
+                  <number>10</number>
                  </property>
                 </widget>
                </item>
@@ -2127,13 +2165,16 @@
                  </property>
                 </widget>
                </item>
-               <item row="1" column="1">
-                <widget class="QSpinBox" name="failureSleepSpinBox">
-                 <property name="minimum">
-                  <number>1</number>
+               <item row="2" column="0">
+                <widget class="QLabel" name="hideStrategiesLayout">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
-                 <property name="value">
-                  <number>10</number>
+                 <property name="text">
+                  <string>Hide Strategies</string>
                  </property>
                 </widget>
                </item>
