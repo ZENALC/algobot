@@ -29,7 +29,7 @@ class MovingAverageStrategy(Strategy):
                            "bearish trend is determined. All moving averages have to have the same trend for an " \
                            "overall trend to be set."
 
-        if parent:  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
+        if parent:  # Only validate if parent exists. If no parent, this means we're just calling this for param types.
             self.validate_options()
             self.initialize_plot_dict()
 
