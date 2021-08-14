@@ -55,16 +55,57 @@ def load_take_profit_slots(config_obj):
     )
 
 
+def load_hide_show_strategies(config_obj):
+    """
+    Load slots for hiding/showing strategies.
+    :param config_obj: Configuration QDialog object (from configuration.py)
+    """
+    def hide_strategies(b: QCheckBox, name: str):
+        if b.isChecked():
+            config_obj.hiddenStrategies.remove(name)
+        else:
+            config_obj.hiddenStrategies.add(name)
+
+        delete_strategy_slots(config_obj)
+        load_strategy_slots(config_obj)
+
+    c_boxes = []
+    for strategy_name in config_obj.strategies.keys():
+        c_boxes.append(QCheckBox())
+        # When restoring slots, if the strategy is not hidden, tick it.
+        if strategy_name not in config_obj.hiddenStrategies:
+            c_boxes[-1].setChecked(True)
+        # Lambdas don't retain values, so we must cache variable args to the lambda func.
+        c_boxes[-1].toggled.connect(lambda *_, a=c_boxes[-1], s=strategy_name: hide_strategies(a, s))
+        config_obj.hideStrategiesFormLayout.addRow(strategy_name, c_boxes[-1])
+
+
+def delete_strategy_slots(config_obj):
+    """
+    Delete strategy slots.
+    :param config_obj: Configuration QDialog object (from configuration.py)
+    """
+    config_obj.strategyDict = {}  # Reset the dictionary.
+
+    for i, tab in enumerate(config_obj.categoryTabs):
+        nuke_index = 3 if i < 2 else 4  # TODO: Refactor this. This is hard coded based on category tabs.
+        for _ in range(tab.count() - nuke_index):
+            tab.removeTab(nuke_index)
+
+
 def load_strategy_slots(config_obj):
     """
     This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
-    are loaded from the self.strategies dictionary.
+    are loaded from the config_obj.strategies dictionary.
     :param config_obj: Configuration QDialog object (from configuration.py)
     :return: None
     """
     # TODO: Refactor to remove pylint disable below.
     # pylint: disable=too-many-locals, too-many-statements, too-many-nested-blocks
-    for strategy in config_obj.strategies.values():
+    for strategy_key_name, strategy in config_obj.strategies.items():
+        if strategy_key_name in config_obj.hiddenStrategies:  # Don't re-render hidden strategies.
+            continue
+
         temp = strategy()
         strategy_name = temp.name
         parameters = temp.get_param_types()
