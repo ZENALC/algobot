@@ -61,11 +61,7 @@ def load_hide_show_strategies(config_obj):
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
     def hide_strategies(b: QCheckBox, name: str):
-        if b.isChecked():
-            config_obj.hiddenStrategies.add(name)
-        else:
-            config_obj.hiddenStrategies.remove(name)
-
+        config_obj.hiddenStrategies.remove(name) if b.isChecked() else config_obj.hiddenStrategies.add(name)
         delete_strategy_slots(config_obj)
         load_strategy_slots(config_obj)
 

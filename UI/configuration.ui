@@ -2174,7 +2174,7 @@
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Hide Strategies</string>
+                  <string>Show Strategies</string>
                  </property>
                 </widget>
                </item>
