@@ -194,13 +194,7 @@ def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Typ
     :param strategies: List of strategies to process for dictionary.
     :return: Dictionary of strategies with strategy name as the key and strategy itself as the value.
     """
-    ignored_strategies = ['Sample']
-    strategies_dict = {}
-    for strategy in strategies:
-        strategy_name = strategy().name
-        if strategy_name not in ignored_strategies:
-            strategies_dict[strategy_name] = strategy
-    return strategies_dict
+    return {strategy().name: strategy for strategy in strategies}
 
 
 def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_combobox: QComboBox,

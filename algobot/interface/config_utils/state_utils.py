@@ -6,6 +6,7 @@ import os
 
 from algobot import helpers
 from algobot.graph_helpers import set_color_to_label
+from algobot.interface.config_utils.slot_utils import delete_strategy_slots, load_strategy_slots
 
 
 def load_state(config_obj):
@@ -49,6 +50,10 @@ def load_state(config_obj):
             config_obj.backtestIntervalComboBox.setCurrentIndex(config['backtestInterval'])
             config_obj.backtestStrategyIntervalCombobox.setCurrentIndex(config['backtestStrategyInterval'])
 
+            config_obj.hiddenStrategies = set(config['hiddenStrategies'])
+            delete_strategy_slots(config_obj)
+            load_strategy_slots(config_obj)
+
             if config_obj.parent:
                 config_obj.parent.add_to_live_activity_monitor('Loaded previous state successfully.')
         except Exception as e:
@@ -79,6 +84,7 @@ def save_state(config_obj):
         'chatPass': config_obj.chatPass,
         'tokenPass': config_obj.tokenPass,
         'telegramResult': config_obj.telegrationConnectionResult.text(),
+        'hiddenStrategies': list(config_obj.hiddenStrategies),
 
         # Tickers
         'mainTicker': config_obj.tickerLineEdit.text(),
