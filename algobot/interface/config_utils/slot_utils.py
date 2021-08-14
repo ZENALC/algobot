@@ -68,6 +68,9 @@ def load_hide_show_strategies(config_obj):
     c_boxes = []
     for strategy_name in config_obj.strategies.keys():
         c_boxes.append(QCheckBox())
+        # When restoring slots, if the strategy is not hidden, tick it.
+        if strategy_name not in config_obj.hiddenStrategies:
+            c_boxes[-1].setChecked(True)
         # Lambdas don't retain values, so we must cache variable args to the lambda func.
         c_boxes[-1].toggled.connect(lambda *_, a=c_boxes[-1], s=strategy_name: hide_strategies(a, s))
         config_obj.hideStrategiesFormLayout.addRow(strategy_name, c_boxes[-1])
@@ -273,4 +276,3 @@ def load_slots(config_obj):
     load_loss_slots(c)  # These slots are based on the ordering.
     load_take_profit_slots(c)
     load_strategy_slots(c)
-    load_hide_show_strategies(c)

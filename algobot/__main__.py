@@ -23,6 +23,7 @@ from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots, get_gr
                                    update_backtest_graph_limits, update_main_graphs)
 from algobot.helpers import ROOT_DIR, create_folder, create_folder_if_needed, get_caller_string, open_file_or_folder
 from algobot.interface.about import About
+from algobot.interface.config_utils.slot_utils import load_hide_show_strategies
 from algobot.interface.config_utils.state_utils import load_state, save_state
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.configuration import Configuration
@@ -95,6 +96,9 @@ class Interface(QMainWindow):
         self.load_tickers_and_news()
         self.homeTab.setCurrentIndex(0)
         load_state(self.configuration)
+
+        # TODO: Refactor this. We call this here, because we rely on loading the previous state if it exists.
+        load_hide_show_strategies(self.configuration)
 
         self.graphUpdateSeconds = 1
         self.graphUpdateSchedule: List[float or None] = [None, None]  # LIVE, SIM
