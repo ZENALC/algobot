@@ -7,8 +7,8 @@ Visit https://github.com/ZENALC/algobot/wiki/Strategies for documentation.
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from algobot.data import Data
 import algobot
+from algobot.data import Data
 
 
 class Strategy:
