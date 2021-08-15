@@ -2,10 +2,15 @@
 File containing helper functions for graphs.
 """
 
-from datetime import datetime
-from typing import Any, Dict, List
+from __future__ import annotations
 
-from PyQt5.QtWidgets import QColorDialog, QDialog, QLabel, QMainWindow
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Dict, List
+
+if TYPE_CHECKING:
+    from algobot.__main__ import Interface
+
+from PyQt5.QtWidgets import QColorDialog, QDialog, QLabel
 from pyqtgraph import InfiniteLine, PlotWidget, mkPen
 
 from algobot.enums import GraphType
@@ -38,7 +43,7 @@ def set_color_to_label(label: QLabel, color: str):
     label.setStyleSheet(f"background: {color};")
 
 
-def set_backtest_graph_limits_and_empty_plots(gui: QMainWindow, limit: int = 105):
+def set_backtest_graph_limits_and_empty_plots(gui: Interface, limit: int = 105):
     """
     Resets backtest graph and sets x-axis limits.
     :param gui: Graphical user interface in which to set up graphs.
@@ -54,7 +59,7 @@ def set_backtest_graph_limits_and_empty_plots(gui: QMainWindow, limit: int = 105
     plot['plot'].setData(plot['x'], plot['y'])
 
 
-def update_backtest_graph_limits(gui: QMainWindow, limit: int = 105):
+def update_backtest_graph_limits(gui: Interface, limit: int = 105):
     """
     Updates backtest graph limits based on the limit provided.
     :param gui: Graphical user interface in which to set up graphs.
@@ -64,7 +69,7 @@ def update_backtest_graph_limits(gui: QMainWindow, limit: int = 105):
     graph_dict['graph'].setLimits(xMin=0, xMax=limit)
 
 
-def get_graph_dictionary(gui: QMainWindow, targetGraph: PlotWidget) -> dict:
+def get_graph_dictionary(gui: Interface, targetGraph: PlotWidget) -> dict:
     """
     Loops over list of graphs and returns appropriate graph dictionary.
     :param gui: Graphical user interface in which to set up graphs.
@@ -94,7 +99,7 @@ def legend_helper(graphDict, x_val):
     graphDict['label'].setText(total)
 
 
-def onMouseMoved(gui, point, graph: PlotWidget):
+def onMouseMoved(gui: Interface, point, graph: PlotWidget):
     """
     Updates coordinates label when mouse is hovered over graph.
     :param gui: Graphical user interface in which to manipulate graphs.
@@ -127,7 +132,7 @@ def onMouseMoved(gui, point, graph: PlotWidget):
                 gui.update_backtest_activity_based_on_graph(int(x_val))
 
 
-def add_data_to_plot(gui: QMainWindow, targetGraph: PlotWidget, plotIndex: int, y: float, timestamp: float):
+def add_data_to_plot(gui: Interface, targetGraph: PlotWidget, plotIndex: int, y: float, timestamp: float):
     """
     Adds data to plot in provided graph.
     :param gui: Graphical user interface in which to set up graphs.
@@ -151,7 +156,7 @@ def add_data_to_plot(gui: QMainWindow, targetGraph: PlotWidget, plotIndex: int, 
     plot['plot'].setData(plot['x'], plot['y'])
 
 
-def setup_graph_plots(gui: QMainWindow, graph: PlotWidget, trader: Trader, graph_type: GraphType):
+def setup_graph_plots(gui: Interface, graph: PlotWidget, trader: Trader, graph_type: GraphType):
     """
     Setups graph plots for graph, trade, and graphType specified.
     :param gui: Graphical user interface in which to set up graphs.
@@ -171,7 +176,7 @@ def setup_graph_plots(gui: QMainWindow, graph: PlotWidget, trader: Trader, graph
         raise TypeError(f"Invalid type ({graph_type}) of graph provided.")
 
 
-def get_plot_dictionary(gui: QMainWindow, graph: PlotWidget, color: str, y: float, name: str, timestamp: float) -> dict:
+def get_plot_dictionary(gui: Interface, graph: PlotWidget, color: str, y: float, name: str, timestamp: float) -> dict:
     """
     Creates a graph plot and returns a dictionary of it.
     :param gui: Graphical user interface in which to set up graphs.
@@ -192,7 +197,7 @@ def get_plot_dictionary(gui: QMainWindow, graph: PlotWidget, color: str, y: floa
     }
 
 
-def destroy_graph_plots(gui: QMainWindow, targetGraph: PlotWidget):
+def destroy_graph_plots(gui: Interface, targetGraph: PlotWidget):
     """
     Resets graph plots for graph provided.
     :param gui: Graphical user interface in which to set up graphs.
@@ -203,7 +208,7 @@ def destroy_graph_plots(gui: QMainWindow, targetGraph: PlotWidget):
     graph_dict['plots'] = []
 
 
-def setup_net_graph_plot(gui: QMainWindow, graph: PlotWidget, trader: Trader, color: str):
+def setup_net_graph_plot(gui: Interface, graph: PlotWidget, trader: Trader, color: str):
     """
     Sets up net balance plot for graph provided.
     :param gui: Graphical user interface in which to set up graphs.
@@ -218,7 +223,7 @@ def setup_net_graph_plot(gui: QMainWindow, graph: PlotWidget, trader: Trader, co
     append_plot_to_graph(gui, graph, [plot])
 
 
-def setup_average_graph_plots(gui: QMainWindow, graph: PlotWidget, trader, colors: list):
+def setup_average_graph_plots(gui: Interface, graph: PlotWidget, trader, colors: list):
     """
     Sets up moving average plots for graph provided.
     :param gui: Graphical user interface in which to set up graphs.
@@ -263,7 +268,7 @@ def setup_average_graph_plots(gui: QMainWindow, graph: PlotWidget, trader, color
             index += 1
 
 
-def append_plot_to_graph(gui: QMainWindow, targetGraph: PlotWidget, toAdd: list):
+def append_plot_to_graph(gui: Interface, targetGraph: PlotWidget, toAdd: list):
     """
     Appends plot to graph provided.
     :param gui: Graphical user interface in which to set up graphs.
@@ -274,7 +279,7 @@ def append_plot_to_graph(gui: QMainWindow, targetGraph: PlotWidget, toAdd: list)
     graph_dict['plots'] += toAdd
 
 
-def create_infinite_line(gui: QMainWindow, graphDict: dict, colors: list = None):
+def create_infinite_line(gui: Interface, graphDict: dict, colors: list = None):
     """
     Creates an infinite (hover) line and adds it as a reference to the graph dictionary provided.
     :param gui: Graphical user interface in which to set up graphs.
@@ -287,7 +292,7 @@ def create_infinite_line(gui: QMainWindow, graphDict: dict, colors: list = None)
     graphDict['line'] = hover_line
 
 
-def create_graph_plot(gui, graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):
+def create_graph_plot(gui: Interface, graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):
     """
     Creates a graph plot with parameters provided.
     :param gui: Graphical user interface in which to set up graphs.
@@ -303,7 +308,7 @@ def create_graph_plot(gui, graph: PlotWidget, x: tuple, y: tuple, plotName: str,
     return plot
 
 
-def get_graph_colors(gui: QMainWindow) -> List[str]:
+def get_graph_colors(gui: Interface) -> List[str]:
     """
     Returns graph colors to be placed based on configuration.
     """
@@ -313,7 +318,7 @@ def get_graph_colors(gui: QMainWindow) -> List[str]:
     ]
 
 
-def setup_graphs(gui: QMainWindow):
+def setup_graphs(gui: Interface):
     """
     Sets up all available graphs in application.
     :param gui: Graphical user interface in which to set up graphs.
@@ -353,7 +358,7 @@ def smart_update(graph_dict: Dict[str, Any]):
             legend_helper(graph_dict, -1)
 
 
-def update_main_graphs(gui: QMainWindow, caller: int, valueDict: dict):
+def update_main_graphs(gui: Interface, caller: int, valueDict: dict):
     """
     Updates graphs and moving averages from statistics based on caller.
     :param gui: GUI in which to update main graphs.

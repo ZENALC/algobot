@@ -2,13 +2,19 @@
 Configuration window.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from algobot.__main__ import Interface
+
 import os
 from logging import Logger
 
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
-from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QLabel, QLayout, QMainWindow, QSpinBox,
-                             QTabWidget)
+from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QLabel, QLayout, QSpinBox, QTabWidget
 
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
@@ -31,7 +37,7 @@ class Configuration(QDialog):
     """
     Configuration window.
     """
-    def __init__(self, parent: QMainWindow, logger: Logger = None):
+    def __init__(self, parent: Interface, logger: Logger = None):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
         self.parent = parent
