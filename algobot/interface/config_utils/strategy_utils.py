@@ -20,7 +20,7 @@ def strategy_enabled(config_obj, strategy_name: str, caller: int) -> bool:
     """
     tab = config_obj.get_category_tab(caller)
 
-    if (tab, strategy_name, 'groupBox') not in config_obj.strategyDict:
+    if strategy_name in config_obj.hiddenStrategies:
         return False
 
     return config_obj.strategyDict[tab, strategy_name, 'groupBox'].isChecked()

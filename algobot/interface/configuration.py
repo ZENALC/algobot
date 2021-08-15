@@ -220,7 +220,7 @@ class Configuration(QDialog):
             temp = strategy()
             strategy_name = temp.name
             parameters = temp.get_param_types()
-            if self.strategyDict[tab, strategy_name].isChecked():
+            if strategy_name not in self.hiddenStrategies and self.strategyDict[tab, strategy_name].isChecked():
                 current = {}
                 for index, parameter in enumerate(parameters, start=1):
                     if isinstance(parameter, tuple) and parameter[1] in (int, float) or \
