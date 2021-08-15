@@ -19,6 +19,10 @@ def strategy_enabled(config_obj, strategy_name: str, caller: int) -> bool:
     :return: Boolean whether strategy is enabled or not.
     """
     tab = config_obj.get_category_tab(caller)
+
+    if strategy_name in config_obj.hiddenStrategies:
+        return False
+
     return config_obj.strategyDict[tab, strategy_name, 'groupBox'].isChecked()
 
 

@@ -7,6 +7,7 @@ Visit https://github.com/ZENALC/algobot/wiki/Strategies for documentation.
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import algobot
 from algobot.data import Data
 
 
@@ -46,6 +47,21 @@ class Strategy:
         # which is 'lower'. The two keys will then hold dictionaries for the strategies' values in lower and regular
         # interval data.
         self.strategyDict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
+
+    def get_current_trader_price(self):
+        """
+        Helper function to get the current trader price for live/sims. This is mainly used for setting up auxiliary
+        graph plots for misc strategies' plot dicts.
+        :return: Current trader price.
+        """
+        # noinspection PyUnresolvedReferences
+        if isinstance(self.parent, algobot.traders.simulationtrader.SimulationTrader):
+            if self.parent.currentPrice is None:
+                self.parent.currentPrice = self.parent.dataView.get_current_price()
+
+            return self.parent.currentPrice
+
+        return 0
 
     def set_inputs(self, *args, **kwargs):
         """
