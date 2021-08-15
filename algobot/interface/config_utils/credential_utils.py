@@ -1,8 +1,13 @@
 """
 Credentials helper functions for configuration.py can be found here.
 """
+from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
 from binance.client import Client
 from PyQt5.QtWidgets import QFileDialog
@@ -10,7 +15,7 @@ from PyQt5.QtWidgets import QFileDialog
 from algobot import helpers
 
 
-def test_binance_credentials(config_obj):
+def test_binance_credentials(config_obj: Configuration):
     """
     Tests Binance credentials provided in configuration.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -28,7 +33,7 @@ def test_binance_credentials(config_obj):
             config_obj.credentialResult.setText(string_error)
 
 
-def save_credentials(config_obj):
+def save_credentials(config_obj: Configuration):
     """
     Function that saves credentials to base path in a JSON format. Obviously not very secure, but temp fix.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -53,7 +58,7 @@ def save_credentials(config_obj):
         config_obj.credentialResult.setText('Credentials could not be saved.')
 
 
-def load_credentials(config_obj, auto: bool = True):
+def load_credentials(config_obj: Configuration, auto: bool = True):
     """
     Attempts to load credentials automatically from path program regularly stores credentials in if auto is True.
     :param config_obj: Configuration QDialog object (from configuration.py)

@@ -2,8 +2,14 @@
 Saving, loading, and copying settings helper functions for configuration.py can be found here.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Callable, Union
+
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
+
 import os
-from typing import Callable, Union
 
 from PyQt5.QtWidgets import QFileDialog, QLabel, QMessageBox
 
@@ -13,7 +19,7 @@ from algobot.helpers import get_caller_string
 from algobot.interface.config_utils.strategy_utils import get_strategy_values, set_strategy_values
 
 
-def create_appropriate_config_folders(config_obj, folder: str) -> str:
+def create_appropriate_config_folders(config_obj: Configuration, folder: str) -> str:
     """
     Creates appropriate configuration folders. If a configuration folder doesn't exist, it'll create that. Next,
     it'll try to check if a type of configuration folder exists (e.g. Live, Simulation, Backtest). If it exists,
@@ -31,7 +37,7 @@ def create_appropriate_config_folders(config_obj, folder: str) -> str:
     return target_path
 
 
-def helper_load(config_obj, caller: int, config: dict):
+def helper_load(config_obj: Configuration, caller: int, config: dict):
     """
     Helper function to load caller configuration to GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -45,7 +51,7 @@ def helper_load(config_obj, caller: int, config: dict):
         config_obj.load_strategy_from_config(caller, strategyName, config)
 
 
-def helper_save(config_obj, caller: int, config: dict):
+def helper_save(config_obj: Configuration, caller: int, config: dict):
     """
     Helper function to save caller configuration from GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -59,7 +65,7 @@ def helper_save(config_obj, caller: int, config: dict):
         config_obj.add_strategy_to_config(caller, strategyName, config)
 
 
-def helper_get_save_file_path(config_obj, name: str) -> Union[str]:
+def helper_get_save_file_path(config_obj: Configuration, name: str) -> Union[str]:
     """
     Does necessary folder creations and returns save file path based on name provided.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -73,7 +79,7 @@ def helper_get_save_file_path(config_obj, name: str) -> Union[str]:
     return file_path
 
 
-def save_config_helper(config_obj, caller, result_label: QLabel, func: Callable):
+def save_config_helper(config_obj: Configuration, caller, result_label: QLabel, func: Callable):
     """
     Helper function to save configurations.
     :param config_obj: Configuration object (configuration.py)
@@ -97,7 +103,7 @@ def save_config_helper(config_obj, caller, result_label: QLabel, func: Callable)
         result_label.setText(f"Could not save {caller_str} configuration.")
 
 
-def save_backtest_settings(config_obj):
+def save_backtest_settings(config_obj: Configuration):
     """
     Returns basic backtest settings as a dictionary.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -112,7 +118,7 @@ def save_backtest_settings(config_obj):
     }
 
 
-def save_optimizer_settings(config_obj):
+def save_optimizer_settings(config_obj: Configuration):
     """
     Returns basic optimizer settings as a dictionary.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -130,7 +136,7 @@ def save_optimizer_settings(config_obj):
     }
 
 
-def save_live_settings(config_obj):
+def save_live_settings(config_obj: Configuration):
     """
     Returns basic live bot settings as a dictionary.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -148,7 +154,7 @@ def save_live_settings(config_obj):
     }
 
 
-def save_simulation_settings(config_obj):
+def save_simulation_settings(config_obj: Configuration):
     """
     Returns basic simulation settings as a dictionary.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -163,7 +169,7 @@ def save_simulation_settings(config_obj):
     }
 
 
-def load_config_helper(config_obj, caller, result_label: QLabel, func: Callable):
+def load_config_helper(config_obj: Configuration, caller, result_label: QLabel, func: Callable):
     """
     Helper function to load configurations.
     :param config_obj: Configuration object (configuration.py).
@@ -194,7 +200,7 @@ def load_config_helper(config_obj, caller, result_label: QLabel, func: Callable)
         result_label.setText(f"Could not load {caller_str} configuration.")
 
 
-def load_live_settings(config_obj, config):
+def load_live_settings(config_obj: Configuration, config):
     """
     Loads live settings from JSON file and sets it to live settings.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -210,7 +216,7 @@ def load_live_settings(config_obj, config):
     config_obj.lowerIntervalCheck.setChecked(config['lowerInterval'])
 
 
-def load_simulation_settings(config_obj, config):
+def load_simulation_settings(config_obj: Configuration, config):
     """
     Loads simulation settings from JSON file and sets it to simulation settings.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -223,7 +229,7 @@ def load_simulation_settings(config_obj, config):
     config_obj.lowerIntervalSimulationCheck.setChecked(config['lowerInterval'])
 
 
-def load_backtest_settings(config_obj, config):
+def load_backtest_settings(config_obj: Configuration, config):
     """
     Loads backtest settings from JSON file and sets them to backtest settings.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -236,7 +242,7 @@ def load_backtest_settings(config_obj, config):
     config_obj.backtestMarginTradingCheckBox.setChecked(config['marginTrading'])
 
 
-def load_optimizer_settings(config_obj, config):
+def load_optimizer_settings(config_obj: Configuration, config):
     """
     Loads optimizer settings from JSON file and sets them to optimizer settings.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -251,7 +257,7 @@ def load_optimizer_settings(config_obj, config):
     config_obj.drawdownPercentageSpinBox.setValue(config['drawdownPercentage'])
 
 
-def copy_config_helper(config_obj, caller, result_label, func: Callable):
+def copy_config_helper(config_obj: Configuration, caller, result_label, func: Callable):
     """
     Helper function to copy configurations from live bot to caller provided.
     :param config_obj: Configuration object.
@@ -269,7 +275,7 @@ def copy_config_helper(config_obj, caller, result_label, func: Callable):
     result_label.setText(f"Copied all viable settings from main to {get_caller_string(caller)} settings successfully.")
 
 
-def copy_settings_to_simulation(config_obj):
+def copy_settings_to_simulation(config_obj: Configuration):
     """
     Copies parameters from main configuration to simulation configuration.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -279,7 +285,7 @@ def copy_settings_to_simulation(config_obj):
     config_obj.simulationPrecisionComboBox.setCurrentIndex(config_obj.precisionComboBox.currentIndex())
 
 
-def copy_settings_to_backtest(config_obj):
+def copy_settings_to_backtest(config_obj: Configuration):
     """
     Copies parameters from main configuration to backtest configuration.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -289,7 +295,7 @@ def copy_settings_to_backtest(config_obj):
     config_obj.backtestPrecisionComboBox.setCurrentIndex(config_obj.precisionComboBox.currentIndex())
 
 
-def copy_strategy_settings(config_obj, fromCaller: int, toCaller: int, strategyName: str):
+def copy_strategy_settings(config_obj: Configuration, fromCaller: int, toCaller: int, strategyName: str):
     """
     Copies strategy settings from caller provided and sets it to caller provided based on strategy name.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -305,7 +311,7 @@ def copy_strategy_settings(config_obj, fromCaller: int, toCaller: int, strategyN
     set_strategy_values(config_obj, strategyName, toCaller, get_strategy_values(config_obj, strategyName, fromCaller))
 
 
-def copy_loss_settings(config_obj, fromCaller: int, toCaller: int):
+def copy_loss_settings(config_obj: Configuration, fromCaller: int, toCaller: int):
     """
     Copies loss settings from one caller to another.
     :param config_obj: Configuration QDialog object (from configuration.py)

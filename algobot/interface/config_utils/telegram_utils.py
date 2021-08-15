@@ -1,11 +1,19 @@
 """
 Telegram helper functions for configuration.py can be found here.
 """
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
+
 import telegram
 from telegram.ext import Updater
 
 
-def reset_telegram_state(config_obj):
+def reset_telegram_state(config_obj: Configuration):
     """
     Resets telegram state once something is changed in the Telegram configuration GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -15,7 +23,7 @@ def reset_telegram_state(config_obj):
     config_obj.telegrationConnectionResult.setText("Telegram credentials not yet tested.")
 
 
-def test_telegram(config_obj):
+def test_telegram(config_obj: Configuration):
     """
     Tests Telegram connection and updates respective GUI elements.
     :param config_obj: Configuration QDialog object (from configuration.py)
