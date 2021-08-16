@@ -4,9 +4,8 @@ Saving, loading, and copying settings helper functions for configuration.py can 
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Union
-
 import os
+from typing import TYPE_CHECKING, Callable, Union
 
 from PyQt5.QtWidgets import QFileDialog, QLabel, QMessageBox
 

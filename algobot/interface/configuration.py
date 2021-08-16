@@ -4,10 +4,9 @@ Configuration window.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import os
 from logging import Logger
+from typing import TYPE_CHECKING
 
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool

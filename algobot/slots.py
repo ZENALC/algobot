@@ -2,15 +2,21 @@
 Slots for Algobot GUI.
 """
 
+from __future__ import annotations
+
 import webbrowser
+from typing import TYPE_CHECKING
 
 from algobot.enums import BACKTEST, LIVE, SIMULATION
 from algobot.helpers import open_folder
 from algobot.interface.utils import clear_table, show_and_bring_window_to_front
 from algobot.themes import set_bear_mode, set_bloomberg_mode, set_bull_mode, set_dark_mode, set_light_mode
 
+if TYPE_CHECKING:
+    from algobot.__main__ import Interface
 
-def initiate_slots(app, gui):
+
+def initiate_slots(app, gui: Interface):
     """
     Initiates all interface slots.
     """
@@ -19,7 +25,7 @@ def initiate_slots(app, gui):
     create_interface_slots(gui)
 
 
-def create_interface_slots(gui):
+def create_interface_slots(gui: Interface):
     """
     Creates interface slots.
     """
@@ -32,7 +38,7 @@ def create_interface_slots(gui):
     gui.refreshNewsButton.clicked.connect(gui.news_thread)
 
 
-def create_configuration_slots(app, gui):
+def create_configuration_slots(app, gui: Interface):
     """
     Creates configuration slots.
     """
@@ -48,7 +54,7 @@ def create_configuration_slots(app, gui):
     gui.configuration.updateTickers.clicked.connect(gui.tickers_thread)
 
 
-def create_action_slots(gui):
+def create_action_slots(gui: Interface):
     """
     Creates actions slots.
     """
@@ -78,7 +84,7 @@ def create_action_slots(gui):
 
 
 # noinspection DuplicatedCode
-def create_simulation_slots(gui):
+def create_simulation_slots(gui: Interface):
     """
     Creates simulation slots.
     """
@@ -99,7 +105,7 @@ def create_simulation_slots(gui):
 
 
 # noinspection DuplicatedCode
-def create_bot_slots(gui):
+def create_bot_slots(gui: Interface):
     """
     Creates bot slots.
     """
@@ -119,7 +125,7 @@ def create_bot_slots(gui):
     gui.importLiveTradesButton.clicked.connect(lambda: gui.import_trades(caller=LIVE))
 
 
-def create_backtest_slots(gui):
+def create_backtest_slots(gui: Interface):
     """
     Creates backtest slots.
     """
@@ -131,7 +137,7 @@ def create_backtest_slots(gui):
     gui.backtestResetCursorButton.clicked.connect(gui.reset_backtest_cursor)
 
 
-def create_optimizer_slots(gui):
+def create_optimizer_slots(gui: Interface):
     """
     Creates optimizer slots.
     """
