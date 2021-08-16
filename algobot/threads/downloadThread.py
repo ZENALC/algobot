@@ -12,7 +12,6 @@ class DownloadSignals(QObject):
     """
     Defines the signals available from a running worker thread.
     """
-    # pylint: disable=too-few-public-methods
     started = pyqtSignal()
     csv_finished = pyqtSignal(str)
     finished = pyqtSignal(list, int)

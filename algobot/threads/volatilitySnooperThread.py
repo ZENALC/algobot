@@ -18,7 +18,6 @@ class VolatilitySnooperSignals(QObject):
     """
     Defines the signals available from a running worker thread.
     """
-    # pylint: disable=too-few-public-methods
     progress = pyqtSignal(int)
     activity = pyqtSignal(str)
     error = pyqtSignal(str)

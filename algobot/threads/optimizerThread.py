@@ -15,7 +15,6 @@ class OptimizerSignals(QObject):
     """
     Optimizer signals the optimizer thread will leverage.
     """
-    # pylint: disable=too-few-public-methods
     activity = pyqtSignal(tuple)
     error = pyqtSignal(str)
     restore = pyqtSignal()
