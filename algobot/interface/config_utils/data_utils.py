@@ -1,6 +1,10 @@
 """
 Data download and import helper functions for configuration.py can be found here.
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from PyQt5.QtWidgets import QFileDialog
 
 from algobot import helpers
@@ -8,8 +12,11 @@ from algobot.enums import BACKTEST
 from algobot.interface.config_utils.calendar_utils import setup_calendar
 from algobot.threads import downloadThread
 
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
-def import_data(config_obj, caller: int = BACKTEST):
+
+def import_data(config_obj: Configuration, caller: int = BACKTEST):
     """
     Imports CSV data and loads it.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -33,7 +40,7 @@ def import_data(config_obj, caller: int = BACKTEST):
         setup_calendar(config_obj=config_obj, caller=caller)
 
 
-def download_data(config_obj, caller: int = BACKTEST):
+def download_data(config_obj: Configuration, caller: int = BACKTEST):
     """
     Loads data from data object. If the data object is empty, it downloads it.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -58,7 +65,7 @@ def download_data(config_obj, caller: int = BACKTEST):
     config_obj.threadPool.start(thread)
 
 
-def set_downloaded_data(config_obj, data, caller: int = BACKTEST):
+def set_downloaded_data(config_obj: Configuration, data, caller: int = BACKTEST):
     """
     If download is successful, the data passed is set to backtest data.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -79,7 +86,7 @@ def set_downloaded_data(config_obj, data, caller: int = BACKTEST):
     setup_calendar(config_obj=config_obj, caller=caller)
 
 
-def stop_download(config_obj, caller: int = BACKTEST):
+def stop_download(config_obj: Configuration, caller: int = BACKTEST):
     """
     Stops download if download is in progress.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -90,7 +97,8 @@ def stop_download(config_obj, caller: int = BACKTEST):
         config_obj.optimizer_backtest_dict[caller]['downloadThread'].stop()
 
 
-def set_download_progress(config_obj, progress: int, message: str, caller: int = BACKTEST, enable_stop: bool = True):
+def set_download_progress(config_obj: Configuration,
+                          progress: int, message: str, caller: int = BACKTEST, enable_stop: bool = True):
     """
     Sets download progress and message with parameters passed.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -107,7 +115,7 @@ def set_download_progress(config_obj, progress: int, message: str, caller: int =
     config_obj.optimizer_backtest_dict[caller]['downloadLabel'].setText(message)
 
 
-def handle_download_failure(config_obj, e, caller: int = BACKTEST):
+def handle_download_failure(config_obj: Configuration, e, caller: int = BACKTEST):
     """
     If download fails for backtest data, then GUI gets updated.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -118,7 +126,7 @@ def handle_download_failure(config_obj, e, caller: int = BACKTEST):
     config_obj.optimizer_backtest_dict[caller]['infoLabel'].setText(f"Error occurred during download: {e}")
 
 
-def restore_download_state(config_obj, caller: int = BACKTEST):
+def restore_download_state(config_obj: Configuration, caller: int = BACKTEST):
     """
     Restores GUI to normal state.
     :param config_obj: Configuration QDialog object (from configuration.py)

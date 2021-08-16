@@ -2,7 +2,10 @@
 Telegram bot file.
 """
 
+from __future__ import annotations
+
 import random
+from typing import TYPE_CHECKING
 
 from telegram import Bot, constants
 from telegram.ext import CommandHandler, Updater
@@ -11,12 +14,15 @@ from algobot.enums import LIVE, LONG, SHORT
 from algobot.helpers import get_label_string
 from algobot.traders.simulationtrader import SimulationTrader
 
+if TYPE_CHECKING:
+    from algobot.__main__ import Interface
+
 
 class TelegramBot:
     """
     Telegram bot class.
     """
-    def __init__(self, gui, token: str, bot_thread):
+    def __init__(self, gui: Interface, token: str, bot_thread):
         self.token = token
         self.gui = gui
         self.bot_thread = bot_thread

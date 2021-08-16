@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
+import algobot
 from algobot.data import Data
 
 
@@ -49,6 +50,21 @@ class Strategy:
         # interval data.
         self.strategyDict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
 
+    def get_current_trader_price(self):
+        """
+        Helper function to get the current trader price for live/sims. This is mainly used for setting up auxiliary
+        graph plots for misc strategies' plot dicts.
+        :return: Current trader price.
+        """
+        # noinspection PyUnresolvedReferences
+        if isinstance(self.parent, algobot.traders.simulationtrader.SimulationTrader):
+            if self.parent.currentPrice is None:
+                self.parent.currentPrice = self.parent.dataView.get_current_price()
+
+            return self.parent.currentPrice
+
+        return 0
+
     def set_inputs(self, *args, **kwargs):
         """
         This function is used extensively by the optimizer. Your inputs argument will reset the strategy's inputs.
@@ -72,7 +88,7 @@ class Strategy:
         """
         raise NotImplementedError("Implement a function to return parameters.")
 
-    def get_plot_data(self) -> Dict[str, List[Union[float, str]]]:
+    def get_plot_data(self) -> Dict[str, Union[List[Union[float, str]], int]]:
         """
         This function should return plot data for bot. By default, it'll return an empty dictionary.
         :return: Plot data dictionary.

@@ -83,13 +83,13 @@ class SampleStrategy(Strategy):
         # Populating the plot dictionary. We want to plot the moving averages, so we use the strings from above, and
         # then populate it with a list. The list's first item should be the value, and the second should be the color.
         # The color is the line on the graph.
-        self.plotDict[ma1] = [0, '00ff00']
-        self.plotDict[ma2] = [0, 'FF0000']
+        self.plotDict[ma1] = [self.get_current_trader_price(), '00ff00']
+        self.plotDict[ma2] = [self.get_current_trader_price(), 'FF0000']
 
         # Populating same as above but for Bollinger Bands.
-        self.plotDict['Upper Band'] = [0, get_random_color()]
-        self.plotDict['Middle Band'] = [0, get_random_color()]
-        self.plotDict['Lower Band'] = [0, get_random_color()]
+        self.plotDict['Upper Band'] = [self.get_current_trader_price(), get_random_color()]
+        self.plotDict['Middle Band'] = [self.get_current_trader_price(), get_random_color()]
+        self.plotDict['Lower Band'] = [self.get_current_trader_price(), get_random_color()]
 
         # General purpose dict key/pair for the statistics window. The statistics window will populate it by key/pair.
         self.strategyDict['general'] = {

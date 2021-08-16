@@ -1,7 +1,9 @@
 """
 Strategy helper functions for configuration.py can be found here.
 """
-from typing import Any, Dict, List, Tuple, Type, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type, Union
 
 from PyQt5.QtWidgets import QComboBox, QDoubleSpinBox, QLabel, QLayout, QLineEdit, QPushButton, QSpinBox, QTabWidget
 
@@ -9,8 +11,11 @@ from algobot.helpers import get_interval_minutes, get_interval_strings
 from algobot.interface.configuration_helpers import get_h_line, get_input_widget_value, set_value
 from algobot.strategies.strategy import Strategy
 
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
-def strategy_enabled(config_obj, strategy_name: str, caller: int) -> bool:
+
+def strategy_enabled(config_obj: Configuration, strategy_name: str, caller: int) -> bool:
     """
     Returns a boolean whether a strategy is enabled or not.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -19,10 +24,14 @@ def strategy_enabled(config_obj, strategy_name: str, caller: int) -> bool:
     :return: Boolean whether strategy is enabled or not.
     """
     tab = config_obj.get_category_tab(caller)
+
+    if strategy_name in config_obj.hiddenStrategies:
+        return False
+
     return config_obj.strategyDict[tab, strategy_name, 'groupBox'].isChecked()
 
 
-def get_strategies(config_obj, caller: int) -> List[tuple]:
+def get_strategies(config_obj: Configuration, caller: int) -> List[tuple]:
     """
     Returns strategy information from GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -39,7 +48,7 @@ def get_strategies(config_obj, caller: int) -> List[tuple]:
     return strategies
 
 
-def get_strategy_values(config_obj, strategy_name: str, caller: int, verbose: bool = False) -> List[int]:
+def get_strategy_values(config_obj: Configuration, strategy_name: str, caller: int, verbose: bool = False) -> List[int]:
     """
     This will return values from the strategy provided.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -56,7 +65,7 @@ def get_strategy_values(config_obj, strategy_name: str, caller: int, verbose: bo
     return values
 
 
-def set_strategy_values(config_obj, strategy_name: str, caller: int, values):
+def set_strategy_values(config_obj: Configuration, strategy_name: str, caller: int, values):
     """
     Set GUI values for a strategy based on values passed.
     :param config_obj: Configuration QDialog object (from configuration.py)

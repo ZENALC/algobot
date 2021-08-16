@@ -2,14 +2,20 @@
 Various utility functions for Algobot state.
 """
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 from algobot import helpers
 from algobot.graph_helpers import set_color_to_label
 from algobot.interface.config_utils.slot_utils import delete_strategy_slots, load_strategy_slots
 
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
-def load_state(config_obj):
+
+def load_state(config_obj: Configuration):
     """
     This function will attempt to load previous basic configuration settings from config_obj.stateFilePath.
     :param config_obj: Configuration object.
@@ -64,7 +70,7 @@ def load_state(config_obj):
                                                                'potential new update/install. Try restarting Algobot.')
 
 
-def save_state(config_obj):
+def save_state(config_obj: Configuration):
     """
     Saves bot configuration to a JSON file for next application run.
     """

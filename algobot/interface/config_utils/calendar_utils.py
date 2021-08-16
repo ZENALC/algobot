@@ -1,17 +1,22 @@
 """
 Calendar helper functions for configuration.py can be found here.
 """
+from __future__ import annotations
 
 import datetime
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from dateutil import parser
 from PyQt5.QtCore import QDate
 
 from algobot.enums import BACKTEST
 
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
-def get_calendar_dates(config_obj, caller: int = BACKTEST) -> Tuple[Optional[datetime.date], Optional[datetime.date]]:
+
+def get_calendar_dates(config_obj: Configuration,
+                       caller: int = BACKTEST) -> Tuple[Optional[datetime.date], Optional[datetime.date]]:
     """
     Returns start end end dates for backtest. If both are the same, returns None.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -25,7 +30,7 @@ def get_calendar_dates(config_obj, caller: int = BACKTEST) -> Tuple[Optional[dat
     return start_date, end_date
 
 
-def setup_calendar(config_obj, caller: int = BACKTEST):
+def setup_calendar(config_obj: Configuration, caller: int = BACKTEST):
     """
     Parses data if needed and then manipulates GUI elements with data timeframe.
     :param config_obj: Configuration QDialog object (from configuration.py)
