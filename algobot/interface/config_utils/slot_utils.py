@@ -1,6 +1,10 @@
 """
 Slots helper functions for configuration.py can be found here.
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from PyQt5.QtWidgets import (QCheckBox, QDoubleSpinBox, QHBoxLayout, QLabel, QScrollArea, QSpinBox, QTabWidget,
                              QVBoxLayout)
 
@@ -22,8 +26,11 @@ from algobot.interface.config_utils.user_config_utils import (copy_config_helper
 from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, create_inner_tab, get_default_widget,
                                                      get_regular_groupbox_and_layout)
 
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
-def load_loss_slots(config_obj):
+
+def load_loss_slots(config_obj: Configuration):
     """
     Loads slots for loss settings in GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -39,7 +46,7 @@ def load_loss_slots(config_obj):
     )
 
 
-def load_take_profit_slots(config_obj):
+def load_take_profit_slots(config_obj: Configuration):
     """
     Loads slots for take profit settings in GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -55,7 +62,7 @@ def load_take_profit_slots(config_obj):
     )
 
 
-def load_hide_show_strategies(config_obj):
+def load_hide_show_strategies(config_obj: Configuration):
     """
     Load slots for hiding/showing strategies.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -80,7 +87,7 @@ def load_hide_show_strategies(config_obj):
         config_obj.hideStrategiesFormLayout.addRow(strategy_name, c_boxes[-1])
 
 
-def delete_strategy_slots(config_obj):
+def delete_strategy_slots(config_obj: Configuration):
     """
     Delete strategy slots.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -93,7 +100,7 @@ def delete_strategy_slots(config_obj):
             tab.removeTab(nuke_index)
 
 
-def load_strategy_slots(config_obj):
+def load_strategy_slots(config_obj: Configuration):
     """
     This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
     are loaded from the config_obj.strategies dictionary.
@@ -177,7 +184,7 @@ def load_strategy_slots(config_obj):
             tab.addTab(tab_widget, strategy_name)
 
 
-def load_precision_combo_boxes(config_obj):
+def load_precision_combo_boxes(config_obj: Configuration):
     """
     Load precision combo boxes on the config object provided.
     :param config_obj: Configuration object to load precision combo boxes on.
@@ -189,7 +196,7 @@ def load_precision_combo_boxes(config_obj):
         combo_box.addItems(precisions)
 
 
-def load_interval_combo_boxes(config_obj):
+def load_interval_combo_boxes(config_obj: Configuration):
     """
     This function currently only handles combo boxes for backtester/optimizer interval logic. It'll update the
     strategy interval combo-box depending on what the data interval combo-box has as its current value.
@@ -224,7 +231,7 @@ def load_interval_combo_boxes(config_obj):
     ))
 
 
-def load_slots(config_obj):
+def load_slots(config_obj: Configuration):
     """
     Loads all configuration interface slots.
     :param config_obj: Configuration QDialog object (from configuration.py)

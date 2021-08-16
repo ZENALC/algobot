@@ -83,7 +83,7 @@ class Strategy:
         """
         raise NotImplementedError("Implement a function to return parameters.")
 
-    def get_plot_data(self) -> Dict[str, List[Union[float, str]]]:
+    def get_plot_data(self) -> Dict[str, Union[List[Union[float, str]], int]]:
         """
         This function should return plot data for bot. By default, it'll return an empty dictionary.
         :return: Plot data dictionary.

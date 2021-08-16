@@ -2,15 +2,17 @@
 Other commands window.
 """
 
+from __future__ import annotations
+
 import os
 import shutil
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 import pandas as pd
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QDate, QThreadPool
-from PyQt5.QtWidgets import QApplication, QDialog, QLineEdit, QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QApplication, QDialog, QLineEdit, QMessageBox
 
 import algobot
 from algobot.helpers import ROOT_DIR, convert_long_interval, create_folder, get_logger, open_file_or_folder
@@ -19,6 +21,9 @@ from algobot.threads.downloadThread import DownloadThread
 from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread
 from algobot.threads.workerThread import Worker
 
+if TYPE_CHECKING:
+    from algobot.__main__ import Interface
+
 otherCommandsUi = os.path.join(ROOT_DIR, 'UI', 'otherCommands.ui')
 
 
@@ -26,7 +31,7 @@ class OtherCommands(QDialog):
     """
     Other commands window.
     """
-    def __init__(self, parent: QMainWindow = None):
+    def __init__(self, parent: Interface = None):
         """
         Initializer for other commands QDialog. This is the main QDialog that supports CSV creation and data purges.
         """
