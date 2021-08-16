@@ -6,9 +6,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Union
 
-if TYPE_CHECKING:
-    from algobot.interface.configuration import Configuration
-
 import os
 
 from PyQt5.QtWidgets import QFileDialog, QLabel, QMessageBox
@@ -17,6 +14,9 @@ from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.helpers import get_caller_string
 from algobot.interface.config_utils.strategy_utils import get_strategy_values, set_strategy_values
+
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
 
 def create_appropriate_config_folders(config_obj: Configuration, folder: str) -> str:

@@ -6,11 +6,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from algobot.interface.configuration import Configuration
-
 import telegram
 from telegram.ext import Updater
+
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
 
 def reset_telegram_state(config_obj: Configuration):

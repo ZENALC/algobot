@@ -7,9 +7,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List
 
-if TYPE_CHECKING:
-    from algobot.__main__ import Interface
-
 from PyQt5.QtWidgets import QColorDialog, QDialog, QLabel
 from pyqtgraph import InfiniteLine, PlotWidget, mkPen
 
@@ -18,6 +15,9 @@ from algobot.interface.utils import show_and_bring_window_to_front
 from algobot.traders.trader import Trader
 
 GRAPH_LEEWAY = 10  # Amount of points to set extra for graph limits.
+
+if TYPE_CHECKING:
+    from algobot.__main__ import Interface
 
 
 def get_and_set_line_color(view: QDialog, label: QLabel):

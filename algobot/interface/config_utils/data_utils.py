@@ -5,15 +5,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from algobot.interface.configuration import Configuration
-
 from PyQt5.QtWidgets import QFileDialog
 
 from algobot import helpers
 from algobot.enums import BACKTEST
 from algobot.interface.config_utils.calendar_utils import setup_calendar
 from algobot.threads import downloadThread
+
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
 
 def import_data(config_obj: Configuration, caller: int = BACKTEST):

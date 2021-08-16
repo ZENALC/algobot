@@ -6,14 +6,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from algobot.interface.configuration import Configuration
-
 import os
 
 from algobot import helpers
 from algobot.graph_helpers import set_color_to_label
 from algobot.interface.config_utils.slot_utils import delete_strategy_slots, load_strategy_slots
+
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
 
 def load_state(config_obj: Configuration):

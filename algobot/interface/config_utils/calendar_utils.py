@@ -6,13 +6,13 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING, Optional, Tuple
 
-if TYPE_CHECKING:
-    from algobot.interface.configuration import Configuration
-
 from dateutil import parser
 from PyQt5.QtCore import QDate
 
 from algobot.enums import BACKTEST
+
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
 
 def get_calendar_dates(config_obj: Configuration,

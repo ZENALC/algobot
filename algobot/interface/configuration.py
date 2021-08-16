@@ -6,9 +6,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from algobot.__main__ import Interface
-
 import os
 from logging import Logger
 
@@ -29,6 +26,9 @@ from algobot.interface.configuration_helpers import add_start_end_step_to_layout
 from algobot.interface.utils import get_elements_from_combobox
 from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import,unused-wildcard-import
 from algobot.strategies.strategy import Strategy
+
+if TYPE_CHECKING:
+    from algobot.__main__ import Interface
 
 configurationUi = os.path.join(ROOT_DIR, 'UI', 'configuration.ui')
 

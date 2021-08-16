@@ -6,13 +6,13 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from algobot.interface.configuration import Configuration
-
 from binance.client import Client
 from PyQt5.QtWidgets import QFileDialog
 
 from algobot import helpers
+
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
 
 def test_binance_credentials(config_obj: Configuration):

@@ -5,14 +5,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type, Union
 
-if TYPE_CHECKING:
-    from algobot.interface.configuration import Configuration
-
 from PyQt5.QtWidgets import QComboBox, QDoubleSpinBox, QLabel, QLayout, QLineEdit, QPushButton, QSpinBox, QTabWidget
 
 from algobot.helpers import get_interval_minutes, get_interval_strings
 from algobot.interface.configuration_helpers import get_h_line, get_input_widget_value, set_value
 from algobot.strategies.strategy import Strategy
+
+if TYPE_CHECKING:
+    from algobot.interface.configuration import Configuration
 
 
 def strategy_enabled(config_obj: Configuration, strategy_name: str, caller: int) -> bool:
