@@ -4,9 +4,8 @@ Various utility functions for Algobot state.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import os
+from typing import TYPE_CHECKING
 
 from algobot import helpers
 from algobot.graph_helpers import set_color_to_label
