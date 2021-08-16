@@ -9,7 +9,7 @@ import pandas as pd
 from algobot.enums import BEARISH, BULLISH
 from algobot.helpers import get_random_color
 from algobot.option import Option
-from algobot.strategies import MA_STREAM_MAP, STREAM, TALIB
+from algobot.strategies import STREAM, TALIB, TALIB_MAP_SINGLETON
 from algobot.strategies.strategy import Strategy
 
 
@@ -78,7 +78,7 @@ class MovingAverageStrategy(Strategy):
         The initial value will return the int type.
         The final value will return the int type.
         """
-        moving_averages = MA_STREAM_MAP.keys()
+        moving_averages = TALIB_MAP_SINGLETON.MA
         parameters = ['High', 'Low', 'Open', 'Close', 'High/Low', 'Open/Close']
         return [('Moving Average', tuple, moving_averages),
                 ('Parameter', tuple, parameters),
@@ -107,7 +107,7 @@ class MovingAverageStrategy(Strategy):
             moving_average, parameter, initial_bound, final_bound = option.get_all_params()
             initial_name, final_name = option.get_pretty_option()
 
-            ma_func = MA_STREAM_MAP[moving_average][func_type]
+            ma_func = TALIB_MAP_SINGLETON.get_entry(moving_average).get_func(func_type)
             avg1 = ma_func(df[parameter], initial_bound)
             avg2 = ma_func(df[parameter], final_bound)
 

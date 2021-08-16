@@ -24,8 +24,6 @@ and live trading. Not recommended to actually live trade with this strategy.
 *** END OF THE STRATEGY ***
 """
 
-from typing import List, Union
-
 from algobot.algorithms import get_bollinger_bands, get_moving_average
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH
@@ -175,7 +173,7 @@ class SampleStrategy(Strategy):
             self.volatility_look_back_periods
         ])
 
-    def get_trend(self, data: Union[List[dict], Data] = None, log_data: bool = False):
+    def get_trend(self, df, data, log_data: bool = False):
         """
         Main function. This will determine the trend and set the plot and statistics window values.
 
@@ -185,6 +183,7 @@ class SampleStrategy(Strategy):
         Next, we are leveraging moving averages too, so for that, if the 1st moving average is higher than the second
         one, we are bullish, and vice-versa.
 
+        :param df: Dataframe containing data.
         :param data: Data object.
         :param log_data: Boolean whether you want to log data or not.
         :return: The trend.
