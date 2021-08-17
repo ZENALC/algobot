@@ -2,14 +2,25 @@
 Initialization of all strategies.
 """
 from collections import namedtuple
+from dataclasses import dataclass
 from os import listdir
 from os.path import basename, dirname
-from typing import Callable, List
+from typing import Any, Callable, List, Type
 
 import talib
 
 __all__ = [basename(f)[:-3] for f in listdir(dirname(__file__)) if f[-3:] == ".py" and not f.endswith("__init__.py")]
-ARGUMENT = namedtuple("ARGUMENT", "name type")
+
+
+@dataclass
+class Arg:
+    """
+    Data class to map TALIB functions with names, types, and arguments.
+    """
+    name: str
+    type: Type
+    default: Any = None
+
 
 STREAM = 'STREAM'
 TALIB = 'TALIB'
@@ -55,70 +66,77 @@ class TALIBMap:
             name="DEMA",
             stream=lambda s, i: talib.DEMA(s, i).iloc[-1],
             talib_func=talib.DEMA,
-            args=[ARGUMENT("Time period", int)]
+            args=[Arg("Time Period", int)]
         )
 
         self.ema = TALIBEntry(  # TESTED
             name='EMA',
             stream=lambda s, i: talib.EMA(s, i).iloc[-1],
             talib_func=talib.EMA,
-            args=[ARGUMENT("Time period", int)]
+            args=[Arg("Time Period", int)]
         )
 
         self.fama = TALIBEntry(
             name='FAMA',
             stream=lambda s, i, fast, slow: talib.MAMA(s, i, fast, slow).iloc[-1][1],  # 0th is MAMA, 1st is FAMA.
             talib_func=talib.MAMA,
-            args=[ARGUMENT("Time period", int), ARGUMENT("Fast Limit", int), ARGUMENT("Slow Limit", int)]
+            args=[Arg("Time Period", int), Arg("Fast Limit", int), Arg("Slow Limit", int)]
         )
 
         self.kama = TALIBEntry(  # TESTED
             name='KAMA',
             stream=lambda s, i: talib.KAMA(s, i).iloc[-1],
             talib_func=talib.KAMA,
-            args=[ARGUMENT("Time period", int)]
+            args=[Arg("Time Period", int)]
         )
 
         self.mama = TALIBEntry(
             name='MAMA',
             stream=lambda s, i, fast, slow: talib.MAMA(s, i, fast, slow).iloc[-1][0],  # 0th is MAMA, 1st is FAMA.
             talib_func=talib.MAMA,
-            args=[ARGUMENT("Time period", int), ARGUMENT("Fast Limit", int), ARGUMENT("Slow Limit", int)]
+            args=[Arg("Time Period", int), Arg("Fast Limit", int), Arg("Slow Limit", int)]
         )
 
         self.sma = TALIBEntry(  # TESTED
             name='SMA',
             stream=talib.stream.SMA,
             talib_func=talib.SMA,
-            args=[ARGUMENT("Time period", int)]
+            args=[Arg("Time Period", int)]
         )
 
         self.tema = TALIBEntry(  # TESTED
             name='TEMA',
             stream=lambda s, i: talib.TEMA(s, i).iloc[-1],
             talib_func=talib.TEMA,
-            args=[ARGUMENT("Time period", int)]
+            args=[Arg("Time Period", int)]
         )
 
         self.trima = TALIBEntry(  # TESTED
             name='TRIMA',
             stream=lambda s, i: talib.TRIMA(s, i).iloc[-1],
             talib_func=talib.TRIMA,
-            args=[ARGUMENT("Time period", int)]
+            args=[Arg("Time Period", int)]
         )
 
         self.t3 = TALIBEntry(
             name='T3',
             stream=lambda s, i, v: talib.T3(s, i, v).iloc[-1],
             talib_func=talib.T3,
-            args=[ARGUMENT("Time period", int), ARGUMENT("V Factor", float)]
+            args=[Arg("Time Period", int), Arg("V Factor", float)]
         )
 
         self.wma = TALIBEntry(  # TESTED
             name='WMA',
             stream=talib.stream.WMA,
             talib_func=talib.WMA,
-            args=[ARGUMENT("Time period", int)]
+            args=[Arg("Time Period", int)]
+        )
+
+        self.bollinger_band = TALIBEntry(
+            name='Bollinger Band',
+            stream=talib.stream.BBANDS,
+            talib_func=talib.BBANDS,
+            args=[Arg("Time Period", int), Arg("NB Dev Up", int, 2), Arg("NB Dev Down", int, 2)]
         )
 
     def get_entry(self, entry: str) -> TALIBEntry:
