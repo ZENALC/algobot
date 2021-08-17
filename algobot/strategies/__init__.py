@@ -132,7 +132,7 @@ class TALIBMap:
             args=[Arg("Time Period", int)]
         )
 
-        self.bollinger_band = TALIBEntry(
+        self.bbands = TALIBEntry(
             name='Bollinger Band',
             stream=talib.stream.BBANDS,
             talib_func=talib.BBANDS,
