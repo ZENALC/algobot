@@ -141,11 +141,12 @@ class TALIBMap:
 
     def get_entry(self, entry: str) -> TALIBEntry:
         """
-        Get TALIB entry based on entry provided.
+        Get TALIB entry based on entry provided. It will parse the entry into underscores when it encounters a space.
         :param entry: Entry to get TALIB entry of.
         :return: TALIB entry.
         """
-        return getattr(self, entry.lower())
+        parsed = '_'.join(entry.lower().split(' '))
+        return getattr(self, parsed)
 
 
 TALIB_MAP_SINGLETON = TALIBMap()
