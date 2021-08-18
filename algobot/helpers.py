@@ -301,9 +301,10 @@ def get_label_string(label: str) -> str:
     return label
 
 
-def get_interval_minutes(interval: str) -> int:
+def get_interval_minutes(interval: Union[int, str], reverse: bool = False) -> int:
     """
     Returns amount of minutes from interval provided.
+    :param reverse: Reverse if you want interval from minutes instead.
     :param interval: Interval to get the amount of minutes of.
     """
     intervals = {
@@ -321,6 +322,10 @@ def get_interval_minutes(interval: str) -> int:
         '6 Hours': 360,
         '8 Hours': 480
     }
+
+    if reverse:
+        intervals = {v: k for k, v in intervals.items()}
+
     return intervals[interval]
 
 
