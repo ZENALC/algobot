@@ -196,6 +196,7 @@ class Trader:
         Sets up strategies from list of strategies provided.
         :param strategies: List of strategies to set up and apply to bot.
         """
+        # TODO: Use data classes for strategy "tuples".
         for strategy_tuple in strategies:
             strategy_class = strategy_tuple[0]
             values = strategy_tuple[1]
