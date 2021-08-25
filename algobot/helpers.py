@@ -19,7 +19,6 @@ import requests
 from dateutil import parser
 
 import algobot
-from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.typing_hints import DICT_TYPE
 
 LOG_FOLDER = 'Logs'
@@ -266,21 +265,12 @@ def get_data_from_parameter(data: DICT_TYPE, parameter: str) -> float:
         return data[parameter]
 
 
-def get_caller_string(caller: int):
+def get_caller_string(caller: str):
     """
     Returns the string of the caller provided. This should be changed to enums soon.
     :param caller: Caller enum.
     """
-    if caller == LIVE:
-        return 'live'
-    elif caller == SIMULATION:
-        return 'simulation'
-    elif caller == BACKTEST:
-        return 'backtest'
-    elif caller == OPTIMIZER:
-        return 'optimizer'
-    else:
-        raise ValueError("Invalid type of caller specified.")
+    return caller.lower()
 
 
 def get_label_string(label: str) -> str:

@@ -368,36 +368,6 @@ def test_get_profit_percentage(trader: Trader, initial_net, final_net, expected)
 
 
 @pytest.mark.parametrize(
-    'stop_type, expected',
-    [
-        (STOP, 'Stop'),
-        (TRAILING, 'Trailing'),
-        (None, 'None')
-    ]
-)
-def test_get_trailing_or_stop_loss_string(trader: Trader, stop_type, expected):
-    """
-    Test trader get trailing or stop loss string.
-    """
-    assert trader.get_trailing_or_stop_type_string(stop_type) == expected
-
-
-@pytest.mark.parametrize(
-    'trend, expected',
-    [
-        (None, 'None'),
-        (BEARISH, "Bearish"),
-        (BULLISH, "Bullish")
-    ]
-)
-def test_get_trend_string(trader: Trader, trend, expected):
-    """
-    Test trader get trend string functionality.
-    """
-    assert trader.get_trend_string(trend) == expected
-
-
-@pytest.mark.parametrize(
     'profit_or_loss, expected',
     [
         (0, 'Profit'),

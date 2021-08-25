@@ -21,7 +21,7 @@ class BacktestSignals(QObject):
     message = pyqtSignal(str)
     activity = pyqtSignal(dict)
     started = pyqtSignal(dict)
-    error = pyqtSignal(int, str)
+    error = pyqtSignal(str, str)
     restore = pyqtSignal()
     updateGraphLimits = pyqtSignal(int)
 
