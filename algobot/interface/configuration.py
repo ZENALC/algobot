@@ -219,30 +219,32 @@ class Configuration(QDialog):
         self.get_strategy_intervals_for_optimizer(settings)
 
         settings['strategies'] = {}
-        # TODO: Refactor so it's not as nested and remove pylint disable below.
-        # pylint: disable=too-many-nested-blocks
         for strategy_name, strategy in self.strategies.items():
             parameters = strategy().get_param_types()
-            if strategy_name not in self.hiddenStrategies and self.strategyDict[tab, strategy_name].isChecked():
-                current = {}
-                for index, param in enumerate(parameters, start=1):
-                    if isinstance(param, tuple) and param[1] in (int, float) or not isinstance(param, tuple):
-                        if not isinstance(param, tuple):
-                            key = strategy_name.lower() + str(index)
-                        else:
-                            key = param[0]
+            if strategy_name in self.hiddenStrategies or not self.strategyDict[tab, strategy_name].isChecked():
+                continue
 
-                        current[key] = (
-                            self.strategyDict[strategy_name, index, 'start'].value(),
-                            self.strategyDict[strategy_name, index, 'end'].value(),
-                            self.strategyDict[strategy_name, index, 'step'].value(),
-                        )
+            current = {}
+            for index, param in enumerate(parameters, start=1):
+                if isinstance(param, tuple) and param[1] in (int, float) or not isinstance(param, tuple):
+                    # Logic for step values for integers and floats.
+                    if not isinstance(param, tuple):
+                        key = strategy_name.lower() + str(index)
                     else:
-                        current[param[0]] = []
-                        for option in param[2]:
-                            if self.strategyDict[strategy_name, option].isChecked():
-                                current[param[0]].append(option)
-                settings['strategies'][strategy_name] = current
+                        key = param[0]
+
+                    current[key] = (
+                        self.strategyDict[strategy_name, index, 'start'].value(),
+                        self.strategyDict[strategy_name, index, 'end'].value(),
+                        self.strategyDict[strategy_name, index, 'step'].value(),
+                    )
+                else:
+                    current[param[0]] = []
+                    for option in param[2]:
+                        if self.strategyDict[strategy_name, option].isChecked():
+                            current[param[0]].append(option)
+            settings['strategies'][strategy_name] = current
+
         return settings
 
     def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout, isOptimizer: bool = False):
