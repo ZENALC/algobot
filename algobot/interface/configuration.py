@@ -221,29 +221,27 @@ class Configuration(QDialog):
         settings['strategies'] = {}
         # TODO: Refactor so it's not as nested and remove pylint disable below.
         # pylint: disable=too-many-nested-blocks
-        for strategy in self.strategies.values():
-            temp = strategy()
-            strategy_name = temp.name
-            parameters = temp.get_param_types()
+        for strategy_name, strategy in self.strategies.items():
+            parameters = strategy().get_param_types()
             if strategy_name not in self.hiddenStrategies and self.strategyDict[tab, strategy_name].isChecked():
                 current = {}
-                for index, parameter in enumerate(parameters, start=1):
-                    if isinstance(parameter, tuple) and parameter[1] in (int, float) or \
-                            not isinstance(parameter, tuple):
-                        if not isinstance(parameter, tuple):
+                for index, param in enumerate(parameters, start=1):
+                    if isinstance(param, tuple) and param[1] in (int, float) or not isinstance(param, tuple):
+                        if not isinstance(param, tuple):
                             key = strategy_name.lower() + str(index)
                         else:
-                            key = parameter[0]
+                            key = param[0]
+
                         current[key] = (
                             self.strategyDict[strategy_name, index, 'start'].value(),
                             self.strategyDict[strategy_name, index, 'end'].value(),
                             self.strategyDict[strategy_name, index, 'step'].value(),
                         )
                     else:
-                        current[parameter[0]] = []
-                        for option in parameter[2]:
+                        current[param[0]] = []
+                        for option in param[2]:
                             if self.strategyDict[strategy_name, option].isChecked():
-                                current[parameter[0]].append(option)
+                                current[param[0]].append(option)
                 settings['strategies'][strategy_name] = current
         return settings
 
