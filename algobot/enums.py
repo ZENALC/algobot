@@ -2,8 +2,6 @@
 Enum classes and constants.
 """
 
-from enum import IntEnum
-
 BULLISH = "Bullish"
 BEARISH = "Bearish"
 ENTER_LONG = "Enter Long"
@@ -12,7 +10,7 @@ ENTER_SHORT = "Enter Short"
 EXIT_SHORT = "Exit Short"
 
 
-class GraphType(IntEnum):
+class GraphType:
     """
     Graph type enums.
     """

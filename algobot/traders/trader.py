@@ -1,8 +1,9 @@
 """
 This will be the main Trader class that all other Traders will inherit from.
 """
+
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import get_label_string, parse_strategy_name
@@ -323,19 +324,15 @@ class Trader:
             return -1 * (100 - finalNet / initialNet * 100)
 
     @staticmethod
-    def get_trailing_or_stop_type_string(stopType: Union[int, None]) -> str:
+    def get_trailing_or_stop_type_string(stopType: Optional[str]) -> str:
         """
         Returns stop type in string format instead of integer enum.
         :return: Stop type in string format.
         """
-        if stopType == STOP:
-            return 'Stop'
-        elif stopType == TRAILING:
-            return 'Trailing'
-        elif stopType is None:
+        if stopType is None:
             return 'None'
-        else:
-            raise ValueError("Unknown type of exit position type.")
+
+        return stopType
 
     @staticmethod
     def get_enum_from_str(string: str):
