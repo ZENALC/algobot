@@ -373,14 +373,10 @@ class Trader:
         Returns position in string format, instead of integer enum.
         :return: Position in string format.
         """
-        if self.currentPosition == LONG:
-            return 'Long'
-        elif self.currentPosition == SHORT:
-            return 'Short'
-        elif self.currentPosition is None:
-            return 'None'
-        else:
-            raise ValueError("Invalid type of current position.")
+        if self.currentPosition is None:
+            return "None"
+
+        return self.currentPosition
 
     def get_position(self) -> int:
         """
