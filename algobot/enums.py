@@ -2,32 +2,31 @@
 Enum classes and constants.
 """
 
-# TODO: Add unit tests.
 from enum import IntEnum
 
-BULLISH = 1
-BEARISH = -1
-ENTER_LONG = 2
-EXIT_LONG = -2
-ENTER_SHORT = -3
-EXIT_SHORT = 3
+BULLISH = "Bullish"
+BEARISH = "Bearish"
+ENTER_LONG = "Enter Long"
+EXIT_LONG = "Exit Long"
+ENTER_SHORT = "Enter Short"
+EXIT_SHORT = "Exit Short"
 
 
 class GraphType(IntEnum):
     """
     Graph type enums.
     """
-    NET = 1
-    AVG = 2
+    NET = "NET"
+    AVG = "AVG"
 
 
-LONG = 1
-SHORT = -1
+LONG = "Long"
+SHORT = "Short"
 
-TRAILING = 2
-STOP = 1
+TRAILING = "Trailing"
+STOP = "Stop"
 
-BACKTEST = 2
-SIMULATION = 3
-LIVE = 1
-OPTIMIZER = 4
+BACKTEST = "Backtest"
+SIMULATION = "Simulation"
+LIVE = "Live"
+OPTIMIZER = "Optimizer"

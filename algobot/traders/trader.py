@@ -356,23 +356,11 @@ class Trader:
         :param trend: Current trend enum.
         :return: Current trend in a string format.
         """
-        # pylint: disable=too-many-return-statements
-        if trend == BULLISH:
-            return "Bullish"
-        elif trend == BEARISH:
-            return 'Bearish'
-        elif trend is None:
-            return 'None'
-        elif trend == ENTER_LONG:
-            return "Enter Long"
-        elif trend == EXIT_LONG:
-            return "Exit Long"
-        elif trend == ENTER_SHORT:
-            return "Enter Short"
-        elif trend == EXIT_SHORT:
-            return "Exit Short"
-        else:
-            raise ValueError('Unknown type of trend.')
+        if trend is None:
+            return "None"
+
+        # It's already a string otherwise.
+        return trend
 
     @staticmethod
     def get_profit_or_loss_string(profit: float) -> str:
