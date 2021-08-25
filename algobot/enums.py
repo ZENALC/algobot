@@ -14,6 +14,7 @@ class GraphType:
     """
     Graph type enums.
     """
+    # pylint: disable=too-few-public-methods
     NET = "NET"
     AVG = "AVG"
 

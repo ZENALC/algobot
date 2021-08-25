@@ -23,8 +23,8 @@ from algobot.interface.config_utils.user_config_utils import (copy_config_helper
                                                               save_backtest_settings, save_config_helper,
                                                               save_live_settings, save_optimizer_settings,
                                                               save_simulation_settings)
-from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, create_inner_tab, get_default_widget,
-                                                     get_regular_groupbox_and_layout)
+from algobot.interface.configuration_helpers import (
+    add_start_end_step_to_layout, create_inner_tab, get_default_widget, get_regular_groupbox_and_layout)
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
