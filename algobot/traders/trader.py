@@ -3,7 +3,7 @@ This will be the main Trader class that all other Traders will inherit from.
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import get_label_string, parse_strategy_name
@@ -324,14 +324,6 @@ class Trader:
             return -1 * (100 - finalNet / initialNet * 100)
 
     @staticmethod
-    def get_trailing_or_stop_type_string(stopType: Optional[str]) -> str:
-        """
-        Returns stop type in string format instead of integer enum.
-        :return: Stop type in string format.
-        """
-        return str(stopType)
-
-    @staticmethod
     def get_enum_from_str(string: str):
         """
         Get enum from string. # TODO: Deprecate. (inverse will handle this).
@@ -344,15 +336,6 @@ class Trader:
             return STOP
 
     @staticmethod
-    def get_trend_string(trend) -> str:
-        """
-        Returns current market trend in a string format.
-        :param trend: Current trend enum.
-        :return: Current trend in a string format.
-        """
-        return str(trend)
-
-    @staticmethod
     def get_profit_or_loss_string(profit: float) -> str:
         """
         Helper function that returns where profit specified is profit or loss. Profit is positive; loss if negative.
@@ -363,7 +346,7 @@ class Trader:
 
     def get_position_string(self) -> str:
         """
-        Returns position in string format, instead of integer enum.
+        Returns position in string format instead of an enum.
         :return: Position in string format.
         """
         return str(self.currentPosition)
