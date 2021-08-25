@@ -15,10 +15,10 @@ class DownloadSignals(QObject):
     # pylint: disable=too-few-public-methods
     started = pyqtSignal()
     csv_finished = pyqtSignal(str)
-    finished = pyqtSignal(list, int)
-    error = pyqtSignal(str, int)
-    restore = pyqtSignal(int)
-    progress = pyqtSignal(int, str, int)
+    finished = pyqtSignal(list, str)
+    error = pyqtSignal(str, str)
+    restore = pyqtSignal(str)
+    progress = pyqtSignal(int, str, str)
     locked = pyqtSignal()
 
 

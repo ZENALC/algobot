@@ -24,13 +24,13 @@ class BotSignals(QObject):
     """
     # pylint: disable=too-few-public-methods
     smallError = pyqtSignal(str)  # Signal emitted when small errors such as internet losses occur.
-    started = pyqtSignal(int)  # Signal emitted when bot first starts.
-    activity = pyqtSignal(int, str)  # Signal emitted to broadcast current activity.
-    updated = pyqtSignal(int, dict, dict)  # Signal emitted when bot is updated.
+    started = pyqtSignal(str)  # Signal emitted when bot first starts.
+    activity = pyqtSignal(str, str)  # Signal emitted to broadcast current activity.
+    updated = pyqtSignal(str, dict, dict)  # Signal emitted when bot is updated.
     finished = pyqtSignal()  # Signal emitted when bot is ended.
-    error = pyqtSignal(int, str)  # Signal emitted when a critical error occurs.
+    error = pyqtSignal(str, str)  # Signal emitted when a critical error occurs.
     restore = pyqtSignal()  # Signal emitted to restore GUI.
-    progress = pyqtSignal(int, str, int)  # Signal emitted to broadcast progress.
+    progress = pyqtSignal(int, str, str)  # Signal emitted to broadcast progress.
     addTrade = pyqtSignal(dict)  # Signal emitted when a transaction occurs.
 
     # All of these below are for Telegram integration.
@@ -41,7 +41,7 @@ class BotSignals(QObject):
     resume = pyqtSignal()  # Signal emitted to resume bot logic.
     pause = pyqtSignal()  # Signal emitted to pause bot logic.
     removeCustomStopLoss = pyqtSignal()  # Signal emitted to remove custom stop loss.
-    setCustomStopLoss = pyqtSignal(int, bool, float)  # Signal emitted to set a custom stop loss.
+    setCustomStopLoss = pyqtSignal(str, bool, float)  # Signal emitted to set a custom stop loss.
 
 
 class BotThread(QRunnable):
