@@ -19,7 +19,6 @@ import requests
 from dateutil import parser
 
 import algobot
-from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.typing_hints import DICT_TYPE
 
 LOG_FOLDER = 'Logs'
