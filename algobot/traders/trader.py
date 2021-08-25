@@ -329,10 +329,7 @@ class Trader:
         Returns stop type in string format instead of integer enum.
         :return: Stop type in string format.
         """
-        if stopType is None:
-            return 'None'
-
-        return stopType
+        return str(stopType)
 
     @staticmethod
     def get_enum_from_str(string: str):
@@ -353,11 +350,7 @@ class Trader:
         :param trend: Current trend enum.
         :return: Current trend in a string format.
         """
-        if trend is None:
-            return "None"
-
-        # It's already a string otherwise.
-        return trend
+        return str(trend)
 
     @staticmethod
     def get_profit_or_loss_string(profit: float) -> str:
@@ -373,10 +366,7 @@ class Trader:
         Returns position in string format, instead of integer enum.
         :return: Position in string format.
         """
-        if self.currentPosition is None:
-            return "None"
-
-        return self.currentPosition
+        return str(self.currentPosition)
 
     def get_position(self) -> int:
         """
