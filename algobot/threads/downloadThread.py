@@ -52,7 +52,7 @@ class DownloadThread(QRunnable):
                 if self.descending is None and self.armyTime is None:
                     self.signals.finished.emit(data, self.caller)
                 else:  # This means the CSV generator called this thread.
-                    self.signals.progress.emit(100, "Creating CSV file...", -1)
+                    self.signals.progress.emit(100, "Creating CSV file...", '')
                     savedPath = self.client.create_csv_file(descending=self.descending, army_time=self.armyTime,
                                                             start_date=self.startDate)
                     self.signals.csv_finished.emit(savedPath)
