@@ -1389,11 +1389,11 @@
         },
         "pytest-socket": {
             "hashes": [
-                "sha256:5e21faa48f1febc6ac83bf78f5dd48a8989ef84a01ae50deb3a226813e5f61d1",
-                "sha256:f590593675161e1407df676f0aff9ae24ca52c19f0fb4f30df0aaf820fa32bb1"
+                "sha256:b5abcfd14d9c03e7d4e2875bb5e190af28bf5b4162d0a83e3d7aee6d79f1c85d",
+                "sha256:e3bc6cc9c2534289c6a5b9748ca733f6ae8c8d34f1fdab5115ca17a47860bf5e"
             ],
             "index": "pypi",
-            "version": "==0.4.0"
+            "version": "==0.4.1"
         },
         "python-dateutil": {
             "hashes": [
