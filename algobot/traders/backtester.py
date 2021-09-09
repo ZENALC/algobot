@@ -29,6 +29,7 @@ class Backtester(Trader):
     """
     Backtester class.
     """
+
     def __init__(self,
                  startingBalance: float,
                  data: list,
@@ -42,16 +43,24 @@ class Backtester(Trader):
                  precision: int = 4,
                  outputTrades: bool = True,
                  logger: Logger = None):
-        super().__init__(symbol=symbol,
-                         precision=precision,
-                         startingBalance=startingBalance,
-                         marginEnabled=marginEnabled)
+
+        super().__init__(
+            symbol=symbol,
+            precision=precision,
+            startingBalance=startingBalance,
+            marginEnabled=marginEnabled
+        )
+
         convert_all_dates_to_datetime(data)
+
         self.data = data
         self.check_data()
+
         self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
+
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
+
         self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
         self.drawdownPercentageDecimal = drawdownPercentage / 100  # Percentage of loss at which bot exits backtest.
         self.optimizerRows = []
@@ -72,6 +81,7 @@ class Backtester(Trader):
         self.ema_dict = {}
         self.rsi_dictionary = {}
         self.setup_strategies(strategies)
+
         self.startDateIndex = self.get_start_index(startDate)
         self.endDateIndex = self.get_end_index(endDate)
 
@@ -83,10 +93,11 @@ class Backtester(Trader):
         if len(interval.split()) == 1:
             interval = convert_small_interval(interval)
 
-        self.strategyInterval = self.interval if interval is None else interval
-        self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
+        self.strategyInterval = interval
+        self.strategyIntervalMinutes = get_interval_minutes(interval)
         self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
         self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
+
         if self.intervalMinutes > self.strategyIntervalMinutes:
             raise RuntimeError("Your strategy interval can't be smaller than the data interval.")
 
@@ -116,10 +127,10 @@ class Backtester(Trader):
         Checks data sorting. If descending, it reverses data, so we can mimic backtest as if we are starting from the
         beginning.
         """
-        firstDate = self.data[0]['date_utc']
-        lastDate = self.data[-1]['date_utc']
+        first_date = self.data[0]['date_utc']
+        last_date = self.data[-1]['date_utc']
 
-        if firstDate > lastDate:
+        if first_date > last_date:
             self.data = self.data[::-1]
 
     def find_date_index(self, targetDate: datetime.date, starting: bool = True) -> int:
@@ -140,7 +151,8 @@ class Backtester(Trader):
         for index, data in iterator:
             if data['date_utc'].date() == targetDate:
                 return index
-        return -1
+
+        raise IndexError("Date not found.")
 
     def get_start_index(self, startDate: datetime.date) -> int:
         """
@@ -148,14 +160,7 @@ class Backtester(Trader):
         :param startDate: Datetime object to compare index with.
         :return: Index of start date.
         """
-        if startDate:
-            startDateIndex = self.find_date_index(startDate)
-            if startDateIndex == -1:
-                raise IndexError("Date not found.")
-
-            return startDateIndex
-        else:
-            return 0
+        return self.find_date_index(startDate) if startDate else 0
 
     def get_end_index(self, endDate: datetime.date) -> int:
         """
@@ -165,16 +170,15 @@ class Backtester(Trader):
         """
         if endDate:
             endDateIndex = self.find_date_index(endDate, starting=False)
-            if endDateIndex == -1:
-                raise IndexError("Date not found.")
+
             if endDateIndex < 1:
                 raise IndexError("You need at least one data period.")
             if endDateIndex <= self.startDateIndex:
                 raise IndexError("Ending date index cannot be less than or equal to start date index.")
 
             return endDateIndex
-        else:
-            return len(self.data) - 1
+
+        return len(self.data) - 1
 
     def set_indexed_current_price_and_period(self, index: int):
         """
@@ -183,20 +187,6 @@ class Backtester(Trader):
         """
         self.currentPeriod = self.data[index]
         self.currentPrice = self.data[index]['open']
-
-    def set_priced_current_price_and_period(self, price):
-        """
-        Auxiliary function to set current period and price to price provided.
-        :param price: Price to set to current period and price.
-        """
-        self.currentPeriod = {
-            'date_utc': None,
-            'open': price,
-            'close': price,
-            'high': price,
-            'low': price
-        }
-        self.currentPrice = price
 
     @staticmethod
     def generate_error_message(error: Exception, strategy: Strategy) -> str:

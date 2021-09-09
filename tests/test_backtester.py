@@ -16,6 +16,22 @@ test_data = load_from_csv(path=data_path, descending=False)
 convert_all_dates_to_datetime(test_data)
 
 
+def set_priced_current_price_and_period(backtester, price):
+    """
+    Auxiliary function to set current period and price to price provided.
+    :param backtester: Backtester object.
+    :param price: Price to set to current period and price.
+    """
+    backtester.currentPrice = price
+    backtester.currentPeriod = {
+        'date_utc': None,
+        'open': price,
+        'close': price,
+        'high': price,
+        'low': price
+    }
+
+
 @pytest.fixture(scope='function', name='backtester')
 def get_backtester():
     """
@@ -242,34 +258,34 @@ def test_smart_stop_loss(backtester: Backtester):
     backtester.set_smart_stop_loss_counter(test_counter)
     assert backtester.smartStopLossInitialCounter == test_counter
 
-    backtester.set_priced_current_price_and_period(5)
+    set_priced_current_price_and_period(backtester, 5)
     backtester.buy_long("Dummy purchase to test smart stop loss.")
-    backtester.set_priced_current_price_and_period(4)
+    set_priced_current_price_and_period(backtester, 4)
     backtester.main_logic()  # Stop loss triggered.
-    backtester.set_priced_current_price_and_period(5)
+    set_priced_current_price_and_period(backtester, 5)
     backtester.main_logic()  # Smart stop loss purchase.
     assert backtester.smartStopLossCounter == test_counter - 1
 
-    backtester.set_priced_current_price_and_period(3)
+    set_priced_current_price_and_period(backtester, 3)
     backtester.main_logic()  # Stop loss triggered.
-    backtester.set_priced_current_price_and_period(6)
+    set_priced_current_price_and_period(backtester, 6)
     backtester.main_logic()  # Smart stop loss purchase.
     assert backtester.smartStopLossCounter == test_counter - 2
 
-    backtester.set_priced_current_price_and_period(2)
+    set_priced_current_price_and_period(backtester, 2)
     backtester.main_logic()  # Stop loss triggered.
-    backtester.set_priced_current_price_and_period(1.9)
+    set_priced_current_price_and_period(backtester, 1.9)
     backtester.main_logic()  # No smart stop loss purchase.
     assert backtester.smartStopLossCounter == test_counter - 2
 
-    backtester.set_priced_current_price_and_period(10)
+    set_priced_current_price_and_period(backtester, 10)
     backtester.main_logic()  # Smart stop loss purchase.
     assert backtester.smartStopLossCounter == test_counter - 3
 
-    backtester.set_priced_current_price_and_period(1)
+    set_priced_current_price_and_period(backtester, 1)
     backtester.main_logic()  # Stop loss triggered.
     backtester.smartStopLossCounter = 0  # Set stop loss counter at 0, so bot can't reenter.
-    backtester.set_priced_current_price_and_period(150)  # Set exorbitant price but don't let bot reenter.
+    set_priced_current_price_and_period(backtester, 150)  # Set exorbitant price but don't let bot reenter.
     backtester.main_logic()  # Should not reenter as counter is 0.
     assert backtester.currentPosition is None
     assert backtester.smartStopLossCounter == 0
@@ -285,11 +301,11 @@ def test_long_stop_loss(backtester: Backtester):
     Test backtester stop loss logic in a long position.
     """
     backtester.lossStrategy = STOP
-    backtester.set_priced_current_price_and_period(5)
+    set_priced_current_price_and_period(backtester, 5)
     backtester.buy_long("Test purchase.")
     assert backtester.get_stop_loss() == 5 * (1 - backtester.lossPercentageDecimal)
 
-    backtester.set_priced_current_price_and_period(10)
+    set_priced_current_price_and_period(backtester, 10)
     assert backtester.get_stop_loss() == 5 * (1 - backtester.lossPercentageDecimal)
 
     backtester.lossStrategy = TRAILING
@@ -301,11 +317,11 @@ def test_short_stop_loss(backtester: Backtester):
     Test backtester stop loss logic in a short position.
     """
     backtester.lossStrategy = STOP
-    backtester.set_priced_current_price_and_period(5)
+    set_priced_current_price_and_period(backtester, 5)
     backtester.sell_short("Test short.")
     assert backtester.get_stop_loss() == 5 * (1 + backtester.lossPercentageDecimal)
 
-    backtester.set_priced_current_price_and_period(3)
+    set_priced_current_price_and_period(backtester, 3)
     assert backtester.get_stop_loss() == 5 * (1 + backtester.lossPercentageDecimal)
 
     backtester.lossStrategy = TRAILING
@@ -317,7 +333,7 @@ def test_stop_take_profit(backtester: Backtester):
     Test backtester take profit logic.
     """
     backtester.takeProfitType = STOP
-    backtester.set_priced_current_price_and_period(10)
+    set_priced_current_price_and_period(backtester, 10)
     backtester.buy_long("Test purchase.")
     assert backtester.get_take_profit() == 10 * (1 + backtester.takeProfitPercentageDecimal)
 
