@@ -1,5 +1,7 @@
 """
 Backtester object.
+
+TODO: Use snake case.
 """
 
 import copy
@@ -10,7 +12,7 @@ import traceback
 from datetime import datetime, timedelta
 from itertools import product
 from logging import Logger
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 import pandas as pd
 from dateutil import parser
@@ -34,7 +36,7 @@ class Backtester(Trader):
                  startingBalance: float,
                  data: list,
                  strategies: list,
-                 strategyInterval: Union[str, None] = None,
+                 strategyInterval: Optional[str] = None,
                  symbol: str = None,
                  marginEnabled: bool = True,
                  startDate: datetime = None,
@@ -56,13 +58,18 @@ class Backtester(Trader):
         self.data = data
         self.check_data()
 
-        self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
-
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
 
-        self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
-        self.drawdownPercentageDecimal = drawdownPercentage / 100  # Percentage of loss at which bot exits backtest.
+        # Boolean that'll determine whether trades are outputted to file or not.
+        self.outputTrades: bool = outputTrades
+
+        # We'll add previous data here when hovering through graph in GUI.
+        self.pastActivity = []
+
+        # Percentage of loss at which bot exits backtest.
+        self.drawdownPercentageDecimal = drawdownPercentage / 100
+
         self.optimizerRows = []
         self.logger = logger
 
@@ -70,16 +77,17 @@ class Backtester(Trader):
             strategyInterval = convert_small_interval(strategyInterval)
 
         self.allStrategies = get_strategies_dictionary(Strategy.__subclasses__())
+
         self.strategyInterval = self.interval if strategyInterval is None else strategyInterval
         self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
+
         self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
         self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
+
         if self.intervalMinutes > self.strategyIntervalMinutes:
             raise RuntimeError(f"Your strategy interval ({self.strategyIntervalMinutes} minute(s)) can't be smaller "
                                f"than the data interval ({self.intervalMinutes} minute(s)).")
 
-        self.ema_dict = {}
-        self.rsi_dictionary = {}
         self.setup_strategies(strategies)
 
         self.startDateIndex = self.get_start_index(startDate)
@@ -95,6 +103,7 @@ class Backtester(Trader):
 
         self.strategyInterval = interval
         self.strategyIntervalMinutes = get_interval_minutes(interval)
+
         self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
         self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
 
@@ -143,9 +152,9 @@ class Backtester(Trader):
         if isinstance(targetDate, datetime):
             targetDate = targetDate.date()
 
-        if starting:
-            iterator = list(enumerate(self.data))
-        else:
+        iterator = list(enumerate(self.data))
+
+        if not starting:
             iterator = reversed(list(enumerate(self.data)))
 
         for index, data in iterator:
@@ -196,14 +205,13 @@ class Backtester(Trader):
         :param strategy: Strategy that caused this error.
         :return: String containing error message.
         """
-        msg = f'It looks like your strategy has crashed because of: "{str(error)}". Try using' \
-              f' different parameters, rewriting your strategy, or taking a look at ' \
-              f'your strategy code again. The strategy that caused this crash is: ' \
-              f'{strategy.name}. You can find more details about the crash in the ' \
-              f'logs file at {os.path.join(ROOT_DIR, LOG_FOLDER)}.'
-        return msg
+        return f'It looks like your strategy has crashed because of: "{str(error)}". Try using' \
+               f' different parameters, rewriting your strategy, or taking a look at ' \
+               f'your strategy code again. The strategy that caused this crash is: ' \
+               f'{strategy.name}. You can find more details about the crash in the ' \
+               f'logs file at {os.path.join(ROOT_DIR, LOG_FOLDER)}.'
 
-    def strategy_loop(self, strategyData, thread) -> Union[None, str]:
+    def strategy_loop(self, strategyData, thread) -> Optional[str]:
         """
         This will traverse through all strategies and attempt to get their trends.
         :param strategyData: Data to use to get the strategy trend.
@@ -212,16 +220,20 @@ class Backtester(Trader):
         """
         for strategy in self.strategies.values():
             try:
-                strategy.get_trend(strategyData)
+                df = pd.DataFrame(strategyData[-500:])
+                strategy.get_trend(df, data=strategyData)
             except Exception as e:
                 if thread and thread.caller == OPTIMIZER:
                     error_message = traceback.format_exc()
+
                     if self.logger is not None:
                         self.logger.exception(error_message)
+
                     return 'CRASHED'  # We don't want optimizer to stop.
                 else:
                     if thread:
                         thread.signals.updateGraphLimits.emit(len(self.pastActivity))
+
                     raise RuntimeError(self.generate_error_message(e, strategy)) from e
 
     def start_backtest(self, thread=None):
@@ -542,6 +554,7 @@ class Backtester(Trader):
         :return: Interval in str format.
         """
         assert len(self.data) >= 2, "Not enough data gathered. Change your data interval."
+
         period1 = self.data[0]['date_utc']
         period2 = self.data[1]['date_utc']
 
@@ -553,20 +566,18 @@ class Backtester(Trader):
         difference = period2 - period1
         seconds = difference.total_seconds()
         if seconds < 3600:  # This will assume the interval is in minutes.
-            minutes = seconds / 60
-            result = f'{int(minutes)} Minute'
-            if minutes > 1:
-                result += 's'
+            unit = seconds / 60
+            result = f'{int(unit)} Minute'
         elif seconds < 86400:  # This will assume the interval is in hours.
-            hours = seconds / 3600
-            result = f'{int(hours)} Hour'
-            if hours > 1:
-                result += 's'
+            unit = seconds / 3600
+            result = f'{int(unit)} Hour'
         else:  # This will assume the interval is in days.
-            days = seconds / 86400
-            result = f'{int(days)} Day'
-            if days > 1:
-                result += 's'
+            unit = seconds / 86400
+            result = f'{int(unit)} Day'
+
+        if unit > 1:
+            result += 's'
+
         return result
 
     def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> float:

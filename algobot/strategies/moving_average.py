@@ -101,7 +101,7 @@ class MovingAverageStrategy(Strategy):
         """
         parent = self.parent
         trends = []  # Current option trends. They all have to be the same to register a trend.
-        func_type = TALIB if isinstance(data, list) else STREAM
+        func_type = STREAM
 
         for option in self.tradingOptions:
             moving_average, parameter, initial_bound, final_bound = option.get_all_params()
