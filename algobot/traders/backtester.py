@@ -186,7 +186,6 @@ class Backtester(Trader):
                 raise IndexError("Ending date index cannot be less than or equal to start date index.")
 
             return endDateIndex
-
         return len(self.data) - 1
 
     def set_indexed_current_price_and_period(self, index: int):
