@@ -88,7 +88,7 @@ class SimulationTrader(Trader):
                 'position': self.get_position_string(),
                 'autonomous': str(not self.inHumanControl),
                 'precision': str(self.precision),
-                'trend': self.get_trend_string(self.trend),
+                'trend': str(self.trend),
                 'marginEnabled': str(self.marginEnabled),
             }
         }
@@ -115,7 +115,7 @@ class SimulationTrader(Trader):
 
         if self.takeProfitType is not None:
             groupedDict['takeProfit'] = {
-                'takeProfitType': self.get_trailing_or_stop_type_string(self.takeProfitType),
+                'takeProfitType': str(self.takeProfitType),
                 'takeProfitPercentage': self.get_safe_rounded_percentage(self.takeProfitPercentageDecimal),
                 'trailingTakeProfitActivated': str(self.trailingTakeProfitActivated),
                 'takeProfitPoint': self.get_safe_rounded_string(self.takeProfitPoint),
@@ -147,7 +147,7 @@ class SimulationTrader(Trader):
         for strategy_name, strategy in self.strategies.items():
 
             groupedDict[strategy_name] = {
-                'trend': self.get_trend_string(strategy.trend),
+                'trend': str(strategy.trend),
                 'enabled': 'True',
             }
 

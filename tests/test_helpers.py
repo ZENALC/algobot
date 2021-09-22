@@ -74,7 +74,7 @@ def test_get_label_string(label: str, expected: str):
         (LIVE, "live"),
     ]
 )
-def test_get_caller_string(caller: int, expected: str):
+def test_get_caller_string(caller: str, expected: str):
     """
     Test get caller string functionality.
     :param caller: Caller int.
