@@ -20,7 +20,7 @@ from dateutil import parser
 from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER,
                            SHORT)
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR, convert_all_dates_to_datetime, convert_small_interval,
-                             get_interval_minutes, get_ups_and_downs, parse_strategy_name)
+                             get_interval_minutes, parse_strategy_name)
 from algobot.interface.config_utils.strategy_utils import get_strategies_dictionary
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
@@ -545,8 +545,6 @@ class Backtester(Trader):
         self.previousStopLoss = self.previousPosition = None
         self.stopLossExit = False
         self.smartStopLossEnter = False
-        self.ema_dict = {}
-        self.rsi_dictionary = {}
 
     def get_interval(self) -> str:
         """
@@ -579,65 +577,6 @@ class Backtester(Trader):
             result += 's'
 
         return result
-
-    def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> float:
-        """
-        Helper function to get the EMA for relative strength index and return the RSI.
-        :param down_data: Other data to get EMA of.
-        :param up_data: Data to get EMA of.
-        :param periods: Number of periods to iterate through.
-        :return: RSI
-        """
-        emaUp = up_data[0]
-        emaDown = down_data[0]
-        alpha = 1 / periods
-        rsi_values = []
-
-        for index in range(1, len(up_data)):
-            emaUp = up_data[index] * alpha + emaUp * (1 - alpha)
-            emaDown = down_data[index] * alpha + emaDown * (1 - alpha)
-            rsi = 100 if emaDown == 0 else 100 - 100 / (1 + emaUp / emaDown)
-            rsi_values.append((rsi, emaUp, emaDown))
-
-        if periods in self.rsi_dictionary:
-            rsi_values = self.rsi_dictionary[periods]['close'] + rsi_values
-
-        self.rsi_dictionary[periods] = {'close': rsi_values}
-        return rsi_values[-1][0]
-
-    # noinspection DuplicatedCode
-    def get_rsi(self, data: list, prices: int, parameter: str = 'close', shift: int = 0,
-                round_value: bool = False) -> float:
-        """
-        Returns relative strength index.
-        :param data: Data values.
-        :param prices: Amount of prices to iterate through.
-        :param parameter: Parameter to use for iterations. By default, it's close.
-        :param shift: Amount of prices to shift prices by.
-        :param round_value: Boolean that determines whether final value is rounded or not.
-        :return: Final relative strength index.
-        """
-        if shift > 0 and prices in self.rsi_dictionary:
-            rsi = self.rsi_dictionary[prices]['close'][-shift][0]
-        elif prices in self.rsi_dictionary:
-            alpha = 1 / prices
-            difference = data[-1][parameter] - data[-2][parameter]
-            if difference > 0:
-                up = difference * alpha + self.rsi_dictionary[prices]['close'][-1][1] * (1 - alpha)
-                down = self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
-            else:
-                up = self.rsi_dictionary[prices]['close'][-1][1] * (1 - alpha)
-                down = -difference * alpha + self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
-
-            rsi = 100 if down == 0 else 100 - 100 / (1 + up / down)
-            self.rsi_dictionary[prices]['close'].append((rsi, up, down))
-        else:
-            if shift > 0:
-                data = data[:-shift]
-            ups, downs = get_ups_and_downs(data=data, parameter=parameter)
-            rsi = self.helper_get_ema(ups, downs, prices)
-
-        return round(rsi, self.precision) if round_value else rsi
 
     def main_logic(self):
         """

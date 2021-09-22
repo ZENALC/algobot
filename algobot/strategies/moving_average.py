@@ -9,7 +9,7 @@ import pandas as pd
 from algobot.enums import BEARISH, BULLISH
 from algobot.helpers import get_random_color
 from algobot.option import Option
-from algobot.strategies import STREAM, TALIB, TALIB_MAP_SINGLETON
+from algobot.strategies import STREAM, TALIB_MAP_SINGLETON
 from algobot.strategies.strategy import Strategy
 
 
