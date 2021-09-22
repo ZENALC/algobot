@@ -7,6 +7,8 @@ Visit https://github.com/ZENALC/algobot/wiki/Strategies for documentation.
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import pandas as pd
+
 import algobot
 from algobot.data import Data
 
@@ -69,10 +71,13 @@ class Strategy:
         """
         raise NotImplementedError("Implement a function to set new inputs to your strategy.")
 
-    def get_trend(self, data: Union[List[dict], Data], log_data: bool = False) -> int:
+    def get_trend(self, df: pd.DataFrame, data, log_data: bool = False) -> int:
         """
         Implement your strategy here. Based on the strategy's algorithm, this should return a trend.
         A trend can be either bullish, bearish, or neither.
+        :param df: Dataframe to leverage to get the trend.
+        :param data: Data object or list used by the bot.
+        :param log_data: Whether to log data or not. (only supported by live sims/bots).
         :return: Enum representing the trend.
         """
         raise NotImplementedError("Implement a strategy to get trend.")

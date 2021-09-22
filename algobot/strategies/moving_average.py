@@ -2,13 +2,14 @@
 Moving Average strategy.
 """
 
-from typing import List, Union
+from typing import List
 
-from algobot.algorithms import get_moving_average
-from algobot.data import Data
+import pandas as pd
+
 from algobot.enums import BEARISH, BULLISH
 from algobot.helpers import get_random_color
 from algobot.option import Option
+from algobot.strategies import STREAM, TALIB_MAP_SINGLETON
 from algobot.strategies.strategy import Strategy
 
 
@@ -28,7 +29,7 @@ class MovingAverageStrategy(Strategy):
                            "bearish trend is determined. All moving averages have to have the same trend for an " \
                            "overall trend to be set."
 
-        if parent:  # Only validate if parent exists. If no parent, this mean's we're just calling this for param types.
+        if parent:  # Only validate if parent exists. If no parent, this means we're just calling this for param types.
             self.validate_options()
             self.initialize_plot_dict()
 
@@ -77,9 +78,9 @@ class MovingAverageStrategy(Strategy):
         The initial value will return the int type.
         The final value will return the int type.
         """
-        movingAverages = ['SMA', 'EMA', 'WMA']
+        moving_averages = TALIB_MAP_SINGLETON.MA
         parameters = ['High', 'Low', 'Open', 'Close', 'High/Low', 'Open/Close']
-        return [('Moving Average', tuple, movingAverages),
+        return [('Moving Average', tuple, moving_averages),
                 ('Parameter', tuple, parameters),
                 ('Initial', int),
                 ('Final', int)
@@ -91,42 +92,37 @@ class MovingAverageStrategy(Strategy):
         """
         return self.tradingOptions
 
-    def get_trend(self, data: Union[List[dict], Data], log_data: bool = False) -> int:
+    def get_trend(self, df: pd.DataFrame, data, log_data: bool = False) -> int:
         """
         This function should return the current trend for the Moving Average strategy with the provided data.
-        :param data: Data container to get trend from - it can either be a list or a Data object.
+        :param df: Dataframe to get trend from.
+        :param data: Data object or list used for trading.
         :param log_data: Boolean specifying whether current information regarding strategy should be logged or not.
         """
         parent = self.parent
-        data_object = data
         trends = []  # Current option trends. They all have to be the same to register a trend.
+        func_type = STREAM
 
         for option in self.tradingOptions:
-            movingAverage, parameter, initialBound, finalBound = option.get_all_params()
-            initialName, finalName = option.get_pretty_option()
+            moving_average, parameter, initial_bound, final_bound = option.get_all_params()
+            initial_name, final_name = option.get_pretty_option()
 
-            if isinstance(data, list):  # This means it was called by the optimizer/backtester.
-                avg1 = get_moving_average(movingAverage, parameter, initialBound, data, parent.ema_dict)
-                avg2 = get_moving_average(movingAverage, parameter, finalBound, data, parent.ema_dict)
-            else:  # This means it was called by the live bot / simulation.
-                avg1 = get_moving_average(movingAverage, parameter, initialBound, data.data + [data.current_values],
-                                          data.ema_dict)
-                avg2 = get_moving_average(movingAverage, parameter, finalBound, data.data + [data.current_values],
-                                          data.ema_dict)
+            ma_func = TALIB_MAP_SINGLETON.get_entry(moving_average).get_func(func_type)
+            avg1 = ma_func(df[parameter], initial_bound)
+            avg2 = ma_func(df[parameter], final_bound)
 
             prefix, interval_type = self.get_prefix_and_interval_type(data)
-
             if log_data:
                 parent.output_message(f'{interval_type.capitalize()} interval ({data.interval}) data:')
-                parent.output_message(f'{movingAverage}({initialBound}) {parameter} = {avg1}')
-                parent.output_message(f'{movingAverage}({finalBound}) {parameter} = {avg2}')
+                parent.output_message(f'{moving_average}({initial_bound}) {parameter} = {avg1}')
+                parent.output_message(f'{moving_average}({final_bound}) {parameter} = {avg2}')
 
-            self.strategyDict[interval_type][f'{prefix}{initialName}'] = avg1
-            self.strategyDict[interval_type][f'{prefix}{finalName}'] = avg2
+            self.strategyDict[interval_type][f'{prefix}{initial_name}'] = avg1
+            self.strategyDict[interval_type][f'{prefix}{final_name}'] = avg2
 
-            if interval_type == 'regular' and not isinstance(data_object, list):
-                self.plotDict[initialName][0] = avg1
-                self.plotDict[finalName][0] = avg2
+            if interval_type == 'regular' and not isinstance(data, list):
+                self.plotDict[initial_name][0] = avg1
+                self.plotDict[final_name][0] = avg2
 
             if avg1 > avg2:
                 trends.append(BULLISH)

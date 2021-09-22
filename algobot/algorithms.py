@@ -164,15 +164,8 @@ def get_ema(data: List[dict], prices: int, parameter: str, sma_prices: int = 5, 
 
     return ema, memo
 
-
-def get_rsi():
-    """
-    Function to get the RSI. # TODO: Deprecate the get_rsi() functions in the traders' and rewrite here or use TA-LIB.
-    """
-    pass
-
-
 # Volume Indicators
+
 
 def get_money_flow_index(periods: int, data: List[Dict[str, float]]) -> float:
     """

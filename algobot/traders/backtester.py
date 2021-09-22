@@ -1,5 +1,7 @@
 """
 Backtester object.
+
+TODO: Use snake case.
 """
 
 import copy
@@ -10,7 +12,7 @@ import traceback
 from datetime import datetime, timedelta
 from itertools import product
 from logging import Logger
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 import pandas as pd
 from dateutil import parser
@@ -18,7 +20,7 @@ from dateutil import parser
 from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER,
                            SHORT)
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR, convert_all_dates_to_datetime, convert_small_interval,
-                             get_interval_minutes, get_ups_and_downs, parse_strategy_name)
+                             get_interval_minutes, parse_strategy_name)
 from algobot.interface.config_utils.strategy_utils import get_strategies_dictionary
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
@@ -29,11 +31,12 @@ class Backtester(Trader):
     """
     Backtester class.
     """
+
     def __init__(self,
                  startingBalance: float,
                  data: list,
                  strategies: list,
-                 strategyInterval: Union[str, None] = None,
+                 strategyInterval: Optional[str] = None,
                  symbol: str = None,
                  marginEnabled: bool = True,
                  startDate: datetime = None,
@@ -42,18 +45,31 @@ class Backtester(Trader):
                  precision: int = 4,
                  outputTrades: bool = True,
                  logger: Logger = None):
-        super().__init__(symbol=symbol,
-                         precision=precision,
-                         startingBalance=startingBalance,
-                         marginEnabled=marginEnabled)
+
+        super().__init__(
+            symbol=symbol,
+            precision=precision,
+            startingBalance=startingBalance,
+            marginEnabled=marginEnabled
+        )
+
         convert_all_dates_to_datetime(data)
+
         self.data = data
         self.check_data()
-        self.outputTrades: bool = outputTrades  # Boolean that'll determine whether trades are outputted to file or not.
+
         self.interval = self.get_interval()
         self.intervalMinutes = get_interval_minutes(self.interval)
-        self.pastActivity = []  # We'll add previous data here when hovering through graph in GUI.
-        self.drawdownPercentageDecimal = drawdownPercentage / 100  # Percentage of loss at which bot exits backtest.
+
+        # Boolean that'll determine whether trades are outputted to file or not.
+        self.outputTrades: bool = outputTrades
+
+        # We'll add previous data here when hovering through graph in GUI.
+        self.pastActivity = []
+
+        # Percentage of loss at which bot exits backtest.
+        self.drawdownPercentageDecimal = drawdownPercentage / 100
+
         self.optimizerRows = []
         self.logger = logger
 
@@ -61,17 +77,19 @@ class Backtester(Trader):
             strategyInterval = convert_small_interval(strategyInterval)
 
         self.allStrategies = get_strategies_dictionary(Strategy.__subclasses__())
+
         self.strategyInterval = self.interval if strategyInterval is None else strategyInterval
         self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
+
         self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
         self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
+
         if self.intervalMinutes > self.strategyIntervalMinutes:
             raise RuntimeError(f"Your strategy interval ({self.strategyIntervalMinutes} minute(s)) can't be smaller "
                                f"than the data interval ({self.intervalMinutes} minute(s)).")
 
-        self.ema_dict = {}
-        self.rsi_dictionary = {}
         self.setup_strategies(strategies)
+
         self.startDateIndex = self.get_start_index(startDate)
         self.endDateIndex = self.get_end_index(endDate)
 
@@ -83,10 +101,12 @@ class Backtester(Trader):
         if len(interval.split()) == 1:
             interval = convert_small_interval(interval)
 
-        self.strategyInterval = self.interval if interval is None else interval
-        self.strategyIntervalMinutes = get_interval_minutes(self.strategyInterval)
+        self.strategyInterval = interval
+        self.strategyIntervalMinutes = get_interval_minutes(interval)
+
         self.intervalGapMinutes = self.strategyIntervalMinutes - self.intervalMinutes
         self.intervalGapMultiplier = self.strategyIntervalMinutes // self.intervalMinutes
+
         if self.intervalMinutes > self.strategyIntervalMinutes:
             raise RuntimeError("Your strategy interval can't be smaller than the data interval.")
 
@@ -116,10 +136,10 @@ class Backtester(Trader):
         Checks data sorting. If descending, it reverses data, so we can mimic backtest as if we are starting from the
         beginning.
         """
-        firstDate = self.data[0]['date_utc']
-        lastDate = self.data[-1]['date_utc']
+        first_date = self.data[0]['date_utc']
+        last_date = self.data[-1]['date_utc']
 
-        if firstDate > lastDate:
+        if first_date > last_date:
             self.data = self.data[::-1]
 
     def find_date_index(self, targetDate: datetime.date, starting: bool = True) -> int:
@@ -132,15 +152,16 @@ class Backtester(Trader):
         if isinstance(targetDate, datetime):
             targetDate = targetDate.date()
 
-        if starting:
-            iterator = list(enumerate(self.data))
-        else:
+        iterator = list(enumerate(self.data))
+
+        if not starting:
             iterator = reversed(list(enumerate(self.data)))
 
         for index, data in iterator:
             if data['date_utc'].date() == targetDate:
                 return index
-        return -1
+
+        raise IndexError("Date not found.")
 
     def get_start_index(self, startDate: datetime.date) -> int:
         """
@@ -148,14 +169,7 @@ class Backtester(Trader):
         :param startDate: Datetime object to compare index with.
         :return: Index of start date.
         """
-        if startDate:
-            startDateIndex = self.find_date_index(startDate)
-            if startDateIndex == -1:
-                raise IndexError("Date not found.")
-
-            return startDateIndex
-        else:
-            return 0
+        return self.find_date_index(startDate) if startDate else 0
 
     def get_end_index(self, endDate: datetime.date) -> int:
         """
@@ -165,16 +179,14 @@ class Backtester(Trader):
         """
         if endDate:
             endDateIndex = self.find_date_index(endDate, starting=False)
-            if endDateIndex == -1:
-                raise IndexError("Date not found.")
+
             if endDateIndex < 1:
                 raise IndexError("You need at least one data period.")
             if endDateIndex <= self.startDateIndex:
                 raise IndexError("Ending date index cannot be less than or equal to start date index.")
 
             return endDateIndex
-        else:
-            return len(self.data) - 1
+        return len(self.data) - 1
 
     def set_indexed_current_price_and_period(self, index: int):
         """
@@ -184,20 +196,6 @@ class Backtester(Trader):
         self.currentPeriod = self.data[index]
         self.currentPrice = self.data[index]['open']
 
-    def set_priced_current_price_and_period(self, price):
-        """
-        Auxiliary function to set current period and price to price provided.
-        :param price: Price to set to current period and price.
-        """
-        self.currentPeriod = {
-            'date_utc': None,
-            'open': price,
-            'close': price,
-            'high': price,
-            'low': price
-        }
-        self.currentPrice = price
-
     @staticmethod
     def generate_error_message(error: Exception, strategy: Strategy) -> str:
         """
@@ -206,14 +204,13 @@ class Backtester(Trader):
         :param strategy: Strategy that caused this error.
         :return: String containing error message.
         """
-        msg = f'It looks like your strategy has crashed because of: "{str(error)}". Try using' \
-              f' different parameters, rewriting your strategy, or taking a look at ' \
-              f'your strategy code again. The strategy that caused this crash is: ' \
-              f'{strategy.name}. You can find more details about the crash in the ' \
-              f'logs file at {os.path.join(ROOT_DIR, LOG_FOLDER)}.'
-        return msg
+        return f'It looks like your strategy has crashed because of: "{str(error)}". Try using' \
+               f' different parameters, rewriting your strategy, or taking a look at ' \
+               f'your strategy code again. The strategy that caused this crash is: ' \
+               f'{strategy.name}. You can find more details about the crash in the ' \
+               f'logs file at {os.path.join(ROOT_DIR, LOG_FOLDER)}.'
 
-    def strategy_loop(self, strategyData, thread) -> Union[None, str]:
+    def strategy_loop(self, strategyData, thread) -> Optional[str]:
         """
         This will traverse through all strategies and attempt to get their trends.
         :param strategyData: Data to use to get the strategy trend.
@@ -222,16 +219,22 @@ class Backtester(Trader):
         """
         for strategy in self.strategies.values():
             try:
-                strategy.get_trend(strategyData)
+                df = pd.DataFrame(strategyData[-250:])
+                df['high/low'] = (df['high'] + df['low']) / 2
+                df['open/close'] = (df['open'] + df['close']) / 2
+                strategy.get_trend(df, data=strategyData)
             except Exception as e:
                 if thread and thread.caller == OPTIMIZER:
                     error_message = traceback.format_exc()
+
                     if self.logger is not None:
                         self.logger.exception(error_message)
+
                     return 'CRASHED'  # We don't want optimizer to stop.
                 else:
                     if thread:
                         thread.signals.updateGraphLimits.emit(len(self.pastActivity))
+
                     raise RuntimeError(self.generate_error_message(e, strategy)) from e
 
     def start_backtest(self, thread=None):
@@ -543,8 +546,6 @@ class Backtester(Trader):
         self.previousStopLoss = self.previousPosition = None
         self.stopLossExit = False
         self.smartStopLossEnter = False
-        self.ema_dict = {}
-        self.rsi_dictionary = {}
 
     def get_interval(self) -> str:
         """
@@ -552,6 +553,7 @@ class Backtester(Trader):
         :return: Interval in str format.
         """
         assert len(self.data) >= 2, "Not enough data gathered. Change your data interval."
+
         period1 = self.data[0]['date_utc']
         period2 = self.data[1]['date_utc']
 
@@ -563,80 +565,19 @@ class Backtester(Trader):
         difference = period2 - period1
         seconds = difference.total_seconds()
         if seconds < 3600:  # This will assume the interval is in minutes.
-            minutes = seconds / 60
-            result = f'{int(minutes)} Minute'
-            if minutes > 1:
-                result += 's'
+            unit = seconds / 60
+            result = f'{int(unit)} Minute'
         elif seconds < 86400:  # This will assume the interval is in hours.
-            hours = seconds / 3600
-            result = f'{int(hours)} Hour'
-            if hours > 1:
-                result += 's'
+            unit = seconds / 3600
+            result = f'{int(unit)} Hour'
         else:  # This will assume the interval is in days.
-            days = seconds / 86400
-            result = f'{int(days)} Day'
-            if days > 1:
-                result += 's'
+            unit = seconds / 86400
+            result = f'{int(unit)} Day'
+
+        if unit > 1:
+            result += 's'
+
         return result
-
-    def helper_get_ema(self, up_data: list, down_data: list, periods: int) -> float:
-        """
-        Helper function to get the EMA for relative strength index and return the RSI.
-        :param down_data: Other data to get EMA of.
-        :param up_data: Data to get EMA of.
-        :param periods: Number of periods to iterate through.
-        :return: RSI
-        """
-        emaUp = up_data[0]
-        emaDown = down_data[0]
-        alpha = 1 / periods
-        rsi_values = []
-
-        for index in range(1, len(up_data)):
-            emaUp = up_data[index] * alpha + emaUp * (1 - alpha)
-            emaDown = down_data[index] * alpha + emaDown * (1 - alpha)
-            rsi = 100 if emaDown == 0 else 100 - 100 / (1 + emaUp / emaDown)
-            rsi_values.append((rsi, emaUp, emaDown))
-
-        if periods in self.rsi_dictionary:
-            rsi_values = self.rsi_dictionary[periods]['close'] + rsi_values
-
-        self.rsi_dictionary[periods] = {'close': rsi_values}
-        return rsi_values[-1][0]
-
-    # noinspection DuplicatedCode
-    def get_rsi(self, data: list, prices: int, parameter: str = 'close', shift: int = 0,
-                round_value: bool = False) -> float:
-        """
-        Returns relative strength index.
-        :param data: Data values.
-        :param prices: Amount of prices to iterate through.
-        :param parameter: Parameter to use for iterations. By default, it's close.
-        :param shift: Amount of prices to shift prices by.
-        :param round_value: Boolean that determines whether final value is rounded or not.
-        :return: Final relative strength index.
-        """
-        if shift > 0 and prices in self.rsi_dictionary:
-            rsi = self.rsi_dictionary[prices]['close'][-shift][0]
-        elif prices in self.rsi_dictionary:
-            alpha = 1 / prices
-            difference = data[-1][parameter] - data[-2][parameter]
-            if difference > 0:
-                up = difference * alpha + self.rsi_dictionary[prices]['close'][-1][1] * (1 - alpha)
-                down = self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
-            else:
-                up = self.rsi_dictionary[prices]['close'][-1][1] * (1 - alpha)
-                down = -difference * alpha + self.rsi_dictionary[prices]['close'][-1][2] * (1 - alpha)
-
-            rsi = 100 if down == 0 else 100 - 100 / (1 + up / down)
-            self.rsi_dictionary[prices]['close'].append((rsi, up, down))
-        else:
-            if shift > 0:
-                data = data[:-shift]
-            ups, downs = get_ups_and_downs(data=data, parameter=parameter)
-            rsi = self.helper_get_ema(ups, downs, prices)
-
-        return round(rsi, self.precision) if round_value else rsi
 
     def main_logic(self):
         """

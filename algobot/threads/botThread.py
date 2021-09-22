@@ -22,7 +22,6 @@ class BotSignals(QObject):
     """
     Signals available for the BotThread.
     """
-    # pylint: disable=too-few-public-methods
     smallError = pyqtSignal(str)  # Signal emitted when small errors such as internet losses occur.
     started = pyqtSignal(str)  # Signal emitted when bot first starts.
     activity = pyqtSignal(str, str)  # Signal emitted to broadcast current activity.
