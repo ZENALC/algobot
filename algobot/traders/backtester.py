@@ -220,6 +220,8 @@ class Backtester(Trader):
         for strategy in self.strategies.values():
             try:
                 df = pd.DataFrame(strategyData[-250:])
+                df['high/low'] = (df['high'] + df['low']) / 2
+                df['open/close'] = (df['open'] + df['close']) / 2
                 strategy.get_trend(df, data=strategyData)
             except Exception as e:
                 if thread and thread.caller == OPTIMIZER:

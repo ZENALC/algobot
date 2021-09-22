@@ -350,8 +350,8 @@ class SimulationTrader(Trader):
             dataObject = self.dataView
 
         df = pd.DataFrame(dataObject.data + [dataObject.current_values])
-        df['high/low'] = df.apply(lambda row: (row['high'] + row['low']) / 2, axis=1)
-        df['open/close'] = df.apply(lambda row: (row['open'] + row['close']) / 2, axis=1)
+        df['high/low'] = (df['high'] + df['low']) / 2
+        df['open/close'] = (df['open'] + df['close']) / 2
 
         trends = [strategy.get_trend(df=df, data=dataObject, log_data=log_data)
                   for strategy in self.strategies.values()]
