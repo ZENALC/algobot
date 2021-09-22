@@ -220,7 +220,7 @@ class Backtester(Trader):
         """
         for strategy in self.strategies.values():
             try:
-                df = pd.DataFrame(strategyData[-500:])
+                df = pd.DataFrame(strategyData[-250:])
                 strategy.get_trend(df, data=strategyData)
             except Exception as e:
                 if thread and thread.caller == OPTIMIZER:
