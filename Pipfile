@@ -48,3 +48,6 @@ pytest-cov = "*"
 pytest-socket = "*"
 pre-commit = "*"
 jupyterlab = "*"
+
+[scripts]
+precommit = "pre-commit run --all"
