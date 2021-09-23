@@ -75,7 +75,7 @@ class SimulationTrader(Trader):
         """
         Returns dictionary of grouped statistics for the statistics window in the GUI.
         """
-        groupedDict = {
+        grouped_dict = {
             'general': {
                 'currentBalance': f'${round(self.balance, 2)}',
                 'startingBalance': f'${round(self.startingBalance, 2)}',
@@ -94,7 +94,7 @@ class SimulationTrader(Trader):
         }
 
         if self.lossStrategy is not None:
-            groupedDict['stopLoss'] = {
+            grouped_dict['stopLoss'] = {
                 'stopLossType': self.get_stop_loss_strategy_string(),
                 'stopLossPercentage': self.get_safe_rounded_percentage(self.lossPercentageDecimal),
                 'stopLossPoint': self.get_safe_rounded_string(self.get_stop_loss()),
@@ -114,7 +114,7 @@ class SimulationTrader(Trader):
             }
 
         if self.takeProfitType is not None:
-            groupedDict['takeProfit'] = {
+            grouped_dict['takeProfit'] = {
                 'takeProfitType': str(self.takeProfitType),
                 'takeProfitPercentage': self.get_safe_rounded_percentage(self.takeProfitPercentageDecimal),
                 'trailingTakeProfitActivated': str(self.trailingTakeProfitActivated),
@@ -123,7 +123,7 @@ class SimulationTrader(Trader):
             }
 
         if self.dataView.current_values:
-            groupedDict['currentData'] = {
+            grouped_dict['currentData'] = {
                 'UTC Open Time': self.dataView.current_values['date_utc'].strftime('%Y-%m-%d %H:%M:%S'),
                 'open': '$' + str(round(self.dataView.current_values['open'], self.precision)),
                 'close': '$' + str(round(self.dataView.current_values['close'], self.precision)),
@@ -136,22 +136,22 @@ class SimulationTrader(Trader):
                 'takerBuyQuoteAsset': str(round(self.dataView.current_values['taker_buy_quote_asset'], self.precision)),
             }
 
-        self.add_strategy_info_to_grouped_dict(groupedDict)
-        return groupedDict
+        self.add_strategy_info_to_grouped_dict(grouped_dict)
+        return grouped_dict
 
-    def add_strategy_info_to_grouped_dict(self, groupedDict: dict):
+    def add_strategy_info_to_grouped_dict(self, grouped_dict: dict):
         """
         Adds strategy information to the dictionary provided.
-        :param groupedDict: Dictionary to add strategy information to.
+        :param grouped_dict: Dictionary to add strategy information to.
         """
         for strategy_name, strategy in self.strategies.items():
 
-            groupedDict[strategy_name] = {
+            grouped_dict[strategy_name] = {
                 'trend': str(strategy.trend),
                 'enabled': 'True',
             }
 
-            strategy.populate_grouped_dict(groupedDict[strategy_name])
+            strategy.populate_grouped_dict(grouped_dict[strategy_name])
 
     def get_remaining_safety_timer(self) -> str:
         """
@@ -326,8 +326,8 @@ class SimulationTrader(Trader):
             self.currentPrice = self.dataView.get_current_price()
 
             if coin is None:
-                transactionFee = self.balance * self.transactionFeePercentageDecimal
-                coin = (self.balance - transactionFee) / self.currentPrice
+                transaction_fee = self.balance * self.transactionFeePercentageDecimal
+                coin = (self.balance - transaction_fee) / self.currentPrice
 
             if coin <= 0:
                 raise ValueError(f"You cannot borrow negative {abs(coin)} {self.coinName}.")
@@ -568,18 +568,18 @@ class SimulationTrader(Trader):
         else:
             self.output_message(f'\nTrades conducted in live market: {len(self.trades)}\n')
 
-    def get_run_result(self, isSimulation: bool = False):
+    def get_run_result(self, is_simulation: bool = False):
         """
         Gets end result of simulation.
-        :param isSimulation: Boolean that'll determine if coins are returned or not.
+        :param is_simulation: Boolean that'll determine if coins are returned or not.
         """
         self.output_message('\n---------------------------------------------------\nBot run has ended.')
         self.endingTime = datetime.utcnow()
-        if isSimulation and self.coin > 0:
+        if is_simulation and self.coin > 0:
             self.output_message(f"Selling all {self.coinName}...")
             self.sell_long('Sold all owned coin as simulation ended.')
 
-        if isSimulation and self.coinOwed > 0:
+        if is_simulation and self.coinOwed > 0:
             self.output_message(f"Returning all borrowed {self.coinName}...")
             self.buy_short('Returned all borrowed coin as simulation ended.')
 

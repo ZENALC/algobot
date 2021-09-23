@@ -210,19 +210,19 @@ class Backtester(Trader):
                f'{strategy.name}. You can find more details about the crash in the ' \
                f'logs file at {os.path.join(ROOT_DIR, LOG_FOLDER)}.'
 
-    def strategy_loop(self, strategyData, thread) -> Optional[str]:
+    def strategy_loop(self, strategy_data, thread) -> Optional[str]:
         """
         This will traverse through all strategies and attempt to get their trends.
-        :param strategyData: Data to use to get the strategy trend.
+        :param strategy_data: Data to use to get the strategy trend.
         :param thread: Thread object (if exists).
         :return: String "CRASHED" if an error is raised, else None if everything goes smoothly.
         """
         for strategy in self.strategies.values():
             try:
-                df = pd.DataFrame(strategyData[-250:])
+                df = pd.DataFrame(strategy_data[-250:])
                 df['high/low'] = (df['high'] + df['low']) / 2
                 df['open/close'] = (df['open'] + df['close']) / 2
-                strategy.get_trend(df, data=strategyData)
+                strategy.get_trend(df, data=strategy_data)
             except Exception as e:
                 if thread and thread.caller == OPTIMIZER:
                     error_message = traceback.format_exc()
@@ -330,11 +330,11 @@ class Backtester(Trader):
             result = None  # Result of strategy loop to ensure nothing crashed -> None is good, anything else is bad.
             if strategy_data is seen_data:
                 if len(strategy_data) >= self.minPeriod:
-                    result = self.strategy_loop(strategyData=strategy_data, thread=thread)
+                    result = self.strategy_loop(strategy_data=strategy_data, thread=thread)
             else:
                 if len(strategy_data) + 1 >= self.minPeriod:
                     strategy_data.append(self.currentPeriod)
-                    result = self.strategy_loop(strategyData=strategy_data, thread=thread)
+                    result = self.strategy_loop(strategy_data=strategy_data, thread=thread)
                     strategy_data.pop()
 
             if result is not None:
@@ -391,9 +391,9 @@ class Backtester(Trader):
                 self.extend_helper(value_range, combos, key)
             elif key == "strategies":
                 for strategy_key, strategy_dict in value_range.items():
-                    for inputKey, step_tuple in strategy_dict.items():
+                    for input_key, step_tuple in strategy_dict.items():
                         if isinstance(step_tuple, tuple) and len(step_tuple) == 3:
-                            self.extend_helper(step_tuple, strategy_dict, inputKey)
+                            self.extend_helper(step_tuple, strategy_dict, input_key)
             elif isinstance(value_range, list):
                 continue
             else:
@@ -454,7 +454,7 @@ class Backtester(Trader):
                     return True
         return False
 
-    def get_basic_optimize_info(self, run: int, totalRuns: int, result: str = 'PASSED') -> tuple:
+    def get_basic_optimize_info(self, run: int, total_runs: int, result: str = 'PASSED') -> tuple:
         """
         Return basic information in a tuple for emitting to the trades table in the GUI.
         """
@@ -468,7 +468,7 @@ class Backtester(Trader):
             self.interval,
             self.strategyInterval,
             len(self.trades),
-            f'{run}/{totalRuns}',
+            f'{run}/{total_runs}',
             result,  # PASSED / DRAWDOWN / CRASHED
             self.get_strategies_info_string(left=' ', right=' ')
         )

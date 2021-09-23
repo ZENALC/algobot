@@ -51,7 +51,7 @@ def save_credentials(config_obj: Configuration):
     file_path = file_path.strip()
 
     if file_path:
-        helpers.write_json_file(filePath=file_path, apiKey=api_key, apiSecret=api_secret,
+        helpers.write_json_file(file_path=file_path, apiKey=api_key, apiSecret=api_secret,
                                 telegramApiKey=telegram_api_key, chatID=telegram_chat_id)
         config_obj.credentialResult.setText(f'Credentials saved successfully to {os.path.basename(file_path)}.')
     else:
@@ -71,17 +71,17 @@ def load_credentials(config_obj: Configuration, auto: bool = True):
         return
 
     if not auto:
-        filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', target_folder, "JSON (*.json)")
+        file_path, _ = QFileDialog.getOpenFileName(config_obj, 'Load Credentials', target_folder, "JSON (*.json)")
     else:
-        filePath = os.path.join(target_folder, 'default.json')
+        file_path = os.path.join(target_folder, 'default.json')
 
     try:
-        credentials = helpers.load_json_file(json_file=filePath)
+        credentials = helpers.load_json_file(json_file=file_path)
         config_obj.binanceApiKey.setText(credentials['apiKey'])
         config_obj.binanceApiSecret.setText(credentials['apiSecret'])
         config_obj.telegramApiKey.setText(credentials['telegramApiKey'])
         config_obj.telegramChatID.setText(credentials['chatID'])
-        config_obj.credentialResult.setText(f'Credentials loaded successfully from {os.path.basename(filePath)}.')
+        config_obj.credentialResult.setText(f'Credentials loaded successfully from {os.path.basename(file_path)}.')
     except FileNotFoundError:
         config_obj.credentialResult.setText('Could not load credentials.')
     except Exception as e:

@@ -38,7 +38,8 @@ def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:
 
 
 def create_inner_tab(category_tabs: List[QTabWidget],
-                     description: str, tabName: str,
+                     description: str,
+                     tab_name: str,
                      input_creator: Callable,
                      dictionary: Dict[Any, QGroupBox],
                      signal_function: Callable,
@@ -47,7 +48,7 @@ def create_inner_tab(category_tabs: List[QTabWidget],
     Creates inner tab for each category tab in list of category tabs provided.
     :param category_tabs: Tabs to create inner tab and append to.
     :param description: Description to insert for inner tab.
-    :param tabName: Name of tab to display.
+    :param tab_name: Name of tab to display.
     :param input_creator: Function to call for input creation.
     :param signal_function: Function to call for input slots.
     :param dictionary: Dictionary to add items to for reference.
@@ -62,10 +63,10 @@ def create_inner_tab(category_tabs: List[QTabWidget],
         layout.addWidget(description_label)
 
         if parent and parent.get_caller_based_on_tab(tab) == OPTIMIZER:
-            group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()} optimization?")
+            group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {tab_name.lower()} optimization?")
             input_creator(tab, group_box_layout, isOptimizer=True)
         else:
-            group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()}?")
+            group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {tab_name.lower()}?")
             group_box.toggled.connect(lambda _, current_tab=tab: signal_function(tab=current_tab))
             input_creator(tab, group_box_layout)
 
@@ -78,7 +79,7 @@ def create_inner_tab(category_tabs: List[QTabWidget],
 
         tab_widget = QTabWidget()
         tab_widget.setLayout(layout)
-        tab.addTab(tab_widget, tabName)
+        tab.addTab(tab_widget, tab_name)
 
 
 def set_value(widget: QWidget, value: Union[str, int, float]):

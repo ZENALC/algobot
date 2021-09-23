@@ -26,12 +26,12 @@ def import_data(config_obj: Configuration, caller: int = BACKTEST):
     action = 'backtest' if caller == BACKTEST else 'optimization'
 
     inner_dict['infoLabel'].setText("Importing data...")
-    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Open file', helpers.ROOT_DIR, "CSV (*.csv)")
-    if filePath == '':
+    file_path, _ = QFileDialog.getOpenFileName(config_obj, 'Open file', helpers.ROOT_DIR, "CSV (*.csv)")
+    if file_path == '':
         inner_dict['infoLabel'].setText("Data not imported.")
         inner_dict['downloadProgress'].setValue(0)
     else:
-        inner_dict['data'] = helpers.load_from_csv(filePath, descending=False)
+        inner_dict['data'] = helpers.load_from_csv(file_path, descending=False)
         inner_dict['dataType'] = "Imported"
         inner_dict['dataInterval'] = inner_dict['dataIntervalComboBox'].currentText()
         inner_dict['infoLabel'].setText("Imported data successfully.")

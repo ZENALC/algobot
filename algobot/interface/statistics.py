@@ -79,7 +79,8 @@ class Statistics(QDialog):
         Modifies instance tabs variable with new values from value_dictionary.
         :param category_key: Category to modify.
         :param value_dictionary: Dictionary with values to put in.
-        :param inner_tabs: Inner tabs of tab to tbe modified. E.g. Simulation's inner tabs can be general, averages, etc.
+        :param inner_tabs: Inner tabs of tab to tbe modified. E.g. Simulation's inner tabs can be general,
+        averages, etc.
         :param tab: Tab to be modified. For instance, this tab can be the simulation tab.
         """
         inner_layout = QFormLayout()
@@ -97,50 +98,50 @@ class Statistics(QDialog):
         tab.addTab(inner_tabs[category_key]['tab'], get_label_string(category_key))
 
     @staticmethod
-    def set_profit_or_loss_label(valueDictionary: Dict[str, Any], innerTabs: Dict[str, Any]):
+    def set_profit_or_loss_label(value_dictionary: Dict[str, Any], inner_tabs: Dict[str, Any]):
         """
         Sets the profit or loss label appropriately based on the value dictionary provided.
-        :param valueDictionary: Dictionary with values to update profit or loss label.
-        :param innerTabs: Main tab's inner tabs.
+        :param value_dictionary: Dictionary with values to update profit or loss label.
+        :param inner_tabs: Main tab's inner tabs.
         """
-        if 'general' in valueDictionary and 'profit' in valueDictionary['general']:
-            tab = innerTabs['general']
+        if 'general' in value_dictionary and 'profit' in value_dictionary['general']:
+            tab = inner_tabs['general']
             if 'profit' in tab:
-                if valueDictionary['general']['profit'][1] == '-':
+                if value_dictionary['general']['profit'][1] == '-':
                     label = 'Loss'
-                    valueDictionary['general']['profit'] = "$" + valueDictionary['general']['profit'][2:]
+                    value_dictionary['general']['profit'] = "$" + value_dictionary['general']['profit'][2:]
                 else:
                     label = 'Profit'
                 tab['profit']['label'].setText(label)
 
-    def modify_tab(self, valueDictionary: Dict[str, Any], tabType: str):
+    def modify_tab(self, value_dictionary: Dict[str, Any], tab_type: str):
         """
         Modifies tab.
-        :param valueDictionary: Dictionary with values.
-        :param tabType: Tab type to be modified.
+        :param value_dictionary: Dictionary with values.
+        :param tab_type: Tab type to be modified.
         """
-        inner_tabs = self.tabs[tabType]['innerTabs']  # live/widgets
-        self.set_profit_or_loss_label(valueDictionary=valueDictionary, innerTabs=inner_tabs)
+        inner_tabs = self.tabs[tab_type]['innerTabs']  # live/widgets
+        self.set_profit_or_loss_label(value_dictionary=value_dictionary, inner_tabs=inner_tabs)
 
         for key in inner_tabs:  # If there's a change in the value dictionary, re-initialize the tab.
-            if key not in valueDictionary:
-                self.initialize_tab(value_dictionary=valueDictionary, tab_type=tabType)
+            if key not in value_dictionary:
+                self.initialize_tab(value_dictionary=value_dictionary, tab_type=tab_type)
                 break
 
-        for category_key in valueDictionary:
+        for category_key in value_dictionary:
             if category_key not in inner_tabs:
-                tab = self.tabs[tabType]['tab']
-                self.add_category_and_children_keys(category_key, valueDictionary, inner_tabs, tab)
+                tab = self.tabs[tab_type]['tab']
+                self.add_category_and_children_keys(category_key, value_dictionary, inner_tabs, tab)
             else:
                 inner_widgets = inner_tabs[category_key]  # live/widgets/general
-                for mainKey, mainValue in valueDictionary[category_key].items():
-                    if mainKey in inner_widgets:
-                        inner_widgets[mainKey]['value'].setText(str(mainValue))
+                for main_key, main_value in value_dictionary[category_key].items():
+                    if main_key in inner_widgets:
+                        inner_widgets[main_key]['value'].setText(str(main_value))
                     else:
-                        label = QLabel(get_label_string(str(mainKey)))
-                        value = QLabel(str(mainValue))
+                        label = QLabel(get_label_string(str(main_key)))
+                        value = QLabel(str(main_value))
                         value.setAlignment(QtCore.Qt.AlignRight)
 
                         layout = inner_tabs[category_key]['tab'].layout()
                         layout.addRow(label, value)
-                        inner_widgets[mainKey] = {'label': label, 'value': value}
+                        inner_widgets[main_key] = {'label': label, 'value': value}

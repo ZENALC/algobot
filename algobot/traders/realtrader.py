@@ -88,8 +88,8 @@ class RealTrader(SimulationTrader):
         filters = symbol_info['filters']
         for filter_dict in filters:
             if 'stepSize' in filter_dict:
-                stepSize = float(filter_dict['stepSize'])
-                return int(round(-math.log(stepSize, 10), 0))
+                step_size = float(filter_dict['stepSize'])
+                return int(round(-math.log(step_size, 10), 0))
         return 6  # Default value if no step size found.
 
     def check_spot_and_transfer(self):
@@ -255,18 +255,18 @@ class RealTrader(SimulationTrader):
         usdt -= self.coinOwed * self.currentPrice
         return usdt
 
-    def get_asset(self, targetAsset: str) -> dict:
+    def get_asset(self, target_asset: str) -> dict:
         """
         Retrieves asset specified (if exists).
-        :param targetAsset: Asset to be retrieved.
+        :param target_asset: Asset to be retrieved.
         :return: The target asset (if found).
         """
         if self.isolated:
             assets = self.get_isolated_margin_account()['assets']
-            return [asset for asset in assets if asset['baseAsset']['asset'] == targetAsset][0]['baseAsset']
+            return [asset for asset in assets if asset['baseAsset']['asset'] == target_asset][0]['baseAsset']
         else:
             assets = self.binanceClient.get_margin_account()['userAssets']
-            return [asset for asset in assets if asset['asset'] == targetAsset][0]
+            return [asset for asset in assets if asset['asset'] == target_asset][0]
 
     def get_margin_coin_info(self) -> dict:
         """
@@ -498,10 +498,10 @@ class RealTrader(SimulationTrader):
 
             self.currentPrice = self.dataView.get_current_price()
             self.balance = self.get_margin_usdt()
-            transactionFee = self.balance * self.transactionFeePercentage * 2
+            transaction_fee = self.balance * self.transactionFeePercentage * 2
 
             if coin is None:
-                coin = (self.balance - transactionFee) / self.currentPrice
+                coin = (self.balance - transaction_fee) / self.currentPrice
             # max_borrow = self.round_down(self.balance / self.currentPrice - self.get_borrowed_margin_coin())
             # self.create_margin_loan(amount=max_borrow, force=force)
             self.output_message(f'Attempting to enter short by selling {coin} coins...')

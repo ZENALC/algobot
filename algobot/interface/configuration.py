@@ -123,10 +123,10 @@ class Configuration(QDialog):
                     create_infinite_line(gui=self.parent, graph_dict=graph_dict)
         else:
             for graph_dict in self.parent.graphs:
-                hoverLine = graph_dict.get('line')
+                hover_line = graph_dict.get('line')
                 self.parent.reset_backtest_cursor()
-                if hoverLine:
-                    graph_dict['graph'].removeItem(hoverLine)
+                if hover_line:
+                    graph_dict['graph'].removeItem(hover_line)
                     graph_dict['line'] = None
 
     def update_graph_speed(self):
@@ -247,26 +247,26 @@ class Configuration(QDialog):
 
         return settings
 
-    def create_loss_inputs(self, tab: QTabWidget, innerLayout: QLayout, isOptimizer: bool = False):
+    def create_loss_inputs(self, tab: QTabWidget, inner_layout: QLayout, is_optimizer: bool = False):
         """
         Creates inputs for loss settings in GUI.
         :param tab: Tab to create inputs for - simulation, live, or backtest.
-        :param innerLayout: Inner layout to place input widgets on.
-        :param isOptimizer: Boolean for whether optimizer method called this function.
+        :param inner_layout: Inner layout to place input widgets on.
+        :param is_optimizer: Boolean for whether optimizer method called this function.
         """
-        if isOptimizer:
+        if is_optimizer:
             self.lossDict['optimizerTypes'] = []
-            innerLayout.addRow(QLabel("Loss Types"))
+            inner_layout.addRow(QLabel("Loss Types"))
             for loss_type in self.lossTypes:
                 checkbox = QCheckBox(f'Enable {loss_type.lower()} type of stop loss?')
-                innerLayout.addRow(checkbox)
+                inner_layout.addRow(checkbox)
                 self.lossDict['optimizerTypes'].append((loss_type, checkbox))
 
             for optimizer_type in self.lossOptimizerTypes:
                 self.lossDict[optimizer_type, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
                 self.lossDict[optimizer_type, 'end'] = end = get_default_widget(QSpinBox, 1, 0)
                 self.lossDict[optimizer_type, 'step'] = step = get_default_widget(QSpinBox, 1)
-                add_start_end_step_to_layout(innerLayout, optimizer_type, start, end, step)
+                add_start_end_step_to_layout(inner_layout, optimizer_type, start, end, step)
         else:
             self.lossDict[tab, "lossType"] = loss_type_combo_box = QComboBox()
             self.lossDict[tab, "lossPercentage"] = loss_percentage = QDoubleSpinBox()
@@ -275,14 +275,14 @@ class Configuration(QDialog):
             loss_type_combo_box.addItems(self.lossTypes)
             loss_percentage.setValue(5)
 
-            innerLayout.addRow(QLabel("Loss Type"), loss_type_combo_box)
-            innerLayout.addRow(QLabel("Loss Percentage"), loss_percentage)
-            innerLayout.addRow(QLabel("Smart Stop Loss Counter"), smart_stop_loss_counter)
+            inner_layout.addRow(QLabel("Loss Type"), loss_type_combo_box)
+            inner_layout.addRow(QLabel("Loss Percentage"), loss_percentage)
+            inner_layout.addRow(QLabel("Smart Stop Loss Counter"), smart_stop_loss_counter)
 
             if tab != self.backtestConfigurationTabWidget:
-                self.lossDict[tab, "safetyTimer"] = safetyTimer = QSpinBox()
-                safetyTimer.valueChanged.connect(lambda: self.update_loss_settings(tab))
-                innerLayout.addRow(QLabel("Safety Timer"), safetyTimer)
+                self.lossDict[tab, "safetyTimer"] = safety_timer = QSpinBox()
+                safety_timer.valueChanged.connect(lambda: self.update_loss_settings(tab))
+                inner_layout.addRow(QLabel("Safety Timer"), safety_timer)
 
             loss_type_combo_box.currentIndexChanged.connect(lambda: self.update_loss_settings(tab))
             loss_percentage.valueChanged.connect(lambda: self.update_loss_settings(tab))

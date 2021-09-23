@@ -298,10 +298,10 @@ class BotThread(QRunnable):
         if self.gui.telegramBot and gui.configuration.chatPass:
             self.gui.telegramBot.send_message(self.telegramChatID, "Started Telegram bot.")
 
-    def handle_lower_interval_cross(self, caller, previousLowerTrend) -> bool or None:
+    def handle_lower_interval_cross(self, caller, previous_lower_trend) -> bool or None:
         """
         Handles logic and notifications for lower interval cross data.
-        :param previousLowerTrend: Previous lower trend. Used to check if notification is necessary.
+        :param previous_lower_trend: Previous lower trend. Used to check if notification is necessary.
         :param caller: Caller for which we will check lower interval cross data.
         """
         if self.lowerIntervalNotification:
@@ -310,7 +310,7 @@ class BotThread(QRunnable):
             lower_data.get_current_data()
             lower_trend = trader.get_trend(dataObject=lower_data, log_data=self.gui.advancedLogging)
             self.lowerTrend = str(lower_trend)
-            if previousLowerTrend != lower_trend:
+            if previous_lower_trend != lower_trend:
                 message = f'{self.lowerTrend.capitalize()} trend detected on lower interval data.'
                 self.signals.activity.emit(caller, message)
                 if self.gui.configuration.enableTelegramNotification.isChecked() and caller == LIVE:
@@ -433,9 +433,9 @@ class BotThread(QRunnable):
         self.failError = str(e)  # This is the fail error that led to the crash.
         error_message = traceback.format_exc()  # Get error message.
 
-        attemptsLeft = self.failLimit - self.failCount
+        attempts_left = self.failLimit - self.failCount
         s = self.failSleep
-        self.signals.activity.emit(self.caller, f'{e} {attemptsLeft} attempts left. Retrying in {s} seconds.')
+        self.signals.activity.emit(self.caller, f'{e} {attempts_left} attempts left. Retrying in {s} seconds.')
         self.logger.critical(error_message)
 
         if trader:  # Log this message to the trader's log.
@@ -450,8 +450,9 @@ class BotThread(QRunnable):
                     self.gui.telegramBot.send_message(self.telegramChatID, error_message)
                     self.gui.telegramBot.send_message(self.telegramChatID, "Bot has died.")
                 else:
-                    failCount = self.failCount
-                    self.gui.telegramBot.send_message(self.telegramChatID, f"({failCount})Trying again in {s} seconds.")
+                    fail_count = self.failCount
+                    gui = self.gui
+                    gui.telegramBot.send_message(self.telegramChatID, f"({fail_count})Trying again in {s} seconds.")
         except Exception as telegram_error:
             self.logger.critical(str(telegram_error))
 
@@ -487,8 +488,8 @@ class BotThread(QRunnable):
 
         if trader:
             trader.completedLoop = True  # If false, this will cause an infinite loop.
-            isSimulation = trader == self.gui.simulationTrader
-            trader.get_run_result(isSimulation=isSimulation)
+            is_simulation = trader == self.gui.simulationTrader
+            trader.get_run_result(is_simulation=is_simulation)
 
         if self.failLimit == self.failCount or self.failed or not success:
             self.signals.error.emit(self.caller, str(self.failError))

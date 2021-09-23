@@ -206,8 +206,8 @@ def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Typ
     return {strategy().name: strategy for strategy in strategies}
 
 
-def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_combobox: QComboBox,
-                                     start_index: int = 0, filter_intervals: bool = True, divisor: int = None):
+def reset_strategy_interval_combo_box(strategy_combobox: QComboBox, interval_combobox: QComboBox,
+                                      start_index: int = 0, filter_intervals: bool = True, divisor: int = None):
     """
     This function will reset the strategy combobox based on what interval is picked in the interval combobox.
     :param strategy_combobox: Combobox to modify based on the interval combobox.

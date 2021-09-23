@@ -79,8 +79,8 @@ class VolatilitySnooperThread(QRunnable):
         Get current timestamp in UTC.
         :return: Current UTC timestamp.
         """
-        dt = datetime.datetime.now(datetime.timezone.utc)
-        utc_time = dt.replace(tzinfo=datetime.timezone.utc)
+        current_dt = datetime.datetime.now(datetime.timezone.utc)
+        utc_time = current_dt.replace(tzinfo=datetime.timezone.utc)
         utc_timestamp = utc_time.timestamp()
 
         return utc_timestamp

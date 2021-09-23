@@ -118,8 +118,8 @@ class OtherCommands(QDialog):
         interval = convert_long_interval(self.csvGenerationDataInterval.currentText())
 
         # pylint: disable=protected-access
-        ts = algobot.BINANCE_CLIENT._get_earliest_valid_timestamp(symbol, interval)
-        start_date = datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
+        earliest_ts = algobot.BINANCE_CLIENT._get_earliest_valid_timestamp(symbol, interval)
+        start_date = datetime.fromtimestamp(int(earliest_ts) / 1000, tz=timezone.utc)
         q_start = QDate(start_date.year, start_date.month, start_date.day)
 
         end_date = datetime.now(tz=timezone.utc)
@@ -149,14 +149,14 @@ class OtherCommands(QDialog):
         """
         symbol = self.csvGenerationTicker.text()
         descending = self.descendingDateRadio.isChecked()
-        armyTime = self.armyDateRadio.isChecked()
+        army_time = self.armyDateRadio.isChecked()
         interval = convert_long_interval(self.csvGenerationDataInterval.currentText())
 
-        selectedDate = self.startDateCalendar.selectedDate().toPyDate()
-        startDate = None if selectedDate == self.currentDateList[0] else selectedDate
+        selected_date = self.startDateCalendar.selectedDate().toPyDate()
+        start_date = None if selected_date == self.currentDateList[0] else selected_date
 
         self.csvGenerationStatus.setText("Downloading data...")
-        thread = DownloadThread(interval, symbol, descending, armyTime, startDate, logger=self.parent.logger)
+        thread = DownloadThread(interval, symbol, descending, army_time, start_date, logger=self.parent.logger)
         thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
         thread.signals.csv_finished.connect(self.end_csv_generation)
         thread.signals.error.connect(lambda e: self.csvGenerationStatus.setText(f"Download failed with error: {e}"))

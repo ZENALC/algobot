@@ -14,7 +14,7 @@ from algobot.graph_helpers import get_and_set_line_color
 from algobot.interface.config_utils.credential_utils import load_credentials, save_credentials, test_binance_credentials
 from algobot.interface.config_utils.data_utils import download_data, import_data, stop_download
 from algobot.interface.config_utils.strategy_utils import (add_strategy_buttons, create_strategy_inputs,
-                                                           reset_strategy_interval_comboBox)
+                                                           reset_strategy_interval_combo_box)
 from algobot.interface.config_utils.telegram_utils import reset_telegram_state, test_telegram
 from algobot.interface.config_utils.user_config_utils import (copy_config_helper, copy_settings_to_backtest,
                                                               copy_settings_to_simulation, load_backtest_settings,
@@ -38,7 +38,7 @@ def load_loss_slots(config_obj: Configuration):
     create_inner_tab(
         category_tabs=config_obj.categoryTabs,
         description="Configure your stop loss settings here.",
-        tabName="Stop Loss",
+        tab_name="Stop Loss",
         input_creator=config_obj.create_loss_inputs,
         dictionary=config_obj.lossDict,
         signal_function=config_obj.update_loss_settings,
@@ -54,7 +54,7 @@ def load_take_profit_slots(config_obj: Configuration):
     create_inner_tab(
         category_tabs=config_obj.categoryTabs,
         description="Configure your take profit settings here.",
-        tabName="Take Profit",
+        tab_name="Take Profit",
         input_creator=config_obj.create_take_profit_inputs,
         dictionary=config_obj.takeProfitDict,
         signal_function=config_obj.update_take_profit_settings,
@@ -128,8 +128,8 @@ def load_strategy_slots(config_obj: Configuration):
             scroll.setWidgetResizable(True)
 
             if config_obj.get_caller_based_on_tab(tab) == OPTIMIZER:
-                groupBox, group_box_layout = get_regular_groupbox_and_layout(f'Enable {strategy_name} optimization?')
-                config_obj.strategyDict[tab, strategy_name] = groupBox
+                group_box, group_box_layout = get_regular_groupbox_and_layout(f'Enable {strategy_name} optimization?')
+                config_obj.strategyDict[tab, strategy_name] = group_box
                 for index, parameter in enumerate(parameters, start=1):
                     # TODO: Refactor this logic.
                     if not isinstance(parameter, tuple) or \
@@ -157,16 +157,16 @@ def load_strategy_slots(config_obj: Configuration):
                     else:
                         raise ValueError("Invalid type of parameter type provided.")
             else:
-                groupBox, group_box_layout = get_regular_groupbox_and_layout(f"Enable {strategy_name}?")
-                config_obj.strategyDict[tab, strategy_name, 'groupBox'] = groupBox
+                group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {strategy_name}?")
+                config_obj.strategyDict[tab, strategy_name, 'groupBox'] = group_box
 
                 status = QLabel()
                 if temp.dynamic:
-                    addButton, deleteButton = add_strategy_buttons(config_obj.strategyDict, parameters, strategy_name,
-                                                                   group_box_layout, tab)
+                    add_button, delete_button = add_strategy_buttons(config_obj.strategyDict, parameters,
+                                                                     strategy_name, group_box_layout, tab)
                     horizontal_layout = QHBoxLayout()
-                    horizontal_layout.addWidget(addButton)
-                    horizontal_layout.addWidget(deleteButton)
+                    horizontal_layout.addWidget(add_button)
+                    horizontal_layout.addWidget(delete_button)
                     horizontal_layout.addWidget(status)
                     horizontal_layout.addStretch()
                     layout.addLayout(horizontal_layout)
@@ -179,7 +179,7 @@ def load_strategy_slots(config_obj: Configuration):
                 config_obj.strategyDict[tab, strategy_name, 'status'] = status
 
             layout.addWidget(scroll)
-            scroll.setWidget(groupBox)
+            scroll.setWidget(group_box)
             tab_widget.setLayout(layout)
             tab.addTab(tab_widget, strategy_name)
 
@@ -209,7 +209,7 @@ def load_interval_combo_boxes(config_obj: Configuration):
 
     config_obj.backtestStrategyIntervalCombobox.addItems(intervals)
     config_obj.backtestIntervalComboBox.addItems(intervals)
-    config_obj.backtestIntervalComboBox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(
+    config_obj.backtestIntervalComboBox.currentTextChanged.connect(lambda: reset_strategy_interval_combo_box(
         strategy_combobox=config_obj.backtestStrategyIntervalCombobox,
         interval_combobox=config_obj.backtestIntervalComboBox
     ))
@@ -218,12 +218,12 @@ def load_interval_combo_boxes(config_obj: Configuration):
     config_obj.optimizerIntervalComboBox.addItems(intervals)
     config_obj.optimizerStrategyIntervalEndCombobox.addItems(intervals)
 
-    config_obj.optimizerIntervalComboBox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(
+    config_obj.optimizerIntervalComboBox.currentTextChanged.connect(lambda: reset_strategy_interval_combo_box(
         strategy_combobox=config_obj.optimizerStrategyIntervalCombobox,
         interval_combobox=config_obj.optimizerIntervalComboBox
     ))
 
-    config_obj.optimizerStrategyIntervalCombobox.currentTextChanged.connect(lambda: reset_strategy_interval_comboBox(
+    config_obj.optimizerStrategyIntervalCombobox.currentTextChanged.connect(lambda: reset_strategy_interval_combo_box(
         strategy_combobox=config_obj.optimizerStrategyIntervalEndCombobox,
         interval_combobox=config_obj.optimizerStrategyIntervalCombobox,
         start_index=config_obj.optimizerIntervalComboBox.currentIndex(),

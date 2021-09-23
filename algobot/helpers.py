@@ -94,8 +94,8 @@ def get_random_color() -> str:
         Generates a random integer between 0 and 255 and returns in a hexadecimal format.
         :return: Hexadecimal between 0 and 255.
         """
-        randomInt = random.randint(0, 255)
-        return format(randomInt, '02x')
+        random_int = random.randint(0, 255)
+        return format(random_int, '02x')
 
     return r() + r() + r()
 
@@ -120,38 +120,38 @@ def create_folder(folder: str) -> str:
     return target_path
 
 
-def create_folder_if_needed(targetPath: str, basePath: str = ROOT_DIR) -> bool:
+def create_folder_if_needed(target_path: str, base_path: str = ROOT_DIR) -> bool:
     """
     This function will create the appropriate folders in the root folder if needed.
-    :param targetPath: Target path to have exist.
-    :param basePath: Base path to start from. By default, it'll be the root directory.
+    :param target_path: Target path to have exist.
+    :param base_path: Base path to start from. By default, it'll be the root directory.
     :return: Boolean whether folder was created or not.
     """
-    if not os.path.exists(targetPath):
-        folder = os.path.basename(targetPath)
-        os.mkdir(os.path.join(basePath, folder))
+    if not os.path.exists(target_path):
+        folder = os.path.basename(target_path)
+        os.mkdir(os.path.join(base_path, folder))
         return True
     return False
 
 
-def open_file_or_folder(targetPath: str):
+def open_file_or_folder(target_path: str):
     """
     Opens a file or folder based on targetPath.
-    :param targetPath: File or folder to open with system defaults.
+    :param target_path: File or folder to open with system defaults.
     """
     # pylint: disable=consider-using-with, no-member
     if platform.system() == "Windows":
-        os.startfile(targetPath)
+        os.startfile(target_path)
     elif platform.system() == "Darwin":
-        subprocess.Popen(["open", targetPath])
+        subprocess.Popen(["open", target_path])
     else:
-        subprocess.Popen(["xdg-open", targetPath])
+        subprocess.Popen(["xdg-open", target_path])
 
 
-def setup_and_return_log_path(fileName: str) -> str:
+def setup_and_return_log_path(file_name: str) -> str:
     """
     Creates folders (if needed) and returns default log path.
-    :param fileName: Log filename to be created.
+    :param file_name: Log filename to be created.
     :return: Absolute path to log file.
     """
     if not os.path.exists(LOG_DIR):
@@ -162,7 +162,7 @@ def setup_and_return_log_path(fileName: str) -> str:
     if not os.path.exists(log_date_folder):
         os.mkdir(log_date_folder)
 
-    log_file_name = f'{datetime.now().strftime("%H-%M-%S")}-{fileName}.log'
+    log_file_name = f'{datetime.now().strftime("%H-%M-%S")}-{file_name}.log'
     return os.path.join(log_date_folder, log_file_name)
 
 
@@ -181,7 +181,7 @@ def get_logger(log_file: str, logger_name: str) -> logging.Logger:
 
     logger.setLevel(log_level)
     formatter = logging.Formatter('%(message)s')
-    handler = logging.FileHandler(filename=setup_and_return_log_path(fileName=log_file), delay=True)
+    handler = logging.FileHandler(filename=setup_and_return_log_path(file_name=log_file), delay=True)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
@@ -452,13 +452,13 @@ def parse_precision(precision: str, symbol: str) -> int:
     return int(precision)
 
 
-def write_json_file(filePath: str = 'secret.json', **kwargs):
+def write_json_file(file_path: str = 'secret.json', **kwargs):
     """
     Writes JSON file with **kwargs provided.
-    :param filePath: Path to write **kwargs data to.
+    :param file_path: Path to write **kwargs data to.
     :param kwargs: Dictionary to dump to JSON file.
     """
-    with open(filePath, 'w') as f:
+    with open(file_path, 'w') as f:
         json.dump(kwargs, f, indent=4)
 
 
