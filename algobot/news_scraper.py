@@ -15,8 +15,8 @@ def scrape_news() -> List[str]:
     Scrapes latest news from www.todayonchain.com.
     :return: List of latest news.
     """
-    URL = 'https://www.todayonchain.com/'
-    page = requests.get(URL)
+    url = 'https://www.todayonchain.com/'
+    page = requests.get(url)
 
     soup = BeautifulSoup(page.content, 'html.parser')
     links = soup.find('div', class_='api_article_include').find_all('a')

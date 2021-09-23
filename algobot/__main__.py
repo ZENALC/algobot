@@ -403,18 +403,18 @@ class Interface(QMainWindow):
         """
         Ends backtest and prompts user if they want to see the results.
         """
-        backtestFolderPath = create_folder('Backtest Results')
-        innerPath = os.path.join(backtestFolderPath, self.backtester.symbol)
-        create_folder_if_needed(innerPath, backtestFolderPath)
-        defaultFile = os.path.join(innerPath, self.backtester.get_default_result_file_name())
-        fileName, _ = QFileDialog.getSaveFileName(self, 'Save Result', defaultFile, 'TXT (*.txt)')
-        fileName = fileName.strip()
-        fileName = fileName if fileName != '' else None
+        backtest_folder_path = create_folder('Backtest Results')
+        inner_path = os.path.join(backtest_folder_path, self.backtester.symbol)
+        create_folder_if_needed(inner_path, backtest_folder_path)
+        defaultFile = os.path.join(inner_path, self.backtester.get_default_result_file_name())
+        file_name, _ = QFileDialog.getSaveFileName(self, 'Save Result', defaultFile, 'TXT (*.txt)')
+        file_name = file_name.strip()
+        file_name = file_name if file_name != '' else None
 
-        if not fileName:
+        if not file_name:
             self.add_to_backtest_monitor('Ended backtest.')
         else:
-            path = self.backtester.write_results(result_file=fileName)
+            path = self.backtester.write_results(result_file=file_name)
             self.add_to_backtest_monitor(f'Ended backtest and saved results to {path}.')
 
             if open_from_msg_box(text=f"Backtest results have been saved to {path}.", title="Backtest Results"):
@@ -422,18 +422,18 @@ class Interface(QMainWindow):
 
         self.backtestProgressBar.setValue(100)
 
-    def update_backtest_gui(self, updatedDict: dict, add_data: bool = True, update_progress_bar: bool = True):
+    def update_backtest_gui(self, updated_dict: dict, add_data: bool = True, update_progress_bar: bool = True):
         """
         Updates activity backtest details to GUI.
         :param update_progress_bar: Boolean for whether progress bar should be updated based on the dictionary provided.
         :param add_data: Boolean to determine whether to add data to graph or not.
-        :param updatedDict: Dictionary containing backtest data.
+        :param updated_dict: Dictionary containing backtest data.
         """
         if update_progress_bar:
-            self.backtestProgressBar.setValue(updatedDict['percentage'])
+            self.backtestProgressBar.setValue(updated_dict['percentage'])
 
-        net = updatedDict['net']
-        utc = updatedDict['utc']
+        net = updated_dict['net']
+        utc = updated_dict['utc']
 
         if net < self.backtester.startingBalance:
             self.backtestProfitLabel.setText("Loss")
@@ -442,18 +442,18 @@ class Interface(QMainWindow):
             self.backtestProfitLabel.setText("Profit")
             self.backtestProfitPercentageLabel.setText("Profit Percentage")
 
-        self.backtestBalance.setText(updatedDict['balance'])
-        self.backtestPrice.setText(updatedDict['price'])
-        self.backtestNet.setText(updatedDict['netString'])
-        self.backtestCommissionsPaid.setText(updatedDict['commissionsPaid'])
-        self.backtestProfit.setText(updatedDict['profit'])
-        self.backtestProfitPercentage.setText(updatedDict['profitPercentage'])
-        self.backtestTradesMade.setText(updatedDict['tradesMade'])
-        self.backtestCurrentPeriod.setText(updatedDict['currentPeriod'])
+        self.backtestBalance.setText(updated_dict['balance'])
+        self.backtestPrice.setText(updated_dict['price'])
+        self.backtestNet.setText(updated_dict['netString'])
+        self.backtestCommissionsPaid.setText(updated_dict['commissionsPaid'])
+        self.backtestProfit.setText(updated_dict['profit'])
+        self.backtestProfitPercentage.setText(updated_dict['profitPercentage'])
+        self.backtestTradesMade.setText(updated_dict['tradesMade'])
+        self.backtestCurrentPeriod.setText(updated_dict['currentPeriod'])
 
         if add_data:
-            graphDict = self.interfaceDictionary[BACKTEST]['mainInterface']['graph']
-            add_data_to_plot(self, graphDict, 0, y=net, timestamp=utc)
+            graph_dict = self.interfaceDictionary[BACKTEST]['mainInterface']['graph']
+            add_data_to_plot(self, graph_dict, 0, y=net, timestamp=utc)
 
     def update_backtest_configuration_gui(self, statDict: dict):
         """
@@ -630,7 +630,7 @@ class Interface(QMainWindow):
         :param caller: Caller object that'll determine which bot is to be ended.
         :param callback: Callback flag for thread used for emitting signals.
         """
-        tempTrader = None
+        temp_trader = None
         elapsed = time.time()
 
         if caller == SIMULATION:
@@ -646,7 +646,7 @@ class Interface(QMainWindow):
                     if time.time() > elapsed + 15:
                         break
 
-                tempTrader = self.simulationTrader
+                temp_trader = self.simulationTrader
                 if self.simulationLowerIntervalData:
                     self.simulationLowerIntervalData.dump_to_table()
                     self.simulationLowerIntervalData = None
@@ -669,7 +669,7 @@ class Interface(QMainWindow):
                     if time.time() > elapsed + 15:
                         break
 
-                tempTrader = self.trader
+                temp_trader = self.trader
                 if self.lowerIntervalData:
                     self.lowerIntervalData.dump_to_table()
                     self.lowerIntervalData = None
@@ -679,9 +679,9 @@ class Interface(QMainWindow):
         if callback:
             callback.emit("Dumping data to database...")
 
-        if tempTrader:
-            tempTrader.log_trades_and_daily_net()
-            tempTrader.dataView.dump_to_table()
+        if temp_trader:
+            temp_trader.log_trades_and_daily_net()
+            temp_trader.dataView.dump_to_table()
 
         if callback:
             callback.emit("Dumped all new data to database.")
@@ -729,7 +729,7 @@ class Interface(QMainWindow):
         self.enable_override(caller)
         destroy_graph_plots(self, interfaceDict['graph'])
         destroy_graph_plots(self, interfaceDict['averageGraph'])
-        self.statistics.initialize_tab(trader.get_grouped_statistics(), tabType=get_caller_string(caller))
+        self.statistics.initialize_tab(trader.get_grouped_statistics(), tab_type=get_caller_string(caller))
         setup_graph_plots(self, interfaceDict['graph'], trader, GraphType.NET)
 
         averageGraphDict = get_graph_dictionary(self, interfaceDict['averageGraph'])
@@ -887,8 +887,8 @@ class Interface(QMainWindow):
         :param humanControl: Boolean that will specify how interface's GUI will change.
         """
         text = "Resume Bot" if humanControl else "Pause Bot"
-        self.modify_override_buttons(caller=caller, pauseText=text, shortBtn=True, longBtn=True, exitBtn=False,
-                                     waitBtn=False)
+        self.modify_override_buttons(caller=caller, pause_text=text, short_btn=True, long_btn=True, exit_btn=False,
+                                     wait_btn=False)
 
     def exit_position(self, caller, humanControl: bool = True):
         """
@@ -910,8 +910,8 @@ class Interface(QMainWindow):
         Thread that'll configure GUI to reflect force long aftermath.
         :param caller: Caller that will specify which interface's GUI will change.
         """
-        self.modify_override_buttons(caller=caller, pauseText="Resume Bot", shortBtn=True, longBtn=False, exitBtn=True,
-                                     waitBtn=True)
+        self.modify_override_buttons(caller=caller, pause_text="Resume Bot", short_btn=True, long_btn=False,
+                                     exit_btn=True, wait_btn=True)
 
     def force_long_thread(self, caller):
         """
@@ -944,8 +944,8 @@ class Interface(QMainWindow):
         Thread that'll configure GUI to reflect force short aftermath.
         :param caller: Caller that will specify which interface's GUI will change.
         """
-        self.modify_override_buttons(caller=caller, pauseText="Resume Bot", shortBtn=False, longBtn=True, exitBtn=True,
-                                     waitBtn=True)
+        self.modify_override_buttons(caller=caller, pause_text="Resume Bot", short_btn=False, long_btn=True,
+                                     exit_btn=True, wait_btn=True)
 
     def force_short_thread(self, caller):
         """
@@ -973,23 +973,28 @@ class Interface(QMainWindow):
         thread.signals.error.connect(lambda x: create_popup(self, x))
         self.threadPool.start(thread)
 
-    def modify_override_buttons(self, caller, pauseText: str, shortBtn: bool, longBtn: bool, exitBtn: bool,
-                                waitBtn: bool):
+    def modify_override_buttons(self,
+                                caller,
+                                pause_text: str,
+                                short_btn: bool,
+                                long_btn: bool,
+                                exit_btn: bool,
+                                wait_btn: bool):
         """
         Modify force override button with booleans provided above for caller.
         :param caller: Caller object that specifies which trading object will have its override buttons modified.
-        :param pauseText: Text to show in the pause bot button.
-        :param shortBtn: Boolean that'll determine if the force short button is enabled or disabled.
-        :param longBtn: Boolean that'll determine if the force long button is enabled or disabled.
-        :param exitBtn: Boolean that'll determine if the exit button is enabled or disabled.
-        :param waitBtn: Boolean that'll determine if the wait override button is enabled or disabled.
+        :param pause_text: Text to show in the pause bot button.
+        :param short_btn: Boolean that'll determine if the force short button is enabled or disabled.
+        :param long_btn: Boolean that'll determine if the force long button is enabled or disabled.
+        :param exit_btn: Boolean that'll determine if the exit button is enabled or disabled.
+        :param wait_btn: Boolean that'll determine if the wait override button is enabled or disabled.
         """
-        interfaceDict = self.interfaceDictionary[caller]['mainInterface']
-        interfaceDict['pauseBotButton'].setText(pauseText)
-        interfaceDict['forceShortButton'].setEnabled(shortBtn)
-        interfaceDict['forceLongButton'].setEnabled(longBtn)
-        interfaceDict['exitPositionButton'].setEnabled(exitBtn)
-        interfaceDict['waitOverrideButton'].setEnabled(waitBtn)
+        interface_dict = self.interfaceDictionary[caller]['mainInterface']
+        interface_dict['pauseBotButton'].setText(pause_text)
+        interface_dict['forceShortButton'].setEnabled(short_btn)
+        interface_dict['forceLongButton'].setEnabled(long_btn)
+        interface_dict['exitPositionButton'].setEnabled(exit_btn)
+        interface_dict['waitOverrideButton'].setEnabled(wait_btn)
 
     def pause_or_resume_bot(self, caller):
         """
@@ -997,14 +1002,14 @@ class Interface(QMainWindow):
         :param caller: Caller object that specifies which trading object will be paused or resumed.
         """
         trader = self.get_trader(caller)
-        pauseButton = self.interfaceDictionary[caller]['mainInterface']['pauseBotButton']
-        if pauseButton.text() == 'Pause Bot':
+        pause_button = self.interfaceDictionary[caller]['mainInterface']['pauseBotButton']
+        if pause_button.text() == 'Pause Bot':
             trader.inHumanControl = True
-            pauseButton.setText('Resume Bot')
+            pause_button.setText('Resume Bot')
             self.add_to_monitor(caller, 'Pausing bot logic.')
         else:
             trader.inHumanControl = False
-            pauseButton.setText('Pause Bot')
+            pause_button.setText('Pause Bot')
             self.add_to_monitor(caller, 'Resuming bot logic.')
 
     def set_advanced_logging(self, boolean: bool):
@@ -1020,29 +1025,29 @@ class Interface(QMainWindow):
             self.add_to_live_activity_monitor('Logging method has been changed to simple.')
             self.add_to_simulation_activity_monitor('Logging method has been changed to simple.')
 
-    def set_custom_stop_loss(self, caller, enable: bool = True, foreignValue: float or None = None):
+    def set_custom_stop_loss(self, caller, enable: bool = True, foreign_value: float or None = None):
         """
         Enables or disables custom stop loss.
-        :param foreignValue: Foreign value to set for custom stop loss not related to GUI.
+        :param foreign_value: Foreign value to set for custom stop loss not related to GUI.
         :param enable: Boolean that determines whether custom stop loss is enabled or disabled. Default is enable.
         :param caller: Caller that decides which trader object gets the stop loss.
         """
         trader = self.get_trader(caller)
-        mainDict = self.interfaceDictionary[caller]['mainInterface']
+        main_dict = self.interfaceDictionary[caller]['mainInterface']
         if enable:
-            if foreignValue is None:
-                customStopLoss = mainDict['customStopLossValue'].value()
+            if foreign_value is None:
+                custom_stop_loss = main_dict['customStopLossValue'].value()
             else:
-                customStopLoss = foreignValue
-                mainDict['customStopLossValue'].setValue(round(foreignValue, trader.precision))
-            trader.customStopLoss = customStopLoss
-            mainDict['enableCustomStopLossButton'].setEnabled(False)
-            mainDict['disableCustomStopLossButton'].setEnabled(True)
-            self.add_to_monitor(caller, f'Set custom stop loss at ${customStopLoss}')
+                custom_stop_loss = foreign_value
+                main_dict['customStopLossValue'].setValue(round(foreign_value, trader.precision))
+            trader.customStopLoss = custom_stop_loss
+            main_dict['enableCustomStopLossButton'].setEnabled(False)
+            main_dict['disableCustomStopLossButton'].setEnabled(True)
+            self.add_to_monitor(caller, f'Set custom stop loss at ${custom_stop_loss}')
         else:
             trader.customStopLoss = None
-            mainDict['enableCustomStopLossButton'].setEnabled(True)
-            mainDict['disableCustomStopLossButton'].setEnabled(False)
+            main_dict['enableCustomStopLossButton'].setEnabled(True)
+            main_dict['disableCustomStopLossButton'].setEnabled(False)
             self.add_to_monitor(caller, 'Removed custom stop loss.')
 
     @staticmethod
@@ -1052,13 +1057,13 @@ class Interface(QMainWindow):
         :param table: Table to insert row at.
         :param trade: Trade information to add.
         """
-        rowPosition = table.rowCount()
+        row_position = table.rowCount()
         columns = table.columnCount()
 
-        table.insertRow(rowPosition)
+        table.insertRow(row_position)
         for column in range(columns):
             cell = QTableWidgetItem(str(trade[column]))
-            table.setItem(rowPosition, column, cell)
+            table.setItem(row_position, column, cell)
 
     def get_activity_table(self, caller):
         """
@@ -1293,11 +1298,11 @@ class Interface(QMainWindow):
         path = create_folder("Trade History")
 
         if caller == LIVE:
-            defaultFile = os.path.join(path, 'live_trades.csv')
+            default_file = os.path.join(path, 'live_trades.csv')
         else:
-            defaultFile = os.path.join(path, 'simulation_trades.csv')
+            default_file = os.path.join(path, 'simulation_trades.csv')
 
-        path, _ = QFileDialog.getSaveFileName(self, 'Export Trades', defaultFile, 'CSV (*.csv)')
+        path, _ = QFileDialog.getSaveFileName(self, 'Export Trades', default_file, 'CSV (*.csv)')
 
         if path:
             with open(path, 'w') as f:

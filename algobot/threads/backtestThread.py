@@ -85,9 +85,9 @@ class BacktestThread(QRunnable):
         net = backtester.get_net()
         profit = net - backtester.startingBalance
         if profit < 0:
-            profitPercentage = round(100 - net / backtester.startingBalance * 100, 2)
+            profit_percentage = round(100 - net / backtester.startingBalance * 100, 2)
         else:
-            profitPercentage = round(net / backtester.startingBalance * 100 - 100, 2)
+            profit_percentage = round(net / backtester.startingBalance * 100 - 100, 2)
 
         activity = {
             'price': backtester.get_safe_rounded_string(backtester.currentPrice),
@@ -97,7 +97,7 @@ class BacktestThread(QRunnable):
             'commissionsPaid': f'${round(backtester.commissionsPaid, backtester.precision)}',
             'tradesMade': str(len(backtester.trades)),
             'profit': f'${abs(round(profit, backtester.precision))}',
-            'profitPercentage': f'{profitPercentage}%',
+            'profitPercentage': f'{profit_percentage}%',
             'currentPeriod': period['date_utc'].strftime("%m/%d/%Y, %H:%M:%S"),
             'utc': period['date_utc'].timestamp(),
             'percentage': int((index - backtester.startDateIndex) / length * 100)

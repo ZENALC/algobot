@@ -3,6 +3,7 @@ max-line-length = 120
 extension-pkg-whitelist=PyQt5
 
 [DESIGN]
+good-names=f,df
 max-attributes=40  # TODO: refactor classes as needed to have default at 7
 max-locals=20  # TODO: refactor so it's 15 by default.
 max-public-methods=100  # TODO: Refactor classes into smaller classes as needed.
@@ -19,7 +20,6 @@ disable=
     duplicate-code,
     arguments-differ,
     too-many-arguments,
-    invalid-name,
     broad-except,
     import-error,
     fixme,

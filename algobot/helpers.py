@@ -19,7 +19,7 @@ import requests
 from dateutil import parser
 
 import algobot
-from algobot.typing_hints import DICT_TYPE
+from algobot.typing_hints import DictType
 
 LOG_FOLDER = 'Logs'
 
@@ -251,7 +251,7 @@ def get_elapsed_time(starting_time: float) -> str:
         return f'{hours}h {minutes}m {seconds}s'
 
 
-def get_data_from_parameter(data: DICT_TYPE, parameter: str) -> float:
+def get_data_from_parameter(data: DictType, parameter: str) -> float:
     """
     Helper function for trading. Will return appropriate data from parameter passed in.
     :param data: Dictionary data with parameters.

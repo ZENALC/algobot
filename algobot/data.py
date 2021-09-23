@@ -14,7 +14,7 @@ import binance
 import pandas as pd
 
 from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data, get_ups_and_downs
-from algobot.typing_hints import DATA_TYPE
+from algobot.typing_hints import DataType
 
 
 class Data:
@@ -130,14 +130,14 @@ class Data:
         if not self.is_valid_symbol(symbol):
             raise ValueError(f'Invalid symbol/ticker {symbol} provided.')
 
-    def output_message(self, message: str, level: int = 2, printMessage: bool = False):
+    def output_message(self, message: str, level: int = 2, print_message: bool = False):
         """
         This function will log and optionally print the message provided.
         :param message: Messaged to be logged and potentially printed.
         :param level: Level message will be logged at.
-        :param printMessage: Boolean that decides whether message will also be printed or not.
+        :param print_message: Boolean that decides whether message will also be printed or not.
         """
-        if printMessage:
+        if print_message:
             print(message)
 
         if self.logger:
@@ -600,7 +600,7 @@ class Data:
         return True
 
     @staticmethod
-    def verify_integrity(total_data: List[Dict[str, Union[float, datetime]]]) -> DATA_TYPE:
+    def verify_integrity(total_data: List[Dict[str, Union[float, datetime]]]) -> DataType:
         """
         Verifies integrity of data by checking if there's any repeated data.
         :param total_data: Total data to verify integrity of.
@@ -614,7 +614,7 @@ class Data:
 
         return errored_data
 
-    def get_total_non_updated_data(self) -> DATA_TYPE:
+    def get_total_non_updated_data(self) -> DataType:
         """
         Get total non-updated data. TODO: Deprecate this function.
         :return: Total non-updated data.

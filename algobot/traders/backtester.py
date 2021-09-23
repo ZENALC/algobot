@@ -24,7 +24,7 @@ from algobot.helpers import (LOG_FOLDER, ROOT_DIR, convert_all_dates_to_datetime
 from algobot.interface.config_utils.strategy_utils import get_strategies_dictionary
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
-from algobot.typing_hints import DATA_TYPE, DICT_TYPE
+from algobot.typing_hints import DataType, DictType
 
 
 class Backtester(Trader):
@@ -110,7 +110,7 @@ class Backtester(Trader):
         if self.intervalMinutes > self.strategyIntervalMinutes:
             raise RuntimeError("Your strategy interval can't be smaller than the data interval.")
 
-    def get_gap_data(self, data: DATA_TYPE, check: bool = True) -> DICT_TYPE:
+    def get_gap_data(self, data: DataType, check: bool = True) -> DictType:
         """
         Returns gap interval data from data list provided.
         :param check: Check values to match with strategy interval minutes.
@@ -342,8 +342,8 @@ class Backtester(Trader):
 
             if seen_data is not strategy_data and self.currentPeriod['date_utc'] >= next_insertion:
                 next_insertion = self.currentPeriod['date_utc'] + timedelta(minutes=self.strategyIntervalMinutes)
-                gapData = self.get_gap_data(seen_data[-self.intervalGapMultiplier - 1: -1])
-                strategy_data.append(gapData)
+                gap_data = self.get_gap_data(seen_data[-self.intervalGapMultiplier - 1: -1])
+                strategy_data.append(gap_data)
 
             if thread and thread.caller == BACKTEST and index % divisor == 0:
                 thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, test_length))

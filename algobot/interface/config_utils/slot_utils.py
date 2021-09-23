@@ -36,12 +36,12 @@ def load_loss_slots(config_obj: Configuration):
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
     create_inner_tab(
-        categoryTabs=config_obj.categoryTabs,
+        category_tabs=config_obj.categoryTabs,
         description="Configure your stop loss settings here.",
         tabName="Stop Loss",
         input_creator=config_obj.create_loss_inputs,
         dictionary=config_obj.lossDict,
-        signalFunction=config_obj.update_loss_settings,
+        signal_function=config_obj.update_loss_settings,
         parent=config_obj
     )
 
@@ -52,12 +52,12 @@ def load_take_profit_slots(config_obj: Configuration):
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
     create_inner_tab(
-        categoryTabs=config_obj.categoryTabs,
+        category_tabs=config_obj.categoryTabs,
         description="Configure your take profit settings here.",
         tabName="Take Profit",
         input_creator=config_obj.create_take_profit_inputs,
         dictionary=config_obj.takeProfitDict,
-        signalFunction=config_obj.update_take_profit_settings,
+        signal_function=config_obj.update_take_profit_settings,
         parent=config_obj
     )
 

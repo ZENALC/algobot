@@ -22,7 +22,7 @@ def get_config_helper(gui, caller) -> Dict[str, Any]:
     precision = algo_dict['precision'].currentText()
     symbol = gui.configuration.optimizer_backtest_dict[caller]['dataType']
 
-    d = {
+    temp_dict = {
         'startDate': start_date,
         'endDate': end_date,
         'symbol': symbol,
@@ -35,15 +35,15 @@ def get_config_helper(gui, caller) -> Dict[str, Any]:
     }
 
     if caller == OPTIMIZER:
-        d.update({
+        temp_dict.update({
             'drawdownPercentage': algo_dict['drawdownPercentage'].value(),
             'strategies': []
         })
 
     if caller == BACKTEST:
-        d.update({
+        temp_dict.update({
             'outputTrades': algo_dict['outputTrades'].isChecked(),
             'strategies': get_strategies(gui.configuration, BACKTEST),
         })
 
-    return d
+    return temp_dict

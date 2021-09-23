@@ -22,43 +22,43 @@ class Statistics(QDialog):
         uic.loadUi(statisticsUi, self)  # Loading the main UI
         self.tabs = {}
 
-    def remove_tab_if_needed(self, tabType: str):
+    def remove_tab_if_needed(self, tab_type: str):
         """
         Removes tab based on tabType provided (if it exists).
-        :param tabType: Tab type to remove from list of statistics tabs.
+        :param tab_type: Tab type to remove from list of statistics tabs.
         """
-        if tabType in self.tabs:  # Delete previous tab if exists.
-            tab = self.tabs[tabType]['tab']
+        if tab_type in self.tabs:  # Delete previous tab if exists.
+            tab = self.tabs[tab_type]['tab']
             index = self.statisticsTabWidget.indexOf(tab)
             self.statisticsTabWidget.removeTab(index)
 
-    def remove_old_tab(self, tabType: str):
+    def remove_old_tab(self, tab_type: str):
         """
         Removes previous tab of the same tab type.
-        :param tabType: Tab type to remove.
+        :param tab_type: Tab type to remove.
         """
-        index = self.get_index_from_tab_type(tabType)
+        index = self.get_index_from_tab_type(tab_type)
         self.statisticsTabWidget.removeTab(index)
 
-    def initialize_tab(self, valueDictionary: Dict[str, Any], tabType: str):
+    def initialize_tab(self, value_dictionary: Dict[str, Any], tab_type: str):
         """
         Initializes tab of tabType provided.
-        :param valueDictionary: Dictionary with values to fill into the tab.
-        :param tabType: Type of tab.
+        :param value_dictionary: Dictionary with values to fill into the tab.
+        :param tab_type: Type of tab.
         """
-        self.remove_old_tab(tabType)
-        self.tabs[tabType] = {'tab': QTabWidget(), 'innerTabs': {}}  # Create new tab dictionary.
+        self.remove_old_tab(tab_type)
+        self.tabs[tab_type] = {'tab': QTabWidget(), 'innerTabs': {}}  # Create new tab dictionary.
 
-        tab = self.tabs[tabType]['tab']
+        tab = self.tabs[tab_type]['tab']
         tab.setTabPosition(QTabWidget.West)
 
-        index = self.get_index_from_tab_type(tabType)
-        inner_tabs = self.tabs[tabType]['innerTabs']
+        index = self.get_index_from_tab_type(tab_type)
+        inner_tabs = self.tabs[tab_type]['innerTabs']
 
-        for category_key in valueDictionary:
-            self.add_category_and_children_keys(category_key, valueDictionary, inner_tabs, tab)
+        for category_key in value_dictionary:
+            self.add_category_and_children_keys(category_key, value_dictionary, inner_tabs, tab)
 
-        self.statisticsTabWidget.insertTab(index, tab, f"{tabType.capitalize()}")
+        self.statisticsTabWidget.insertTab(index, tab, f"{tab_type.capitalize()}")
         self.statisticsTabWidget.setCurrentIndex(index)
 
     @staticmethod
@@ -124,7 +124,7 @@ class Statistics(QDialog):
 
         for key in inner_tabs:  # If there's a change in the value dictionary, re-initialize the tab.
             if key not in valueDictionary:
-                self.initialize_tab(valueDictionary=valueDictionary, tabType=tabType)
+                self.initialize_tab(value_dictionary=valueDictionary, tab_type=tabType)
                 break
 
         for category_key in valueDictionary:

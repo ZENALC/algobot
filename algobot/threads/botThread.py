@@ -439,9 +439,9 @@ class BotThread(QRunnable):
         self.logger.critical(error_message)
 
         if trader:  # Log this message to the trader's log.
-            trader.output_message(error_message, printMessage=True)
-            trader.output_message(f'Bot has crashed because of :{e}', printMessage=True)
-            trader.output_message(f"({self.failCount})Trying again in {self.failSleep} seconds.", printMessage=True)
+            trader.output_message(error_message, print_message=True)
+            trader.output_message(f'Bot has crashed because of :{e}', print_message=True)
+            trader.output_message(f"({self.failCount})Trying again in {self.failSleep} seconds.", print_message=True)
 
         try:
             if self.gui.telegramBot and self.gui.configuration.chatPass:  # Send crash information through Telegram.

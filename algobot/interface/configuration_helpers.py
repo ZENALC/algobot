@@ -37,24 +37,24 @@ def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:
     return group_box, layout
 
 
-def create_inner_tab(categoryTabs: List[QTabWidget],
+def create_inner_tab(category_tabs: List[QTabWidget],
                      description: str, tabName: str,
                      input_creator: Callable,
                      dictionary: Dict[Any, QGroupBox],
-                     signalFunction: Callable,
+                     signal_function: Callable,
                      parent: QDialog = None):
     """
     Creates inner tab for each category tab in list of category tabs provided.
-    :param categoryTabs: Tabs to create inner tab and append to.
+    :param category_tabs: Tabs to create inner tab and append to.
     :param description: Description to insert for inner tab.
     :param tabName: Name of tab to display.
     :param input_creator: Function to call for input creation.
-    :param signalFunction: Function to call for input slots.
+    :param signal_function: Function to call for input slots.
     :param dictionary: Dictionary to add items to for reference.
     :param parent: Parent configuration object.
     :return: None
     """
-    for tab in categoryTabs:
+    for tab in category_tabs:
         description_label = QLabel(description)
         description_label.setWordWrap(True)
 
@@ -66,7 +66,7 @@ def create_inner_tab(categoryTabs: List[QTabWidget],
             input_creator(tab, group_box_layout, isOptimizer=True)
         else:
             group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {tabName.lower()}?")
-            group_box.toggled.connect(lambda _, current_tab=tab: signalFunction(tab=current_tab))
+            group_box.toggled.connect(lambda _, current_tab=tab: signal_function(tab=current_tab))
             input_creator(tab, group_box_layout)
 
         dictionary[tab, 'groupBox'] = group_box
