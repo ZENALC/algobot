@@ -430,9 +430,9 @@ def test_get_safe_rounded_string(trader: Trader):
     """
     trader.precision = 3
     assert trader.get_safe_rounded_string(value=5.1231) == '$5.123'
-    assert trader.get_safe_rounded_string(value=5.12345, roundDigits=5) == '$5.12345'
-    assert trader.get_safe_rounded_string(value=5.12345, roundDigits=0) == '$5.0'
-    assert trader.get_safe_rounded_string(1.23, roundDigits=2, symbol='*', direction='right', multiplier=5) == '6.15*'
+    assert trader.get_safe_rounded_string(value=5.12345, round_digits=5) == '$5.12345'
+    assert trader.get_safe_rounded_string(value=5.12345, round_digits=0) == '$5.0'
+    assert trader.get_safe_rounded_string(1.23, round_digits=2, symbol='*', direction='right', multiplier=5) == '6.15*'
 
 
 def test_get_take_profit(trader: Trader):

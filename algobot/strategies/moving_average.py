@@ -39,9 +39,9 @@ class MovingAverageStrategy(Strategy):
         """
         # TODO: Add support for colors in the actual program.
         for option in self.tradingOptions:
-            initialName, finalName = option.get_pretty_option()
-            self.plotDict[initialName] = [self.get_current_trader_price(), get_random_color()]
-            self.plotDict[finalName] = [self.get_current_trader_price(), get_random_color()]
+            initial_name, final_name = option.get_pretty_option()
+            self.plotDict[initial_name] = [self.get_current_trader_price(), get_random_color()]
+            self.plotDict[final_name] = [self.get_current_trader_price(), get_random_color()]
 
     @staticmethod
     def parse_inputs(inputs):

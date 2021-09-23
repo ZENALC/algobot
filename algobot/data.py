@@ -49,7 +49,7 @@ class Data:
         self.callback = callback  # Used to emit signals to GUI if provided.
         self.caller = caller  # Used to specify which caller emitted signals for GUI.
         self.binanceClient = binance.client.Client()  # Initialize Binance client to retrieve data.
-        self.logger = get_logging_object(enable_logging=log, logFile=log_file, loggerObject=log_object)
+        self.logger = get_logging_object(enable_logging=log, log_file=log_file, logger_object=log_object)
 
         self.validate_interval(interval)  # Validate the interval provided.
         self.interval = interval  # Interval to trade in.

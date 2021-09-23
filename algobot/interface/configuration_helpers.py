@@ -37,8 +37,12 @@ def get_regular_groupbox_and_layout(name: str) -> Tuple[QGroupBox, QFormLayout]:
     return group_box, layout
 
 
-def create_inner_tab(categoryTabs: List[QTabWidget], description: str, tabName: str, input_creator: Callable,
-                     dictionary: Dict[Any, QGroupBox], signalFunction: Callable, parent: QDialog = None):
+def create_inner_tab(categoryTabs: List[QTabWidget],
+                     description: str, tabName: str,
+                     input_creator: Callable,
+                     dictionary: Dict[Any, QGroupBox],
+                     signalFunction: Callable,
+                     parent: QDialog = None):
     """
     Creates inner tab for each category tab in list of category tabs provided.
     :param categoryTabs: Tabs to create inner tab and append to.
@@ -94,22 +98,22 @@ def set_value(widget: QWidget, value: Union[str, int, float]):
         raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
 
 
-def get_input_widget_value(inputWidget: QWidget, verbose: bool = False):
+def get_input_widget_value(input_widget: QWidget, verbose: bool = False):
     """
     This function will attempt to get the value of the inputWidget and return it.
     :param verbose: If verbose, return value of widget when possible.
-    :param inputWidget: Input widget to try to get the value of.
+    :param input_widget: Input widget to try to get the value of.
     :return: Value of inputWidget object.
     """
-    if isinstance(inputWidget, (QSpinBox, QDoubleSpinBox)):
-        return inputWidget.value()
-    elif isinstance(inputWidget, QLineEdit):
-        return inputWidget.text()
-    elif isinstance(inputWidget, QComboBox):
+    if isinstance(input_widget, (QSpinBox, QDoubleSpinBox)):
+        return input_widget.value()
+    elif isinstance(input_widget, QLineEdit):
+        return input_widget.text()
+    elif isinstance(input_widget, QComboBox):
         if verbose:
-            return inputWidget.currentText()
+            return input_widget.currentText()
         else:
-            return inputWidget.currentIndex()
+            return input_widget.currentIndex()
     else:
         raise TypeError("Unknown type of instance provided. Please check load_strategy_slots() function.")
 

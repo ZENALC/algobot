@@ -76,7 +76,7 @@ def load_credentials(config_obj: Configuration, auto: bool = True):
         filePath = os.path.join(target_folder, 'default.json')
 
     try:
-        credentials = helpers.load_json_file(jsonfile=filePath)
+        credentials = helpers.load_json_file(json_file=filePath)
         config_obj.binanceApiKey.setText(credentials['apiKey'])
         config_obj.binanceApiSecret.setText(credentials['apiSecret'])
         config_obj.telegramApiKey.setText(credentials['telegramApiKey'])

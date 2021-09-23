@@ -90,10 +90,10 @@ class Trader:
         :param message: Message that specifies why it entered long.
         """
         usd = self.balance
-        transactionFee = self.transactionFeePercentageDecimal * usd
-        self.commissionsPaid += transactionFee
+        transaction_fee = self.transactionFeePercentageDecimal * usd
+        self.commissionsPaid += transaction_fee
         self.currentPosition = LONG
-        self.coin += (usd - transactionFee) / self.currentPrice
+        self.coin += (usd - transaction_fee) / self.currentPrice
         self.balance -= usd
         self.buyLongPrice = self.longTrailingPrice = self.currentPrice
         self.add_trade(message, smartEnter=smartEnter)
@@ -105,12 +105,12 @@ class Trader:
         :param message: Message that specifies why it exited long.
         """
         coin = self.coin
-        transactionFee = self.currentPrice * coin * self.transactionFeePercentageDecimal
-        self.commissionsPaid += transactionFee
+        transaction_fee = self.currentPrice * coin * self.transactionFeePercentageDecimal
+        self.commissionsPaid += transaction_fee
         self.currentPosition = None
         self.previousPosition = LONG
         self.coin -= coin
-        self.balance += coin * self.currentPrice - transactionFee
+        self.balance += coin * self.currentPrice - transaction_fee
         self.buyLongPrice = self.longTrailingPrice = None
         self.add_trade(message, stopLossExit=stopLossExit)
 
@@ -283,8 +283,8 @@ class Trader:
         :param right: Character to add after each new line in strategies information.
         """
         string = f'Strategies:{right}'
-        for strategyName in self.strategies:
-            string += f'{left}{get_label_string(strategyName)}: {self.get_strategy_inputs(strategyName)}{right}'
+        for strategy_name in self.strategies:
+            string += f'{left}{get_label_string(strategy_name)}: {self.get_strategy_inputs(strategy_name)}{right}'
 
         return string.rstrip()  # Remove new line in the very end.
 
@@ -312,17 +312,17 @@ class Trader:
         return None
 
     @staticmethod
-    def get_profit_percentage(initialNet: float, finalNet: float) -> float:
+    def get_profit_percentage(initial_net: float, final_net: float) -> float:
         """
         Calculates net percentage from initial and final values and returns it.
-        :param initialNet: Initial net value.
-        :param finalNet: Final net value.
+        :param initial_net: Initial net value.
+        :param final_net: Final net value.
         :return: Profit percentage.
         """
-        if finalNet >= initialNet:
-            return finalNet / initialNet * 100 - 100
+        if final_net >= initial_net:
+            return final_net / initial_net * 100 - 100
         else:
-            return -1 * (100 - finalNet / initialNet * 100)
+            return -1 * (100 - final_net / initial_net * 100)
 
     @staticmethod
     def get_enum_from_str(string: str):
@@ -359,35 +359,38 @@ class Trader:
         """
         return self.currentPosition
 
-    def get_safe_rounded_percentage(self, decimalValue: float) -> str:
+    def get_safe_rounded_percentage(self, decimal_value: float) -> str:
         """
         Converts decimal value provided to a percentage.
-        :param decimalValue: Percentage in decimal format.
+        :param decimal_value: Percentage in decimal format.
         :return: Rounded percentage value in a string format.
         """
-        return self.get_safe_rounded_string(decimalValue, direction='right', multiplier=100, symbol='%')
+        return self.get_safe_rounded_string(decimal_value, direction='right', multiplier=100, symbol='%')
 
-    def get_safe_rounded_string(self, value: float, roundDigits: int = None, symbol: str = '$', direction: str = 'left',
+    def get_safe_rounded_string(self, value: float,
+                                round_digits: int = None,
+                                symbol: str = '$',
+                                direction: str = 'left',
                                 multiplier: float = 1) -> str:
         """
         Helper function that will, if exists, return value rounded with symbol provided.
         :param multiplier: Optional value to multiply final value with before return.
         :param direction: Direction to add the safe rounded string: left or right.
-        :param roundDigits: Number of digits to round value.
+        :param round_digits: Number of digits to round value.
         :param symbol: Symbol to insert to beginning of return string.
         :param value: Value that will be safety checked.
         :return: Rounded value (if not none) in string format.
         """
-        if roundDigits is None:
-            roundDigits = self.precision
+        if round_digits is None:
+            round_digits = self.precision
 
         if value is None:
             return "None"
         else:
             if direction == 'left':
-                return f'{symbol}{round(value * multiplier, roundDigits)}'
+                return f'{symbol}{round(value * multiplier, round_digits)}'
             else:
-                return f'{round(value * multiplier, roundDigits)}{symbol}'
+                return f'{round(value * multiplier, round_digits)}{symbol}'
 
     def get_take_profit(self) -> Union[float, None]:
         """

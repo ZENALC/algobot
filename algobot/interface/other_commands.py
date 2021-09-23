@@ -119,20 +119,20 @@ class OtherCommands(QDialog):
 
         # pylint: disable=protected-access
         ts = algobot.BINANCE_CLIENT._get_earliest_valid_timestamp(symbol, interval)
-        startDate = datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
-        qStart = QDate(startDate.year, startDate.month, startDate.day)
+        start_date = datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
+        q_start = QDate(start_date.year, start_date.month, start_date.day)
 
-        endDate = datetime.now(tz=timezone.utc)
-        qEnd = QDate(endDate.year, endDate.month, endDate.day)
-        return [qStart, qEnd]
+        end_date = datetime.now(tz=timezone.utc)
+        q_end = QDate(end_date.year, end_date.month, end_date.day)
+        return [q_start, q_end]
 
-    def set_start_date_for_csv(self, startEndList: List[QDate]):
+    def set_start_date_for_csv(self, start_end_list: List[QDate]):
         """
         Sets start date for CSV generation based on the parameters provided.
         """
-        self.currentDateList = startEndList
-        self.startDateCalendar.setDateRange(*startEndList)
-        self.startDateCalendar.setSelectedDate(startEndList[0])
+        self.currentDateList = start_end_list
+        self.startDateCalendar.setDateRange(*start_end_list)
+        self.startDateCalendar.setSelectedDate(start_end_list[0])
         self.csvGenerationStatus.setText("Setup filtered date successfully.")
         self.generateCSVButton.setEnabled(True)
 
@@ -175,20 +175,20 @@ class OtherCommands(QDialog):
         self.csvGenerationProgressBar.setValue(progress)
         self.csvGenerationStatus.setText(message)
 
-    def end_csv_generation(self, savedPath: str):
+    def end_csv_generation(self, saved_path: str):
         """
         After getting a successful end signal from thread, it modifies GUI to reflect this action. It also opens up a
         pop-up asking the user if they want to open the file right away.
-        :param savedPath: Path where the file was saved.
+        :param saved_path: Path where the file was saved.
         """
-        msg = f"Successfully saved CSV data to {savedPath}."
+        msg = f"Successfully saved CSV data to {saved_path}."
 
         self.csvGenerationStatus.setText(msg)
         self.csvGenerationProgressBar.setValue(100)
         self.generateCSVButton.setEnabled(True)
 
-        if open_from_msg_box(text=f"Successfully saved CSV data to {savedPath}.", title="Data saved successfully."):
-            open_file_or_folder(savedPath)
+        if open_from_msg_box(text=f"Successfully saved CSV data to {saved_path}.", title="Data saved successfully."):
+            open_file_or_folder(saved_path)
 
     def modify_csv_ui(self, running: bool, reset: bool = False):
         """
@@ -224,7 +224,7 @@ class OtherCommands(QDialog):
 
         df = pd.DataFrame(list(volatility_dict.items()), columns=['Ticker', 'Volatility'])
         if output_type.lower() == 'csv':
-            df.to_csv(file_path, index=False)
+            df.to_csv(file_path, index=False)  # noqa
         elif output_type.lower() == 'xlsx':
             df.to_excel(file_path, index=False)
         else:

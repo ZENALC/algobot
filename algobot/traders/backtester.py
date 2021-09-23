@@ -178,14 +178,14 @@ class Backtester(Trader):
         :return: Index of end date.
         """
         if end_date:
-            endDateIndex = self.find_date_index(end_date, starting=False)
+            end_date_index = self.find_date_index(end_date, starting=False)
 
-            if endDateIndex < 1:
+            if end_date_index < 1:
                 raise IndexError("You need at least one data period.")
-            if endDateIndex <= self.startDateIndex:
+            if end_date_index <= self.startDateIndex:
                 raise IndexError("Ending date index cannot be less than or equal to start date index.")
 
-            return endDateIndex
+            return end_date_index
         return len(self.data) - 1
 
     def set_indexed_current_price_and_period(self, index: int):
@@ -271,11 +271,11 @@ class Backtester(Trader):
         elif self.currentPosition == LONG:
             self.sell_long("Exited long position because backtest ended.")
 
-    def simulate_hold(self, testLength: int, divisor: int, thread=None) -> str:
+    def simulate_hold(self, test_length: int, divisor: int, thread=None) -> str:
         """
         Simulate a long hold position if no strategies are provided.
         :param divisor: Divisor where when remainder of test length and divisor is 0, a signal is emitted to GUI.
-        :param testLength: Length of backtest.
+        :param test_length: Length of backtest.
         :param thread: Thread to emit signals back to if provided.
         """
         for index in range(self.startDateIndex, self.endDateIndex, divisor):
@@ -292,16 +292,16 @@ class Backtester(Trader):
                 self.buy_long("Entered long to simulate a hold.")
 
             if thread and thread.caller == BACKTEST:
-                thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
+                thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, test_length))
 
         self.exit_backtest()
         return 'HOLD'
 
-    def strategy_backtest(self, testLength: int, divisor: int, thread=None) -> str:
+    def strategy_backtest(self, test_length: int, divisor: int, thread=None) -> str:
         """
         Perform a backtest with provided strategies to backtester object.
         :param divisor: Divisor where when remainder of test length and divisor is 0, a signal is emitted to GUI.
-        :param testLength: Length of backtest.
+        :param test_length: Length of backtest.
         :param thread: Optional thread that called this function that'll be used for emitting signals.
         """
         seen_data = self.data[:self.startDateIndex]
@@ -346,7 +346,7 @@ class Backtester(Trader):
                 strategy_data.append(gapData)
 
             if thread and thread.caller == BACKTEST and index % divisor == 0:
-                thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, testLength))
+                thread.signals.activity.emit(thread.get_activity_dictionary(self.currentPeriod, index, test_length))
 
         self.exit_backtest(index)
         return 'PASSED'

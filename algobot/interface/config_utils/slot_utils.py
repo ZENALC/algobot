@@ -202,7 +202,7 @@ def load_interval_combo_boxes(config_obj: Configuration):
     strategy interval combo-box depending on what the data interval combo-box has as its current value.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    intervals = helpers.get_interval_strings(startingIndex=0)
+    intervals = helpers.get_interval_strings(starting_index=0)
 
     config_obj.intervalComboBox.addItems(intervals)
     config_obj.simulationIntervalComboBox.addItems(intervals)

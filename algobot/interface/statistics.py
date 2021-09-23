@@ -55,47 +55,46 @@ class Statistics(QDialog):
         index = self.get_index_from_tab_type(tabType)
         inner_tabs = self.tabs[tabType]['innerTabs']
 
-        for categoryKey in valueDictionary:
-            self.add_category_and_children_keys(categoryKey, valueDictionary, inner_tabs, tab)
+        for category_key in valueDictionary:
+            self.add_category_and_children_keys(category_key, valueDictionary, inner_tabs, tab)
 
         self.statisticsTabWidget.insertTab(index, tab, f"{tabType.capitalize()}")
         self.statisticsTabWidget.setCurrentIndex(index)
 
     @staticmethod
-    def get_index_from_tab_type(tabType: str) -> int:
+    def get_index_from_tab_type(tab_type: str) -> int:
         """
         Returns index of type of tab.
-        :param tabType: Type of tab to get index of.
+        :param tab_type: Type of tab to get index of.
         :return: Tab index of given tab type.
         """
-        if 'sim' in tabType:
-            return 1
-        else:
-            return 0
+        return 1 if 'sim' in tab_type else 0
 
     @staticmethod
-    def add_category_and_children_keys(categoryKey: str, valueDictionary: Dict[str, Any], innerTabs: Dict[str, Any],
+    def add_category_and_children_keys(category_key: str,
+                                       value_dictionary: Dict[str, Any],
+                                       inner_tabs: Dict[str, Any],
                                        tab: QTabWidget):
         """
-        Modifies instance tabs variable with new values from valueDictionary.
-        :param categoryKey: Category to modify.
-        :param valueDictionary: Dictionary with values to put in.
-        :param innerTabs: Inner tabs of tab to tbe modified. E.g. Simulation's inner tabs can be general, averages, etc.
+        Modifies instance tabs variable with new values from value_dictionary.
+        :param category_key: Category to modify.
+        :param value_dictionary: Dictionary with values to put in.
+        :param inner_tabs: Inner tabs of tab to tbe modified. E.g. Simulation's inner tabs can be general, averages, etc.
         :param tab: Tab to be modified. For instance, this tab can be the simulation tab.
         """
         inner_layout = QFormLayout()
-        innerTabs[categoryKey] = {'tab': QTabWidget()}
+        inner_tabs[category_key] = {'tab': QTabWidget()}
 
-        for mainKey, mainValue in valueDictionary[categoryKey].items():
-            label = QLabel(get_label_string(str(mainKey)))
-            value = QLabel(str(mainValue))
+        for main_key, main_value in value_dictionary[category_key].items():
+            label = QLabel(get_label_string(str(main_key)))
+            value = QLabel(str(main_value))
             value.setAlignment(QtCore.Qt.AlignRight)
 
             inner_layout.addRow(label, value)
-            innerTabs[categoryKey][mainKey] = {'label': label, 'value': value}
+            inner_tabs[category_key][main_key] = {'label': label, 'value': value}
 
-        innerTabs[categoryKey]['tab'].setLayout(inner_layout)
-        tab.addTab(innerTabs[categoryKey]['tab'], get_label_string(categoryKey))
+        inner_tabs[category_key]['tab'].setLayout(inner_layout)
+        tab.addTab(inner_tabs[category_key]['tab'], get_label_string(category_key))
 
     @staticmethod
     def set_profit_or_loss_label(valueDictionary: Dict[str, Any], innerTabs: Dict[str, Any]):

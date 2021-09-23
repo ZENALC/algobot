@@ -120,7 +120,7 @@ class Configuration(QDialog):
         if enable:
             for graph_dict in self.parent.graphs:
                 if len(graph_dict['plots']) > 0:
-                    create_infinite_line(gui=self.parent, graphDict=graph_dict)
+                    create_infinite_line(gui=self.parent, graph_dict=graph_dict)
         else:
             for graph_dict in self.parent.graphs:
                 hoverLine = graph_dict.get('line')
@@ -288,26 +288,26 @@ class Configuration(QDialog):
             loss_percentage.valueChanged.connect(lambda: self.update_loss_settings(tab))
             smart_stop_loss_counter.valueChanged.connect(lambda: self.update_loss_settings(tab))
 
-    def create_take_profit_inputs(self, tab: QTabWidget, innerLayout: QLayout, isOptimizer: bool = False):
+    def create_take_profit_inputs(self, tab: QTabWidget, inner_layout: QLayout, is_optimizer: bool = False):
         """
         Creates inputs for take profit settings in GUI.
         :param tab: Tab to create inputs for - simulation, live, or backtest.
-        :param innerLayout: Inner layout to place input widgets on.
-        :param isOptimizer: Boolean for whether optimizer method called this function.
+        :param inner_layout: Inner layout to place input widgets on.
+        :param is_optimizer: Boolean for whether optimizer method called this function.
         """
-        if isOptimizer:
+        if is_optimizer:
             self.takeProfitDict['optimizerTypes'] = []
-            innerLayout.addRow(QLabel("Take Profit Types"))
+            inner_layout.addRow(QLabel("Take Profit Types"))
             for take_profit_type in self.takeProfitTypes:
                 checkbox = QCheckBox(f'Enable {take_profit_type} take profit?')
-                innerLayout.addRow(checkbox)
+                inner_layout.addRow(checkbox)
                 self.takeProfitDict['optimizerTypes'].append((take_profit_type, checkbox))
 
             for optimizer_type in self.takeProfitOptimizerTypes:
                 self.takeProfitDict[optimizer_type, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
                 self.takeProfitDict[optimizer_type, 'end'] = end = get_default_widget(QSpinBox, 1, 0)
                 self.takeProfitDict[optimizer_type, 'step'] = step = get_default_widget(QSpinBox, 1)
-                add_start_end_step_to_layout(innerLayout, optimizer_type, start, end, step)
+                add_start_end_step_to_layout(inner_layout, optimizer_type, start, end, step)
         else:
             self.takeProfitDict[tab, 'takeProfitType'] = take_profit_type_combo_box = QComboBox()
             self.takeProfitDict[tab, 'takeProfitPercentage'] = take_profit_percentage = QDoubleSpinBox()
@@ -317,8 +317,8 @@ class Configuration(QDialog):
             take_profit_percentage.setValue(5)
             take_profit_percentage.valueChanged.connect(lambda: self.update_take_profit_settings(tab))
 
-            innerLayout.addRow(QLabel("Take Profit Type"), take_profit_type_combo_box)
-            innerLayout.addRow(QLabel('Take Profit Percentage'), take_profit_percentage)
+            inner_layout.addRow(QLabel("Take Profit Type"), take_profit_type_combo_box)
+            inner_layout.addRow(QLabel('Take Profit Percentage'), take_profit_percentage)
 
     def set_loss_settings(self, caller: int, config: dict):
         """
@@ -421,45 +421,45 @@ class Configuration(QDialog):
 
         return loss_settings
 
-    def add_strategy_to_config(self, caller: int, strategyName: str, config: dict):
+    def add_strategy_to_config(self, caller: int, strategy_name: str, config: dict):
         """
         Adds strategy configuration to config dictionary provided.
         :param caller: Caller that'll determine which trader's strategy settings get added to the config dictionary.
-        :param strategyName: Name of strategy to add.
+        :param strategy_name: Name of strategy to add.
         :param config: Dictionary to add strategy information to.
         :return: None
         """
-        values = get_strategy_values(self, strategyName, caller)
-        config[strategyName.lower()] = strategy_enabled(self, strategyName, caller)
-        config[f'{strategyName.lower()}Length'] = len(values)
+        values = get_strategy_values(self, strategy_name, caller)
+        config[strategy_name.lower()] = strategy_enabled(self, strategy_name, caller)
+        config[f'{strategy_name.lower()}Length'] = len(values)
         for index, value in enumerate(values, start=1):
-            config[f'{strategyName.lower()}{index}'] = value
+            config[f'{strategy_name.lower()}{index}'] = value
 
-    def load_strategy_from_config(self, caller: int, strategyName: str, config: dict):
+    def load_strategy_from_config(self, caller: int, strategy_name: str, config: dict):
         """
         This function will load the strategy from the config dictionary provided.
         :param caller: Caller to manipulate.
-        :param strategyName: Name of strategy to load.
+        :param strategy_name: Name of strategy to load.
         :param config: Configuration dictionary to load.
         :return: None
         """
-        key = f'{strategyName.lower()}Length'
+        key = f'{strategy_name.lower()}Length'
         if key not in config:
             return
 
         value_count = config[key]
         tab = self.get_category_tab(caller)
-        value_widgets = self.strategyDict[tab, strategyName, 'values']
-        parameters = self.strategyDict[tab, strategyName, 'parameters']
-        group_box_layout = self.strategyDict[tab, strategyName, 'layout']
+        value_widgets = self.strategyDict[tab, strategy_name, 'values']
+        parameters = self.strategyDict[tab, strategy_name, 'parameters']
+        group_box_layout = self.strategyDict[tab, strategy_name, 'layout']
 
-        self.strategyDict[tab, strategyName, 'groupBox'].setChecked(config[f'{strategyName.lower()}'])
+        self.strategyDict[tab, strategy_name, 'groupBox'].setChecked(config[f'{strategy_name.lower()}'])
 
         while value_count > len(value_widgets):
-            add_strategy_inputs(self.strategyDict, parameters, strategyName, group_box_layout, tab)
+            add_strategy_inputs(self.strategyDict, parameters, strategy_name, group_box_layout, tab)
         while value_count < len(value_widgets):
-            delete_strategy_inputs(self.strategyDict, parameters, strategyName, tab)
+            delete_strategy_inputs(self.strategyDict, parameters, strategy_name, tab)
 
         for index, widget in enumerate(value_widgets, start=1):
-            value = config[f'{strategyName.lower()}{index}']
+            value = config[f'{strategy_name.lower()}{index}']
             set_value(widget, value)

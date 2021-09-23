@@ -42,8 +42,8 @@ def get_strategies(config_obj: Configuration, caller: int) -> List[tuple]:
     for strategy_name, strategy in config_obj.strategies.items():
         if strategy_enabled(config_obj, strategy_name, caller):
             values = get_strategy_values(config_obj, strategy_name, caller, verbose=True)
-            strategyTuple = (strategy, values, strategy_name)
-            strategies.append(strategyTuple)
+            strategy_tuple = (strategy, values, strategy_name)
+            strategies.append(strategy_tuple)
 
     return strategies
 
@@ -89,20 +89,20 @@ def set_strategy_values(config_obj: Configuration, strategy_name: str, caller: i
         set_value(widget, value)
 
 
-def add_strategy_inputs(strategyDict: dict, parameters: list, strategyName: str, groupBoxLayout, tab: QTabWidget):
+def add_strategy_inputs(strategy_dict: dict, parameters: list, strategy_name: str, group_box_layout, tab: QTabWidget):
     """
     Adds strategy parameters to the layout provided.
-    :param strategyDict: Dictionary to modify.
+    :param strategy_dict: Dictionary to modify.
     :param parameters: Parameters to add to the group box layout.
-    :param strategyName: Name of strategy.
-    :param groupBoxLayout: Layout to add parameters to.
+    :param strategy_name: Name of strategy.
+    :param group_box_layout: Layout to add parameters to.
     :param tab: Add which group box layout is in.
     :return: None
     """
-    values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
-    strategyDict[tab, strategyName, 'labels'] += labels
-    strategyDict[tab, strategyName, 'values'] += values
-    strategyDict[tab, strategyName, 'status'].setText("Added additional slots.")
+    values, labels = create_strategy_inputs(parameters, strategy_name, group_box_layout)
+    strategy_dict[tab, strategy_name, 'labels'] += labels
+    strategy_dict[tab, strategy_name, 'values'] += values
+    strategy_dict[tab, strategy_name, 'status'].setText("Added additional slots.")
 
 
 def delete_strategy_inputs(strategy_dict: Dict[Any, Any], parameters: list, strategy_name: str, tab: QTabWidget):
@@ -224,7 +224,7 @@ def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_comb
     data_index = interval_combobox.currentIndex()
 
     strategy_interval = strategy_combobox.currentText()
-    intervals = get_interval_strings(startingIndex=start_index + data_index)
+    intervals = get_interval_strings(starting_index=start_index + data_index)
 
     if filter_intervals:
         divisor = divisor if divisor is not None else data_interval_minutes

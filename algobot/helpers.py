@@ -163,8 +163,7 @@ def setup_and_return_log_path(fileName: str) -> str:
         os.mkdir(log_date_folder)
 
     log_file_name = f'{datetime.now().strftime("%H-%M-%S")}-{fileName}.log'
-    fullPath = os.path.join(log_date_folder, log_file_name)
-    return fullPath
+    return os.path.join(log_date_folder, log_file_name)
 
 
 def get_logger(log_file: str, logger_name: str) -> logging.Logger:
@@ -189,19 +188,21 @@ def get_logger(log_file: str, logger_name: str) -> logging.Logger:
     return logger
 
 
-def get_logging_object(enable_logging: bool, logFile: str, loggerObject: logging.Logger) -> Optional[logging.Logger]:
+def get_logging_object(enable_logging: bool,
+                       log_file: str,
+                       logger_object: logging.Logger) -> Optional[logging.Logger]:
     """
     Returns a logger object.
     :param enable_logging: Boolean that determines whether logging is enabled or not.
-    :param logFile: File to log to.
-    :param loggerObject: Logger object to return if there is one already specified.
+    :param log_file: File to log to.
+    :param logger_object: Logger object to return if there is one already specified.
     :return: Logger object or None.
     """
-    if loggerObject:
-        return loggerObject
+    if logger_object:
+        return logger_object
 
     if enable_logging:
-        return get_logger(log_file=logFile, logger_name=logFile)
+        return get_logger(log_file=log_file, logger_name=log_file)
 
     return None
 
@@ -229,13 +230,13 @@ def get_ups_and_downs(data: List[Dict[str, float]], parameter: str) -> Tuple[lis
     return ups, downs
 
 
-def get_elapsed_time(startingTime: float) -> str:
+def get_elapsed_time(starting_time: float) -> str:
     """
     Returns elapsed time in human readable format subtracted from starting time.
-    :param startingTime: Starting time to subtract from current time.
+    :param starting_time: Starting time to subtract from current time.
     :return: Human readable string representing elapsed time.
     """
-    seconds = int(time.time() - startingTime)
+    seconds = int(time.time() - starting_time)
     if seconds <= 60:
         return f'{seconds} seconds'
     elif seconds <= 3600:
@@ -319,10 +320,10 @@ def get_interval_minutes(interval: Union[int, str], reverse: bool = False) -> Un
     return intervals[interval]
 
 
-def get_interval_strings(startingIndex: int = 0) -> List[str]:
+def get_interval_strings(starting_index: int = 0) -> List[str]:
     """
     Returns interval strings in a sorted format.
-    :param startingIndex: Index to start getting interval strings from.
+    :param starting_index: Index to start getting interval strings from.
     :return: Strings in descending format.
     """
     return ['1 Minute',
@@ -337,7 +338,7 @@ def get_interval_strings(startingIndex: int = 0) -> List[str]:
             '8 Hours',
             '12 Hours',
             '1 Day',
-            '3 Days'][startingIndex:]
+            '3 Days'][starting_index:]
 
 
 def parse_strategy_name(name: str) -> str:
@@ -446,8 +447,8 @@ def parse_precision(precision: str, symbol: str) -> int:
     """
     if precision == "Auto":
         symbol_info = algobot.BINANCE_CLIENT.get_symbol_info(symbol)
-        tickSize = float(symbol_info['filters'][0]['tickSize'])
-        precision = abs(round(math.log(tickSize, 10)))
+        tick_size = float(symbol_info['filters'][0]['tickSize'])
+        precision = abs(round(math.log(tick_size, 10)))
     return int(precision)
 
 
@@ -461,11 +462,11 @@ def write_json_file(filePath: str = 'secret.json', **kwargs):
         json.dump(kwargs, f, indent=4)
 
 
-def load_json_file(jsonfile: str) -> dict:
+def load_json_file(json_file: str) -> dict:
     """
     Loads JSON file passed and returns dictionary.
-    :param jsonfile: File to read dictionary from.
+    :param json_file: File to read dictionary from.
     :return: Dictionary with credentials.
     """
-    with open(jsonfile) as f:
+    with open(json_file) as f:
         return json.load(f)
