@@ -414,7 +414,7 @@ class Interface(QMainWindow):
         if not fileName:
             self.add_to_backtest_monitor('Ended backtest.')
         else:
-            path = self.backtester.write_results(resultFile=fileName)
+            path = self.backtester.write_results(result_file=fileName)
             self.add_to_backtest_monitor(f'Ended backtest and saved results to {path}.')
 
             if open_from_msg_box(text=f"Backtest results have been saved to {path}.", title="Backtest Results"):

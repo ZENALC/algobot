@@ -142,15 +142,15 @@ class Backtester(Trader):
         if first_date > last_date:
             self.data = self.data[::-1]
 
-    def find_date_index(self, targetDate: datetime.date, starting: bool = True) -> int:
+    def find_date_index(self, target_date: datetime.date, starting: bool = True) -> int:
         """
         Finds starting or ending index of date from targetDate if it exists in data loaded.
         :param starting: Boolean if true will find the first found index. If used for end index, set to False.
-        :param targetDate: Object to compare date-time with.
+        :param target_date: Object to compare date-time with.
         :return: Index from self.data if found, else -1.
         """
-        if isinstance(targetDate, datetime):
-            targetDate = targetDate.date()
+        if isinstance(target_date, datetime):
+            target_date = target_date.date()
 
         iterator = list(enumerate(self.data))
 
@@ -158,27 +158,27 @@ class Backtester(Trader):
             iterator = reversed(list(enumerate(self.data)))
 
         for index, data in iterator:
-            if data['date_utc'].date() == targetDate:
+            if data['date_utc'].date() == target_date:
                 return index
 
         raise IndexError("Date not found.")
 
-    def get_start_index(self, startDate: datetime.date) -> int:
+    def get_start_index(self, start_date: datetime.date) -> int:
         """
         Returns index of start date based on startDate argument.
-        :param startDate: Datetime object to compare index with.
+        :param start_date: Datetime object to compare index with.
         :return: Index of start date.
         """
-        return self.find_date_index(startDate) if startDate else 0
+        return self.find_date_index(start_date) if start_date else 0
 
-    def get_end_index(self, endDate: datetime.date) -> int:
+    def get_end_index(self, end_date: datetime.date) -> int:
         """
         Returns index of end date based on endDate argument.
-        :param endDate: Datetime object to compare index with.
+        :param end_date: Datetime object to compare index with.
         :return: Index of end date.
         """
-        if endDate:
-            endDateIndex = self.find_date_index(endDate, starting=False)
+        if end_date:
+            endDateIndex = self.find_date_index(end_date, starting=False)
 
             if endDateIndex < 1:
                 raise IndexError("You need at least one data period.")
@@ -487,7 +487,7 @@ class Backtester(Trader):
         df.set_index('Run', inplace=True)
 
         if file_type == 'CSV':
-            df.to_csv(file_path)
+            df.to_csv(file_path)  # noqa
         elif file_type == 'XLSX':
             df.to_excel(file_path)
         else:
@@ -717,41 +717,41 @@ class Backtester(Trader):
         Returns a default backtest/optimizer result file name.
         :return: String filename.
         """
-        resultsFolder = os.path.join(ROOT_DIR, f'{name.capitalize()} Results')
+        results_folder = os.path.join(ROOT_DIR, f'{name.capitalize()} Results')
         symbol = 'Imported' if not self.symbol else self.symbol
-        dateString = datetime.now().strftime("%Y-%m-%d_%H-%M")
-        resultFile = f'{symbol}_{name}_results_{"_".join(self.interval.lower().split())}-{dateString}.{ext}'
+        date_string = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        result_file = f'{symbol}_{name}_results_{"_".join(self.interval.lower().split())}-{date_string}.{ext}'
 
-        if not os.path.exists(resultsFolder):
-            return resultFile
+        if not os.path.exists(results_folder):
+            return result_file
 
-        innerFolder = os.path.join(resultsFolder, self.symbol)
-        if not os.path.exists(innerFolder):
-            return resultFile
+        inner_folder = os.path.join(results_folder, self.symbol)
+        if not os.path.exists(inner_folder):
+            return result_file
 
         counter = 0
-        previousFile = resultFile
+        previous_file = result_file
 
-        while os.path.exists(os.path.join(innerFolder, resultFile)):
-            resultFile = f'({counter}){previousFile}'  # (1), (2)
+        while os.path.exists(os.path.join(inner_folder, result_file)):
+            result_file = f'({counter}){previous_file}'  # (1), (2)
             counter += 1
 
-        return resultFile
+        return result_file
 
-    def write_results(self, resultFile: str = None) -> str:
+    def write_results(self, result_file: str = None) -> str:
         """
         Writes backtest results to resultFile provided. If none is provided, it'll write to a default file name.
-        :param resultFile: File to write results in.
+        :param result_file: File to write results in.
         :return: Path to file.
         """
-        if not resultFile:
-            resultFile = self.get_default_result_file_name()
+        if not result_file:
+            result_file = self.get_default_result_file_name()
 
-        with open(resultFile, 'w') as f:
+        with open(result_file, 'w') as f:
             self.print_configuration_parameters(f)
             self.print_backtest_results(f)
 
             if self.outputTrades:
                 self.print_trades(f)
 
-        return os.path.join(os.getcwd(), resultFile)
+        return os.path.join(os.getcwd(), result_file)
