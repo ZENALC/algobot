@@ -18,8 +18,8 @@ def reset_telegram_state(config_obj: Configuration):
     Resets telegram state once something is changed in the Telegram configuration GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    config_obj.chatPass = False
-    config_obj.tokenPass = False
+    config_obj.chat_pass = False
+    config_obj.token_pass = False
     config_obj.telegrationConnectionResult.setText("Telegram credentials not yet tested.")
 
 
@@ -59,5 +59,5 @@ def test_telegram(config_obj: Configuration):
         message = f'Error: {error}'
 
     config_obj.telegrationConnectionResult.setText(message)
-    config_obj.chatPass = chat_pass
-    config_obj.tokenPass = token_pass
+    config_obj.chat_pass = chat_pass
+    config_obj.token_pass = token_pass

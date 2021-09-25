@@ -46,12 +46,12 @@ class SampleStrategy(Strategy):
         # Populating the plot dictionary. We want to plot the Bollinger Bands, so we use the values from above, and
         # then populate it with a list. The list's first item should be the value, and the second should be the color.
         # The color is the line on the graph.
-        self.plotDict['Upper Band'] = [self.get_current_trader_price(), get_random_color()]
-        self.plotDict['Middle Band'] = [self.get_current_trader_price(), get_random_color()]
-        self.plotDict['Lower Band'] = [self.get_current_trader_price(), get_random_color()]
+        self.plot_dict['Upper Band'] = [self.get_current_trader_price(), get_random_color()]
+        self.plot_dict['Middle Band'] = [self.get_current_trader_price(), get_random_color()]
+        self.plot_dict['Lower Band'] = [self.get_current_trader_price(), get_random_color()]
 
         # General purpose dict key/pair for the statistics window. The statistics window will populate it by key/pair.
-        self.strategyDict['general'] = {
+        self.strategy_dict['general'] = {
             'BB Periods': self.bb_period,
             'BB Parameter': self.bb_parameter,
             'NB Dev Up': self.nb_dev_up,
@@ -139,16 +139,16 @@ class SampleStrategy(Strategy):
         # Now, let's throw these values in the statistics window. Note that the prefix is necessary. The prefix is
         # either blank or "Lower Interval". The lower interval and regular interval keys need to be different.
         # Otherwise, they'll just override each other which would be chaos.
-        self.strategyDict[interval][f'{prefix}Lower Band'] = lower_band
-        self.strategyDict[interval][f'{prefix}Middle Band'] = middle_band
-        self.strategyDict[interval][f'{prefix}Upper Band'] = upper_band
+        self.strategy_dict[interval][f'{prefix}Lower Band'] = lower_band
+        self.strategy_dict[interval][f'{prefix}Middle Band'] = middle_band
+        self.strategy_dict[interval][f'{prefix}Upper Band'] = upper_band
 
         if interval == 'regular' and not isinstance(data, list):  # Only plot for regular interval values.
             # Note that the value of this dictionary is a list. The first contains the value and the second contains
             # the color. We only want to change the value, so modify the first value (which is at the 0th index).
-            self.plotDict['Lower Band'][0] = lower_band
-            self.plotDict['Middle Band'][0] = middle_band
-            self.plotDict['Upper Band'][0] = upper_band
+            self.plot_dict['Lower Band'][0] = lower_band
+            self.plot_dict['Middle Band'][0] = middle_band
+            self.plot_dict['Upper Band'][0] = upper_band
 
         if log_data:  # If you want to log the data, set advanced logging to True. Note this will write a lot of data.
             self.parent.output_message(f'Lower Band: {lower_band}')

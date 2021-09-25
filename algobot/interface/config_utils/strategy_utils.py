@@ -25,10 +25,10 @@ def strategy_enabled(config_obj: Configuration, strategy_name: str, caller: int)
     """
     tab = config_obj.get_category_tab(caller)
 
-    if strategy_name in config_obj.hiddenStrategies:
+    if strategy_name in config_obj.hidden_strategies:
         return False
 
-    return config_obj.strategyDict[tab, strategy_name, 'groupBox'].isChecked()
+    return config_obj.strategy_dict[tab, strategy_name, 'groupBox'].isChecked()
 
 
 def get_strategies(config_obj: Configuration, caller: int) -> List[tuple]:
@@ -59,7 +59,7 @@ def get_strategy_values(config_obj: Configuration, strategy_name: str, caller: i
     """
     tab = config_obj.get_category_tab(caller)
     values = []
-    for input_widget in config_obj.strategyDict[tab, strategy_name, 'values']:
+    for input_widget in config_obj.strategy_dict[tab, strategy_name, 'values']:
         values.append(get_input_widget_value(input_widget, verbose=verbose))
 
     return values
@@ -75,14 +75,14 @@ def set_strategy_values(config_obj: Configuration, strategy_name: str, caller: i
     :return: None
     """
     tab = config_obj.get_category_tab(caller)
-    target_values = config_obj.strategyDict[tab, strategy_name, 'values']
-    parameters = config_obj.strategyDict[tab, strategy_name, 'parameters']
-    layout = config_obj.strategyDict[tab, strategy_name, 'layout']
+    target_values = config_obj.strategy_dict[tab, strategy_name, 'values']
+    parameters = config_obj.strategy_dict[tab, strategy_name, 'parameters']
+    layout = config_obj.strategy_dict[tab, strategy_name, 'layout']
 
     while len(values) < len(target_values):
-        delete_strategy_inputs(config_obj.strategyDict, parameters, strategy_name, tab)
+        delete_strategy_inputs(config_obj.strategy_dict, parameters, strategy_name, tab)
     while len(values) > len(target_values):
-        add_strategy_inputs(config_obj.strategyDict, parameters, strategy_name, layout, tab)
+        add_strategy_inputs(config_obj.strategy_dict, parameters, strategy_name, layout, tab)
 
     for index, widget in enumerate(target_values):
         value = values[index]

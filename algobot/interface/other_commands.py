@@ -38,12 +38,12 @@ class OtherCommands(QDialog):
         super(OtherCommands, self).__init__(parent)  # Initializing object
         uic.loadUi(otherCommandsUi, self)  # Loading the main UI
         self.parent = parent
-        self.threadPool = QThreadPool()
+        self.thread_pool = QThreadPool()
         self.load_slots()
-        self.csvThread = None
-        self.volatilityThread = None
-        self.setDateThread = None
-        self.currentDateList = None
+        self.csv_thread = None
+        self.volatility_thread = None
+        self.set_date_thread = None
+        self.current_date_list = None
 
     def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
         """
@@ -103,11 +103,11 @@ class OtherCommands(QDialog):
         self.csvGenerationTicker.clearFocus()  # Shift focus to next element.
         self.csvGenerationStatus.setText("Searching for earliest start date..")
         self.csvGenerationProgressBar.setValue(0)
-        self.setDateThread = Worker(self.get_start_date_for_csv)
-        self.setDateThread.signals.finished.connect(self.set_start_date_for_csv)
-        self.setDateThread.signals.started.connect(lambda: self.generateCSVButton.setEnabled(False))
-        self.setDateThread.signals.error.connect(self.error_handle_for_csv_start_date)
-        self.threadPool.start(self.setDateThread)
+        self.set_date_thread = Worker(self.get_start_date_for_csv)
+        self.set_date_thread.signals.finished.connect(self.set_start_date_for_csv)
+        self.set_date_thread.signals.started.connect(lambda: self.generateCSVButton.setEnabled(False))
+        self.set_date_thread.signals.error.connect(self.error_handle_for_csv_start_date)
+        self.thread_pool.start(self.set_date_thread)
 
     # noinspection PyProtectedMember
     def get_start_date_for_csv(self) -> List[QDate]:
@@ -130,7 +130,7 @@ class OtherCommands(QDialog):
         """
         Sets start date for CSV generation based on the parameters provided.
         """
-        self.currentDateList = start_end_list
+        self.current_date_list = start_end_list
         self.startDateCalendar.setDateRange(*start_end_list)
         self.startDateCalendar.setSelectedDate(start_end_list[0])
         self.csvGenerationStatus.setText("Setup filtered date successfully.")
@@ -153,7 +153,7 @@ class OtherCommands(QDialog):
         interval = convert_long_interval(self.csvGenerationDataInterval.currentText())
 
         selected_date = self.startDateCalendar.selectedDate().toPyDate()
-        start_date = None if selected_date == self.currentDateList[0] else selected_date
+        start_date = None if selected_date == self.current_date_list[0] else selected_date
 
         self.csvGenerationStatus.setText("Downloading data...")
         thread = DownloadThread(interval, symbol, descending, army_time, start_date, logger=self.parent.logger)
@@ -163,8 +163,8 @@ class OtherCommands(QDialog):
         thread.signals.restore.connect(lambda: self.modify_csv_ui(running=False, reset=True))
         thread.signals.progress.connect(self.progress_update)
         thread.signals.started.connect(lambda: self.modify_csv_ui(running=True))
-        self.csvThread = thread
-        self.threadPool.start(thread)
+        self.csv_thread = thread
+        self.thread_pool.start(thread)
 
     def progress_update(self, progress: int, message: str):
         """
@@ -200,15 +200,15 @@ class OtherCommands(QDialog):
         self.stopButton.setEnabled(running)
 
         if reset:
-            self.csvThread = None
+            self.csv_thread = None
 
     def stop_csv_generation(self):
         """
         Stops download if download is in progress.
         """
-        if self.csvThread:
+        if self.csv_thread:
             self.csvGenerationStatus.setText("Canceling download...")
-            self.csvThread.stop()
+            self.csv_thread.stop()
 
     def end_snoop_generate_volatility_report(self, volatility_dict: Dict[str, Any], output_type: str):
         """
@@ -239,9 +239,9 @@ class OtherCommands(QDialog):
         """
         Stop the snooping process.
         """
-        if self.volatilityThread:
+        if self.volatility_thread:
             self.volatilityStatus.setText("Stopping volatility snooper...")
-            self.volatilityThread.stop()
+            self.volatility_thread.stop()
             self.volatilityProgressBar.setValue(0)
             self.volatilityStatus.setText("Stopped volatility snooper.")
         else:
@@ -267,13 +267,13 @@ class OtherCommands(QDialog):
         status = self.volatilityStatus
         output_type = self.volatilityFileType.currentText()
 
-        self.volatilityThread = thread = VolatilitySnooperThread(periods=periods, interval=interval,
-                                                                 volatility=volatility, tickers=self.parent.tickers,
-                                                                 filter_word=ticker_filter)
+        self.volatility_thread = thread = VolatilitySnooperThread(periods=periods, interval=interval,
+                                                                  volatility=volatility, tickers=self.parent.tickers,
+                                                                  filter_word=ticker_filter)
         thread.signals.progress.connect(progress_bar.setValue)
         thread.signals.activity.connect(status.setText)
         thread.signals.error.connect(lambda x: status.setText(f'Error: {x}'))
         thread.signals.started.connect(lambda: self.modify_snooper_ui(running=True))
         thread.signals.restore.connect(lambda: self.modify_snooper_ui(running=False))
         thread.signals.finished.connect(lambda d: self.end_snoop_generate_volatility_report(d, output_type=output_type))
-        self.threadPool.start(thread)
+        self.thread_pool.start(thread)

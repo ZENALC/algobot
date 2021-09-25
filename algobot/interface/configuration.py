@@ -40,7 +40,7 @@ class Configuration(QDialog):
         super(Configuration, self).__init__(parent)  # Initializing object
         uic.loadUi(configurationUi, self)  # Loading the main UI
         self.parent = parent
-        self.threadPool = QThreadPool()
+        self.thread_pool = QThreadPool()
         self.logger = logger
 
         self.optimizer_backtest_dict = {
@@ -82,21 +82,21 @@ class Configuration(QDialog):
             }
         }
 
-        self.lossTypes = ("Trailing", "Stop")
-        self.takeProfitTypes = ('Stop',)
-        self.lossOptimizerTypes = ('lossPercentage', 'stopLossCounter')
-        self.takeProfitOptimizerTypes = ('takeProfitPercentage',)
+        self.loss_types = ("Trailing", "Stop")
+        self.take_profit_types = ('Stop',)
+        self.loss_optimizer_types = ('lossPercentage', 'stopLossCounter')
+        self.take_profit_optimizer_types = ('takeProfitPercentage',)
 
         # Telegram
-        self.tokenPass = False
-        self.chatPass = False
+        self.token_pass = False
+        self.chat_pass = False
 
         # Folders and files
-        self.credentialsFolder = "Credentials"
-        self.configFolder = 'Configuration'
-        self.stateFilePath = os.path.join(ROOT_DIR, 'state.json')
+        self.credentials_folder = "Credentials"
+        self.config_folder = 'Configuration'
+        self.state_file_path = os.path.join(ROOT_DIR, 'state.json')
 
-        self.categoryTabs = [
+        self.category_tabs = [
             self.mainConfigurationTabWidget,
             self.simulationConfigurationTabWidget,
             self.backtestConfigurationTabWidget,
@@ -104,10 +104,10 @@ class Configuration(QDialog):
         ]
 
         self.strategies = get_strategies_dictionary(Strategy.__subclasses__())
-        self.hiddenStrategies = set(self.strategies)  # Hidden strategies dynamically populated.
-        self.strategyDict = {}  # We will store all the strategy slot information in this dictionary.
-        self.lossDict = {}  # We will store stop loss settings here.
-        self.takeProfitDict = {}  # We will store take profit settings here.
+        self.hidden_strategies = set(self.strategies)  # Hidden strategies dynamically populated.
+        self.strategy_dict = {}  # We will store all the strategy slot information in this dictionary.
+        self.loss_dict = {}  # We will store stop loss settings here.
+        self.take_profit_dict = {}  # We will store take profit settings here.
 
         load_slots(self)  # Loads stop loss, take profit, and strategies slots.
         load_credentials(self)  # Load credentials if they exist.
@@ -134,7 +134,7 @@ class Configuration(QDialog):
         Updates graph speed on main Algobot interface.
         """
         graph_speed = self.graphPlotSpeedSpinBox.value()
-        self.parent.graphUpdateSeconds = graph_speed
+        self.parent.graph_update_seconds = graph_speed
         self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graph_speed} second(s).")
 
     def get_caller_based_on_tab(self, tab: QTabWidget) -> int:
@@ -143,13 +143,13 @@ class Configuration(QDialog):
         :param tab: Tab for which the caller will be returned.
         :return: Caller for which this tab corresponds to.
         """
-        if tab == self.categoryTabs[2]:
+        if tab == self.category_tabs[2]:
             return BACKTEST
-        elif tab == self.categoryTabs[1]:
+        elif tab == self.category_tabs[1]:
             return SIMULATION
-        elif tab == self.categoryTabs[0]:
+        elif tab == self.category_tabs[0]:
             return LIVE
-        elif tab == self.categoryTabs[3]:
+        elif tab == self.category_tabs[3]:
             return OPTIMIZER
         else:
             raise ValueError("Invalid tab provided. No known called associated with this tab.")
@@ -161,24 +161,24 @@ class Configuration(QDialog):
         :return: Category tab widget object.
         """
         if caller == BACKTEST:
-            return self.categoryTabs[2]
+            return self.category_tabs[2]
         elif caller == SIMULATION:
-            return self.categoryTabs[1]
+            return self.category_tabs[1]
         elif caller == LIVE:
-            return self.categoryTabs[0]
+            return self.category_tabs[0]
         elif caller == OPTIMIZER:
-            return self.categoryTabs[3]
+            return self.category_tabs[3]
         else:
             raise ValueError("Invalid type of caller provided.")
 
     @staticmethod
-    def helper_get_optimizer(optimizer_tab, dictionary: dict, key: str, optimizerTypes: tuple, settings: dict):
+    def helper_get_optimizer(optimizer_tab, dictionary: dict, key: str, optimizer_types: tuple, settings: dict):
         """
         Helper function to get optimizer settings and modify the settings dictionary based on the dictionary provided.
         :param optimizer_tab: Optimizer tab.
         :param dictionary: Specific dictionary that is either the loss dictionary or the take profit dictionary.
         :param key: Key to populate in the settings dictionary.
-        :param optimizerTypes: Optimizer types.
+        :param optimizer_types: Optimizer types.
         :param settings: Dictionary to modify.
         """
         if dictionary[optimizer_tab, 'groupBox'].isChecked():
@@ -188,7 +188,7 @@ class Configuration(QDialog):
                     settings[key].append(string)
 
             if len(settings[key]) > 0:
-                for opt in optimizerTypes:
+                for opt in optimizer_types:
                     start, end, step = (dictionary[opt, 'start'].value(), dictionary[opt, 'end'].value(),
                                         dictionary[opt, 'step'].value())
                     settings[opt] = (start, end, step)
@@ -214,14 +214,15 @@ class Configuration(QDialog):
         tab = self.get_category_tab(OPTIMIZER)
         settings = {}
 
-        self.helper_get_optimizer(tab, self.lossDict, 'lossType', self.lossOptimizerTypes, settings)
-        self.helper_get_optimizer(tab, self.takeProfitDict, 'takeProfitType', self.takeProfitOptimizerTypes, settings)
+        self.helper_get_optimizer(tab, self.loss_dict, 'lossType', self.loss_optimizer_types, settings)
+        self.helper_get_optimizer(tab, self.take_profit_dict, 'takeProfitType', self.take_profit_optimizer_types,
+                                  settings)
         self.get_strategy_intervals_for_optimizer(settings)
 
         settings['strategies'] = {}
         for strategy_name, strategy in self.strategies.items():
             parameters = strategy().get_param_types()
-            if strategy_name in self.hiddenStrategies or not self.strategyDict[tab, strategy_name].isChecked():
+            if strategy_name in self.hidden_strategies or not self.strategy_dict[tab, strategy_name].isChecked():
                 continue
 
             current = {}
@@ -234,14 +235,14 @@ class Configuration(QDialog):
                         key = param[0]
 
                     current[key] = (
-                        self.strategyDict[strategy_name, index, 'start'].value(),
-                        self.strategyDict[strategy_name, index, 'end'].value(),
-                        self.strategyDict[strategy_name, index, 'step'].value(),
+                        self.strategy_dict[strategy_name, index, 'start'].value(),
+                        self.strategy_dict[strategy_name, index, 'end'].value(),
+                        self.strategy_dict[strategy_name, index, 'step'].value(),
                     )
                 else:
                     current[param[0]] = []
                     for option in param[2]:
-                        if self.strategyDict[strategy_name, option].isChecked():
+                        if self.strategy_dict[strategy_name, option].isChecked():
                             current[param[0]].append(option)
             settings['strategies'][strategy_name] = current
 
@@ -255,24 +256,24 @@ class Configuration(QDialog):
         :param is_optimizer: Boolean for whether optimizer method called this function.
         """
         if is_optimizer:
-            self.lossDict['optimizerTypes'] = []
+            self.loss_dict['optimizerTypes'] = []
             inner_layout.addRow(QLabel("Loss Types"))
-            for loss_type in self.lossTypes:
+            for loss_type in self.loss_types:
                 checkbox = QCheckBox(f'Enable {loss_type.lower()} type of stop loss?')
                 inner_layout.addRow(checkbox)
-                self.lossDict['optimizerTypes'].append((loss_type, checkbox))
+                self.loss_dict['optimizerTypes'].append((loss_type, checkbox))
 
-            for optimizer_type in self.lossOptimizerTypes:
-                self.lossDict[optimizer_type, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
-                self.lossDict[optimizer_type, 'end'] = end = get_default_widget(QSpinBox, 1, 0)
-                self.lossDict[optimizer_type, 'step'] = step = get_default_widget(QSpinBox, 1)
+            for optimizer_type in self.loss_optimizer_types:
+                self.loss_dict[optimizer_type, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
+                self.loss_dict[optimizer_type, 'end'] = end = get_default_widget(QSpinBox, 1, 0)
+                self.loss_dict[optimizer_type, 'step'] = step = get_default_widget(QSpinBox, 1)
                 add_start_end_step_to_layout(inner_layout, optimizer_type, start, end, step)
         else:
-            self.lossDict[tab, "lossType"] = loss_type_combo_box = QComboBox()
-            self.lossDict[tab, "lossPercentage"] = loss_percentage = QDoubleSpinBox()
-            self.lossDict[tab, "smartStopLossCounter"] = smart_stop_loss_counter = QSpinBox()
+            self.loss_dict[tab, "lossType"] = loss_type_combo_box = QComboBox()
+            self.loss_dict[tab, "lossPercentage"] = loss_percentage = QDoubleSpinBox()
+            self.loss_dict[tab, "smartStopLossCounter"] = smart_stop_loss_counter = QSpinBox()
 
-            loss_type_combo_box.addItems(self.lossTypes)
+            loss_type_combo_box.addItems(self.loss_types)
             loss_percentage.setValue(5)
 
             inner_layout.addRow(QLabel("Loss Type"), loss_type_combo_box)
@@ -280,7 +281,7 @@ class Configuration(QDialog):
             inner_layout.addRow(QLabel("Smart Stop Loss Counter"), smart_stop_loss_counter)
 
             if tab != self.backtestConfigurationTabWidget:
-                self.lossDict[tab, "safetyTimer"] = safety_timer = QSpinBox()
+                self.loss_dict[tab, "safetyTimer"] = safety_timer = QSpinBox()
                 safety_timer.valueChanged.connect(lambda: self.update_loss_settings(tab))
                 inner_layout.addRow(QLabel("Safety Timer"), safety_timer)
 
@@ -296,23 +297,23 @@ class Configuration(QDialog):
         :param is_optimizer: Boolean for whether optimizer method called this function.
         """
         if is_optimizer:
-            self.takeProfitDict['optimizerTypes'] = []
+            self.take_profit_dict['optimizerTypes'] = []
             inner_layout.addRow(QLabel("Take Profit Types"))
-            for take_profit_type in self.takeProfitTypes:
+            for take_profit_type in self.take_profit_types:
                 checkbox = QCheckBox(f'Enable {take_profit_type} take profit?')
                 inner_layout.addRow(checkbox)
-                self.takeProfitDict['optimizerTypes'].append((take_profit_type, checkbox))
+                self.take_profit_dict['optimizerTypes'].append((take_profit_type, checkbox))
 
-            for optimizer_type in self.takeProfitOptimizerTypes:
-                self.takeProfitDict[optimizer_type, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
-                self.takeProfitDict[optimizer_type, 'end'] = end = get_default_widget(QSpinBox, 1, 0)
-                self.takeProfitDict[optimizer_type, 'step'] = step = get_default_widget(QSpinBox, 1)
+            for optimizer_type in self.take_profit_optimizer_types:
+                self.take_profit_dict[optimizer_type, 'start'] = start = get_default_widget(QSpinBox, 1, 0)
+                self.take_profit_dict[optimizer_type, 'end'] = end = get_default_widget(QSpinBox, 1, 0)
+                self.take_profit_dict[optimizer_type, 'step'] = step = get_default_widget(QSpinBox, 1)
                 add_start_end_step_to_layout(inner_layout, optimizer_type, start, end, step)
         else:
-            self.takeProfitDict[tab, 'takeProfitType'] = take_profit_type_combo_box = QComboBox()
-            self.takeProfitDict[tab, 'takeProfitPercentage'] = take_profit_percentage = QDoubleSpinBox()
+            self.take_profit_dict[tab, 'takeProfitType'] = take_profit_type_combo_box = QComboBox()
+            self.take_profit_dict[tab, 'takeProfitPercentage'] = take_profit_percentage = QDoubleSpinBox()
 
-            take_profit_type_combo_box.addItems(self.takeProfitTypes)
+            take_profit_type_combo_box.addItems(self.take_profit_types)
             take_profit_type_combo_box.currentIndexChanged.connect(lambda: self.update_take_profit_settings(tab))
             take_profit_percentage.setValue(5)
             take_profit_percentage.valueChanged.connect(lambda: self.update_take_profit_settings(tab))
@@ -330,12 +331,12 @@ class Configuration(QDialog):
             return
 
         tab = self.get_category_tab(caller)
-        self.lossDict[tab, "lossType"].setCurrentIndex(config["lossTypeIndex"])
-        self.lossDict[tab, "lossPercentage"].setValue(config["lossPercentage"])
-        self.lossDict[tab, "smartStopLossCounter"].setValue(config["smartStopLossCounter"])
+        self.loss_dict[tab, "lossType"].setCurrentIndex(config["lossTypeIndex"])
+        self.loss_dict[tab, "lossPercentage"].setValue(config["lossPercentage"])
+        self.loss_dict[tab, "smartStopLossCounter"].setValue(config["smartStopLossCounter"])
 
         if tab != self.backtestConfigurationTabWidget:
-            self.lossDict[tab, 'safetyTimer'].setValue(config["safetyTimer"])
+            self.loss_dict[tab, 'safetyTimer'].setValue(config["safetyTimer"])
 
     def set_take_profit_settings(self, caller: int, config: dict):
         """
@@ -347,8 +348,8 @@ class Configuration(QDialog):
             return
 
         tab = self.get_category_tab(caller)
-        self.takeProfitDict[tab, 'takeProfitType'].setCurrentIndex(config["takeProfitTypeIndex"])
-        self.takeProfitDict[tab, 'takeProfitPercentage'].setValue(config["takeProfitPercentage"])
+        self.take_profit_dict[tab, 'takeProfitType'].setCurrentIndex(config["takeProfitTypeIndex"])
+        self.take_profit_dict[tab, 'takeProfitPercentage'].setValue(config["takeProfitPercentage"])
 
     def get_take_profit_settings(self, caller) -> dict:
         """
@@ -357,7 +358,7 @@ class Configuration(QDialog):
         :return: Dictionary including take profit settings.
         """
         tab = self.get_category_tab(caller)
-        dictionary = self.takeProfitDict
+        dictionary = self.take_profit_dict
         if dictionary[tab, 'groupBox'].isChecked():
             if dictionary[tab, 'takeProfitType'].currentText() == "Trailing":
                 take_profit_type = TRAILING
@@ -403,7 +404,7 @@ class Configuration(QDialog):
         :return: Dictionary including loss settings.
         """
         tab = self.get_category_tab(caller)
-        dictionary = self.lossDict
+        dictionary = self.loss_dict
         if dictionary[tab, 'groupBox'].isChecked():
             loss_type = TRAILING if dictionary[tab, "lossType"].currentText() == "Trailing" else STOP
         else:
@@ -449,16 +450,16 @@ class Configuration(QDialog):
 
         value_count = config[key]
         tab = self.get_category_tab(caller)
-        value_widgets = self.strategyDict[tab, strategy_name, 'values']
-        parameters = self.strategyDict[tab, strategy_name, 'parameters']
-        group_box_layout = self.strategyDict[tab, strategy_name, 'layout']
+        value_widgets = self.strategy_dict[tab, strategy_name, 'values']
+        parameters = self.strategy_dict[tab, strategy_name, 'parameters']
+        group_box_layout = self.strategy_dict[tab, strategy_name, 'layout']
 
-        self.strategyDict[tab, strategy_name, 'groupBox'].setChecked(config[f'{strategy_name.lower()}'])
+        self.strategy_dict[tab, strategy_name, 'groupBox'].setChecked(config[f'{strategy_name.lower()}'])
 
         while value_count > len(value_widgets):
-            add_strategy_inputs(self.strategyDict, parameters, strategy_name, group_box_layout, tab)
+            add_strategy_inputs(self.strategy_dict, parameters, strategy_name, group_box_layout, tab)
         while value_count < len(value_widgets):
-            delete_strategy_inputs(self.strategyDict, parameters, strategy_name, tab)
+            delete_strategy_inputs(self.strategy_dict, parameters, strategy_name, tab)
 
         for index, widget in enumerate(value_widgets, start=1):
             value = config[f'{strategy_name.lower()}{index}']

@@ -17,12 +17,12 @@ if TYPE_CHECKING:
 
 def load_state(config_obj: Configuration):
     """
-    This function will attempt to load previous basic configuration settings from config_obj.stateFilePath.
+    This function will attempt to load previous basic configuration settings from config_obj.state_file_path.
     :param config_obj: Configuration object.
     """
-    if os.path.exists(config_obj.stateFilePath):
+    if os.path.exists(config_obj.state_file_path):
         try:
-            config = helpers.load_json_file(config_obj.stateFilePath)
+            config = helpers.load_json_file(config_obj.state_file_path)
 
             config_obj.lightModeRadioButton.setChecked(config['lightTheme'])
             config_obj.darkModeRadioButton.setChecked(config['darkTheme'])
@@ -37,8 +37,8 @@ def load_state(config_obj: Configuration):
             config_obj.enableHoverLine.setChecked(config['hoverLine'])
             config_obj.failureLimitSpinBox.setValue(int(config['failureLimit']))
             config_obj.failureSleepSpinBox.setValue(int(config['failureSleep']))
-            config_obj.tokenPass = config['tokenPass']
-            config_obj.chatPass = config['chatPass']
+            config_obj.token_pass = config['tokenPass']
+            config_obj.chat_pass = config['chatPass']
             config_obj.telegrationConnectionResult.setText(config['telegramResult'])
 
             # Load saved tickers.
@@ -56,7 +56,7 @@ def load_state(config_obj: Configuration):
             config_obj.backtestIntervalComboBox.setCurrentIndex(config['backtestInterval'])
             config_obj.backtestStrategyIntervalCombobox.setCurrentIndex(config['backtestStrategyInterval'])
 
-            config_obj.hiddenStrategies = set(config['hiddenStrategies'])
+            config_obj.hidden_strategies = set(config['hiddenStrategies'])
             delete_strategy_slots(config_obj)
             load_strategy_slots(config_obj)
 
@@ -87,10 +87,10 @@ def save_state(config_obj: Configuration):
         'averagePlot': config_obj.graphIndicatorsCheckBox.isChecked(),
         'failureLimit': config_obj.failureLimitSpinBox.value(),
         'failureSleep': config_obj.failureSleepSpinBox.value(),
-        'chatPass': config_obj.chatPass,
-        'tokenPass': config_obj.tokenPass,
+        'chatPass': config_obj.chat_pass,
+        'tokenPass': config_obj.token_pass,
         'telegramResult': config_obj.telegrationConnectionResult.text(),
-        'hiddenStrategies': list(config_obj.hiddenStrategies),
+        'hiddenStrategies': list(config_obj.hidden_strategies),
 
         # Tickers
         'mainTicker': config_obj.tickerLineEdit.text(),
@@ -108,4 +108,4 @@ def save_state(config_obj: Configuration):
         'backtestStrategyInterval': int(config_obj.backtestStrategyIntervalCombobox.currentIndex())
     }
 
-    helpers.write_json_file(config_obj.stateFilePath, **config)
+    helpers.write_json_file(config_obj.state_file_path, **config)

@@ -32,8 +32,8 @@ class DownloadThread(QRunnable):
         self.symbol = symbol
         self.interval = interval
         self.descending = descending
-        self.armyTime = armyTime
-        self.startDate = startDate
+        self.army_time = armyTime
+        self.start_date = startDate
         self.logger = logger
         self.client: Data or None = None
 
@@ -48,13 +48,13 @@ class DownloadThread(QRunnable):
             data = self.client.custom_get_new_data(progress_callback=self.signals.progress, locked=self.signals.locked,
                                                    caller=self.caller)
             if data:
-                if self.descending is None and self.armyTime is None:
+                if self.descending is None and self.army_time is None:
                     self.signals.finished.emit(data, self.caller)
                 else:  # This means the CSV generator called this thread.
                     self.signals.progress.emit(100, "Creating CSV file...", '')
-                    savedPath = self.client.create_csv_file(descending=self.descending, army_time=self.armyTime,
-                                                            start_date=self.startDate)
-                    self.signals.csv_finished.emit(savedPath)
+                    saved_path = self.client.create_csv_file(descending=self.descending, army_time=self.army_time,
+                                                             start_date=self.start_date)
+                    self.signals.csv_finished.emit(saved_path)
         except Exception as e:
             algobot.MAIN_LOGGER.exception(repr(e))
             self.signals.error.emit(str(e), self.caller)

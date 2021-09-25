@@ -6,6 +6,8 @@ from typing import Tuple
 
 # TODO: Get rid of this class.
 
+# pylint: disable=invalid-name
+
 
 class Option:
     """

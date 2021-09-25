@@ -39,7 +39,7 @@ class VolatilitySnooperThread(QRunnable):
         self.volatility_func = self.get_volatility_func()
         self.filter_word = filter_word
         self.tickers = self.get_filtered_tickers(tickers=tickers, filter_word=filter_word)
-        self.binanceClient = algobot.BINANCE_CLIENT
+        self.binance_client = algobot.BINANCE_CLIENT
         self.running = True
         self.signals = VolatilitySnooperSignals()
 
@@ -118,7 +118,7 @@ class VolatilitySnooperThread(QRunnable):
             self.signals.activity.emit(f"Gathering volatility for {ticker}...")
             self.signals.progress.emit(int(index / len(self.tickers) * 100))
 
-            data = self.binanceClient.get_historical_klines(ticker, self.short_interval, self.get_starting_timestamp())
+            data = self.binance_client.get_historical_klines(ticker, self.short_interval, self.get_starting_timestamp())
             data_length = len(data)
 
             multiplier = 2
@@ -126,7 +126,7 @@ class VolatilitySnooperThread(QRunnable):
 
             while len(data) < self.periods + 1:
                 starting_timestamp = self.get_starting_timestamp(multiplier=multiplier)
-                data = self.binanceClient.get_historical_klines(ticker, self.short_interval, starting_timestamp)
+                data = self.binance_client.get_historical_klines(ticker, self.short_interval, starting_timestamp)
                 multiplier += 1
 
                 if len(data) == data_length:

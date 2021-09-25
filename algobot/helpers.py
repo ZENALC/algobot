@@ -89,7 +89,7 @@ def get_random_color() -> str:
     Returns a random HEX color string.
     :return: HEX color string.
     """
-    def r():
+    def random_integer():
         """
         Generates a random integer between 0 and 255 and returns in a hexadecimal format.
         :return: Hexadecimal between 0 and 255.
@@ -97,7 +97,7 @@ def get_random_color() -> str:
         random_int = random.randint(0, 255)
         return format(random_int, '02x')
 
-    return r() + r() + r()
+    return random_integer() + random_integer() + random_integer()
 
 
 def open_folder(folder: str):
@@ -424,7 +424,7 @@ def load_from_csv(path: str, descending: bool = True) -> List[Dict[str, Union[fl
     """
     df = pd.read_csv(path)
     df.columns = [col.lower().strip() for col in df.columns]  # To support backwards compatibility.
-    data = df.to_dict('records')
+    data = df.to_dict('records')  # pylint: disable=no-member
 
     first_date = parser.parse(data[0]['date_utc'])  # Retrieve first date from CSV data.
     last_date = parser.parse(data[-1]['date_utc'])  # Retrieve last date from CSV data.

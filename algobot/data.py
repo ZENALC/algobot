@@ -13,7 +13,7 @@ from typing import Dict, List, Tuple, Union
 import binance
 import pandas as pd
 
-from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data, get_ups_and_downs
+from algobot.helpers import ROOT_DIR, SHORT_INTERVAL_MAP, get_logging_object, get_normalized_data
 from algobot.typing_hints import DataType
 
 
@@ -48,7 +48,7 @@ class Data:
         """
         self.callback = callback  # Used to emit signals to GUI if provided.
         self.caller = caller  # Used to specify which caller emitted signals for GUI.
-        self.binanceClient = binance.client.Client()  # Initialize Binance client to retrieve data.
+        self.binance_client = binance.client.Client()  # Initialize Binance client to retrieve data.
         self.logger = get_logging_object(enable_logging=log, log_file=log_file, logger_object=log_object)
 
         self.validate_interval(interval)  # Validate the interval provided.
@@ -60,7 +60,7 @@ class Data:
         self.data_limit = 2000  # Max amount of data to contain.
         self.download_completed = False  # Boolean to determine whether data download is completed or not.
         self.download_loop = True  # Boolean to determine whether data is being downloaded or not.
-        self.tickers = self.binanceClient.get_all_tickers()  # A list of all the tickers on Binance.
+        self.tickers = self.binance_client.get_all_tickers()  # A list of all the tickers on Binance.
         self.symbol = symbol.upper()  # Symbol of data being used.
         self.validate_symbol(self.symbol)  # Validate symbol.
         self.data = []  # Total bot data.
@@ -285,7 +285,7 @@ class Data:
         result = self.get_latest_database_row()
         if not result:
             # pylint: disable=protected-access
-            return self.binanceClient._get_earliest_valid_timestamp(self.symbol, self.interval)
+            return self.binance_client._get_earliest_valid_timestamp(self.symbol, self.interval)
         else:
             return int(result['date_utc'].timestamp()) * 1000 + 1  # Converting timestamp to milliseconds
 
@@ -329,7 +329,7 @@ class Data:
                 progress_callback.emit(int(percentage), msg, caller)
 
         while self.download_loop:
-            temp_data = self.binanceClient.get_klines(
+            temp_data = self.binance_client.get_klines(
                 symbol=self.symbol,
                 interval=self.interval,
                 limit=limit,
@@ -392,7 +392,7 @@ class Data:
         :param get_current: Boolean for whether to include current period's data.
         :return: A list of dictionaries.
         """
-        new_data = self.binanceClient.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
+        new_data = self.binance_client.get_historical_klines(self.symbol, self.interval, timestamp + 1, limit=limit)
         self.download_completed = True
         if len(new_data[:-1]) == 0:
             raise RuntimeError("No data was fetched from Binance. Please check Binance server.")
@@ -491,11 +491,11 @@ class Data:
 
             next_interval = current_interval + timedelta(minutes=self.interval_minutes)
             next_timestamp = int(next_interval.timestamp() * 1000) - 1
-            current_data = [current_interval] + self.binanceClient.get_klines(symbol=self.symbol,
-                                                                              interval=self.interval,
-                                                                              startTime=current_timestamp,
-                                                                              endTime=next_timestamp,
-                                                                              )[0][1:]  # We don't need timestamp.
+            current_data = [current_interval] + self.binance_client.get_klines(symbol=self.symbol,
+                                                                               interval=self.interval,
+                                                                               startTime=current_timestamp,
+                                                                               endTime=next_timestamp,
+                                                                               )[0][1:]  # We don't need timestamp.
             self.current_values = get_normalized_data(data=current_data)
 
             if counter > 0:
@@ -525,7 +525,7 @@ class Data:
         :return: Ticker market price
         """
         try:
-            return float(self.binanceClient.get_symbol_ticker(symbol=self.symbol)['price'])
+            return float(self.binance_client.get_symbol_ticker(symbol=self.symbol)['price'])
         except Exception as e:
             error_message = f'Error: {e}. Retrying in 15 seconds...'
             self.output_message(error_message, 4)
@@ -564,7 +564,7 @@ class Data:
 
         df = pd.DataFrame(data)
         df['date_utc'] = df['date_utc'].apply(lambda x: x.strftime(date_formatting))
-        df.to_csv(file_path, index=False)
+        df.to_csv(file_path, index=False)  # noqa
 
         return file_path
 
@@ -578,26 +578,6 @@ class Data:
             if ticker['symbol'] == symbol:
                 return True
         return False
-
-    def is_valid_average_input(self, shift: int, prices: int, extra_shift: int = 0) -> bool:
-        """
-        Checks whether shift, prices, and (optional) extraShift are valid.
-        :param shift: Periods from current period.
-        :param prices: Amount of prices to iterate over.
-        :param extra_shift: Extra shift for EMA.
-        :return: A boolean whether shift, prices, and extraShift are logical or not.
-        TODO: Deprecate along with helper get EMA and RSI.
-        """
-        if shift < 0:
-            self.output_message("Shift cannot be less than 0.")
-            return False
-        elif prices <= 0:
-            self.output_message("Prices cannot be 0 or less than 0.")
-            return False
-        elif shift + extra_shift + prices > len(self.data) + 1:
-            self.output_message("Shift + prices period cannot be more than data available.")
-            return False
-        return True
 
     @staticmethod
     def verify_integrity(total_data: List[Dict[str, Union[float, datetime]]]) -> DataType:
@@ -613,64 +593,3 @@ class Data:
                 errored_data.append(data)
 
         return errored_data
-
-    def get_total_non_updated_data(self) -> DataType:
-        """
-        Get total non-updated data. TODO: Deprecate this function.
-        :return: Total non-updated data.
-        """
-        return self.data + [self.current_values]
-
-    @staticmethod
-    def helper_get_ema(up_data: list, down_data: list, periods: int) -> tuple:
-        """
-        Helper function to get the EMA for relative strength index.
-        :param down_data: Other data to get EMA of.
-        :param up_data: Data to get EMA of.
-        :param periods: Number of periods to iterate through.
-        :return: EMA
-        """
-        ema_up = up_data[0]
-        ema_down = down_data[0]
-        alpha = 1 / periods
-
-        for index in range(1, len(up_data)):
-            ema_up = up_data[index] * alpha + ema_up * (1 - alpha)
-            ema_down = down_data[index] * alpha + ema_down * (1 - alpha)
-
-        return ema_up, ema_down
-
-    def get_rsi(self, prices: int = 14, parameter: str = 'close', shift: int = 0, round_value: bool = True,
-                update: bool = True) -> float:
-        """
-        Returns relative strength index.
-        :param update: Boolean for whether function should call API and get latest data or not.
-        :param prices: Amount of prices to iterate through.
-        :param parameter: Parameter to use for iterations. By default, it's close.
-        :param shift: Amount of prices to shift prices by.
-        :param round_value: Boolean that determines whether final value is rounded or not.
-        :return: Final relative strength index.
-        """
-        if not self.is_valid_average_input(shift, prices):
-            raise ValueError('Invalid input specified.')
-
-        if shift > 0:
-            update_dict = False
-            data = self.data
-            shift -= 1
-        else:
-            update_dict = True
-            data = self.data + [self.get_current_data()] if update else self.get_total_non_updated_data()
-
-        start = len(data) - 500 - prices - shift if len(data) > 500 + prices + shift else 0
-        ups, downs = get_ups_and_downs(data=data[start:len(data) - shift], parameter=parameter)
-        average_up, average_down = self.helper_get_ema(ups, downs, prices)
-        rs = average_up / average_down
-        rsi = 100 - 100 / (1 + rs)
-
-        if shift == 0 and update_dict:
-            self.rsi_data[prices] = rsi
-
-        if round_value:
-            return round(rsi, self.precision)
-        return rsi

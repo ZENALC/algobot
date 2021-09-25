@@ -36,11 +36,11 @@ def load_loss_slots(config_obj: Configuration):
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
     create_inner_tab(
-        category_tabs=config_obj.categoryTabs,
+        category_tabs=config_obj.category_tabs,
         description="Configure your stop loss settings here.",
         tab_name="Stop Loss",
         input_creator=config_obj.create_loss_inputs,
-        dictionary=config_obj.lossDict,
+        dictionary=config_obj.loss_dict,
         signal_function=config_obj.update_loss_settings,
         parent=config_obj
     )
@@ -52,11 +52,11 @@ def load_take_profit_slots(config_obj: Configuration):
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
     create_inner_tab(
-        category_tabs=config_obj.categoryTabs,
+        category_tabs=config_obj.category_tabs,
         description="Configure your take profit settings here.",
         tab_name="Take Profit",
         input_creator=config_obj.create_take_profit_inputs,
-        dictionary=config_obj.takeProfitDict,
+        dictionary=config_obj.take_profit_dict,
         signal_function=config_obj.update_take_profit_settings,
         parent=config_obj
     )
@@ -69,9 +69,9 @@ def load_hide_show_strategies(config_obj: Configuration):
     """
     def hide_strategies(b: QCheckBox, name: str):
         if b.isChecked():
-            config_obj.hiddenStrategies.remove(name)
+            config_obj.hidden_strategies.remove(name)
         else:
-            config_obj.hiddenStrategies.add(name)
+            config_obj.hidden_strategies.add(name)
 
         delete_strategy_slots(config_obj)
         load_strategy_slots(config_obj)
@@ -80,7 +80,7 @@ def load_hide_show_strategies(config_obj: Configuration):
     for strategy_name in config_obj.strategies.keys():
         c_boxes.append(QCheckBox())
         # When restoring slots, if the strategy is not hidden, tick it.
-        if strategy_name not in config_obj.hiddenStrategies:
+        if strategy_name not in config_obj.hidden_strategies:
             c_boxes[-1].setChecked(True)
         # Lambdas don't retain values, so we must cache variable args to the lambda func.
         c_boxes[-1].toggled.connect(lambda *_, a=c_boxes[-1], s=strategy_name: hide_strategies(a, s))
@@ -92,9 +92,9 @@ def delete_strategy_slots(config_obj: Configuration):
     Delete strategy slots.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    config_obj.strategyDict = {}  # Reset the dictionary.
+    config_obj.strategy_dict = {}  # Reset the dictionary.
 
-    for i, tab in enumerate(config_obj.categoryTabs):
+    for i, tab in enumerate(config_obj.category_tabs):
         nuke_index = 3 if i < 2 else 4  # TODO: Refactor this. This is hard coded based on category tabs.
         for _ in range(tab.count() - nuke_index):
             tab.removeTab(nuke_index)
@@ -110,14 +110,14 @@ def load_strategy_slots(config_obj: Configuration):
     # TODO: Refactor to remove pylint disable below.
     # pylint: disable=too-many-locals, too-many-statements, too-many-nested-blocks
     for strategy_key_name, strategy in config_obj.strategies.items():
-        if strategy_key_name in config_obj.hiddenStrategies:  # Don't re-render hidden strategies.
+        if strategy_key_name in config_obj.hidden_strategies:  # Don't re-render hidden strategies.
             continue
 
         temp = strategy()
         strategy_name = temp.name
         parameters = temp.get_param_types()
-        for tab in config_obj.categoryTabs:
-            config_obj.strategyDict[tab, strategy_name] = tab_widget = QTabWidget()
+        for tab in config_obj.category_tabs:
+            config_obj.strategy_dict[tab, strategy_name] = tab_widget = QTabWidget()
             description_label = QLabel(f'Strategy description: {temp.description}')
             description_label.setWordWrap(True)
 
@@ -129,7 +129,7 @@ def load_strategy_slots(config_obj: Configuration):
 
             if config_obj.get_caller_based_on_tab(tab) == OPTIMIZER:
                 group_box, group_box_layout = get_regular_groupbox_and_layout(f'Enable {strategy_name} optimization?')
-                config_obj.strategyDict[tab, strategy_name] = group_box
+                config_obj.strategy_dict[tab, strategy_name] = group_box
                 for index, parameter in enumerate(parameters, start=1):
                     # TODO: Refactor this logic.
                     if not isinstance(parameter, tuple) or \
@@ -140,10 +140,10 @@ def load_strategy_slots(config_obj: Configuration):
                         else:
                             widget = QSpinBox if parameter == int else QDoubleSpinBox
                             step_val = 1 if widget == QSpinBox else 0.1
-                        config_obj.strategyDict[strategy_name, index, 'start'] = start = get_default_widget(widget, 1)
-                        config_obj.strategyDict[strategy_name, index, 'end'] = end = get_default_widget(widget, 1)
-                        config_obj.strategyDict[strategy_name, index, 'step'] = step = get_default_widget(widget,
-                                                                                                          step_val)
+                        config_obj.strategy_dict[strategy_name, index, 'start'] = start = get_default_widget(widget, 1)
+                        config_obj.strategy_dict[strategy_name, index, 'end'] = end = get_default_widget(widget, 1)
+                        config_obj.strategy_dict[strategy_name, index, 'step'] = step = get_default_widget(widget,
+                                                                                                           step_val)
                         if isinstance(parameter, tuple):
                             message = parameter[0]
                         else:
@@ -152,17 +152,17 @@ def load_strategy_slots(config_obj: Configuration):
                     elif isinstance(parameter, tuple) and parameter[1] == tuple:
                         group_box_layout.addRow(QLabel(parameter[0]))
                         for option in parameter[2]:
-                            config_obj.strategyDict[strategy_name, option] = checkBox = QCheckBox(option)
-                            group_box_layout.addRow(checkBox)
+                            config_obj.strategy_dict[strategy_name, option] = check_box = QCheckBox(option)
+                            group_box_layout.addRow(check_box)
                     else:
                         raise ValueError("Invalid type of parameter type provided.")
             else:
                 group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {strategy_name}?")
-                config_obj.strategyDict[tab, strategy_name, 'groupBox'] = group_box
+                config_obj.strategy_dict[tab, strategy_name, 'groupBox'] = group_box
 
                 status = QLabel()
                 if temp.dynamic:
-                    add_button, delete_button = add_strategy_buttons(config_obj.strategyDict, parameters,
+                    add_button, delete_button = add_strategy_buttons(config_obj.strategy_dict, parameters,
                                                                      strategy_name, group_box_layout, tab)
                     horizontal_layout = QHBoxLayout()
                     horizontal_layout.addWidget(add_button)
@@ -172,11 +172,11 @@ def load_strategy_slots(config_obj: Configuration):
                     layout.addLayout(horizontal_layout)
 
                 values, labels = create_strategy_inputs(parameters, strategy_name, group_box_layout)
-                config_obj.strategyDict[tab, strategy_name, 'values'] = values
-                config_obj.strategyDict[tab, strategy_name, 'labels'] = labels
-                config_obj.strategyDict[tab, strategy_name, 'parameters'] = parameters
-                config_obj.strategyDict[tab, strategy_name, 'layout'] = group_box_layout
-                config_obj.strategyDict[tab, strategy_name, 'status'] = status
+                config_obj.strategy_dict[tab, strategy_name, 'values'] = values
+                config_obj.strategy_dict[tab, strategy_name, 'labels'] = labels
+                config_obj.strategy_dict[tab, strategy_name, 'parameters'] = parameters
+                config_obj.strategy_dict[tab, strategy_name, 'layout'] = group_box_layout
+                config_obj.strategy_dict[tab, strategy_name, 'status'] = status
 
             layout.addWidget(scroll)
             scroll.setWidget(group_box)

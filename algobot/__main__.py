@@ -58,10 +58,10 @@ class Interface(QMainWindow):
         uic.loadUi(mainUi, self)  # Loading the main UI
         self.logger = algobot.MAIN_LOGGER
         self.configuration = Configuration(parent=self, logger=self.logger)  # Loading configuration
-        self.otherCommands = OtherCommands(self)  # Loading other commands
+        self.other_commands = OtherCommands(self)  # Loading other commands
         self.about = About(self)  # Loading about information
         self.statistics = Statistics(self)  # Loading statistics
-        self.threadPool = QThreadPool(self)  # Initiating threading pool
+        self.thread_pool = QThreadPool(self)  # Initiating threading pool
         self.threads: Dict[int, QRunnable or None] = {BACKTEST: None, SIMULATION: None, LIVE: None, OPTIMIZER: None}
         self.graphs = (
             {'graph': self.simulationGraph, 'plots': [], 'label': self.simulationCoordinates, 'enable': True},
@@ -73,17 +73,17 @@ class Interface(QMainWindow):
         setup_graphs(gui=self)  # Setting up graphs.
         initiate_slots(app=app, gui=self)  # Initiating slots.
 
-        self.interfaceDictionary = get_interface_dictionary(self)
-        self.advancedLogging = False
-        self.runningLive = False
-        self.simulationRunningLive = False
+        self.interface_dictionary = get_interface_dictionary(self)
+        self.advanced_logging = False
+        self.running_live = False
+        self.simulation_running_live = False
         self.optimizer: Union[Backtester, None] = None
         self.backtester: Union[Backtester, None] = None
         self.trader: Union[RealTrader, None] = None
-        self.simulationTrader: Union[SimulationTrader, None] = None
-        self.simulationLowerIntervalData: Union[Data, None] = None
-        self.lowerIntervalData: Union[Data, None] = None
-        self.telegramBot = None
+        self.simulation_trader: Union[SimulationTrader, None] = None
+        self.simulation_lower_interval_data: Union[Data, None] = None
+        self.lower_interval_data: Union[Data, None] = None
+        self.telegram_bot = None
         self.tickers = []  # All available tickers.
 
         if algobot.CURRENT_VERSION != algobot.LATEST_VERSION:
@@ -100,8 +100,8 @@ class Interface(QMainWindow):
         # TODO: Refactor this. We call this here, because we rely on loading the previous state if it exists.
         load_hide_show_strategies(self.configuration)
 
-        self.graphUpdateSeconds = 1
-        self.graphUpdateSchedule: List[float or None] = [None, None]  # LIVE, SIM
+        self.graph_update_seconds = 1
+        self.graph_update_schedule: List[float or None] = [None, None]  # LIVE, SIM
 
     def inform_telegram(self, message: str, stop_bot: bool = False):
         """
@@ -110,17 +110,17 @@ class Interface(QMainWindow):
         :param stop_bot: Boolean for whether bot should be stopped or not.
         """
         try:
-            if self.telegramBot is None:
+            if self.telegram_bot is None:
                 api_key = self.configuration.telegramApiKey.text()
-                self.telegramBot = TelegramBot(gui=self, token=api_key, bot_thread=None)
+                self.telegram_bot = TelegramBot(gui=self, token=api_key, bot_thread=None)
 
             chat_id = self.configuration.telegramChatID.text()
-            if self.configuration.chatPass:
-                self.telegramBot.send_message(chat_id, message)
+            if self.configuration.chat_pass:
+                self.telegram_bot.send_message(chat_id, message)
 
             if stop_bot:
-                self.telegramBot.stop()
-                self.telegramBot = None
+                self.telegram_bot.stop()
+                self.telegram_bot = None
         except Exception as e:
             self.logger.exception(str(e))
 
@@ -141,7 +141,7 @@ class Interface(QMainWindow):
         news_thread.signals.error.connect(self.news_thread_error)
         news_thread.signals.finished.connect(self.setup_news)
         news_thread.signals.restore.connect(lambda: self.refreshNewsButton.setEnabled(True))
-        self.threadPool.start(news_thread)
+        self.thread_pool.start(news_thread)
 
     def news_thread_error(self, e: str):
         """
@@ -164,7 +164,7 @@ class Interface(QMainWindow):
         ticker_thread.signals.error.connect(self.tickers_thread_error)
         ticker_thread.signals.finished.connect(self.setup_tickers)
         ticker_thread.signals.restore.connect(lambda: self.configuration.updateTickers.setEnabled(True))
-        self.threadPool.start(ticker_thread)
+        self.thread_pool.start(ticker_thread)
 
     def tickers_thread_error(self, e: str):
         """
@@ -185,7 +185,7 @@ class Interface(QMainWindow):
         Returns all available tickers from Binance API.
         :return: List of all available tickers.
         """
-        tickers = [ticker['symbol'] for ticker in Data(load_data=False, log=False).binanceClient.get_all_tickers()]
+        tickers = [ticker['symbol'] for ticker in Data(load_data=False, log=False).binance_client.get_all_tickers()]
         return sorted(tickers)
 
     def setup_tickers(self, tickers: List[str]):
@@ -210,7 +210,7 @@ class Interface(QMainWindow):
         full_completer = QCompleter(tickers)
         full_completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
 
-        self.otherCommands.csvGenerationTicker.setCompleter(full_completer)
+        self.other_commands.csvGenerationTicker.setCompleter(full_completer)
         self.configuration.serverResult.setText("Updated tickers successfully.")
 
     def setup_news(self, news: List[str]):
@@ -247,7 +247,7 @@ class Interface(QMainWindow):
         :param file_type: Type of file to export optimizer results to.
         """
         if self.optimizer:
-            if len(self.optimizer.optimizerRows) > 0:
+            if len(self.optimizer.optimizer_rows) > 0:
                 optimizer_folder_path = create_folder('Optimizer Results')
                 inner_path = os.path.join(optimizer_folder_path, self.optimizer.symbol)
                 create_folder_if_needed(inner_path, optimizer_folder_path)
@@ -284,7 +284,7 @@ class Interface(QMainWindow):
             create_popup(self, f"No data setup yet for {noun}. Please download or import data in settings first.")
             return False
 
-        selected_symbol = self.interfaceDictionary[caller]['configuration']['ticker'].text()
+        selected_symbol = self.interface_dictionary[caller]['configuration']['ticker'].text()
         download_symbol = config.optimizer_backtest_dict[caller]['dataType']
 
         if selected_symbol != download_symbol and download_symbol.lower() != 'imported':
@@ -293,7 +293,7 @@ class Interface(QMainWindow):
                                f"or download ({selected_symbol}) data to get rid of this error.")
             return False
 
-        selected_interval = self.interfaceDictionary[caller]['configuration']['interval'].currentText().lower()
+        selected_interval = self.interface_dictionary[caller]['configuration']['interval'].currentText().lower()
         download_interval = config.optimizer_backtest_dict[caller]['dataInterval'].lower()
 
         if selected_interval != download_interval and download_symbol.lower() != 'imported':
@@ -335,7 +335,7 @@ class Interface(QMainWindow):
                                                                          stop_bot=True))
         worker.signals.activity.connect(lambda data: add_to_table(self.optimizerTableWidget, data=data,
                                                                   insert_date=False))
-        self.threadPool.start(worker)
+        self.thread_pool.start(worker)
 
     def set_optimizer_buttons(self, running: bool, clear: bool):
         """
@@ -383,7 +383,7 @@ class Interface(QMainWindow):
         worker.signals.message.connect(lambda message: self.add_to_monitor(BACKTEST, message))
         worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=BACKTEST))
         worker.signals.updateGraphLimits.connect(lambda x: update_backtest_graph_limits(gui=self, limit=x))
-        self.threadPool.start(worker)
+        self.thread_pool.start(worker)
 
     def end_backtest_thread(self):
         """
@@ -406,8 +406,8 @@ class Interface(QMainWindow):
         backtest_folder_path = create_folder('Backtest Results')
         inner_path = os.path.join(backtest_folder_path, self.backtester.symbol)
         create_folder_if_needed(inner_path, backtest_folder_path)
-        defaultFile = os.path.join(inner_path, self.backtester.get_default_result_file_name())
-        file_name, _ = QFileDialog.getSaveFileName(self, 'Save Result', defaultFile, 'TXT (*.txt)')
+        default_file = os.path.join(inner_path, self.backtester.get_default_result_file_name())
+        file_name, _ = QFileDialog.getSaveFileName(self, 'Save Result', default_file, 'TXT (*.txt)')
         file_name = file_name.strip()
         file_name = file_name if file_name != '' else None
 
@@ -435,7 +435,7 @@ class Interface(QMainWindow):
         net = updated_dict['net']
         utc = updated_dict['utc']
 
-        if net < self.backtester.startingBalance:
+        if net < self.backtester.starting_balance:
             self.backtestProfitLabel.setText("Loss")
             self.backtestProfitPercentageLabel.setText("Loss Percentage")
         else:
@@ -452,7 +452,7 @@ class Interface(QMainWindow):
         self.backtestCurrentPeriod.setText(updated_dict['currentPeriod'])
 
         if add_data:
-            graph_dict = self.interfaceDictionary[BACKTEST]['mainInterface']['graph']
+            graph_dict = self.interface_dictionary[BACKTEST]['mainInterface']['graph']
             add_data_to_plot(self, graph_dict, 0, y=net, timestamp=utc)
 
     def update_backtest_configuration_gui(self, stat_dict: dict):
@@ -461,13 +461,13 @@ class Interface(QMainWindow):
         :param stat_dict: Dictionary containing configuration details.
         """
         self.backtestSymbol.setText(stat_dict['symbol'])
-        self.backtestStartingBalance.setText(stat_dict['startingBalance'])
+        self.backtestStartingBalance.setText(stat_dict['starting_balance'])
         self.backtestInterval.setText(stat_dict['interval'])
-        self.backtestMarginEnabled.setText(stat_dict['marginEnabled'])
-        self.backtestStopLossPercentage.setText(stat_dict['stopLossPercentage'])
-        self.backtestLossStrategy.setText(stat_dict['stopLossStrategy'])
-        self.backtestStartPeriod.setText(stat_dict['startPeriod'])
-        self.backtestEndPeriod.setText(stat_dict['endPeriod'])
+        self.backtestMarginEnabled.setText(stat_dict['margin_enabled'])
+        self.backtestStopLossPercentage.setText(stat_dict['stop_loss_percentage'])
+        self.backtestLossStrategy.setText(stat_dict['stop_loss_strategy'])
+        self.backtestStartPeriod.setText(stat_dict['start_period'])
+        self.backtestEndPeriod.setText(stat_dict['end_period'])
         if 'options' in stat_dict:
             self.backtestMovingAverage1.setText(stat_dict['options'][0][0])
             self.backtestMovingAverage2.setText(stat_dict['options'][0][1])
@@ -482,9 +482,9 @@ class Interface(QMainWindow):
         :param aux: Shift position by the number provided.
         """
         if self.backtester is not None:
-            if 1 <= position + aux < len(self.backtester.pastActivity):
+            if 1 <= position + aux < len(self.backtester.past_activity):
                 try:
-                    self.update_backtest_gui(self.backtester.pastActivity[position + aux], add_data=False,
+                    self.update_backtest_gui(self.backtester.past_activity[position + aux], add_data=False,
                                              update_progress_bar=False)
                 except IndexError as e:
                     self.logger.exception(str(e))
@@ -495,22 +495,22 @@ class Interface(QMainWindow):
         """
         graph_dict = get_graph_dictionary(self, self.backtestGraph)
         if self.backtester is not None and graph_dict.get('line') is not None:
-            index = len(self.backtester.pastActivity)
+            index = len(self.backtester.past_activity)
             graph_dict['line'].setPos(index)
             self.update_backtest_activity_based_on_graph(index)
 
-    def setup_backtester(self, configurationDictionary: dict):
+    def setup_backtester(self, configuration_dictionary: dict):
         """
         Set up backtest GUI with dictionary provided.
-        :param configurationDictionary: Dictionary with configuration details.
+        :param configuration_dictionary: Dictionary with configuration details.
         """
-        interface_dict = self.interfaceDictionary[BACKTEST]['mainInterface']
-        symbol = configurationDictionary['symbol']
-        interval = configurationDictionary['interval']
+        interface_dict = self.interface_dictionary[BACKTEST]['mainInterface']
+        symbol = configuration_dictionary['symbol']
+        interval = configuration_dictionary['interval']
         destroy_graph_plots(self, interface_dict['graph'])
         setup_graph_plots(self, interface_dict['graph'], self.backtester, GraphType.NET)
         set_backtest_graph_limits_and_empty_plots(self)
-        self.update_backtest_configuration_gui(configurationDictionary)
+        self.update_backtest_configuration_gui(configuration_dictionary)
         self.add_to_backtest_monitor(f"Started backtest with {symbol} data and {interval.lower()} interval periods.")
 
     def check_strategies(self, caller: int) -> bool:
@@ -536,7 +536,7 @@ class Interface(QMainWindow):
         """
         Validate ticker provided before running a bot.
         """
-        selected_ticker = self.interfaceDictionary[caller]['configuration']['ticker'].text()
+        selected_ticker = self.interface_dictionary[caller]['configuration']['ticker'].text()
         if selected_ticker.strip() == '':
             create_popup(self, "Please specify a ticker. No ticker found.")
             return False
@@ -558,25 +558,25 @@ class Interface(QMainWindow):
 
         self.disable_interface(True, caller)
         worker = botThread.BotThread(gui=self, caller=caller, logger=self.logger)
-        worker.signals.smallError.connect(lambda x: create_popup(self, x))
+        worker.signals.small_error.connect(lambda x: create_popup(self, x))
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.activity.connect(self.add_to_monitor)
         worker.signals.started.connect(self.initial_bot_ui_setup)
         worker.signals.updated.connect(self.update_interface_info)
         worker.signals.progress.connect(self.download_progress_update)
-        worker.signals.addTrade.connect(lambda trade: self.update_trades_table_and_activity_monitor(trade, caller))
+        worker.signals.add_trade.connect(lambda trade: self.update_trades_table_and_activity_monitor(trade, caller))
         worker.signals.restore.connect(lambda: self.disable_interface(disable=False, caller=caller))
 
         # All these below are for Telegram.
-        worker.signals.forceLong.connect(lambda: self.force_long(LIVE))
-        worker.signals.forceShort.connect(lambda: self.force_short(LIVE))
-        worker.signals.exitPosition.connect(lambda: self.exit_position(LIVE))
-        worker.signals.waitOverride.connect(lambda: self.exit_position(LIVE, False))
+        worker.signals.force_long.connect(lambda: self.force_long(LIVE))
+        worker.signals.force_short.connect(lambda: self.force_short(LIVE))
+        worker.signals.exit_position.connect(lambda: self.exit_position(LIVE))
+        worker.signals.wait_override.connect(lambda: self.exit_position(LIVE, False))
         worker.signals.pause.connect(lambda: self.pause_or_resume_bot(LIVE))
         worker.signals.resume.connect(lambda: self.pause_or_resume_bot(LIVE))
-        worker.signals.setCustomStopLoss.connect(self.set_custom_stop_loss)
-        worker.signals.removeCustomStopLoss.connect(lambda: self.set_custom_stop_loss(LIVE, False))
-        self.threadPool.start(worker)
+        worker.signals.set_custom_stop_loss.connect(self.set_custom_stop_loss)
+        worker.signals.remove_custom_stop_loss.connect(lambda: self.set_custom_stop_loss(LIVE, False))
+        self.thread_pool.start(worker)
 
     def download_progress_update(self, value: int, message: str, caller):
         """
@@ -603,7 +603,7 @@ class Interface(QMainWindow):
         thread.signals.error.connect(lambda x: create_popup(self, x))
         thread.signals.finished.connect(lambda: self.add_end_bot_status(caller=caller))
         thread.signals.restore.connect(lambda: self.reset_bot_interface(caller=caller))
-        self.threadPool.start(thread)
+        self.thread_pool.start(thread)
 
     def add_end_bot_status(self, caller):
         """
@@ -634,45 +634,45 @@ class Interface(QMainWindow):
         elapsed = time.time()
 
         if caller == SIMULATION:
-            self.simulationRunningLive = False
-            if self.simulationTrader:
-                self.simulationTrader.dataView.download_loop = False
+            self.simulation_running_live = False
+            if self.simulation_trader:
+                self.simulation_trader.data_view.download_loop = False
 
-                if self.simulationLowerIntervalData:
-                    self.simulationLowerIntervalData.download_loop = False
+                if self.simulation_lower_interval_data:
+                    self.simulation_lower_interval_data.download_loop = False
 
-                while not self.simulationTrader.completedLoop:
-                    self.simulationRunningLive = False
+                while not self.simulation_trader.completed_loop:
+                    self.simulation_running_live = False
                     if time.time() > elapsed + 15:
                         break
 
-                temp_trader = self.simulationTrader
-                if self.simulationLowerIntervalData:
-                    self.simulationLowerIntervalData.dump_to_table()
-                    self.simulationLowerIntervalData = None
+                temp_trader = self.simulation_trader
+                if self.simulation_lower_interval_data:
+                    self.simulation_lower_interval_data.dump_to_table()
+                    self.simulation_lower_interval_data = None
         elif caller == LIVE:
-            self.runningLive = False
+            self.running_live = False
             if self.trader:
-                self.trader.dataView.download_loop = False
+                self.trader.data_view.download_loop = False
 
-                if self.lowerIntervalData:
-                    self.lowerIntervalData.download_loop = False
+                if self.lower_interval_data:
+                    self.lower_interval_data.download_loop = False
 
-                if self.configuration.chatPass:
-                    self.telegramBot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended.")
-                if self.telegramBot:
-                    self.telegramBot.stop()
-                    self.telegramBot = None
+                if self.configuration.chat_pass:
+                    self.telegram_bot.send_message(self.configuration.telegramChatID.text(), "Bot has been ended.")
+                if self.telegram_bot:
+                    self.telegram_bot.stop()
+                    self.telegram_bot = None
 
-                while not self.trader.completedLoop:
-                    self.runningLive = False
+                while not self.trader.completed_loop:
+                    self.running_live = False
                     if time.time() > elapsed + 15:
                         break
 
                 temp_trader = self.trader
-                if self.lowerIntervalData:
-                    self.lowerIntervalData.dump_to_table()
-                    self.lowerIntervalData = None
+                if self.lower_interval_data:
+                    self.lower_interval_data.dump_to_table()
+                    self.lower_interval_data = None
         else:
             raise ValueError("Invalid type of caller provided.")
 
@@ -681,7 +681,7 @@ class Interface(QMainWindow):
 
         if temp_trader:
             temp_trader.log_trades_and_daily_net()
-            temp_trader.dataView.dump_to_table()
+            temp_trader.data_view.dump_to_table()
 
         if callback:
             callback.emit("Dumped all new data to database.")
@@ -691,16 +691,16 @@ class Interface(QMainWindow):
         Function that force ends bot in the event that it crashes.
         """
         if caller == LIVE:
-            self.runningLive = False
-            if self.lowerIntervalData and not self.lowerIntervalData.download_completed:
+            self.running_live = False
+            if self.lower_interval_data and not self.lower_interval_data.download_completed:
                 self.download_progress_update(value=0, message="Lower interval data download failed.", caller=caller)
         elif caller == SIMULATION:
-            self.simulationRunningLive = False
-            if self.simulationLowerIntervalData and not self.simulationLowerIntervalData.download_completed:
+            self.simulation_running_live = False
+            if self.simulation_lower_interval_data and not self.simulation_lower_interval_data.download_completed:
                 self.download_progress_update(value=0, message="Lower interval data download failed.", caller=caller)
 
         trader = self.get_trader(caller=caller)
-        if trader and caller != BACKTEST and not trader.dataView.download_completed:
+        if trader and caller != BACKTEST and not trader.data_view.download_completed:
             self.download_progress_update(value=0, message="Download failed.", caller=caller)
 
         if '-1021' in msg:
@@ -724,7 +724,7 @@ class Interface(QMainWindow):
         trader_position = trader.get_position()
         if trader_position is not None:
             self.add_to_monitor(caller, f"Detected {trader.get_position_string().lower()} position before bot run.")
-        interface_dict = self.interfaceDictionary[caller]['mainInterface']
+        interface_dict = self.interface_dictionary[caller]['mainInterface']
         self.disable_interface(True, caller, False)
         self.enable_override(caller)
         destroy_graph_plots(self, interface_dict['graph'])
@@ -747,18 +747,18 @@ class Interface(QMainWindow):
         :param caller: Caller that determines which configuration settings get disabled.
         """
         disable = not disable
-        self.interfaceDictionary[caller]['configuration']['mainTab'].setEnabled(disable)
-        self.interfaceDictionary[caller]['mainInterface']['runBotButton'].setEnabled(disable)
+        self.interface_dictionary[caller]['configuration']['mainTab'].setEnabled(disable)
+        self.interface_dictionary[caller]['mainInterface']['runBotButton'].setEnabled(disable)
 
         tab = self.configuration.get_category_tab(caller)
         for strategy_name in self.configuration.strategies:
-            if strategy_name not in self.configuration.hiddenStrategies:
-                self.configuration.strategyDict[tab, strategy_name, 'groupBox'].setEnabled(disable)
+            if strategy_name not in self.configuration.hidden_strategies:
+                self.configuration.strategy_dict[tab, strategy_name, 'groupBox'].setEnabled(disable)
 
         if everything:
-            self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(disable)
+            self.interface_dictionary[caller]['mainInterface']['endBotButton'].setEnabled(disable)
         else:
-            self.interfaceDictionary[caller]['mainInterface']['endBotButton'].setEnabled(not disable)
+            self.interface_dictionary[caller]['mainInterface']['endBotButton'].setEnabled(not disable)
 
     def update_interface_info(self, caller, value_dict: dict, grouped_dict: dict):
         """
@@ -779,7 +779,7 @@ class Interface(QMainWindow):
         :param value_dict: Dictionary with values to populate interface with.
         :return: None
         """
-        main_interface_dictionary = self.interfaceDictionary[caller]['mainInterface']
+        main_interface_dictionary = self.interface_dictionary[caller]['mainInterface']
         main_interface_dictionary['profitLabel'].setText(value_dict['profitLossLabel'])
         main_interface_dictionary['profitValue'].setText(value_dict['profitLossValue'])
         main_interface_dictionary['percentageValue'].setText(value_dict['percentageValue'])
@@ -796,9 +796,9 @@ class Interface(QMainWindow):
         """
         self.update_interface_text(caller=caller, value_dict=value_dict)
         index = 0 if caller == LIVE else 1
-        if self.graphUpdateSchedule[index] is None or time.time() > self.graphUpdateSchedule[index]:
+        if self.graph_update_schedule[index] is None or time.time() > self.graph_update_schedule[index]:
             update_main_graphs(gui=self, caller=caller, value_dict=value_dict)
-            self.graphUpdateSchedule[index] = time.time() + self.graphUpdateSeconds
+            self.graph_update_schedule[index] = time.time() + self.graph_update_seconds
 
     def destroy_trader(self, caller):
         """
@@ -806,7 +806,7 @@ class Interface(QMainWindow):
         :param caller: Caller that determines which trading object gets destroyed.
         """
         if caller == SIMULATION:
-            self.simulationTrader = None
+            self.simulation_trader = None
         elif caller == LIVE:
             self.trader = None
         elif caller == BACKTEST:
@@ -820,9 +820,9 @@ class Interface(QMainWindow):
         :param caller: Caller that'll determine which GUI elements get manipulated.
         """
         trader = self.get_trader(caller)
-        main_dict = self.interfaceDictionary[caller]['mainInterface']
+        main_dict = self.interface_dictionary[caller]['mainInterface']
 
-        if trader.customStopLoss is None:
+        if trader.custom_stop_loss is None:
             main_dict['enableCustomStopLossButton'].setEnabled(True)
             main_dict['disableCustomStopLossButton'].setEnabled(False)
         else:
@@ -834,20 +834,20 @@ class Interface(QMainWindow):
         Handles interface position buttons based on caller.
         :param caller: Caller object for whose interface buttons will be affected.
         """
-        interface_dict = self.interfaceDictionary[caller]['mainInterface']
+        interface_dict = self.interface_dictionary[caller]['mainInterface']
         trader = self.get_trader(caller)
 
-        in_position = trader.currentPosition is not None
+        in_position = trader.current_position is not None
         interface_dict['exitPositionButton'].setEnabled(in_position)
         interface_dict['waitOverrideButton'].setEnabled(in_position)
 
-        if trader.currentPosition == LONG:
+        if trader.current_position == LONG:
             interface_dict['forceLongButton'].setEnabled(False)
             interface_dict['forceShortButton'].setEnabled(True)
-        elif trader.currentPosition == SHORT:
+        elif trader.current_position == SHORT:
             interface_dict['forceLongButton'].setEnabled(True)
             interface_dict['forceShortButton'].setEnabled(False)
-        elif trader.currentPosition is None:
+        elif trader.current_position is None:
             interface_dict['forceLongButton'].setEnabled(True)
             interface_dict['forceShortButton'].setEnabled(True)
 
@@ -857,8 +857,8 @@ class Interface(QMainWindow):
         :param enabled: Boolean that determines whether override is enabled or disable. By default, it is enabled.
         :param caller: Caller that will specify which interface will have its override interface enabled.
         """
-        self.interfaceDictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(enabled)
-        self.interfaceDictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(enabled)
+        self.interface_dictionary[caller]['mainInterface']['overrideGroupBox'].setEnabled(enabled)
+        self.interface_dictionary[caller]['mainInterface']['customStopLossGroupBox'].setEnabled(enabled)
 
     def exit_position_thread(self, caller, human_control: bool):
         """
@@ -867,13 +867,13 @@ class Interface(QMainWindow):
         :param human_control: Boolean that will specify whether bot gives up control or not.
         """
         trader = self.get_trader(caller)
-        trader.inHumanControl = human_control
-        if trader.currentPosition == LONG:
+        trader.in_human_control = human_control
+        if trader.current_position == LONG:
             if human_control:
                 trader.sell_long('Force exited long.', force=True)
             else:
                 trader.sell_long('Exited long because of override and resumed autonomous logic.', force=True)
-        elif trader.currentPosition == SHORT:
+        elif trader.current_position == SHORT:
             if human_control:
                 trader.buy_short('Force exited short.', force=True)
             else:
@@ -903,7 +903,7 @@ class Interface(QMainWindow):
         thread.signals.finished.connect(lambda: self.set_exit_position_gui(caller=caller, human_control=human_control))
         thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
         thread.signals.error.connect(lambda x: create_popup(self, x))
-        self.threadPool.start(thread)
+        self.thread_pool.start(thread)
 
     def set_force_long_gui(self, caller):
         """
@@ -919,8 +919,8 @@ class Interface(QMainWindow):
         :param caller: Caller that will specify which trader will force long.
         """
         trader = self.get_trader(caller)
-        trader.inHumanControl = True
-        if trader.currentPosition == SHORT:
+        trader.in_human_control = True
+        if trader.current_position == SHORT:
             trader.buy_short('Exited short because long was forced.', force=True)
         trader.buy_long('Force executed long.', force=True)
         trader.reset_smart_stop_loss()
@@ -937,7 +937,7 @@ class Interface(QMainWindow):
         thread.signals.finished.connect(lambda: self.set_force_long_gui(caller=caller))
         thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
         thread.signals.error.connect(lambda x: create_popup(self, x))
-        self.threadPool.start(thread)
+        self.thread_pool.start(thread)
 
     def set_force_short_gui(self, caller):
         """
@@ -953,8 +953,8 @@ class Interface(QMainWindow):
         :param caller: Caller that will specify which trader will force short.
         """
         trader = self.get_trader(caller)
-        trader.inHumanControl = True
-        if trader.currentPosition == LONG:
+        trader.in_human_control = True
+        if trader.current_position == LONG:
             trader.sell_long('Exited long because short was forced.', force=True)
         trader.sell_short('Force executed short.', force=True)
         trader.reset_smart_stop_loss()
@@ -971,7 +971,7 @@ class Interface(QMainWindow):
         thread.signals.finished.connect(lambda: self.set_force_short_gui(caller=caller))
         thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
         thread.signals.error.connect(lambda x: create_popup(self, x))
-        self.threadPool.start(thread)
+        self.thread_pool.start(thread)
 
     def modify_override_buttons(self,
                                 caller,
@@ -989,7 +989,7 @@ class Interface(QMainWindow):
         :param exit_btn: Boolean that'll determine if the exit button is enabled or disabled.
         :param wait_btn: Boolean that'll determine if the wait override button is enabled or disabled.
         """
-        interface_dict = self.interfaceDictionary[caller]['mainInterface']
+        interface_dict = self.interface_dictionary[caller]['mainInterface']
         interface_dict['pauseBotButton'].setText(pause_text)
         interface_dict['forceShortButton'].setEnabled(short_btn)
         interface_dict['forceLongButton'].setEnabled(long_btn)
@@ -1002,13 +1002,13 @@ class Interface(QMainWindow):
         :param caller: Caller object that specifies which trading object will be paused or resumed.
         """
         trader = self.get_trader(caller)
-        pause_button = self.interfaceDictionary[caller]['mainInterface']['pauseBotButton']
+        pause_button = self.interface_dictionary[caller]['mainInterface']['pauseBotButton']
         if pause_button.text() == 'Pause Bot':
-            trader.inHumanControl = True
+            trader.in_human_control = True
             pause_button.setText('Resume Bot')
             self.add_to_monitor(caller, 'Pausing bot logic.')
         else:
-            trader.inHumanControl = False
+            trader.in_human_control = False
             pause_button.setText('Pause Bot')
             self.add_to_monitor(caller, 'Resuming bot logic.')
 
@@ -1017,8 +1017,8 @@ class Interface(QMainWindow):
         Sets logging standard.
         :param boolean: Boolean that will determine whether logging is advanced or not. If true, advanced, else regular.
         """
-        self.advancedLogging = boolean
-        if self.advancedLogging:
+        self.advanced_logging = boolean
+        if self.advanced_logging:
             self.add_to_live_activity_monitor('Logging method has been changed to advanced.')
             self.add_to_simulation_activity_monitor('Logging method has been changed to advanced.')
         else:
@@ -1033,19 +1033,19 @@ class Interface(QMainWindow):
         :param caller: Caller that decides which trader object gets the stop loss.
         """
         trader = self.get_trader(caller)
-        main_dict = self.interfaceDictionary[caller]['mainInterface']
+        main_dict = self.interface_dictionary[caller]['mainInterface']
         if enable:
             if foreign_value is None:
                 custom_stop_loss = main_dict['customStopLossValue'].value()
             else:
                 custom_stop_loss = foreign_value
                 main_dict['customStopLossValue'].setValue(round(foreign_value, trader.precision))
-            trader.customStopLoss = custom_stop_loss
+            trader.custom_stop_loss = custom_stop_loss
             main_dict['enableCustomStopLossButton'].setEnabled(False)
             main_dict['disableCustomStopLossButton'].setEnabled(True)
             self.add_to_monitor(caller, f'Set custom stop loss at ${custom_stop_loss}')
         else:
-            trader.customStopLoss = None
+            trader.custom_stop_loss = None
             main_dict['enableCustomStopLossButton'].setEnabled(True)
             main_dict['disableCustomStopLossButton'].setEnabled(False)
             self.add_to_monitor(caller, 'Removed custom stop loss.')
@@ -1126,7 +1126,7 @@ class Interface(QMainWindow):
         :param trade: Trade information to add to activity monitor and trades table.
         :param caller: Caller object that will rule which tables get updated.
         """
-        table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
+        table = self.interface_dictionary[caller]['mainInterface']['historyTable']
         trader = self.get_trader(caller)
 
         if not trader:
@@ -1143,7 +1143,7 @@ class Interface(QMainWindow):
         add_to_table(table, trade_data)
         self.add_to_monitor(caller, trade['action'])
 
-        if caller == LIVE and self.telegramBot and self.configuration.enableTelegramSendMessage.isChecked():
+        if caller == LIVE and self.telegram_bot and self.configuration.enableTelegramSendMessage.isChecked():
             self.inform_telegram(message=trade['action'])
 
         monitor = self.get_activity_table(caller=caller)
@@ -1158,19 +1158,19 @@ class Interface(QMainWindow):
         save_state(self.configuration)
         qm = QMessageBox
         message = ""
-        if self.simulationRunningLive and self.runningLive:
+        if self.simulation_running_live and self.running_live:
             message = "There is a live bot and a simulation running."
-        elif self.simulationRunningLive:
+        elif self.simulation_running_live:
             message = "There is a simulation running."
-        elif self.runningLive:
+        elif self.running_live:
             message = "There is a live bot running."
         ret = qm.question(self, 'Close?', f"{message} Are you sure you want to end Algobot?",
                           qm.Yes | qm.No)
 
         if ret == qm.Yes:
-            if self.runningLive:
+            if self.running_live:
                 self.end_bot_gracefully(caller=LIVE)
-            elif self.simulationRunningLive:
+            elif self.simulation_running_live:
                 self.end_bot_gracefully(caller=SIMULATION)
             event.accept()
         else:
@@ -1224,7 +1224,7 @@ class Interface(QMainWindow):
             thread = workerThread.Worker(self.trader.retrieve_margin_values)
             thread.signals.finished.connect(lambda: create_popup(self, 'Successfully updated values.'))
             thread.signals.error.connect(lambda x: create_popup(self, x))
-            self.threadPool.start(thread)
+            self.thread_pool.start(thread)
         else:
             create_popup(self, 'There is currently no live bot running.')
 
@@ -1235,8 +1235,8 @@ class Interface(QMainWindow):
         """
         if self.trader:
             return self.trader.symbol
-        elif self.simulationTrader:
-            return self.simulationTrader.symbol
+        elif self.simulation_trader:
+            return self.simulation_trader.symbol
         elif self.backtester:
             return self.backtester.symbol
         else:
@@ -1251,7 +1251,7 @@ class Interface(QMainWindow):
         if caller is None:
             webbrowser.open("https://www.binance.com/en")
         else:
-            symbol = self.interfaceDictionary[caller]['configuration']['ticker'].text()
+            symbol = self.interface_dictionary[caller]['configuration']['ticker'].text()
             if symbol.strip() == '' or 'USDT' not in symbol:  # TODO: Add more ticker pair separators.
                 webbrowser.open("https://www.binance.com/en")
             else:
@@ -1267,7 +1267,7 @@ class Interface(QMainWindow):
         if caller is None:
             webbrowser.open("https://www.tradingview.com/")
         else:
-            symbol = self.interfaceDictionary[caller]['configuration']['ticker'].text()
+            symbol = self.interface_dictionary[caller]['configuration']['ticker'].text()
             if symbol.strip() == '':
                 webbrowser.open("https://www.tradingview.com/")
             else:
@@ -1278,8 +1278,8 @@ class Interface(QMainWindow):
         Export trade history to a CSV file.
         :param caller: Caller that'll determine which trades get exported.
         """
-        table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
-        label = self.interfaceDictionary[caller]['mainInterface']['historyLabel']
+        table = self.interface_dictionary[caller]['mainInterface']['historyTable']
+        label = self.interface_dictionary[caller]['mainInterface']['historyLabel']
         columns = table.columnCount()
         rows = table.rowCount()
         trades = []
@@ -1317,8 +1317,8 @@ class Interface(QMainWindow):
         Import trade histories from a file.
         :param caller: Caller that will determine which trade table gets updated.
         """
-        table = self.interfaceDictionary[caller]['mainInterface']['historyTable']
-        label = self.interfaceDictionary[caller]['mainInterface']['historyLabel']
+        table = self.interface_dictionary[caller]['mainInterface']['historyTable']
+        label = self.interface_dictionary[caller]['mainInterface']['historyLabel']
         path = create_folder("Trade History")
         path, _ = QFileDialog.getOpenFileName(self, 'Import Trades', path, "CSV (*.csv)")
 
@@ -1349,9 +1349,9 @@ class Interface(QMainWindow):
         :return: Data object.
         """
         if caller == SIMULATION:
-            return self.simulationLowerIntervalData
+            return self.simulation_lower_interval_data
         elif caller == LIVE:
-            return self.lowerIntervalData
+            return self.lower_interval_data
         else:
             raise TypeError("Invalid type of caller specified.")
 
@@ -1362,7 +1362,7 @@ class Interface(QMainWindow):
         :return: Trader object.
         """
         if caller == SIMULATION:
-            return self.simulationTrader
+            return self.simulation_trader
         elif caller == LIVE:
             return self.trader
         elif caller == BACKTEST:

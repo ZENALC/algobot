@@ -62,7 +62,7 @@ def download_data(config_obj: Configuration, caller: int = BACKTEST):
     thread.signals.locked.connect(lambda:
                                   config_obj.optimizer_backtest_dict[caller]['stopDownloadButton'].setEnabled(False))
     config_obj.optimizer_backtest_dict[caller]['downloadThread'] = thread
-    config_obj.threadPool.start(thread)
+    config_obj.thread_pool.start(thread)
 
 
 def set_downloaded_data(config_obj: Configuration, data, caller: int = BACKTEST):
