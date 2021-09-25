@@ -67,7 +67,7 @@ class BotThread(QRunnable):
 
         self.lower_interval_notification = False
         self.lower_trend = 'None'
-        self.telegram_chat_id = gui.configuration.telegram_chat_id.text()
+        self.telegram_chat_id = gui.configuration.telegramChatID.text()
         self.caller = caller
         self.trader = None
 

@@ -64,7 +64,7 @@ def create_inner_tab(category_tabs: List[QTabWidget],
 
         if parent and parent.get_caller_based_on_tab(tab) == OPTIMIZER:
             group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {tab_name.lower()} optimization?")
-            input_creator(tab, group_box_layout, isOptimizer=True)
+            input_creator(tab, group_box_layout, is_optimizer=True)
         else:
             group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {tab_name.lower()}?")
             group_box.toggled.connect(lambda _, current_tab=tab: signal_function(tab=current_tab))

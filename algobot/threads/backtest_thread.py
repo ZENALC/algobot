@@ -68,7 +68,8 @@ class BacktestThread(QRunnable):
         }
 
         if 'movingAverage' in backtester.strategies:
-            temp_dict['options'] = [opt.get_pretty_option() for opt in backtester.strategies['movingAverage'].get_params()]
+            temp_dict['options'] = [
+                opt.get_pretty_option() for opt in backtester.strategies['movingAverage'].get_params()]
         else:
             temp_dict['options'] = [('Configuration Required', 'Configuration Required') for _ in range(2)]
 

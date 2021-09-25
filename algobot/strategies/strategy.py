@@ -57,7 +57,7 @@ class Strategy:
         :return: Current trader price.
         """
         # noinspection PyUnresolvedReferences
-        if isinstance(self.parent, algobot.traders.simulationtrader.SimulationTrader):
+        if isinstance(self.parent, algobot.traders.simulation_trader.SimulationTrader):
             if self.parent.current_price is None:
                 self.parent.current_price = self.parent.data_view.get_current_price()
 
