@@ -406,10 +406,10 @@ class Backtester(Trader):
 
         permutations = []
         strategies = combos.pop('strategies')
-        for v in product(*combos.values()):
-            permutations_dict = dict(zip(combos, v))
-            for z in product(*strategies.values()):
-                permutations_dict['strategies'] = dict(zip(strategies, z))
+        for combo in product(*combos.values()):
+            permutations_dict = dict(zip(combos, combo))
+            for strategy_combo in product(*strategies.values()):
+                permutations_dict['strategies'] = dict(zip(strategies, strategy_combo))
                 permutations.append(copy.deepcopy(permutations_dict))
         return permutations
 

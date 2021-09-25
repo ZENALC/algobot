@@ -55,7 +55,7 @@ class BacktestThread(QRunnable):
         else:
             stop_loss_percentage_string = 'Configuration Required'
 
-        d = {
+        temp_dict = {
             'starting_balance': f'${backtester.starting_balance}',
             'interval': backtester.interval,
             'margin_enabled': f'{backtester.margin_enabled}',
@@ -68,11 +68,11 @@ class BacktestThread(QRunnable):
         }
 
         if 'movingAverage' in backtester.strategies:
-            d['options'] = [opt.get_pretty_option() for opt in backtester.strategies['movingAverage'].get_params()]
+            temp_dict['options'] = [opt.get_pretty_option() for opt in backtester.strategies['movingAverage'].get_params()]
         else:
-            d['options'] = [('Configuration Required', 'Configuration Required') for _ in range(2)]
+            temp_dict['options'] = [('Configuration Required', 'Configuration Required') for _ in range(2)]
 
-        return d
+        return temp_dict
 
     def get_activity_dictionary(self, period: Dict[str, datetime], index: int, length: int) -> dict:
         """
