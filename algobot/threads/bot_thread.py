@@ -14,8 +14,8 @@ from algobot.helpers import convert_long_interval, convert_small_interval, get_e
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.config_utils.telegram_utils import test_telegram
 from algobot.telegram_bot import TelegramBot
-from algobot.traders.realtrader import RealTrader
-from algobot.traders.simulationtrader import SimulationTrader
+from algobot.traders.real_trader import RealTrader
+from algobot.traders.simulation_trader import SimulationTrader
 
 
 class BotSignals(QObject):

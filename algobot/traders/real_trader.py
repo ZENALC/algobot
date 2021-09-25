@@ -10,7 +10,7 @@ from binance.client import Client
 from binance.enums import ORDER_TYPE_MARKET, SIDE_BUY, SIDE_SELL
 
 from algobot.enums import LONG, SHORT
-from algobot.traders.simulationtrader import SimulationTrader
+from algobot.traders.simulation_trader import SimulationTrader
 
 
 class RealTrader(SimulationTrader):

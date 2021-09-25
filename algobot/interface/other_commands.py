@@ -17,9 +17,9 @@ from PyQt5.QtWidgets import QApplication, QDialog, QLineEdit, QMessageBox
 import algobot
 from algobot.helpers import ROOT_DIR, convert_long_interval, create_folder, get_logger, open_file_or_folder
 from algobot.interface.utils import create_popup, open_from_msg_box
-from algobot.threads.downloadThread import DownloadThread
-from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread
-from algobot.threads.workerThread import Worker
+from algobot.threads.download_thread import DownloadThread
+from algobot.threads.volatility_snooper_thread import VolatilitySnooperThread
+from algobot.threads.worker_thread import Worker
 
 if TYPE_CHECKING:
     from algobot.__main__ import Interface

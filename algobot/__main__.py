@@ -34,10 +34,10 @@ from algobot.interface.utils import (add_to_table, clear_table, create_popup, op
 from algobot.news_scraper import scrape_news
 from algobot.slots import initiate_slots
 from algobot.telegram_bot import TelegramBot
-from algobot.threads import backtestThread, botThread, optimizerThread, workerThread
+from algobot.threads import backtest_thread, bot_thread, optimizer_thread, worker_thread
 from algobot.traders.backtester import Backtester
-from algobot.traders.realtrader import RealTrader
-from algobot.traders.simulationtrader import SimulationTrader
+from algobot.traders.real_trader import RealTrader
+from algobot.traders.simulation_trader import SimulationTrader
 
 app = QApplication(sys.argv)
 mainUi = os.path.join(ROOT_DIR, 'UI', 'algobot.ui')
@@ -137,7 +137,7 @@ class Interface(QMainWindow):
         """
         self.newsStatusLabel.setText("Retrieving latest news...")
         self.refreshNewsButton.setEnabled(False)
-        news_thread = workerThread.Worker(scrape_news)
+        news_thread = worker_thread.Worker(scrape_news)
         news_thread.signals.error.connect(self.news_thread_error)
         news_thread.signals.finished.connect(self.setup_news)
         news_thread.signals.restore.connect(lambda: self.refreshNewsButton.setEnabled(True))
@@ -160,7 +160,7 @@ class Interface(QMainWindow):
         """
         self.configuration.serverResult.setText("Updating tickers...")
         self.configuration.updateTickers.setEnabled(False)
-        ticker_thread = workerThread.Worker(self.get_tickers)
+        ticker_thread = worker_thread.Worker(self.get_tickers)
         ticker_thread.signals.error.connect(self.tickers_thread_error)
         ticker_thread.signals.finished.connect(self.setup_tickers)
         ticker_thread.signals.restore.connect(lambda: self.configuration.updateTickers.setEnabled(True))
@@ -325,7 +325,7 @@ class Interface(QMainWindow):
             create_popup(self, "Please configure your strategies correctly.")
             return
 
-        self.threads[OPTIMIZER] = optimizerThread.OptimizerThread(gui=self, logger=self.logger, combos=combos)
+        self.threads[OPTIMIZER] = optimizer_thread.OptimizerThread(gui=self, logger=self.logger, combos=combos)
         worker = self.threads[OPTIMIZER]
         worker.signals.started.connect(lambda: self.set_optimizer_buttons(running=True, clear=True))
         worker.signals.restore.connect(lambda: self.set_optimizer_buttons(running=False, clear=False))
@@ -373,7 +373,7 @@ class Interface(QMainWindow):
             return
 
         self.disable_interface(disable=True, caller=BACKTEST)
-        self.threads[BACKTEST] = backtestThread.BacktestThread(gui=self, logger=self.logger)
+        self.threads[BACKTEST] = backtest_thread.BacktestThread(gui=self, logger=self.logger)
 
         worker = self.threads[BACKTEST]
         worker.signals.started.connect(self.setup_backtester)
@@ -557,7 +557,7 @@ class Interface(QMainWindow):
             return
 
         self.disable_interface(True, caller)
-        worker = botThread.BotThread(gui=self, caller=caller, logger=self.logger)
+        worker = bot_thread.BotThread(gui=self, caller=caller, logger=self.logger)
         worker.signals.small_error.connect(lambda x: create_popup(self, x))
         worker.signals.error.connect(self.end_crash_bot_and_create_popup)
         worker.signals.activity.connect(self.add_to_monitor)
@@ -599,7 +599,7 @@ class Interface(QMainWindow):
         """
         self.disable_interface(True, caller=caller, everything=True)  # Disable everything until everything is done.
         self.enable_override(caller, False)  # Disable overrides.
-        thread = workerThread.Worker(lambda: self.end_bot_gracefully(caller=caller))
+        thread = worker_thread.Worker(lambda: self.end_bot_gracefully(caller=caller))
         thread.signals.error.connect(lambda x: create_popup(self, x))
         thread.signals.finished.connect(lambda: self.add_end_bot_status(caller=caller))
         thread.signals.restore.connect(lambda: self.reset_bot_interface(caller=caller))
@@ -898,7 +898,7 @@ class Interface(QMainWindow):
         :param caller: Caller that will specify which trader will exit position.
         """
         self.add_to_monitor(caller, 'Exiting position...')
-        thread = workerThread.Worker(lambda: self.exit_position_thread(caller=caller, human_control=human_control))
+        thread = worker_thread.Worker(lambda: self.exit_position_thread(caller=caller, human_control=human_control))
         thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
         thread.signals.finished.connect(lambda: self.set_exit_position_gui(caller=caller, human_control=human_control))
         thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
@@ -932,7 +932,7 @@ class Interface(QMainWindow):
         :param caller: Caller that will determine with trader will force long.
         """
         self.add_to_monitor(caller, 'Forcing long and stopping autonomous logic...')
-        thread = workerThread.Worker(lambda: self.force_long_thread(caller=caller))
+        thread = worker_thread.Worker(lambda: self.force_long_thread(caller=caller))
         thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
         thread.signals.finished.connect(lambda: self.set_force_long_gui(caller=caller))
         thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
@@ -966,7 +966,7 @@ class Interface(QMainWindow):
         :param caller: Caller that will determine with trader will force short.
         """
         self.add_to_monitor(caller, 'Forcing short and stopping autonomous logic...')
-        thread = workerThread.Worker(lambda: self.force_short_thread(caller=caller))
+        thread = worker_thread.Worker(lambda: self.force_short_thread(caller=caller))
         thread.signals.started.connect(lambda: self.enable_override(caller=caller, enabled=False))
         thread.signals.finished.connect(lambda: self.set_force_short_gui(caller=caller))
         thread.signals.restore.connect(lambda: self.enable_override(caller=caller, enabled=True))
@@ -1221,7 +1221,7 @@ class Interface(QMainWindow):
         This will update values from Binance.
         """
         if self.trader is not None:
-            thread = workerThread.Worker(self.trader.retrieve_margin_values)
+            thread = worker_thread.Worker(self.trader.retrieve_margin_values)
             thread.signals.finished.connect(lambda: create_popup(self, 'Successfully updated values.'))
             thread.signals.error.connect(lambda x: create_popup(self, x))
             self.thread_pool.start(thread)
