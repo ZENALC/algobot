@@ -52,6 +52,7 @@ class Interface(QMainWindow):
         For bug reports or feature requests, please create an issue at: https://github.com/ZENALC/algobot/issues.
         For available documentation, please visit: https://github.com/ZENALC/algobot/wiki.
     """
+
     def __init__(self, parent=None):
         algobot.assets.qInitResources()
         super(Interface, self).__init__(parent)  # Initializing object
@@ -527,9 +528,9 @@ class Interface(QMainWindow):
             else:
                 raise ValueError("Invalid type of caller specified.")
 
-            qm = QMessageBox
-            ret = qm.question(self, 'Warning', message, qm.Yes | qm.No)
-            return ret == qm.Yes
+            msg_box = QMessageBox
+            ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
+            return ret == msg_box.Yes
         return True
 
     def validate_ticker(self, caller: int):
@@ -1156,7 +1157,7 @@ class Interface(QMainWindow):
         :param event: close event
         """
         save_state(self.configuration)
-        qm = QMessageBox
+        msg_box = QMessageBox
         message = ""
         if self.simulation_running_live and self.running_live:
             message = "There is a live bot and a simulation running."
@@ -1164,10 +1165,10 @@ class Interface(QMainWindow):
             message = "There is a simulation running."
         elif self.running_live:
             message = "There is a live bot running."
-        ret = qm.question(self, 'Close?', f"{message} Are you sure you want to end Algobot?",
-                          qm.Yes | qm.No)
+        ret = msg_box.question(self, 'Close?', f"{message} Are you sure you want to end Algobot?",
+                               msg_box.Yes | msg_box.No)
 
-        if ret == qm.Yes:
+        if ret == msg_box.Yes:
             if self.running_live:
                 self.end_bot_gracefully(caller=LIVE)
             elif self.simulation_running_live:

@@ -25,15 +25,15 @@ class DownloadThread(QRunnable):
     """
     Thread to use for downloads.
     """
-    def __init__(self, interval, symbol, descending=None, armyTime=None, startDate=None, caller=None, logger=None):
+    def __init__(self, interval, symbol, descending=None, army_time=None, start_date=None, caller=None, logger=None):
         super(DownloadThread, self).__init__()
         self.caller = caller
         self.signals = DownloadSignals()
         self.symbol = symbol
         self.interval = interval
         self.descending = descending
-        self.army_time = armyTime
-        self.start_date = startDate
+        self.army_time = army_time
+        self.start_date = start_date
         self.logger = logger
         self.client: Data or None = None
 

@@ -47,6 +47,7 @@ class BotThread(QRunnable):
     """
     Main bot thread to run simulations and live bots.
     """
+
     def __init__(self, caller: int, gui, logger):
         super(BotThread, self).__init__()
         self.signals = BotSignals()
@@ -453,7 +454,7 @@ class BotThread(QRunnable):
                     fail_count = self.fail_count
                     gui = self.gui
                     gui.telegram_bot.send_message(self.telegram_chat_id, f"({fail_count})Trying again in "
-                                                                      f"{fail_sleep} seconds.")
+                                                                         f"{fail_sleep} seconds.")
         except Exception as telegram_error:
             self.logger.critical(str(telegram_error))
 

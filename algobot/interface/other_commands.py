@@ -87,10 +87,10 @@ class OtherCommands(QDialog):
 
         message = f'Are you sure you want to delete your {directory.lower()} files? You might not be able to undo ' \
                   f'this operation. \n\nThe following path will be deleted: \n{path}'
-        qm = QMessageBox
-        ret = qm.question(self, 'Warning', message, qm.Yes | qm.No)
+        msg_box = QMessageBox
+        ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
 
-        if ret == qm.Yes and os.path.exists(path):
+        if ret == msg_box.Yes and os.path.exists(path):
             shutil.rmtree(path)
             self.infoLabel.setText(f'{directory.capitalize()} files have been successfully deleted.')
 
