@@ -58,7 +58,7 @@ def create_action_slots(gui: Interface):
     """
     Creates actions slots.
     """
-    gui.otherCommandsAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.otherCommands))
+    gui.otherCommandsAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.other_commands))
     gui.configurationAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.configuration))
     gui.aboutAlgobotAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.about))
     gui.liveStatisticsAction.triggered.connect(lambda: gui.show_statistics(0))

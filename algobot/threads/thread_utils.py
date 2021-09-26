@@ -22,28 +22,28 @@ def get_config_helper(gui, caller) -> Dict[str, Any]:
     precision = algo_dict['precision'].currentText()
     symbol = gui.configuration.optimizer_backtest_dict[caller]['dataType']
 
-    d = {
-        'startDate': start_date,
-        'endDate': end_date,
+    temp_dict = {
+        'start_date': start_date,
+        'end_date': end_date,
         'symbol': symbol,
-        'startingBalance': algo_dict['startingBalance'].value(),
+        'starting_balance': algo_dict['startingBalance'].value(),
         'data': gui.configuration.optimizer_backtest_dict[caller]['data'],
         'precision': parse_precision(precision, symbol),
-        'marginEnabled': algo_dict['marginEnabled'].isChecked(),
-        'strategyInterval': algo_dict['strategyInterval'].currentText(),
+        'margin_enabled': algo_dict['marginEnabled'].isChecked(),
+        'strategy_interval': algo_dict['strategyInterval'].currentText(),
         'logger': gui.logger
     }
 
     if caller == OPTIMIZER:
-        d.update({
-            'drawdownPercentage': algo_dict['drawdownPercentage'].value(),
+        temp_dict.update({
+            'drawdown_percentage': algo_dict['drawdownPercentage'].value(),
             'strategies': []
         })
 
     if caller == BACKTEST:
-        d.update({
-            'outputTrades': algo_dict['outputTrades'].isChecked(),
+        temp_dict.update({
+            'output_trades': algo_dict['outputTrades'].isChecked(),
             'strategies': get_strategies(gui.configuration, BACKTEST),
         })
 
-    return d
+    return temp_dict

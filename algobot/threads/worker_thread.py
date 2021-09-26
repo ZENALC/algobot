@@ -21,15 +21,15 @@ class Worker(QRunnable):
     """
     Worker thread inherited from QRunnable to handler worker thread setup, signals and wrap-up.
 
-    :param fn: The function callback to run on this worker thread. Supplied args and kwargs will be passed through
+    :param function: The function callback to run on this worker thread. Supplied args and kwargs will be passed through
       to the runner.
     :param args: Arguments to pass to the callback function
     :param kwargs: Keywords to pass to the callback function
 
     """
-    def __init__(self, fn, *args, **kwargs):
+    def __init__(self, function, *args, **kwargs):
         super(Worker, self).__init__()
-        self.fn = fn
+        self.function = function
         self.args = args
         self.kwargs = kwargs
         self.signals = WorkerSignals()
@@ -41,7 +41,7 @@ class Worker(QRunnable):
         """
         try:
             self.signals.started.emit()
-            result = self.fn(*self.args, **self.kwargs)
+            result = self.function(*self.args, **self.kwargs)
             self.signals.finished.emit(result)
         except Exception as e:
             algobot.MAIN_LOGGER.exception(repr(e))

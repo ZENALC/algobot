@@ -118,6 +118,7 @@ class TALIBMap:
             args=[Arg("Time Period", int)]
         )
 
+        # pylint: disable=invalid-name
         self.t3 = TALIBEntry(
             name='T3',
             stream=lambda s, i, v: talib.T3(s, i, v).iloc[-1],

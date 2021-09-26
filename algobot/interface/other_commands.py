@@ -17,9 +17,9 @@ from PyQt5.QtWidgets import QApplication, QDialog, QLineEdit, QMessageBox
 import algobot
 from algobot.helpers import ROOT_DIR, convert_long_interval, create_folder, get_logger, open_file_or_folder
 from algobot.interface.utils import create_popup, open_from_msg_box
-from algobot.threads.downloadThread import DownloadThread
-from algobot.threads.volatilitySnooperThread import VolatilitySnooperThread
-from algobot.threads.workerThread import Worker
+from algobot.threads.download_thread import DownloadThread
+from algobot.threads.volatility_snooper_thread import VolatilitySnooperThread
+from algobot.threads.worker_thread import Worker
 
 if TYPE_CHECKING:
     from algobot.__main__ import Interface
@@ -38,14 +38,15 @@ class OtherCommands(QDialog):
         super(OtherCommands, self).__init__(parent)  # Initializing object
         uic.loadUi(otherCommandsUi, self)  # Loading the main UI
         self.parent = parent
-        self.threadPool = QThreadPool()
+        self.thread_pool = QThreadPool()
         self.load_slots()
-        self.csvThread = None
-        self.volatilityThread = None
-        self.setDateThread = None
-        self.currentDateList = None
+        self.csv_thread = None
+        self.volatility_thread = None
+        self.set_date_thread = None
+        self.current_date_list = None
 
-    def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+    def mousePressEvent(self, _: QtGui.QMouseEvent) -> None:
+        # pylint: disable=invalid-name
         """
         Overrides QDialog to detect click events. Used mainly to clear focus from QLineEdits.
         """
@@ -86,10 +87,10 @@ class OtherCommands(QDialog):
 
         message = f'Are you sure you want to delete your {directory.lower()} files? You might not be able to undo ' \
                   f'this operation. \n\nThe following path will be deleted: \n{path}'
-        qm = QMessageBox
-        ret = qm.question(self, 'Warning', message, qm.Yes | qm.No)
+        msg_box = QMessageBox
+        ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
 
-        if ret == qm.Yes and os.path.exists(path):
+        if ret == msg_box.Yes and os.path.exists(path):
             shutil.rmtree(path)
             self.infoLabel.setText(f'{directory.capitalize()} files have been successfully deleted.')
 
@@ -103,11 +104,11 @@ class OtherCommands(QDialog):
         self.csvGenerationTicker.clearFocus()  # Shift focus to next element.
         self.csvGenerationStatus.setText("Searching for earliest start date..")
         self.csvGenerationProgressBar.setValue(0)
-        self.setDateThread = Worker(self.get_start_date_for_csv)
-        self.setDateThread.signals.finished.connect(self.set_start_date_for_csv)
-        self.setDateThread.signals.started.connect(lambda: self.generateCSVButton.setEnabled(False))
-        self.setDateThread.signals.error.connect(self.error_handle_for_csv_start_date)
-        self.threadPool.start(self.setDateThread)
+        self.set_date_thread = Worker(self.get_start_date_for_csv)
+        self.set_date_thread.signals.finished.connect(self.set_start_date_for_csv)
+        self.set_date_thread.signals.started.connect(lambda: self.generateCSVButton.setEnabled(False))
+        self.set_date_thread.signals.error.connect(self.error_handle_for_csv_start_date)
+        self.thread_pool.start(self.set_date_thread)
 
     # noinspection PyProtectedMember
     def get_start_date_for_csv(self) -> List[QDate]:
@@ -118,21 +119,21 @@ class OtherCommands(QDialog):
         interval = convert_long_interval(self.csvGenerationDataInterval.currentText())
 
         # pylint: disable=protected-access
-        ts = algobot.BINANCE_CLIENT._get_earliest_valid_timestamp(symbol, interval)
-        startDate = datetime.fromtimestamp(int(ts) / 1000, tz=timezone.utc)
-        qStart = QDate(startDate.year, startDate.month, startDate.day)
+        earliest_ts = algobot.BINANCE_CLIENT._get_earliest_valid_timestamp(symbol, interval)
+        start_date = datetime.fromtimestamp(int(earliest_ts) / 1000, tz=timezone.utc)
+        q_start = QDate(start_date.year, start_date.month, start_date.day)
 
-        endDate = datetime.now(tz=timezone.utc)
-        qEnd = QDate(endDate.year, endDate.month, endDate.day)
-        return [qStart, qEnd]
+        end_date = datetime.now(tz=timezone.utc)
+        q_end = QDate(end_date.year, end_date.month, end_date.day)
+        return [q_start, q_end]
 
-    def set_start_date_for_csv(self, startEndList: List[QDate]):
+    def set_start_date_for_csv(self, start_end_list: List[QDate]):
         """
         Sets start date for CSV generation based on the parameters provided.
         """
-        self.currentDateList = startEndList
-        self.startDateCalendar.setDateRange(*startEndList)
-        self.startDateCalendar.setSelectedDate(startEndList[0])
+        self.current_date_list = start_end_list
+        self.startDateCalendar.setDateRange(*start_end_list)
+        self.startDateCalendar.setSelectedDate(start_end_list[0])
         self.csvGenerationStatus.setText("Setup filtered date successfully.")
         self.generateCSVButton.setEnabled(True)
 
@@ -149,22 +150,22 @@ class OtherCommands(QDialog):
         """
         symbol = self.csvGenerationTicker.text()
         descending = self.descendingDateRadio.isChecked()
-        armyTime = self.armyDateRadio.isChecked()
+        army_time = self.armyDateRadio.isChecked()
         interval = convert_long_interval(self.csvGenerationDataInterval.currentText())
 
-        selectedDate = self.startDateCalendar.selectedDate().toPyDate()
-        startDate = None if selectedDate == self.currentDateList[0] else selectedDate
+        selected_date = self.startDateCalendar.selectedDate().toPyDate()
+        start_date = None if selected_date == self.current_date_list[0] else selected_date
 
         self.csvGenerationStatus.setText("Downloading data...")
-        thread = DownloadThread(interval, symbol, descending, armyTime, startDate, logger=self.parent.logger)
+        thread = DownloadThread(interval, symbol, descending, army_time, start_date, logger=self.parent.logger)
         thread.signals.locked.connect(lambda: self.stopButton.setEnabled(False))
         thread.signals.csv_finished.connect(self.end_csv_generation)
         thread.signals.error.connect(lambda e: self.csvGenerationStatus.setText(f"Download failed with error: {e}"))
         thread.signals.restore.connect(lambda: self.modify_csv_ui(running=False, reset=True))
         thread.signals.progress.connect(self.progress_update)
         thread.signals.started.connect(lambda: self.modify_csv_ui(running=True))
-        self.csvThread = thread
-        self.threadPool.start(thread)
+        self.csv_thread = thread
+        self.thread_pool.start(thread)
 
     def progress_update(self, progress: int, message: str):
         """
@@ -175,20 +176,20 @@ class OtherCommands(QDialog):
         self.csvGenerationProgressBar.setValue(progress)
         self.csvGenerationStatus.setText(message)
 
-    def end_csv_generation(self, savedPath: str):
+    def end_csv_generation(self, saved_path: str):
         """
         After getting a successful end signal from thread, it modifies GUI to reflect this action. It also opens up a
         pop-up asking the user if they want to open the file right away.
-        :param savedPath: Path where the file was saved.
+        :param saved_path: Path where the file was saved.
         """
-        msg = f"Successfully saved CSV data to {savedPath}."
+        msg = f"Successfully saved CSV data to {saved_path}."
 
         self.csvGenerationStatus.setText(msg)
         self.csvGenerationProgressBar.setValue(100)
         self.generateCSVButton.setEnabled(True)
 
-        if open_from_msg_box(text=f"Successfully saved CSV data to {savedPath}.", title="Data saved successfully."):
-            open_file_or_folder(savedPath)
+        if open_from_msg_box(text=f"Successfully saved CSV data to {saved_path}.", title="Data saved successfully."):
+            open_file_or_folder(saved_path)
 
     def modify_csv_ui(self, running: bool, reset: bool = False):
         """
@@ -200,15 +201,15 @@ class OtherCommands(QDialog):
         self.stopButton.setEnabled(running)
 
         if reset:
-            self.csvThread = None
+            self.csv_thread = None
 
     def stop_csv_generation(self):
         """
         Stops download if download is in progress.
         """
-        if self.csvThread:
+        if self.csv_thread:
             self.csvGenerationStatus.setText("Canceling download...")
-            self.csvThread.stop()
+            self.csv_thread.stop()
 
     def end_snoop_generate_volatility_report(self, volatility_dict: Dict[str, Any], output_type: str):
         """
@@ -224,7 +225,7 @@ class OtherCommands(QDialog):
 
         df = pd.DataFrame(list(volatility_dict.items()), columns=['Ticker', 'Volatility'])
         if output_type.lower() == 'csv':
-            df.to_csv(file_path, index=False)
+            df.to_csv(file_path, index=False)  # noqa
         elif output_type.lower() == 'xlsx':
             df.to_excel(file_path, index=False)
         else:
@@ -239,9 +240,9 @@ class OtherCommands(QDialog):
         """
         Stop the snooping process.
         """
-        if self.volatilityThread:
+        if self.volatility_thread:
             self.volatilityStatus.setText("Stopping volatility snooper...")
-            self.volatilityThread.stop()
+            self.volatility_thread.stop()
             self.volatilityProgressBar.setValue(0)
             self.volatilityStatus.setText("Stopped volatility snooper.")
         else:
@@ -267,13 +268,13 @@ class OtherCommands(QDialog):
         status = self.volatilityStatus
         output_type = self.volatilityFileType.currentText()
 
-        self.volatilityThread = thread = VolatilitySnooperThread(periods=periods, interval=interval,
-                                                                 volatility=volatility, tickers=self.parent.tickers,
-                                                                 filter_word=ticker_filter)
+        self.volatility_thread = thread = VolatilitySnooperThread(periods=periods, interval=interval,
+                                                                  volatility=volatility, tickers=self.parent.tickers,
+                                                                  filter_word=ticker_filter)
         thread.signals.progress.connect(progress_bar.setValue)
         thread.signals.activity.connect(status.setText)
         thread.signals.error.connect(lambda x: status.setText(f'Error: {x}'))
         thread.signals.started.connect(lambda: self.modify_snooper_ui(running=True))
         thread.signals.restore.connect(lambda: self.modify_snooper_ui(running=False))
         thread.signals.finished.connect(lambda d: self.end_snoop_generate_volatility_report(d, output_type=output_type))
-        self.threadPool.start(thread)
+        self.thread_pool.start(thread)

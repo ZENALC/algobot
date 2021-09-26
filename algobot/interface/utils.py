@@ -53,17 +53,17 @@ def show_and_bring_window_to_front(window: QDialog):
     window.raise_()
 
 
-def add_to_table(table: QTableWidget, data: list, insertDate=True):
+def add_to_table(table: QTableWidget, data: list, insert_date: bool = True):
     """
     Function that will add specified data to a provided table.
-    :param insertDate: Boolean to add date to 0th index of data or not.
+    :param insert_date: Boolean to add date to 0th index of data or not.
     :param table: Table we will add data to.
     :param data: Data we will add to table.
     """
     row_position = table.rowCount()
     columns = table.columnCount()
 
-    if insertDate:
+    if insert_date:
         data.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     if len(data) != columns:

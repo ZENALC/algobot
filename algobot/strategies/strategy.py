@@ -42,13 +42,13 @@ class Strategy:
         # non-numeric, the program will crash. This should hold the key of the value and then the list containing
         # the value then the color.
         #
-        # For example -> self.plotDict['SMA(5)'] = [13, 'ffffff'] -> SMA(5) value of 13 with a hex color of white.
-        self.plotDict: Dict[str, List[Union[float, str]]] = {}
+        # For example -> self.plot_dict['SMA(5)'] = [13, 'ffffff'] -> SMA(5) value of 13 with a hex color of white.
+        self.plot_dict: Dict[str, List[Union[float, str]]] = {}
 
         # Dictionary for the what's going on in the strategy. This needs two keys: one which is 'regular' and another
         # which is 'lower'. The two keys will then hold dictionaries for the strategies' values in lower and regular
         # interval data.
-        self.strategyDict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
+        self.strategy_dict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
 
     def get_current_trader_price(self):
         """
@@ -57,11 +57,11 @@ class Strategy:
         :return: Current trader price.
         """
         # noinspection PyUnresolvedReferences
-        if isinstance(self.parent, algobot.traders.simulationtrader.SimulationTrader):
-            if self.parent.currentPrice is None:
-                self.parent.currentPrice = self.parent.dataView.get_current_price()
+        if isinstance(self.parent, algobot.traders.simulation_trader.SimulationTrader):
+            if self.parent.current_price is None:
+                self.parent.current_price = self.parent.data_view.get_current_price()
 
-            return self.parent.currentPrice
+            return self.parent.current_price
 
         return 0
 
@@ -93,7 +93,7 @@ class Strategy:
         This function should return plot data for bot. By default, it'll return an empty dictionary.
         :return: Plot data dictionary.
         """
-        return self.plotDict
+        return self.plot_dict
 
     def get_interval_type(self, data) -> str:
         """
@@ -101,7 +101,7 @@ class Strategy:
         :param data: Data object.
         :return: The interval - it can either be regular or lower.
         """
-        if isinstance(data, list) or data == self.parent.dataView:
+        if isinstance(data, list) or data == self.parent.data_view:
             return 'regular'
         else:
             return 'lower'
@@ -127,8 +127,8 @@ class Strategy:
         """
         Clears strategy dictionary.
         """
-        self.strategyDict['regular'] = {}
-        self.strategyDict['lower'] = {}
+        self.strategy_dict['regular'] = {}
+        self.strategy_dict['lower'] = {}
 
     def get_appropriate_dictionary(self, data: Union[list, Data]) -> Dict[str, Any]:
         """
@@ -137,7 +137,7 @@ class Strategy:
         finally, if none of them are selected, then it's most likely the lower interval's dictionary.
         """
         interval_type = self.get_interval_type(data)
-        return self.strategyDict[interval_type]
+        return self.strategy_dict[interval_type]
 
     def get_min_option_period(self) -> int:
         """
@@ -153,6 +153,6 @@ class Strategy:
         :param grouped_dict: Grouped dictionary (strategy key) to populate.
         :return: None
         """
-        for interval_dict in self.strategyDict.values():
+        for interval_dict in self.strategy_dict.values():
             for key, value in interval_dict.items():
                 grouped_dict[key] = value if not isinstance(value, float) else round(value, self.precision)

@@ -2,6 +2,8 @@
 Basic indicators. TODO: Deprecate and move to TA-LIB.
 """
 
+# pylint: disable=invalid-name
+
 import math
 from datetime import datetime
 from typing import Dict, List, Tuple, Union

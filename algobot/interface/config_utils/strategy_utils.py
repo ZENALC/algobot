@@ -25,10 +25,10 @@ def strategy_enabled(config_obj: Configuration, strategy_name: str, caller: int)
     """
     tab = config_obj.get_category_tab(caller)
 
-    if strategy_name in config_obj.hiddenStrategies:
+    if strategy_name in config_obj.hidden_strategies:
         return False
 
-    return config_obj.strategyDict[tab, strategy_name, 'groupBox'].isChecked()
+    return config_obj.strategy_dict[tab, strategy_name, 'groupBox'].isChecked()
 
 
 def get_strategies(config_obj: Configuration, caller: int) -> List[tuple]:
@@ -42,8 +42,8 @@ def get_strategies(config_obj: Configuration, caller: int) -> List[tuple]:
     for strategy_name, strategy in config_obj.strategies.items():
         if strategy_enabled(config_obj, strategy_name, caller):
             values = get_strategy_values(config_obj, strategy_name, caller, verbose=True)
-            strategyTuple = (strategy, values, strategy_name)
-            strategies.append(strategyTuple)
+            strategy_tuple = (strategy, values, strategy_name)
+            strategies.append(strategy_tuple)
 
     return strategies
 
@@ -59,7 +59,7 @@ def get_strategy_values(config_obj: Configuration, strategy_name: str, caller: i
     """
     tab = config_obj.get_category_tab(caller)
     values = []
-    for input_widget in config_obj.strategyDict[tab, strategy_name, 'values']:
+    for input_widget in config_obj.strategy_dict[tab, strategy_name, 'values']:
         values.append(get_input_widget_value(input_widget, verbose=verbose))
 
     return values
@@ -75,34 +75,34 @@ def set_strategy_values(config_obj: Configuration, strategy_name: str, caller: i
     :return: None
     """
     tab = config_obj.get_category_tab(caller)
-    target_values = config_obj.strategyDict[tab, strategy_name, 'values']
-    parameters = config_obj.strategyDict[tab, strategy_name, 'parameters']
-    layout = config_obj.strategyDict[tab, strategy_name, 'layout']
+    target_values = config_obj.strategy_dict[tab, strategy_name, 'values']
+    parameters = config_obj.strategy_dict[tab, strategy_name, 'parameters']
+    layout = config_obj.strategy_dict[tab, strategy_name, 'layout']
 
     while len(values) < len(target_values):
-        delete_strategy_inputs(config_obj.strategyDict, parameters, strategy_name, tab)
+        delete_strategy_inputs(config_obj.strategy_dict, parameters, strategy_name, tab)
     while len(values) > len(target_values):
-        add_strategy_inputs(config_obj.strategyDict, parameters, strategy_name, layout, tab)
+        add_strategy_inputs(config_obj.strategy_dict, parameters, strategy_name, layout, tab)
 
     for index, widget in enumerate(target_values):
         value = values[index]
         set_value(widget, value)
 
 
-def add_strategy_inputs(strategyDict: dict, parameters: list, strategyName: str, groupBoxLayout, tab: QTabWidget):
+def add_strategy_inputs(strategy_dict: dict, parameters: list, strategy_name: str, group_box_layout, tab: QTabWidget):
     """
     Adds strategy parameters to the layout provided.
-    :param strategyDict: Dictionary to modify.
+    :param strategy_dict: Dictionary to modify.
     :param parameters: Parameters to add to the group box layout.
-    :param strategyName: Name of strategy.
-    :param groupBoxLayout: Layout to add parameters to.
+    :param strategy_name: Name of strategy.
+    :param group_box_layout: Layout to add parameters to.
     :param tab: Add which group box layout is in.
     :return: None
     """
-    values, labels = create_strategy_inputs(parameters, strategyName, groupBoxLayout)
-    strategyDict[tab, strategyName, 'labels'] += labels
-    strategyDict[tab, strategyName, 'values'] += values
-    strategyDict[tab, strategyName, 'status'].setText("Added additional slots.")
+    values, labels = create_strategy_inputs(parameters, strategy_name, group_box_layout)
+    strategy_dict[tab, strategy_name, 'labels'] += labels
+    strategy_dict[tab, strategy_name, 'values'] += values
+    strategy_dict[tab, strategy_name, 'status'].setText("Added additional slots.")
 
 
 def delete_strategy_inputs(strategy_dict: Dict[Any, Any], parameters: list, strategy_name: str, tab: QTabWidget):
@@ -206,8 +206,8 @@ def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Typ
     return {strategy().name: strategy for strategy in strategies}
 
 
-def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_combobox: QComboBox,
-                                     start_index: int = 0, filter_intervals: bool = True, divisor: int = None):
+def reset_strategy_interval_combo_box(strategy_combobox: QComboBox, interval_combobox: QComboBox,
+                                      start_index: int = 0, filter_intervals: bool = True, divisor: int = None):
     """
     This function will reset the strategy combobox based on what interval is picked in the interval combobox.
     :param strategy_combobox: Combobox to modify based on the interval combobox.
@@ -224,7 +224,7 @@ def reset_strategy_interval_comboBox(strategy_combobox: QComboBox, interval_comb
     data_index = interval_combobox.currentIndex()
 
     strategy_interval = strategy_combobox.currentText()
-    intervals = get_interval_strings(startingIndex=start_index + data_index)
+    intervals = get_interval_strings(starting_index=start_index + data_index)
 
     if filter_intervals:
         divisor = divisor if divisor is not None else data_interval_minutes

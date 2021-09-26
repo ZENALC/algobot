@@ -22,7 +22,7 @@ class MovingAverageStrategy(Strategy):
         Basic Moving Average strategy.
         """
         super().__init__(name='Moving Average', parent=parent, precision=precision)
-        self.tradingOptions: List[Option] = self.parse_inputs(inputs)
+        self.trading_options: List[Option] = self.parse_inputs(inputs)
         self.dynamic = True
         self.description = "Basic trading strategy using moving averages. If the moving average of initial is greater" \
                            " than final, a bullish trend is determined. If the moving average of final is greater, a " \
@@ -38,10 +38,10 @@ class MovingAverageStrategy(Strategy):
         Initializes plot dictionary for the Moving Average class.
         """
         # TODO: Add support for colors in the actual program.
-        for option in self.tradingOptions:
-            initialName, finalName = option.get_pretty_option()
-            self.plotDict[initialName] = [self.get_current_trader_price(), get_random_color()]
-            self.plotDict[finalName] = [self.get_current_trader_price(), get_random_color()]
+        for option in self.trading_options:
+            initial_name, final_name = option.get_pretty_option()
+            self.plot_dict[initial_name] = [self.get_current_trader_price(), get_random_color()]
+            self.plot_dict[final_name] = [self.get_current_trader_price(), get_random_color()]
 
     @staticmethod
     def parse_inputs(inputs):
@@ -56,7 +56,7 @@ class MovingAverageStrategy(Strategy):
         """
         Sets trading options provided.
         """
-        self.tradingOptions = self.parse_inputs(inputs)
+        self.trading_options = self.parse_inputs(inputs)
 
     def get_min_option_period(self) -> int:
         """
@@ -65,7 +65,7 @@ class MovingAverageStrategy(Strategy):
         :return: Minimum period of days required.
         """
         minimum = 0
-        for option in self.tradingOptions:
+        for option in self.trading_options:
             minimum = max(minimum, option.finalBound, option.initialBound)
         return minimum
 
@@ -90,7 +90,7 @@ class MovingAverageStrategy(Strategy):
         """
         This function will return all the parameters used for the Moving Average strategy.
         """
-        return self.tradingOptions
+        return self.trading_options
 
     def get_trend(self, df: pd.DataFrame, data, log_data: bool = False) -> int:
         """
@@ -103,7 +103,7 @@ class MovingAverageStrategy(Strategy):
         trends = []  # Current option trends. They all have to be the same to register a trend.
         func_type = STREAM
 
-        for option in self.tradingOptions:
+        for option in self.trading_options:
             moving_average, parameter, initial_bound, final_bound = option.get_all_params()
             initial_name, final_name = option.get_pretty_option()
 
@@ -117,12 +117,12 @@ class MovingAverageStrategy(Strategy):
                 parent.output_message(f'{moving_average}({initial_bound}) {parameter} = {avg1}')
                 parent.output_message(f'{moving_average}({final_bound}) {parameter} = {avg2}')
 
-            self.strategyDict[interval_type][f'{prefix}{initial_name}'] = avg1
-            self.strategyDict[interval_type][f'{prefix}{final_name}'] = avg2
+            self.strategy_dict[interval_type][f'{prefix}{initial_name}'] = avg1
+            self.strategy_dict[interval_type][f'{prefix}{final_name}'] = avg2
 
             if interval_type == 'regular' and not isinstance(data, list):
-                self.plotDict[initial_name][0] = avg1
-                self.plotDict[final_name][0] = avg2
+                self.plot_dict[initial_name][0] = avg1
+                self.plot_dict[final_name][0] = avg2
 
             if avg1 > avg2:
                 trends.append(BULLISH)
@@ -144,9 +144,9 @@ class MovingAverageStrategy(Strategy):
         """
         Validates options provided. If the list of options provided does not contain all options, an error is raised.
         """
-        if len(self.tradingOptions) == 0:  # Checking whether options exist.
+        if len(self.trading_options) == 0:  # Checking whether options exist.
             raise ValueError("No trading options provided.")
 
-        for option in self.tradingOptions:
+        for option in self.trading_options:
             if not isinstance(option, Option):
                 raise TypeError(f"'{option}' is not a valid option type.")
