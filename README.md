@@ -27,7 +27,11 @@ If your install fails, please make sure to have [Visual Studio Build Tools](http
 
 # Execution
 
-To run Algobot, run `python -m algobot` from within the activated virtual environment. (use `pipenv shell` to activate.)
+To run Algobot, run:
+
+```bash
+pipenv run python -m algobot
+```
 
 Set `DEBUG=1` to enable debug level logging.
 
