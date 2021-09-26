@@ -27,7 +27,7 @@ If your install fails, please make sure to have [Visual Studio Build Tools](http
 
 # Execution
 
-To run Algobot, run:
+To start Algobot, run:
 
 ```bash
 pipenv run python -m algobot
