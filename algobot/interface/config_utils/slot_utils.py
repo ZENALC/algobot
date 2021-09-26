@@ -85,6 +85,7 @@ def load_hide_show_strategies(config_obj: Configuration):
             c_boxes[-1].setChecked(True)
 
         # Lambdas don't retain values, so we must cache variable args to the lambda func.
+        # pylint: disable=cell-var-from-loop
         c_boxes[-1].toggled.connect(lambda *_, a=c_boxes[-1], s=strategy_name: hide_strategies(a, s))
         config_obj.hideStrategiesFormLayout.addRow(strategy_name, c_boxes[-1])
 
