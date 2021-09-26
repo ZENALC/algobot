@@ -67,8 +67,8 @@ def load_hide_show_strategies(config_obj: Configuration):
     Load slots for hiding/showing strategies.
     :param config_obj: Configuration QDialog object (from configuration.py)
     """
-    def hide_strategies(b: QCheckBox, name: str):
-        if b.isChecked():
+    def hide_strategies(box: QCheckBox, name: str):
+        if box.isChecked():
             config_obj.hidden_strategies.remove(name)
         else:
             config_obj.hidden_strategies.add(name)
@@ -79,9 +79,11 @@ def load_hide_show_strategies(config_obj: Configuration):
     c_boxes = []
     for strategy_name in config_obj.strategies.keys():
         c_boxes.append(QCheckBox())
+
         # When restoring slots, if the strategy is not hidden, tick it.
         if strategy_name not in config_obj.hidden_strategies:
             c_boxes[-1].setChecked(True)
+
         # Lambdas don't retain values, so we must cache variable args to the lambda func.
         c_boxes[-1].toggled.connect(lambda *_, a=c_boxes[-1], s=strategy_name: hide_strategies(a, s))
         config_obj.hideStrategiesFormLayout.addRow(strategy_name, c_boxes[-1])
@@ -94,8 +96,8 @@ def delete_strategy_slots(config_obj: Configuration):
     """
     config_obj.strategy_dict = {}  # Reset the dictionary.
 
-    for i, tab in enumerate(config_obj.category_tabs):
-        nuke_index = 3 if i < 2 else 4  # TODO: Refactor this. This is hard coded based on category tabs.
+    for index, tab in enumerate(config_obj.category_tabs):
+        nuke_index = 3 if index < 2 else 4  # TODO: Refactor this. This is hard coded based on category tabs.
         for _ in range(tab.count() - nuke_index):
             tab.removeTab(nuke_index)
 
@@ -237,7 +239,7 @@ def load_slots(config_obj: Configuration):
     :param config_obj: Configuration QDialog object (from configuration.py)
     :return: None
     """
-    c = config_obj
+    c = config_obj  # pylint: disable=invalid-name
 
     c.saveConfigurationButton.clicked.connect(lambda: save_config_helper(
         config_obj=c, caller=LIVE, result_label=c.configurationResult, func=save_live_settings))

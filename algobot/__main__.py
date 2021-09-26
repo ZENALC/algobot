@@ -1150,7 +1150,7 @@ class Interface(QMainWindow):
         monitor.scrollToBottom()
         table.scrollToBottom()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event):  # pylint:disable=invalid-name
         """
         Close event override. Makes user confirm they want to end program if something is running live.
         :param event: close event
@@ -1305,7 +1305,7 @@ class Interface(QMainWindow):
         path, _ = QFileDialog.getSaveFileName(self, 'Export Trades', default_file, 'CSV (*.csv)')
 
         if path:
-            with open(path, 'w') as f:
+            with open(path, 'w', encoding='utf-8') as f:
                 for trade in trades:
                     f.write(','.join(trade) + '\n')
             label.setText(f"Exported trade history successfully to {path}.")
@@ -1323,7 +1323,7 @@ class Interface(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, 'Import Trades', path, "CSV (*.csv)")
 
         try:
-            with open(path, 'r') as f:
+            with open(path, 'r', encoding='utf-8') as f:
                 rows = f.readlines()
                 for row in rows:
                     row = row.strip().split(',')

@@ -748,7 +748,7 @@ class Backtester(Trader):
         if not result_file:
             result_file = self.get_default_result_file_name()
 
-        with open(result_file, 'w') as f:
+        with open(result_file, 'w', encoding='utf-8') as f:
             self.print_configuration_parameters(f)
             self.print_backtest_results(f)
 

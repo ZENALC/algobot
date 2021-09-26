@@ -1,6 +1,6 @@
 [FORMAT]
 max-line-length = 120
-extension-pkg-whitelist=PyQt5
+extension-pkg-whitelist=PyQt5,talib
 
 [DESIGN]
 good-names=f,df,e

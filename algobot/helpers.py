@@ -70,7 +70,7 @@ def get_current_version() -> str:
     if not os.path.isfile(version_file):
         version = 'not found'
     else:
-        with open(version_file) as f:
+        with open(version_file, encoding='utf-8') as f:
             version = f.read().strip()
 
     return version
@@ -458,7 +458,7 @@ def write_json_file(file_path: str = 'secret.json', **kwargs):
     :param file_path: Path to write **kwargs data to.
     :param kwargs: Dictionary to dump to JSON file.
     """
-    with open(file_path, 'w') as f:
+    with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(kwargs, f, indent=4)
 
 
@@ -468,5 +468,5 @@ def load_json_file(json_file: str) -> dict:
     :param json_file: File to read dictionary from.
     :return: Dictionary with credentials.
     """
-    with open(json_file) as f:
+    with open(json_file, encoding='utf-8') as f:
         return json.load(f)

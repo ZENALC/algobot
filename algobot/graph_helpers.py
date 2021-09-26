@@ -99,7 +99,7 @@ def legend_helper(graph_dict, x_val):
     graph_dict['label'].setText(total)
 
 
-def onMouseMoved(gui: Interface, point, graph: PlotWidget):
+def on_mouse_moved(gui: Interface, point, graph: PlotWidget):
     """
     Updates coordinates label when mouse is hovered over graph.
     :param gui: Graphical user interface in which to manipulate graphs.
@@ -137,6 +137,7 @@ def add_data_to_plot(gui: Interface,
                      plot_index: int,
                      y: float,
                      timestamp: float):
+    # pylint: disable=invalid-name
     """
     Adds data to plot in provided graph.
     :param gui: Graphical user interface in which to set up graphs.
@@ -184,6 +185,7 @@ def setup_graph_plots(gui: Interface,
 
 
 def get_plot_dictionary(gui: Interface, graph: PlotWidget, color: str, y: float, name: str, timestamp: float) -> dict:
+    # pylint: disable=invalid-name
     """
     Creates a graph plot and returns a dictionary of it.
     :param gui: Graphical user interface in which to set up graphs.
@@ -300,6 +302,7 @@ def create_infinite_line(gui: Interface, graph_dict: dict, colors: list = None):
 
 
 def create_graph_plot(gui: Interface, graph: PlotWidget, x: tuple, y: tuple, plot_name: str, color: str):
+    # pylint: disable=invalid-name
     """
     Creates a graph plot with parameters provided.
     :param gui: Graphical user interface in which to set up graphs.
@@ -311,7 +314,7 @@ def create_graph_plot(gui: Interface, graph: PlotWidget, x: tuple, y: tuple, plo
     """
     pen = mkPen(color=color)
     plot = graph.plot(x, y, name=plot_name, pen=pen, autoDownsample=True, downsampleMethod='subsample')
-    plot.curve.scene().sigMouseMoved.connect(lambda point: onMouseMoved(gui=gui, point=point, graph=graph))
+    plot.curve.scene().sigMouseMoved.connect(lambda point: on_mouse_moved(gui=gui, point=point, graph=graph))
     return plot
 
 

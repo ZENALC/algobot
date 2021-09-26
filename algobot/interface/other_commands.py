@@ -45,7 +45,8 @@ class OtherCommands(QDialog):
         self.set_date_thread = None
         self.current_date_list = None
 
-    def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+    def mousePressEvent(self, _: QtGui.QMouseEvent) -> None:
+        # pylint: disable=invalid-name
         """
         Overrides QDialog to detect click events. Used mainly to clear focus from QLineEdits.
         """
