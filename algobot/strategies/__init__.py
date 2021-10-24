@@ -9,6 +9,7 @@ from typing import Any, Callable, List, Type
 
 import talib
 
+# This is importing all strategies within the current working directory.
 __all__ = [basename(f)[:-3] for f in listdir(dirname(__file__)) if f[-3:] == ".py" and not f.endswith("__init__.py")]
 
 
@@ -56,6 +57,15 @@ class TALIBEntry:
 class TALIBMap:
     """
     Main map that'll contain TALIB related information.
+
+    Please note that the only reason we actually have this is due to Algobot's current limitations with support for
+    variable intervals for data and strategy. TALIB's stream function by definition is broken for unstable functions
+    as they don't go all the way back, so we have to in a sense "mock" stream functions by going a few periods behind
+    and calling the actual TALIB function.
+
+    This approach is vastly inefficient, and we should only have this as a temporary band-aid until we come up with a
+    better and more performant approach.
+
     """
     MA = ('DEMA', 'EMA', 'KAMA', 'SMA', 'TEMA', 'TRIMA', 'WMA')
 
