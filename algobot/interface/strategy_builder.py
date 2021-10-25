@@ -45,9 +45,9 @@ class StrategyBuilder(QDialog):
         self.selection_layout.addRow(QLabel('Indicator Group'), self.indicator_group_combo_box)
         self.selection_layout.addRow(QLabel('Indicator'), self.indicator_combo_box)
 
-        self.indicator_combo_box.currentTextChanged.connect(lambda: self.update_indicator())
+        self.indicator_combo_box.currentTextChanged.connect(self.update_indicator)
 
-        self.indicator_group_combo_box.currentTextChanged.connect(lambda: self.update_indicators())
+        self.indicator_group_combo_box.currentTextChanged.connect(self.update_indicators)
         self.indicator_group_combo_box.addItems(self.ALL_FUNCTION_GROUPS)
 
         self.setLayout(self.layout)
@@ -70,7 +70,8 @@ class StrategyBuilder(QDialog):
         indicator_info = abstract.Function(raw_indicator).info
 
         for key, value in indicator_info.items():
-            if not isinstance(key, str) or not isinstance(value, str):
+            value = str(value)
+            if not isinstance(key, str):
                 continue
 
             row = (QLabel(key), QLabel(value))
@@ -92,7 +93,7 @@ class StrategyBuilder(QDialog):
             indicators = [abstract.Function(indicator).info['display_name'] for indicator in indicators]
 
         self.indicator_combo_box.clear()
-        self.indicator_combo_box.addItems(indicators)
+        self.indicator_combo_box.addItems(sorted(indicators))
 
 
 def except_hook(cls, exception, trace_back):
