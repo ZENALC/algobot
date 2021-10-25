@@ -138,7 +138,7 @@ class TALIBMap:
 
         self.wma = TALIBEntry(  # TESTED
             name='WMA',
-            stream=talib.stream.WMA,
+            stream=talib.stream_WMA,
             talib_func=talib.WMA,
             args=[Arg("Time Period", int)]
         )
