@@ -6,8 +6,8 @@ import sys
 from typing import Dict, OrderedDict
 
 import talib
-from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QLabel, QLineEdit, QSpinBox,
-                             QVBoxLayout)
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QLabel, QLineEdit,
+                             QPushButton, QSpinBox, QVBoxLayout)
 from talib import abstract
 
 from algobot.interface.configuration_helpers import get_default_widget, get_h_line
@@ -26,7 +26,7 @@ def get_normalized_indicator_map() -> Dict[str, str]:
     return dict(zip(raw_indicators, parsed_indicators))
 
 
-class StrategyBuilder(QDialog):
+class IndicatorSelector(QDialog):
     TALIB_FUNCTION_GROUPS = list(talib.get_function_groups().keys())
     ALL_FUNCTION_GROUPS = ["All"] + TALIB_FUNCTION_GROUPS
     RAW_TO_PARSED_INDICATORS = get_normalized_indicator_map()
@@ -46,6 +46,10 @@ class StrategyBuilder(QDialog):
         self.layout.addLayout(self.selection_layout)
         self.layout.addLayout(self.info_layout)
 
+        self.submit_button = QPushButton("Add Indicator")
+        self.submit_button.clicked.connect(self.add_indicator)
+        self.layout.addWidget(self.submit_button)
+
         self.layout.addItem(get_v_spacer())
 
         self.indicator_combo_box = QComboBox()
@@ -61,12 +65,17 @@ class StrategyBuilder(QDialog):
         self.indicator_group_combo_box.addItems(self.ALL_FUNCTION_GROUPS)
 
         self.setLayout(self.layout)
-        self.setWindowTitle('Strategy Builder')
+        self.setWindowTitle('Indicator Selector')
+
+    def add_indicator(self):
+        print(self.state)
 
     def update_indicator(self):
         """
         Update indicator being shown based on the indicator combobox.
         """
+        # Clear state.
+        self.state = {}
         indicator = self.indicator_combo_box.currentText()
 
         if not indicator:
@@ -103,9 +112,11 @@ class StrategyBuilder(QDialog):
             else:
                 raise ValueError("Unknown type of data encountered.")
 
+            input_obj.setEnabled(False)
+
             row = (QLabel(param_name.capitalize()), input_obj)
             self.info_layout.addRow(*row)
-            self.state[param_name] = input_obj
+            self.state = {**indicator_info, param_name: input_obj}
 
         if len(parameters) == 0:
             self.info_layout.addRow(QLabel("No parameters found."), QLabel(""))
@@ -129,6 +140,30 @@ class StrategyBuilder(QDialog):
         self.indicator_combo_box.addItems(sorted(indicators))
 
 
+class StrategyBuilder(QDialog):
+    def __init__(self, parent=None):
+        super(QDialog, self).__init__(parent)
+        self.setWindowTitle('Strategy Builder')
+
+        self.layout = QVBoxLayout()
+
+        self.main_layouts = {
+            'Buy Long': QFormLayout(),
+            'Sell Long': QFormLayout(),
+            'Sell Short': QFormLayout(),
+            'Buy Short': QFormLayout()
+        }
+
+        for key, layout in self.main_layouts.items():
+            add_indicator_button = QPushButton(f"Add {key} Indicator")
+            layout.addRow(QLabel(key))
+            layout.addRow(add_indicator_button)
+            self.layout.addLayout(layout)
+            self.layout.addWidget(get_h_line())
+
+        self.setLayout(self.layout)
+
+
 def except_hook(cls, exception, trace_back):
     """
     Exception hook.
@@ -138,7 +173,12 @@ def except_hook(cls, exception, trace_back):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    s = StrategyBuilder()
-    s.show()
+
+    strategy_builder = StrategyBuilder()
+    strategy_builder.show()
+
+    indicator_selector = IndicatorSelector()
+    indicator_selector.show()
+
     sys.excepthook = except_hook
     sys.exit(app.exec_())
