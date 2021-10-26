@@ -3,12 +3,15 @@ Simple strategy builder.
 """
 
 import sys
-from typing import Dict
+from typing import Dict, OrderedDict
 
-from talib import abstract
 import talib
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QLabel, QLineEdit, QSpinBox,
+                             QVBoxLayout)
+from talib import abstract
 
-from PyQt5.QtWidgets import QDialog, QComboBox, QApplication, QFormLayout, QLabel, QVBoxLayout
+from algobot.interface.configuration_helpers import get_default_widget, get_h_line
+from algobot.interface.utils import get_v_spacer
 
 
 def get_normalized_indicator_map() -> Dict[str, str]:
@@ -29,6 +32,10 @@ class StrategyBuilder(QDialog):
     RAW_TO_PARSED_INDICATORS = get_normalized_indicator_map()
     PARSED_TO_RAW_INDICATORS = {v: k for k, v in RAW_TO_PARSED_INDICATORS.items()}
 
+    # Turn this on if you want to see more information.
+    ADVANCED = False
+    state = {}
+
     def __init__(self, parent=None):
         super(QDialog, self).__init__(parent)
 
@@ -39,11 +46,14 @@ class StrategyBuilder(QDialog):
         self.layout.addLayout(self.selection_layout)
         self.layout.addLayout(self.info_layout)
 
+        self.layout.addItem(get_v_spacer())
+
         self.indicator_combo_box = QComboBox()
         self.indicator_group_combo_box = QComboBox()
 
         self.selection_layout.addRow(QLabel('Indicator Group'), self.indicator_group_combo_box)
         self.selection_layout.addRow(QLabel('Indicator'), self.indicator_combo_box)
+        self.selection_layout.addRow(get_h_line())
 
         self.indicator_combo_box.currentTextChanged.connect(self.update_indicator)
 
@@ -69,13 +79,36 @@ class StrategyBuilder(QDialog):
         raw_indicator = self.PARSED_TO_RAW_INDICATORS[indicator]
         indicator_info = abstract.Function(raw_indicator).info
 
+        parameters = indicator_info.pop('parameters')
+
         for key, value in indicator_info.items():
-            value = str(value)
-            if not isinstance(key, str):
-                continue
+            if self.ADVANCED:
+                value = str(value)
+            else:
+                if isinstance(value, (list, OrderedDict)) or not value:
+                    continue
+
+            key = ' '.join(map(str.capitalize, key.split('_')))
 
             row = (QLabel(key), QLabel(value))
             self.info_layout.addRow(*row)
+
+        for param_name, param in parameters.items():
+            if isinstance(param, int):
+                input_obj = get_default_widget(QSpinBox, param, None, None)
+            elif isinstance(param, float):
+                input_obj = get_default_widget(QDoubleSpinBox, param, None, None)
+            elif isinstance(param, str):
+                input_obj = QLineEdit()
+            else:
+                raise ValueError("Unknown type of data encountered.")
+
+            row = (QLabel(param_name.capitalize()), input_obj)
+            self.info_layout.addRow(*row)
+            self.state[param_name] = input_obj
+
+        if len(parameters) == 0:
+            self.info_layout.addRow(QLabel("No parameters found."), QLabel(""))
 
     def update_indicators(self, normalize: bool = True):
         """
