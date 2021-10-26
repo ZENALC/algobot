@@ -2,7 +2,7 @@
 Helpers for the configuration object.
 """
 
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QFrame, QGroupBox, QLabel, QLayout,
                              QLineEdit, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
@@ -130,8 +130,8 @@ def get_h_line() -> QFrame:
     return line
 
 
-def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, float], minimum: int = 1,
-                       maximum: int = 99) -> Union[QSpinBox, QDoubleSpinBox]:
+def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, float], minimum: Optional[int] = 1,
+                       maximum: Optional[int] = 99) -> Union[QSpinBox, QDoubleSpinBox]:
     """
     Returns a default QSpinbox or QDoubleSpinbox widget with default, minimum, and maximum values provided.
     """
@@ -142,6 +142,10 @@ def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, f
     if widget is QDoubleSpinBox:
         minimum = -1
 
-    default_widget.setMinimum(minimum)
-    default_widget.setMaximum(maximum)
+    if minimum is not None:
+        default_widget.setMinimum(minimum)
+
+    if maximum is not None:
+        default_widget.setMaximum(maximum)
+
     return default_widget
