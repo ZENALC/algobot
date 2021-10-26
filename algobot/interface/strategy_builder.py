@@ -36,12 +36,14 @@ class IndicatorSelector(QDialog):
     ADVANCED = False
     state = {}
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super(QDialog, self).__init__(parent)
 
         self.layout = QVBoxLayout()
         self.selection_layout = QFormLayout()
         self.info_layout = QFormLayout()
+        self.parent = parent
+        self.trend = None
 
         self.layout.addLayout(self.selection_layout)
         self.layout.addLayout(self.info_layout)
@@ -68,7 +70,11 @@ class IndicatorSelector(QDialog):
         self.setWindowTitle('Indicator Selector')
 
     def add_indicator(self):
-        print(self.state)
+        if self.trend is None:
+            raise ValueError("Some trend needs to be set to add indicator.")
+
+        self.parent.state.setdefault(self.trend, [])
+        self.parent.state[self.trend].append(self.state)
 
     def update_indicator(self):
         """
@@ -143,8 +149,10 @@ class IndicatorSelector(QDialog):
 class StrategyBuilder(QDialog):
     def __init__(self, parent=None):
         super(QDialog, self).__init__(parent)
+        self.indicator_selector = IndicatorSelector(parent=self)
         self.setWindowTitle('Strategy Builder')
 
+        self.state = {}
         self.layout = QVBoxLayout()
 
         self.main_layouts = {
@@ -156,12 +164,24 @@ class StrategyBuilder(QDialog):
 
         for key, layout in self.main_layouts.items():
             add_indicator_button = QPushButton(f"Add {key} Indicator")
+            add_indicator_button.clicked.connect(lambda _, strict_key=key: self.open_indicator_selector(strict_key))
+
             layout.addRow(QLabel(key))
             layout.addRow(add_indicator_button)
+
             self.layout.addLayout(layout)
             self.layout.addWidget(get_h_line())
 
+        create_strategy_button = QPushButton("Create Strategy")
+        self.layout.addWidget(create_strategy_button)
+
         self.setLayout(self.layout)
+
+    def open_indicator_selector(self, key: str):
+        import pprint
+        pprint.pprint(self.state)
+        self.indicator_selector.open()
+        self.indicator_selector.trend = key
 
 
 def except_hook(cls, exception, trace_back):
@@ -176,9 +196,6 @@ if __name__ == '__main__':
 
     strategy_builder = StrategyBuilder()
     strategy_builder.show()
-
-    indicator_selector = IndicatorSelector()
-    indicator_selector.show()
 
     sys.excepthook = except_hook
     sys.exit(app.exec_())
