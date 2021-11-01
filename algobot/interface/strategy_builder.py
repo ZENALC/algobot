@@ -9,6 +9,7 @@ import talib
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QLabel, QLineEdit,
                              QPushButton, QSpinBox, QVBoxLayout)
 from talib import abstract
+from talib import MA_Type
 
 from algobot.interface.configuration_helpers import get_default_widget, get_h_line
 from algobot.interface.utils import get_v_spacer
@@ -31,6 +32,9 @@ class IndicatorSelector(QDialog):
     ALL_FUNCTION_GROUPS = ["All"] + TALIB_FUNCTION_GROUPS
     RAW_TO_PARSED_INDICATORS = get_normalized_indicator_map()
     PARSED_TO_RAW_INDICATORS = {v: k for k, v in RAW_TO_PARSED_INDICATORS.items()}
+
+    MOVING_AVERAGE_TYPES_BY_NUM = vars(MA_Type)['_lookup']
+    MOVING_AVERAGE_TYPES_BY_NAME = {k: v for k, v in MOVING_AVERAGE_TYPES_BY_NUM.items()}
 
     # Turn this on if you want to see more information.
     ADVANCED = False
@@ -110,7 +114,12 @@ class IndicatorSelector(QDialog):
 
         for param_name, param in parameters.items():
             if isinstance(param, int):
-                input_obj = get_default_widget(QSpinBox, param, None, None)
+                if param_name == 'matype':
+                    input_obj = QLineEdit()
+                    input_obj.setText(self.MOVING_AVERAGE_TYPES_BY_NUM[param])
+                else:
+                    input_obj = get_default_widget(QSpinBox, param, None, None)
+
             elif isinstance(param, float):
                 input_obj = get_default_widget(QDoubleSpinBox, param, None, None)
             elif isinstance(param, str):
