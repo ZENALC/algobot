@@ -6,6 +6,7 @@ import sys
 from typing import Dict, OrderedDict
 
 import talib
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QLabel, QLineEdit,
                              QPushButton, QSpinBox, QVBoxLayout)
 from talib import abstract
@@ -111,6 +112,14 @@ class IndicatorSelector(QDialog):
 
             row = (QLabel(key), QLabel(value))
             self.info_layout.addRow(*row)
+
+        bold_font = QFont()
+        bold_font.setBold(True)
+
+        defaults_label = QLabel('Parameters and their defaults')
+        defaults_label.setFont(bold_font)
+
+        self.info_layout.addRow(defaults_label, QLabel(''))
 
         for param_name, param in parameters.items():
             if isinstance(param, int):
