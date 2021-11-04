@@ -6,7 +6,19 @@ from datetime import datetime
 from typing import List
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QComboBox, QDialog, QMessageBox, QSizePolicy, QSpacerItem, QTableWidget, QTableWidgetItem
+
+
+def get_bold_font() -> QFont:
+    """
+    Returns a bold font.
+    :return: Bold font.
+    """
+    bold_font = QFont()
+    bold_font.setBold(True)
+
+    return bold_font
 
 
 def get_v_spacer() -> QSpacerItem:
