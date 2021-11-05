@@ -191,6 +191,7 @@ class IndicatorSelector(QDialog):
         :param parameters: Parameters dictionary.
         :param indicator_info: Dictionary containing indicator information.
         """
+        self.submit_button.setEnabled(True)
         for param_name, param in parameters.items():
             if isinstance(param, int):
                 if param_name == 'matype':
@@ -213,7 +214,8 @@ class IndicatorSelector(QDialog):
             self.state = {**indicator_info, param_name: input_obj}
 
         if len(parameters) == 0:
-            self.info_layout.addRow(QLabel("No parameters found."))
+            self.info_layout.addRow(QLabel("No parameters found. Cannot submit this indicator right now."))
+            self.submit_button.setEnabled(False)
 
     def add_indicator(self):
         """
@@ -225,7 +227,7 @@ class IndicatorSelector(QDialog):
             return
 
         if self.trend is None:
-            raise ValueError("Some trend needs to be set to add indicator.")
+            raise ValueError("Some trend needs to be set to add an indicator.")
 
         self.parent.state.setdefault(self.trend, [])
         self.parent.state[self.trend].append(self.state)
@@ -281,10 +283,12 @@ class IndicatorSelector(QDialog):
         if add_type == 'indicator':
             local_vbox.addWidget(QLabel("Enter indicator from selector below."))
 
-            add_indicator_button = QPushButton('Add indicator')
+            add_indicator_button = QPushButton('Select indicator')
             add_indicator_button.clicked.connect(lambda: self.temp_indicator_selector.open())
+            indicator_against_selected = QLabel('No indicator against selected.')
 
             local_vbox.addWidget(add_indicator_button)
+            local_vbox.addWidget(indicator_against_selected)
 
         elif add_type == 'static':
             local_vbox.addWidget(QLabel("Enter static value below."))
