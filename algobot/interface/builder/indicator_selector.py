@@ -297,8 +297,13 @@ class IndicatorSelector(QDialog):
         msg_box = QMessageBox
         ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
 
+        # If confirmed, delete the groupbox.
         if ret == msg_box.Yes:
             groupbox.setParent(None)
+
+        # Resize the parent to shrink once groupbox has been deleted.
+        if self.parent is not None:
+            self.parent.adjustSize()
 
     def update_indicators(self, normalize: bool = True):
         """
