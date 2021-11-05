@@ -2,6 +2,8 @@
 Indicator selector.
 """
 
+from uuid import uuid4, UUID
+
 from typing import TYPE_CHECKING, Dict, Optional, OrderedDict, Any
 
 if TYPE_CHECKING:
@@ -144,11 +146,8 @@ class IndicatorSelector(QDialog):
         defaults_label.setFont(get_bold_font())
         self.info_layout.addRow(defaults_label)
 
-        # We don't care about the parameters staying in the dictionary, so just pop it out.
-        parameters = indicator_info.pop('parameters')
-
         # For each param, show the appropriate default value in its appropriate input field.
-        self.add_param_items(parameters, indicator_info)
+        self.add_param_items(indicator_info)
 
     def add_info_items(self, indicator_info: Dict[str, Any]):
         """
@@ -185,13 +184,54 @@ class IndicatorSelector(QDialog):
         vbox.addWidget(another_indicator_radio)
         another_indicator_radio.toggled.connect(lambda: self.add_against_values(vbox, 'indicator'))
 
-    def add_param_items(self, parameters: Dict[str, Any], indicator_info: Dict[str, Any]):
+    def add_param_items(self, indicator_info: Dict[str, Any]):
         """
         Add parameter items to the info layout.
-        :param parameters: Parameters dictionary.
+
+        Parameters look like this:
+
+            Without any parameters: OrderedDict()
+
+            With parameters: OrderedDict([('timeperiod', 30)])
+
+        Indicators look like this (they contain the params):
+
+            { (without params)
+                'name': 'CDLBELTHOLD',
+                'group': 'Pattern Recognition',
+                'display_name': 'Belt-hold',
+                'function_flags': ['Output is a candlestick'],
+                'input_names': OrderedDict([('prices', ['open', 'high', 'low', 'close'])]),
+                'parameters': OrderedDict(),
+                'output_flags': OrderedDict([('integer', ['Line'])]), 'output_names': ['integer']
+            }
+
+            { (with params)
+                'name': 'BBANDS',
+                'group': 'Overlap Studies',
+                'display_name': 'Bollinger Bands',
+                'function_flags': ['Output scale same as input'],
+                'input_names': OrderedDict([('price', 'close')]),
+                'parameters': OrderedDict([
+                    ('timeperiod', 5),
+                    ('nbdevup', 2),
+                    ('nbdevdn', 2),
+                    ('matype', 0)
+                ]),
+                'output_flags': OrderedDict([
+                    ('upperband', ['Values represent an upper limit']),
+                    ('middleband', ['Line']),
+                    ('lowerband', ['Values represent a lower limit'])
+                ]),
+                'output_names': ['upperband', 'middleband', 'lowerband']}
+
+
+
         :param indicator_info: Dictionary containing indicator information.
         """
         self.submit_button.setEnabled(True)
+
+        parameters = indicator_info['parameters']
         for param_name, param in parameters.items():
             if isinstance(param, int):
                 if param_name == 'matype':
@@ -229,8 +269,10 @@ class IndicatorSelector(QDialog):
         if self.trend is None:
             raise ValueError("Some trend needs to be set to add an indicator.")
 
-        self.parent.state.setdefault(self.trend, [])
-        self.parent.state[self.trend].append(self.state)
+        # Add trend key and add indicator to its list value.
+        unique_identifier = uuid4()
+        self.parent.state.setdefault(self.trend, {})
+        self.parent.state[self.trend][unique_identifier] = self.state
 
         # Add the added indicator view to the strategy builder.
         indicator_name = str(self.state['name'])
@@ -239,7 +281,7 @@ class IndicatorSelector(QDialog):
         vbox.addWidget(get_h_line())
 
         delete_button = QPushButton('Delete')
-        delete_button.clicked.connect(lambda: self.delete_groupbox(indicator_name, group_box))
+        delete_button.clicked.connect(lambda: self.delete_groupbox(indicator_name, group_box, unique_identifier))
 
         vbox.addWidget(delete_button)
         vbox.addWidget(get_h_line())
@@ -305,23 +347,26 @@ class IndicatorSelector(QDialog):
 
         vbox.addWidget(groupbox)
 
-    def delete_groupbox(self, indicator: str, groupbox: QGroupBox):
+    def delete_groupbox(self, indicator: str, groupbox: QGroupBox, uuid: UUID):
         """
         Delete groupbox based on the indicator and groupbox provided.
         :param indicator: Indicator to remove. Only used for populating the messagebox.
         :param groupbox: Groupbox to remove.
+        :param uuid: State UUID to remove from dictionary.
         """
         message = f'Are you sure you want to delete this indicator ({indicator})?'
         msg_box = QMessageBox
         ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
 
-        # If confirmed, delete the groupbox.
+        # If confirmed, delete the groupbox and remove from parent state.
         if ret == msg_box.Yes:
+            del self.parent.state[self.trend][uuid]
+
             groupbox.setParent(None)
 
-        # Resize the parent to shrink once groupbox has been deleted.
-        if self.parent is not None:
-            self.parent.adjustSize()
+            # Resize the parent to shrink once groupbox has been deleted.
+            if self.parent is not None:
+                self.parent.adjustSize()
 
     def update_indicators(self, normalize: bool = True):
         """

@@ -24,7 +24,12 @@ class StrategyBuilder(QDialog):
         self.indicator_selector = IndicatorSelector(parent=self)
 
         # Store the current strategy builder state in this dictionary. We'll dump the state into a JSON file.
-        self.state = {}
+        self.state = {
+            'Buy Long': {},
+            'Sell Long': {},
+            'Sell Short': {},
+            'Buy Short': {}
+        }
         self.layout = QVBoxLayout()
 
         self.main_layouts = {
@@ -63,15 +68,15 @@ class StrategyBuilder(QDialog):
         TODO: Wrap up.
         """
         strategy_name = self.strategy_name_input.text()
+        self.state['name'] = strategy_name
 
         if not strategy_name.strip():
             create_popup(self, "No strategy name found. Please provide a name.")
             return
 
-        if len(self.state) == 1:
+        trend_keys = ('Sell Long', 'Buy Long', 'Sell Short', 'Buy Short')
+        if not any([self.state[trend_key] for trend_key in trend_keys]):
             create_popup(self, "No trend indicators found. Please at least select one indicator.")
-
-        self.state['name'] = strategy_name
 
         import pprint
         pprint.pprint(self.state)
