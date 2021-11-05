@@ -236,10 +236,6 @@ class IndicatorSelector(QDialog):
         vbox = QVBoxLayout()
         vbox.addWidget(get_h_line())
 
-        operands = ['>', '<', '>=', '<=', '==', '!=']
-        operands_combobox = QComboBox()
-        operands_combobox.addItems(operands)
-
         delete_button = QPushButton('Delete')
         delete_button.clicked.connect(lambda: self.delete_groupbox(indicator_name, group_box))
 
@@ -249,6 +245,10 @@ class IndicatorSelector(QDialog):
         info_label = QLabel(f"You are creating a strategy for: {indicator_name}.")
         info_label.setFont(get_bold_font())
         vbox.addWidget(info_label)
+
+        operands = ['>', '<', '>=', '<=', '==', '!=']
+        operands_combobox = QComboBox()
+        operands_combobox.addItems(operands)
 
         vbox.addWidget(QLabel("Operand"))
         vbox.addWidget(operands_combobox)
