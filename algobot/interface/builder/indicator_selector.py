@@ -167,6 +167,24 @@ class IndicatorSelector(QDialog):
             row = (QLabel(key), QLabel(value))
             self.info_layout.addRow(*row)
 
+    def add_against_radio_buttons(self, vbox):
+        """
+        Add against radio buttons.
+        :param vbox: Layout to add radio buttons to.
+        """
+        current_price_radio = QRadioButton('Current Price')
+        static_value_radio = QRadioButton('Static Value')
+        another_indicator_radio = QRadioButton('Another Indicator')
+
+        vbox.addWidget(current_price_radio)
+        current_price_radio.toggled.connect(lambda: self.add_against_values(vbox))
+
+        vbox.addWidget(static_value_radio)
+        static_value_radio.toggled.connect(lambda: self.add_against_values(vbox, 'static'))
+
+        vbox.addWidget(another_indicator_radio)
+        another_indicator_radio.toggled.connect(lambda: self.add_against_values(vbox, 'indicator'))
+
     def add_param_items(self, parameters: Dict[str, Any], indicator_info: Dict[str, Any]):
         """
         Add parameter items to the info layout.
@@ -223,6 +241,8 @@ class IndicatorSelector(QDialog):
         operands_combobox.addItems(operands)
 
         delete_button = QPushButton('Delete')
+        delete_button.clicked.connect(lambda: self.delete_groupbox(indicator_name, group_box))
+
         vbox.addWidget(delete_button)
         vbox.addWidget(get_h_line())
 
@@ -234,23 +254,10 @@ class IndicatorSelector(QDialog):
         vbox.addWidget(operands_combobox)
         vbox.addWidget(QLabel("Against"))
 
-        current_price_radio = QRadioButton('Current Price')
-        static_value_radio = QRadioButton('Static Value')
-        another_indicator_radio = QRadioButton('Another Indicator')
-
-        vbox.addWidget(current_price_radio)
-        current_price_radio.toggled.connect(lambda: self.add_against_values(vbox))
-
-        vbox.addWidget(static_value_radio)
-        static_value_radio.toggled.connect(lambda: self.add_against_values(vbox, 'static'))
-
-        vbox.addWidget(another_indicator_radio)
-        another_indicator_radio.toggled.connect(lambda: self.add_against_values(vbox, 'indicator'))
+        self.add_against_radio_buttons(vbox)
 
         group_box = QGroupBox(indicator_name)
         group_box.setLayout(vbox)
-
-        delete_button.clicked.connect(lambda: self.delete_groupbox(indicator_name, group_box))
 
         section_layout = self.parent.main_layouts[self.trend]
         section_layout.addRow(group_box)
