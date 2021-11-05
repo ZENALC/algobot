@@ -2,7 +2,7 @@
 Indicator selector.
 """
 
-from uuid import uuid4, UUID
+from uuid import uuid4
 
 from typing import TYPE_CHECKING, Dict, Optional, OrderedDict, Any
 
@@ -270,7 +270,7 @@ class IndicatorSelector(QDialog):
             raise ValueError("Some trend needs to be set to add an indicator.")
 
         # Add trend key and add indicator to its list value.
-        unique_identifier = uuid4()
+        unique_identifier = str(uuid4())
         self.parent.state.setdefault(self.trend, {})
         self.parent.state[self.trend][unique_identifier] = self.state
 
@@ -281,7 +281,8 @@ class IndicatorSelector(QDialog):
         vbox.addWidget(get_h_line())
 
         delete_button = QPushButton('Delete')
-        delete_button.clicked.connect(lambda: self.delete_groupbox(indicator_name, group_box, unique_identifier))
+        delete_button.clicked.connect(lambda _, trend=self.trend: self.delete_groupbox(
+            indicator_name, group_box, unique_identifier, trend))
 
         vbox.addWidget(delete_button)
         vbox.addWidget(get_h_line())
@@ -347,12 +348,13 @@ class IndicatorSelector(QDialog):
 
         vbox.addWidget(groupbox)
 
-    def delete_groupbox(self, indicator: str, groupbox: QGroupBox, uuid: UUID):
+    def delete_groupbox(self, indicator: str, groupbox: QGroupBox, uuid: str, trend: str):
         """
         Delete groupbox based on the indicator and groupbox provided.
         :param indicator: Indicator to remove. Only used for populating the messagebox.
         :param groupbox: Groupbox to remove.
         :param uuid: State UUID to remove from dictionary.
+        :param trend: Trend associated with this groupbox.
         """
         message = f'Are you sure you want to delete this indicator ({indicator})?'
         msg_box = QMessageBox
@@ -360,7 +362,7 @@ class IndicatorSelector(QDialog):
 
         # If confirmed, delete the groupbox and remove from parent state.
         if ret == msg_box.Yes:
-            del self.parent.state[self.trend][uuid]
+            del self.parent.state[trend][uuid]
 
             groupbox.setParent(None)
 
