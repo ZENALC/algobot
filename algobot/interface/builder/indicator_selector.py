@@ -215,27 +215,28 @@ class IndicatorSelector(QDialog):
         # Add the added indicator view to the strategy builder.
         indicator_name = str(self.state['name'])
 
+        vbox = QVBoxLayout()
+        vbox.addWidget(get_h_line())
+
         operands = ['>', '<', '>=', '<=', '==', '!=']
         operands_combobox = QComboBox()
         operands_combobox.addItems(operands)
 
         delete_button = QPushButton('Delete')
+        vbox.addWidget(delete_button)
+        vbox.addWidget(get_h_line())
 
         info_label = QLabel(f"You are creating a strategy for: {indicator_name}.")
         info_label.setFont(get_bold_font())
+        vbox.addWidget(info_label)
+
+        vbox.addWidget(QLabel("Operand"))
+        vbox.addWidget(operands_combobox)
+        vbox.addWidget(QLabel("Against"))
 
         current_price_radio = QRadioButton('Current Price')
         static_value_radio = QRadioButton('Static Value')
         another_indicator_radio = QRadioButton('Another Indicator')
-
-        vbox = QVBoxLayout()
-        vbox.addWidget(get_h_line())
-        vbox.addWidget(delete_button)
-        vbox.addWidget(get_h_line())
-        vbox.addWidget(info_label)
-        vbox.addWidget(QLabel("Operand"))
-        vbox.addWidget(operands_combobox)
-        vbox.addWidget(QLabel("Against"))
 
         vbox.addWidget(current_price_radio)
         current_price_radio.toggled.connect(lambda: self.add_against_values(vbox))
@@ -254,7 +255,13 @@ class IndicatorSelector(QDialog):
         section_layout = self.parent.main_layouts[self.trend]
         section_layout.addRow(group_box)
 
-    def add_against_values(self, vbox: QVBoxLayout, add_type=None):
+    def add_against_values(self, vbox: QVBoxLayout, add_type: Optional[str] = None):
+        """
+        Add against values.
+        :param vbox: Vertical layout to add against values to.
+        :param add_type: Type of value to add.
+        """
+
         # Clear out the previous groupbox.
         if self.current_add_against_groupbox is not None:
             self.current_add_against_groupbox.setParent(None)
