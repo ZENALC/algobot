@@ -291,14 +291,7 @@ class IndicatorSelector(QDialog):
         info_label.setFont(get_bold_font())
         vbox.addWidget(info_label)
 
-        operands = ['>', '<', '>=', '<=', '==', '!=']
-        operands_combobox = QComboBox()
-        operands_combobox.addItems(operands)
-
-        vbox.addWidget(QLabel("Operand"))
-        vbox.addWidget(operands_combobox)
-        vbox.addWidget(QLabel("Against"))
-
+        self.add_operand(vbox)
         self.add_against_radio_buttons(vbox)
 
         group_box = QGroupBox(indicator_name)
@@ -306,6 +299,20 @@ class IndicatorSelector(QDialog):
 
         section_layout = self.parent.main_layouts[self.trend]
         section_layout.addRow(group_box)
+
+    @staticmethod
+    def add_operand(vbox: QVBoxLayout):
+        """
+        Add operand values.
+        :param vbox: Vertical layout to add operand values to.
+        """
+        operands = ['>', '<', '>=', '<=', '==', '!=']
+        operands_combobox = QComboBox()
+        operands_combobox.addItems(operands)
+
+        vbox.addWidget(QLabel("Operand"))
+        vbox.addWidget(operands_combobox)
+        vbox.addWidget(QLabel("Against"))
 
     def add_against_values(self, vbox: QVBoxLayout, add_type: Optional[str] = None):
         """
