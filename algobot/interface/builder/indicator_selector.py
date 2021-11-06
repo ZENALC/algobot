@@ -85,10 +85,6 @@ class IndicatorSelector(QDialog):
         if helper is False:
             self.temp_indicator_selector = IndicatorSelector(None, helper=True)
 
-        # Groupbox for comparison against. Please note we keep this here as the indicator selector has full control
-        #  over the indicator selector, and not the parent.
-        self.current_add_against_groupbox: Optional[QGroupBox] = None
-
         # Just adding the add indicator button here.
         self.submit_button = QPushButton("Add Indicator")
         self.submit_button.clicked.connect(self.add_indicator)
@@ -165,23 +161,27 @@ class IndicatorSelector(QDialog):
             row = (QLabel(key), QLabel(value))
             self.info_layout.addRow(*row)
 
-    def add_against_radio_buttons(self, vbox):
+    def add_against_radio_buttons(self, vbox, unique_identifier: str):
         """
         Add against radio buttons.
         :param vbox: Layout to add radio buttons to.
+        :param unique_identifier: Unique identifier to distinguish in states.
         """
         current_price_radio = QRadioButton('Current Price')
         static_value_radio = QRadioButton('Static Value')
         another_indicator_radio = QRadioButton('Another Indicator')
 
         vbox.addWidget(current_price_radio)
-        current_price_radio.toggled.connect(lambda: self.add_against_values(vbox))
+        current_price_radio.toggled.connect(lambda: self.add_against_values(vbox, unique_identifier))
 
         vbox.addWidget(static_value_radio)
-        static_value_radio.toggled.connect(lambda: self.add_against_values(vbox, 'static'))
+        static_value_radio.toggled.connect(lambda: self.add_against_values(vbox, unique_identifier, 'static'))
 
         vbox.addWidget(another_indicator_radio)
-        another_indicator_radio.toggled.connect(lambda: self.add_against_values(vbox, 'indicator'))
+        another_indicator_radio.toggled.connect(lambda: self.add_against_values(vbox, unique_identifier, 'indicator'))
+
+        # Default to current price radio selected.
+        current_price_radio.setChecked(True)
 
     def add_param_items(self, indicator_info: Dict[str, Any]):
         """
@@ -290,8 +290,8 @@ class IndicatorSelector(QDialog):
         info_label.setFont(get_bold_font())
         vbox.addWidget(info_label)
 
-        self.add_operand(vbox)
-        self.add_against_radio_buttons(vbox)
+        self.add_operand(vbox, unique_identifier)
+        self.add_against_radio_buttons(vbox, unique_identifier)
 
         group_box = QGroupBox(indicator_name)
         group_box.setLayout(vbox)
@@ -299,34 +299,39 @@ class IndicatorSelector(QDialog):
         section_layout = self.parent.main_layouts[self.trend]
         section_layout.addRow(group_box)
 
-    @staticmethod
-    def add_operand(vbox: QVBoxLayout):
+    def add_operand(self, vbox: QVBoxLayout, unique_identifier: str):
         """
         Add operand values.
         :param vbox: Vertical layout to add operand values to.
+        :param unique_identifier: Unique identifier to distinguish in states.
         """
         operands = ['>', '<', '>=', '<=', '==', '!=']
-        operands_combobox = QComboBox()
+        self.parent.state[self.trend][unique_identifier]['operand'] = operands_combobox = QComboBox()
         operands_combobox.addItems(operands)
 
         vbox.addWidget(QLabel("Operand"))
         vbox.addWidget(operands_combobox)
         vbox.addWidget(QLabel("Against"))
 
-    def add_against_values(self, vbox: QVBoxLayout, add_type: Optional[str] = None):
+    def add_against_values(self, vbox: QVBoxLayout, unique_identifier: str, add_type: Optional[str] = None):
         """
         Add against values.
         :param vbox: Vertical layout to add against values to.
+        :param unique_identifier: Unique identifier to distinguish in states.
         :param add_type: Type of value to add.
         """
+        unique_dict = self.parent.state[self.trend][unique_identifier]
+
+        add_against_groupbox = 'add_against_groupbox'
+        against = 'against'
 
         # Clear out the previous groupbox.
-        if self.current_add_against_groupbox is not None:
-            self.current_add_against_groupbox.setParent(None)
+        if add_against_groupbox in unique_dict:
+            unique_dict[add_against_groupbox].setParent(None)
+
+        unique_dict[add_against_groupbox] = groupbox = QGroupBox()
 
         local_vbox = QVBoxLayout()
-
-        self.current_add_against_groupbox = groupbox = QGroupBox()
         groupbox.setLayout(local_vbox)
 
         if add_type == 'indicator':
@@ -338,6 +343,7 @@ class IndicatorSelector(QDialog):
 
             local_vbox.addWidget(add_indicator_button)
             local_vbox.addWidget(indicator_against_selected)
+            unique_dict[against] = 'indicator'
 
         elif add_type == 'static':
             local_vbox.addWidget(QLabel("Enter static value below."))
@@ -345,9 +351,11 @@ class IndicatorSelector(QDialog):
             spinbox = QDoubleSpinBox()
             spinbox.setMaximum(99999999999)
             local_vbox.addWidget(spinbox)
+            unique_dict[against] = spinbox
 
         elif add_type is None:
             local_vbox.addWidget(QLabel("Bot will execute transactions based on the current price."))
+            unique_dict[against] = 'current_price'
 
         else:
             raise ValueError("Invalid type of add type provided. Only accepted ones are None, indicator, and static.")
