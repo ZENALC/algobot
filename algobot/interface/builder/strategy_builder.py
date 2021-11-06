@@ -4,10 +4,10 @@ Simple strategy builder.
 
 import sys
 
-from PyQt5.QtWidgets import QApplication, QDialog, QFormLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout
+from PyQt5.QtWidgets import (QApplication, QDialog, QFormLayout, QLabel, QLineEdit, QPushButton, QTabWidget,
+                             QVBoxLayout, QWidget)
 
 from algobot.interface.builder.indicator_selector import IndicatorSelector
-from algobot.interface.configuration_helpers import get_h_line
 from algobot.interface.utils import create_popup
 
 
@@ -32,6 +32,14 @@ class StrategyBuilder(QDialog):
         }
         self.layout = QVBoxLayout()
 
+        self.main_tabs_widget = QTabWidget()
+        self.tabs = {
+            'Buy Long': QWidget(),
+            'Sell Long': QWidget(),
+            'Sell Short': QWidget(),
+            'Buy Short': QWidget(),
+        }
+
         self.main_layouts = {
             'Buy Long': QFormLayout(),
             'Sell Long': QFormLayout(),
@@ -45,12 +53,16 @@ class StrategyBuilder(QDialog):
             # We need to the store the func args here, or else it'll use the latest trend from the loop.
             add_indicator_button.clicked.connect(lambda _, strict_key=trend: self.open_indicator_selector(strict_key))
 
-            layout.addRow(QLabel(trend))
-            layout.addRow(add_indicator_button)
+            tab_layout = self.main_layouts[trend]
+            inner_tab = self.tabs[trend]
+            inner_tab.setLayout(tab_layout)
 
-            self.layout.addLayout(layout)
-            self.layout.addWidget(get_h_line())
+            self.main_tabs_widget.addTab(inner_tab, trend)
 
+            tab_layout.addRow(QLabel(trend))
+            tab_layout.addRow(add_indicator_button)
+
+        self.layout.addWidget(self.main_tabs_widget)
         self.layout.addWidget(QLabel('Strategy Name'))
 
         self.strategy_name_input = QLineEdit()

@@ -2,9 +2,8 @@
 Indicator selector.
 """
 
+from typing import TYPE_CHECKING, Any, Dict, Optional, OrderedDict
 from uuid import uuid4
-
-from typing import TYPE_CHECKING, Dict, Optional, OrderedDict, Any
 
 if TYPE_CHECKING:
     from algobot.interface.builder.strategy_builder import StrategyBuilder
