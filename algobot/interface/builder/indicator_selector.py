@@ -81,12 +81,15 @@ class IndicatorSelector(QDialog):
         #  it would not even work as the parent would be None, so it would crash! Please make sure the parent is also
         #  set to None in the strategy builder when calling this for an against value.
 
+        # Callback for adding against indicator. This works okay because only one window is allowed regardless
+        #  of how many indicators are created.
+        self.callback = {}
         self.helper = helper
         if helper is False:
             self.temp_indicator_selector = IndicatorSelector(None, helper=True)
 
         # Just adding the add indicator button here.
-        self.submit_button = QPushButton("Add Indicator")
+        self.submit_button = QPushButton("Select Indicator")
         self.submit_button.clicked.connect(self.add_indicator)
         self.layout.addWidget(self.submit_button)
 
@@ -230,6 +233,10 @@ class IndicatorSelector(QDialog):
         """
         self.submit_button.setEnabled(True)
 
+        self.state = {
+            'name': indicator_info['name']
+        }
+
         parameters = indicator_info['parameters']
         for param_name, param in parameters.items():
             if isinstance(param, int):
@@ -250,7 +257,6 @@ class IndicatorSelector(QDialog):
 
             row = (QLabel(param_name.capitalize()), input_obj)
             self.info_layout.addRow(*row)
-            self.state = {**indicator_info, param_name: input_obj}
 
         if len(parameters) == 0:
             self.info_layout.addRow(QLabel("No parameters found. Cannot submit this indicator right now."))
@@ -298,6 +304,11 @@ class IndicatorSelector(QDialog):
 
         section_layout = self.parent.main_layouts[self.trend]
         section_layout.addRow(group_box)
+
+        # Reset state by re-updating indicator and hide the window. This is beyond imperative.
+        # TODO: Consider refactoring this logic.
+        self.update_indicator()
+        self.hide()
 
     def add_operand(self, vbox: QVBoxLayout, unique_identifier: str):
         """
