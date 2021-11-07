@@ -52,6 +52,7 @@ class StrategyBuilder(QDialog):
             'Buy Short': QFormLayout()
         }
 
+        # TODO: Add scroll bars.
         for trend, tab_layout in self.main_layouts.items():
             add_indicator_button = QPushButton(f"Add {trend} Indicator")
 
@@ -76,13 +77,38 @@ class StrategyBuilder(QDialog):
         self.create_strategy_button.clicked.connect(self.save_strategy)
         self.layout.addWidget(self.create_strategy_button)
 
+        self.reset_button = QPushButton("Reset Builder")
+        self.reset_button.clicked.connect(self.restore_builder)
+        self.layout.addWidget(self.reset_button)
+
         self.setLayout(self.layout)
         self.setMinimumSize(self.main_tabs_widget.size())
+
+    def restore_builder(self):
+        """
+        Restore the builder to initial state.
+        """
+        for trend, trend_values in self.state.items():
+            for uuid, uuid_values in trend_values.items():
+                indicator = uuid_values['name']
+                self.indicator_selector.delete_groupbox(
+                    indicator=indicator,
+                    groupbox=uuid_values['groupbox'],
+                    trend=trend,
+                    uuid=uuid,
+                    bypass_popup=True
+                )
+
+        self.state = {
+            'Buy Long': {},
+            'Sell Long': {},
+            'Sell Short': {},
+            'Buy Short': {}
+        }
 
     def save_strategy(self):
         """
         Save strategy into a JSON format.
-        TODO: Wrap up.
         """
         strategy_name = self.strategy_name_input.text()
         self.state['name'] = strategy_name

@@ -114,7 +114,6 @@ class IndicatorSelector(QDialog):
 
         self.setLayout(self.layout)
         self.setWindowTitle('Indicator Selector')
-        self.adjustSize()
 
     def update_indicator(self):
         """
@@ -307,6 +306,8 @@ class IndicatorSelector(QDialog):
         group_box = QGroupBox(indicator_name)
         group_box.setLayout(vbox)
 
+        self.parent.state[self.trend][unique_identifier]['groupbox'] = group_box
+
         section_layout = self.parent.main_layouts[self.trend]
         section_layout.addRow(group_box)
 
@@ -387,21 +388,38 @@ class IndicatorSelector(QDialog):
 
         vbox.addWidget(groupbox)
 
-    def delete_groupbox(self, indicator: str, groupbox: QGroupBox, uuid: str, trend: str):
+    def delete_groupbox(self, indicator: str, groupbox: QGroupBox, uuid: str, trend: str, bypass_popup: bool = False):
         """
         Delete groupbox based on the indicator and groupbox provided.
+
+        Sample from state:
+            {'Buy Long':
+                {'33e14177-318b-426a-87ce-a6dde86955fe': {
+                    'add_against_groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CA0>,
+                    'against': None,
+                    'name': 'TRIX',
+                    'operand': <PyQt5.QtWidgets.QComboBox object at 0x00000248735073A0>
+                }
+            }
+
         :param indicator: Indicator to remove. Only used for populating the messagebox.
         :param groupbox: Groupbox to remove.
         :param uuid: State UUID to remove from dictionary.
         :param trend: Trend associated with this groupbox.
+        :param bypass_popup: Bypass popup. Used with restore_builder.
         """
-        message = f'Are you sure you want to delete this indicator ({indicator})?'
-        msg_box = QMessageBox
-        ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
+        if not bypass_popup:
+            message = f'Are you sure you want to delete this indicator ({indicator})?'
+            msg_box = QMessageBox
+            ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
 
         # If confirmed, delete the groupbox and remove from parent state.
-        if ret == msg_box.Yes:
-            del self.parent.state[trend][uuid]
+        if bypass_popup or ret == msg_box.Yes:  # noqa
+
+            # This is because the state will be reset anyway and we don't want the dictionary to change size during
+            #  iteration. TODO: Cleanup.
+            if not bypass_popup:
+                del self.parent.state[trend][uuid]
 
             groupbox.setParent(None)
 
