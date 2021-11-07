@@ -6,7 +6,7 @@ import os
 import sys
 
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
-                             QLineEdit, QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget, QScrollArea)
+                             QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from algobot.helpers import STRATEGIES_DIR
 from algobot.interface.builder.indicator_selector import IndicatorSelector
