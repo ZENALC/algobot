@@ -4,6 +4,7 @@ Simple strategy builder.
 import json
 import os
 import sys
+from typing import TYPE_CHECKING, Optional
 
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
                              QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
@@ -12,12 +13,15 @@ from algobot.helpers import STRATEGIES_DIR
 from algobot.interface.builder.indicator_selector import IndicatorSelector
 from algobot.interface.utils import create_popup
 
+if TYPE_CHECKING:
+    from algobot.__main__ import Interface
+
 
 class StrategyBuilder(QDialog):
     """
     Strategy builder class.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional['Interface'] = None):
         """
         Strategy builder. Helps add indicators, comparison operator, and comparisons against.
         :param parent: Parent that initializes the strategy builder. (This should be the Algobot GUI).
@@ -35,8 +39,11 @@ class StrategyBuilder(QDialog):
             'Sell Short': {},
             'Buy Short': {}
         }
+
+        # Main layout itself. This contains the tab widget, input for strategy name, saving, and reset buttons.
         self.layout = QVBoxLayout()
 
+        # Main tab widget that'll hold the tabs.
         self.main_tabs_widget = QTabWidget()
         self.tabs = {
             'Buy Long': QWidget(),
@@ -45,6 +52,7 @@ class StrategyBuilder(QDialog):
             'Buy Short': QWidget(),
         }
 
+        # Main layouts for each individual tab.
         self.main_layouts = {
             'Buy Long': QFormLayout(),
             'Sell Long': QFormLayout(),
@@ -61,14 +69,19 @@ class StrategyBuilder(QDialog):
             inner_tab = self.tabs[trend]
             inner_tab.setLayout(tab_layout)
 
+            # Add this tab to the main tabs widget.
             self.main_tabs_widget.addTab(inner_tab, trend)
 
             tab_layout.addRow(QLabel(trend))
             tab_layout.addRow(add_indicator_button)
 
+        # Define a scroll and set the main tabs widget as its main widget. This is super important, as the view looks
+        #  hideous when there are a lot of indicators selected (it can shrink and it's not good). That's why we must
+        #  encapsulate the items in a scroll, so users can scroll up and down when appropriate.
         scroll = QScrollArea()
         scroll.setWidget(self.main_tabs_widget)
         scroll.setWidgetResizable(True)
+
         self.layout.addWidget(scroll)
         self.layout.addWidget(QLabel('Strategy Name'))
 
@@ -84,23 +97,37 @@ class StrategyBuilder(QDialog):
         self.layout.addWidget(self.reset_button)
 
         self.setLayout(self.layout)
+
+        # Set minimum size equal to the main tab widget size. This ensures the strategy builder doesn't start small.
         self.setMinimumSize(self.main_tabs_widget.size())
 
     def restore_builder(self):
         """
-        Restore the builder to initial state.
+        Restore the builder to its initial state.
+
+        Sample state item:
+            {'Buy Long':
+                {'33e14177-318b-426a-87ce-a6dde86955fe': {
+                    'add_against_groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CA0>,
+                    'against': None,
+                    'name': 'TRIX',
+                    'operand': <PyQt5.QtWidgets.QComboBox object at 0x00000248735073A0>,
+                    'groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CB9>
+                }
+            }
+
         """
         for trend, trend_values in self.state.items():
             for uuid, uuid_values in trend_values.items():
-                indicator = uuid_values['name']
                 self.indicator_selector.delete_groupbox(
-                    indicator=indicator,
+                    indicator=uuid_values['name'],
                     groupbox=uuid_values['groupbox'],
                     trend=trend,
                     uuid=uuid,
                     bypass_popup=True
                 )
 
+        # Reset state. TODO: Simplify this with init(). We'll manually resetting with keys here which is not ideal.
         self.state = {
             'Buy Long': {},
             'Sell Long': {},
@@ -144,12 +171,20 @@ class StrategyBuilder(QDialog):
 
     def create_parsed_dict(self, from_dict: dict) -> dict:
         """
-        Create parsed dictionary to dump into a JSON. It should parse and read the QWidget values.
+        Create parsed dictionary to dump into a JSON. It should parse and read the QWidget values and store their
+         actual held values.
+
+        Note that this function can be recursive.
+
         :param from_dict: Dictionary to create a parsed dictionary from.
         :return: Parsed dictionary.
         """
-        useless_keys = {'add_against_groupbox', 'groupbox'}
+        # We'll populate this dictionary.
         parsed_dict = {}
+
+        # We don't use these keys as they're not needed for strategies.
+        useless_keys = {'add_against_groupbox', 'groupbox'}
+
         for key, value in from_dict.items():
             if isinstance(value, dict):
                 parsed_dict[key] = self.create_parsed_dict(value)
@@ -167,7 +202,7 @@ class StrategyBuilder(QDialog):
     def open_indicator_selector(self, trend: str):
         """
         Open the indicator selector. Note that we set the trend of indicator selector here, then we delegate the logic
-         over to the indicator selector. It'll store the value set in its parent which is the strategy builder object
+         over to the indicator selector. It'll then in turn update the state set within this strategy builder object
          itself.
         :param trend: Trend to save indicator as.
         """
