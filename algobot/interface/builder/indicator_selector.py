@@ -6,16 +6,16 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, OrderedDict
 from uuid import uuid4
 
 import talib
-from talib import abstract
-
-if TYPE_CHECKING:
-    from algobot.interface.builder.strategy_builder import StrategyBuilder
-
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel, QLineEdit, QMessageBox,
                              QPushButton, QRadioButton, QSpinBox, QVBoxLayout)
+from talib import abstract
 
 from algobot.interface.configuration_helpers import get_default_widget, get_h_line
 from algobot.interface.utils import get_bold_font, get_v_spacer
+
+if TYPE_CHECKING:
+    # pylint: disable=ungrouped-imports
+    from algobot.interface.builder.strategy_builder import StrategyBuilder
 
 
 def get_normalized_indicator_map() -> Dict[str, str]:
@@ -51,7 +51,7 @@ class IndicatorSelector(QDialog):
     MOVING_AVERAGE_TYPES_BY_NAME = MOVING_AVERAGE_TYPES_BY_NUM.items()
 
     def __init__(self, parent: Optional['StrategyBuilder'], helper: bool = False, advanced: bool = False):
-        super(QDialog, self).__init__(parent)
+        super(IndicatorSelector, self).__init__(parent)
 
         # Main overall layout.
         self.layout = QVBoxLayout()

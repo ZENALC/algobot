@@ -22,7 +22,7 @@ class StrategyBuilder(QDialog):
         Strategy builder. Helps add indicators, comparison operator, and comparisons against.
         :param parent: Parent that initializes the strategy builder. (This should be the Algobot GUI).
         """
-        super(QDialog, self).__init__(parent)
+        super(StrategyBuilder, self).__init__(parent)
         self.setWindowTitle('Strategy Builder')
 
         # Main indicator selector GUI.
