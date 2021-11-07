@@ -6,7 +6,7 @@ import os
 import sys
 
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
-                             QLineEdit, QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+                             QLineEdit, QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget, QScrollArea)
 
 from algobot.helpers import STRATEGIES_DIR
 from algobot.interface.builder.indicator_selector import IndicatorSelector
@@ -52,7 +52,6 @@ class StrategyBuilder(QDialog):
             'Buy Short': QFormLayout()
         }
 
-        # TODO: Add scroll bars.
         for trend, tab_layout in self.main_layouts.items():
             add_indicator_button = QPushButton(f"Add {trend} Indicator")
 
@@ -67,7 +66,10 @@ class StrategyBuilder(QDialog):
             tab_layout.addRow(QLabel(trend))
             tab_layout.addRow(add_indicator_button)
 
-        self.layout.addWidget(self.main_tabs_widget)
+        scroll = QScrollArea()
+        scroll.setWidget(self.main_tabs_widget)
+        scroll.setWidgetResizable(True)
+        self.layout.addWidget(scroll)
         self.layout.addWidget(QLabel('Strategy Name'))
 
         self.strategy_name_input = QLineEdit()
