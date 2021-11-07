@@ -5,13 +5,14 @@ Indicator selector.
 from typing import TYPE_CHECKING, Any, Dict, Optional, OrderedDict
 from uuid import uuid4
 
+import talib
+from talib import abstract
+
 if TYPE_CHECKING:
     from algobot.interface.builder.strategy_builder import StrategyBuilder
 
-import talib
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel, QLineEdit, QMessageBox,
                              QPushButton, QRadioButton, QSpinBox, QVBoxLayout)
-from talib import MA_Type, abstract
 
 from algobot.interface.configuration_helpers import get_default_widget, get_h_line
 from algobot.interface.utils import get_bold_font, get_v_spacer
@@ -46,8 +47,8 @@ class IndicatorSelector(QDialog):
 
     # TALIB sets moving averages by numbers. This is not very appealing in the frontend, so we'll map it to its
     #  appropriate moving average.
-    MOVING_AVERAGE_TYPES_BY_NUM = vars(MA_Type)['_lookup']
-    MOVING_AVERAGE_TYPES_BY_NAME = {k: v for k, v in MOVING_AVERAGE_TYPES_BY_NUM.items()}
+    MOVING_AVERAGE_TYPES_BY_NUM = vars(talib.MA_Type)['_lookup']
+    MOVING_AVERAGE_TYPES_BY_NAME = MOVING_AVERAGE_TYPES_BY_NUM.items()
 
     def __init__(self, parent: Optional['StrategyBuilder'], helper: bool = False, advanced: bool = False):
         super(QDialog, self).__init__(parent)
@@ -113,6 +114,7 @@ class IndicatorSelector(QDialog):
 
         self.setLayout(self.layout)
         self.setWindowTitle('Indicator Selector')
+        self.adjustSize()
 
     def update_indicator(self):
         """

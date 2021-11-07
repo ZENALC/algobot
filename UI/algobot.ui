@@ -46,8 +46,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>1243</width>
-         <height>927</height>
+         <width>1247</width>
+         <height>890</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -2227,7 +2227,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>1284</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
@@ -2236,6 +2236,7 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="configurationAction"/>
     <addaction name="otherCommandsAction"/>
+    <addaction name="strategyBuilderAction"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -2284,6 +2285,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="sourceCodeAction"/>
     <addaction name="openConfigurationsFolderAction"/>
     <addaction name="openCredentialsFolderAction"/>
+    <addaction name="openStrategiesFolderAction"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuStatistics"/>
@@ -2427,6 +2429,16 @@ p, li { white-space: pre-wrap; }
   <action name="wikiAction">
    <property name="text">
     <string>Wiki</string>
+   </property>
+  </action>
+  <action name="strategyBuilderAction">
+   <property name="text">
+    <string>Strategy Builder</string>
+   </property>
+  </action>
+  <action name="openStrategiesFolderAction">
+   <property name="text">
+    <string>Strategies</string>
    </property>
   </action>
  </widget>

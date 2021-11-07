@@ -22,9 +22,11 @@ import algobot
 from algobot.typing_hints import DictType
 
 LOG_FOLDER = 'Logs'
+STRATEGIES_FOLDER = 'Strategies'
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
+STRATEGIES_DIR = os.path.join(ROOT_DIR, STRATEGIES_FOLDER)
 LOG_DIR = os.path.join(ROOT_DIR, LOG_FOLDER)
 
 SHORT_INTERVAL_MAP = {

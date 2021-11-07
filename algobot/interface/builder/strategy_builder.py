@@ -1,17 +1,22 @@
 """
 Simple strategy builder.
 """
-
+import json
+import os
 import sys
 
-from PyQt5.QtWidgets import (QApplication, QDialog, QFormLayout, QLabel, QLineEdit, QPushButton, QTabWidget,
-                             QVBoxLayout, QWidget, QComboBox, QDoubleSpinBox, QSpinBox)
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
+                             QLineEdit, QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
+from algobot.helpers import STRATEGIES_DIR
 from algobot.interface.builder.indicator_selector import IndicatorSelector
 from algobot.interface.utils import create_popup
 
 
 class StrategyBuilder(QDialog):
+    """
+    Strategy builder class.
+    """
     def __init__(self, parent=None):
         """
         Strategy builder. Helps add indicators, comparison operator, and comparisons against.
@@ -47,13 +52,12 @@ class StrategyBuilder(QDialog):
             'Buy Short': QFormLayout()
         }
 
-        for trend, layout in self.main_layouts.items():
+        for trend, tab_layout in self.main_layouts.items():
             add_indicator_button = QPushButton(f"Add {trend} Indicator")
 
             # We need to the store the func args here, or else it'll use the latest trend from the loop.
             add_indicator_button.clicked.connect(lambda _, strict_key=trend: self.open_indicator_selector(strict_key))
 
-            tab_layout = self.main_layouts[trend]
             inner_tab = self.tabs[trend]
             inner_tab.setLayout(tab_layout)
 
@@ -73,6 +77,7 @@ class StrategyBuilder(QDialog):
         self.layout.addWidget(self.create_strategy_button)
 
         self.setLayout(self.layout)
+        self.setMinimumSize(self.main_tabs_widget.size())
 
     def save_strategy(self):
         """
@@ -87,13 +92,27 @@ class StrategyBuilder(QDialog):
             return
 
         trend_keys = ('Sell Long', 'Buy Long', 'Sell Short', 'Buy Short')
-        if not any([self.state[trend_key] for trend_key in trend_keys]):
+        if not any(self.state[trend_key] for trend_key in trend_keys):
             create_popup(self, "No trend indicators found. Please at least select one indicator.")
+            return
 
         parsed_dict = self.create_parsed_dict(self.state)
 
-        import pprint
-        pprint.pprint(parsed_dict)
+        if not os.path.exists(STRATEGIES_DIR):
+            os.mkdir(STRATEGIES_DIR)
+
+        default_path = os.path.join(STRATEGIES_DIR, strategy_name)
+        file_path, _ = QFileDialog.getSaveFileName(self, f'Save {strategy_name} strategy', default_path,
+                                                   'JSON (*.json)')
+
+        # User selected cancel.
+        if not file_path:
+            return
+
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(parsed_dict, f, indent=4)
+
+        create_popup(self, f"Strategy {strategy_name} has been successfully created.")
 
     def create_parsed_dict(self, from_dict: dict) -> dict:
         """

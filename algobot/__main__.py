@@ -23,6 +23,7 @@ from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots, get_gr
                                    update_backtest_graph_limits, update_main_graphs)
 from algobot.helpers import ROOT_DIR, create_folder, create_folder_if_needed, get_caller_string, open_file_or_folder
 from algobot.interface.about import About
+from algobot.interface.builder.strategy_builder import StrategyBuilder
 from algobot.interface.config_utils.slot_utils import load_hide_show_strategies
 from algobot.interface.config_utils.state_utils import load_state, save_state
 from algobot.interface.config_utils.strategy_utils import get_strategies
@@ -61,6 +62,7 @@ class Interface(QMainWindow):
         self.configuration = Configuration(parent=self, logger=self.logger)  # Loading configuration
         self.other_commands = OtherCommands(self)  # Loading other commands
         self.about = About(self)  # Loading about information
+        self.strategy_builder = StrategyBuilder(self)
         self.statistics = Statistics(self)  # Loading statistics
         self.thread_pool = QThreadPool(self)  # Initiating threading pool
         self.threads: Dict[int, QRunnable or None] = {BACKTEST: None, SIMULATION: None, LIVE: None, OPTIMIZER: None}

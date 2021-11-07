@@ -20,6 +20,7 @@ __pycache__/
 /Trade History/
 
 # Strategies
+Strategies/
 /algobot/strategies
 !algobot/strategies/sample.py
 !algobot/strategies/moving_average.py
