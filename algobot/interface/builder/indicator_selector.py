@@ -83,7 +83,7 @@ class IndicatorSelector(QDialog):
 
         # Callback for adding against indicator. This works okay because only one window is allowed regardless
         #  of how many indicators are created.
-        self.callback = {}
+        self.callback = None
         self.helper = helper
         if helper is False:
             self.temp_indicator_selector = IndicatorSelector(None, helper=True)
@@ -266,9 +266,15 @@ class IndicatorSelector(QDialog):
         """
         Add indicator to the strategy builder state.
         """
+        # Add the added indicator view to the strategy builder.
+        indicator_name = str(self.state['name'])
+
         # No need to do any logic for now. We are only using for this against values.
         # TODO: Return indicator name once selected.
         if self.helper is True:
+            self.callback(indicator_name)
+            self.update_indicator()
+            self.hide()
             return
 
         if self.trend is None:
@@ -278,9 +284,6 @@ class IndicatorSelector(QDialog):
         unique_identifier = str(uuid4())
         self.parent.state.setdefault(self.trend, {})
         self.parent.state[self.trend][unique_identifier] = self.state
-
-        # Add the added indicator view to the strategy builder.
-        indicator_name = str(self.state['name'])
 
         vbox = QVBoxLayout()
         vbox.addWidget(get_h_line())
@@ -348,13 +351,22 @@ class IndicatorSelector(QDialog):
         if add_type == 'indicator':
             local_vbox.addWidget(QLabel("Enter indicator from selector below."))
 
-            add_indicator_button = QPushButton('Select indicator')
-            add_indicator_button.clicked.connect(lambda: self.temp_indicator_selector.open())
             indicator_against_selected = QLabel('No indicator against selected.')
+
+            def bind(selected_indicator: str):
+                indicator_against_selected.setText(f'{selected_indicator} selected.')
+                unique_dict[against] = selected_indicator
+
+            def view_indicator_selector():
+                self.temp_indicator_selector.callback = bind
+                self.temp_indicator_selector.open()
+
+            add_indicator_button = QPushButton('Select indicator')
+            add_indicator_button.clicked.connect(view_indicator_selector)
 
             local_vbox.addWidget(add_indicator_button)
             local_vbox.addWidget(indicator_against_selected)
-            unique_dict[against] = 'indicator'
+            unique_dict[against] = None
 
         elif add_type == 'static':
             local_vbox.addWidget(QLabel("Enter static value below."))
