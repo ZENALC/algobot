@@ -5,7 +5,7 @@ Simple strategy builder.
 import sys
 
 from PyQt5.QtWidgets import (QApplication, QDialog, QFormLayout, QLabel, QLineEdit, QPushButton, QTabWidget,
-                             QVBoxLayout, QWidget)
+                             QVBoxLayout, QWidget, QComboBox, QDoubleSpinBox, QSpinBox)
 
 from algobot.interface.builder.indicator_selector import IndicatorSelector
 from algobot.interface.utils import create_popup
@@ -90,8 +90,32 @@ class StrategyBuilder(QDialog):
         if not any([self.state[trend_key] for trend_key in trend_keys]):
             create_popup(self, "No trend indicators found. Please at least select one indicator.")
 
+        parsed_dict = self.create_parsed_dict(self.state)
+
         import pprint
-        pprint.pprint(self.state)
+        pprint.pprint(parsed_dict)
+
+    def create_parsed_dict(self, from_dict: dict) -> dict:
+        """
+        Create parsed dictionary to dump into a JSON. It should parse and read the QWidget values.
+        :param from_dict: Dictionary to create a parsed dictionary from.
+        :return: Parsed dictionary.
+        """
+        useless_keys = {'add_against_groupbox'}
+        parsed_dict = {}
+        for key, value in from_dict.items():
+            if isinstance(value, dict):
+                parsed_dict[key] = self.create_parsed_dict(value)
+            elif isinstance(value, QComboBox):
+                parsed_dict[key] = value.currentText()
+            elif isinstance(value, (QSpinBox, QDoubleSpinBox)):
+                parsed_dict[key] = value.value()
+            elif key in useless_keys:
+                continue
+            else:
+                parsed_dict[key] = value
+
+        return parsed_dict
 
     def open_indicator_selector(self, trend: str):
         """
