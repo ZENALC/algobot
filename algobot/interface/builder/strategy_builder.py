@@ -148,7 +148,7 @@ class StrategyBuilder(QDialog):
         :param from_dict: Dictionary to create a parsed dictionary from.
         :return: Parsed dictionary.
         """
-        useless_keys = {'add_against_groupbox'}
+        useless_keys = {'add_against_groupbox', 'groupbox'}
         parsed_dict = {}
         for key, value in from_dict.items():
             if isinstance(value, dict):
