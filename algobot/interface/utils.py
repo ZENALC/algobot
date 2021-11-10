@@ -3,11 +3,53 @@ File containing utility functions for the GUI.
 """
 
 from datetime import datetime
-from typing import List
+from typing import List, Union
 
+import talib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QComboBox, QDialog, QMessageBox, QSizePolicy, QSpacerItem, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QLineEdit, QMessageBox, QSizePolicy, QSpacerItem,
+                             QSpinBox, QTableWidget, QTableWidgetItem)
+
+from algobot.interface.configuration_helpers import get_default_widget
+
+# TALIB sets moving averages by numbers. This is not very appealing in the frontend, so we'll map it to its
+#  appropriate moving average.
+MOVING_AVERAGE_TYPES_BY_NUM = vars(talib.MA_Type)['_lookup']
+MOVING_AVERAGE_TYPES_BY_NAME = {v: k for k, v in MOVING_AVERAGE_TYPES_BY_NUM.items()}
+
+PARAMETER_MAP = {
+    'matype': 'MA Type',
+    'timeperiod': 'Time Period'
+}
+
+
+def get_param_obj(default_value: Union[float, int, str], param_name: str):
+    """
+    Get param widget based on param and param_name provided.
+    :param default_value: Param type.
+    :param param_name: Name of the parameter (e.g. matype)
+    :return: Parameter object.
+    """
+    if isinstance(default_value, int):
+        # TALIB stores MA types as ints. So, we must see what that num maps to.
+        if 'matype' in param_name:
+            default_moving_average = MOVING_AVERAGE_TYPES_BY_NUM[default_value]
+            moving_averages = list(MOVING_AVERAGE_TYPES_BY_NAME.keys())
+
+            input_obj = QComboBox()
+            input_obj.addItems(moving_averages)
+            input_obj.setCurrentIndex(moving_averages.index(default_moving_average))
+            return input_obj
+        else:
+            return get_default_widget(QSpinBox, default_value, None, None)
+
+    elif isinstance(default_value, float):
+        return get_default_widget(QDoubleSpinBox, default_value, None, None)
+    elif isinstance(default_value, str):
+        return QLineEdit()
+    else:
+        raise ValueError("Unknown type of data encountered.")
 
 
 def get_bold_font() -> QFont:
