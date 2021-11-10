@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, OrderedDict
 from uuid import uuid4
 
 import talib
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel, QLineEdit, QMessageBox,
-                             QPushButton, QRadioButton, QSpinBox, QVBoxLayout)
+from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel, QMessageBox,
+                             QPushButton, QRadioButton, QVBoxLayout)
 from talib import abstract
 
-from algobot.interface.configuration_helpers import get_default_widget, get_h_line
-from algobot.interface.utils import get_bold_font, get_v_spacer
+from algobot.interface.configuration_helpers import get_h_line
+from algobot.interface.utils import get_bold_font, get_param_obj, get_v_spacer, PARAMETER_MAP
 
 if TYPE_CHECKING:
     # Strategy builder calls indicator selector, so we can't just simply import strategy builder for hinting here.
@@ -44,11 +44,6 @@ class IndicatorSelector(QDialog):
     # Mapping between raw and parsed indicators. We display parsed on the frontend, but we'll store in raw format.
     RAW_TO_PARSED_INDICATORS = get_normalized_indicator_map()
     PARSED_TO_RAW_INDICATORS = {v: k for k, v in RAW_TO_PARSED_INDICATORS.items()}
-
-    # TALIB sets moving averages by numbers. This is not very appealing in the frontend, so we'll map it to its
-    #  appropriate moving average.
-    MOVING_AVERAGE_TYPES_BY_NUM = vars(talib.MA_Type)['_lookup']
-    MOVING_AVERAGE_TYPES_BY_NAME = MOVING_AVERAGE_TYPES_BY_NUM.items()
 
     def __init__(
             self,
@@ -272,25 +267,11 @@ class IndicatorSelector(QDialog):
         }
 
         parameters = indicator_info['parameters']
-        for param_name, param in parameters.items():
-            if isinstance(param, int):
-                # TALIB stores MA types as ints. So, we must see what that num maps to.
-                if param_name == 'matype':
-                    input_obj = QLineEdit()
-                    input_obj.setText(self.MOVING_AVERAGE_TYPES_BY_NUM[param])
-                else:
-                    input_obj = get_default_widget(QSpinBox, param, None, None)
-
-            elif isinstance(param, float):
-                input_obj = get_default_widget(QDoubleSpinBox, param, None, None)
-            elif isinstance(param, str):
-                input_obj = QLineEdit()
-            else:
-                raise ValueError("Unknown type of data encountered.")
-
+        for param_name, default_value in parameters.items():
+            input_obj = get_param_obj(default_value=default_value, param_name=param_name)
             input_obj.setEnabled(False)
 
-            row = (QLabel(param_name.capitalize()), input_obj)
+            row = (QLabel(PARAMETER_MAP.get(param_name, param_name)), input_obj)
             self.info_layout.addRow(*row)
 
         if len(parameters) == 0:
