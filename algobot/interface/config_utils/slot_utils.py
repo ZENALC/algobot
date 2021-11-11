@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PyQt5.QtWidgets import (QCheckBox, QDoubleSpinBox, QHBoxLayout, QLabel, QScrollArea, QSpinBox, QTabWidget,
-                             QVBoxLayout)
+                             QVBoxLayout, QWidget, QFormLayout)
 
 from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
@@ -25,6 +25,7 @@ from algobot.interface.config_utils.user_config_utils import (copy_config_helper
                                                               save_simulation_settings)
 from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, create_inner_tab, get_default_widget,
                                                      get_regular_groupbox_and_layout)
+from algobot.interface.utils import get_param_obj, PARAMETER_MAP
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
@@ -75,9 +76,10 @@ def load_hide_show_strategies(config_obj: Configuration):
 
         delete_strategy_slots(config_obj)
         load_strategy_slots(config_obj)
+        load_custom_strategy_slots(config_obj)
 
     c_boxes = []
-    for strategy_name in config_obj.strategies.keys():
+    for strategy_name in [*config_obj.strategies.keys(), *[s['name'] for s in config_obj.json_strategies]]:
         c_boxes.append(QCheckBox())
 
         # When restoring slots, if the strategy is not hidden, tick it.
@@ -101,6 +103,93 @@ def delete_strategy_slots(config_obj: Configuration):
         nuke_index = 3 if index < 2 else 4  # TODO: Refactor this. This is hard coded based on category tabs.
         for _ in range(tab.count() - nuke_index):
             tab.removeTab(nuke_index)
+
+
+def load_custom_strategy_slots(config_obj: Configuration):
+    """
+    This will load all the necessary slots for custom strategy slots.
+    :param config_obj: Configuration object to populate slots on.
+    :return: None
+    """
+    for strategy in config_obj.json_strategies:
+
+        # TODO: Add strategy description to strategy builder.
+        strategy_description = "Custom Strategy"
+        strategy_name = strategy['name']
+
+        if strategy_name in config_obj.hidden_strategies:  # Don't re-render hidden strategies.
+            continue
+
+        for tab in config_obj.category_tabs:
+            config_obj.strategy_dict[tab, strategy_name] = tab_widget = QTabWidget()
+            description_label = QLabel(f'Strategy description: {strategy_description}')
+            description_label.setWordWrap(True)
+
+            layout = QVBoxLayout()
+            layout.addWidget(description_label)
+
+            scroll = QScrollArea()  # Added a scroll area so user can scroll when additional slots are added.
+            scroll.setWidgetResizable(True)
+
+            group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {strategy_name}?")
+            config_obj.strategy_dict[tab, strategy_name, 'groupBox'] = group_box
+
+            main_tabs_widget = QTabWidget()
+            tabs = {
+                'Buy Long': QWidget(),
+                'Sell Long': QWidget(),
+                'Sell Short': QWidget(),
+                'Buy Short': QWidget(),
+            }
+
+            # Main layouts for each individual tab.
+            tab_layouts = {
+                'Buy Long': QFormLayout(),
+                'Sell Long': QFormLayout(),
+                'Sell Short': QFormLayout(),
+                'Buy Short': QFormLayout()
+            }
+
+            for trend, trend_items in strategy.items():
+                if trend not in tab_layouts.keys():
+                    continue
+
+                values = []
+                labels = []
+
+                inner_tab = tabs[trend]
+                inner_tab_layout = tab_layouts[trend]
+                inner_tab.setLayout(inner_tab_layout)
+
+                main_tabs_widget.addTab(inner_tab, trend)
+
+                if len(trend_items) == 0:
+                    inner_tab_layout.addRow(QLabel("No indicators found."))
+
+                for _uuid, indicator in trend_items.items():
+                    main_parameters = indicator['parameters']
+
+                    for parameter, default_value in main_parameters.items():
+                        label = QLabel(PARAMETER_MAP.get(parameter, parameter))
+                        widget = get_param_obj(default_value=default_value, param_name=parameter)
+
+                        inner_tab_layout.addRow(label, widget)
+
+                        labels.append(label)
+                        values.append(widget)
+
+                status = QLabel()
+
+                config_obj.strategy_dict[tab, strategy_name, trend, 'values'] = values
+                config_obj.strategy_dict[tab, strategy_name, trend, 'labels'] = labels
+                config_obj.strategy_dict[tab, strategy_name, trend, 'layout'] = group_box_layout
+                config_obj.strategy_dict[tab, strategy_name, trend, 'status'] = status
+
+            group_box_layout.addRow(main_tabs_widget)
+            layout.addWidget(scroll)
+            scroll.setWidget(group_box)
+            tab_widget.setLayout(layout)
+            tab.addTab(tab_widget, strategy_name)
 
 
 def load_strategy_slots(config_obj: Configuration):
@@ -290,3 +379,4 @@ def load_slots(config_obj: Configuration):
     load_loss_slots(c)  # These slots are based on the ordering.
     load_take_profit_slots(c)
     load_strategy_slots(c)
+    load_custom_strategy_slots(c)
