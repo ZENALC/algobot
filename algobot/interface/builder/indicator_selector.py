@@ -259,7 +259,7 @@ class IndicatorSelector(QDialog):
         #  submissions. Note if len(parameters) == 0, we disable this submission button.
         self.submit_button.setEnabled(True)
 
-        # Initialize state with just the name. We don't need anything else. Operand and against will be populated once
+        # Initialize state with just the name. We don't need anything else. Operator and against will be populated once
         #  the user fills them in. Note that Algobot will automatically populate the strategy UI elements from just the
         #  strategy name.
         self.state = {
@@ -339,7 +339,7 @@ class IndicatorSelector(QDialog):
         info_label.setFont(get_bold_font())
         vbox.addWidget(info_label)
 
-        self.add_operand(vbox, unique_identifier)
+        self.add_operator(vbox, unique_identifier)
         self.add_against_radio_buttons(vbox, unique_identifier)
 
         # Add this populated groupbox to the parent (strategy builder) view.
@@ -348,19 +348,20 @@ class IndicatorSelector(QDialog):
 
         self.reset_and_hide()
 
-    def add_operand(self, vbox: QVBoxLayout, unique_identifier: str):
+    def add_operator(self, vbox: QVBoxLayout, unique_identifier: str):
         """
-        Add operand values; there are the >, <, >=, etc values. When storing state, we'll just fetch the combobox's
+        Add operator values; there are the >, <, >=, etc values. When storing state, we'll just fetch the combobox's
          selected value.
-        :param vbox: Vertical layout to add operand values to.
+        :param vbox: Vertical layout to add operator values to.
         :param unique_identifier: Unique identifier to distinguish in states.
         """
-        operands = ['>', '<', '>=', '<=', '==', '!=']
-        self.parent.state[self.trend][unique_identifier]['operand'] = operands_combobox = QComboBox()
-        operands_combobox.addItems(operands)
+        # TODO: Make operators a global somewhere.
+        operators = ['>', '<', '>=', '<=', '==', '!=']
+        self.parent.state[self.trend][unique_identifier]['operator'] = operators_combobox = QComboBox()
+        operators_combobox.addItems(operators)
 
-        vbox.addWidget(QLabel("Operand"))
-        vbox.addWidget(operands_combobox)
+        vbox.addWidget(QLabel("Operator"))
+        vbox.addWidget(operators_combobox)
         vbox.addWidget(QLabel("Against"))
 
     def add_against_values(self, vbox: QVBoxLayout, unique_identifier: str, add_type: Optional[str] = None):
@@ -443,7 +444,7 @@ class IndicatorSelector(QDialog):
                     'add_against_groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CA0>,
                     'against': None,
                     'name': 'TRIX',
-                    'operand': <PyQt5.QtWidgets.QComboBox object at 0x00000248735073A0>,
+                    'operator': <PyQt5.QtWidgets.QComboBox object at 0x00000248735073A0>,
                     'groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CB9>
                 }
             }

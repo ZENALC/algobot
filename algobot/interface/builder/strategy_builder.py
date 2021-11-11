@@ -111,7 +111,7 @@ class StrategyBuilder(QDialog):
                     'add_against_groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CA0>,
                     'against': None,
                     'name': 'TRIX',
-                    'operand': <PyQt5.QtWidgets.QComboBox object at 0x00000248735073A0>,
+                    'operator': <PyQt5.QtWidgets.QComboBox object at 0x00000248735073A0>,
                     'groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CB9>
                 }
             }
