@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PyQt5.QtWidgets import (QCheckBox, QDoubleSpinBox, QHBoxLayout, QLabel, QScrollArea, QSpinBox, QTabWidget,
-                             QVBoxLayout, QWidget, QFormLayout)
+                             QVBoxLayout, QWidget, QFormLayout, QComboBox)
 
 from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
@@ -24,8 +24,8 @@ from algobot.interface.config_utils.user_config_utils import (copy_config_helper
                                                               save_live_settings, save_optimizer_settings,
                                                               save_simulation_settings)
 from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, create_inner_tab, get_default_widget,
-                                                     get_regular_groupbox_and_layout)
-from algobot.interface.utils import get_param_obj, PARAMETER_MAP
+                                                     get_regular_groupbox_and_layout, get_h_line)
+from algobot.interface.utils import get_param_obj, PARAMETER_MAP, get_bold_font
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
@@ -111,6 +111,8 @@ def load_custom_strategy_slots(config_obj: Configuration):
     :param config_obj: Configuration object to populate slots on.
     :return: None
     """
+    bold_font = get_bold_font()
+
     for strategy in config_obj.json_strategies:
 
         # TODO: Add strategy description to strategy builder.
@@ -168,6 +170,18 @@ def load_custom_strategy_slots(config_obj: Configuration):
 
                 for _uuid, indicator in trend_items.items():
                     main_parameters = indicator['parameters']
+                    inner_tab_layout.addWidget(get_h_line())
+
+                    indicator_label = QLabel(indicator['name'])
+                    indicator_label.setFont(bold_font)
+                    inner_tab_layout.addWidget(indicator_label)
+
+                    inner_tab_layout.addWidget(get_h_line())
+
+                    # We are just calling this to get a combo box for price types (high, low, etc), so default value
+                    #  can just be ''.
+                    price_type_widget = get_param_obj('', 'price_type')
+                    inner_tab_layout.addRow(QLabel('Price Type'), price_type_widget)
 
                     for parameter, default_value in main_parameters.items():
                         label = QLabel(PARAMETER_MAP.get(parameter, parameter))
@@ -177,6 +191,39 @@ def load_custom_strategy_slots(config_obj: Configuration):
 
                         labels.append(label)
                         values.append(widget)
+
+                    operators = ['>', '<', '>=', '<=', '==', '!=']
+                    operator_label = QLabel("Operator")
+
+                    operators_combobox = QComboBox()
+                    operators_combobox.addItems(operators)
+                    operators_combobox.setCurrentIndex(operators.index(indicator['operator']))
+
+                    inner_tab_layout.addRow(operator_label, operators_combobox)
+
+                    against = indicator['against']
+
+                    if isinstance(against, (float, int)):
+                        inner_tab_layout.addWidget(QLabel('Against static value defined below:'))
+                        inner_tab_layout.addWidget(get_default_widget(QDoubleSpinBox, against, None, 999999999))
+
+                    elif against == 'current_price':
+                        inner_tab_layout.addWidget(QLabel("Bot will execute against current price."))
+
+                    else:
+                        # It must be against another indicator then.
+                        inner_tab_layout.addWidget(QLabel(f"Bot will execute against: {against['name']}."))
+
+                        price_type_widget = get_param_obj('', 'price_type')
+                        inner_tab_layout.addRow(QLabel('Price Type'), price_type_widget)
+
+                        for parameter, default_value in against['parameters'].items():
+                            label = QLabel(PARAMETER_MAP.get(parameter, parameter))
+                            widget = get_param_obj(default_value=default_value, param_name=parameter)
+
+                            inner_tab_layout.addRow(label, widget)
+
+                    inner_tab_layout.addWidget(QLabel())
 
                 status = QLabel()
 
