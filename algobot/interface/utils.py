@@ -17,6 +17,7 @@ from algobot.interface.configuration_helpers import get_default_widget
 #  appropriate moving average.
 MOVING_AVERAGE_TYPES_BY_NUM = vars(talib.MA_Type)['_lookup']
 MOVING_AVERAGE_TYPES_BY_NAME = {v: k for k, v in MOVING_AVERAGE_TYPES_BY_NUM.items()}
+MOVING_AVERAGES_LIST = list(MOVING_AVERAGE_TYPES_BY_NAME.keys())
 
 # Mappings from TALIB parameters to better display names.
 PARAMETER_MAP = {
@@ -71,19 +72,25 @@ def get_param_obj(default_value: Union[float, int, str], param_name: str):
         # TALIB stores MA types as ints. So, we must see what that num maps to.
         if 'matype' in param_name:
             default_moving_average = MOVING_AVERAGE_TYPES_BY_NUM[default_value]
-            moving_averages = list(MOVING_AVERAGE_TYPES_BY_NAME.keys())
 
             input_obj = QComboBox()
-            input_obj.addItems(moving_averages)
-            input_obj.setCurrentIndex(moving_averages.index(default_moving_average))
+            input_obj.addItems(MOVING_AVERAGES_LIST)
+            input_obj.setCurrentIndex(MOVING_AVERAGES_LIST.index(default_moving_average))
             return input_obj
         else:
             return get_default_widget(QSpinBox, default_value, None, None)
 
+    elif param_name == 'price_type':
+        input_obj = QComboBox()
+        input_obj.addItems(['Open', 'High', 'Low', 'Close', 'Open/Close', 'High/Low'])
+        return input_obj
+
     elif isinstance(default_value, float):
         return get_default_widget(QDoubleSpinBox, default_value, None, None)
+
     elif isinstance(default_value, str):
         return QLineEdit()
+
     else:
         raise ValueError("Unknown type of data encountered.")
 
