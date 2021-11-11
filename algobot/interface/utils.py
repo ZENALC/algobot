@@ -18,9 +18,45 @@ from algobot.interface.configuration_helpers import get_default_widget
 MOVING_AVERAGE_TYPES_BY_NUM = vars(talib.MA_Type)['_lookup']
 MOVING_AVERAGE_TYPES_BY_NAME = {v: k for k, v in MOVING_AVERAGE_TYPES_BY_NUM.items()}
 
+# Mappings from TALIB parameters to better display names.
 PARAMETER_MAP = {
-    'matype': 'MA Type',
-    'timeperiod': 'Time Period'
+    'acceleration': 'Acceleration',
+    'accelerationinitlong': 'Acceleration Init Long',
+    'accelerationinitshort': 'Acceleration Init Short',
+    'accelerationlong': 'Acceleration Long',
+    'accelerationmaxlong': 'Acceleration Max Long',
+    'accelerationmaxshort': 'Acceleration Max Short',
+    'accelerationshort': "Acceleration Short",
+    'fastd_matype': "Fast D MA Type",
+    'fastd_period': "Fast D Period",
+    'fastk_period': "Fast K Period",  # noqa
+    'fastlimit': "Fast Limit",  # noqa
+    'fastmatype': "Fast MA Type",
+    'fastperiod': 'Fast Period',
+    'matype': "MA Type",
+    'maximum': "Maximum",
+    'maxperiod': "Max Period",  # noqa
+    'minperiod': 'Min Period',  # noqa
+    'nbdev': 'NB Dev',  # noqa
+    'nbdevdn': 'NB Dev Down',
+    'nbdevup': 'NB Dev Up',
+    'offsetonreverse': "Offset On Reverse",  # noqa
+    'penetration': 'Penetration',
+    'signalmatype': 'Signal MA Type',
+    'signalperiod': 'Signal Period',  # noqa
+    'slowd_matype': 'Slow D MA Type',  # noqa
+    'slowd_period': 'Slow D Period',  # noqa
+    'slowk_matype': 'Slow K MA Type',  # noqa
+    'slowk_period': 'Slow K Period',  # noqa
+    'slowlimit': "Slow Limit",  # noqa
+    'slowmatype': "Slow MA Type",
+    'slowperiod': "Slow Period",
+    'startvalue': 'Start Value',  # noqa
+    'timeperiod': "Time Period",
+    'timeperiod1': "Time Period 1",
+    'timeperiod2': 'Time Period 2',
+    'timeperiod3': "Time Period 3",
+    'vfactor': 'V Factor'
 }
 
 
