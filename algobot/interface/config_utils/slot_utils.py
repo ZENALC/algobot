@@ -105,14 +105,69 @@ def delete_strategy_slots(config_obj: Configuration):
             tab.removeTab(nuke_index)
 
 
+def populate_custom_indicator(_uuid, indicator, inner_tab_layout, labels, values):
+    main_parameters = indicator['parameters']
+    indicator_label = QLabel(indicator['name'])
+    indicator_label.setFont(get_bold_font())
+
+    inner_tab_layout.addWidget(get_h_line())
+    inner_tab_layout.addWidget(indicator_label)
+    inner_tab_layout.addWidget(get_h_line())
+
+    # We are just calling this to get a combo box for price types (high, low, etc), so default value
+    #  can just be ''.
+    price_type_widget = get_param_obj('', 'price_type')
+    inner_tab_layout.addRow(QLabel('Price Type'), price_type_widget)
+
+    for parameter, default_value in main_parameters.items():
+        label = QLabel(PARAMETER_MAP.get(parameter, parameter))
+        widget = get_param_obj(default_value=default_value, param_name=parameter)
+
+        inner_tab_layout.addRow(label, widget)
+
+        labels.append(label)
+        values.append(widget)
+
+    operators = ['>', '<', '>=', '<=', '==', '!=']
+    operator_label = QLabel("Operator")
+
+    operators_combobox = QComboBox()
+    operators_combobox.addItems(operators)
+    operators_combobox.setCurrentIndex(operators.index(indicator['operator']))
+
+    inner_tab_layout.addRow(operator_label, operators_combobox)
+
+    against = indicator['against']
+
+    if isinstance(against, (float, int)):
+        inner_tab_layout.addWidget(QLabel('Against static value defined below:'))
+        inner_tab_layout.addWidget(get_default_widget(QDoubleSpinBox, against, None, 999999999))
+
+    elif against == 'current_price':
+        inner_tab_layout.addWidget(QLabel("Bot will execute against current price."))
+
+    else:
+        # It must be against another indicator then.
+        inner_tab_layout.addWidget(QLabel(f"Bot will execute against: {against['name']}."))
+
+        price_type_widget = get_param_obj('', 'price_type')
+        inner_tab_layout.addRow(QLabel('Price Type'), price_type_widget)
+
+        for parameter, default_value in against['parameters'].items():
+            label = QLabel(PARAMETER_MAP.get(parameter, parameter))
+            widget = get_param_obj(default_value=default_value, param_name=parameter)
+
+            inner_tab_layout.addRow(label, widget)
+
+    inner_tab_layout.addWidget(QLabel())
+
+
 def load_custom_strategy_slots(config_obj: Configuration):
     """
     This will load all the necessary slots for custom strategy slots.
     :param config_obj: Configuration object to populate slots on.
     :return: None
     """
-    bold_font = get_bold_font()
-
     for strategy in config_obj.json_strategies:
 
         # TODO: Add strategy description to strategy builder.
@@ -169,61 +224,11 @@ def load_custom_strategy_slots(config_obj: Configuration):
                     inner_tab_layout.addRow(QLabel("No indicators found."))
 
                 for _uuid, indicator in trend_items.items():
-                    main_parameters = indicator['parameters']
-                    inner_tab_layout.addWidget(get_h_line())
-
-                    indicator_label = QLabel(indicator['name'])
-                    indicator_label.setFont(bold_font)
-                    inner_tab_layout.addWidget(indicator_label)
-
-                    inner_tab_layout.addWidget(get_h_line())
-
-                    # We are just calling this to get a combo box for price types (high, low, etc), so default value
-                    #  can just be ''.
-                    price_type_widget = get_param_obj('', 'price_type')
-                    inner_tab_layout.addRow(QLabel('Price Type'), price_type_widget)
-
-                    for parameter, default_value in main_parameters.items():
-                        label = QLabel(PARAMETER_MAP.get(parameter, parameter))
-                        widget = get_param_obj(default_value=default_value, param_name=parameter)
-
-                        inner_tab_layout.addRow(label, widget)
-
-                        labels.append(label)
-                        values.append(widget)
-
-                    operators = ['>', '<', '>=', '<=', '==', '!=']
-                    operator_label = QLabel("Operator")
-
-                    operators_combobox = QComboBox()
-                    operators_combobox.addItems(operators)
-                    operators_combobox.setCurrentIndex(operators.index(indicator['operator']))
-
-                    inner_tab_layout.addRow(operator_label, operators_combobox)
-
-                    against = indicator['against']
-
-                    if isinstance(against, (float, int)):
-                        inner_tab_layout.addWidget(QLabel('Against static value defined below:'))
-                        inner_tab_layout.addWidget(get_default_widget(QDoubleSpinBox, against, None, 999999999))
-
-                    elif against == 'current_price':
-                        inner_tab_layout.addWidget(QLabel("Bot will execute against current price."))
-
-                    else:
-                        # It must be against another indicator then.
-                        inner_tab_layout.addWidget(QLabel(f"Bot will execute against: {against['name']}."))
-
-                        price_type_widget = get_param_obj('', 'price_type')
-                        inner_tab_layout.addRow(QLabel('Price Type'), price_type_widget)
-
-                        for parameter, default_value in against['parameters'].items():
-                            label = QLabel(PARAMETER_MAP.get(parameter, parameter))
-                            widget = get_param_obj(default_value=default_value, param_name=parameter)
-
-                            inner_tab_layout.addRow(label, widget)
-
-                    inner_tab_layout.addWidget(QLabel())
+                    populate_custom_indicator(_uuid=_uuid,
+                                              indicator=indicator,
+                                              inner_tab_layout=inner_tab_layout,
+                                              labels=labels,
+                                              values=values)
 
                 status = QLabel()
 
