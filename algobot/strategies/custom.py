@@ -1,32 +1,34 @@
 """
 Custom strategy built from strategy builder.
-
-TODO: Remove JSON logic. We are no longer using that. This should only accept strategy items.
 """
-import json
-from typing import Any, Dict, List, Optional, Union
-
+from typing import Any, Dict, List, Union
 from talib import abstract
+from ast import literal_eval
+
+from PyQt5.QtWidgets import QWidget
+
+from algobot.enums import ENTER_LONG, EXIT_LONG, ENTER_SHORT, EXIT_SHORT
+from algobot.helpers import get_random_color
+from algobot.interface.configuration_helpers import get_input_widget_value
+from algobot.interface.utils import MOVING_AVERAGE_TYPES_BY_NAME
 
 
 class CustomStrategy:
-    def __init__(self, trader=None, json_file: Optional[str] = None, precision: int = 2):
+    def __init__(self, trader, values: dict, precision: int = 2):
         """
         Initialize a custom strategy built off the strategy builder. This strategy should soon replace the actual
          Strategy class.
-        :param trader: Trader that'll leverage this strategy. If it's None, we'll assume Algobot is calling it to ask
-         for parameters and inputs.
-        :param json_file: JSON file to create the strategy from. This contains the parameters, inputs, operands, and
-         operators.
+        :param trader: Trader that'll leverage this strategy.
         :param precision: Precision with which to show values.
+        :param values: Values for custom strategy.
         """
         self.trader = trader
         self.precision = precision
 
-        self.json_file = json_file
-        self.parsed_json = self.load_custom_strategy_json()
+        self.values = self.parse_values(values)
+        self.strategy_name = self.values['name']
 
-        self.strategy_name = self.parsed_json['name']
+        self.plot_dict: Dict[str, List[Union[float, str]]] = {}
 
         # The GUI will show this description.
         # TODO: Add support for descriptions in the strategy builder.
@@ -52,21 +54,157 @@ class CustomStrategy:
         # interval data.
         self.strategy_dict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
 
-    def load_custom_strategy_json(self):
+    def get_plot_data(self) -> Dict[str, Union[List[Union[float, str]], int]]:
         """
-        Load JSON for strategy.
-        :return: Parsed JSON.
+        This function should return plot data for bot. By default, it'll return an empty dictionary.
+        :return: Plot data dictionary.
         """
-        with open(self.json_file, 'r', encoding='utf-8') as f:
-            loaded_dict = json.load(f)
+        return self.plot_dict
 
-        for trend_items in loaded_dict.values():
-            for uuid in trend_items:
-                indicator = trend_items['name']
-                abstract_info = {abstract.Function(indicator)}
-                trend_items[uuid] = {**trend_items[uuid], **abstract_info}
+    def populate_grouped_dict(self, grouped_dict: Dict[str, Dict[str, Any]]):
+        """
+        Populate grouped dictionary for the simulation/live trader. Note that only the key where this strategy exists
+        will be provided. Not the entire grouped dictionary.
+        :param grouped_dict: Grouped dictionary (strategy key) to populate.
+        :return: None
+        """
+        for interval_dict in self.strategy_dict.values():
+            for key, value in interval_dict.items():
+                grouped_dict[key] = value if not isinstance(value, float) else round(value, self.precision)
 
-        return loaded_dict
+    def parse_values(self, values):
+        """
+        Parse values from QWidgets into regular values for TALIB.
+
+        Example data:
+
+            'Sell Long': {
+                '74ec21ed-5a21-4ae4-8c00-fd1161b858cf': {
+                'against': <PyQt5.QtWidgets.QDoubleSpinBox object at 0x0000024A03E8CC10>,
+                'indicator': 'MFI',
+                'operator': <PyQt5.QtWidgets.QComboBox object at 0x0000024A03E8CAF0>,
+                'price': <PyQt5.QtWidgets.QComboBox object at 0x0000024A03E8C820>,
+                'timeperiod': <PyQt5.QtWidgets.QSpinBox object at 0x0000024A03E8C9D0>
+                }
+            },
+
+        Would become:
+
+            'Sell Long': {
+                '74ec21ed-5a21-4ae4-8c00-fd1161b858cf': {
+                'against': 5.90,
+                'indicator': 'MFI',
+                'operator': '>=',
+                'price': 'High',
+                'timeperiod': 36
+                }
+            },
+
+        :return: Parsed values.
+        """
+        for k, v in values.items():
+            if isinstance(v, QWidget):
+                values[k] = get_input_widget_value(v, verbose=True)
+            elif isinstance(v, dict):
+                self.parse_values(v)
+
+        return values
+
+    def get_params(self):
+        return ['lol']
+
+    @staticmethod
+    def get_func_kwargs(kwargs) -> dict:
+        """
+        We just want **kwargs to feed into TALIB. To do this, we'll just use the current dictionary minus the ignored
+         keys.
+        :param kwargs: Kwargs to filter out.
+        :return: Filtered kwargs.
+        """
+        ignored_keys = {'against', 'indicator', 'operator', 'price'}
+
+        p = {k: v for k, v in kwargs.items() if k not in ignored_keys}
+        p = {k: MOVING_AVERAGE_TYPES_BY_NAME[v] for k, v in p.items() if 'matype' in k}
+        return p
+
+    def get_trend_by_key(self, key: str, df):
+        indicators = self.values[key]
+
+        df.columns = [c.lower() for c in df.columns]
+        input_arrays_dict = df.to_dict('series')
+
+        if not indicators:
+            # Nothing provided as an input for this trend.
+            return False
+
+        for uuid, operation in indicators.items():
+            price = operation['price'].lower()
+            indicator = operation['indicator']
+            print(indicator)
+            with_func = abstract.Function(indicator)
+            with_val = with_func(input_arrays_dict, price=price, **self.get_func_kwargs(operation))[-1]
+
+            if operation['against'] == 'current_price':
+                against_val = self.get_current_trader_price()
+                against_label = 'current price'
+            elif isinstance(operation['against'], (float, int)):
+                against_val = operation['against']
+                against_label = 'static price'
+            else:
+                against_indicator = operation['against']['indicator']
+                against_price = operation['against']['price'].lower()
+                against_func = abstract.Function(against_indicator)
+                against_val = against_func(input_arrays_dict, price=against_price,
+                                           **self.get_func_kwargs(operation['against']))[-1]
+                against_label = against_indicator
+
+            operator = operation['operator']
+            # TODO: Not sure why literal_eval doesn't work? Investigate.
+            result = eval(f'{with_val} {operator} {against_val}')
+
+            with_label = f'{key}_{uuid}_{indicator}'
+            operator_label = f'{key}_{uuid}_{operator}'
+            against_label = f'{key}_{uuid}_{against_label}'
+
+            self.strategy_dict['regular'][with_label] = with_val
+            self.strategy_dict['regular'][operator_label] = operator
+            self.strategy_dict['regular'][against_label] = against_val
+
+            k = [(with_label, with_val), (against_label, against_val)]
+            for label, val in k:
+                if label not in self.plot_dict:
+                    self.plot_dict[label] = [val, get_random_color()]
+
+            if result is False:
+                return False
+
+        return True
+
+    def get_trend(self, df):
+        """
+        There must be only one trend. If multiple trends are true, then return no trend.
+        :param df: Dataframe to use to get trend.
+        :return: Trend.
+        """
+        trends = {
+            ENTER_LONG: self.get_trend_by_key('Buy Long', df),
+            EXIT_LONG: self.get_trend_by_key('Sell Long', df),
+            ENTER_SHORT: self.get_trend_by_key('Sell Short', df),
+            EXIT_SHORT: self.get_trend_by_key('Buy Short', df),
+        }
+
+        true_trends = []
+        for trend_name, trend_status in trends.items():
+            if trend_status is True:
+                true_trends.append(trend_name)
+
+        if len(true_trends) == 1:
+            self.trend = true_trends.pop()
+            return true_trends.pop()
+
+        # There was more than 1 trend or 0 trends, so return no trend.
+        self.trend = None
+        return None
 
     def get_current_trader_price(self):
         """
@@ -74,8 +212,7 @@ class CustomStrategy:
         graph plots for misc strategies' plot dicts.
         :return: Current trader price.
         """
-        # noinspection PyUnresolvedReferences
-        if isinstance(self.trader, algobot.traders.simulation_trader.SimulationTrader):
+        if hasattr(self.trader, 'data_view'):
             if self.trader.current_price is None:
                 self.trader.current_price = self.trader.data_view.get_current_price()
 
@@ -97,28 +234,6 @@ class CustomStrategy:
         Clears strategy dictionary.
         """
         self.strategy_dict = {'regular': {}, 'lower': {}}
-
-    def get_param_types(self) -> dict:
-        """
-        Get parameter types to populate with in the Algobot GUI interface. Note that we delegate the GUI to handle
-        population of the widgets. This will just return the parameter types.
-
-        The GUI should then decide what type of widgets to use. The main reason we do this is because we don't want to
-        be stuck with the possibility of multiple bot runs with the same widget. That is, it may be possible for a
-        backtester and a simulation trader to reference the same widget; thus causing incorrect parameters to be
-        returned.
-
-        :return: Parameter types.
-        """
-        param_types = {}
-
-        for trend, trend_items in self.parsed_json.items():
-            param_types[trend] = {}
-
-            for uuid, uuid_items in trend_items.items():
-                param_types[trend][uuid] = uuid_items['parameters']
-
-        return param_types
 
     def get_minimum_periods_required(self) -> int:
         """

@@ -3,10 +3,11 @@ This will be the main Trader class that all other Traders will inherit from.
 """
 
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import get_label_string, parse_strategy_name
+from algobot.strategies.custom import CustomStrategy
 from algobot.strategies.strategy import Strategy
 
 
@@ -192,20 +193,27 @@ class Trader:
         if 'safetyTimer' in loss_dict:
             self.set_safety_timer(loss_dict['safetyTimer'])
 
-    def setup_strategies(self, strategies: List[tuple]):
+    def setup_strategies(self, strategies: List[Any]):
         """
         Sets up strategies from list of strategies provided.
         :param strategies: List of strategies to set up and apply to bot.
         """
         # TODO: Use data classes for strategy "tuples".
-        for strategy_tuple in strategies:
-            strategy_class = strategy_tuple[0]
-            values = strategy_tuple[1]
-            name = parse_strategy_name(strategy_tuple[2])
+        if not isinstance(strategies, list):
+            strategies = [strategies]
 
-            # TODO: Leverage kwargs to initialize strategies.
-            self.strategies[name] = strategy_class(parent=self, inputs=values, precision=self.precision)
-            self.min_period = max(self.strategies[name].get_min_option_period(), self.min_period)
+        for strategy_item in strategies:
+            if isinstance(strategy_item, tuple):
+                strategy_class = strategy_item[0]
+                values = strategy_item[1]
+                name = parse_strategy_name(strategy_item[2])
+
+                # TODO: Leverage kwargs to initialize strategies.
+                self.strategies[name] = strategy_class(parent=self, inputs=values, precision=self.precision)
+                self.min_period = max(self.strategies[name].get_min_option_period(), self.min_period)
+            else:
+                strategy_name = strategy_item['name']
+                self.strategies[strategy_name] = CustomStrategy(trader=self, values=strategy_item)
 
     def handle_trailing_prices(self):
         """

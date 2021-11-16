@@ -105,6 +105,7 @@ class Configuration(QDialog):
         ]
 
         self.json_strategies = get_json_strategies()
+        self.custom_strategies = [strategy['name'] for strategy in self.json_strategies]
         self.strategies = get_strategies_dictionary(Strategy.__subclasses__())
 
         # Hidden strategies dynamically populated.

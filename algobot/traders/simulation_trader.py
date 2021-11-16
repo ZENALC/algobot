@@ -12,6 +12,7 @@ import pandas as pd
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT
 from algobot.helpers import convert_small_interval, get_logger
+from algobot.strategies.custom import CustomStrategy
 from algobot.traders.trader import Trader
 
 
@@ -355,6 +356,7 @@ class SimulationTrader(Trader):
         df['open/close'] = (df['open'] + df['close']) / 2
 
         trends = [strategy.get_trend(df=df, data=dataObject, log_data=log_data)
+                  if not isinstance(strategy, CustomStrategy) else strategy.get_trend(df=df)
                   for strategy in self.strategies.values()]
         return self.get_cumulative_trend(trends=trends)
 

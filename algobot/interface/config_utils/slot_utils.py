@@ -105,57 +105,64 @@ def delete_strategy_slots(config_obj: Configuration):
             tab.removeTab(nuke_index)
 
 
-def populate_custom_indicator(_uuid, indicator, inner_tab_layout, labels, values):
+def populate_custom_indicator(indicator, inner_tab_layout, values):
+    """
+    Populate custom indicator fields.
+    :param indicator: Indicator to populate.
+    :param inner_tab_layout: Layout to add widgets to.
+    :param values: Values to reference when executing bot.
+    """
+    indicator_name = indicator['name']
+    values['indicator'] = indicator_name
+
     main_parameters = indicator['parameters']
-    indicator_label = QLabel(indicator['name'])
+    indicator_label = QLabel(indicator_name)
     indicator_label.setFont(get_bold_font())
 
     inner_tab_layout.addWidget(get_h_line())
     inner_tab_layout.addWidget(indicator_label)
     inner_tab_layout.addWidget(get_h_line())
 
-    # We are just calling this to get a combo box for price types (high, low, etc), so default value
-    #  can just be ''.
-    price_type_widget = get_param_obj('', 'price_type')
-    inner_tab_layout.addRow(QLabel('Price Type'), price_type_widget)
+    # We are just calling this to get a combo box for price types (high, low, etc), so default can just be ''.
+    values['price'] = price_widget = get_param_obj('', 'price')
+    inner_tab_layout.addRow(QLabel('Price Type'), price_widget)
 
     for parameter, default_value in main_parameters.items():
         label = QLabel(PARAMETER_MAP.get(parameter, parameter))
-        widget = get_param_obj(default_value=default_value, param_name=parameter)
+        values[parameter] = widget = get_param_obj(default_value=default_value, param_name=parameter)
 
         inner_tab_layout.addRow(label, widget)
-
-        labels.append(label)
-        values.append(widget)
 
     operators = ['>', '<', '>=', '<=', '==', '!=']
     operator_label = QLabel("Operator")
 
-    operators_combobox = QComboBox()
+    values['operator'] = operators_combobox = QComboBox()
     operators_combobox.addItems(operators)
     operators_combobox.setCurrentIndex(operators.index(indicator['operator']))
 
     inner_tab_layout.addRow(operator_label, operators_combobox)
-
     against = indicator['against']
 
     if isinstance(against, (float, int)):
         inner_tab_layout.addWidget(QLabel('Against static value defined below:'))
-        inner_tab_layout.addWidget(get_default_widget(QDoubleSpinBox, against, None, 999999999))
+        values['against'] = against_widget = get_default_widget(QDoubleSpinBox, against, None, 999999999)
+        inner_tab_layout.addWidget(against_widget)
 
     elif against == 'current_price':
         inner_tab_layout.addWidget(QLabel("Bot will execute against current price."))
+        values['against'] = 'current_price'
 
     else:
         # It must be against another indicator then.
         inner_tab_layout.addWidget(QLabel(f"Bot will execute against: {against['name']}."))
+        values['against'] = {'indicator': against['name']}
 
-        price_type_widget = get_param_obj('', 'price_type')
-        inner_tab_layout.addRow(QLabel('Price Type'), price_type_widget)
+        values['against']['price'] = price_widget = get_param_obj('', 'price')
+        inner_tab_layout.addRow(QLabel('Price Type'), price_widget)
 
         for parameter, default_value in against['parameters'].items():
             label = QLabel(PARAMETER_MAP.get(parameter, parameter))
-            widget = get_param_obj(default_value=default_value, param_name=parameter)
+            values['against'][parameter] = widget = get_param_obj(default_value=default_value, param_name=parameter)
 
             inner_tab_layout.addRow(label, widget)
 
@@ -171,14 +178,14 @@ def load_custom_strategy_slots(config_obj: Configuration):
     for strategy in config_obj.json_strategies:
 
         # TODO: Add strategy description to strategy builder.
-        strategy_description = "Custom Strategy"
+        strategy_description = strategy.get('description', "Custom Strategy")
         strategy_name = strategy['name']
 
         if strategy_name in config_obj.hidden_strategies:  # Don't re-render hidden strategies.
             continue
 
         for tab in config_obj.category_tabs:
-            config_obj.strategy_dict[tab, strategy_name] = tab_widget = QTabWidget()
+            tab_widget = QTabWidget()
             description_label = QLabel(f'Strategy description: {strategy_description}')
             description_label.setWordWrap(True)
 
@@ -191,57 +198,59 @@ def load_custom_strategy_slots(config_obj: Configuration):
             group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {strategy_name}?")
             config_obj.strategy_dict[tab, strategy_name, 'groupBox'] = group_box
 
+            config_obj.strategy_dict[tab, strategy_name] = {'name': strategy_name}
+
             main_tabs_widget = QTabWidget()
             tabs = {
-                'Buy Long': QWidget(),
-                'Sell Long': QWidget(),
-                'Sell Short': QWidget(),
-                'Buy Short': QWidget(),
-            }
-
-            # Main layouts for each individual tab.
-            tab_layouts = {
-                'Buy Long': QFormLayout(),
-                'Sell Long': QFormLayout(),
-                'Sell Short': QFormLayout(),
-                'Buy Short': QFormLayout()
+                'Buy Long': (QWidget(), QFormLayout()),
+                'Sell Long': (QWidget(), QFormLayout()),
+                'Sell Short': (QWidget(), QFormLayout()),
+                'Buy Short': (QWidget(), QFormLayout()),
             }
 
             for trend, trend_items in strategy.items():
-                if trend not in tab_layouts.keys():
+                if trend not in tabs.keys():
                     continue
 
-                values = []
-                labels = []
+                config_obj.strategy_dict[tab, strategy_name][trend] = {}
 
-                inner_tab = tabs[trend]
-                inner_tab_layout = tab_layouts[trend]
+                inner_tab, inner_tab_layout = tabs[trend]
                 inner_tab.setLayout(inner_tab_layout)
 
                 main_tabs_widget.addTab(inner_tab, trend)
 
                 if len(trend_items) == 0:
                     inner_tab_layout.addRow(QLabel("No indicators found."))
+                    continue
 
-                for _uuid, indicator in trend_items.items():
-                    populate_custom_indicator(_uuid=_uuid,
-                                              indicator=indicator,
-                                              inner_tab_layout=inner_tab_layout,
-                                              labels=labels,
-                                              values=values)
+                trend_tab_widget = QTabWidget()
+                inner_tab_layout.addWidget(trend_tab_widget)
+                for uuid, indicator in trend_items.items():
 
-                status = QLabel()
+                    indicator_tab = QWidget()
+                    indicator_tab_layout = QFormLayout()
+                    indicator_tab.setLayout(indicator_tab_layout)
 
-                config_obj.strategy_dict[tab, strategy_name, trend, 'values'] = values
-                config_obj.strategy_dict[tab, strategy_name, trend, 'labels'] = labels
-                config_obj.strategy_dict[tab, strategy_name, trend, 'layout'] = group_box_layout
-                config_obj.strategy_dict[tab, strategy_name, trend, 'status'] = status
+                    trend_tab_widget.addTab(indicator_tab, indicator['name'])
+
+                    values = {}
+                    populate_custom_indicator(
+                        indicator=indicator,
+                        inner_tab_layout=indicator_tab_layout,
+                        values=values
+                    )
+
+                    config_obj.strategy_dict[tab, strategy_name][trend][uuid] = values
 
             group_box_layout.addRow(main_tabs_widget)
             layout.addWidget(scroll)
             scroll.setWidget(group_box)
             tab_widget.setLayout(layout)
             tab.addTab(tab_widget, strategy_name)
+
+            # For now, disable optimizers. TODO: add support.
+            if tab is config_obj.category_tabs[-1]:
+                tab_widget.setEnabled(False)
 
 
 def load_strategy_slots(config_obj: Configuration):

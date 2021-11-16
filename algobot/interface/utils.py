@@ -80,7 +80,7 @@ def get_param_obj(default_value: Union[float, int, str], param_name: str):
         else:
             return get_default_widget(QSpinBox, default_value, None, None)
 
-    elif param_name == 'price_type':
+    elif param_name == 'price':
         input_obj = QComboBox()
         input_obj.addItems(['Open', 'High', 'Low', 'Close', 'Open/Close', 'High/Low'])
         return input_obj
