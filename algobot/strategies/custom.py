@@ -3,7 +3,6 @@ Custom strategy built from strategy builder.
 """
 from typing import Any, Dict, List, Union
 from talib import abstract
-from ast import literal_eval
 
 from PyQt5.QtWidgets import QWidget
 
@@ -24,6 +23,7 @@ class CustomStrategy:
         """
         self.trader = trader
         self.precision = precision
+        self.short_circuit = False
 
         self.values = self.parse_values(values)
         self.strategy_name = self.values['name']
@@ -104,7 +104,15 @@ class CustomStrategy:
         """
         for k, v in values.items():
             if isinstance(v, QWidget):
-                values[k] = get_input_widget_value(v, verbose=True)
+                if k == 'output':
+                    # In this case, we just want the index.
+                    output = get_input_widget_value(v, verbose=True)
+                    if output == 'real':
+                        values[k] = None
+                    else:
+                        values[k] = get_input_widget_value(v, verbose=False)
+                else:
+                    values[k] = get_input_widget_value(v, verbose=True)
             elif isinstance(v, dict):
                 self.parse_values(v)
 
@@ -121,29 +129,37 @@ class CustomStrategy:
         :param kwargs: Kwargs to filter out.
         :return: Filtered kwargs.
         """
-        ignored_keys = {'against', 'indicator', 'operator', 'price'}
+        ignored_keys = {'against', 'indicator', 'operator', 'price', 'output'}
 
         p = {k: v for k, v in kwargs.items() if k not in ignored_keys}
-        p = {k: MOVING_AVERAGE_TYPES_BY_NAME[v] for k, v in p.items() if 'matype' in k}
+
+        for k, v in p.items():
+            if 'matype' in k:
+                p[k] = MOVING_AVERAGE_TYPES_BY_NAME[v]
+
         return p
 
-    def get_trend_by_key(self, key: str, df):
+    def get_trend_by_key(self, key: str, input_arrays_dict):
         indicators = self.values[key]
-
-        df.columns = [c.lower() for c in df.columns]
-        input_arrays_dict = df.to_dict('series')
-
         if not indicators:
             # Nothing provided as an input for this trend.
             return False
 
+        trends = []
         for uuid, operation in indicators.items():
             price = operation['price'].lower()
             indicator = operation['indicator']
-            print(indicator)
             with_func = abstract.Function(indicator)
-            with_val = with_func(input_arrays_dict, price=price, **self.get_func_kwargs(operation))[-1]
+            with_kwargs = self.get_func_kwargs(operation)
+            with_val = with_func(input_arrays_dict, price=price, **with_kwargs)
 
+            with_output = operation['output']
+            if with_output is None:
+                with_val = with_val[-1]
+            else:
+                with_val = with_val[with_output][-1]
+
+            against_kwargs = ""
             if operation['against'] == 'current_price':
                 against_val = self.get_current_trader_price()
                 against_label = 'current price'
@@ -154,31 +170,41 @@ class CustomStrategy:
                 against_indicator = operation['against']['indicator']
                 against_price = operation['against']['price'].lower()
                 against_func = abstract.Function(against_indicator)
-                against_val = against_func(input_arrays_dict, price=against_price,
-                                           **self.get_func_kwargs(operation['against']))[-1]
+
+                against_kwargs = self.get_func_kwargs(operation['against'])
+                against_val = against_func(input_arrays_dict, price=against_price, **against_kwargs)
+
+                against_output = operation['against']['output']
+                if against_output is None:
+                    against_val = against_val[-1]
+                else:
+                    against_val = against_val[against_output][-1]
+
                 against_label = against_indicator
 
             operator = operation['operator']
             # TODO: Not sure why literal_eval doesn't work? Investigate.
             result = eval(f'{with_val} {operator} {against_val}')
+            trends.append(result)
 
-            with_label = f'{key}_{uuid}_{indicator}'
-            operator_label = f'{key}_{uuid}_{operator}'
-            against_label = f'{key}_{uuid}_{against_label}'
+            with_label = f'{indicator} {with_kwargs}'
+            against_label = f'{against_label} {against_kwargs}'
+            result_label = f'{key}'
 
             self.strategy_dict['regular'][with_label] = with_val
-            self.strategy_dict['regular'][operator_label] = operator
             self.strategy_dict['regular'][against_label] = against_val
+            self.strategy_dict['regular'][result_label] = str(result)
 
-            k = [(with_label, with_val), (against_label, against_val)]
-            for label, val in k:
-                if label not in self.plot_dict:
-                    self.plot_dict[label] = [val, get_random_color()]
+            # k = [(with_label, with_val), (against_label, against_val)]
+            # for label, val in k:
+            #     if label not in self.plot_dict:
+            #         self.plot_dict[label] = [val, get_random_color()]
 
-            if result is False:
+            if self.short_circuit and result is False:
                 return False
 
-        return True
+        # Return true if all trends are true, else false.
+        return all(trends)
 
     def get_trend(self, df):
         """
@@ -186,11 +212,14 @@ class CustomStrategy:
         :param df: Dataframe to use to get trend.
         :return: Trend.
         """
+        df.columns = [c.lower() for c in df.columns]
+        input_arrays_dict = df.to_dict('series')
+
         trends = {
-            ENTER_LONG: self.get_trend_by_key('Buy Long', df),
-            EXIT_LONG: self.get_trend_by_key('Sell Long', df),
-            ENTER_SHORT: self.get_trend_by_key('Sell Short', df),
-            EXIT_SHORT: self.get_trend_by_key('Buy Short', df),
+            ENTER_LONG: self.get_trend_by_key('Buy Long', input_arrays_dict),
+            EXIT_LONG: self.get_trend_by_key('Sell Long', input_arrays_dict),
+            ENTER_SHORT: self.get_trend_by_key('Sell Short', input_arrays_dict),
+            EXIT_SHORT: self.get_trend_by_key('Buy Short', input_arrays_dict),
         }
 
         true_trends = []
@@ -200,7 +229,7 @@ class CustomStrategy:
 
         if len(true_trends) == 1:
             self.trend = true_trends.pop()
-            return true_trends.pop()
+            return self.trend
 
         # There was more than 1 trend or 0 trends, so return no trend.
         self.trend = None

@@ -106,7 +106,9 @@ def get_input_widget_value(input_widget: QWidget, verbose: bool = False):
     :param input_widget: Input widget to try to get the value of.
     :return: Value of inputWidget object.
     """
-    if isinstance(input_widget, (QSpinBox, QDoubleSpinBox)):
+    if isinstance(input_widget, QDoubleSpinBox):
+        return float(input_widget.value())
+    elif isinstance(input_widget, QSpinBox):
         return input_widget.value()
     elif isinstance(input_widget, QLineEdit):
         return input_widget.text()

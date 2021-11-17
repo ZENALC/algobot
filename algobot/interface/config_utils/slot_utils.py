@@ -114,6 +114,7 @@ def populate_custom_indicator(indicator, inner_tab_layout, values):
     """
     indicator_name = indicator['name']
     values['indicator'] = indicator_name
+    output_names = indicator['output_names']
 
     main_parameters = indicator['parameters']
     indicator_label = QLabel(indicator_name)
@@ -133,16 +134,17 @@ def populate_custom_indicator(indicator, inner_tab_layout, values):
 
         inner_tab_layout.addRow(label, widget)
 
-    operators = ['>', '<', '>=', '<=', '==', '!=']
-    operator_label = QLabel("Operator")
+    values['output'] = output_combobox = QComboBox()
+    output_combobox.addItems(output_names)
+    inner_tab_layout.addRow("Primary Output Type", output_combobox)
 
+    operators = ['>', '<', '>=', '<=', '==', '!=']
     values['operator'] = operators_combobox = QComboBox()
     operators_combobox.addItems(operators)
     operators_combobox.setCurrentIndex(operators.index(indicator['operator']))
+    inner_tab_layout.addRow('Operator', operators_combobox)
 
-    inner_tab_layout.addRow(operator_label, operators_combobox)
     against = indicator['against']
-
     if isinstance(against, (float, int)):
         inner_tab_layout.addWidget(QLabel('Against static value defined below:'))
         values['against'] = against_widget = get_default_widget(QDoubleSpinBox, against, None, 999999999)
@@ -166,7 +168,10 @@ def populate_custom_indicator(indicator, inner_tab_layout, values):
 
             inner_tab_layout.addRow(label, widget)
 
-    inner_tab_layout.addWidget(QLabel())
+        against_outputs = against['output_names']
+        values['against']['output'] = against_operators_combobox = QComboBox()
+        against_operators_combobox.addItems(against_outputs)
+        inner_tab_layout.addRow('Against Output Type', against_operators_combobox)
 
 
 def load_custom_strategy_slots(config_obj: Configuration):

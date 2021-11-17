@@ -77,6 +77,11 @@ def get_param_obj(default_value: Union[float, int, str], param_name: str):
             input_obj.addItems(MOVING_AVERAGES_LIST)
             input_obj.setCurrentIndex(MOVING_AVERAGES_LIST.index(default_moving_average))
             return input_obj
+
+        # Annoying edge case where TALIB expects a float even though it should accept an int.
+        elif param_name.lower() in {'nbdevdn', 'nbdevup'}:
+            return get_default_widget(QDoubleSpinBox, default_value, None, None)
+
         else:
             return get_default_widget(QSpinBox, default_value, None, None)
 
