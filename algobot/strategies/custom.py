@@ -54,9 +54,6 @@ class CustomStrategy:
         # interval data.
         self.strategy_dict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
 
-        import pprint
-        pprint.pprint(self.values)
-
     def initialize_plot_dict(self):
         pass
 
