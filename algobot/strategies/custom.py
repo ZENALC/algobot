@@ -25,7 +25,7 @@ class CustomStrategy:
         self.precision = precision
         self.short_circuit = False
 
-        self.values = self.parse_values(values)
+        self.values: Dict[str, Any] = self.parse_values(values)
         self.strategy_name = self.values['name']
 
         self.plot_dict: Dict[str, List[Union[float, str]]] = {}
@@ -177,10 +177,8 @@ class CustomStrategy:
             against_kwargs = ""
             if operation['against'] == 'current_price':
                 against_val = self.get_current_trader_price()
-                against_label = 'current price'
             elif isinstance(operation['against'], (float, int)):
                 against_val = operation['against']
-                against_label = 'static price'
             else:
                 against_indicator = operation['against']['indicator']
                 against_price = operation['against']['price'].lower()
@@ -194,8 +192,6 @@ class CustomStrategy:
                     against_val = against_val[-1]
                 else:
                     against_val = against_val[against_output_index][-1]
-
-                against_label = against_indicator
 
             operator = operation['operator']
             # TODO: Not sure why literal_eval doesn't work? Investigate.
