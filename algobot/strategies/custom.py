@@ -54,6 +54,12 @@ class CustomStrategy:
         # interval data.
         self.strategy_dict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
 
+        import pprint
+        pprint.pprint(self.values)
+
+    def initialize_plot_dict(self):
+        pass
+
     def get_plot_data(self) -> Dict[str, Union[List[Union[float, str]], int]]:
         """
         This function should return plot data for bot. By default, it'll return an empty dictionary.
@@ -108,9 +114,9 @@ class CustomStrategy:
                     # In this case, we just want the index.
                     output = get_input_widget_value(v, verbose=True)
                     if output == 'real':
-                        values[k] = None
+                        values[k] = (None, 'real')
                     else:
-                        values[k] = get_input_widget_value(v, verbose=False)
+                        values[k] = (get_input_widget_value(v, verbose=False), output)
                 else:
                     values[k] = get_input_widget_value(v, verbose=True)
             elif isinstance(v, dict):
@@ -139,6 +145,15 @@ class CustomStrategy:
 
         return p
 
+    @staticmethod
+    def get_pretty_label(outputs, operation, func_kwargs):
+        output_index, output_verbose = outputs
+
+        if output_index is None:
+            return f'{operation["indicator"]}({func_kwargs["timeperiod"]})'
+
+        return f'{output_verbose}({func_kwargs["timeperiod"]})'
+
     def get_trend_by_key(self, key: str, input_arrays_dict):
         indicators = self.values[key]
         if not indicators:
@@ -153,11 +168,11 @@ class CustomStrategy:
             with_kwargs = self.get_func_kwargs(operation)
             with_val = with_func(input_arrays_dict, price=price, **with_kwargs)
 
-            with_output = operation['output']
-            if with_output is None:
+            without_output_index, without_output_verbose = operation['output']
+            if without_output_index is None:
                 with_val = with_val[-1]
             else:
-                with_val = with_val[with_output][-1]
+                with_val = with_val[without_output_index][-1]
 
             against_kwargs = ""
             if operation['against'] == 'current_price':
@@ -174,11 +189,11 @@ class CustomStrategy:
                 against_kwargs = self.get_func_kwargs(operation['against'])
                 against_val = against_func(input_arrays_dict, price=against_price, **against_kwargs)
 
-                against_output = operation['against']['output']
-                if against_output is None:
+                against_output_index, against_output_verbose = operation['against']['output']
+                if against_output_index is None:
                     against_val = against_val[-1]
                 else:
-                    against_val = against_val[against_output][-1]
+                    against_val = against_val[against_output_index][-1]
 
                 against_label = against_indicator
 
@@ -187,8 +202,17 @@ class CustomStrategy:
             result = eval(f'{with_val} {operator} {against_val}')
             trends.append(result)
 
-            with_label = f'{indicator} {with_kwargs}'
-            against_label = f'{against_label} {against_kwargs}'
+            with_label = self.get_pretty_label(outputs=operation['output'],
+                                               operation=operation,
+                                               func_kwargs=with_kwargs)
+
+            if against_kwargs != '':
+                against_label = self.get_pretty_label(outputs=operation['against']['output'],
+                                                      operation=operation['against'],
+                                                      func_kwargs=against_kwargs)
+            else:
+                against_label = f'{against_label}'
+
             result_label = f'{key}'
 
             self.strategy_dict['regular'][with_label] = with_val
