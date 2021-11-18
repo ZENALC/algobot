@@ -206,18 +206,13 @@ class CustomStrategy:
                                                operation=operation,
                                                func_kwargs=with_kwargs)
 
+            self.strategy_dict['regular'][with_label] = with_val
+
             if against_kwargs != '':
                 against_label = self.get_pretty_label(outputs=operation['against']['output'],
                                                       operation=operation['against'],
                                                       func_kwargs=against_kwargs)
-            else:
-                against_label = f'{against_label}'
-
-            result_label = f'{key}'
-
-            self.strategy_dict['regular'][with_label] = with_val
-            self.strategy_dict['regular'][against_label] = against_val
-            self.strategy_dict['regular'][result_label] = str(result)
+                self.strategy_dict['regular'][against_label] = against_val
 
             # k = [(with_label, with_val), (against_label, against_val)]
             # for label, val in k:
@@ -227,8 +222,10 @@ class CustomStrategy:
             if self.short_circuit and result is False:
                 return False
 
+        trend_sentiment = all(trends)
+        self.strategy_dict['regular'][key] = str(trend_sentiment)
         # Return true if all trends are true, else false.
-        return all(trends)
+        return trend_sentiment
 
     def get_trend(self, df):
         """
