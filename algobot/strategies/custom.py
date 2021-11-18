@@ -108,21 +108,24 @@ class CustomStrategy:
 
         :return: Parsed values.
         """
+        new_dict = {}
         for k, v in values.items():
             if isinstance(v, QWidget):
                 if k == 'output':
                     # In this case, we just want the index.
                     output = get_input_widget_value(v, verbose=True)
                     if output == 'real':
-                        values[k] = (None, 'real')
+                        new_dict[k] = (None, 'real')
                     else:
-                        values[k] = (get_input_widget_value(v, verbose=False), output)
+                        new_dict[k] = (get_input_widget_value(v, verbose=False), output)
                 else:
-                    values[k] = get_input_widget_value(v, verbose=True)
+                    new_dict[k] = get_input_widget_value(v, verbose=True)
             elif isinstance(v, dict):
-                self.parse_values(v)
+                new_dict[k] = self.parse_values(v)
+            else:
+                new_dict[k] = v
 
-        return values
+        return new_dict
 
     def get_params(self):
         return ['lol']
