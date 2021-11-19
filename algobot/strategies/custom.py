@@ -26,14 +26,9 @@ class CustomStrategy:
         self.short_circuit = False
 
         self.values: Dict[str, Any] = self.parse_values(values)
-        self.strategy_name = self.values['name']
+        self.name = self.values['name']
 
         self.plot_dict: Dict[str, List[Union[float, str]]] = {}
-
-        # The GUI will show this description.
-        # TODO: Add support for descriptions in the strategy builder.
-        self.description: str = f"This is a custom strategy named '{self.strategy_name}' built with the " \
-                                f"strategy builder."
 
         # Current overall trend. In order for a strategy to have a trend, only one singular trend should reign. If
         #  multiple trends are showing signs, nothing will execute.
@@ -53,9 +48,23 @@ class CustomStrategy:
         # which is 'lower'. The two keys will then hold dictionaries for the strategies' values in lower and regular
         # interval data.
         self.strategy_dict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
+        self.initialize_plot_dict()
 
     def initialize_plot_dict(self):
-        pass
+        # TODO: Make trends consistent with variable names.
+        trends = {"Buy Long", "Sell Long", "Sell Short", "Buy Short"}
+        for trend, indicators in self.values.items():
+            if trend not in trends:
+                continue
+
+            for operation in indicators.values():
+                label = self.get_pretty_label(operation, self.get_func_kwargs(operation))
+                self.plot_dict[label] = [0, get_random_color()]
+
+                against = operation['against']
+                if isinstance(against, dict):
+                    label = self.get_pretty_label(against, self.get_func_kwargs(against))
+                    self.plot_dict[label] = [0, get_random_color()]
 
     def get_plot_data(self) -> Dict[str, Union[List[Union[float, str]], int]]:
         """
@@ -63,6 +72,23 @@ class CustomStrategy:
         :return: Plot data dictionary.
         """
         return self.plot_dict
+
+    def get_indicator_val_and_label(self, operation, input_arrays_dict):
+        price = operation['price'].lower()
+        indicator = operation['indicator']
+
+        with_func = abstract.Function(indicator)
+        with_kwargs = self.get_func_kwargs(operation)
+        with_val = with_func(input_arrays_dict, price=price, **with_kwargs)
+
+        label = self.get_pretty_label(operation=operation,
+                                      func_kwargs=with_kwargs)
+
+        with_output_index, output_verbose = operation['output']
+        if with_output_index is None:
+            return with_val[-1], label
+        else:
+            return with_val[with_output_index][-1], label
 
     def populate_grouped_dict(self, grouped_dict: Dict[str, Dict[str, Any]]):
         """
@@ -109,7 +135,7 @@ class CustomStrategy:
         for k, v in values.items():
             if isinstance(v, QWidget):
                 if k == 'output':
-                    # In this case, we just want the index.
+                    # In this case, we just want the index. If the value is 'real', we'll just set the index to None.
                     output = get_input_widget_value(v, verbose=True)
                     if output == 'real':
                         new_dict[k] = (None, 'real')
@@ -146,8 +172,8 @@ class CustomStrategy:
         return p
 
     @staticmethod
-    def get_pretty_label(outputs, operation, func_kwargs):
-        output_index, output_verbose = outputs
+    def get_pretty_label(operation, func_kwargs):
+        output_index, output_verbose = operation['output']
 
         if output_index is None:
             return f'{operation["indicator"]}({func_kwargs["timeperiod"]})'
@@ -156,64 +182,26 @@ class CustomStrategy:
 
     def get_trend_by_key(self, key: str, input_arrays_dict):
         indicators = self.values[key]
-        if not indicators:
-            # Nothing provided as an input for this trend.
+        if not indicators:  # Nothing provided as an input for this trend.
             return False
 
         trends = []
         for uuid, operation in indicators.items():
-            price = operation['price'].lower()
-            indicator = operation['indicator']
-            with_func = abstract.Function(indicator)
-            with_kwargs = self.get_func_kwargs(operation)
-            with_val = with_func(input_arrays_dict, price=price, **with_kwargs)
+            val, label = self.get_indicator_val_and_label(operation, input_arrays_dict)
+            self.strategy_dict['regular'][label] = val
+            self.plot_dict[label][0] = val
 
-            without_output_index, without_output_verbose = operation['output']
-            if without_output_index is None:
-                with_val = with_val[-1]
-            else:
-                with_val = with_val[without_output_index][-1]
-
-            against_kwargs = ""
             if operation['against'] == 'current_price':
                 against_val = self.get_current_trader_price()
             elif isinstance(operation['against'], (float, int)):
                 against_val = operation['against']
             else:
-                against_indicator = operation['against']['indicator']
-                against_price = operation['against']['price'].lower()
-                against_func = abstract.Function(against_indicator)
-
-                against_kwargs = self.get_func_kwargs(operation['against'])
-                against_val = against_func(input_arrays_dict, price=against_price, **against_kwargs)
-
-                against_output_index, against_output_verbose = operation['against']['output']
-                if against_output_index is None:
-                    against_val = against_val[-1]
-                else:
-                    against_val = against_val[against_output_index][-1]
-
-            operator = operation['operator']
-            # TODO: Not sure why literal_eval doesn't work? Investigate.
-            result = eval(f'{with_val} {operator} {against_val}')
-            trends.append(result)
-
-            with_label = self.get_pretty_label(outputs=operation['output'],
-                                               operation=operation,
-                                               func_kwargs=with_kwargs)
-
-            self.strategy_dict['regular'][with_label] = with_val
-
-            if against_kwargs != '':
-                against_label = self.get_pretty_label(outputs=operation['against']['output'],
-                                                      operation=operation['against'],
-                                                      func_kwargs=against_kwargs)
+                against_val, against_label = self.get_indicator_val_and_label(operation['against'], input_arrays_dict)
                 self.strategy_dict['regular'][against_label] = against_val
+                self.plot_dict[against_label][0] = against_val
 
-            # k = [(with_label, with_val), (against_label, against_val)]
-            # for label, val in k:
-            #     if label not in self.plot_dict:
-            #         self.plot_dict[label] = [val, get_random_color()]
+            result = eval(f'{val} {operation["operator"]} {against_val}')
+            trends.append(result)
 
             if self.short_circuit and result is False:
                 return False
