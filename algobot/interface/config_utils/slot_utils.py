@@ -236,7 +236,8 @@ def load_custom_strategy_slots(config_obj: Configuration):
 
             # For now, disable optimizers. TODO: add support.
             if tab is config_obj.category_tabs[-1]:
-                tab_widget.setEnabled(False)
+                group_box.setEnabled(False)
+                layout.addWidget(QLabel("Warning: Optimizers are currently not supported for custom strategies."))
 
 
 def load_strategy_slots(config_obj: Configuration):
