@@ -7,10 +7,11 @@ if TYPE_CHECKING:
     from algobot.traders.trader import Trader
 
 import numpy as np
+import pandas as pd
 from PyQt5.QtWidgets import QWidget
 from talib import abstract
 
-from algobot.enums import ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT
+from algobot.enums import TRENDS
 from algobot.helpers import get_random_color
 from algobot.interface.configuration_helpers import get_input_widget_value
 from algobot.interface.utils import MOVING_AVERAGE_TYPES_BY_NAME
@@ -20,6 +21,7 @@ class CustomStrategy:
     """
     Custom strategy built from JSON files created by the strategy builder.
     """
+
     def __init__(self, trader: 'Trader', values: dict, precision: int = 2, short_circuit: bool = False):
         """
         Initialize a custom strategy built off the strategy builder. This strategy should soon replace the actual
@@ -63,9 +65,8 @@ class CustomStrategy:
         Initialize plot dictionary for custom strategies. This will loop through each indicator, gather outputs and
          labels, and then create a dictionary with label/value pairs.
         """
-        trends = {ENTER_LONG, EXIT_LONG, ENTER_SHORT, EXIT_SHORT}
         for trend, indicators in self.values.items():
-            if trend not in trends:
+            if trend not in TRENDS:
                 continue
 
             for operation in indicators.values():
@@ -84,10 +85,23 @@ class CustomStrategy:
         """
         return self.plot_dict
 
-    def get_indicator_val_and_label(self, operation, input_arrays_dict, get_arr: bool = False):
+    def get_indicator_val_and_label(
+            self,
+            operation: dict,
+            input_arrays_dict: Dict[str, pd.Series],
+            get_arr: bool = False
+    ):
+        """
+        Create indicator value and label.
+        :param operation: Dictionary containing indicator operation information in a dictionary.
+        :param input_arrays_dict: Dictionary containing price type as key and price values as value.
+        :param get_arr: Boolean whether to get entire array of results from TALIB or singular result value.
+        :return:
+        """
         kwargs = self.get_func_kwargs(operation)
         label = self.get_pretty_label(operation=operation, func_kwargs=kwargs)
 
+        # We have this value in our cache, so just quick-return.
         if label in self.cache:
             return self.cache[label], label
 
@@ -248,12 +262,7 @@ class CustomStrategy:
         df.columns = [c.lower() for c in df.columns]
         input_arrays_dict = df.to_dict('series')
 
-        trends = {
-            ENTER_LONG: self.get_trend_by_key(ENTER_LONG, input_arrays_dict),
-            EXIT_LONG: self.get_trend_by_key(EXIT_LONG, input_arrays_dict),
-            ENTER_SHORT: self.get_trend_by_key(ENTER_LONG, input_arrays_dict),
-            EXIT_SHORT: self.get_trend_by_key(EXIT_SHORT, input_arrays_dict),
-        }
+        trends = {trend: self.get_trend_by_key(trend, input_arrays_dict) for trend in TRENDS}
 
         true_trends = []
         for trend_name, trend_status in trends.items():
@@ -315,9 +324,8 @@ class CustomStrategy:
 
         current_minimum = 0
 
-        trends = {ENTER_LONG, EXIT_LONG, ENTER_SHORT, EXIT_SHORT}
         for trend, indicators in self.values.items():
-            if trend not in trends:
+            if trend not in TRENDS:
                 continue
 
             for operation in indicators.values():
