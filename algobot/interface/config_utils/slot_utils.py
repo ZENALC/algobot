@@ -105,15 +105,7 @@ def delete_strategy_slots(config_obj: Configuration):
             tab.removeTab(nuke_index)
 
 
-def populate_custom_indicator(indicator, inner_tab_layout, values):
-    """
-    Populate custom indicator fields.
-    :param indicator: Indicator to populate.
-    :param inner_tab_layout: Layout to add widgets to.
-    :param values: Values to reference when executing bot.
-    """
-    values['indicator'] = indicator['name']
-
+def populate_parameters(values, indicator, inner_tab_layout):
     # We are just calling this to get a combo box for price types (high, low, etc), so default can just be ''.
     values['price'] = price_widget = get_param_obj(default_value='', param_name='price')
     inner_tab_layout.addRow(QLabel('Price Type'), price_widget)
@@ -125,7 +117,18 @@ def populate_custom_indicator(indicator, inner_tab_layout, values):
 
     values['output'] = output_combobox = QComboBox()
     output_combobox.addItems(indicator['output_names'])
-    inner_tab_layout.addRow("Primary Output Type", output_combobox)
+    inner_tab_layout.addRow("Output Type", output_combobox)
+
+
+def populate_custom_indicator(indicator, inner_tab_layout, values):
+    """
+    Populate custom indicator fields.
+    :param indicator: Indicator to populate.
+    :param inner_tab_layout: Layout to add widgets to.
+    :param values: Values to reference when executing bot.
+    """
+    values['indicator'] = indicator['name']
+    populate_parameters(values, indicator, inner_tab_layout)
 
     values['operator'] = operators_combobox = QComboBox()
     operators_combobox.addItems(OPERATORS)
@@ -146,19 +149,7 @@ def populate_custom_indicator(indicator, inner_tab_layout, values):
         # It must be against another indicator then.
         inner_tab_layout.addWidget(QLabel(f"Bot will execute against: {against['name']}."))
         values['against'] = {'indicator': against['name']}
-
-        values['against']['price'] = price_widget = get_param_obj('', 'price')
-        inner_tab_layout.addRow(QLabel('Price Type'), price_widget)
-
-        for parameter, default_value in against['parameters'].items():
-            label = QLabel(PARAMETER_MAP.get(parameter, parameter))
-            values['against'][parameter] = widget = get_param_obj(default_value=default_value, param_name=parameter)
-            inner_tab_layout.addRow(label, widget)
-
-        against_outputs = against['output_names']
-        values['against']['output'] = against_operators_combobox = QComboBox()
-        against_operators_combobox.addItems(against_outputs)
-        inner_tab_layout.addRow('Against Output Type', against_operators_combobox)
+        populate_parameters(values['against'], indicator=against, inner_tab_layout=inner_tab_layout)
 
 
 def load_custom_strategy_slots(config_obj: Configuration):
