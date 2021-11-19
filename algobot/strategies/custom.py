@@ -159,6 +159,8 @@ class CustomStrategy:
 
         :return: Parsed values.
         """
+        # TODO: Add support for gathering all combobox inputs and then populating them in the plot and statistics
+        #  windows and adding them to the cache for faster access.
         new_dict = {}
         for key, value in values.items():
             if isinstance(value, QWidget):
