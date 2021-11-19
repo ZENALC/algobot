@@ -1,7 +1,7 @@
 """
 Custom strategy built from strategy builder.
 """
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union, Tuple
 
 if TYPE_CHECKING:
     from algobot.traders.trader import Trader
@@ -90,7 +90,7 @@ class CustomStrategy:
             operation: dict,
             input_arrays_dict: Dict[str, pd.Series],
             get_arr: bool = False
-    ):
+    ) -> Tuple[Union[pd.Series, int, float], str]:
         """
         Create indicator value and label.
         :param operation: Dictionary containing indicator operation information in a dictionary.
@@ -109,18 +109,14 @@ class CustomStrategy:
         val = func(input_arrays_dict, price=operation['price'], **kwargs)
 
         output_index, output_verbose = operation['output']
-        if output_index is None:
-            if get_arr:
-                return val, label
+        if output_index is not None:
+            val = val[output_index]
 
-            self.cache[label] = val[-1]
-            return val[-1], label
-        else:
-            if get_arr:
-                return val[output_index], label
+        if get_arr:
+            return val, label
 
-            self.cache[label] = val[output_index][-1]
-            return val[output_index][-1], label
+        self.cache[label] = val[-1]
+        return val[-1], label
 
     def populate_grouped_dict(self, grouped_dict: Dict[str, Dict[str, Any]]):
         """
@@ -133,7 +129,7 @@ class CustomStrategy:
             for key, value in interval_dict.items():
                 grouped_dict[key] = value if not isinstance(value, float) else round(value, self.precision)
 
-    def parse_values(self, values):
+    def parse_values(self, values: dict):
         """
         Parse values from QWidgets into regular values for TALIB.
 
@@ -187,10 +183,10 @@ class CustomStrategy:
         return new_dict
 
     def get_params(self):
-        return ['lol']
+        return ['']
 
     @staticmethod
-    def get_func_kwargs(kwargs) -> dict:
+    def get_func_kwargs(kwargs: dict) -> dict:
         """
         We just want **kwargs to feed into TALIB. To do this, we'll just use the current dictionary minus the ignored
          keys.
@@ -200,23 +196,37 @@ class CustomStrategy:
         ignored_keys = {'against', 'indicator', 'operator', 'price', 'output'}
 
         p = {k: v for k, v in kwargs.items() if k not in ignored_keys}
-
         for k, v in p.items():
+            # We display verbosely, but we must cast back to numeric for TALIB to understand the moving average.
             if 'matype' in k:
                 p[k] = MOVING_AVERAGE_TYPES_BY_NAME[v]
 
         return p
 
     @staticmethod
-    def get_pretty_label(operation, func_kwargs):
+    def get_pretty_label(operation: dict, func_kwargs: dict) -> str:
+        """
+        Get prettified label for plots and statistics windows.
+        :param operation: Operation dictionary containing indicator, operator, and against information.
+        :param func_kwargs: Function keyword arguments. We use this to get the timeperiod.
+        :return: Prettified label.
+        """
         output_index, output_verbose = operation['output']
 
+        # If there's no output index, we get the "real" value. The real value is nothing but the indicator, so we'll
+        #  use leverage that for the label. However, if it does have an index, we'll get the verbose output from above.
         if output_index is None:
             return f'{operation["indicator"]}({func_kwargs["timeperiod"]}) - {operation["price"]}'
 
         return f'{output_verbose}({func_kwargs["timeperiod"]})'
 
-    def get_trend_by_key(self, key: str, input_arrays_dict):
+    def get_trend_by_key(self, key: str, input_arrays_dict: Dict[str, pd.Series]) -> bool:
+        """
+        Get trend by key.
+        :param key: Key to get trend of.
+        :param input_arrays_dict: Dictionary containing price type as key and price values as value.
+        :return: Boolean regarding trend. If True is returned, this key trend is true, else false.
+        """
         indicators = self.values[key]
         if not indicators:  # Nothing provided as an input for this trend.
             return False
@@ -225,7 +235,7 @@ class CustomStrategy:
         for uuid, operation in indicators.items():
             val, label = self.get_indicator_val_and_label(operation, input_arrays_dict)
             self.strategy_dict['regular'][label] = val
-            self.plot_dict[label][0] = val
+            self.plot_dict[label][0] = val  # The 2nd value is the color, so we only update the value.
 
             if operation['against'] == 'current_price':
                 against_val = self.get_current_trader_price()
@@ -240,7 +250,7 @@ class CustomStrategy:
             trends.append(result)
 
             if self.short_circuit and result is False:
-                return False
+                break
 
         trend_sentiment = all(trends)
         self.strategy_dict['regular'][key] = str(trend_sentiment)
@@ -309,7 +319,9 @@ class CustomStrategy:
     def get_min_option_period(self) -> int:
         """
         Get minimum periods required. This will traverse through the current selected parameters and get the minimum
-        periods required. To find the minimum, we find the maximum number.
+         periods required. To find the minimum, we find the maximum number. To use a dummy placeholder, we'll
+         initialize a dummy numpy array with 500 random values for each price type.
+
         :return: Minimum periods required.
         """
         np_arr = np.random.random(500)
@@ -329,8 +341,15 @@ class CustomStrategy:
                 continue
 
             for operation in indicators.values():
-                val, _ = self.get_indicator_val_and_label(operation, test_dict, get_arr=True)
+                val, _label = self.get_indicator_val_and_label(operation, test_dict, get_arr=True)
                 first_non_nan = np.where(np.isnan(val))[0][-1] + 2
                 current_minimum = max(first_non_nan, current_minimum)
+
+                # Check for the against indicator too if it exists.
+                against = operation['against']
+                if isinstance(against, dict):
+                    val, _label = self.get_indicator_val_and_label(against, test_dict, get_arr=True)
+                    first_non_nan = np.where(np.isnan(val))[0][-1] + 2
+                    current_minimum = max(first_non_nan, current_minimum)
 
         return current_minimum
