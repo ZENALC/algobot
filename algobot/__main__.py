@@ -31,8 +31,8 @@ from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
 from algobot.interface.statistics import Statistics
-from algobot.interface.utils import (add_to_table, clear_table, create_popup, open_from_msg_box,
-                                     show_and_bring_window_to_front, confirm_message_box)
+from algobot.interface.utils import (add_to_table, clear_table, confirm_message_box, create_popup, open_from_msg_box,
+                                     show_and_bring_window_to_front)
 from algobot.news_scraper import scrape_news
 from algobot.slots import initiate_slots
 from algobot.telegram_bot import TelegramBot

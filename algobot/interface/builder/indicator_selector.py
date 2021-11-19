@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, OrderedDict
 from uuid import uuid4
 
 import talib
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel,
-                             QPushButton, QRadioButton, QVBoxLayout)
+from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel, QPushButton,
+                             QRadioButton, QVBoxLayout)
 from talib import abstract
 
 from algobot.interface.configuration_helpers import get_h_line
-from algobot.interface.utils import OPERATORS, PARAMETER_MAP, get_bold_font, get_param_obj, get_v_spacer, \
-    confirm_message_box
+from algobot.interface.utils import (OPERATORS, PARAMETER_MAP, confirm_message_box, get_bold_font, get_param_obj,
+                                     get_v_spacer)
 
 if TYPE_CHECKING:
     # Strategy builder calls indicator selector, so we can't just simply import strategy builder for hinting here.
