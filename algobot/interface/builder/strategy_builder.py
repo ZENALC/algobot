@@ -7,7 +7,8 @@ import sys
 from typing import TYPE_CHECKING, Optional
 
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
-                             QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+                             QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget,
+                             QPlainTextEdit)
 
 from algobot.helpers import STRATEGIES_DIR
 from algobot.interface.builder.indicator_selector import IndicatorSelector
@@ -83,10 +84,14 @@ class StrategyBuilder(QDialog):
         scroll.setWidgetResizable(True)
 
         self.layout.addWidget(scroll)
-        self.layout.addWidget(QLabel('Strategy Name'))
 
+        self.layout.addWidget(QLabel('Strategy Name'))
         self.strategy_name_input = QLineEdit()
         self.layout.addWidget(self.strategy_name_input)
+
+        self.layout.addWidget(QLabel('Strategy Description'))
+        self.description_input = QPlainTextEdit()
+        self.layout.addWidget(self.description_input)
 
         self.create_strategy_button = QPushButton("Create Strategy")
         self.create_strategy_button.clicked.connect(self.save_strategy)
@@ -141,6 +146,9 @@ class StrategyBuilder(QDialog):
         """
         strategy_name = self.strategy_name_input.text()
         self.state['name'] = strategy_name
+
+        description = self.description_input.toPlainText()
+        self.state['description'] = description if description else "No description provided."
 
         if not strategy_name.strip():
             create_popup(self, "No strategy name found. Please provide a name.")
