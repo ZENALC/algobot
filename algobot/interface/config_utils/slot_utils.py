@@ -79,7 +79,7 @@ def load_hide_show_strategies(config_obj: Configuration):
         load_custom_strategy_slots(config_obj)
 
     c_boxes = []
-    for strategy_name in [*config_obj.strategies.keys(), *[s['name'] for s in config_obj.json_strategies]]:
+    for strategy_name in [*config_obj.strategies.keys(), *config_obj.custom_strategies]:
         c_boxes.append(QCheckBox())
 
         # When restoring slots, if the strategy is not hidden, tick it.
