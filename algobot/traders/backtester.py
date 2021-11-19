@@ -218,6 +218,7 @@ class Backtester(Trader):
         :param thread: Thread object (if exists).
         :return: String "CRASHED" if an error is raised, else None if everything goes smoothly.
         """
+        cache = {}
         for strategy in self.strategies.values():
             try:
                 df = pd.DataFrame(strategy_data[-250:])
@@ -225,7 +226,7 @@ class Backtester(Trader):
                 df['open/close'] = (df['open'] + df['close']) / 2
 
                 if isinstance(strategy, CustomStrategy):
-                    strategy.get_trend(df)
+                    strategy.get_trend(df, cache)
                 else:
                     strategy.get_trend(df, data=strategy_data)
             except Exception as e:

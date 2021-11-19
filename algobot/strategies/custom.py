@@ -29,6 +29,7 @@ class CustomStrategy:
 
         self.values: Dict[str, Any] = self.parse_values(values)
         self.name = self.values['name']
+        self.cache = {}
 
         self.plot_dict: Dict[str, List[Union[float, str]]] = {}
 
@@ -76,22 +77,27 @@ class CustomStrategy:
         return self.plot_dict
 
     def get_indicator_val_and_label(self, operation, input_arrays_dict, get_arr: bool = False):
-        func = abstract.Function(operation['indicator'])
         kwargs = self.get_func_kwargs(operation)
-        val = func(input_arrays_dict, price=operation['price'], **kwargs)
-
         label = self.get_pretty_label(operation=operation, func_kwargs=kwargs)
+
+        if label in self.cache:
+            return self.cache[label], label
+
+        func = abstract.Function(operation['indicator'])
+        val = func(input_arrays_dict, price=operation['price'], **kwargs)
 
         output_index, output_verbose = operation['output']
         if output_index is None:
             if get_arr:
                 return val, label
 
+            self.cache[label] = val[-1]
             return val[-1], label
         else:
             if get_arr:
                 return val[output_index], label
 
+            self.cache[label] = val[output_index][-1]
             return val[output_index][-1], label
 
     def populate_grouped_dict(self, grouped_dict: Dict[str, Dict[str, Any]]):
@@ -219,12 +225,18 @@ class CustomStrategy:
         # Return true if all trends are true, else false.
         return trend_sentiment
 
-    def get_trend(self, df):
+    def get_trend(self, df, cache=None):
         """
         There must be only one trend. If multiple trends are true, then return no trend.
+        :param cache: Cache to use to avoid reevaluating trends.
         :param df: Dataframe to use to get trend.
         :return: Trend.
         """
+        if cache is None:
+            self.cache = {}
+        else:
+            self.cache = cache
+
         df.columns = [c.lower() for c in df.columns]
         input_arrays_dict = df.to_dict('series')
 

@@ -355,8 +355,10 @@ class SimulationTrader(Trader):
         df['high/low'] = (df['high'] + df['low']) / 2
         df['open/close'] = (df['open'] + df['close']) / 2
 
+        cache = {}
+
         trends = [strategy.get_trend(df=df, data=dataObject, log_data=log_data)
-                  if not isinstance(strategy, CustomStrategy) else strategy.get_trend(df=df)
+                  if not isinstance(strategy, CustomStrategy) else strategy.get_trend(df=df, cache=cache)
                   for strategy in self.strategies.values()]
         return self.get_cumulative_trend(trends=trends)
 
