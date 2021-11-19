@@ -59,12 +59,12 @@ class CustomStrategy:
 
             for operation in indicators.values():
                 label = self.get_pretty_label(operation, self.get_func_kwargs(operation))
-                self.plot_dict[label] = [0, get_random_color()]
+                self.plot_dict[label] = [self.get_current_trader_price(), get_random_color()]
 
                 against = operation['against']
                 if isinstance(against, dict):
                     label = self.get_pretty_label(against, self.get_func_kwargs(against))
-                    self.plot_dict[label] = [0, get_random_color()]
+                    self.plot_dict[label] = [self.get_current_trader_price(), get_random_color()]
 
     def get_plot_data(self) -> Dict[str, Union[List[Union[float, str]], int]]:
         """
@@ -176,7 +176,7 @@ class CustomStrategy:
         output_index, output_verbose = operation['output']
 
         if output_index is None:
-            return f'{operation["indicator"]}({func_kwargs["timeperiod"]})'
+            return f'{operation["indicator"]}({func_kwargs["timeperiod"]}) - {operation["price"]}'
 
         return f'{output_verbose}({func_kwargs["timeperiod"]})'
 
