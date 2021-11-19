@@ -7,8 +7,7 @@ import sys
 from typing import TYPE_CHECKING, Optional
 
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
-                             QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget,
-                             QPlainTextEdit)
+                             QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from algobot.helpers import STRATEGIES_DIR
 from algobot.interface.builder.indicator_selector import IndicatorSelector
@@ -87,10 +86,12 @@ class StrategyBuilder(QDialog):
 
         self.layout.addWidget(QLabel('Strategy Name'))
         self.strategy_name_input = QLineEdit()
+        self.strategy_name_input.setPlaceholderText("Enter your strategy name here. This is a required field.")
         self.layout.addWidget(self.strategy_name_input)
 
         self.layout.addWidget(QLabel('Strategy Description'))
-        self.description_input = QPlainTextEdit()
+        self.description_input = QLineEdit()
+        self.description_input.setPlaceholderText("Optional: Enter strategy description.")
         self.layout.addWidget(self.description_input)
 
         self.create_strategy_button = QPushButton("Create Strategy")
@@ -123,6 +124,9 @@ class StrategyBuilder(QDialog):
 
         """
         for trend, trend_values in self.state.items():
+            if trend not in self.tabs:
+                continue
+
             for uuid, uuid_values in trend_values.items():
                 self.indicator_selector.delete_groupbox(
                     indicator=uuid_values['name'],
@@ -140,6 +144,9 @@ class StrategyBuilder(QDialog):
             'Buy Short': {}
         }
 
+        self.strategy_name_input.setText("")
+        self.description_input.setText("")
+
     def save_strategy(self):
         """
         Save strategy into a JSON format.
@@ -147,7 +154,7 @@ class StrategyBuilder(QDialog):
         strategy_name = self.strategy_name_input.text()
         self.state['name'] = strategy_name
 
-        description = self.description_input.toPlainText()
+        description = self.description_input.text()
         self.state['description'] = description if description else "No description provided."
 
         if not strategy_name.strip():
