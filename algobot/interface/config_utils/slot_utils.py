@@ -106,6 +106,12 @@ def delete_strategy_slots(config_obj: Configuration):
 
 
 def populate_parameters(values, indicator, inner_tab_layout):
+    """
+    Populate parameters.
+    :param values: Values dictionary to populate.
+    :param indicator: Indicator to populate parameters from.
+    :param inner_tab_layout: Layout to add parameters to.
+    """
     # We are just calling this to get a combo box for price types (high, low, etc), so default can just be ''.
     values['price'] = price_widget = get_param_obj(default_value='', param_name='price')
     inner_tab_layout.addRow(QLabel('Price Type'), price_widget)
