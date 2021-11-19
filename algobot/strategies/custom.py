@@ -2,6 +2,8 @@
 Custom strategy built from strategy builder.
 """
 from typing import Any, Dict, List, Union
+
+import numpy as np
 from talib import abstract
 
 from PyQt5.QtWidgets import QWidget
@@ -73,22 +75,24 @@ class CustomStrategy:
         """
         return self.plot_dict
 
-    def get_indicator_val_and_label(self, operation, input_arrays_dict):
-        price = operation['price'].lower()
-        indicator = operation['indicator']
+    def get_indicator_val_and_label(self, operation, input_arrays_dict, get_arr: bool = False):
+        func = abstract.Function(operation['indicator'])
+        kwargs = self.get_func_kwargs(operation)
+        val = func(input_arrays_dict, price=operation['price'], **kwargs)
 
-        with_func = abstract.Function(indicator)
-        with_kwargs = self.get_func_kwargs(operation)
-        with_val = with_func(input_arrays_dict, price=price, **with_kwargs)
+        label = self.get_pretty_label(operation=operation, func_kwargs=kwargs)
 
-        label = self.get_pretty_label(operation=operation,
-                                      func_kwargs=with_kwargs)
+        output_index, output_verbose = operation['output']
+        if output_index is None:
+            if get_arr:
+                return val, label
 
-        with_output_index, output_verbose = operation['output']
-        if with_output_index is None:
-            return with_val[-1], label
+            return val[-1], label
         else:
-            return with_val[with_output_index][-1], label
+            if get_arr:
+                return val[output_index], label
+
+            return val[output_index][-1], label
 
     def populate_grouped_dict(self, grouped_dict: Dict[str, Dict[str, Any]]):
         """
@@ -143,6 +147,10 @@ class CustomStrategy:
                         new_dict[k] = (get_input_widget_value(v, verbose=False), output)
                 else:
                     new_dict[k] = get_input_widget_value(v, verbose=True)
+
+                    # Lower all prices upstream.
+                    if k == 'price':
+                        new_dict[k] = new_dict[k].lower()
             elif isinstance(v, dict):
                 new_dict[k] = self.parse_values(v)
             else:
@@ -269,18 +277,34 @@ class CustomStrategy:
         """
         self.strategy_dict = {'regular': {}, 'lower': {}}
 
-    def get_minimum_periods_required(self) -> int:
+    def get_min_option_period(self) -> int:
         """
         Get minimum periods required. This will traverse through the current selected parameters and get the minimum
         periods required. To find the minimum, we find the maximum number.
         :return: Minimum periods required.
         """
+        np_arr = np.random.random(500)
+        test_dict = {
+            'high': np_arr,
+            'low': np_arr,
+            'open': np_arr,
+            'close': np_arr,
+            'open/close': np_arr,
+            'high/low': np_arr
+        }
+
         current_minimum = 0
 
-        for trend_items in self.params.values():
-            for params in trend_items.values():
-                for param_name, param in params.items():
-                    if param_name.lower() == 'timeperiod' and isinstance(param, (int, float)):
-                        current_minimum = max(current_minimum, param)
+        # TODO: Make trends consistent with variable names.
+        trends = {"Buy Long", "Sell Long", "Sell Short", "Buy Short"}
+
+        for trend, indicators in self.values.items():
+            if trend not in trends:
+                continue
+
+            for operation in indicators.values():
+                val, _ = self.get_indicator_val_and_label(operation, test_dict, get_arr=True)
+                first_non_nan = np.where(np.isnan(val))[0][-1] + 2
+                current_minimum = max(first_non_nan, current_minimum)
 
         return current_minimum

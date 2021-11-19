@@ -22,6 +22,7 @@ from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, 
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR, convert_all_dates_to_datetime, convert_small_interval,
                              get_interval_minutes, parse_strategy_name)
 from algobot.interface.config_utils.strategy_utils import get_strategies_dictionary
+from algobot.strategies.custom import CustomStrategy
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 from algobot.typing_hints import DataType, DictType
@@ -222,7 +223,11 @@ class Backtester(Trader):
                 df = pd.DataFrame(strategy_data[-250:])
                 df['high/low'] = (df['high'] + df['low']) / 2
                 df['open/close'] = (df['open'] + df['close']) / 2
-                strategy.get_trend(df, data=strategy_data)
+
+                if isinstance(strategy, CustomStrategy):
+                    strategy.get_trend(df)
+                else:
+                    strategy.get_trend(df, data=strategy_data)
             except Exception as e:
                 if thread and thread.caller == OPTIMIZER:
                     error_message = traceback.format_exc()
