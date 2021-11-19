@@ -105,7 +105,7 @@ def delete_strategy_slots(config_obj: Configuration):
             tab.removeTab(nuke_index)
 
 
-def populate_parameters(values, indicator, inner_tab_layout):
+def populate_parameters(values: dict, indicator: dict, inner_tab_layout: QFormLayout):
     """
     Populate parameters.
     :param values: Values dictionary to populate.
@@ -126,12 +126,12 @@ def populate_parameters(values, indicator, inner_tab_layout):
     inner_tab_layout.addRow("Output Type", output_combobox)
 
 
-def populate_custom_indicator(indicator, inner_tab_layout, values):
+def populate_custom_indicator(indicator: dict, inner_tab_layout: QFormLayout, values: dict):
     """
     Populate custom indicator fields.
-    :param indicator: Indicator to populate.
+    :param indicator: Indicator to populate values from.
     :param inner_tab_layout: Layout to add widgets to.
-    :param values: Values to reference when executing bot.
+    :param values: Values to reference when executing bot. We'll populate this dictionary.
     """
     values['indicator'] = indicator['name']
     populate_parameters(values, indicator, inner_tab_layout)
@@ -177,24 +177,24 @@ def load_custom_strategy_slots(config_obj: Configuration):
             description_label = QLabel(f'Strategy description: {strategy_description}')
             description_label.setWordWrap(True)
 
-            layout = QVBoxLayout()
-            layout.addWidget(description_label)
-
-            scroll = QScrollArea()  # Added a scroll area so user can scroll when additional slots are added.
-            scroll.setWidgetResizable(True)
+            # This is the outer tab widget.
+            main_tabs_widget = QTabWidget()
 
             group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {strategy_name}?")
+            group_box_layout.addRow(main_tabs_widget)
+
             config_obj.strategy_dict[tab, strategy_name, 'groupBox'] = group_box
             config_obj.strategy_dict[tab, strategy_name] = {'name': strategy_name}
 
-            # This is the outer tab widget.
-            main_tabs_widget = QTabWidget()
-            tabs = {
-                'Buy Long': (QWidget(), QFormLayout()),
-                'Sell Long': (QWidget(), QFormLayout()),
-                'Sell Short': (QWidget(), QFormLayout()),
-                'Buy Short': (QWidget(), QFormLayout()),
-            }
+            scroll = QScrollArea()  # Added a scroll area so user can scroll when additional slots are added.
+            scroll.setWidgetResizable(True)
+            scroll.setWidget(group_box)
+
+            layout = QVBoxLayout()
+            layout.addWidget(description_label)
+            layout.addWidget(scroll)
+
+            tabs = {'Buy Long', 'Sell Long', 'Sell Short', 'Buy Short'}
 
             for trend, trend_items in strategy.items():
                 # The key (trend) can be another key such as description or name. So we first ensure it's a valid trend
@@ -205,23 +205,22 @@ def load_custom_strategy_slots(config_obj: Configuration):
                 # For each trend, we must now set the appropriate dictionary containing the widgets.
                 config_obj.strategy_dict[tab, strategy_name][trend] = {}
 
-                inner_tab, inner_tab_layout = tabs[trend]
-                inner_tab.setLayout(inner_tab_layout)
-                main_tabs_widget.addTab(inner_tab, trend)
+                trend_tab, trend_tab_layout = QWidget(), QFormLayout()
+                trend_tab.setLayout(trend_tab_layout)
+                main_tabs_widget.addTab(trend_tab, trend)
 
                 if len(trend_items) == 0:
-                    inner_tab_layout.addRow(QLabel("No indicators found."))
+                    trend_tab_layout.addRow(QLabel("No indicators found."))
                     continue
 
                 # For each indicator inside a trend, we must place it inside a new tab.
                 trend_tab_widget = QTabWidget()
-                inner_tab_layout.addWidget(trend_tab_widget)
+                trend_tab_layout.addWidget(trend_tab_widget)
+
                 for uuid, indicator in trend_items.items():
 
-                    indicator_tab = QWidget()
-                    indicator_tab_layout = QFormLayout()
+                    indicator_tab, indicator_tab_layout = QWidget(), QFormLayout()
                     indicator_tab.setLayout(indicator_tab_layout)
-
                     trend_tab_widget.addTab(indicator_tab, indicator['name'])
 
                     values = {}
@@ -233,9 +232,6 @@ def load_custom_strategy_slots(config_obj: Configuration):
 
                     config_obj.strategy_dict[tab, strategy_name][trend][uuid] = values
 
-            group_box_layout.addRow(main_tabs_widget)
-            layout.addWidget(scroll)
-            scroll.setWidget(group_box)
             tab_widget.setLayout(layout)
             tab.addTab(tab_widget, strategy_name)
 
