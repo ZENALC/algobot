@@ -12,7 +12,7 @@ from typing import Dict, List, Union
 from PyQt5 import QtCore, uic
 from PyQt5.QtCore import QRunnable, QThreadPool
 from PyQt5.QtGui import QIcon, QTextCursor
-from PyQt5.QtWidgets import QApplication, QCompleter, QFileDialog, QMainWindow, QMessageBox, QTableWidgetItem
+from PyQt5.QtWidgets import QApplication, QCompleter, QFileDialog, QMainWindow, QTableWidgetItem
 
 import algobot.assets
 from algobot.algodict import get_interface_dictionary
@@ -32,7 +32,7 @@ from algobot.interface.configuration import Configuration
 from algobot.interface.other_commands import OtherCommands
 from algobot.interface.statistics import Statistics
 from algobot.interface.utils import (add_to_table, clear_table, create_popup, open_from_msg_box,
-                                     show_and_bring_window_to_front)
+                                     show_and_bring_window_to_front, confirm_message_box)
 from algobot.news_scraper import scrape_news
 from algobot.slots import initiate_slots
 from algobot.telegram_bot import TelegramBot
@@ -540,9 +540,7 @@ class Interface(QMainWindow):
             else:
                 raise ValueError("Invalid type of caller specified.")
 
-            msg_box = QMessageBox
-            ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
-            return ret == msg_box.Yes
+            return confirm_message_box(message, self)
         return True
 
     def validate_ticker(self, caller: int):
@@ -1169,7 +1167,6 @@ class Interface(QMainWindow):
         :param event: close event
         """
         save_state(self.configuration)
-        msg_box = QMessageBox
         message = ""
         if self.simulation_running_live and self.running_live:
             message = "There is a live bot and a simulation running."
@@ -1177,10 +1174,13 @@ class Interface(QMainWindow):
             message = "There is a simulation running."
         elif self.running_live:
             message = "There is a live bot running."
-        ret = msg_box.question(self, 'Close?', f"{message} Are you sure you want to end Algobot?",
-                               msg_box.Yes | msg_box.No)
 
-        if ret == msg_box.Yes:
+        confirm = confirm_message_box(
+            message=f"{message} Are you sure you want to end Algobot?",
+            parent=self
+        )
+
+        if confirm:
             if self.running_live:
                 self.end_bot_gracefully(caller=LIVE)
             elif self.simulation_running_live:

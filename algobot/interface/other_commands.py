@@ -12,11 +12,11 @@ from typing import TYPE_CHECKING, Any, Dict, List
 import pandas as pd
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QDate, QThreadPool
-from PyQt5.QtWidgets import QApplication, QDialog, QLineEdit, QMessageBox
+from PyQt5.QtWidgets import QApplication, QDialog, QLineEdit
 
 import algobot
 from algobot.helpers import ROOT_DIR, convert_long_interval, create_folder, get_logger, open_file_or_folder
-from algobot.interface.utils import create_popup, open_from_msg_box
+from algobot.interface.utils import create_popup, open_from_msg_box, confirm_message_box
 from algobot.threads.download_thread import DownloadThread
 from algobot.threads.volatility_snooper_thread import VolatilitySnooperThread
 from algobot.threads.worker_thread import Worker
@@ -87,10 +87,12 @@ class OtherCommands(QDialog):
 
         message = f'Are you sure you want to delete your {directory.lower()} files? You might not be able to undo ' \
                   f'this operation. \n\nThe following path will be deleted: \n{path}'
-        msg_box = QMessageBox
-        ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
+        confirm = confirm_message_box(
+            message=message,
+            parent=self
+        )
 
-        if ret == msg_box.Yes and os.path.exists(path):
+        if confirm and os.path.exists(path):
             shutil.rmtree(path)
             self.infoLabel.setText(f'{directory.capitalize()} files have been successfully deleted.')
 

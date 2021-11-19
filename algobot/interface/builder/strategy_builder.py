@@ -34,12 +34,7 @@ class StrategyBuilder(QDialog):
         self.indicator_selector = IndicatorSelector(parent=self)
 
         # Store the current strategy builder state in this dictionary. We'll dump the state into a JSON file.
-        self.state = {
-            'Buy Long': {},
-            'Sell Long': {},
-            'Sell Short': {},
-            'Buy Short': {}
-        }
+        self.state = self.get_empty_state()
 
         # Main layout itself. This contains the tab widget, input for strategy name, saving, and reset buttons.
         self.layout = QVBoxLayout()
@@ -63,7 +58,7 @@ class StrategyBuilder(QDialog):
             # Add this tab to the main tabs widget.
             self.main_tabs_widget.addTab(tab, trend)
 
-            tab_layout.addRow(QLabel(trend))
+            # Add button to add indicators to inner tab.
             tab_layout.addRow(add_indicator_button)
 
         # Define a scroll and set the main tabs widget as its main widget. This is super important, as the view looks
@@ -72,14 +67,15 @@ class StrategyBuilder(QDialog):
         scroll = QScrollArea()
         scroll.setWidget(self.main_tabs_widget)
         scroll.setWidgetResizable(True)
-
         self.layout.addWidget(scroll)
 
+        # Create input for strategy name.
         self.layout.addWidget(QLabel('Strategy Name'))
         self.strategy_name_input = QLineEdit()
         self.strategy_name_input.setPlaceholderText("Enter your strategy name here. This is a required field.")
         self.layout.addWidget(self.strategy_name_input)
 
+        # Create input for strategy description.
         self.layout.addWidget(QLabel('Strategy Description'))
         self.description_input = QLineEdit()
         self.description_input.setPlaceholderText("Optional: Enter strategy description.")
@@ -147,17 +143,17 @@ class StrategyBuilder(QDialog):
         """
         strategy_name = self.strategy_name_input.text()
         if not strategy_name.strip():
-            create_popup(self, "No strategy name found. Please provide a name.")
+            create_popup(self, "No strategy name found. Please provide a strategy name.")
             return
 
         if not any(self.state.values()):
-            create_popup(self, "No trend indicators found. Please at least select one indicator.")
+            create_popup(self, "No trend indicators found. Please select at least one indicator.")
             return
 
         description = self.description_input.text()
         parsed_dict = {
             'name': strategy_name,
-            'description': description if description else "No description provided."
+            'description': description if description.strip() else "No description provided."
         }
 
         parsed_dict = self.create_parsed_dict(self.state, parsed_dict)

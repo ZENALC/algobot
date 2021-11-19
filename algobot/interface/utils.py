@@ -102,6 +102,18 @@ def get_param_obj(default_value: Union[float, int, str], param_name: str):
         raise ValueError("Unknown type of data encountered.")
 
 
+def confirm_message_box(message: str, parent) -> bool:
+    """
+    Show a confirmation message box and return true if confirmed else false.
+    :param message: Message to show.
+    :param parent: Parent to show message on top of.
+    :return: Boolean whether user has confirmed or not.
+    """
+    msg_box = QMessageBox
+    ret = msg_box.question(parent, 'Warning', message, msg_box.Yes | msg_box.No)
+    return ret == msg_box.Yes
+
+
 def get_bold_font() -> QFont:
     """
     Returns a bold font.

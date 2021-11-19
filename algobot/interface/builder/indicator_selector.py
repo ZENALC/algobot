@@ -6,12 +6,13 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, OrderedDict
 from uuid import uuid4
 
 import talib
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel, QMessageBox,
+from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel,
                              QPushButton, QRadioButton, QVBoxLayout)
 from talib import abstract
 
 from algobot.interface.configuration_helpers import get_h_line
-from algobot.interface.utils import OPERATORS, PARAMETER_MAP, get_bold_font, get_param_obj, get_v_spacer
+from algobot.interface.utils import OPERATORS, PARAMETER_MAP, get_bold_font, get_param_obj, get_v_spacer, \
+    confirm_message_box
 
 if TYPE_CHECKING:
     # Strategy builder calls indicator selector, so we can't just simply import strategy builder for hinting here.
@@ -454,12 +455,13 @@ class IndicatorSelector(QDialog):
         :param bypass_popup: Bypass popup. Used with restore_builder.
         """
         if not bypass_popup:
-            message = f'Are you sure you want to delete this indicator ({indicator})?'
-            msg_box = QMessageBox
-            ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
+            confirm = confirm_message_box(
+                message=f'Are you sure you want to delete this indicator ({indicator})?',
+                parent=self
+            )
 
         # If confirmed or bypassing popup, delete the groupbox and remove from parent state.
-        if bypass_popup or ret == msg_box.Yes:  # noqa
+        if bypass_popup or confirm:  # noqa
 
             # This is because the state will be reset anyway and we don't want the dictionary to change size during
             #  iteration. TODO: Cleanup.
