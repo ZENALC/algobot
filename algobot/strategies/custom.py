@@ -1,7 +1,7 @@
 """
 Custom strategy built from strategy builder.
 """
-from typing import TYPE_CHECKING, Any, Dict, List, Union, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from algobot.traders.trader import Trader
@@ -108,7 +108,7 @@ class CustomStrategy:
         func = abstract.Function(operation['indicator'])
         val = func(input_arrays_dict, price=operation['price'], **kwargs)
 
-        output_index, output_verbose = operation['output']
+        output_index, _output_verbose = operation['output']
         if output_index is not None:
             val = val[output_index]
 
@@ -160,29 +160,31 @@ class CustomStrategy:
         :return: Parsed values.
         """
         new_dict = {}
-        for k, v in values.items():
-            if isinstance(v, QWidget):
-                if k == 'output':
+        for key, value in values.items():
+            if isinstance(value, QWidget):
+                if key == 'output':
                     # In this case, we just want the index. If the value is 'real', we'll just set the index to None.
-                    output = get_input_widget_value(v, verbose=True)
+                    output = get_input_widget_value(value, verbose=True)
                     if output == 'real':
-                        new_dict[k] = (None, 'real')
+                        new_dict[key] = (None, 'real')
                     else:
-                        new_dict[k] = (get_input_widget_value(v, verbose=False), output)
+                        new_dict[key] = (get_input_widget_value(value, verbose=False), output)
                 else:
-                    new_dict[k] = get_input_widget_value(v, verbose=True)
+                    new_dict[key] = get_input_widget_value(value, verbose=True)
 
                     # Lower all prices upstream.
-                    if k == 'price':
-                        new_dict[k] = new_dict[k].lower()
-            elif isinstance(v, dict):
-                new_dict[k] = self.parse_values(v)
+                    if key == 'price':
+                        new_dict[key] = new_dict[key].lower()
+            elif isinstance(value, dict):
+                new_dict[key] = self.parse_values(value)
             else:
-                new_dict[k] = v
+                new_dict[key] = value
 
         return new_dict
 
-    def get_params(self):
+    @staticmethod
+    def get_params():
+        """TODO: DEPRECATE"""
         return ['']
 
     @staticmethod
@@ -195,13 +197,13 @@ class CustomStrategy:
         """
         ignored_keys = {'against', 'indicator', 'operator', 'price', 'output'}
 
-        p = {k: v for k, v in kwargs.items() if k not in ignored_keys}
-        for k, v in p.items():
+        parsed = {key: value for key, value in kwargs.items() if key not in ignored_keys}
+        for key, value in parsed.items():
             # We display verbosely, but we must cast back to numeric for TALIB to understand the moving average.
-            if 'matype' in k:
-                p[k] = MOVING_AVERAGE_TYPES_BY_NAME[v]
+            if 'matype' in key:
+                parsed[key] = MOVING_AVERAGE_TYPES_BY_NAME[value]
 
-        return p
+        return parsed
 
     @staticmethod
     def get_pretty_label(operation: dict, func_kwargs: dict) -> str:
@@ -232,7 +234,7 @@ class CustomStrategy:
             return False
 
         trends = []
-        for uuid, operation in indicators.items():
+        for operation in indicators.values():
             val, label = self.get_indicator_val_and_label(operation, input_arrays_dict)
             self.strategy_dict['regular'][label] = val
             self.plot_dict[label][0] = val  # The 2nd value is the color, so we only update the value.
@@ -246,7 +248,7 @@ class CustomStrategy:
                 self.strategy_dict['regular'][against_label] = against_val
                 self.plot_dict[against_label][0] = against_val
 
-            result = eval(f'{val} {operation["operator"]} {against_val}')
+            result = eval(f'{val} {operation["operator"]} {against_val}')  # pylint: disable=eval-used
             trends.append(result)
 
             if self.short_circuit and result is False:
@@ -257,21 +259,14 @@ class CustomStrategy:
         # Return true if all trends are true, else false.
         return trend_sentiment
 
-    def get_trend(self, df, cache=None):
+    def get_trend(self, input_arrays_dict: Dict[str, pd.Series], cache: Optional[Dict[str, Any]] = None):
         """
         There must be only one trend. If multiple trends are true, then return no trend.
         :param cache: Cache to use to avoid reevaluating trends.
-        :param df: Dataframe to use to get trend.
+        :param input_arrays_dict: Dictionary containing price as key and price values as value.
         :return: Trend.
         """
-        if cache is None:
-            self.cache = {}
-        else:
-            self.cache = cache
-
-        df.columns = [c.lower() for c in df.columns]
-        input_arrays_dict = df.to_dict('series')
-
+        self.cache = {} if cache is None else cache
         trends = {trend: self.get_trend_by_key(trend, input_arrays_dict) for trend in TRENDS}
 
         true_trends = []

@@ -3,7 +3,7 @@ This will be the main Trader class that all other Traders will inherit from.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Dict, List, Union
 
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import get_label_string, parse_strategy_name
@@ -27,7 +27,7 @@ class Trader:
         self.commissions_paid = 0  # Total commissions paid this bot run.
         self.precision = precision  # Precision to round data to.
         self.trades = []  # All trades performed.
-        self.strategies: Dict[str, Strategy] = {}
+        self.strategies: Dict[str, Union[Strategy, CustomStrategy]] = {}
 
         self.starting_time = datetime.utcnow()  # Starting time in UTC.
         self.ending_time = None  # Ending time for previous bot run.
@@ -193,7 +193,7 @@ class Trader:
         if 'safetyTimer' in loss_dict:
             self.set_safety_timer(loss_dict['safetyTimer'])
 
-    def setup_strategies(self, strategies: List[Any], short_circuit: bool = False):
+    def setup_strategies(self, strategies: List[Union[tuple, dict]], short_circuit: bool = False):
         """
         Sets up strategies from list of strategies provided.
         :param strategies: List of strategies to set up and apply to bot.
@@ -214,7 +214,9 @@ class Trader:
                 self.strategies[name] = strategy_class(parent=self, inputs=values, precision=self.precision)
             else:
                 name = strategy_item['name']  # noqa
-                self.strategies[name] = CustomStrategy(trader=self, values=strategy_item, short_circuit=short_circuit)
+                self.strategies[name] = CustomStrategy(
+                    trader=self, values=strategy_item, short_circuit=short_circuit  # noqa
+                )
 
             self.min_period = max(self.strategies[name].get_min_option_period(), self.min_period)
 

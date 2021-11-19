@@ -219,14 +219,16 @@ class Backtester(Trader):
         :return: String "CRASHED" if an error is raised, else None if everything goes smoothly.
         """
         cache = {}
+        df = pd.DataFrame(strategy_data[-250:])
+        df['high/low'] = (df['high'] + df['low']) / 2
+        df['open/close'] = (df['open'] + df['close']) / 2
+        df.columns = [c.lower() for c in df.columns]
+        input_arrays_dict = df.to_dict('series')
+
         for strategy in self.strategies.values():
             try:
-                df = pd.DataFrame(strategy_data[-250:])
-                df['high/low'] = (df['high'] + df['low']) / 2
-                df['open/close'] = (df['open'] + df['close']) / 2
-
                 if isinstance(strategy, CustomStrategy):
-                    strategy.get_trend(df, cache)
+                    strategy.get_trend(input_arrays_dict, cache)
                 else:
                     strategy.get_trend(df, data=strategy_data)
             except Exception as e:
