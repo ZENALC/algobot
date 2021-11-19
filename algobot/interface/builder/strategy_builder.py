@@ -5,7 +5,7 @@ Simple strategy builder.
 import json
 import os
 import sys
-from typing import TYPE_CHECKING, Optional, Dict
+from typing import TYPE_CHECKING, Dict, Optional
 
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
                              QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
@@ -156,12 +156,11 @@ class StrategyBuilder(QDialog):
 
         description = self.description_input.text()
         parsed_dict = {
-            **self.state,
             'name': strategy_name,
             'description': description if description else "No description provided."
         }
 
-        parsed_dict = self.create_parsed_dict(parsed_dict)
+        parsed_dict = self.create_parsed_dict(self.state, parsed_dict)
         if not os.path.exists(STRATEGIES_DIR):
             os.mkdir(STRATEGIES_DIR)
 
@@ -178,7 +177,7 @@ class StrategyBuilder(QDialog):
 
         create_popup(self, f"Strategy {strategy_name} has been successfully created.")
 
-    def create_parsed_dict(self, from_dict: dict) -> dict:
+    def create_parsed_dict(self, from_dict: dict, to_dict: dict) -> dict:
         """
         Create parsed dictionary to dump into a JSON. It should parse and read the QWidget values and store their
          actual held values.
@@ -186,27 +185,25 @@ class StrategyBuilder(QDialog):
         Note that this function can be recursive.
 
         :param from_dict: Dictionary to create a parsed dictionary from.
+        :param to_dict: Dictionary to populate.
         :return: Parsed dictionary.
         """
-        # We'll populate this dictionary.
-        parsed_dict = {}
-
         # We don't use these keys as they're not needed for strategies.
         useless_keys = {'add_against_groupbox', 'groupbox'}
 
         for key, value in from_dict.items():
             if isinstance(value, dict):
-                parsed_dict[key] = self.create_parsed_dict(value)
+                to_dict[key] = self.create_parsed_dict(value, {})
             elif isinstance(value, QComboBox):
-                parsed_dict[key] = value.currentText()
+                to_dict[key] = value.currentText()
             elif isinstance(value, (QSpinBox, QDoubleSpinBox)):
-                parsed_dict[key] = value.value()
+                to_dict[key] = value.value()
             elif key in useless_keys:
                 continue
             else:
-                parsed_dict[key] = value
+                to_dict[key] = value
 
-        return parsed_dict
+        return to_dict
 
     def open_indicator_selector(self, trend: str):
         """

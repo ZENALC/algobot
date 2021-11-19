@@ -3,7 +3,7 @@ This will be the main Trader class that all other Traders will inherit from.
 """
 
 from datetime import datetime
-from typing import Dict, List, Union, Any
+from typing import Any, Dict, List, Union
 
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import get_label_string, parse_strategy_name

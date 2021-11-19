@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QG
 from talib import abstract
 
 from algobot.interface.configuration_helpers import get_h_line
-from algobot.interface.utils import get_bold_font, get_param_obj, get_v_spacer, PARAMETER_MAP, OPERATORS
+from algobot.interface.utils import OPERATORS, PARAMETER_MAP, get_bold_font, get_param_obj, get_v_spacer
 
 if TYPE_CHECKING:
     # Strategy builder calls indicator selector, so we can't just simply import strategy builder for hinting here.

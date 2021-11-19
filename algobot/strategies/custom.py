@@ -4,11 +4,10 @@ Custom strategy built from strategy builder.
 from typing import Any, Dict, List, Union
 
 import numpy as np
+from PyQt5.QtWidgets import QWidget
 from talib import abstract
 
-from PyQt5.QtWidgets import QWidget
-
-from algobot.enums import ENTER_LONG, EXIT_LONG, ENTER_SHORT, EXIT_SHORT
+from algobot.enums import ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT
 from algobot.helpers import get_random_color
 from algobot.interface.configuration_helpers import get_input_widget_value
 from algobot.interface.utils import MOVING_AVERAGE_TYPES_BY_NAME

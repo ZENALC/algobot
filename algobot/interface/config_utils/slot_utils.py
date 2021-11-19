@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PyQt5.QtWidgets import (QCheckBox, QDoubleSpinBox, QHBoxLayout, QLabel, QScrollArea, QSpinBox, QTabWidget,
-                             QVBoxLayout, QWidget, QFormLayout, QComboBox)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QHBoxLayout, QLabel, QScrollArea,
+                             QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
@@ -25,7 +25,7 @@ from algobot.interface.config_utils.user_config_utils import (copy_config_helper
                                                               save_simulation_settings)
 from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, create_inner_tab, get_default_widget,
                                                      get_regular_groupbox_and_layout)
-from algobot.interface.utils import get_param_obj, PARAMETER_MAP, OPERATORS
+from algobot.interface.utils import OPERATORS, PARAMETER_MAP, get_param_obj
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
