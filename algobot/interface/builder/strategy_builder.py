@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Dict, Optional
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
                              QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
-from algobot.enums import ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT
+from algobot.enums import TRENDS
 from algobot.helpers import STRATEGIES_DIR
 from algobot.interface.builder.indicator_selector import IndicatorSelector
 from algobot.interface.utils import create_popup
@@ -42,12 +42,7 @@ class StrategyBuilder(QDialog):
 
         # Main tab widget that'll hold the tabs.
         self.main_tabs_widget = QTabWidget()
-        self.tabs = {
-            ENTER_LONG: (QWidget(), QFormLayout()),
-            EXIT_LONG: (QWidget(), QFormLayout()),
-            ENTER_SHORT: (QWidget(), QFormLayout()),
-            EXIT_SHORT: (QWidget(), QFormLayout()),
-        }
+        self.tabs = {trend: (QWidget(), QFormLayout()) for trend in TRENDS}
 
         for trend, (tab, tab_layout) in self.tabs.items():
             add_indicator_button = QPushButton(f"Add {trend} Indicator")
@@ -101,12 +96,7 @@ class StrategyBuilder(QDialog):
         Get an empty state.
         :return: Dictionary containing empty state.
         """
-        return {
-            ENTER_LONG: {},
-            EXIT_LONG: {},
-            ENTER_SHORT: {},
-            EXIT_SHORT: {}
-        }
+        return {trend: {} for trend in TRENDS}
 
     def restore_builder(self):
         """
