@@ -24,8 +24,8 @@ from algobot.interface.config_utils.user_config_utils import (copy_config_helper
                                                               save_live_settings, save_optimizer_settings,
                                                               save_simulation_settings)
 from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, create_inner_tab, get_default_widget,
-                                                     get_regular_groupbox_and_layout, get_h_line)
-from algobot.interface.utils import get_param_obj, PARAMETER_MAP, get_bold_font
+                                                     get_regular_groupbox_and_layout)
+from algobot.interface.utils import get_param_obj, PARAMETER_MAP, OPERATORS
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
@@ -112,36 +112,24 @@ def populate_custom_indicator(indicator, inner_tab_layout, values):
     :param inner_tab_layout: Layout to add widgets to.
     :param values: Values to reference when executing bot.
     """
-    indicator_name = indicator['name']
-    values['indicator'] = indicator_name
-    output_names = indicator['output_names']
-
-    main_parameters = indicator['parameters']
-    indicator_label = QLabel(indicator_name)
-    indicator_label.setFont(get_bold_font())
-
-    inner_tab_layout.addWidget(get_h_line())
-    inner_tab_layout.addWidget(indicator_label)
-    inner_tab_layout.addWidget(get_h_line())
+    values['indicator'] = indicator['name']
 
     # We are just calling this to get a combo box for price types (high, low, etc), so default can just be ''.
-    values['price'] = price_widget = get_param_obj('', 'price')
+    values['price'] = price_widget = get_param_obj(default_value='', param_name='price')
     inner_tab_layout.addRow(QLabel('Price Type'), price_widget)
 
-    for parameter, default_value in main_parameters.items():
+    for parameter, default_value in indicator['parameters'].items():
         label = QLabel(PARAMETER_MAP.get(parameter, parameter))
         values[parameter] = widget = get_param_obj(default_value=default_value, param_name=parameter)
-
         inner_tab_layout.addRow(label, widget)
 
     values['output'] = output_combobox = QComboBox()
-    output_combobox.addItems(output_names)
+    output_combobox.addItems(indicator['output_names'])
     inner_tab_layout.addRow("Primary Output Type", output_combobox)
 
-    operators = ['>', '<', '>=', '<=', '==', '!=']
     values['operator'] = operators_combobox = QComboBox()
-    operators_combobox.addItems(operators)
-    operators_combobox.setCurrentIndex(operators.index(indicator['operator']))
+    operators_combobox.addItems(OPERATORS)
+    operators_combobox.setCurrentIndex(OPERATORS.index(indicator['operator']))
     inner_tab_layout.addRow('Operator', operators_combobox)
 
     against = indicator['against']
@@ -165,7 +153,6 @@ def populate_custom_indicator(indicator, inner_tab_layout, values):
         for parameter, default_value in against['parameters'].items():
             label = QLabel(PARAMETER_MAP.get(parameter, parameter))
             values['against'][parameter] = widget = get_param_obj(default_value=default_value, param_name=parameter)
-
             inner_tab_layout.addRow(label, widget)
 
         against_outputs = against['output_names']
@@ -182,7 +169,6 @@ def load_custom_strategy_slots(config_obj: Configuration):
     """
     for strategy in config_obj.json_strategies:
 
-        # TODO: Add strategy description to strategy builder.
         strategy_description = strategy.get('description', "Custom Strategy")
         strategy_name = strategy['name']
 
@@ -202,9 +188,9 @@ def load_custom_strategy_slots(config_obj: Configuration):
 
             group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {strategy_name}?")
             config_obj.strategy_dict[tab, strategy_name, 'groupBox'] = group_box
-
             config_obj.strategy_dict[tab, strategy_name] = {'name': strategy_name}
 
+            # This is the outer tab widget.
             main_tabs_widget = QTabWidget()
             tabs = {
                 'Buy Long': (QWidget(), QFormLayout()),
@@ -214,20 +200,23 @@ def load_custom_strategy_slots(config_obj: Configuration):
             }
 
             for trend, trend_items in strategy.items():
-                if trend not in tabs.keys():
+                # The key (trend) can be another key such as description or name. So we first ensure it's a valid trend
+                #  by checking against the tab.
+                if trend not in tabs:
                     continue
 
+                # For each trend, we must now set the appropriate dictionary containing the widgets.
                 config_obj.strategy_dict[tab, strategy_name][trend] = {}
 
                 inner_tab, inner_tab_layout = tabs[trend]
                 inner_tab.setLayout(inner_tab_layout)
-
                 main_tabs_widget.addTab(inner_tab, trend)
 
                 if len(trend_items) == 0:
                     inner_tab_layout.addRow(QLabel("No indicators found."))
                     continue
 
+                # For each indicator inside a trend, we must place it inside a new tab.
                 trend_tab_widget = QTabWidget()
                 inner_tab_layout.addWidget(trend_tab_widget)
                 for uuid, indicator in trend_items.items():

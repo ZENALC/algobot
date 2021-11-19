@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QG
 from talib import abstract
 
 from algobot.interface.configuration_helpers import get_h_line
-from algobot.interface.utils import get_bold_font, get_param_obj, get_v_spacer, PARAMETER_MAP
+from algobot.interface.utils import get_bold_font, get_param_obj, get_v_spacer, PARAMETER_MAP, OPERATORS
 
 if TYPE_CHECKING:
     # Strategy builder calls indicator selector, so we can't just simply import strategy builder for hinting here.
@@ -355,10 +355,8 @@ class IndicatorSelector(QDialog):
         :param vbox: Vertical layout to add operator values to.
         :param unique_identifier: Unique identifier to distinguish in states.
         """
-        # TODO: Make operators a global somewhere.
-        operators = ['>', '<', '>=', '<=', '==', '!=']
         self.parent.state[self.trend][unique_identifier]['operator'] = operators_combobox = QComboBox()
-        operators_combobox.addItems(operators)
+        operators_combobox.addItems(OPERATORS)
 
         vbox.addWidget(QLabel("Operator"))
         vbox.addWidget(operators_combobox)

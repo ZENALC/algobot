@@ -19,6 +19,8 @@ MOVING_AVERAGE_TYPES_BY_NUM = vars(talib.MA_Type)['_lookup']
 MOVING_AVERAGE_TYPES_BY_NAME = {v: k for k, v in MOVING_AVERAGE_TYPES_BY_NUM.items()}
 MOVING_AVERAGES_LIST = list(MOVING_AVERAGE_TYPES_BY_NAME.keys())
 
+OPERATORS = ['>', '<', '>=', '<=', '==', '!=']
+
 # Mappings from TALIB parameters to better display names.
 PARAMETER_MAP = {
     'acceleration': 'Acceleration',
