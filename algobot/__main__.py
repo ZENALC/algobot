@@ -21,8 +21,8 @@ from algobot.enums import BACKTEST, LIVE, LONG, OPTIMIZER, SHORT, SIMULATION, Gr
 from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots, get_graph_dictionary,
                                    set_backtest_graph_limits_and_empty_plots, setup_graph_plots, setup_graphs,
                                    update_backtest_graph_limits, update_main_graphs)
-from algobot.helpers import ROOT_DIR, create_folder, create_folder_if_needed, get_caller_string, open_file_or_folder, \
-    compare_versions, UNKNOWN
+from algobot.helpers import (ROOT_DIR, UNKNOWN, compare_versions, create_folder, create_folder_if_needed,
+                             get_caller_string, open_file_or_folder)
 from algobot.interface.about import About
 from algobot.interface.builder.strategy_builder import StrategyBuilder
 from algobot.interface.config_utils.slot_utils import load_hide_show_strategies
