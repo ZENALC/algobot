@@ -229,8 +229,7 @@ class BotThread(QRunnable):
         trader: SimulationTrader = self.gui.get_trader(caller)
         trader.apply_take_profit_settings(take_profit_dict)
         trader.apply_loss_settings(loss_dict)
-        s = get_strategies(config, caller)
-        trader.setup_strategies(s)
+        trader.setup_strategies(get_strategies(config, caller))
         trader.output_configuration()
 
     def setup_bot(self, caller):

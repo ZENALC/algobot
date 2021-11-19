@@ -207,14 +207,14 @@ class Trader:
                 strategy_class = strategy_item[0]
                 values = strategy_item[1]
                 name = parse_strategy_name(strategy_item[2])
-                self.min_period = max(self.strategies[name].get_min_option_period(), self.min_period)
 
                 # TODO: Leverage kwargs to initialize strategies.
                 self.strategies[name] = strategy_class(parent=self, inputs=values, precision=self.precision)
             else:
-                strategy_name = strategy_item['name']
-                self.strategies[strategy_name] = CustomStrategy(trader=self, values=strategy_item)
-                self.min_period = max(self.strategies[strategy_name].get_min_option_period(), self.min_period)
+                name = strategy_item['name']  # noqa
+                self.strategies[name] = CustomStrategy(trader=self, values=strategy_item)  # noqa
+
+            self.min_period = max(self.strategies[name].get_min_option_period(), self.min_period)
 
     def handle_trailing_prices(self):
         """

@@ -110,7 +110,7 @@ class Configuration(QDialog):
 
         # Hidden strategies dynamically populated.
         self.hidden_strategies = set(self.strategies)
-        self.hidden_strategies.update([s['name'] for s in self.json_strategies])
+        self.hidden_strategies.update(self.custom_strategies)
 
         self.strategy_dict = {}  # We will store all the strategy slot information in this dictionary.
         self.loss_dict = {}  # We will store stop loss settings here.
