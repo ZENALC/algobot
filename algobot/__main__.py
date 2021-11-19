@@ -21,7 +21,8 @@ from algobot.enums import BACKTEST, LIVE, LONG, OPTIMIZER, SHORT, SIMULATION, Gr
 from algobot.graph_helpers import (add_data_to_plot, destroy_graph_plots, get_graph_dictionary,
                                    set_backtest_graph_limits_and_empty_plots, setup_graph_plots, setup_graphs,
                                    update_backtest_graph_limits, update_main_graphs)
-from algobot.helpers import ROOT_DIR, create_folder, create_folder_if_needed, get_caller_string, open_file_or_folder
+from algobot.helpers import ROOT_DIR, create_folder, create_folder_if_needed, get_caller_string, open_file_or_folder, \
+    compare_versions, UNKNOWN
 from algobot.interface.about import About
 from algobot.interface.builder.strategy_builder import StrategyBuilder
 from algobot.interface.config_utils.slot_utils import load_hide_show_strategies
@@ -89,11 +90,20 @@ class Interface(QMainWindow):
         self.telegram_bot = None
         self.tickers = []  # All available tickers.
 
-        if algobot.CURRENT_VERSION != algobot.LATEST_VERSION:
-            if algobot.LATEST_VERSION != 'unknown':
+        if algobot.CURRENT_VERSION == UNKNOWN:
+            self.add_to_live_activity_monitor("Unknown current version. Try reinstalling Algobot.")
+        elif algobot.LATEST_VERSION == UNKNOWN:
+            self.add_to_live_activity_monitor('Failed to fetch latest version metadata.')
+        elif algobot.LATEST_VERSION == algobot.CURRENT_VERSION:
+            self.add_to_live_activity_monitor('No updates found.')
+        else:
+            higher_version = compare_versions(algobot.CURRENT_VERSION, algobot.LATEST_VERSION)
+            if higher_version == algobot.LATEST_VERSION:
                 self.add_to_live_activity_monitor(f"Update {algobot.LATEST_VERSION} is available.")
             else:
-                self.add_to_live_activity_monitor('Failed to fetch latest version metadata.')
+                self.add_to_live_activity_monitor('You are running an unreleased Algobot version. Latest version is: '
+                                                  f'{algobot.LATEST_VERSION}. You are running: '
+                                                  f'{algobot.CURRENT_VERSION}.')
 
         self.add_to_live_activity_monitor('Initialized interface.')
         self.load_tickers_and_news()
