@@ -193,10 +193,12 @@ class Trader:
         if 'safetyTimer' in loss_dict:
             self.set_safety_timer(loss_dict['safetyTimer'])
 
-    def setup_strategies(self, strategies: List[Any]):
+    def setup_strategies(self, strategies: List[Any], short_circuit: bool = False):
         """
         Sets up strategies from list of strategies provided.
         :param strategies: List of strategies to set up and apply to bot.
+        :param short_circuit: Whether you want to short circuit strategy or not. More documentation can be found in
+         the Custom strategy class.
         """
         # TODO: Use data classes for strategy "tuples".
         if not isinstance(strategies, list):
@@ -212,7 +214,7 @@ class Trader:
                 self.strategies[name] = strategy_class(parent=self, inputs=values, precision=self.precision)
             else:
                 name = strategy_item['name']  # noqa
-                self.strategies[name] = CustomStrategy(trader=self, values=strategy_item)  # noqa
+                self.strategies[name] = CustomStrategy(trader=self, values=strategy_item, short_circuit=short_circuit)
 
             self.min_period = max(self.strategies[name].get_min_option_period(), self.min_period)
 

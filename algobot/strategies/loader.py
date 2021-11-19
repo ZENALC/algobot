@@ -6,6 +6,7 @@ import os
 
 from talib import abstract
 
+from algobot.enums import ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT
 from algobot.helpers import STRATEGIES_DIR
 
 
@@ -42,7 +43,7 @@ def parse_custom_strategy_json(json_file: str) -> dict:
     with open(json_file, 'r', encoding='utf-8') as f:
         loaded_dict = json.load(f)
 
-    trend_keys = {'Buy Long', 'Sell Long', 'Sell Short', 'Buy Short'}
+    trend_keys = {ENTER_LONG, EXIT_LONG, ENTER_SHORT, EXIT_SHORT}
     for trend, trend_items in loaded_dict.items():
         if trend not in trend_keys:
             continue

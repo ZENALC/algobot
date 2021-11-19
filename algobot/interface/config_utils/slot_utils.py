@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, 
                              QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from algobot import helpers
-from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
+from algobot.enums import BACKTEST, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LIVE, OPTIMIZER, SIMULATION
 from algobot.graph_helpers import get_and_set_line_color
 from algobot.interface.config_utils.credential_utils import load_credentials, save_credentials, test_binance_credentials
 from algobot.interface.config_utils.data_utils import download_data, import_data, stop_download
@@ -164,6 +164,7 @@ def load_custom_strategy_slots(config_obj: Configuration):
     :param config_obj: Configuration object to populate slots on.
     :return: None
     """
+    # pylint: disable=too-many-locals
     for strategy in config_obj.json_strategies:
 
         strategy_description = strategy.get('description', "Custom Strategy")
@@ -194,12 +195,11 @@ def load_custom_strategy_slots(config_obj: Configuration):
             layout.addWidget(description_label)
             layout.addWidget(scroll)
 
-            tabs = {'Buy Long', 'Sell Long', 'Sell Short', 'Buy Short'}
-
+            trends = {ENTER_LONG, EXIT_LONG, ENTER_SHORT, EXIT_SHORT}
             for trend, trend_items in strategy.items():
                 # The key (trend) can be another key such as description or name. So we first ensure it's a valid trend
                 #  by checking against the tab.
-                if trend not in tabs:
+                if trend not in trends:
                     continue
 
                 # For each trend, we must now set the appropriate dictionary containing the widgets.

@@ -1,7 +1,10 @@
 """
 Custom strategy built from strategy builder.
 """
-from typing import Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
+
+if TYPE_CHECKING:
+    from algobot.traders.trader import Trader
 
 import numpy as np
 from PyQt5.QtWidgets import QWidget
@@ -14,23 +17,34 @@ from algobot.interface.utils import MOVING_AVERAGE_TYPES_BY_NAME
 
 
 class CustomStrategy:
-    def __init__(self, trader, values: dict, precision: int = 2):
+    """
+    Custom strategy built from JSON files created by the strategy builder.
+    """
+    def __init__(self, trader: 'Trader', values: dict, precision: int = 2, short_circuit: bool = False):
         """
         Initialize a custom strategy built off the strategy builder. This strategy should soon replace the actual
          Strategy class.
         :param trader: Trader that'll leverage this strategy.
         :param precision: Precision with which to show values.
         :param values: Values for custom strategy.
+        :param short_circuit: Whether you want to short circuit a trend or not. Immediately not perform calculations
+         for remaining indicators in a trend when one indicator in that trend is already false. One drawback of this is
+         that the user will lose support for viewing non-calculated statistics.
         """
         self.trader = trader
         self.precision = precision
-        self.short_circuit = False
-
+        self.short_circuit = short_circuit
         self.values: Dict[str, Any] = self.parse_values(values)
-        self.name = self.values['name']
+
+        # Store cache to avoid calculating again.
         self.cache = {}
 
+        # Dictionary for plotting values in graphs. This should hold string keys and float values. If a value is
+        #  non-numeric, the program will crash. This should hold the key of the value and then a list containing
+        #  the value then the color.
+        #  For example -> self.plot_dict['SMA(5)'] = [13, 'ffffff'] -> SMA(5) value of 13 with a hex color of white.
         self.plot_dict: Dict[str, List[Union[float, str]]] = {}
+        self.initialize_plot_dict()
 
         # Current overall trend. In order for a strategy to have a trend, only one singular trend should reign. If
         #  multiple trends are showing signs, nothing will execute.
@@ -39,22 +53,17 @@ class CustomStrategy:
         # Dictionary for holding params and their values.
         self.params = {}
 
-        # Dictionary for plotting values in graphs. This should hold string keys and float values. If a value is
-        # non-numeric, the program will crash. This should hold the key of the value and then a list containing
-        # the value then the color.
-
-        # For example -> self.plot_dict['SMA(5)'] = [13, 'ffffff'] -> SMA(5) value of 13 with a hex color of white.
-        self.plot_dict: Dict[str, List[Union[float, str]]] = {}
-
         # Dictionary for what's going on in the strategy. This needs two keys: one which is 'regular' and another
-        # which is 'lower'. The two keys will then hold dictionaries for the strategies' values in lower and regular
-        # interval data.
+        #  which is 'lower'. The two keys will then hold dictionaries for the strategies' values in lower and regular
+        #  interval data.
         self.strategy_dict: Dict[str, Dict[str, Any]] = {'regular': {}, 'lower': {}}
-        self.initialize_plot_dict()
 
     def initialize_plot_dict(self):
-        # TODO: Make trends consistent with variable names.
-        trends = {"Buy Long", "Sell Long", "Sell Short", "Buy Short"}
+        """
+        Initialize plot dictionary for custom strategies. This will loop through each indicator, gather outputs and
+         labels, and then create a dictionary with label/value pairs.
+        """
+        trends = {ENTER_LONG, EXIT_LONG, ENTER_SHORT, EXIT_SHORT}
         for trend, indicators in self.values.items():
             if trend not in trends:
                 continue
@@ -240,10 +249,10 @@ class CustomStrategy:
         input_arrays_dict = df.to_dict('series')
 
         trends = {
-            ENTER_LONG: self.get_trend_by_key('Buy Long', input_arrays_dict),
-            EXIT_LONG: self.get_trend_by_key('Sell Long', input_arrays_dict),
-            ENTER_SHORT: self.get_trend_by_key('Sell Short', input_arrays_dict),
-            EXIT_SHORT: self.get_trend_by_key('Buy Short', input_arrays_dict),
+            ENTER_LONG: self.get_trend_by_key(ENTER_LONG, input_arrays_dict),
+            EXIT_LONG: self.get_trend_by_key(EXIT_LONG, input_arrays_dict),
+            ENTER_SHORT: self.get_trend_by_key(ENTER_LONG, input_arrays_dict),
+            EXIT_SHORT: self.get_trend_by_key(EXIT_SHORT, input_arrays_dict),
         }
 
         true_trends = []
@@ -306,9 +315,7 @@ class CustomStrategy:
 
         current_minimum = 0
 
-        # TODO: Make trends consistent with variable names.
-        trends = {"Buy Long", "Sell Long", "Sell Short", "Buy Short"}
-
+        trends = {ENTER_LONG, EXIT_LONG, ENTER_SHORT, EXIT_SHORT}
         for trend, indicators in self.values.items():
             if trend not in trends:
                 continue

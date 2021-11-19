@@ -438,7 +438,7 @@ class IndicatorSelector(QDialog):
         Delete groupbox based on the indicator and groupbox provided.
 
         Sample from state:
-            {'Buy Long':
+            {'Enter Long':
                 {'33e14177-318b-426a-87ce-a6dde86955fe': {
                     'add_against_groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CA0>,
                     'against': None,

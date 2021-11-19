@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Dict, Optional
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
                              QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
+from algobot.enums import ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT
 from algobot.helpers import STRATEGIES_DIR
 from algobot.interface.builder.indicator_selector import IndicatorSelector
 from algobot.interface.utils import create_popup
@@ -42,10 +43,10 @@ class StrategyBuilder(QDialog):
         # Main tab widget that'll hold the tabs.
         self.main_tabs_widget = QTabWidget()
         self.tabs = {
-            'Buy Long': (QWidget(), QFormLayout()),
-            'Sell Long': (QWidget(), QFormLayout()),
-            'Sell Short': (QWidget(), QFormLayout()),
-            'Buy Short': (QWidget(), QFormLayout()),
+            ENTER_LONG: (QWidget(), QFormLayout()),
+            EXIT_LONG: (QWidget(), QFormLayout()),
+            ENTER_SHORT: (QWidget(), QFormLayout()),
+            EXIT_SHORT: (QWidget(), QFormLayout()),
         }
 
         for trend, (tab, tab_layout) in self.tabs.items():
@@ -101,10 +102,10 @@ class StrategyBuilder(QDialog):
         :return: Dictionary containing empty state.
         """
         return {
-            'Buy Long': {},
-            'Sell Long': {},
-            'Sell Short': {},
-            'Buy Short': {}
+            ENTER_LONG: {},
+            EXIT_LONG: {},
+            ENTER_SHORT: {},
+            EXIT_SHORT: {}
         }
 
     def restore_builder(self):
@@ -112,7 +113,7 @@ class StrategyBuilder(QDialog):
         Restore the builder to its initial state.
 
         Sample state item:
-            {'Buy Long':
+            {'Enter Long':
                 {'33e14177-318b-426a-87ce-a6dde86955fe': {
                     'add_against_groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CA0>,
                     'against': None,

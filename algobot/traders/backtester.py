@@ -89,7 +89,7 @@ class Backtester(Trader):
             raise RuntimeError(f"Your strategy interval ({self.strategy_interval_minutes} minute(s)) can't be smaller "
                                f"than the data interval ({self.interval_minutes} minute(s)).")
 
-        self.setup_strategies(strategies)
+        self.setup_strategies(strategies, short_circuit=True)
 
         self.start_date_index = self.get_start_index(start_date)
         self.end_date_index = self.get_end_index(end_date)
@@ -530,7 +530,7 @@ class Backtester(Trader):
                     strategy_values,
                     pretty_strategy_name
                 )
-                self.setup_strategies([temp_strategy_tuple])
+                self.setup_strategies([temp_strategy_tuple], short_circuit=True)
                 continue
 
             # TODO: Leverage kwargs instead of using indexed lists.
