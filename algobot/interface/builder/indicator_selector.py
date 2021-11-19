@@ -343,7 +343,7 @@ class IndicatorSelector(QDialog):
         self.add_against_radio_buttons(vbox, unique_identifier)
 
         # Add this populated groupbox to the parent (strategy builder) view.
-        section_layout = self.parent.main_layouts[self.trend]
+        section_layout = self.parent.tabs[self.trend][-1]
         section_layout.addRow(group_box)
 
         self.reset_and_hide()

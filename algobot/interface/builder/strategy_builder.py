@@ -1,10 +1,11 @@
 """
 Simple strategy builder.
 """
+
 import json
 import os
 import sys
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Dict
 
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
                              QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
@@ -46,31 +47,21 @@ class StrategyBuilder(QDialog):
         # Main tab widget that'll hold the tabs.
         self.main_tabs_widget = QTabWidget()
         self.tabs = {
-            'Buy Long': QWidget(),
-            'Sell Long': QWidget(),
-            'Sell Short': QWidget(),
-            'Buy Short': QWidget(),
+            'Buy Long': (QWidget(), QFormLayout()),
+            'Sell Long': (QWidget(), QFormLayout()),
+            'Sell Short': (QWidget(), QFormLayout()),
+            'Buy Short': (QWidget(), QFormLayout()),
         }
 
-        # Main layouts for each individual tab.
-        self.main_layouts = {
-            'Buy Long': QFormLayout(),
-            'Sell Long': QFormLayout(),
-            'Sell Short': QFormLayout(),
-            'Buy Short': QFormLayout()
-        }
-
-        for trend, tab_layout in self.main_layouts.items():
+        for trend, (tab, tab_layout) in self.tabs.items():
             add_indicator_button = QPushButton(f"Add {trend} Indicator")
 
             # We need to the store the func args here, or else it'll use the latest trend from the loop.
             add_indicator_button.clicked.connect(lambda _, strict_key=trend: self.open_indicator_selector(strict_key))
-
-            inner_tab = self.tabs[trend]
-            inner_tab.setLayout(tab_layout)
+            tab.setLayout(tab_layout)
 
             # Add this tab to the main tabs widget.
-            self.main_tabs_widget.addTab(inner_tab, trend)
+            self.main_tabs_widget.addTab(tab, trend)
 
             tab_layout.addRow(QLabel(trend))
             tab_layout.addRow(add_indicator_button)
@@ -107,6 +98,19 @@ class StrategyBuilder(QDialog):
         # Set minimum size equal to the main tab widget size. This ensures the strategy builder doesn't start small.
         self.setMinimumSize(self.main_tabs_widget.size())
 
+    @staticmethod
+    def get_empty_state() -> Dict[str, dict]:
+        """
+        Get an empty state.
+        :return: Dictionary containing empty state.
+        """
+        return {
+            'Buy Long': {},
+            'Sell Long': {},
+            'Sell Short': {},
+            'Buy Short': {}
+        }
+
     def restore_builder(self):
         """
         Restore the builder to its initial state.
@@ -124,9 +128,6 @@ class StrategyBuilder(QDialog):
 
         """
         for trend, trend_values in self.state.items():
-            if trend not in self.tabs:
-                continue
-
             for uuid, uuid_values in trend_values.items():
                 self.indicator_selector.delete_groupbox(
                     indicator=uuid_values['name'],
@@ -136,14 +137,7 @@ class StrategyBuilder(QDialog):
                     bypass_popup=True
                 )
 
-        # Reset state. TODO: Simplify this with init(). We'll manually resetting with keys here which is not ideal.
-        self.state = {
-            'Buy Long': {},
-            'Sell Long': {},
-            'Sell Short': {},
-            'Buy Short': {}
-        }
-
+        self.state = self.get_empty_state()
         self.strategy_name_input.setText("")
         self.description_input.setText("")
 
@@ -152,22 +146,22 @@ class StrategyBuilder(QDialog):
         Save strategy into a JSON format.
         """
         strategy_name = self.strategy_name_input.text()
-        self.state['name'] = strategy_name
-
-        description = self.description_input.text()
-        self.state['description'] = description if description else "No description provided."
-
         if not strategy_name.strip():
             create_popup(self, "No strategy name found. Please provide a name.")
             return
 
-        trend_keys = ('Sell Long', 'Buy Long', 'Sell Short', 'Buy Short')
-        if not any(self.state[trend_key] for trend_key in trend_keys):
+        if not any(self.state.values()):
             create_popup(self, "No trend indicators found. Please at least select one indicator.")
             return
 
-        parsed_dict = self.create_parsed_dict(self.state)
+        description = self.description_input.text()
+        parsed_dict = {
+            **self.state,
+            'name': strategy_name,
+            'description': description if description else "No description provided."
+        }
 
+        parsed_dict = self.create_parsed_dict(parsed_dict)
         if not os.path.exists(STRATEGIES_DIR):
             os.mkdir(STRATEGIES_DIR)
 
@@ -232,7 +226,10 @@ def except_hook(cls, exception, trace_back):
     sys.__excepthook__(cls, exception, trace_back)
 
 
-if __name__ == '__main__':
+def main():
+    """
+    Main function if run independently.
+    """
     app = QApplication(sys.argv)
 
     strategy_builder = StrategyBuilder()
@@ -240,3 +237,7 @@ if __name__ == '__main__':
 
     sys.excepthook = except_hook
     sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()
