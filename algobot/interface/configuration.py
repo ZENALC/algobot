@@ -16,7 +16,7 @@ from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
 from algobot.helpers import ROOT_DIR
 from algobot.interface.config_utils.credential_utils import load_credentials
-from algobot.interface.config_utils.slot_utils import load_slots
+from algobot.interface.config_utils.slot_utils import load_slots, load_custom_strategy_slots
 from algobot.interface.config_utils.strategy_utils import (add_strategy_inputs, delete_strategy_inputs,
                                                            get_strategies_dictionary, get_strategy_values,
                                                            strategy_enabled)
@@ -118,6 +118,18 @@ class Configuration(QDialog):
 
         load_slots(self)  # Loads stop loss, take profit, and strategies slots.
         load_credentials(self)  # Load credentials if they exist.
+
+    def reload_custom_strategies(self):
+        """
+        Reload custom strategies after creating a strategy.
+        """
+        self.json_strategies = get_json_strategies()
+        self.custom_strategies = [strategy['name'] for strategy in self.json_strategies]
+
+        self.hidden_strategies = set(self.strategies)
+        self.hidden_strategies.update(self.custom_strategies)
+
+        load_custom_strategy_slots(self)
 
     def enable_disable_hover_line(self):
         """

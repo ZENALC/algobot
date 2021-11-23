@@ -30,6 +30,7 @@ class StrategyBuilder(QDialog):
         """
         super(StrategyBuilder, self).__init__(parent)
         self.setWindowTitle('Strategy Builder')
+        self.parent = parent
 
         # Main indicator selector GUI.
         self.indicator_selector = IndicatorSelector(parent=self)
@@ -163,6 +164,9 @@ class StrategyBuilder(QDialog):
             json.dump(parsed_dict, f, indent=4)
 
         create_popup(self, f"Strategy {strategy_name} has been successfully created.")
+
+        if self.parent is not None:
+            self.parent.reload_custom_strategies()
 
     def create_parsed_dict(self, from_dict: dict, to_dict: dict) -> dict:
         """

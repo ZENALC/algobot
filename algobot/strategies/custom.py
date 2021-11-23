@@ -220,9 +220,9 @@ class CustomStrategy:
         # If there's no output index, we get the "real" value. The real value is nothing but the indicator, so we'll
         #  use leverage that for the label. However, if it does have an index, we'll get the verbose output from above.
         if output_index is None:
-            return f'{operation["indicator"]}({func_kwargs["timeperiod"]}) - {operation["price"]}'
+            return f'{operation["indicator"]}({func_kwargs.get("timeperiod", "None")}) - {operation["price"]}'
 
-        return f'{output_verbose}({func_kwargs["timeperiod"]}) - {operation["price"]}'
+        return f'{output_verbose}({func_kwargs.get("timeperiod", "None")}) - {operation["price"]}'
 
     def get_trend_by_key(self, key: str, input_arrays_dict: Dict[str, pd.Series]) -> bool:
         """
