@@ -196,13 +196,19 @@ class IndicatorSelector(QDialog):
         another_indicator_radio = QRadioButton('Another Indicator')
 
         vbox.addWidget(current_price_radio)
-        current_price_radio.toggled.connect(lambda: self.add_against_values(vbox, unique_identifier))
+        current_price_radio.toggled.connect(lambda *_args, trend=self.trend: self.add_against_values(
+            vbox, unique_identifier, trend=trend
+        ))
 
         vbox.addWidget(static_value_radio)
-        static_value_radio.toggled.connect(lambda: self.add_against_values(vbox, unique_identifier, 'static'))
+        static_value_radio.toggled.connect(lambda *_args, trend=self.trend: self.add_against_values(
+            vbox, unique_identifier, trend=trend, add_type='static'
+        ))
 
         vbox.addWidget(another_indicator_radio)
-        another_indicator_radio.toggled.connect(lambda: self.add_against_values(vbox, unique_identifier, 'indicator'))
+        another_indicator_radio.toggled.connect(lambda *_args, trend=self.trend: self.add_against_values(
+            vbox, unique_identifier, trend=trend, add_type='indicator'
+        ))
 
         # Default to current price radio selected.
         current_price_radio.setChecked(True)
@@ -363,14 +369,15 @@ class IndicatorSelector(QDialog):
         vbox.addWidget(operators_combobox)
         vbox.addWidget(QLabel("Against"))
 
-    def add_against_values(self, vbox: QVBoxLayout, unique_identifier: str, add_type: Optional[str] = None):
+    def add_against_values(self, vbox: QVBoxLayout, unique_identifier: str, trend: str, add_type: Optional[str] = None):
         """
         Add against UI element values.
         :param vbox: Vertical layout to add against values to. This vbox lives in the parent (strategy builder).
         :param unique_identifier: Unique identifier to distinguish in states.
+        :param trend: Trend to add against values for.
         :param add_type: Type of value to add.
         """
-        unique_dict = self.parent.state[self.trend][unique_identifier]
+        unique_dict = self.parent.state[trend][unique_identifier]
 
         add_against_groupbox = 'add_against_groupbox'
         against = 'against'
