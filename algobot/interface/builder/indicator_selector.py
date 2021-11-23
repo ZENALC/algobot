@@ -480,7 +480,7 @@ class IndicatorSelector(QDialog):
             # This will delete all the widgets the groupbox contains.
             groupbox.setParent(None)
 
-            # TODO: Resize only if smaller to become bigger?
+            # TODO: Resize only if window becomes smaller to make bigger?
             # Resize the parent to shrink once groupbox has been deleted.
             # if self.parent is not None:
             #     self.parent.adjustSize()
