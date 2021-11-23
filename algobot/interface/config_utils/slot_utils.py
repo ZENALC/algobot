@@ -144,7 +144,7 @@ def populate_custom_indicator(indicator: dict, inner_tab_layout: QFormLayout, va
     against = indicator['against']
     if isinstance(against, (float, int)):
         inner_tab_layout.addWidget(QLabel('Against static value defined below:'))
-        values['against'] = against_widget = get_default_widget(QDoubleSpinBox, against, None, 999999999)
+        values['against'] = against_widget = get_default_widget(QDoubleSpinBox, against, -99999, 99999)
         inner_tab_layout.addWidget(against_widget)
 
     elif against == 'current_price':

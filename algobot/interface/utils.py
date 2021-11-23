@@ -82,10 +82,10 @@ def get_param_obj(default_value: Union[float, int, str], param_name: str):
 
         # Annoying edge case where TALIB expects a float even though it should accept an int.
         elif param_name.lower() in {'nbdevdn', 'nbdevup'}:
-            return get_default_widget(QDoubleSpinBox, default_value, None, None)
+            return get_default_widget(QDoubleSpinBox, default_value, -99999, 99999)
 
         else:
-            return get_default_widget(QSpinBox, default_value, None, None)
+            return get_default_widget(QSpinBox, default_value, -99999, 99999)
 
     elif param_name == 'price':
         input_obj = QComboBox()
@@ -93,7 +93,7 @@ def get_param_obj(default_value: Union[float, int, str], param_name: str):
         return input_obj
 
     elif isinstance(default_value, float):
-        return get_default_widget(QDoubleSpinBox, default_value, None, None)
+        return get_default_widget(QDoubleSpinBox, default_value, -99999, 99999)
 
     elif isinstance(default_value, str):
         return QLineEdit()

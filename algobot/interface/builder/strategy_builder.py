@@ -166,7 +166,7 @@ class StrategyBuilder(QDialog):
         create_popup(self, f"Strategy {strategy_name} has been successfully created.")
 
         if self.parent is not None:
-            self.parent.reload_custom_strategies()
+            self.parent.configuration.reload_custom_strategies()
 
     def create_parsed_dict(self, from_dict: dict, to_dict: dict) -> dict:
         """

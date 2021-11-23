@@ -141,7 +141,7 @@ def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, f
     default_widget.setValue(default)
 
     # TODO: Hotfix for floats, but use a better method.
-    if widget is QDoubleSpinBox:
+    if widget is QDoubleSpinBox and minimum > -1:
         minimum = -1
 
     if minimum is not None:
