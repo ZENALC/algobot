@@ -222,7 +222,7 @@ class CustomStrategy:
         if output_index is None:
             return f'{operation["indicator"]}({func_kwargs["timeperiod"]}) - {operation["price"]}'
 
-        return f'{output_verbose}({func_kwargs["timeperiod"]})'
+        return f'{output_verbose}({func_kwargs["timeperiod"]}) - {operation["price"]}'
 
     def get_trend_by_key(self, key: str, input_arrays_dict: Dict[str, pd.Series]) -> bool:
         """
