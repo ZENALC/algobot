@@ -98,7 +98,7 @@ class IndicatorSelector(QDialog):
 
         self.helper = helper
         if helper is False:
-            self.temp_indicator_selector = IndicatorSelector(None, helper=True)
+            self.temp_indicator_selector = IndicatorSelector(self.parent, helper=True)
 
         # Callback for adding against indicator. This works okay because only one window is allowed regardless
         #  of how many indicators are created.
