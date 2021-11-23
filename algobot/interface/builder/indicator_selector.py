@@ -293,6 +293,7 @@ class IndicatorSelector(QDialog):
          elements.
 
         TODO: Consider refactoring this logic.
+        TODO: Fix bug where indicator selector makes strategy builder hide.
 
         """
         self.update_indicator()
