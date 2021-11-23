@@ -102,6 +102,17 @@ def get_param_obj(default_value: Union[float, int, str], param_name: str):
         raise ValueError("Unknown type of data encountered.")
 
 
+def clear_layout(layout):
+    """
+    Clear layout.
+    :param layout: Layout to clear.
+    """
+    while layout.count():
+        child = layout.takeAt(0)
+        if child.widget():
+            child.widget().deleteLater()
+
+
 def confirm_message_box(message: str, parent) -> bool:
     """
     Show a confirmation message box and return true if confirmed else false.

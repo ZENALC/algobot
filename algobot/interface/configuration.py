@@ -16,13 +16,13 @@ from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
 from algobot.helpers import ROOT_DIR
 from algobot.interface.config_utils.credential_utils import load_credentials
-from algobot.interface.config_utils.slot_utils import load_custom_strategy_slots, load_hide_show_strategies, load_slots
+from algobot.interface.config_utils.slot_utils import load_hide_show_strategies, load_slots
 from algobot.interface.config_utils.strategy_utils import (add_strategy_inputs, delete_strategy_inputs,
                                                            get_strategies_dictionary, get_strategy_values,
                                                            strategy_enabled)
 from algobot.interface.configuration_helpers import add_start_end_step_to_layout, get_default_widget, set_value
 # noinspection PyUnresolvedReferences
-from algobot.interface.utils import get_elements_from_combobox
+from algobot.interface.utils import clear_layout, get_elements_from_combobox
 from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import,unused-wildcard-import
 from algobot.strategies.loader import get_json_strategies
 from algobot.strategies.strategy import Strategy
@@ -129,7 +129,7 @@ class Configuration(QDialog):
         self.hidden_strategies = set(self.strategies)
         self.hidden_strategies.update(self.custom_strategies)
 
-        load_custom_strategy_slots(self)
+        clear_layout(self.hideStrategiesFormLayout)
         load_hide_show_strategies(self)
 
     def enable_disable_hover_line(self):

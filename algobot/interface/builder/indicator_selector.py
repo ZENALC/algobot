@@ -298,7 +298,7 @@ class IndicatorSelector(QDialog):
 
         """
         self.update_indicator()
-        self.hide()
+        # self.hide()
 
     def add_indicator(self):
         """
