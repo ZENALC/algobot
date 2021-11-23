@@ -106,7 +106,7 @@ class CustomStrategy:
             return self.cache[label], label
 
         func = abstract.Function(operation['indicator'])
-        val = func(input_arrays_dict, price=operation['price'], **kwargs)
+        val = func(input_arrays_dict, **kwargs)
 
         output_index, _output_verbose = operation['output']
         if output_index is not None:
@@ -197,7 +197,7 @@ class CustomStrategy:
         :param kwargs: Kwargs to filter out.
         :return: Filtered kwargs.
         """
-        ignored_keys = {'against', 'indicator', 'operator', 'price', 'output'}
+        ignored_keys = {'against', 'indicator', 'operator', 'output'}
 
         parsed = {key: value for key, value in kwargs.items() if key not in ignored_keys}
         for key, value in parsed.items():
