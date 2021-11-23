@@ -65,6 +65,9 @@ def get_json_strategies() -> list:
     Get JSON strategies.
     :return: List of JSON strategies.
     """
+    # Just in case if the directory doesn't already exist.
+    os.makedirs(STRATEGIES_DIR, exist_ok=True)
+
     # We must create absolute paths with os.path.join() or else we'll just get file names.
     strategy_files = [os.path.join(STRATEGIES_DIR, file_name) for file_name in os.listdir(STRATEGIES_DIR)
                       if file_name.lower().endswith('.json')]
