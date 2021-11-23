@@ -215,7 +215,7 @@ class Trader:
             else:
                 name = strategy_item['name']  # noqa
                 self.strategies[name] = CustomStrategy(
-                    trader=self, values=strategy_item, short_circuit=short_circuit  # noqa
+                    trader=self, values=strategy_item, short_circuit=short_circuit, precision=self.precision  # noqa
                 )
 
             self.min_period = max(self.strategies[name].get_min_option_period(), self.min_period)
