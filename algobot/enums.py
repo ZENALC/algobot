@@ -9,6 +9,9 @@ EXIT_LONG = "Exit Long"
 ENTER_SHORT = "Enter Short"
 EXIT_SHORT = "Exit Short"
 
+TRENDS = {ENTER_LONG, EXIT_LONG, ENTER_SHORT, EXIT_SHORT}
+ALL_TRENDS = {*TRENDS, BULLISH, BEARISH}
+
 
 class GraphType:
     """

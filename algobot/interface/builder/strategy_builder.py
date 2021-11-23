@@ -1,6 +1,7 @@
 """
 Simple strategy builder.
 """
+
 import json
 import os
 import sys
@@ -9,6 +10,7 @@ from typing import TYPE_CHECKING, Dict, Optional
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
                              QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
+from algobot.enums import TRENDS
 from algobot.helpers import STRATEGIES_DIR
 from algobot.interface.builder.indicator_selector import IndicatorSelector
 from algobot.interface.utils import create_popup
@@ -40,12 +42,7 @@ class StrategyBuilder(QDialog):
 
         # Main tab widget that'll hold the tabs.
         self.main_tabs_widget = QTabWidget()
-        self.tabs = {
-            'Buy Long': (QWidget(), QFormLayout()),
-            'Sell Long': (QWidget(), QFormLayout()),
-            'Sell Short': (QWidget(), QFormLayout()),
-            'Buy Short': (QWidget(), QFormLayout()),
-        }
+        self.tabs = {trend: (QWidget(), QFormLayout()) for trend in TRENDS}
 
         for trend, (tab, tab_layout) in self.tabs.items():
             add_indicator_button = QPushButton(f"Add {trend} Indicator")
@@ -99,19 +96,14 @@ class StrategyBuilder(QDialog):
         Get an empty state.
         :return: Dictionary containing empty state.
         """
-        return {
-            'Buy Long': {},
-            'Sell Long': {},
-            'Sell Short': {},
-            'Buy Short': {}
-        }
+        return {trend: {} for trend in TRENDS}
 
     def restore_builder(self):
         """
         Restore the builder to its initial state.
 
         Sample state item:
-            {'Buy Long':
+            {'Enter Long':
                 {'33e14177-318b-426a-87ce-a6dde86955fe': {
                     'add_against_groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CA0>,
                     'against': None,

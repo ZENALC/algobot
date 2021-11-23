@@ -24,6 +24,7 @@ from algobot.interface.configuration_helpers import add_start_end_step_to_layout
 # noinspection PyUnresolvedReferences
 from algobot.interface.utils import get_elements_from_combobox
 from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import,unused-wildcard-import
+from algobot.strategies.loader import get_json_strategies
 from algobot.strategies.strategy import Strategy
 
 if TYPE_CHECKING:
@@ -103,8 +104,14 @@ class Configuration(QDialog):
             self.optimizerConfigurationTabWidget
         ]
 
+        self.json_strategies = get_json_strategies()
+        self.custom_strategies = [strategy['name'] for strategy in self.json_strategies]
         self.strategies = get_strategies_dictionary(Strategy.__subclasses__())
-        self.hidden_strategies = set(self.strategies)  # Hidden strategies dynamically populated.
+
+        # Hidden strategies dynamically populated.
+        self.hidden_strategies = set(self.strategies)
+        self.hidden_strategies.update(self.custom_strategies)
+
         self.strategy_dict = {}  # We will store all the strategy slot information in this dictionary.
         self.loss_dict = {}  # We will store stop loss settings here.
         self.take_profit_dict = {}  # We will store take profit settings here.

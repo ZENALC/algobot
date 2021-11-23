@@ -45,6 +45,11 @@ def get_strategies(config_obj: Configuration, caller: int) -> List[tuple]:
             strategy_tuple = (strategy, values, strategy_name)
             strategies.append(strategy_tuple)
 
+    for custom_strategy in config_obj.json_strategies:
+        strategy_name = custom_strategy['name']
+        if strategy_enabled(config_obj, strategy_name, caller):
+            strategies.append(config_obj.strategy_dict[config_obj.get_category_tab(caller), strategy_name])
+
     return strategies
 
 
