@@ -16,7 +16,7 @@ from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
 from algobot.helpers import ROOT_DIR
 from algobot.interface.config_utils.credential_utils import load_credentials
-from algobot.interface.config_utils.slot_utils import load_slots, load_custom_strategy_slots
+from algobot.interface.config_utils.slot_utils import load_custom_strategy_slots, load_slots
 from algobot.interface.config_utils.strategy_utils import (add_strategy_inputs, delete_strategy_inputs,
                                                            get_strategies_dictionary, get_strategy_values,
                                                            strategy_enabled)
