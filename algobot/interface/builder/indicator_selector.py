@@ -480,9 +480,10 @@ class IndicatorSelector(QDialog):
             # This will delete all the widgets the groupbox contains.
             groupbox.setParent(None)
 
+            # TODO: Resize only if smaller to become bigger?
             # Resize the parent to shrink once groupbox has been deleted.
-            if self.parent is not None:
-                self.parent.adjustSize()
+            # if self.parent is not None:
+            #     self.parent.adjustSize()
 
     def update_indicators(self, normalize: bool = True):
         """
