@@ -11,7 +11,7 @@ import pandas as pd
 from PyQt5.QtWidgets import QWidget
 from talib import abstract
 
-from algobot.enums import TRENDS
+from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, TRENDS
 from algobot.helpers import get_random_color
 from algobot.interface.configuration_helpers import get_input_widget_value
 from algobot.interface.utils import MOVING_AVERAGE_TYPES_BY_NAME
@@ -278,11 +278,14 @@ class CustomStrategy:
 
         if len(true_trends) == 1:
             self.trend = true_trends.pop()
-            return self.trend
+        elif all(trend in (EXIT_LONG, ENTER_SHORT) for trend in true_trends):
+            self.trend = BEARISH
+        elif all(trend in (ENTER_LONG, EXIT_SHORT) for trend in true_trends):
+            self.trend = BULLISH
+        else:
+            self.trend = None
 
-        # There was more than 1 trend or 0 trends, so return no trend.
-        self.trend = None
-        return None
+        return self.trend
 
     def get_current_trader_price(self):
         """
