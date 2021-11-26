@@ -281,10 +281,10 @@ class IndicatorSelector(QDialog):
             row = (QLabel(PARAMETER_MAP.get(param_name, param_name)), input_obj)
             self.info_layout.addRow(*row)
 
-        # TODO: Test out?
-        # if len(parameters) == 0:
-        #     self.info_layout.addRow(QLabel("No parameters found. Cannot submit this indicator right now."))
-        #     self.submit_button.setEnabled(False)
+        # TODO: Add support for indicators that return candlesticks.
+        if len(parameters) == 0:
+            self.info_layout.addRow(QLabel("No parameters found. Cannot submit this indicator right now."))
+            self.submit_button.setEnabled(False)
 
     def reset_and_hide(self):
         """
