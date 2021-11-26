@@ -3,10 +3,10 @@ Slots helper functions for configuration.py can be found here.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
-from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QHBoxLayout, QLabel, QScrollArea,
-                             QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QHBoxLayout, QLabel, QPushButton,
+                             QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, TRENDS
@@ -25,7 +25,7 @@ from algobot.interface.config_utils.user_config_utils import (copy_config_helper
                                                               save_simulation_settings)
 from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, create_inner_tab, get_default_widget,
                                                      get_regular_groupbox_and_layout)
-from algobot.interface.utils import OPERATORS, PARAMETER_MAP, get_param_obj
+from algobot.interface.utils import OPERATORS, PARAMETER_MAP, get_bold_font, get_param_obj
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
@@ -78,7 +78,13 @@ def load_hide_show_strategies(config_obj: Configuration):
         load_strategy_slots(config_obj)
         load_custom_strategy_slots(config_obj)
 
-    c_boxes = []
+    strategies_label = QLabel('Strategies')
+    strategies_label.setFont(get_bold_font())
+
+    clear_button = QPushButton("Clear all strategies")
+    config_obj.hideStrategiesFormLayout.addRow(strategies_label, clear_button)
+
+    c_boxes: List[QCheckBox] = []
     for strategy_name in [*config_obj.strategies.keys(), *config_obj.custom_strategies]:
         c_boxes.append(QCheckBox())
 
@@ -90,6 +96,9 @@ def load_hide_show_strategies(config_obj: Configuration):
         # pylint: disable=cell-var-from-loop
         c_boxes[-1].toggled.connect(lambda *_, a=c_boxes[-1], s=strategy_name: hide_strategies(a, s))
         config_obj.hideStrategiesFormLayout.addRow(strategy_name, c_boxes[-1])
+
+    # TODO: This is not efficient at all. Just a hacky fix for the time being; it'll rerender on every untick.
+    clear_button.clicked.connect(lambda: [c_box.setChecked(False) for c_box in c_boxes])
 
 
 def delete_strategy_slots(config_obj: Configuration):
