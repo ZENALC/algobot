@@ -14,7 +14,7 @@ from talib import abstract
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, TRENDS
 from algobot.helpers import get_random_color
 from algobot.interface.configuration_helpers import get_input_widget_value
-from algobot.interface.utils import MOVING_AVERAGE_TYPES_BY_NAME
+from algobot.interface.utils import MOVING_AVERAGE_TYPES_BY_NAME, PRICE_TYPES
 
 
 class CustomStrategy:
@@ -265,8 +265,9 @@ class CustomStrategy:
             if not self.in_lower_interval:
                 self.plot_dict[label][0] = val  # The 2nd value is the color, so we only update the value.
 
-            if operation['against'] == 'current_price':
-                against_val = self.get_current_trader_price()
+            if operation['against'] in PRICE_TYPES:
+                price_type = operation['against'].lower()
+                against_val = input_arrays_dict[price_type].iloc[-1]
             elif isinstance(operation['against'], (float, int)):
                 against_val = operation['against']
             else:
@@ -314,7 +315,9 @@ class CustomStrategy:
             if trend_status is True:
                 true_trends.append(trend_name)
 
-        if len(true_trends) == 1:
+        if len(true_trends) == 0:
+            self.trend = None
+        elif len(true_trends) == 1:
             self.trend = true_trends.pop()
         elif all(trend in (EXIT_LONG, ENTER_SHORT) for trend in true_trends):
             self.trend = BEARISH

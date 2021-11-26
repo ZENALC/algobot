@@ -577,6 +577,7 @@ class SimulationTrader(Trader):
             self.output_no_position_information()
 
         self.output_message(f'\nCurrent {self.coin_name} price: ${self.current_price}')
+        self.output_message(f'\nCurrent values: {self.data_view.current_values}')
         self.output_message(f'Balance: ${round(self.balance, self.precision)}')
         self.output_profit_information()
         if type(self) == SimulationTrader:  # pylint: disable=unidiomatic-typecheck

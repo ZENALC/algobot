@@ -25,7 +25,7 @@ from algobot.interface.config_utils.user_config_utils import (copy_config_helper
                                                               save_simulation_settings)
 from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, create_inner_tab, get_default_widget,
                                                      get_regular_groupbox_and_layout)
-from algobot.interface.utils import OPERATORS, PARAMETER_MAP, clear_layout, get_bold_font, get_param_obj
+from algobot.interface.utils import OPERATORS, PARAMETER_MAP, PRICE_TYPES, clear_layout, get_bold_font, get_param_obj
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
@@ -166,8 +166,10 @@ def populate_custom_indicator(indicator: dict, inner_tab_layout: QFormLayout, va
         inner_tab_layout.addWidget(against_widget)
 
     elif against == 'current_price':
-        inner_tab_layout.addWidget(QLabel("Bot will execute against current price."))
-        values['against'] = 'current_price'
+        inner_tab_layout.addWidget(QLabel("Bot will execute against current price type selected below:"))
+        values['against'] = against_widget = QComboBox()
+        against_widget.addItems(PRICE_TYPES)
+        inner_tab_layout.addWidget(against_widget)
 
     else:
         # It must be against another indicator then.

@@ -18,6 +18,7 @@ from algobot.interface.configuration_helpers import get_default_widget
 MOVING_AVERAGE_TYPES_BY_NUM = vars(talib.MA_Type)['_lookup']
 MOVING_AVERAGE_TYPES_BY_NAME = {v: k for k, v in MOVING_AVERAGE_TYPES_BY_NUM.items()}
 MOVING_AVERAGES_LIST = list(MOVING_AVERAGE_TYPES_BY_NAME.keys())
+PRICE_TYPES = ['Open', 'High', 'Low', 'Close', 'Open/Close', 'High/Low']
 
 OPERATORS = ['>', '<', '>=', '<=', '==', '!=']
 
@@ -89,7 +90,7 @@ def get_param_obj(default_value: Union[float, int, str], param_name: str):
 
     elif param_name == 'price':
         input_obj = QComboBox()
-        input_obj.addItems(['Open', 'High', 'Low', 'Close', 'Open/Close', 'High/Low'])
+        input_obj.addItems(PRICE_TYPES)
         return input_obj
 
     elif isinstance(default_value, float):
