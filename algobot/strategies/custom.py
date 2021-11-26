@@ -38,6 +38,10 @@ class CustomStrategy:
         self.short_circuit = short_circuit
         self.values: Dict[str, Any] = self.parse_values(values)
 
+        # These are dynamically set by the get_trend() function.
+        self.log_data: bool = False
+        self.in_lower_interval: bool = False
+
         # Store cache to avoid calculating again.
         self.cache = {}
 
@@ -92,7 +96,7 @@ class CustomStrategy:
             get_arr: bool = False
     ) -> Tuple[Union[pd.Series, int, float], str]:
         """
-        Create indicator value and label.
+        Get indicator value and label. This also logs the value and label. TODO: Why log here? Separate it.
         :param operation: Dictionary containing indicator operation information in a dictionary.
         :param input_arrays_dict: Dictionary containing price type as key and price values as value.
         :param get_arr: Boolean whether to get entire array of results from TALIB or singular result value.
@@ -115,6 +119,10 @@ class CustomStrategy:
         if get_arr:
             return val, label
 
+        # TODO: Fix this. Very ugly solution.
+        if self.log_data and hasattr(self.trader, 'output_message'):
+            self.trader.output_message(f'{label}: {val[-1]}')
+
         self.cache[label] = val[-1]
         return val[-1], label
 
@@ -125,9 +133,13 @@ class CustomStrategy:
         :param grouped_dict: Grouped dictionary (strategy key) to populate.
         :return: None
         """
-        for interval_dict in self.strategy_dict.values():
+        for interval_type, interval_dict in self.strategy_dict.items():
             for key, value in interval_dict.items():
-                grouped_dict[key] = value if not isinstance(value, float) else round(value, self.precision)
+                grouped_dict_key = key
+                if interval_type == 'lower':
+                    grouped_dict_key += ' (Lower)'
+
+                grouped_dict[grouped_dict_key] = value if not isinstance(value, float) else round(value, self.precision)
 
     def parse_values(self, values: dict):
         """
@@ -216,13 +228,21 @@ class CustomStrategy:
         :return: Prettified label.
         """
         output_index, output_verbose = operation['output']
+        price = operation['price'].capitalize()
 
         # If there's no output index, we get the "real" value. The real value is nothing but the indicator, so we'll
-        #  use leverage that for the label. However, if it does have an index, we'll get the verbose output from above.
+        #  leverage that for the label. However, if it does have an index, we'll get the verbose output from above.
         if output_index is None:
-            return f'{operation["indicator"]}({func_kwargs.get("timeperiod", "None")}) - {operation["price"]}'
+            return f'{operation["indicator"]}({func_kwargs.get("timeperiod", "No Timeperiod")}) - {price}'
 
-        return f'{output_verbose}({func_kwargs.get("timeperiod", "None")}) - {operation["price"]}'
+        return f'{output_verbose}({func_kwargs.get("timeperiod", "No Timeperiod")}) - {price}'
+
+    def get_interval_type(self):
+        """
+        Get interval type whether it's lower or regular.
+        :return: Interval type.
+        """
+        return 'lower' if self.in_lower_interval else 'regular'
 
     def get_trend_by_key(self, key: str, input_arrays_dict: Dict[str, pd.Series]) -> bool:
         """
@@ -235,11 +255,15 @@ class CustomStrategy:
         if not indicators:  # Nothing provided as an input for this trend.
             return False
 
+        interval_type = self.get_interval_type()
         trends = []
         for operation in indicators.values():
             val, label = self.get_indicator_val_and_label(operation, input_arrays_dict)
-            self.strategy_dict['regular'][label] = val
-            self.plot_dict[label][0] = val  # The 2nd value is the color, so we only update the value.
+            self.strategy_dict[interval_type][label] = val
+
+            # TODO: This is ugly. Refactor.
+            if not self.in_lower_interval:
+                self.plot_dict[label][0] = val  # The 2nd value is the color, so we only update the value.
 
             if operation['against'] == 'current_price':
                 against_val = self.get_current_trader_price()
@@ -247,8 +271,11 @@ class CustomStrategy:
                 against_val = operation['against']
             else:
                 against_val, against_label = self.get_indicator_val_and_label(operation['against'], input_arrays_dict)
-                self.strategy_dict['regular'][against_label] = against_val
-                self.plot_dict[against_label][0] = against_val
+                self.strategy_dict[interval_type][against_label] = against_val
+
+                # TODO: Ugly. We don't want to initialize plot dictionaries for lower intervals, do we?
+                if not self.in_lower_interval:
+                    self.plot_dict[against_label][0] = against_val
 
             result = eval(f'{val} {operation["operator"]} {against_val}')  # pylint: disable=eval-used
             trends.append(result)
@@ -257,18 +284,29 @@ class CustomStrategy:
                 break
 
         trend_sentiment = all(trends)
-        self.strategy_dict['regular'][key] = str(trend_sentiment)
+        self.strategy_dict[interval_type][key] = str(trend_sentiment)
         # Return true if all trends are true, else false.
         return trend_sentiment
 
-    def get_trend(self, input_arrays_dict: Dict[str, pd.Series], cache: Optional[Dict[str, Any]] = None):
+    def get_trend(self, input_arrays_dict: Dict[str, pd.Series], cache: Optional[Dict[str, Any]] = None,
+                  log_data: bool = False, in_lower_interval: bool = False):
         """
         There must be only one trend. If multiple trends are true, then return no trend.
         :param cache: Cache to use to avoid reevaluating trends.
         :param input_arrays_dict: Dictionary containing price as key and price values as value.
+        :param log_data: Boolean whether to log data or not.
+        :param in_lower_interval: Boolean whether in lower interval or not.
         :return: Trend.
         """
         self.cache = {} if cache is None else cache
+        self.log_data = log_data
+        self.in_lower_interval = in_lower_interval
+
+        # TODO: Fix this. Very ugly solution.
+        if self.log_data and hasattr(self.trader, 'output_message'):
+            label = 'lower' if in_lower_interval else 'regular'
+            self.trader.output_message(f'\nInformation for {label} interval data:')
+
         trends = {trend: self.get_trend_by_key(trend, input_arrays_dict) for trend in TRENDS}
 
         true_trends = []
@@ -330,6 +368,7 @@ class CustomStrategy:
             'low': np_arr,
             'open': np_arr,
             'close': np_arr,
+            'volume': np_arr,
             'open/close': np_arr,
             'high/low': np_arr
         }

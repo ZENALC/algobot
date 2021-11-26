@@ -340,11 +340,13 @@ class SimulationTrader(Trader):
             self.sell_short_price = self.short_trailing_price = self.current_price
             self.add_trade(msg, force=force, smart_enter=smart_enter)
 
-    def get_trend(self, dataObject: Data = None, log_data: bool = False) -> Union[int, None]:
+    def get_trend(self, dataObject: Data = None, log_data: bool = False, in_lower_interval: bool = False
+                  ) -> Union[int, None]:
         """
         Returns trend based on the strategies provided.
         :param dataObject: Data object to use to retrieve trend.
         :param log_data: Boolean whether data should be logged or not.
+        :param in_lower_interval: Boolean whether in lower interval or not.
         :return: Integer in the form of an enum.
         """
         if not dataObject:  # We usually only pass the dataObject for a lower interval.
@@ -361,7 +363,10 @@ class SimulationTrader(Trader):
             strategy.get_trend(df=df, data=dataObject, log_data=log_data)
 
             if not isinstance(strategy, CustomStrategy) else strategy.get_trend(
-                input_arrays_dict=input_arrays_dict, cache=cache
+                input_arrays_dict=input_arrays_dict,
+                cache=cache,
+                log_data=log_data,
+                in_lower_interval=in_lower_interval
             )
 
             for strategy in self.strategies.values()]

@@ -309,7 +309,8 @@ class BotThread(QRunnable):
             trader: SimulationTrader = self.gui.get_trader(caller)
             lower_data = self.gui.get_lower_interval_data(caller)
             lower_data.get_current_data()
-            lower_trend = trader.get_trend(dataObject=lower_data, log_data=self.gui.advanced_logging)
+            lower_trend = trader.get_trend(dataObject=lower_data, log_data=self.gui.advanced_logging,
+                                           in_lower_interval=True)
             self.lower_trend = str(lower_trend)
             if previous_lower_trend != lower_trend:
                 message = f'{self.lower_trend.capitalize()} trend detected on lower interval data.'
