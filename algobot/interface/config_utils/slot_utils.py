@@ -92,7 +92,7 @@ def load_hide_show_strategies(config_obj: Configuration):
     strategies_label.setFont(get_bold_font())
 
     clear_button = QPushButton("Clear all strategies")
-    clear_button.clicked.connect(lambda: clear_strategy_checkboxes())
+    clear_button.clicked.connect(clear_strategy_checkboxes)
 
     config_obj.hideStrategiesFormLayout.addRow(strategies_label, clear_button)
 
