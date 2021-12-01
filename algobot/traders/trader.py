@@ -7,6 +7,7 @@ from typing import Dict, List, Union
 
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import get_label_string, parse_strategy_name
+from algobot.strategies.custom import CustomStrategy
 from algobot.strategies.strategy import Strategy
 
 
@@ -26,7 +27,7 @@ class Trader:
         self.commissions_paid = 0  # Total commissions paid this bot run.
         self.precision = precision  # Precision to round data to.
         self.trades = []  # All trades performed.
-        self.strategies: Dict[str, Strategy] = {}
+        self.strategies: Dict[str, Union[Strategy, CustomStrategy]] = {}
 
         self.starting_time = datetime.utcnow()  # Starting time in UTC.
         self.ending_time = None  # Ending time for previous bot run.
@@ -192,19 +193,31 @@ class Trader:
         if 'safetyTimer' in loss_dict:
             self.set_safety_timer(loss_dict['safetyTimer'])
 
-    def setup_strategies(self, strategies: List[tuple]):
+    def setup_strategies(self, strategies: List[Union[tuple, dict]], short_circuit: bool = False):
         """
         Sets up strategies from list of strategies provided.
         :param strategies: List of strategies to set up and apply to bot.
+        :param short_circuit: Whether you want to short circuit strategy or not. More documentation can be found in
+         the Custom strategy class.
         """
         # TODO: Use data classes for strategy "tuples".
-        for strategy_tuple in strategies:
-            strategy_class = strategy_tuple[0]
-            values = strategy_tuple[1]
-            name = parse_strategy_name(strategy_tuple[2])
+        if not isinstance(strategies, list):
+            strategies = [strategies]
 
-            # TODO: Leverage kwargs to initialize strategies.
-            self.strategies[name] = strategy_class(parent=self, inputs=values, precision=self.precision)
+        for strategy_item in strategies:
+            if isinstance(strategy_item, tuple):
+                strategy_class = strategy_item[0]
+                values = strategy_item[1]
+                name = parse_strategy_name(strategy_item[2])
+
+                # TODO: Leverage kwargs to initialize strategies.
+                self.strategies[name] = strategy_class(parent=self, inputs=values, precision=self.precision)
+            else:
+                name = strategy_item['name']  # noqa
+                self.strategies[name] = CustomStrategy(
+                    trader=self, values=strategy_item, short_circuit=short_circuit, precision=self.precision  # noqa
+                )
+
             self.min_period = max(self.strategies[name].get_min_option_period(), self.min_period)
 
     def handle_trailing_prices(self):
@@ -274,7 +287,7 @@ class Trader:
         if strategy_name not in self.strategies:
             return 'Strategy not found.'
         else:
-            return f"{', '.join(map(str, self.strategies[strategy_name].get_params()))}"
+            return ', '.join(map(str, self.strategies[strategy_name].get_params()))
 
     def get_strategies_info_string(self, left: str = '\t', right: str = '\n'):
         """

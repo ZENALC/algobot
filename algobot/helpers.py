@@ -23,6 +23,7 @@ from algobot.typing_hints import DictType
 
 LOG_FOLDER = 'Logs'
 STRATEGIES_FOLDER = 'Strategies'
+UNKNOWN = 'unknown'
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -59,7 +60,7 @@ def get_latest_version() -> str:
         version = response.content.decode().strip()
     except Exception as e:
         algobot.MAIN_LOGGER.exception(repr(e))
-        version = 'unknown'
+        version = UNKNOWN
     return version
 
 
@@ -70,12 +71,44 @@ def get_current_version() -> str:
     version_file = os.path.join(ROOT_DIR, 'version.txt')
 
     if not os.path.isfile(version_file):
-        version = 'not found'
+        return UNKNOWN
     else:
         with open(version_file, encoding='utf-8') as f:
             version = f.read().strip()
 
-    return version
+            version_split = version.split('.')
+            for split_item in version_split:
+                if not split_item.isdigit():
+                    return UNKNOWN
+
+        return version
+
+
+def compare_versions(x: str, y: str) -> Optional[str]:
+    """
+    Compare two versions and return the higher one or either if they're equal.
+    :param x: First version to compare.
+    :param y: Second version to compare.
+    :return: Higher version.
+    """
+    x_split = x.split('.')
+    y_split = y.split('.')
+
+    # They must both contain valid integers.
+    if not ''.join(x_split).isdigit() or not ''.join(y_split).isdigit():
+        return None
+
+    shorter, longer = x_split, y_split
+    if len(y_split) < len(x_split):
+        shorter, longer = y_split, x_split
+
+    for index, num in enumerate(shorter):
+        if num > longer[index]:
+            return '.'.join(shorter)
+        elif num < longer[index]:
+            return '.'.join(longer)
+
+    return '.'.join(longer)
 
 
 def is_debug() -> bool:

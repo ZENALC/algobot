@@ -106,7 +106,9 @@ def get_input_widget_value(input_widget: QWidget, verbose: bool = False):
     :param input_widget: Input widget to try to get the value of.
     :return: Value of inputWidget object.
     """
-    if isinstance(input_widget, (QSpinBox, QDoubleSpinBox)):
+    if isinstance(input_widget, QDoubleSpinBox):
+        return float(input_widget.value())
+    elif isinstance(input_widget, QSpinBox):
         return input_widget.value()
     elif isinstance(input_widget, QLineEdit):
         return input_widget.text()
@@ -139,7 +141,7 @@ def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, f
     default_widget.setValue(default)
 
     # TODO: Hotfix for floats, but use a better method.
-    if widget is QDoubleSpinBox:
+    if widget is QDoubleSpinBox and minimum > -1:
         minimum = -1
 
     if minimum is not None:

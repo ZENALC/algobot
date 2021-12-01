@@ -12,6 +12,7 @@ import pandas as pd
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT
 from algobot.helpers import convert_small_interval, get_logger
+from algobot.strategies.custom import CustomStrategy
 from algobot.traders.trader import Trader
 
 
@@ -146,7 +147,6 @@ class SimulationTrader(Trader):
         :param grouped_dict: Dictionary to add strategy information to.
         """
         for strategy_name, strategy in self.strategies.items():
-
             grouped_dict[strategy_name] = {
                 'trend': str(strategy.trend),
                 'enabled': 'True',
@@ -340,11 +340,13 @@ class SimulationTrader(Trader):
             self.sell_short_price = self.short_trailing_price = self.current_price
             self.add_trade(msg, force=force, smart_enter=smart_enter)
 
-    def get_trend(self, dataObject: Data = None, log_data: bool = False) -> Union[int, None]:
+    def get_trend(self, dataObject: Data = None, log_data: bool = False, in_lower_interval: bool = False
+                  ) -> Union[int, None]:
         """
         Returns trend based on the strategies provided.
         :param dataObject: Data object to use to retrieve trend.
         :param log_data: Boolean whether data should be logged or not.
+        :param in_lower_interval: Boolean whether in lower interval or not.
         :return: Integer in the form of an enum.
         """
         if not dataObject:  # We usually only pass the dataObject for a lower interval.
@@ -353,9 +355,22 @@ class SimulationTrader(Trader):
         df = pd.DataFrame(dataObject.data + [dataObject.current_values])
         df['high/low'] = (df['high'] + df['low']) / 2
         df['open/close'] = (df['open'] + df['close']) / 2
+        df.columns = [c.lower() for c in df.columns]
+        input_arrays_dict = df.to_dict('series')
+        cache = {}
 
-        trends = [strategy.get_trend(df=df, data=dataObject, log_data=log_data)
-                  for strategy in self.strategies.values()]
+        trends = [
+            strategy.get_trend(df=df, data=dataObject, log_data=log_data)
+
+            if not isinstance(strategy, CustomStrategy) else strategy.get_trend(
+                input_arrays_dict=input_arrays_dict,
+                cache=cache,
+                log_data=log_data,
+                in_lower_interval=in_lower_interval
+            )
+
+            for strategy in self.strategies.values()]
+
         return self.get_cumulative_trend(trends=trends)
 
     def short_position_logic(self, trend):
@@ -562,6 +577,7 @@ class SimulationTrader(Trader):
             self.output_no_position_information()
 
         self.output_message(f'\nCurrent {self.coin_name} price: ${self.current_price}')
+        self.output_message(f'\nCurrent values: {self.data_view.current_values}')
         self.output_message(f'Balance: ${round(self.balance, self.precision)}')
         self.output_profit_information()
         if type(self) == SimulationTrader:  # pylint: disable=unidiomatic-typecheck

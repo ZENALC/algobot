@@ -22,6 +22,7 @@ from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, 
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR, convert_all_dates_to_datetime, convert_small_interval,
                              get_interval_minutes, parse_strategy_name)
 from algobot.interface.config_utils.strategy_utils import get_strategies_dictionary
+from algobot.strategies.custom import CustomStrategy
 from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 from algobot.typing_hints import DataType, DictType
@@ -88,7 +89,7 @@ class Backtester(Trader):
             raise RuntimeError(f"Your strategy interval ({self.strategy_interval_minutes} minute(s)) can't be smaller "
                                f"than the data interval ({self.interval_minutes} minute(s)).")
 
-        self.setup_strategies(strategies)
+        self.setup_strategies(strategies, short_circuit=True)
 
         self.start_date_index = self.get_start_index(start_date)
         self.end_date_index = self.get_end_index(end_date)
@@ -217,12 +218,19 @@ class Backtester(Trader):
         :param thread: Thread object (if exists).
         :return: String "CRASHED" if an error is raised, else None if everything goes smoothly.
         """
+        cache = {}
+        df = pd.DataFrame(strategy_data[-250:])
+        df['high/low'] = (df['high'] + df['low']) / 2
+        df['open/close'] = (df['open'] + df['close']) / 2
+        df.columns = [c.lower() for c in df.columns]
+        input_arrays_dict = df.to_dict('series')
+
         for strategy in self.strategies.values():
             try:
-                df = pd.DataFrame(strategy_data[-250:])
-                df['high/low'] = (df['high'] + df['low']) / 2
-                df['open/close'] = (df['open'] + df['close']) / 2
-                strategy.get_trend(df, data=strategy_data)
+                if isinstance(strategy, CustomStrategy):
+                    strategy.get_trend(input_arrays_dict, cache)
+                else:
+                    strategy.get_trend(df, data=strategy_data)
             except Exception as e:
                 if thread and thread.caller == OPTIMIZER:
                     error_message = traceback.format_exc()
@@ -524,7 +532,7 @@ class Backtester(Trader):
                     strategy_values,
                     pretty_strategy_name
                 )
-                self.setup_strategies([temp_strategy_tuple])
+                self.setup_strategies([temp_strategy_tuple], short_circuit=True)
                 continue
 
             # TODO: Leverage kwargs instead of using indexed lists.

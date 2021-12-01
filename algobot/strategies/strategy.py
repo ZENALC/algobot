@@ -41,7 +41,7 @@ class Strategy:
         # Dictionary for plotting values in graphs. This should hold string keys and float values. If a value is
         # non-numeric, the program will crash. This should hold the key of the value and then the list containing
         # the value then the color.
-        #
+
         # For example -> self.plot_dict['SMA(5)'] = [13, 'ffffff'] -> SMA(5) value of 13 with a hex color of white.
         self.plot_dict: Dict[str, List[Union[float, str]]] = {}
 

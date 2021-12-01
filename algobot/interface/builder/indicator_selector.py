@@ -6,12 +6,13 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, OrderedDict
 from uuid import uuid4
 
 import talib
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel, QLineEdit, QMessageBox,
-                             QPushButton, QRadioButton, QSpinBox, QVBoxLayout)
+from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel, QPushButton,
+                             QRadioButton, QVBoxLayout)
 from talib import abstract
 
-from algobot.interface.configuration_helpers import get_default_widget, get_h_line
-from algobot.interface.utils import get_bold_font, get_v_spacer
+from algobot.interface.configuration_helpers import get_h_line
+from algobot.interface.utils import (OPERATORS, PARAMETER_MAP, confirm_message_box, get_bold_font, get_param_obj,
+                                     get_v_spacer)
 
 if TYPE_CHECKING:
     # Strategy builder calls indicator selector, so we can't just simply import strategy builder for hinting here.
@@ -44,11 +45,6 @@ class IndicatorSelector(QDialog):
     # Mapping between raw and parsed indicators. We display parsed on the frontend, but we'll store in raw format.
     RAW_TO_PARSED_INDICATORS = get_normalized_indicator_map()
     PARSED_TO_RAW_INDICATORS = {v: k for k, v in RAW_TO_PARSED_INDICATORS.items()}
-
-    # TALIB sets moving averages by numbers. This is not very appealing in the frontend, so we'll map it to its
-    #  appropriate moving average.
-    MOVING_AVERAGE_TYPES_BY_NUM = vars(talib.MA_Type)['_lookup']
-    MOVING_AVERAGE_TYPES_BY_NAME = MOVING_AVERAGE_TYPES_BY_NUM.items()
 
     def __init__(
             self,
@@ -102,7 +98,7 @@ class IndicatorSelector(QDialog):
 
         self.helper = helper
         if helper is False:
-            self.temp_indicator_selector = IndicatorSelector(None, helper=True)
+            self.temp_indicator_selector = IndicatorSelector(self.parent, helper=True)
 
         # Callback for adding against indicator. This works okay because only one window is allowed regardless
         #  of how many indicators are created.
@@ -200,13 +196,19 @@ class IndicatorSelector(QDialog):
         another_indicator_radio = QRadioButton('Another Indicator')
 
         vbox.addWidget(current_price_radio)
-        current_price_radio.toggled.connect(lambda: self.add_against_values(vbox, unique_identifier))
+        current_price_radio.toggled.connect(lambda *_args, trend=self.trend: self.add_against_values(
+            vbox, unique_identifier, trend=trend
+        ))
 
         vbox.addWidget(static_value_radio)
-        static_value_radio.toggled.connect(lambda: self.add_against_values(vbox, unique_identifier, 'static'))
+        static_value_radio.toggled.connect(lambda *_args, trend=self.trend: self.add_against_values(
+            vbox, unique_identifier, trend=trend, add_type='static'
+        ))
 
         vbox.addWidget(another_indicator_radio)
-        another_indicator_radio.toggled.connect(lambda: self.add_against_values(vbox, unique_identifier, 'indicator'))
+        another_indicator_radio.toggled.connect(lambda *_args, trend=self.trend: self.add_against_values(
+            vbox, unique_identifier, trend=trend, add_type='indicator'
+        ))
 
         # Default to current price radio selected.
         current_price_radio.setChecked(True)
@@ -264,7 +266,7 @@ class IndicatorSelector(QDialog):
         #  submissions. Note if len(parameters) == 0, we disable this submission button.
         self.submit_button.setEnabled(True)
 
-        # Initialize state with just the name. We don't need anything else. Operand and against will be populated once
+        # Initialize state with just the name. We don't need anything else. Operator and against will be populated once
         #  the user fills them in. Note that Algobot will automatically populate the strategy UI elements from just the
         #  strategy name.
         self.state = {
@@ -272,27 +274,14 @@ class IndicatorSelector(QDialog):
         }
 
         parameters = indicator_info['parameters']
-        for param_name, param in parameters.items():
-            if isinstance(param, int):
-                # TALIB stores MA types as ints. So, we must see what that num maps to.
-                if param_name == 'matype':
-                    input_obj = QLineEdit()
-                    input_obj.setText(self.MOVING_AVERAGE_TYPES_BY_NUM[param])
-                else:
-                    input_obj = get_default_widget(QSpinBox, param, None, None)
-
-            elif isinstance(param, float):
-                input_obj = get_default_widget(QDoubleSpinBox, param, None, None)
-            elif isinstance(param, str):
-                input_obj = QLineEdit()
-            else:
-                raise ValueError("Unknown type of data encountered.")
-
+        for param_name, default_value in parameters.items():
+            input_obj = get_param_obj(default_value=default_value, param_name=param_name)
             input_obj.setEnabled(False)
 
-            row = (QLabel(param_name.capitalize()), input_obj)
+            row = (QLabel(PARAMETER_MAP.get(param_name, param_name)), input_obj)
             self.info_layout.addRow(*row)
 
+        # TODO: Add support for indicators that return candlesticks.
         if len(parameters) == 0:
             self.info_layout.addRow(QLabel("No parameters found. Cannot submit this indicator right now."))
             self.submit_button.setEnabled(False)
@@ -305,10 +294,11 @@ class IndicatorSelector(QDialog):
          elements.
 
         TODO: Consider refactoring this logic.
+        TODO: Fix bug where indicator selector makes strategy builder hide.
 
         """
         self.update_indicator()
-        self.hide()
+        # self.hide()
 
     def add_indicator(self):
         """
@@ -358,38 +348,38 @@ class IndicatorSelector(QDialog):
         info_label.setFont(get_bold_font())
         vbox.addWidget(info_label)
 
-        self.add_operand(vbox, unique_identifier)
+        self.add_operator(vbox, unique_identifier)
         self.add_against_radio_buttons(vbox, unique_identifier)
 
         # Add this populated groupbox to the parent (strategy builder) view.
-        section_layout = self.parent.main_layouts[self.trend]
+        section_layout = self.parent.tabs[self.trend][-1]
         section_layout.addRow(group_box)
 
         self.reset_and_hide()
 
-    def add_operand(self, vbox: QVBoxLayout, unique_identifier: str):
+    def add_operator(self, vbox: QVBoxLayout, unique_identifier: str):
         """
-        Add operand values; there are the >, <, >=, etc values. When storing state, we'll just fetch the combobox's
+        Add operator values; there are the >, <, >=, etc values. When storing state, we'll just fetch the combobox's
          selected value.
-        :param vbox: Vertical layout to add operand values to.
+        :param vbox: Vertical layout to add operator values to.
         :param unique_identifier: Unique identifier to distinguish in states.
         """
-        operands = ['>', '<', '>=', '<=', '==', '!=']
-        self.parent.state[self.trend][unique_identifier]['operand'] = operands_combobox = QComboBox()
-        operands_combobox.addItems(operands)
+        self.parent.state[self.trend][unique_identifier]['operator'] = operators_combobox = QComboBox()
+        operators_combobox.addItems(OPERATORS)
 
-        vbox.addWidget(QLabel("Operand"))
-        vbox.addWidget(operands_combobox)
+        vbox.addWidget(QLabel("Operator"))
+        vbox.addWidget(operators_combobox)
         vbox.addWidget(QLabel("Against"))
 
-    def add_against_values(self, vbox: QVBoxLayout, unique_identifier: str, add_type: Optional[str] = None):
+    def add_against_values(self, vbox: QVBoxLayout, unique_identifier: str, trend: str, add_type: Optional[str] = None):
         """
         Add against UI element values.
         :param vbox: Vertical layout to add against values to. This vbox lives in the parent (strategy builder).
         :param unique_identifier: Unique identifier to distinguish in states.
+        :param trend: Trend to add against values for.
         :param add_type: Type of value to add.
         """
-        unique_dict = self.parent.state[self.trend][unique_identifier]
+        unique_dict = self.parent.state[trend][unique_identifier]
 
         add_against_groupbox = 'add_against_groupbox'
         against = 'against'
@@ -457,12 +447,12 @@ class IndicatorSelector(QDialog):
         Delete groupbox based on the indicator and groupbox provided.
 
         Sample from state:
-            {'Buy Long':
+            {'Enter Long':
                 {'33e14177-318b-426a-87ce-a6dde86955fe': {
                     'add_against_groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CA0>,
                     'against': None,
                     'name': 'TRIX',
-                    'operand': <PyQt5.QtWidgets.QComboBox object at 0x00000248735073A0>,
+                    'operator': <PyQt5.QtWidgets.QComboBox object at 0x00000248735073A0>,
                     'groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CB9>
                 }
             }
@@ -474,12 +464,13 @@ class IndicatorSelector(QDialog):
         :param bypass_popup: Bypass popup. Used with restore_builder.
         """
         if not bypass_popup:
-            message = f'Are you sure you want to delete this indicator ({indicator})?'
-            msg_box = QMessageBox
-            ret = msg_box.question(self, 'Warning', message, msg_box.Yes | msg_box.No)
+            confirm = confirm_message_box(
+                message=f'Are you sure you want to delete this indicator ({indicator})?',
+                parent=self
+            )
 
         # If confirmed or bypassing popup, delete the groupbox and remove from parent state.
-        if bypass_popup or ret == msg_box.Yes:  # noqa
+        if bypass_popup or confirm:  # noqa
 
             # This is because the state will be reset anyway and we don't want the dictionary to change size during
             #  iteration. TODO: Cleanup.
@@ -489,9 +480,10 @@ class IndicatorSelector(QDialog):
             # This will delete all the widgets the groupbox contains.
             groupbox.setParent(None)
 
+            # TODO: Resize only if window becomes smaller to make bigger?
             # Resize the parent to shrink once groupbox has been deleted.
-            if self.parent is not None:
-                self.parent.adjustSize()
+            # if self.parent is not None:
+            #     self.parent.adjustSize()
 
     def update_indicators(self, normalize: bool = True):
         """
