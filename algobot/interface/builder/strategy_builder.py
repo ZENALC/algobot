@@ -8,12 +8,12 @@ import sys
 from typing import TYPE_CHECKING, Dict, Optional
 
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox, QFileDialog, QFormLayout, QLabel,
-                             QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+                             QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout)
 
 from algobot.enums import TRENDS
 from algobot.helpers import STRATEGIES_DIR
 from algobot.interface.builder.indicator_selector import IndicatorSelector
-from algobot.interface.utils import create_popup
+from algobot.interface.utils import create_popup, get_widget_with_layout
 
 if TYPE_CHECKING:
     from algobot.__main__ import Interface
@@ -43,20 +43,25 @@ class StrategyBuilder(QDialog):
 
         # Main tab widget that'll hold the tabs.
         self.main_tabs_widget = QTabWidget()
-        self.tabs = {trend: (QWidget(), QFormLayout()) for trend in TRENDS}
+        self.tabs = {trend: get_widget_with_layout(QFormLayout()) for trend in TRENDS}
 
-        for trend, (tab, tab_layout) in self.tabs.items():
+        # Inner tabs per indicator for each trend.
+        self.inner_tab_widgets: Dict[str, QTabWidget] = {}
+
+        for trend, tab in self.tabs.items():
             add_indicator_button = QPushButton(f"Add {trend} Indicator")
 
             # We need to the store the func args here, or else it'll use the latest trend from the loop.
             add_indicator_button.clicked.connect(lambda _, strict_key=trend: self.open_indicator_selector(strict_key))
-            tab.setLayout(tab_layout)
 
             # Add this tab to the main tabs widget.
             self.main_tabs_widget.addTab(tab, trend)
 
             # Add button to add indicators to inner tab.
-            tab_layout.addRow(add_indicator_button)
+            tab.layout().addRow(add_indicator_button)
+
+            self.inner_tab_widgets[trend] = inner_tab_widget = QTabWidget()
+            tab.layout().addRow(inner_tab_widget)
 
         # Define a scroll and set the main tabs widget as its main widget. This is super important, as the view looks
         #  hideous when there are a lot of indicators selected (it can shrink and it's not good). That's why we must
@@ -116,10 +121,8 @@ class StrategyBuilder(QDialog):
 
         """
         for trend, trend_values in self.state.items():
-            for uuid, uuid_values in trend_values.items():
-                self.indicator_selector.delete_groupbox(
-                    indicator=uuid_values['name'],
-                    groupbox=uuid_values['groupbox'],
+            for uuid in trend_values:
+                self.indicator_selector.delete_indicator(
                     trend=trend,
                     uuid=uuid,
                     bypass_popup=True
@@ -180,7 +183,7 @@ class StrategyBuilder(QDialog):
         :return: Parsed dictionary.
         """
         # We don't use these keys as they're not needed for strategies.
-        useless_keys = {'add_against_groupbox', 'groupbox'}
+        useless_keys = {'add_against_groupbox', 'groupbox', 'tab_index'}
 
         for key, value in from_dict.items():
             if isinstance(value, dict):

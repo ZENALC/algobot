@@ -8,8 +8,8 @@ from typing import List, Union
 import talib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QLineEdit, QMessageBox, QSizePolicy, QSpacerItem,
-                             QSpinBox, QTableWidget, QTableWidgetItem)
+from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QLayout, QLineEdit, QMessageBox, QSizePolicy,
+                             QSpacerItem, QSpinBox, QTableWidget, QTableWidgetItem, QWidget)
 
 from algobot.interface.configuration_helpers import get_default_widget
 
@@ -101,6 +101,17 @@ def get_param_obj(default_value: Union[float, int, str], param_name: str):
 
     else:
         raise ValueError("Unknown type of data encountered.")
+
+
+def get_widget_with_layout(layout: QLayout) -> QWidget:
+    """
+    Get a widget with layout provided.
+    :param layout: Layout to set to widget.
+    :return: Widget with the layout.
+    """
+    widget = QWidget()
+    widget.setLayout(layout)
+    return widget
 
 
 def clear_layout(layout):

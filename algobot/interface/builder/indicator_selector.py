@@ -7,12 +7,12 @@ from uuid import uuid4
 
 import talib
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QGroupBox, QLabel, QPushButton,
-                             QRadioButton, QVBoxLayout)
+                             QRadioButton, QSizePolicy, QSpacerItem, QVBoxLayout)
 from talib import abstract
 
 from algobot.interface.configuration_helpers import get_h_line
 from algobot.interface.utils import (OPERATORS, PARAMETER_MAP, confirm_message_box, get_bold_font, get_param_obj,
-                                     get_v_spacer)
+                                     get_v_spacer, get_widget_with_layout)
 
 if TYPE_CHECKING:
     # Strategy builder calls indicator selector, so we can't just simply import strategy builder for hinting here.
@@ -318,43 +318,36 @@ class IndicatorSelector(QDialog):
         if self.trend is None:
             raise ValueError("Some trend needs to be set to add an indicator.")
 
+        parent_indicators_tab = self.parent.inner_tab_widgets[self.trend]
+        self.state['tab_index'] = parent_indicators_tab.count()  # The count would be the current index here.
+
         # Add trend key and add indicator to its list value.
         unique_identifier = str(uuid4())
         self.parent.state.setdefault(self.trend, {})
         self.parent.state[self.trend][unique_identifier] = self.state
 
         # Initialize a vertical layout; we'll add all UI elements to this layout.
-        vbox = QVBoxLayout()
-
-        # This is the groupbox in the strategy builder that'll contain this indicator.
-        group_box = QGroupBox(indicator_name)
-        group_box.setLayout(vbox)
-
-        self.parent.state[self.trend][unique_identifier]['groupbox'] = group_box
+        indicator_tab = get_widget_with_layout(QVBoxLayout())
 
         # Tightly bind each delete button of each groupbox to its indicator name, groupbox element, unique identifier,
-        #  and trend. Technically, we only need the unique identifier, but we'll refactor the logic later.
-        #  TODO: Clean up the logic and simplify.
+        #  and trend.
         delete_button = QPushButton('Delete')
-        delete_button.clicked.connect(lambda _, trend=self.trend: self.delete_groupbox(
-            indicator_name, group_box, unique_identifier, trend))
+        delete_button.clicked.connect(
+            lambda _, trend=self.trend: self.delete_indicator(
+                unique_identifier, trend
+            )
+        )
 
-        # Just adding a horizontal line for nicer separation between delete button and other UI elements.
-        vbox.addWidget(get_h_line())
-        vbox.addWidget(delete_button)
-        vbox.addWidget(get_h_line())
+        indicator_tab.layout().addWidget(delete_button)
 
-        info_label = QLabel(f"You are creating a strategy for: {indicator_name}.")
-        info_label.setFont(get_bold_font())
-        vbox.addWidget(info_label)
+        self.add_operator(indicator_tab.layout(), unique_identifier)
+        self.add_against_radio_buttons(indicator_tab.layout(), unique_identifier)
 
-        self.add_operator(vbox, unique_identifier)
-        self.add_against_radio_buttons(vbox, unique_identifier)
+        indicator_tab.layout().addSpacerItem(
+            QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        )
 
-        # Add this populated groupbox to the parent (strategy builder) view.
-        section_layout = self.parent.tabs[self.trend][-1]
-        section_layout.addRow(group_box)
-
+        parent_indicators_tab.addTab(indicator_tab, indicator_name)
         self.reset_and_hide()
 
     def add_operator(self, vbox: QVBoxLayout, unique_identifier: str):
@@ -442,9 +435,9 @@ class IndicatorSelector(QDialog):
         # Add this groupbox to the appropriate vertical layout in the strategy builder.
         vbox.addWidget(groupbox)
 
-    def delete_groupbox(self, indicator: str, groupbox: QGroupBox, uuid: str, trend: str, bypass_popup: bool = False):
+    def delete_indicator(self, uuid: str, trend: str, bypass_popup: bool = False):
         """
-        Delete groupbox based on the indicator and groupbox provided.
+        Delete indicator based on the trend and UUID provided.
 
         Sample from state:
             {'Enter Long':
@@ -453,16 +446,14 @@ class IndicatorSelector(QDialog):
                     'against': None,
                     'name': 'TRIX',
                     'operator': <PyQt5.QtWidgets.QComboBox object at 0x00000248735073A0>,
-                    'groupbox': <PyQt5.QtWidgets.QGroupBox object at 0x0000024873507CB9>
                 }
             }
 
-        :param indicator: Indicator to remove. Only used for populating the messagebox.
-        :param groupbox: Groupbox to remove.
         :param uuid: State UUID to remove from dictionary.
         :param trend: Trend associated with this groupbox.
         :param bypass_popup: Bypass popup. Used with restore_builder.
         """
+        indicator = self.parent.state[trend][uuid]['name']
         if not bypass_popup:
             confirm = confirm_message_box(
                 message=f'Are you sure you want to delete this indicator ({indicator})?',
@@ -472,13 +463,21 @@ class IndicatorSelector(QDialog):
         # If confirmed or bypassing popup, delete the groupbox and remove from parent state.
         if bypass_popup or confirm:  # noqa
 
+            tab_index = self.parent.state[trend][uuid]['tab_index']
+            for loop_uuid, indicator in self.parent.state[trend].items():
+                # We have to shift all existing indicators one step to the left post-deletion.
+                if loop_uuid == uuid:
+                    continue
+
+                if indicator['tab_index'] > tab_index:
+                    indicator['tab_index'] -= 1
+
+            self.parent.inner_tab_widgets[trend].removeTab(tab_index)
+
             # This is because the state will be reset anyway and we don't want the dictionary to change size during
             #  iteration. TODO: Cleanup.
             if not bypass_popup:
                 del self.parent.state[trend][uuid]
-
-            # This will delete all the widgets the groupbox contains.
-            groupbox.setParent(None)
 
             # TODO: Resize only if window becomes smaller to make bigger?
             # Resize the parent to shrink once groupbox has been deleted.

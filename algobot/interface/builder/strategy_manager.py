@@ -30,7 +30,7 @@ class StrategyManager(QDialog):
         self.layout.addWidget(self.strategies_found_label)
 
         self.refresh_button = QPushButton("Refresh strategies")
-        self.refresh_button.clicked.connect(lambda: self.reset_gui())
+        self.refresh_button.clicked.connect(self.reset_gui)
         self.layout.addWidget(self.refresh_button)
         self.layout.addWidget(get_h_line())
 
@@ -40,7 +40,7 @@ class StrategyManager(QDialog):
         self.layout.addWidget(self.strategies_combobox)
 
         self.delete_button = QPushButton("Delete Strategy")
-        self.delete_button.clicked.connect(lambda: self.delete_strategy())
+        self.delete_button.clicked.connect(self.delete_strategy)
         self.layout.addWidget(self.delete_button)
 
         self.control_state()
