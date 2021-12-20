@@ -5,7 +5,6 @@ Test base trader.
 import pytest
 
 from algobot.enums import BEARISH, BULLISH, LONG, SHORT, STOP, TRAILING
-from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 
 
@@ -256,84 +255,6 @@ def test_get_stop_loss_strategy_string(trader: Trader):
 
     trader.loss_strategy = None
     assert trader.get_stop_loss_strategy_string() == "None"
-
-
-def test_get_strategy_inputs(trader: Trader):
-    """
-    Test trader get strategy inputs functionality.
-    :param trader: Trader object.
-    """
-    dummy_strategy = Strategy(name="dummy", parent=None)
-
-    def temp():
-        return 3, 4, 5
-
-    dummy_strategy.get_params = temp
-    assert dummy_strategy.get_params() == (3, 4, 5)
-
-    trader.strategies = {'dummy': dummy_strategy}
-    assert trader.get_strategy_inputs('dummy') == '3, 4, 5'
-
-
-def test_get_strategies_info_string(trader: Trader):
-    """
-    Test trader get strategies info string functionality.
-    :param trader: Trader object.
-    """
-    dummy_strategy = Strategy(name="dummy", parent=None)
-    dummy_strategy2 = Strategy(name='dummy2', parent=None)
-
-    def temp():
-        return 3, 4, 5
-
-    def temp2():
-        return 5, 6, 7, 8, 9, 10
-
-    dummy_strategy.get_params = temp
-    dummy_strategy2.get_params = temp2
-    expected_string = 'Strategies:\n\tDummy: 3, 4, 5\n\tDummy2: 5, 6, 7, 8, 9, 10'
-
-    trader.strategies = {'dummy': dummy_strategy, 'dummy2': dummy_strategy2}
-    assert trader.get_strategies_info_string() == expected_string
-
-
-def test_get_trend(trader: Trader):
-    """
-    Test trader get trend functionality.
-    :param trader: Trader object.
-    """
-    assert trader.get_trend() is None
-
-    bullish_strategy1 = Strategy(name='b1', parent=None)
-    bullish_strategy1.trend = BULLISH
-
-    trader.strategies['b1'] = bullish_strategy1
-    assert trader.get_trend() == BULLISH
-
-    bullish_strategy2 = Strategy(name='b2', parent=None)
-    bullish_strategy2.trend = BULLISH
-
-    trader.strategies['b2'] = bullish_strategy2
-    assert trader.get_trend() == BULLISH
-
-    bearish_strategy = Strategy(name='b3', parent=None)
-    bearish_strategy.trend = BEARISH
-
-    trader.strategies['b3'] = bearish_strategy
-    assert trader.get_trend() is None
-
-    for strategy in trader.strategies.values():
-        strategy.trend = BEARISH
-
-    assert trader.get_trend() == BEARISH
-
-
-def test_setup_strategies(trader: Trader):
-    """
-    Test trader setup strategies functionality.  # TODO: Implement actual test.
-    :param trader: Trader object.
-    """
-    pass
 
 
 @pytest.mark.parametrize(
