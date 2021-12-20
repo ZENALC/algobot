@@ -2237,6 +2237,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="configurationAction"/>
     <addaction name="otherCommandsAction"/>
     <addaction name="strategyBuilderAction"/>
+    <addaction name="strategyManagerAction"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -2439,6 +2440,11 @@ p, li { white-space: pre-wrap; }
   <action name="openStrategiesFolderAction">
    <property name="text">
     <string>Strategies</string>
+   </property>
+  </action>
+  <action name="strategyManagerAction">
+   <property name="text">
+    <string>Strategy Manager</string>
    </property>
   </action>
  </widget>

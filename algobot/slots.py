@@ -62,6 +62,7 @@ def create_action_slots(gui: Interface):
     gui.configurationAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.configuration))
     gui.aboutAlgobotAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.about))
     gui.strategyBuilderAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.strategy_builder))
+    gui.strategyManagerAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.strategy_manager))
     gui.liveStatisticsAction.triggered.connect(lambda: gui.show_statistics(0))
     gui.simulationStatisticsAction.triggered.connect(lambda: gui.show_statistics(1))
     gui.openBacktestResultsFolderAction.triggered.connect(lambda: open_folder("Backtest Results"))
