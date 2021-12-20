@@ -25,6 +25,7 @@ from algobot.helpers import (ROOT_DIR, UNKNOWN, compare_versions, create_folder,
                              get_caller_string, open_file_or_folder)
 from algobot.interface.about import About
 from algobot.interface.builder.strategy_builder import StrategyBuilder
+from algobot.interface.builder.strategy_manager import StrategyManager
 from algobot.interface.config_utils.slot_utils import load_hide_show_strategies
 from algobot.interface.config_utils.state_utils import load_state, save_state
 from algobot.interface.config_utils.strategy_utils import get_strategies
@@ -64,6 +65,7 @@ class Interface(QMainWindow):
         self.other_commands = OtherCommands(self)  # Loading other commands
         self.about = About(self)  # Loading about information
         self.strategy_builder = StrategyBuilder(self)
+        self.strategy_manager = StrategyManager(self)
         self.statistics = Statistics(self)  # Loading statistics
         self.thread_pool = QThreadPool(self)  # Initiating threading pool
         self.threads: Dict[int, QRunnable or None] = {BACKTEST: None, SIMULATION: None, LIVE: None, OPTIMIZER: None}

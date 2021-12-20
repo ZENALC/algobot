@@ -104,7 +104,8 @@ class Configuration(QDialog):
             self.optimizerConfigurationTabWidget
         ]
 
-        self.json_strategies = get_json_strategies()
+        self.json_strategies_with_path = get_json_strategies()
+        self.json_strategies = [strategy_item[1] for strategy_item in self.json_strategies_with_path]
         self.custom_strategies = [strategy['name'] for strategy in self.json_strategies]
         self.strategies = get_strategies_dictionary(Strategy.__subclasses__())
 
@@ -123,7 +124,8 @@ class Configuration(QDialog):
         """
         Reload custom strategies after creating a strategy.
         """
-        self.json_strategies = get_json_strategies()
+        self.json_strategies_with_path = get_json_strategies()
+        self.json_strategies = [strategy_item[1] for strategy_item in self.json_strategies_with_path]
         self.custom_strategies = [strategy['name'] for strategy in self.json_strategies]
 
         self.hidden_strategies = set(self.strategies)

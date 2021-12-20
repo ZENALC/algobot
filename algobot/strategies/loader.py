@@ -3,6 +3,7 @@ Strategies loader.
 """
 import json
 import os
+from typing import List, Tuple
 
 from talib import abstract
 
@@ -60,10 +61,10 @@ def parse_custom_strategy_json(json_file: str) -> dict:
     return loaded_dict
 
 
-def get_json_strategies() -> list:
+def get_json_strategies() -> List[Tuple[str, dict]]:
     """
     Get JSON strategies.
-    :return: List of JSON strategies.
+    :return: List of tuple containing JSON path and then JSON strategies.
     """
     # Just in case if the directory doesn't already exist.
     os.makedirs(STRATEGIES_DIR, exist_ok=True)
@@ -72,9 +73,9 @@ def get_json_strategies() -> list:
     strategy_files = [os.path.join(STRATEGIES_DIR, file_name) for file_name in os.listdir(STRATEGIES_DIR)
                       if file_name.lower().endswith('.json')]
 
-    return [parse_custom_strategy_json(json_file) for json_file in strategy_files]
+    return [(json_file, parse_custom_strategy_json(json_file)) for json_file in strategy_files]
 
 
 if __name__ == '__main__':
     import pprint
-    pprint.pprint(get_json_strategies()[0])
+    pprint.pprint(get_json_strategies()[0][1])
