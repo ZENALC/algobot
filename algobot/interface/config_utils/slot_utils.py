@@ -130,9 +130,10 @@ def populate_parameters(values: dict, indicator: dict, inner_tab_layout: QFormLa
     :param is_optimizer: Boolean whether is optimizer or not and to populate parameters as appropriate.
     """
     if is_optimizer:
-        inner_tab_layout.addRow(QLabel("Price Type"), QCheckBox(PRICE_TYPES[0]))
-        for price_type in PRICE_TYPES[1:]:
-            inner_tab_layout.addWidget(QCheckBox(price_type))
+        values['price'] = checkboxes = [QCheckBox(price_type) for price_type in PRICE_TYPES]
+        inner_tab_layout.addRow(QLabel("Price Type"), checkboxes.pop(0))
+        for check_box in checkboxes:
+            inner_tab_layout.addWidget(check_box)
     else:
         # We are just calling this to get a combo box for price types (high, low, etc), so default can just be ''.
         values['price'] = price_widget = get_param_obj(default_value='', param_name='price')
@@ -144,17 +145,17 @@ def populate_parameters(values: dict, indicator: dict, inner_tab_layout: QFormLa
 
         if is_optimizer:
             if isinstance(widget, QComboBox):
-                possible_values = get_combobox_items(widget)
-                inner_tab_layout.addRow(QLabel(label_str), QCheckBox(possible_values[0]))
-                for val in possible_values[1]:
-                    inner_tab_layout.addWidget(QCheckBox(val))
+                values[parameter] = checkboxes = [QCheckBox(val) for val in get_combobox_items(widget)]
+                inner_tab_layout.addRow(QLabel(label_str), checkboxes.pop(0))
+                for checkbox in checkboxes:
+                    inner_tab_layout.addWidget(checkbox)
 
             elif isinstance(widget, (QDoubleSpinBox, QSpinBox)):
                 gen_widget = QDoubleSpinBox if isinstance(widget, QDoubleSpinBox) else QSpinBox
-                step_val = 0.1 if isinstance(widget, QDoubleSpinBox) else 1
                 start = get_default_widget(gen_widget, 1)
                 end = get_default_widget(gen_widget, 1)
-                step = get_default_widget(gen_widget, step_val)
+                step = get_default_widget(gen_widget, 1)
+                values[parameter] = [start, end, step]
                 add_start_end_step_to_layout(inner_tab_layout, label_str, start, end, step)
             else:
                 raise Exception("Unexpected type of data encountered!")
@@ -192,6 +193,7 @@ def populate_custom_indicator(
             start = get_default_widget(QDoubleSpinBox, 1)
             end = get_default_widget(QDoubleSpinBox, 1)
             step = get_default_widget(QDoubleSpinBox, 1)
+            values['against'] = [start, end, step]
             add_start_end_step_to_layout(inner_tab_layout, 'Static Price', start, end, step)
         else:
             against_widget = get_default_widget(QDoubleSpinBox, against, -99999, 99999)
@@ -201,9 +203,10 @@ def populate_custom_indicator(
     elif against == 'current_price':
         inner_tab_layout.addWidget(QLabel("Bot will execute against current price type selected below:"))
         if is_optimizer:
-            inner_tab_layout.addRow(QLabel("Price Type"), QCheckBox(PRICE_TYPES[0]))
-            for price_type in PRICE_TYPES[1:]:
-                inner_tab_layout.addWidget(QCheckBox(price_type))
+            values['against'] = checkboxes = [QCheckBox(price) for price in PRICE_TYPES]
+            inner_tab_layout.addRow(QLabel("Price Type"), checkboxes.pop(0))
+            for checkbox in checkboxes:
+                inner_tab_layout.addWidget(checkbox)
         else:
             against_widget = get_param_obj(default_value='', param_name='price')
             values['against'] = against_widget
