@@ -18,14 +18,12 @@ from algobot.helpers import ROOT_DIR
 from algobot.interface.config_utils.credential_utils import load_credentials
 from algobot.interface.config_utils.slot_utils import load_hide_show_strategies, load_slots
 from algobot.interface.config_utils.strategy_utils import (add_strategy_inputs, delete_strategy_inputs,
-                                                           get_strategies_dictionary, get_strategy_values,
-                                                           strategy_enabled)
+                                                           get_strategy_values, strategy_enabled)
 from algobot.interface.configuration_helpers import add_start_end_step_to_layout, get_default_widget, set_value
 # noinspection PyUnresolvedReferences
 from algobot.interface.utils import clear_layout, get_elements_from_combobox
 from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import,unused-wildcard-import
 from algobot.strategies.loader import get_json_strategies
-from algobot.strategies.strategy import Strategy
 
 if TYPE_CHECKING:
     from algobot.__main__ import Interface
@@ -107,11 +105,10 @@ class Configuration(QDialog):
         self.json_strategies_with_path = get_json_strategies()
         self.json_strategies = [strategy_item[1] for strategy_item in self.json_strategies_with_path]
         self.custom_strategies = [strategy['name'] for strategy in self.json_strategies]
-        self.strategies = get_strategies_dictionary(Strategy.__subclasses__())
+        self.strategies = {}
 
         # Hidden strategies dynamically populated.
-        self.hidden_strategies = set(self.strategies)
-        self.hidden_strategies.update(self.custom_strategies)
+        self.hidden_strategies = set(self.custom_strategies)
 
         self.strategy_dict = {}  # We will store all the strategy slot information in this dictionary.
         self.loss_dict = {}  # We will store stop loss settings here.
@@ -128,8 +125,7 @@ class Configuration(QDialog):
         self.json_strategies = [strategy_item[1] for strategy_item in self.json_strategies_with_path]
         self.custom_strategies = [strategy['name'] for strategy in self.json_strategies]
 
-        self.hidden_strategies = set(self.strategies)
-        self.hidden_strategies.update(self.custom_strategies)
+        self.hidden_strategies = set(self.custom_strategies)
 
         clear_layout(self.hideStrategiesFormLayout)
         load_hide_show_strategies(self)

@@ -8,7 +8,6 @@ from typing import Dict, List, Union
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import get_label_string, parse_strategy_name
 from algobot.strategies.custom import CustomStrategy
-from algobot.strategies.strategy import Strategy
 
 
 class Trader:
@@ -27,7 +26,7 @@ class Trader:
         self.commissions_paid = 0  # Total commissions paid this bot run.
         self.precision = precision  # Precision to round data to.
         self.trades = []  # All trades performed.
-        self.strategies: Dict[str, Union[Strategy, CustomStrategy]] = {}
+        self.strategies: Dict[str, CustomStrategy] = {}
 
         self.starting_time = datetime.utcnow()  # Starting time in UTC.
         self.ending_time = None  # Ending time for previous bot run.

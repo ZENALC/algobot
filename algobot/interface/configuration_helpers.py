@@ -132,8 +132,8 @@ def get_h_line() -> QFrame:
     return line
 
 
-def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, float], minimum: Optional[int] = 1,
-                       maximum: Optional[int] = 99) -> Union[QSpinBox, QDoubleSpinBox]:
+def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, float], minimum: Optional[int] = 0,
+                       maximum: Optional[int] = 999) -> Union[QSpinBox, QDoubleSpinBox]:
     """
     Returns a default QSpinbox or QDoubleSpinbox widget with default, minimum, and maximum values provided.
     """

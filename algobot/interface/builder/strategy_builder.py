@@ -151,7 +151,12 @@ class StrategyBuilder(QDialog):
             'description': description if description.strip() else "No description provided."
         }
 
-        parsed_dict = self.create_parsed_dict(self.state, parsed_dict)
+        try:
+            parsed_dict = self.create_parsed_dict(self.state, parsed_dict)
+        except ValueError as error:
+            create_popup(self, str(error))
+            return
+
         if not os.path.exists(STRATEGIES_DIR):
             os.mkdir(STRATEGIES_DIR)
 
@@ -195,6 +200,10 @@ class StrategyBuilder(QDialog):
             elif key in useless_keys:
                 continue
             else:
+                if value is None:
+                    raise ValueError(f'{from_dict["name"]} indicator in tab {from_dict["tab_index"] + 1} is missing '
+                                     f'the {key} value. Got: {value}!')
+
                 to_dict[key] = value
 
         return to_dict

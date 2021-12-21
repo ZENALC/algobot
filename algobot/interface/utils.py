@@ -64,6 +64,15 @@ PARAMETER_MAP = {
 }
 
 
+def get_combobox_items(combobox: QComboBox) -> List[str]:
+    """
+    Get items inside a combobox.
+    :param combobox: Combobox to gets item of.
+    :return: List of items inside the combobox.
+    """
+    return [combobox.itemText(i) for i in range(combobox.count())]
+
+
 def get_param_obj(default_value: Union[float, int, str], param_name: str):
     """
     Get param widget based on param and param_name provided.

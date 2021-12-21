@@ -21,9 +21,6 @@ from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, 
                            SHORT)
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR, convert_all_dates_to_datetime, convert_small_interval,
                              get_interval_minutes, parse_strategy_name)
-from algobot.interface.config_utils.strategy_utils import get_strategies_dictionary
-from algobot.strategies.custom import CustomStrategy
-from algobot.strategies.strategy import Strategy
 from algobot.traders.trader import Trader
 from algobot.typing_hints import DataType, DictType
 
@@ -77,7 +74,7 @@ class Backtester(Trader):
         if len(strategy_interval.split()) == 1:
             strategy_interval = convert_small_interval(strategy_interval)
 
-        self.all_strategies = get_strategies_dictionary(Strategy.__subclasses__())
+        self.all_strategies = {}
 
         self.strategy_interval = self.interval if strategy_interval is None else strategy_interval
         self.strategy_interval_minutes = get_interval_minutes(self.strategy_interval)
@@ -198,7 +195,7 @@ class Backtester(Trader):
         self.current_price = self.data[index]['open']
 
     @staticmethod
-    def generate_error_message(error: Exception, strategy: Strategy) -> str:
+    def generate_error_message(error: Exception, strategy) -> str:
         """
         Error message generator when running a backtest.
         :param error: Error object.
@@ -227,10 +224,7 @@ class Backtester(Trader):
 
         for strategy in self.strategies.values():
             try:
-                if isinstance(strategy, CustomStrategy):
-                    strategy.get_trend(input_arrays_dict, cache)
-                else:
-                    strategy.get_trend(df, data=strategy_data)
+                strategy.get_trend(input_arrays_dict, cache)
             except Exception as e:
                 if thread and thread.caller == OPTIMIZER:
                     error_message = traceback.format_exc()

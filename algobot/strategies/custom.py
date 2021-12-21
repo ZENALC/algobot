@@ -37,6 +37,7 @@ class CustomStrategy:
         self.precision = precision
         self.short_circuit = short_circuit
         self.values: Dict[str, Any] = self.parse_values(values)
+        self.name = self.values['name']
 
         # These are dynamically set by the get_trend() function.
         self.log_data: bool = False
@@ -48,6 +49,7 @@ class CustomStrategy:
         # Dictionary for plotting values in graphs. This should hold string keys and float values. If a value is
         #  non-numeric, the program will crash. This should hold the key of the value and then a list containing
         #  the value then the color.
+
         #  For example -> self.plot_dict['SMA(5)'] = [13, 'ffffff'] -> SMA(5) value of 13 with a hex color of white.
         self.plot_dict: Dict[str, List[Union[float, str]]] = {}
         self.initialize_plot_dict()
@@ -161,11 +163,11 @@ class CustomStrategy:
 
             'Sell Long': {
                 '74ec21ed-5a21-4ae4-8c00-fd1161b858cf': {
-                'against': 5.90,
-                'indicator': 'MFI',
-                'operator': '>=',
-                'price': 'High',
-                'timeperiod': 36
+                    'against': 5.90,
+                    'indicator': 'MFI',
+                    'operator': '>=',
+                    'price': 'High',
+                    'timeperiod': 36
                 }
             },
 
