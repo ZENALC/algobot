@@ -400,11 +400,24 @@ class Backtester(Trader):
 
         for strategy_name, strategy_items in strategies.items():
             for trend, trend_items in strategy_items.items():
-                if trend == 'name':
+                if trend == 'name':  # Must cast to list here, or product will be of string characters.
+                    strategy_items[trend] = [trend_items]
                     continue  # This is not needed.
 
                 for uuid, uuid_items in trend_items.items():
                     for indicator, indicator_value in uuid_items.items():
+
+                        # This means it's an against indicator.
+                        if isinstance(indicator_value, dict):
+                            for against_item_key, against_item in indicator_value.items():
+                                if not isinstance(against_item, list):
+                                    indicator_value[against_item_key] = [against_item]
+
+                            uuid_items[indicator] = [
+                                dict(zip(indicator_value, v)) for v in product(*indicator_value.values())
+                            ]
+                            continue
+
                         if not isinstance(indicator_value, list):  # Cast everything to a list to use product.
                             uuid_items[indicator] = [indicator_value]
 
