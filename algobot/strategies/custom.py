@@ -178,23 +178,24 @@ class CustomStrategy:
         new_dict = {}
         for key, value in values.items():
             if isinstance(value, QWidget):
-                if key == 'output':
-                    # In this case, we just want the index. If the value is 'real', we'll just set the index to None.
-                    output = get_input_widget_value(value, verbose=True)
-                    if output == 'real':
-                        new_dict[key] = (None, 'real')
-                    else:
-                        new_dict[key] = (get_input_widget_value(value, verbose=False), output)
-                else:
-                    new_dict[key] = get_input_widget_value(value, verbose=True)
-
-                    # Lower all prices upstream.
-                    if key == 'price':
-                        new_dict[key] = new_dict[key].lower()
+                new_dict[key] = get_input_widget_value(value, verbose=True)
             elif isinstance(value, dict):
                 new_dict[key] = self.parse_values(value)
             else:
                 new_dict[key] = value
+
+            value = new_dict[key]
+
+            if key == 'output':
+                if value == 'real':
+                    new_dict[key] = (None, 'real')
+                else:
+                    index = abstract.Function(values['indicator']).output_names.index(value)
+                    new_dict[key] = index, value
+
+            # Lower all prices upstream.
+            if key == 'price':
+                new_dict[key] = new_dict[key].lower()
 
         return new_dict
 
@@ -253,7 +254,7 @@ class CustomStrategy:
         :param input_arrays_dict: Dictionary containing price type as key and price values as value.
         :return: Boolean regarding trend. If True is returned, this key trend is true, else false.
         """
-        indicators = self.values[key]
+        indicators = self.values.get(key)
         if not indicators:  # Nothing provided as an input for this trend.
             return False
 

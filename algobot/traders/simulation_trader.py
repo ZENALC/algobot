@@ -12,7 +12,6 @@ import pandas as pd
 from algobot.data import Data
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT
 from algobot.helpers import convert_small_interval, get_logger
-from algobot.strategies.custom import CustomStrategy
 from algobot.traders.trader import Trader
 
 
@@ -360,9 +359,8 @@ class SimulationTrader(Trader):
         cache = {}
 
         trends = [
-            strategy.get_trend(df=df, data=dataObject, log_data=log_data)
 
-            if not isinstance(strategy, CustomStrategy) else strategy.get_trend(
+            strategy.get_trend(
                 input_arrays_dict=input_arrays_dict,
                 cache=cache,
                 log_data=log_data,

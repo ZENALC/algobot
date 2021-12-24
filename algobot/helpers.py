@@ -301,6 +301,14 @@ def get_data_from_parameter(data: DictType, parameter: str) -> float:
         return data[parameter]
 
 
+def is_number(x: str) -> bool:
+    try:
+        float(x)
+        return True
+    except ValueError as e:
+        return False
+
+
 def get_caller_string(caller: str):
     """
     Returns the string of the caller provided. This should be changed to enums soon.

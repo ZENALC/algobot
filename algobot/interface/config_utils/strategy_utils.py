@@ -30,7 +30,7 @@ def strategy_enabled(config_obj: Configuration, strategy_name: str, caller: int)
     return config_obj.strategy_dict[tab, strategy_name, 'groupBox'].isChecked()
 
 
-def get_strategies(config_obj: Configuration, caller: int) -> List[tuple]:
+def get_strategies(config_obj: Configuration, caller: int) -> List[Dict[str, Any]]:
     """
     Returns strategy information from GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -38,12 +38,6 @@ def get_strategies(config_obj: Configuration, caller: int) -> List[tuple]:
     :return: List of strategy information.
     """
     strategies = []
-    for strategy_name, strategy in config_obj.strategies.items():
-        if strategy_enabled(config_obj, strategy_name, caller):
-            values = get_strategy_values(config_obj, strategy_name, caller, verbose=True)
-            strategy_tuple = (strategy, values, strategy_name)
-            strategies.append(strategy_tuple)
-
     for custom_strategy in config_obj.json_strategies:
         strategy_name = custom_strategy['name']
         if strategy_enabled(config_obj, strategy_name, caller):

@@ -131,8 +131,8 @@ def populate_parameters(values: dict, indicator: dict, inner_tab_layout: QFormLa
     """
     if is_optimizer:
         values['price'] = checkboxes = [QCheckBox(price_type) for price_type in PRICE_TYPES]
-        inner_tab_layout.addRow(QLabel("Price Type"), checkboxes.pop(0))
-        for check_box in checkboxes:
+        inner_tab_layout.addRow(QLabel("Price Type"), checkboxes[0])
+        for check_box in checkboxes[1:]:
             inner_tab_layout.addWidget(check_box)
     else:
         # We are just calling this to get a combo box for price types (high, low, etc), so default can just be ''.
@@ -146,8 +146,8 @@ def populate_parameters(values: dict, indicator: dict, inner_tab_layout: QFormLa
         if is_optimizer:
             if isinstance(widget, QComboBox):
                 values[parameter] = checkboxes = [QCheckBox(val) for val in get_combobox_items(widget)]
-                inner_tab_layout.addRow(QLabel(label_str), checkboxes.pop(0))
-                for checkbox in checkboxes:
+                inner_tab_layout.addRow(QLabel(label_str), checkboxes[0])
+                for checkbox in checkboxes[1:]:
                     inner_tab_layout.addWidget(checkbox)
 
             elif isinstance(widget, (QDoubleSpinBox, QSpinBox)):
@@ -204,8 +204,8 @@ def populate_custom_indicator(
         inner_tab_layout.addWidget(QLabel("Bot will execute against current price type selected below:"))
         if is_optimizer:
             values['against'] = checkboxes = [QCheckBox(price) for price in PRICE_TYPES]
-            inner_tab_layout.addRow(QLabel("Price Type"), checkboxes.pop(0))
-            for checkbox in checkboxes:
+            inner_tab_layout.addRow(QLabel("Price Type"), checkboxes[0])
+            for checkbox in checkboxes[1:]:
                 inner_tab_layout.addWidget(checkbox)
         else:
             against_widget = get_param_obj(default_value='', param_name='price')

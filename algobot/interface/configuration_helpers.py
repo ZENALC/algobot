@@ -5,7 +5,7 @@ Helpers for the configuration object.
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QFrame, QGroupBox, QLabel, QLayout,
-                             QLineEdit, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+                             QLineEdit, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget, QCheckBox)
 
 from algobot import helpers
 from algobot.enums import OPTIMIZER
@@ -111,6 +111,8 @@ def get_input_widget_value(input_widget: QWidget, verbose: bool = False):
     elif isinstance(input_widget, QSpinBox):
         return input_widget.value()
     elif isinstance(input_widget, QLineEdit):
+        return input_widget.text()
+    elif isinstance(input_widget, QCheckBox):
         return input_widget.text()
     elif isinstance(input_widget, QComboBox):
         if verbose:
