@@ -199,10 +199,8 @@ class CustomStrategy:
 
         return new_dict
 
-    @staticmethod
-    def get_params():
-        """TODO: DEPRECATE"""
-        return ['']
+    def get_params(self):
+        return self.values
 
     @staticmethod
     def get_func_kwargs(kwargs: dict) -> dict:

@@ -277,7 +277,7 @@ class Trader:
         if strategy_name not in self.strategies:
             return 'Strategy not found.'
         else:
-            return ', '.join(map(str, self.strategies[strategy_name].get_params()))
+            return self.strategies[strategy_name].get_params()
 
     def get_strategies_info_string(self, left: str = '\t', right: str = '\n'):
         """
