@@ -10,18 +10,18 @@ from typing import TYPE_CHECKING
 
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
-from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QLabel, QLayout, QSpinBox, QTabWidget, \
-    QWidget
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QLabel, QLayout, QSpinBox, QTabWidget,
+                             QWidget)
 
-from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING, ALL_TRENDS
+from algobot.enums import ALL_TRENDS, BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
 from algobot.helpers import ROOT_DIR
 from algobot.interface.config_utils.credential_utils import load_credentials
 from algobot.interface.config_utils.slot_utils import load_hide_show_strategies, load_slots
 from algobot.interface.config_utils.strategy_utils import (add_strategy_inputs, delete_strategy_inputs,
                                                            get_strategy_values, strategy_enabled)
-from algobot.interface.configuration_helpers import add_start_end_step_to_layout, get_default_widget, set_value, \
-    get_input_widget_value
+from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, get_default_widget,
+                                                     get_input_widget_value, set_value)
 # noinspection PyUnresolvedReferences
 from algobot.interface.utils import clear_layout, get_elements_from_combobox
 from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import,unused-wildcard-import

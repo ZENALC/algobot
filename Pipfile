@@ -51,3 +51,4 @@ jupyterlab = "*"
 
 [scripts]
 precommit = "pre-commit run --all"
+bot = "python -m algobot"

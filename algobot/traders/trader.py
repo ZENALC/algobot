@@ -3,7 +3,7 @@ This will be the main Trader class that all other Traders will inherit from.
 """
 
 from datetime import datetime
-from typing import Dict, List, Union, Any
+from typing import Any, Dict, List, Union
 
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import get_label_string
@@ -224,7 +224,7 @@ class Trader:
         This function will return the stop loss for the current position the bot is in.
         :return: Stop loss value.
         """
-        if not any([self.loss_strategy, self.current_price, self.current_position]):
+        if self.loss_strategy is None or self.current_price is None or self.current_position is None:
             return None
 
         self.handle_trailing_prices()
@@ -277,7 +277,7 @@ class Trader:
         if strategy_name not in self.strategies:
             return 'Strategy not found.'
         else:
-            return self.strategies[strategy_name].get_params()
+            return self.strategies[strategy_name].values
 
     def get_strategies_info_string(self, left: str = '\t', right: str = '\n'):
         """

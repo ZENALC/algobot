@@ -199,9 +199,6 @@ class CustomStrategy:
 
         return new_dict
 
-    def get_params(self):
-        return self.values
-
     @staticmethod
     def get_func_kwargs(kwargs: dict) -> dict:
         """

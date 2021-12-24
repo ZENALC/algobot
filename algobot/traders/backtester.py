@@ -9,7 +9,7 @@ import traceback
 from datetime import datetime, timedelta
 from itertools import product
 from logging import Logger
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 
 import pandas as pd
 from dateutil import parser
@@ -381,10 +381,16 @@ class Backtester(Trader):
             raise ValueError("Step value cannot be 0.")
 
     def convert_start_end_step(self, combos: dict) -> dict:
+        """
+        Convert start, end, and step values to appropriate list.
+            For example, a start, end, step of [1, 10, 3] would yield -> [1, 4, 7, 10]
+        :param combos: Dictionary to convert start, end, and steps of.
+        :return: Modified combos dictionary.
+        """
         for k, v in combos.items():
             if isinstance(v, dict):
                 combos[k] = self.convert_start_end_step(v)
-            elif isinstance(v, list) and len(v) == 3 and all([is_number(str(char)) for char in v]):
+            elif isinstance(v, list) and len(v) == 3 and all(is_number(str(char)) for char in v):
                 self.extend_helper(v, combos, k)
 
         return combos
@@ -395,6 +401,8 @@ class Backtester(Trader):
         :param combos: Combos with ranges for the permutations.
         :return: List of all dictionary permutations.
         """
+        # pylint: disable=too-many-nested-blocks
+        # TODO: Clean up the function to make it less convoluted.
         self.convert_start_end_step(combos)
         strategies = combos.pop('strategies')
 

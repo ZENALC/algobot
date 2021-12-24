@@ -302,10 +302,15 @@ def get_data_from_parameter(data: DictType, parameter: str) -> float:
 
 
 def is_number(x: str) -> bool:
+    """
+    Check if a string is a number and return boolean regarding it.
+    :param x: String to check if number.
+    :return: Boolean whether number or not.
+    """
     try:
         float(x)
         return True
-    except ValueError as e:
+    except ValueError:
         return False
 
 
