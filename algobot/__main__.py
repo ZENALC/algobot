@@ -241,19 +241,21 @@ class Interface(QMainWindow):
         self.newsTextBrowser.moveCursor(QTextCursor.Start)
         self.newsStatusLabel.setText(f'Retrieved news successfully. (Updated: {now.strftime("%m/%d/%Y, %H:%M:%S")})')
 
-    def check_combos(self, combos: dict) -> bool:
+    def check_combos(self, combos: dict, parent: str = "Base") -> Union[bool, str]:
         """
         This function will recursively check optimizer combo values to see if settings are properly configured.
         :param combos: Combinations dictionary.
+        :param parent: Parent of nested combo.
         """
         if not combos:
-            return False
+            return parent
         elif not isinstance(combos, dict):
             return True
 
-        for value in combos.values():
-            if not self.check_combos(value):
-                return False
+        for key, value in combos.items():
+            result = self.check_combos(value, parent=key)
+            if result is not True:
+                return result
         return True
 
     def export_optimizer(self, file_type: str):
@@ -336,8 +338,9 @@ class Interface(QMainWindow):
             create_popup(self, "No strategies found. Make sure you have some strategies for optimization.")
             return
 
-        if not self.check_combos(combos['strategies']):
-            create_popup(self, "Please configure your strategies correctly.")
+        combo_verify = self.check_combos(combos['strategies'])
+        if combo_verify is not True:
+            create_popup(self, f"Please configure your strategies correctly. Invalid key: {combo_verify.capitalize()}.")
             return
 
         self.threads[OPTIMIZER] = optimizer_thread.OptimizerThread(gui=self, logger=self.logger, combos=combos)
