@@ -82,7 +82,7 @@ class TelegramBot:
         """
         if not self.trader:
             update.message.reply_text("Please first select a trader with /settrader <SIM or LIVE>. If you've already "
-                                      "selected a bot, then it may not be running.")
+                                      "selected a bot, then it may not be initialized.")
             return False
 
         bot_type = self.get_bot_caller(self.trader)
