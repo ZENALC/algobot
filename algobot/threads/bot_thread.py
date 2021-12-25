@@ -13,7 +13,7 @@ from algobot.enums import LIVE, SIMULATION
 from algobot.helpers import convert_long_interval, convert_small_interval, get_elapsed_time, parse_precision
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.config_utils.telegram_utils import test_telegram
-from algobot.telegram_bot import TelegramBot
+from algobot.telegram.bot import TelegramBot
 from algobot.traders.real_trader import RealTrader
 from algobot.traders.simulation_trader import SimulationTrader
 
@@ -33,13 +33,13 @@ class BotSignals(QObject):
     add_trade = pyqtSignal(dict)  # Signal emitted when a transaction occurs.
 
     # All of these below are for Telegram integration.
-    force_long = pyqtSignal()  # Signal emitted to force a long position.
-    force_short = pyqtSignal()  # Signal emitted to force a short position.
-    exit_position = pyqtSignal()  # Signal emitted to force exit a position.
-    wait_override = pyqtSignal()  # Signal emitted to wait override a position.
-    resume = pyqtSignal()  # Signal emitted to resume bot logic.
-    pause = pyqtSignal()  # Signal emitted to pause bot logic.
-    remove_custom_stop_loss = pyqtSignal()  # Signal emitted to remove custom stop loss.
+    force_long = pyqtSignal(str)  # Signal emitted to force a long position.
+    force_short = pyqtSignal(str)  # Signal emitted to force a short position.
+    exit_position = pyqtSignal(str)  # Signal emitted to force exit a position.
+    wait_override = pyqtSignal(str)  # Signal emitted to wait override a position.
+    resume = pyqtSignal(str)  # Signal emitted to resume bot logic.
+    pause = pyqtSignal(str)  # Signal emitted to pause bot logic.
+    remove_custom_stop_loss = pyqtSignal(str)  # Signal emitted to remove custom stop loss.
     set_custom_stop_loss = pyqtSignal(str, bool, float)  # Signal emitted to set a custom stop loss.
 
 
@@ -48,7 +48,7 @@ class BotThread(QRunnable):
     Main bot thread to run simulations and live bots.
     """
 
-    def __init__(self, caller: int, gui, logger):
+    def __init__(self, caller: str, gui, logger):
         super(BotThread, self).__init__()
         self.signals = BotSignals()
         self.logger = logger
@@ -214,10 +214,10 @@ class BotThread(QRunnable):
         a message is sent via Telegram.
         """
         if self.next_scheduled_event and datetime.now() >= self.next_scheduled_event:
-            self.gui.telegram_bot.send_statistics_telegram(self.telegram_chat_id, self.schedule_period)
+            self.gui.telegram_bot.send_statistics_telegram(self.telegram_chat_id, self.schedule_period, self.trader)
             self.next_scheduled_event = datetime.now() + timedelta(seconds=self.schedule_seconds)
 
-    def set_parameters(self, caller: int):
+    def set_parameters(self, caller: str):
         """
         Retrieves moving average options and loss settings based on caller.
         :param caller: Caller that dictates which parameters get set.
@@ -240,11 +240,13 @@ class BotThread(QRunnable):
         self.create_trader(caller)
         self.set_parameters(caller)
 
+        if self.gui.configuration.enableTelegramTrading.isChecked() and self.gui.telegram_bot is None:
+            self.initialize_telegram_bot()
+
+        if self.gui.configuration.schedulingStatisticsCheckBox.isChecked():
+            self.initialize_scheduler()
+
         if caller == LIVE:
-            if self.gui.configuration.enableTelegramTrading.isChecked():
-                self.initialize_telegram_bot()
-            if self.gui.configuration.schedulingStatisticsCheckBox.isChecked():
-                self.initialize_scheduler()
             self.gui.running_live = True
         elif caller == SIMULATION:
             self.gui.simulation_running_live = True
@@ -293,7 +295,7 @@ class BotThread(QRunnable):
         gui = self.gui
         test_telegram(config_obj=gui.configuration)
         api_key = gui.configuration.telegramApiKey.text()
-        gui.telegram_bot = TelegramBot(gui=gui, token=api_key, bot_thread=self)
+        gui.telegram_bot = TelegramBot(gui=gui, token=api_key)
         gui.telegram_bot.start()
         self.signals.activity.emit(LIVE, 'Started Telegram bot.')
         if self.gui.telegram_bot and gui.configuration.chat_pass:

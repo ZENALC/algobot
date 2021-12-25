@@ -157,7 +157,7 @@ class Configuration(QDialog):
         self.parent.graph_update_seconds = graph_speed
         self.parent.add_to_live_activity_monitor(f"Updated graph plot speed to every {graph_speed} second(s).")
 
-    def get_caller_based_on_tab(self, tab: QTabWidget) -> int:
+    def get_caller_based_on_tab(self, tab: QTabWidget) -> str:
         """
         This will return a caller based on the tab provided.
         :param tab: Tab for which the caller will be returned.
@@ -174,7 +174,7 @@ class Configuration(QDialog):
         else:
             raise ValueError("Invalid tab provided. No known called associated with this tab.")
 
-    def get_category_tab(self, caller: int) -> QTabWidget:
+    def get_category_tab(self, caller: str) -> QTabWidget:
         """
         This will return the category tab (main, simulation, or live) based on the caller provided.
         :param caller: Caller argument to return the appropriate category tab.
@@ -350,7 +350,7 @@ class Configuration(QDialog):
             inner_layout.addRow(QLabel("Take Profit Type"), take_profit_type_combo_box)
             inner_layout.addRow(QLabel('Take Profit Percentage'), take_profit_percentage)
 
-    def set_loss_settings(self, caller: int, config: dict):
+    def set_loss_settings(self, caller: str, config: dict):
         """
         Sets loss settings to GUI from configuration dictionary provided.
         :param caller: This caller's tab's GUI will be modified by this function.
@@ -367,7 +367,7 @@ class Configuration(QDialog):
         if tab != self.backtestConfigurationTabWidget:
             self.loss_dict[tab, 'safetyTimer'].setValue(config["safetyTimer"])
 
-    def set_take_profit_settings(self, caller: int, config: dict):
+    def set_take_profit_settings(self, caller: str, config: dict):
         """
         Sets take profit settings to GUI from configuration dictionary provided.
         :param caller: This caller's tab's GUI will be modified by this function.
@@ -426,7 +426,7 @@ class Configuration(QDialog):
             settings = self.get_take_profit_settings(caller)
             trader.apply_take_profit_settings(settings)
 
-    def get_loss_settings(self, caller: int) -> dict:
+    def get_loss_settings(self, caller: str) -> dict:
         """
         Returns loss settings from GUI.
         :param caller: Caller that'll determine which loss settings get returned.
@@ -451,7 +451,7 @@ class Configuration(QDialog):
 
         return loss_settings
 
-    def add_strategy_to_config(self, caller: int, strategy_name: str, config: dict):
+    def add_strategy_to_config(self, caller: str, strategy_name: str, config: dict):
         """
         Adds strategy configuration to config dictionary provided.
         :param caller: Caller that'll determine which trader's strategy settings get added to the config dictionary.
@@ -465,7 +465,7 @@ class Configuration(QDialog):
         for index, value in enumerate(values, start=1):
             config[f'{strategy_name.lower()}{index}'] = value
 
-    def load_strategy_from_config(self, caller: int, strategy_name: str, config: dict):
+    def load_strategy_from_config(self, caller: str, strategy_name: str, config: dict):
         """
         This function will load the strategy from the config dictionary provided.
         :param caller: Caller to manipulate.

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
 
 
-def strategy_enabled(config_obj: Configuration, strategy_name: str, caller: int) -> bool:
+def strategy_enabled(config_obj: Configuration, strategy_name: str, caller: str) -> bool:
     """
     Returns a boolean whether a strategy is enabled or not.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -30,7 +30,7 @@ def strategy_enabled(config_obj: Configuration, strategy_name: str, caller: int)
     return config_obj.strategy_dict[tab, strategy_name, 'groupBox'].isChecked()
 
 
-def get_strategies(config_obj: Configuration, caller: int) -> List[Dict[str, Any]]:
+def get_strategies(config_obj: Configuration, caller: str) -> List[Dict[str, Any]]:
     """
     Returns strategy information from GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -46,7 +46,7 @@ def get_strategies(config_obj: Configuration, caller: int) -> List[Dict[str, Any
     return strategies
 
 
-def get_strategy_values(config_obj: Configuration, strategy_name: str, caller: int, verbose: bool = False) -> List[int]:
+def get_strategy_values(config_obj: Configuration, strategy_name: str, caller: str, verbose: bool = False) -> List[int]:
     """
     This will return values from the strategy provided.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -63,7 +63,7 @@ def get_strategy_values(config_obj: Configuration, strategy_name: str, caller: i
     return values
 
 
-def set_strategy_values(config_obj: Configuration, strategy_name: str, caller: int, values):
+def set_strategy_values(config_obj: Configuration, strategy_name: str, caller: str, values):
     """
     Set GUI values for a strategy based on values passed.
     :param config_obj: Configuration QDialog object (from configuration.py)

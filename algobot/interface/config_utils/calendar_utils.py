@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 def get_calendar_dates(config_obj: Configuration,
-                       caller: int = BACKTEST) -> Tuple[Optional[datetime.date], Optional[datetime.date]]:
+                       caller: str = BACKTEST) -> Tuple[Optional[datetime.date], Optional[datetime.date]]:
     """
     Returns start end end dates for backtest. If both are the same, returns None.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -30,7 +30,7 @@ def get_calendar_dates(config_obj: Configuration,
     return start_date, end_date
 
 
-def setup_calendar(config_obj: Configuration, caller: int = BACKTEST):
+def setup_calendar(config_obj: Configuration, caller: str = BACKTEST):
     """
     Parses data if needed and then manipulates GUI elements with data timeframe.
     :param config_obj: Configuration QDialog object (from configuration.py)

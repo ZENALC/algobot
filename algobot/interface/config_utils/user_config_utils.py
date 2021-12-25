@@ -36,7 +36,7 @@ def create_appropriate_config_folders(config_obj: Configuration, folder: str) ->
     return target_path
 
 
-def helper_load(config_obj: Configuration, caller: int, config: dict):
+def helper_load(config_obj: Configuration, caller: str, config: dict):
     """
     Helper function to load caller configuration to GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -50,7 +50,7 @@ def helper_load(config_obj: Configuration, caller: int, config: dict):
         config_obj.load_strategy_from_config(caller, strategy_name, config)
 
 
-def helper_save(config_obj: Configuration, caller: int, config: dict):
+def helper_save(config_obj: Configuration, caller: str, config: dict):
     """
     Helper function to save caller configuration from GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -294,7 +294,7 @@ def copy_settings_to_backtest(config_obj: Configuration):
     config_obj.backtestPrecisionComboBox.setCurrentIndex(config_obj.precisionComboBox.currentIndex())
 
 
-def copy_strategy_settings(config_obj: Configuration, from_caller: int, to_caller: int, strategy_name: str):
+def copy_strategy_settings(config_obj: Configuration, from_caller: str, to_caller: str, strategy_name: str):
     """
     Copies strategy settings from caller provided and sets it to caller provided based on strategy name.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -311,7 +311,7 @@ def copy_strategy_settings(config_obj: Configuration, from_caller: int, to_calle
                                                                                   strategy_name, from_caller))
 
 
-def copy_loss_settings(config_obj: Configuration, from_caller: int, to_caller: int):
+def copy_loss_settings(config_obj: Configuration, from_caller: str, to_caller: str):
     """
     Copies loss settings from one caller to another.
     :param config_obj: Configuration QDialog object (from configuration.py)
