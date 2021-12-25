@@ -97,7 +97,8 @@ class Interface(QMainWindow):
         elif algobot.LATEST_VERSION == UNKNOWN:
             self.add_to_live_activity_monitor('Failed to fetch latest version metadata.')
         elif algobot.LATEST_VERSION == algobot.CURRENT_VERSION:
-            self.add_to_live_activity_monitor('No updates found.')
+            self.add_to_live_activity_monitor(f'No updates found. You are running the latest version: '
+                                              f'{algobot.CURRENT_VERSION}')
         else:
             higher_version = compare_versions(algobot.CURRENT_VERSION, algobot.LATEST_VERSION)
             if higher_version == algobot.LATEST_VERSION:
