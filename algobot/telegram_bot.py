@@ -12,7 +12,7 @@ from telegram.ext import CommandHandler, Updater
 
 from algobot.enums import LIVE, LONG, SHORT
 from algobot.helpers import get_label_string
-from algobot.traders.simulationtrader import SimulationTrader
+from algobot.traders.simulation_trader import SimulationTrader
 
 if TYPE_CHECKING:
     from algobot.__main__ import Interface
@@ -30,27 +30,27 @@ class TelegramBot:
         self.bot = Bot(token=self.token)
 
         # Get the dispatcher to register handlers
-        dp = self.updater.dispatcher
+        dispatcher = self.updater.dispatcher
 
         # on different commands - answer in Telegram
-        dp.add_handler(CommandHandler("help", self.help_telegram))
-        dp.add_handler(CommandHandler("override", self.override_telegram))
-        dp.add_handler(CommandHandler('trades', self.get_trades_telegram))
-        dp.add_handler(CommandHandler('resume', self.resume_telegram))
-        dp.add_handler(CommandHandler('pause', self.pause_telegram))
-        dp.add_handler(CommandHandler('removecustomstoploss', self.remove_custom_stop_loss))
-        dp.add_handler(CommandHandler('setcustomstoploss', self.set_custom_stop_loss))
-        dp.add_handler(CommandHandler("forcelong", self.force_long_telegram))
-        dp.add_handler(CommandHandler("forceshort", self.force_short_telegram))
-        dp.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
-        dp.add_handler(CommandHandler('morestats', self.get_advanced_statistics_telegram))
-        dp.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
-        dp.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
-        dp.add_handler(CommandHandler(("update", 'updatevalues'), self.update_values))
-        dp.add_handler(CommandHandler(("thanks", 'thanksbot', 'thankyou'), self.thank_bot_telegram))
-        dp.add_handler(CommandHandler(("print", 'makethatbread', 'printmoney'), self.print_telegram))
-        dp.add_handler(CommandHandler('joke', self.joke))
-        dp.add_handler(CommandHandler('wisdom', self.wisdom))
+        dispatcher.add_handler(CommandHandler("help", self.help_telegram))
+        dispatcher.add_handler(CommandHandler("override", self.override_telegram))
+        dispatcher.add_handler(CommandHandler('trades', self.get_trades_telegram))
+        dispatcher.add_handler(CommandHandler('resume', self.resume_telegram))
+        dispatcher.add_handler(CommandHandler('pause', self.pause_telegram))
+        dispatcher.add_handler(CommandHandler('removecustomstoploss', self.remove_custom_stop_loss))
+        dispatcher.add_handler(CommandHandler('setcustomstoploss', self.set_custom_stop_loss))
+        dispatcher.add_handler(CommandHandler("forcelong", self.force_long_telegram))
+        dispatcher.add_handler(CommandHandler("forceshort", self.force_short_telegram))
+        dispatcher.add_handler(CommandHandler('exitposition', self.exit_position_telegram))
+        dispatcher.add_handler(CommandHandler('morestats', self.get_advanced_statistics_telegram))
+        dispatcher.add_handler(CommandHandler(('stats', 'statistics'), self.get_statistics_telegram))
+        dispatcher.add_handler(CommandHandler(("position", 'getposition'), self.get_position_telegram))
+        dispatcher.add_handler(CommandHandler(("update", 'updatevalues'), self.update_values))
+        dispatcher.add_handler(CommandHandler(("thanks", 'thanksbot', 'thankyou'), self.thank_bot_telegram))
+        dispatcher.add_handler(CommandHandler(("print", 'makethatbread', 'printmoney'), self.print_telegram))
+        dispatcher.add_handler(CommandHandler('joke', self.joke))
+        dispatcher.add_handler(CommandHandler('wisdom', self.wisdom))
 
     def send_message(self, chat_id: str, message: str):
         """
@@ -175,26 +175,26 @@ class TelegramBot:
 
         return (f'Symbol: {trader.symbol}\n'
                 f'Position: {trader.get_position_string()}\n'
-                f'Interval: {trader.dataView.interval}\n'
+                f'Interval: {trader.data_view.interval}\n'
                 f'Total trades made: {len(trader.trades)}\n'
                 f"Coin owned: {trader.coin}\n"
-                f"Coin owed: {trader.coinOwed}\n"
-                f"Starting balance: ${round(trader.startingBalance, 2)}\n"
+                f"Coin owed: {trader.coin_owed}\n"
+                f"Starting balance: ${round(trader.starting_balance, 2)}\n"
                 f"Balance: ${round(trader.balance, 2)}\n"
                 f'Net: ${round(trader.get_net(), 2)}\n'
                 f"{profit_label}: ${round(abs(profit), 2)}\n"
                 f'{profit_label} Percentage: {round(self.bot_thread.percentage, 2)}%\n'
-                f'Daily Percentage: {round(self.bot_thread.dailyPercentage, 2)}%\n'
-                f'Autonomous Mode: {not trader.inHumanControl}\n'
+                f'Daily Percentage: {round(self.bot_thread.daily_percentage, 2)}%\n'
+                f'Autonomous Mode: {not trader.in_human_control}\n'
                 f'Loss Strategy: {trader.get_stop_loss_strategy_string()}\n'
-                f'Stop Loss Percentage: {round(trader.lossPercentageDecimal * 100, 2)}%\n'
+                f'Stop Loss Percentage: {round(trader.loss_percentage_decimal * 100, 2)}%\n'
                 f'Stop Loss: {trader.get_safe_rounded_string(trader.get_stop_loss())}\n'
-                f"Custom Stop Loss: {trader.get_safe_rounded_string(trader.customStopLoss)}\n"
-                f"Current {trader.coinName} price: ${trader.currentPrice}\n"
+                f"Custom Stop Loss: {trader.get_safe_rounded_string(trader.custom_stop_loss)}\n"
+                f"Current {trader.coin_name} price: ${trader.current_price}\n"
                 f'Elapsed time: {self.bot_thread.elapsed}\n'
-                f'Smart Stop Loss Initial Counter: {trader.smartStopLossInitialCounter}\n'
-                f'Smart Stop Loss Counter: {trader.smartStopLossCounter}\n'
-                f'Stop Loss Safety Timer: {trader.safetyTimer}\n'
+                f'Smart Stop Loss Initial Counter: {trader.smart_stop_loss_initial_counter}\n'
+                f'Smart Stop Loss Counter: {trader.smart_stop_loss_counter}\n'
+                f'Stop Loss Safety Timer: {trader.safety_timer}\n'
                 )
 
     def send_statistics_telegram(self, chat_id: str, period: str):
@@ -342,7 +342,7 @@ class TelegramBot:
         Function called when /override is called. As the name suggests, it overrides the bot.
         """
         update.message.reply_text("Overriding.")
-        self.bot_thread.signals.waitOverride.emit()
+        self.bot_thread.signals.wait_override.emit()
         update.message.reply_text("Successfully overrode.")
 
     # noinspection PyUnusedLocal
@@ -350,7 +350,7 @@ class TelegramBot:
         """
         Function called when /pause is called. As the name suggests, it pauses the bot logic.
         """
-        if self.gui.trader.inHumanControl:
+        if self.gui.trader.in_human_control:
             update.message.reply_text("Bot is already in human control.")
         else:
             self.bot_thread.signals.pause.emit()
@@ -361,7 +361,7 @@ class TelegramBot:
         """
         Function called when /resume is called. As the name suggests, it resumes the bot logic.
         """
-        if not self.gui.trader.inHumanControl:
+        if not self.gui.trader.in_human_control:
             update.message.reply_text("Bot is already in autonomous mode.")
         else:
             self.bot_thread.signals.resume.emit()
@@ -373,10 +373,10 @@ class TelegramBot:
         Function called when /removecustomstoploss is called. As the name suggests, it removes the current custom stop
         loss set.
         """
-        if self.gui.trader.customStopLoss is None:
+        if self.gui.trader.custom_stop_loss is None:
             update.message.reply_text("Bot already has no custom stop loss implemented.")
         else:
-            self.bot_thread.signals.removeCustomStopLoss.emit()
+            self.bot_thread.signals.remove_custom_stop_loss.emit()
             update.message.reply_text("Bot's custom stop loss has been removed.")
 
     def set_custom_stop_loss(self, update, context):
@@ -401,7 +401,7 @@ class TelegramBot:
             update.message.reply_text("Please make sure you specify a number that is less than 10,000,000.")
         else:
             stop_loss = round(stop_loss, 6)
-            self.bot_thread.signals.setCustomStopLoss.emit(LIVE, True, stop_loss)
+            self.bot_thread.signals.set_custom_stop_loss.emit(LIVE, True, stop_loss)
             update.message.reply_text(f"Stop loss has been successfully set to ${stop_loss}.")
 
     # noinspection PyUnusedLocal
@@ -414,7 +414,7 @@ class TelegramBot:
             update.message.reply_text("Bot is already in a long position.")
         else:
             update.message.reply_text("Forcing long.")
-            self.bot_thread.signals.forceLong.emit()
+            self.bot_thread.signals.force_long.emit()
             update.message.reply_text("Successfully forced long.")
 
     # noinspection PyUnusedLocal
@@ -427,7 +427,7 @@ class TelegramBot:
             update.message.reply_text("Bot is already in a short position.")
         else:
             update.message.reply_text("Forcing short.")
-            self.bot_thread.signals.forceShort.emit()
+            self.bot_thread.signals.force_short.emit()
             update.message.reply_text("Successfully forced short.")
 
     # noinspection PyUnusedLocal
@@ -439,7 +439,7 @@ class TelegramBot:
             update.message.reply_text("Bot is not in a position.")
         else:
             update.message.reply_text("Exiting position.")
-            self.bot_thread.signals.exitPosition.emit()
+            self.bot_thread.signals.exit_position.emit()
             update.message.reply_text("Successfully exited position.")
 
     # noinspection PyUnusedLocal

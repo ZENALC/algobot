@@ -19,12 +19,15 @@ import requests
 from dateutil import parser
 
 import algobot
-from algobot.typing_hints import DICT_TYPE
+from algobot.typing_hints import DictType
 
 LOG_FOLDER = 'Logs'
+STRATEGIES_FOLDER = 'Strategies'
+UNKNOWN = 'unknown'
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
+STRATEGIES_DIR = os.path.join(ROOT_DIR, STRATEGIES_FOLDER)
 LOG_DIR = os.path.join(ROOT_DIR, LOG_FOLDER)
 
 SHORT_INTERVAL_MAP = {
@@ -57,7 +60,7 @@ def get_latest_version() -> str:
         version = response.content.decode().strip()
     except Exception as e:
         algobot.MAIN_LOGGER.exception(repr(e))
-        version = 'unknown'
+        version = UNKNOWN
     return version
 
 
@@ -68,12 +71,44 @@ def get_current_version() -> str:
     version_file = os.path.join(ROOT_DIR, 'version.txt')
 
     if not os.path.isfile(version_file):
-        version = 'not found'
+        return UNKNOWN
     else:
-        with open(version_file) as f:
+        with open(version_file, encoding='utf-8') as f:
             version = f.read().strip()
 
-    return version
+            version_split = version.split('.')
+            for split_item in version_split:
+                if not split_item.isdigit():
+                    return UNKNOWN
+
+        return version
+
+
+def compare_versions(x: str, y: str) -> Optional[str]:
+    """
+    Compare two versions and return the higher one or either if they're equal.
+    :param x: First version to compare.
+    :param y: Second version to compare.
+    :return: Higher version.
+    """
+    x_split = x.split('.')
+    y_split = y.split('.')
+
+    # They must both contain valid integers.
+    if not ''.join(x_split).isdigit() or not ''.join(y_split).isdigit():
+        return None
+
+    shorter, longer = x_split, y_split
+    if len(y_split) < len(x_split):
+        shorter, longer = y_split, x_split
+
+    for index, num in enumerate(shorter):
+        if num > longer[index]:
+            return '.'.join(shorter)
+        elif num < longer[index]:
+            return '.'.join(longer)
+
+    return '.'.join(longer)
 
 
 def is_debug() -> bool:
@@ -89,15 +124,15 @@ def get_random_color() -> str:
     Returns a random HEX color string.
     :return: HEX color string.
     """
-    def r():
+    def random_integer():
         """
         Generates a random integer between 0 and 255 and returns in a hexadecimal format.
         :return: Hexadecimal between 0 and 255.
         """
-        randomInt = random.randint(0, 255)
-        return format(randomInt, '02x')
+        random_int = random.randint(0, 255)
+        return format(random_int, '02x')
 
-    return r() + r() + r()
+    return random_integer() + random_integer() + random_integer()
 
 
 def open_folder(folder: str):
@@ -120,38 +155,38 @@ def create_folder(folder: str) -> str:
     return target_path
 
 
-def create_folder_if_needed(targetPath: str, basePath: str = ROOT_DIR) -> bool:
+def create_folder_if_needed(target_path: str, base_path: str = ROOT_DIR) -> bool:
     """
     This function will create the appropriate folders in the root folder if needed.
-    :param targetPath: Target path to have exist.
-    :param basePath: Base path to start from. By default, it'll be the root directory.
+    :param target_path: Target path to have exist.
+    :param base_path: Base path to start from. By default, it'll be the root directory.
     :return: Boolean whether folder was created or not.
     """
-    if not os.path.exists(targetPath):
-        folder = os.path.basename(targetPath)
-        os.mkdir(os.path.join(basePath, folder))
+    if not os.path.exists(target_path):
+        folder = os.path.basename(target_path)
+        os.mkdir(os.path.join(base_path, folder))
         return True
     return False
 
 
-def open_file_or_folder(targetPath: str):
+def open_file_or_folder(target_path: str):
     """
     Opens a file or folder based on targetPath.
-    :param targetPath: File or folder to open with system defaults.
+    :param target_path: File or folder to open with system defaults.
     """
     # pylint: disable=consider-using-with, no-member
     if platform.system() == "Windows":
-        os.startfile(targetPath)
+        os.startfile(target_path)
     elif platform.system() == "Darwin":
-        subprocess.Popen(["open", targetPath])
+        subprocess.Popen(["open", target_path])
     else:
-        subprocess.Popen(["xdg-open", targetPath])
+        subprocess.Popen(["xdg-open", target_path])
 
 
-def setup_and_return_log_path(fileName: str) -> str:
+def setup_and_return_log_path(file_name: str) -> str:
     """
     Creates folders (if needed) and returns default log path.
-    :param fileName: Log filename to be created.
+    :param file_name: Log filename to be created.
     :return: Absolute path to log file.
     """
     if not os.path.exists(LOG_DIR):
@@ -162,9 +197,8 @@ def setup_and_return_log_path(fileName: str) -> str:
     if not os.path.exists(log_date_folder):
         os.mkdir(log_date_folder)
 
-    log_file_name = f'{datetime.now().strftime("%H-%M-%S")}-{fileName}.log'
-    fullPath = os.path.join(log_date_folder, log_file_name)
-    return fullPath
+    log_file_name = f'{datetime.now().strftime("%H-%M-%S")}-{file_name}.log'
+    return os.path.join(log_date_folder, log_file_name)
 
 
 def get_logger(log_file: str, logger_name: str) -> logging.Logger:
@@ -182,26 +216,28 @@ def get_logger(log_file: str, logger_name: str) -> logging.Logger:
 
     logger.setLevel(log_level)
     formatter = logging.Formatter('%(message)s')
-    handler = logging.FileHandler(filename=setup_and_return_log_path(fileName=log_file), delay=True)
+    handler = logging.FileHandler(filename=setup_and_return_log_path(file_name=log_file), delay=True)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
     return logger
 
 
-def get_logging_object(enable_logging: bool, logFile: str, loggerObject: logging.Logger) -> Optional[logging.Logger]:
+def get_logging_object(enable_logging: bool,
+                       log_file: str,
+                       logger_object: logging.Logger) -> Optional[logging.Logger]:
     """
     Returns a logger object.
     :param enable_logging: Boolean that determines whether logging is enabled or not.
-    :param logFile: File to log to.
-    :param loggerObject: Logger object to return if there is one already specified.
+    :param log_file: File to log to.
+    :param logger_object: Logger object to return if there is one already specified.
     :return: Logger object or None.
     """
-    if loggerObject:
-        return loggerObject
+    if logger_object:
+        return logger_object
 
     if enable_logging:
-        return get_logger(log_file=logFile, logger_name=logFile)
+        return get_logger(log_file=log_file, logger_name=log_file)
 
     return None
 
@@ -229,13 +265,13 @@ def get_ups_and_downs(data: List[Dict[str, float]], parameter: str) -> Tuple[lis
     return ups, downs
 
 
-def get_elapsed_time(startingTime: float) -> str:
+def get_elapsed_time(starting_time: float) -> str:
     """
     Returns elapsed time in human readable format subtracted from starting time.
-    :param startingTime: Starting time to subtract from current time.
+    :param starting_time: Starting time to subtract from current time.
     :return: Human readable string representing elapsed time.
     """
-    seconds = int(time.time() - startingTime)
+    seconds = int(time.time() - starting_time)
     if seconds <= 60:
         return f'{seconds} seconds'
     elif seconds <= 3600:
@@ -250,7 +286,7 @@ def get_elapsed_time(startingTime: float) -> str:
         return f'{hours}h {minutes}m {seconds}s'
 
 
-def get_data_from_parameter(data: DICT_TYPE, parameter: str) -> float:
+def get_data_from_parameter(data: DictType, parameter: str) -> float:
     """
     Helper function for trading. Will return appropriate data from parameter passed in.
     :param data: Dictionary data with parameters.
@@ -263,6 +299,19 @@ def get_data_from_parameter(data: DICT_TYPE, parameter: str) -> float:
         return (data['open'] + data['close']) / 2
     else:
         return data[parameter]
+
+
+def is_number(x: str) -> bool:
+    """
+    Check if a string is a number and return boolean regarding it.
+    :param x: String to check if number.
+    :return: Boolean whether number or not.
+    """
+    try:
+        float(x)
+        return True
+    except ValueError:
+        return False
 
 
 def get_caller_string(caller: str):
@@ -291,9 +340,10 @@ def get_label_string(label: str) -> str:
     return label
 
 
-def get_interval_minutes(interval: str) -> int:
+def get_interval_minutes(interval: Union[int, str], reverse: bool = False) -> Union[int, str]:
     """
     Returns amount of minutes from interval provided.
+    :param reverse: Reverse if you want interval from minutes instead.
     :param interval: Interval to get the amount of minutes of.
     """
     intervals = {
@@ -311,13 +361,17 @@ def get_interval_minutes(interval: str) -> int:
         '6 Hours': 360,
         '8 Hours': 480
     }
+
+    if reverse:
+        intervals = {v: k for k, v in intervals.items()}
+
     return intervals[interval]
 
 
-def get_interval_strings(startingIndex: int = 0) -> List[str]:
+def get_interval_strings(starting_index: int = 0) -> List[str]:
     """
     Returns interval strings in a sorted format.
-    :param startingIndex: Index to start getting interval strings from.
+    :param starting_index: Index to start getting interval strings from.
     :return: Strings in descending format.
     """
     return ['1 Minute',
@@ -332,7 +386,7 @@ def get_interval_strings(startingIndex: int = 0) -> List[str]:
             '8 Hours',
             '12 Hours',
             '1 Day',
-            '3 Days'][startingIndex:]
+            '3 Days'][starting_index:]
 
 
 def parse_strategy_name(name: str) -> str:
@@ -418,7 +472,7 @@ def load_from_csv(path: str, descending: bool = True) -> List[Dict[str, Union[fl
     """
     df = pd.read_csv(path)
     df.columns = [col.lower().strip() for col in df.columns]  # To support backwards compatibility.
-    data = df.to_dict('records')
+    data = df.to_dict('records')  # pylint: disable=no-member
 
     first_date = parser.parse(data[0]['date_utc'])  # Retrieve first date from CSV data.
     last_date = parser.parse(data[-1]['date_utc'])  # Retrieve last date from CSV data.
@@ -441,26 +495,26 @@ def parse_precision(precision: str, symbol: str) -> int:
     """
     if precision == "Auto":
         symbol_info = algobot.BINANCE_CLIENT.get_symbol_info(symbol)
-        tickSize = float(symbol_info['filters'][0]['tickSize'])
-        precision = abs(round(math.log(tickSize, 10)))
+        tick_size = float(symbol_info['filters'][0]['tickSize'])
+        precision = abs(round(math.log(tick_size, 10)))
     return int(precision)
 
 
-def write_json_file(filePath: str = 'secret.json', **kwargs):
+def write_json_file(file_path: str = 'secret.json', **kwargs):
     """
     Writes JSON file with **kwargs provided.
-    :param filePath: Path to write **kwargs data to.
+    :param file_path: Path to write **kwargs data to.
     :param kwargs: Dictionary to dump to JSON file.
     """
-    with open(filePath, 'w') as f:
+    with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(kwargs, f, indent=4)
 
 
-def load_json_file(jsonfile: str) -> dict:
+def load_json_file(json_file: str) -> dict:
     """
     Loads JSON file passed and returns dictionary.
-    :param jsonfile: File to read dictionary from.
+    :param json_file: File to read dictionary from.
     :return: Dictionary with credentials.
     """
-    with open(jsonfile) as f:
+    with open(json_file, encoding='utf-8') as f:
         return json.load(f)

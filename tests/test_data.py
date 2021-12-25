@@ -40,7 +40,7 @@ def get_csv_data(headers: bool = False) -> List[str]:
     :param headers: Boolean for whether you want the headers in the list of data or not.
     """
     data_file = os.path.join(ROOT_DIR, 'tests', 'data', 'small_csv_data.csv')
-    with open(data_file) as f:
+    with open(data_file, 'r', encoding='utf-8') as f:
         index = 0 if headers else 1
         return f.readlines()[index:]
 

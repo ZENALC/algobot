@@ -27,11 +27,11 @@ def create_appropriate_config_folders(config_obj: Configuration, folder: str) ->
     :param folder: Folder to create inside configuration folder.
     :return: Absolute path to new folder.
     """
-    base_path = os.path.join(helpers.ROOT_DIR, config_obj.configFolder)
+    base_path = os.path.join(helpers.ROOT_DIR, config_obj.config_folder)
     helpers.create_folder_if_needed(base_path)
 
     target_path = os.path.join(base_path, folder)
-    helpers.create_folder_if_needed(target_path, basePath=base_path)
+    helpers.create_folder_if_needed(target_path, base_path=base_path)
 
     return target_path
 
@@ -46,8 +46,8 @@ def helper_load(config_obj: Configuration, caller: int, config: dict):
     """
     config_obj.set_loss_settings(caller, config)
     config_obj.set_take_profit_settings(caller, config)
-    for strategyName in config_obj.strategies.keys():
-        config_obj.load_strategy_from_config(caller, strategyName, config)
+    for strategy_name in config_obj.strategies.keys():
+        config_obj.load_strategy_from_config(caller, strategy_name, config)
 
 
 def helper_save(config_obj: Configuration, caller: int, config: dict):
@@ -60,8 +60,8 @@ def helper_save(config_obj: Configuration, caller: int, config: dict):
     """
     config.update(config_obj.get_loss_settings(caller))
     config.update(config_obj.get_take_profit_settings(caller))
-    for strategyName in config_obj.strategies.keys():
-        config_obj.add_strategy_to_config(caller, strategyName, config)
+    for strategy_name in config_obj.strategies.keys():
+        config_obj.add_strategy_to_config(caller, strategy_name, config)
 
 
 def helper_get_save_file_path(config_obj: Configuration, name: str) -> Union[str]:
@@ -294,36 +294,37 @@ def copy_settings_to_backtest(config_obj: Configuration):
     config_obj.backtestPrecisionComboBox.setCurrentIndex(config_obj.precisionComboBox.currentIndex())
 
 
-def copy_strategy_settings(config_obj: Configuration, fromCaller: int, toCaller: int, strategyName: str):
+def copy_strategy_settings(config_obj: Configuration, from_caller: int, to_caller: int, strategy_name: str):
     """
     Copies strategy settings from caller provided and sets it to caller provided based on strategy name.
     :param config_obj: Configuration QDialog object (from configuration.py)
-    :param fromCaller: Function will copy settings from this caller.
-    :param toCaller: Function will copy settings to this caller.
-    :param strategyName: This strategy's settings will be copied.
+    :param from_caller: Function will copy settings from this caller.
+    :param to_caller: Function will copy settings to this caller.
+    :param strategy_name: This strategy's settings will be copied.
     """
-    from_caller_tab = config_obj.get_category_tab(fromCaller)
-    to_caller_tab = config_obj.get_category_tab(toCaller)
+    from_caller_tab = config_obj.get_category_tab(from_caller)
+    to_caller_tab = config_obj.get_category_tab(to_caller)
 
-    from_caller_group_box = config_obj.strategyDict[from_caller_tab, strategyName, 'groupBox']
-    config_obj.strategyDict[to_caller_tab, strategyName, 'groupBox'].setChecked(from_caller_group_box.isChecked())
-    set_strategy_values(config_obj, strategyName, toCaller, get_strategy_values(config_obj, strategyName, fromCaller))
+    from_caller_group_box = config_obj.strategy_dict[from_caller_tab, strategy_name, 'groupBox']
+    config_obj.strategy_dict[to_caller_tab, strategy_name, 'groupBox'].setChecked(from_caller_group_box.isChecked())
+    set_strategy_values(config_obj, strategy_name, to_caller, get_strategy_values(config_obj,
+                                                                                  strategy_name, from_caller))
 
 
-def copy_loss_settings(config_obj: Configuration, fromCaller: int, toCaller: int):
+def copy_loss_settings(config_obj: Configuration, from_caller: int, to_caller: int):
     """
     Copies loss settings from one caller to another.
     :param config_obj: Configuration QDialog object (from configuration.py)
-    :param fromCaller: Loss settings will be copied from this trader.
-    :param toCaller: Loss settings will be copied to this trader.
+    :param from_caller: Loss settings will be copied from this trader.
+    :param to_caller: Loss settings will be copied to this trader.
     """
-    from_tab = config_obj.get_category_tab(fromCaller)
-    to_tab = config_obj.get_category_tab(toCaller)
+    from_tab = config_obj.get_category_tab(from_caller)
+    to_tab = config_obj.get_category_tab(to_caller)
 
-    config_obj.lossDict[to_tab, "lossType"].setCurrentIndex(config_obj.lossDict[from_tab, "lossType"].currentIndex())
-    config_obj.lossDict[to_tab, "lossPercentage"].setValue(config_obj.lossDict[from_tab, "lossPercentage"].value())
-    config_obj.lossDict[to_tab, "smartStopLossCounter"].setValue(config_obj.lossDict[from_tab,
-                                                                                     "smartStopLossCounter"].value())
+    config_obj.loss_dict[to_tab, "lossType"].setCurrentIndex(config_obj.loss_dict[from_tab, "lossType"].currentIndex())
+    config_obj.loss_dict[to_tab, "lossPercentage"].setValue(config_obj.loss_dict[from_tab, "lossPercentage"].value())
+    config_obj.loss_dict[to_tab, "smartStopLossCounter"].setValue(config_obj.loss_dict[from_tab,
+                                                                                       "smartStopLossCounter"].value())
 
     if to_tab != config_obj.backtestConfigurationTabWidget:
-        config_obj.lossDict[to_tab, "safetyTimer"].setValue(config_obj.lossDict[from_tab, "safetyTimer"].value())
+        config_obj.loss_dict[to_tab, "safetyTimer"].setValue(config_obj.loss_dict[from_tab, "safetyTimer"].value())

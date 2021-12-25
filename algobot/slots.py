@@ -58,14 +58,17 @@ def create_action_slots(gui: Interface):
     """
     Creates actions slots.
     """
-    gui.otherCommandsAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.otherCommands))
+    gui.otherCommandsAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.other_commands))
     gui.configurationAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.configuration))
     gui.aboutAlgobotAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.about))
+    gui.strategyBuilderAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.strategy_builder))
+    gui.strategyManagerAction.triggered.connect(lambda: show_and_bring_window_to_front(gui.strategy_manager))
     gui.liveStatisticsAction.triggered.connect(lambda: gui.show_statistics(0))
     gui.simulationStatisticsAction.triggered.connect(lambda: gui.show_statistics(1))
     gui.openBacktestResultsFolderAction.triggered.connect(lambda: open_folder("Backtest Results"))
     gui.openOptimizerResultsFolderAction.triggered.connect(lambda: open_folder('Optimizer Results'))
     gui.openVolatilityResultsFolderAction.triggered.connect(lambda: open_folder('Volatility Results'))
+    gui.openStrategiesFolderAction.triggered.connect(lambda: open_folder('Strategies'))
     gui.openLogFolderAction.triggered.connect(lambda: open_folder("Logs"))
     gui.openCsvFolderAction.triggered.connect(lambda: open_folder('CSV'))
     gui.openDatabasesFolderAction.triggered.connect(lambda: open_folder('Databases'))

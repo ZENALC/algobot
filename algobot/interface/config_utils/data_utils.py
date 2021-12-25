@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QFileDialog
 from algobot import helpers
 from algobot.enums import BACKTEST
 from algobot.interface.config_utils.calendar_utils import setup_calendar
-from algobot.threads import downloadThread
+from algobot.threads import download_thread
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
@@ -26,12 +26,12 @@ def import_data(config_obj: Configuration, caller: int = BACKTEST):
     action = 'backtest' if caller == BACKTEST else 'optimization'
 
     inner_dict['infoLabel'].setText("Importing data...")
-    filePath, _ = QFileDialog.getOpenFileName(config_obj, 'Open file', helpers.ROOT_DIR, "CSV (*.csv)")
-    if filePath == '':
+    file_path, _ = QFileDialog.getOpenFileName(config_obj, 'Open file', helpers.ROOT_DIR, "CSV (*.csv)")
+    if file_path == '':
         inner_dict['infoLabel'].setText("Data not imported.")
         inner_dict['downloadProgress'].setValue(0)
     else:
-        inner_dict['data'] = helpers.load_from_csv(filePath, descending=False)
+        inner_dict['data'] = helpers.load_from_csv(file_path, descending=False)
         inner_dict['dataType'] = "Imported"
         inner_dict['dataInterval'] = inner_dict['dataIntervalComboBox'].currentText()
         inner_dict['infoLabel'].setText("Imported data successfully.")
@@ -53,7 +53,7 @@ def download_data(config_obj: Configuration, caller: int = BACKTEST):
     symbol = config_obj.optimizer_backtest_dict[caller]['tickers'].text()
     interval = helpers.convert_long_interval(config_obj.optimizer_backtest_dict[caller]['intervals'].currentText())
 
-    thread = downloadThread.DownloadThread(symbol=symbol, interval=interval, caller=caller, logger=config_obj.logger)
+    thread = download_thread.DownloadThread(symbol=symbol, interval=interval, caller=caller, logger=config_obj.logger)
     thread.signals.progress.connect(lambda progress, msg: set_download_progress(config_obj=config_obj, message=msg,
                                                                                 progress=progress,  caller=caller))
     thread.signals.finished.connect(lambda data, *_: set_downloaded_data(config_obj, data=data, caller=caller))
@@ -62,7 +62,7 @@ def download_data(config_obj: Configuration, caller: int = BACKTEST):
     thread.signals.locked.connect(lambda:
                                   config_obj.optimizer_backtest_dict[caller]['stopDownloadButton'].setEnabled(False))
     config_obj.optimizer_backtest_dict[caller]['downloadThread'] = thread
-    config_obj.threadPool.start(thread)
+    config_obj.thread_pool.start(thread)
 
 
 def set_downloaded_data(config_obj: Configuration, data, caller: int = BACKTEST):

@@ -54,7 +54,7 @@ def set_backtest_graph_limits_and_empty_plots(gui: Interface, limit: int = 105):
     graph_dict['graph'].setLimits(xMin=0, xMax=limit)
     plot = graph_dict['plots'][0]
     plot['x'] = [0]
-    plot['y'] = [gui.backtester.startingBalance]
+    plot['y'] = [gui.backtester.starting_balance]
     plot['z'] = [initial_timestamp]
     plot['plot'].setData(plot['x'], plot['y'])
 
@@ -69,37 +69,37 @@ def update_backtest_graph_limits(gui: Interface, limit: int = 105):
     graph_dict['graph'].setLimits(xMin=0, xMax=limit)
 
 
-def get_graph_dictionary(gui: Interface, targetGraph: PlotWidget) -> dict:
+def get_graph_dictionary(gui: Interface, target_graph: PlotWidget) -> dict:
     """
     Loops over list of graphs and returns appropriate graph dictionary.
     :param gui: Graphical user interface in which to set up graphs.
-    :param targetGraph: Graph to find in list of graphs.
+    :param target_graph: Graph to find in list of graphs.
     :return: Dictionary with the graph values.
     """
     for graph in gui.graphs:
-        if graph["graph"] == targetGraph:
+        if graph["graph"] == target_graph:
             return graph
 
 
-def legend_helper(graphDict, x_val):
+def legend_helper(graph_dict, x_val):
     """
     Helper for setting graph legends based on the graph dictionary and x value provided.
-    :param graphDict: Graph dictionary.
+    :param graph_dict: Graph dictionary.
     :param x_val: X value in the graph.
     """
-    legend = graphDict['graph'].plotItem.legend.items
-    date_object = datetime.utcfromtimestamp(graphDict['plots'][0]['z'][x_val])
+    legend = graph_dict['graph'].plotItem.legend.items
+    date_object = datetime.utcfromtimestamp(graph_dict['plots'][0]['z'][x_val])
     total = f'X: {x_val} Datetime in UTC: {date_object.strftime("%m/%d/%Y, %H:%M:%S")}'
 
-    for index, plotDict in enumerate(graphDict['plots']):
-        info = f' {plotDict["name"]}: {plotDict["y"][x_val]}'
+    for index, plot_dict in enumerate(graph_dict['plots']):
+        info = f' {plot_dict["name"]}: {plot_dict["y"][x_val]}'
         total += info
         legend[index][1].setText(info)  # The 2nd element in legend is the label, so we can just set text.
 
-    graphDict['label'].setText(total)
+    graph_dict['label'].setText(total)
 
 
-def onMouseMoved(gui: Interface, point, graph: PlotWidget):
+def on_mouse_moved(gui: Interface, point, graph: PlotWidget):
     """
     Updates coordinates label when mouse is hovered over graph.
     :param gui: Graphical user interface in which to manipulate graphs.
@@ -111,10 +111,10 @@ def onMouseMoved(gui: Interface, point, graph: PlotWidget):
         return
 
     plot_item = graph.plotItem
-    p = plot_item.vb.mapSceneToView(point)
+    point = plot_item.vb.mapSceneToView(point)
 
     view_range = plot_item.vb.viewRange()
-    x_val, y_val = p.x(), p.y()
+    x_val, y_val = point.x(), point.y()
     x_min, x_max = view_range[0]  # X axis.
     y_min, y_max = view_range[1]  # Y axis.
 
@@ -123,7 +123,7 @@ def onMouseMoved(gui: Interface, point, graph: PlotWidget):
         legend_helper(graph_dict, -1)
         gui.reset_backtest_cursor()
 
-    elif graph_dict['enable'] and p and graph_dict.get('line'):  # Ensure that the hover line is enabled.
+    elif graph_dict['enable'] and point and graph_dict.get('line'):  # Ensure that the hover line is enabled.
         graph_dict['line'].setPos(x_val)
 
         if graph_dict['plots'][0]['x'][-1] > x_val > graph_dict['plots'][0]['x'][0]:
@@ -132,20 +132,25 @@ def onMouseMoved(gui: Interface, point, graph: PlotWidget):
                 gui.update_backtest_activity_based_on_graph(int(x_val))
 
 
-def add_data_to_plot(gui: Interface, targetGraph: PlotWidget, plotIndex: int, y: float, timestamp: float):
+def add_data_to_plot(gui: Interface,
+                     target_graph: PlotWidget,
+                     plot_index: int,
+                     y: float,
+                     timestamp: float):
+    # pylint: disable=invalid-name
     """
     Adds data to plot in provided graph.
     :param gui: Graphical user interface in which to set up graphs.
-    :param targetGraph: Graph to use for plot to add data to.
-    :param plotIndex: Index of plot in target graph's list of plots.
+    :param target_graph: Graph to use for plot to add data to.
+    :param plot_index: Index of plot in target graph's list of plots.
     :param y: Y value to add.
     :param timestamp: Timestamp value to add.
     """
-    graph_dict = get_graph_dictionary(gui, targetGraph=targetGraph)
-    plot = graph_dict['plots'][plotIndex]
+    graph_dict = get_graph_dictionary(gui, target_graph=target_graph)
+    plot = graph_dict['plots'][plot_index]
 
-    secondsInDay = 86400  # Reset graph every 24 hours (assuming data is updated only once a second).
-    if len(plot['x']) >= secondsInDay:
+    seconds_in_day = 86400  # Reset graph every 24 hours (assuming data is updated only once a second).
+    if len(plot['x']) >= seconds_in_day:
         plot['x'] = [0]
         plot['y'] = [y]
         plot['z'] = [timestamp]
@@ -156,7 +161,10 @@ def add_data_to_plot(gui: Interface, targetGraph: PlotWidget, plotIndex: int, y:
     plot['plot'].setData(plot['x'], plot['y'])
 
 
-def setup_graph_plots(gui: Interface, graph: PlotWidget, trader: Trader, graph_type: GraphType):
+def setup_graph_plots(gui: Interface,
+                      graph: PlotWidget,
+                      trader: Trader,
+                      graph_type: GraphType):
     """
     Setups graph plots for graph, trade, and graphType specified.
     :param gui: Graphical user interface in which to set up graphs.
@@ -177,6 +185,7 @@ def setup_graph_plots(gui: Interface, graph: PlotWidget, trader: Trader, graph_t
 
 
 def get_plot_dictionary(gui: Interface, graph: PlotWidget, color: str, y: float, name: str, timestamp: float) -> dict:
+    # pylint: disable=invalid-name
     """
     Creates a graph plot and returns a dictionary of it.
     :param gui: Graphical user interface in which to set up graphs.
@@ -187,7 +196,7 @@ def get_plot_dictionary(gui: Interface, graph: PlotWidget, color: str, y: float,
     :param timestamp: First UTC timestamp of plot.
     :return: Dictionary of plot information.
     """
-    plot = create_graph_plot(gui, graph, (0,), (y,), color=color, plotName=name)
+    plot = create_graph_plot(gui, graph, (0,), (y,), color=color, plot_name=name)
     return {
         'plot': plot,
         'x': [0],
@@ -197,13 +206,13 @@ def get_plot_dictionary(gui: Interface, graph: PlotWidget, color: str, y: float,
     }
 
 
-def destroy_graph_plots(gui: Interface, targetGraph: PlotWidget):
+def destroy_graph_plots(gui: Interface, target_graph: PlotWidget):
     """
     Resets graph plots for graph provided.
     :param gui: Graphical user interface in which to set up graphs.
-    :param targetGraph: Graph to destroy plots for.
+    :param target_graph: Graph to destroy plots for.
     """
-    graph_dict = get_graph_dictionary(gui, targetGraph=targetGraph)
+    graph_dict = get_graph_dictionary(gui, target_graph=target_graph)
     graph_dict['graph'].clear()
     graph_dict['plots'] = []
 
@@ -216,7 +225,7 @@ def setup_net_graph_plot(gui: Interface, graph: PlotWidget, trader: Trader, colo
     :param graph: Graph where plot will be setup.
     :param color: Color plot will be setup in.
     """
-    net = trader.startingBalance
+    net = trader.starting_balance
     current_date_timestamp = datetime.utcnow().timestamp()
     plot = get_plot_dictionary(gui, graph=graph, color=color, y=net, name='Net', timestamp=current_date_timestamp)
 
@@ -231,10 +240,10 @@ def setup_average_graph_plots(gui: Interface, graph: PlotWidget, trader, colors:
     :param graph: Graph where plots will be setup.
     :param colors: List of colors plots will be setup in.
     """
-    if trader.currentPrice is None:
-        trader.currentPrice = trader.dataView.get_current_price()
+    if trader.current_price is None:
+        trader.current_price = trader.data_view.get_current_price()
 
-    current_price = trader.currentPrice
+    current_price = trader.current_price
     current_date_timestamp = datetime.utcnow().timestamp()
 
     ticker_plot_dict = get_plot_dictionary(gui=gui,
@@ -268,43 +277,44 @@ def setup_average_graph_plots(gui: Interface, graph: PlotWidget, trader, colors:
             index += 1
 
 
-def append_plot_to_graph(gui: Interface, targetGraph: PlotWidget, toAdd: list):
+def append_plot_to_graph(gui: Interface, target_graph: PlotWidget, to_add: list):
     """
     Appends plot to graph provided.
     :param gui: Graphical user interface in which to set up graphs.
-    :param targetGraph: Graph to add plot to.
-    :param toAdd: List of plots to add to target graph.
+    :param target_graph: Graph to add plot to.
+    :param to_add: List of plots to add to target graph.
     """
-    graph_dict = get_graph_dictionary(gui, targetGraph=targetGraph)
-    graph_dict['plots'] += toAdd
+    graph_dict = get_graph_dictionary(gui, target_graph=target_graph)
+    graph_dict['plots'] += to_add
 
 
-def create_infinite_line(gui: Interface, graphDict: dict, colors: list = None):
+def create_infinite_line(gui: Interface, graph_dict: dict, colors: list = None):
     """
     Creates an infinite (hover) line and adds it as a reference to the graph dictionary provided.
     :param gui: Graphical user interface in which to set up graphs.
     :param colors: Optional colors list.
-    :param graphDict: A reference to this infinite line will be added to this graph dictionary.
+    :param graph_dict: A reference to this infinite line will be added to this graph dictionary.
     """
     colors = get_graph_colors(gui=gui) if colors is None else colors
     hover_line = InfiniteLine(pos=0, pen=mkPen(colors[-1], width=1), movable=False)
-    graphDict['graph'].addItem(hover_line)
-    graphDict['line'] = hover_line
+    graph_dict['graph'].addItem(hover_line)
+    graph_dict['line'] = hover_line
 
 
-def create_graph_plot(gui: Interface, graph: PlotWidget, x: tuple, y: tuple, plotName: str, color: str):
+def create_graph_plot(gui: Interface, graph: PlotWidget, x: tuple, y: tuple, plot_name: str, color: str):
+    # pylint: disable=invalid-name
     """
     Creates a graph plot with parameters provided.
     :param gui: Graphical user interface in which to set up graphs.
     :param graph: Graph function will plot on.
     :param x: X values of graph.
     :param y: Y values of graph.
-    :param plotName: Name of graph.
+    :param plot_name: Name of graph.
     :param color: Color graph will be drawn in.
     """
     pen = mkPen(color=color)
-    plot = graph.plot(x, y, name=plotName, pen=pen, autoDownsample=True, downsampleMethod='subsample')
-    plot.curve.scene().sigMouseMoved.connect(lambda point: onMouseMoved(gui=gui, point=point, graph=graph))
+    plot = graph.plot(x, y, name=plot_name, pen=pen, autoDownsample=True, downsampleMethod='subsample')
+    plot.curve.scene().sigMouseMoved.connect(lambda point: on_mouse_moved(gui=gui, point=point, graph=graph))
     return plot
 
 
@@ -323,8 +333,8 @@ def setup_graphs(gui: Interface):
     Sets up all available graphs in application.
     :param gui: Graphical user interface in which to set up graphs.
     """
-    for graphDict in gui.graphs:
-        graph = graphDict['graph']
+    for graph_dict in gui.graphs:
+        graph = graph_dict['graph']
         graph.setLimits(xMin=0, xMax=GRAPH_LEEWAY, yMin=-1, yMax=1000_000_000_000_000)
         graph.setBackground('w')
         graph.setLabel('left', 'USDT')
@@ -353,20 +363,20 @@ def smart_update(graph_dict: Dict[str, Any]):
     if graph_dict.get('line') is None:  # If hover line is turned off, then just update normally.
         legend_helper(graph_dict, -1)
     else:
-        x = graph_dict['line'].getXPos()
-        if x == -1:
+        x_pos = graph_dict['line'].getXPos()
+        if x_pos == -1:
             legend_helper(graph_dict, -1)
 
 
-def update_main_graphs(gui: Interface, caller: int, valueDict: dict):
+def update_main_graphs(gui: Interface, caller: int, value_dict: dict):
     """
     Updates graphs and moving averages from statistics based on caller.
     :param gui: GUI in which to update main graphs.
-    :param valueDict: Dictionary with required values.
+    :param value_dict: Dictionary with required values.
     :param caller: Caller that decides which graphs get updated.
     """
     precision = gui.get_trader(caller=caller).precision
-    interface_dict = gui.interfaceDictionary[caller]
+    interface_dict = gui.interface_dictionary[caller]
     current_utc = datetime.utcnow().timestamp()
 
     net_graph = interface_dict['mainInterface']['graph']
@@ -375,13 +385,13 @@ def update_main_graphs(gui: Interface, caller: int, valueDict: dict):
     graph_dict = get_graph_dictionary(gui, net_graph)
     graph_x_size = len(graph_dict['plots'][0]['x']) + GRAPH_LEEWAY
     net_graph.setLimits(xMin=0, xMax=graph_x_size)
-    add_data_to_plot(gui, net_graph, 0, y=round(valueDict['net'], 2), timestamp=current_utc)
+    add_data_to_plot(gui, net_graph, 0, y=round(value_dict['net'], 2), timestamp=current_utc)
     smart_update(graph_dict)
 
     average_graph_dict = get_graph_dictionary(gui, average_graph)
     if average_graph_dict['enable']:
         average_graph.setLimits(xMin=0, xMax=graph_x_size)
-        add_data_to_plot(gui, average_graph, 0, y=round(valueDict['price'], precision), timestamp=current_utc)
+        add_data_to_plot(gui, average_graph, 0, y=round(value_dict['price'], precision), timestamp=current_utc)
 
         trader = gui.get_trader(caller=caller)
         for strategy in trader.strategies.values():
@@ -395,8 +405,8 @@ def update_main_graphs(gui: Interface, caller: int, valueDict: dict):
                 value, _ = combined_data
                 add_data_to_plot(
                     gui=gui,
-                    targetGraph=average_graph,
-                    plotIndex=index,
+                    target_graph=average_graph,
+                    plot_index=index,
                     y=round(value, trader.precision),
                     timestamp=current_utc
                 )

@@ -16,7 +16,6 @@ class BacktestSignals(QObject):
     """
     Possible signals to emit in backtest thread.
     """
-    # pylint: disable=too-few-public-methods
     finished = pyqtSignal()
     message = pyqtSignal(str)
     activity = pyqtSignal(dict)
@@ -51,28 +50,23 @@ class BacktestThread(QRunnable):
         :return: Dictionary containing backtest configuration details.
         """
         backtester = self.gui.backtester
-        if backtester.lossStrategy is not None:
-            stop_loss_percentage_string = f'{backtester.lossPercentageDecimal * 100}%'
+        if backtester.loss_strategy is not None:
+            stop_loss_percentage_string = f'{backtester.loss_percentage_decimal * 100}%'
         else:
             stop_loss_percentage_string = 'Configuration Required'
 
-        d = {
-            'startingBalance': f'${backtester.startingBalance}',
+        temp_dict = {
+            'starting_balance': f'${backtester.starting_balance}',
             'interval': backtester.interval,
-            'marginEnabled': f'{backtester.marginEnabled}',
-            'stopLossPercentage': stop_loss_percentage_string,
-            'stopLossStrategy': backtester.get_stop_loss_strategy_string(),
-            'startPeriod': f'{backtester.data[backtester.startDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
-            'endPeriod': f'{backtester.data[backtester.endDateIndex]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
-            'symbol': f'{backtester.symbol}'
-        }
+            'margin_enabled': f'{backtester.margin_enabled}',
+            'stop_loss_percentage': stop_loss_percentage_string,
+            'stop_loss_strategy': backtester.get_stop_loss_strategy_string(),
+            'start_period': backtester.data[backtester.start_date_index]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S"),
+            'end_period': backtester.data[backtester.end_date_index]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S"),
+            'symbol': backtester.symbol,
+            'options': [('Configuration Required', 'Configuration Required') for _ in range(2)]}
 
-        if 'movingAverage' in backtester.strategies:
-            d['options'] = [opt.get_pretty_option() for opt in backtester.strategies['movingAverage'].get_params()]
-        else:
-            d['options'] = [('Configuration Required', 'Configuration Required') for _ in range(2)]
-
-        return d
+        return temp_dict
 
     def get_activity_dictionary(self, period: Dict[str, datetime], index: int, length: int) -> dict:
         """
@@ -84,27 +78,27 @@ class BacktestThread(QRunnable):
         """
         backtester = self.gui.backtester
         net = backtester.get_net()
-        profit = net - backtester.startingBalance
+        profit = net - backtester.starting_balance
         if profit < 0:
-            profitPercentage = round(100 - net / backtester.startingBalance * 100, 2)
+            profit_percentage = round(100 - net / backtester.starting_balance * 100, 2)
         else:
-            profitPercentage = round(net / backtester.startingBalance * 100 - 100, 2)
+            profit_percentage = round(net / backtester.starting_balance * 100 - 100, 2)
 
         activity = {
-            'price': backtester.get_safe_rounded_string(backtester.currentPrice),
+            'price': backtester.get_safe_rounded_string(backtester.current_price),
             'net': round(net, backtester.precision),
             'netString': f'${round(net, backtester.precision)}',
             'balance': f'${round(backtester.balance, backtester.precision)}',
-            'commissionsPaid': f'${round(backtester.commissionsPaid, backtester.precision)}',
+            'commissionsPaid': f'${round(backtester.commissions_paid, backtester.precision)}',
             'tradesMade': str(len(backtester.trades)),
             'profit': f'${abs(round(profit, backtester.precision))}',
-            'profitPercentage': f'{profitPercentage}%',
+            'profitPercentage': f'{profit_percentage}%',
             'currentPeriod': period['date_utc'].strftime("%m/%d/%Y, %H:%M:%S"),
             'utc': period['date_utc'].timestamp(),
-            'percentage': int((index - backtester.startDateIndex) / length * 100)
+            'percentage': int((index - backtester.start_date_index) / length * 100)
         }
 
-        backtester.pastActivity.append(activity)
+        backtester.past_activity.append(activity)
         return activity
 
     def setup_bot(self):
@@ -128,8 +122,8 @@ class BacktestThread(QRunnable):
         """
         backtester = self.gui.backtester
         backtester.start_backtest(thread=self)
-        self.signals.updateGraphLimits.emit(len(backtester.pastActivity))
-        self.signals.activity.emit(self.get_activity_dictionary(period=backtester.data[backtester.endDateIndex],
+        self.signals.updateGraphLimits.emit(len(backtester.past_activity))
+        self.signals.activity.emit(self.get_activity_dictionary(period=backtester.data[backtester.end_date_index],
                                                                 index=1,
                                                                 length=1))
 
