@@ -71,7 +71,7 @@ class TelegramBot:
         :return: List of texts inside file.
         """
         path = pkg_resources.resource_filename('algobot.telegram', path)
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding='utf-8') as f:
             return [line.strip() for line in f.readlines()]
 
     def verify_bot(self, update) -> bool:
@@ -103,7 +103,7 @@ class TelegramBot:
         if trader is None:
             trader = self.trader
 
-        return SIMULATION if type(trader) is SimulationTrader else LIVE
+        return SIMULATION if type(trader) is SimulationTrader else LIVE  # pylint: disable=unidiomatic-typecheck
 
     def set_trader(self, update, context):
         """
