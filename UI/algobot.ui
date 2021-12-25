@@ -2245,6 +2245,7 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="aboutAlgobotAction"/>
     <addaction name="wikiAction"/>
+    <addaction name="changesAction"/>
    </widget>
    <widget class="QMenu" name="menuStatistics">
     <property name="title">
@@ -2445,6 +2446,11 @@ p, li { white-space: pre-wrap; }
   <action name="strategyManagerAction">
    <property name="text">
     <string>Strategy Manager</string>
+   </property>
+  </action>
+  <action name="changesAction">
+   <property name="text">
+    <string>Changes</string>
    </property>
   </action>
  </widget>
