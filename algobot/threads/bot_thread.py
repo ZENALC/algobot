@@ -13,7 +13,7 @@ from algobot.enums import LIVE, SIMULATION
 from algobot.helpers import convert_long_interval, convert_small_interval, get_elapsed_time, parse_precision
 from algobot.interface.config_utils.strategy_utils import get_strategies
 from algobot.interface.config_utils.telegram_utils import test_telegram
-from algobot.telegram.bot import TelegramBot
+from algobot.telegram_bot.bot import TelegramBot
 from algobot.traders.real_trader import RealTrader
 from algobot.traders.simulation_trader import SimulationTrader
 

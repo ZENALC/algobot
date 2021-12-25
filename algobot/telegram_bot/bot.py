@@ -70,7 +70,7 @@ class TelegramBot:
         :param path: Path to text file.
         :return: List of texts inside file.
         """
-        path = pkg_resources.resource_filename('algobot.telegram', path)
+        path = pkg_resources.resource_filename('algobot.telegram_bot', path)
         with open(path, 'r', encoding='utf-8') as f:
             return [line.strip() for line in f.readlines()]
 

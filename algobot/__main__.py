@@ -36,7 +36,7 @@ from algobot.interface.utils import (add_to_table, clear_table, confirm_message_
                                      show_and_bring_window_to_front)
 from algobot.news_scraper import scrape_news
 from algobot.slots import initiate_slots
-from algobot.telegram.bot import TelegramBot
+from algobot.telegram_bot.bot import TelegramBot
 from algobot.threads import backtest_thread, bot_thread, optimizer_thread, worker_thread
 from algobot.traders.backtester import Backtester
 from algobot.traders.real_trader import RealTrader
