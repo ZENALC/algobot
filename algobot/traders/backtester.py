@@ -408,8 +408,8 @@ class Backtester(Trader):
 
         for strategy_name, strategy_items in strategies.items():
             for trend, trend_items in strategy_items.items():
-                if not isinstance(trend, dict):  # Must cast to list here, or product will be of string characters.
-                    if not isinstance(trend, list):
+                if not isinstance(trend_items, dict):  # Must cast to list here, or product will be of characters.
+                    if not isinstance(trend_items, list):
                         strategy_items[trend] = [trend_items]
 
                     continue  # This is not needed as it's not a trend.
