@@ -355,8 +355,7 @@ class Interface(QMainWindow):
         worker.signals.restore.connect(lambda: self.set_optimizer_buttons(running=False, clear=False))
         worker.signals.error.connect(lambda x: create_popup(self, x))
         if self.configuration.enabledOptimizerNotification.isChecked():
-            worker.signals.finished.connect(lambda: self.inform_telegram('Optimizer has finished running.',
-                                                                         stop_bot=True))
+            worker.signals.finished.connect(lambda: self.inform_telegram('Optimizer has finished running.'))
         worker.signals.activity.connect(lambda data: add_to_table(self.optimizerTableWidget, data=data,
                                                                   insert_date=False))
         self.thread_pool.start(worker)
@@ -634,9 +633,13 @@ class Interface(QMainWindow):
         """
         self.threads[caller] = None
         if caller == SIMULATION:
-            self.add_to_monitor(caller, "Killed simulation bot.")
+            msg = "Killed simulation bot."
         else:
-            self.add_to_monitor(caller, "Killed bot.")
+            msg = "Killed bot."
+
+        self.add_to_monitor(caller, msg)
+        if self.telegram_bot is not None:
+            self.inform_telegram(msg)
 
     def reset_bot_interface(self, caller):
         """
