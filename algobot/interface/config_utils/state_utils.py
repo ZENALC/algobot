@@ -9,8 +9,7 @@ from typing import TYPE_CHECKING
 
 from algobot import helpers
 from algobot.graph_helpers import set_color_to_label
-from algobot.interface.config_utils.slot_utils import (delete_strategy_slots, load_custom_strategy_slots,
-                                                       load_strategy_slots)
+from algobot.interface.config_utils.slot_utils import delete_strategy_slots, load_custom_strategy_slots
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
@@ -59,7 +58,6 @@ def load_state(config_obj: Configuration):
 
             config_obj.hidden_strategies = set(config['hiddenStrategies'])
             delete_strategy_slots(config_obj)
-            load_strategy_slots(config_obj)
             load_custom_strategy_slots(config_obj)
 
             if config_obj.parent:

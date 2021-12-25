@@ -37,6 +37,7 @@ class CustomStrategy:
         self.precision = precision
         self.short_circuit = short_circuit
         self.values: Dict[str, Any] = self.parse_values(values)
+        self.name = self.values['name']
 
         # These are dynamically set by the get_trend() function.
         self.log_data: bool = False
@@ -48,6 +49,7 @@ class CustomStrategy:
         # Dictionary for plotting values in graphs. This should hold string keys and float values. If a value is
         #  non-numeric, the program will crash. This should hold the key of the value and then a list containing
         #  the value then the color.
+
         #  For example -> self.plot_dict['SMA(5)'] = [13, 'ffffff'] -> SMA(5) value of 13 with a hex color of white.
         self.plot_dict: Dict[str, List[Union[float, str]]] = {}
         self.initialize_plot_dict()
@@ -161,11 +163,11 @@ class CustomStrategy:
 
             'Sell Long': {
                 '74ec21ed-5a21-4ae4-8c00-fd1161b858cf': {
-                'against': 5.90,
-                'indicator': 'MFI',
-                'operator': '>=',
-                'price': 'High',
-                'timeperiod': 36
+                    'against': 5.90,
+                    'indicator': 'MFI',
+                    'operator': '>=',
+                    'price': 'High',
+                    'timeperiod': 36
                 }
             },
 
@@ -176,30 +178,26 @@ class CustomStrategy:
         new_dict = {}
         for key, value in values.items():
             if isinstance(value, QWidget):
-                if key == 'output':
-                    # In this case, we just want the index. If the value is 'real', we'll just set the index to None.
-                    output = get_input_widget_value(value, verbose=True)
-                    if output == 'real':
-                        new_dict[key] = (None, 'real')
-                    else:
-                        new_dict[key] = (get_input_widget_value(value, verbose=False), output)
-                else:
-                    new_dict[key] = get_input_widget_value(value, verbose=True)
-
-                    # Lower all prices upstream.
-                    if key == 'price':
-                        new_dict[key] = new_dict[key].lower()
+                new_dict[key] = get_input_widget_value(value, verbose=True)
             elif isinstance(value, dict):
                 new_dict[key] = self.parse_values(value)
             else:
                 new_dict[key] = value
 
-        return new_dict
+            value = new_dict[key]
 
-    @staticmethod
-    def get_params():
-        """TODO: DEPRECATE"""
-        return ['']
+            if key == 'output':
+                if value == 'real':
+                    new_dict[key] = (None, 'real')
+                else:
+                    index = abstract.Function(values['indicator']).output_names.index(value)
+                    new_dict[key] = index, value
+
+            # Lower all prices upstream.
+            if key == 'price':
+                new_dict[key] = new_dict[key].lower()
+
+        return new_dict
 
     @staticmethod
     def get_func_kwargs(kwargs: dict) -> dict:
@@ -251,7 +249,7 @@ class CustomStrategy:
         :param input_arrays_dict: Dictionary containing price type as key and price values as value.
         :return: Boolean regarding trend. If True is returned, this key trend is true, else false.
         """
-        indicators = self.values[key]
+        indicators = self.values.get(key)
         if not indicators:  # Nothing provided as an input for this trend.
             return False
 

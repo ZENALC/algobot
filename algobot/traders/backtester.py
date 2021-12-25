@@ -1,10 +1,7 @@
 """
 Backtester object.
-
-TODO: Use snake case.
 """
 
-import copy
 import os
 import sys
 import time
@@ -12,7 +9,7 @@ import traceback
 from datetime import datetime, timedelta
 from itertools import product
 from logging import Logger
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional
 
 import pandas as pd
 from dateutil import parser
@@ -20,10 +17,7 @@ from dateutil import parser
 from algobot.enums import (BACKTEST, BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, OPTIMIZER,
                            SHORT)
 from algobot.helpers import (LOG_FOLDER, ROOT_DIR, convert_all_dates_to_datetime, convert_small_interval,
-                             get_interval_minutes, parse_strategy_name)
-from algobot.interface.config_utils.strategy_utils import get_strategies_dictionary
-from algobot.strategies.custom import CustomStrategy
-from algobot.strategies.strategy import Strategy
+                             get_interval_minutes, is_number)
 from algobot.traders.trader import Trader
 from algobot.typing_hints import DataType, DictType
 
@@ -77,7 +71,7 @@ class Backtester(Trader):
         if len(strategy_interval.split()) == 1:
             strategy_interval = convert_small_interval(strategy_interval)
 
-        self.all_strategies = get_strategies_dictionary(Strategy.__subclasses__())
+        self.all_strategies = {}
 
         self.strategy_interval = self.interval if strategy_interval is None else strategy_interval
         self.strategy_interval_minutes = get_interval_minutes(self.strategy_interval)
@@ -198,7 +192,7 @@ class Backtester(Trader):
         self.current_price = self.data[index]['open']
 
     @staticmethod
-    def generate_error_message(error: Exception, strategy: Strategy) -> str:
+    def generate_error_message(error: Exception, strategy) -> str:
         """
         Error message generator when running a backtest.
         :param error: Error object.
@@ -227,10 +221,7 @@ class Backtester(Trader):
 
         for strategy in self.strategies.values():
             try:
-                if isinstance(strategy, CustomStrategy):
-                    strategy.get_trend(input_arrays_dict, cache)
-                else:
-                    strategy.get_trend(df, data=strategy_data)
+                strategy.get_trend(input_arrays_dict, cache)
             except Exception as e:
                 if thread and thread.caller == OPTIMIZER:
                     error_message = traceback.format_exc()
@@ -361,7 +352,7 @@ class Backtester(Trader):
         return 'PASSED'
 
     @staticmethod
-    def extend_helper(x_tuple: tuple, temp_dict: Dict[str, list], temp_key: str):
+    def extend_helper(x_tuple: list, temp_dict: Dict[str, list], temp_key: str):
         """
         Helper function to get all permutations.
         :param x_tuple: Tuple containing start, end, and step values i.e -> (5, 15, 1). Kind of like range().
@@ -389,37 +380,72 @@ class Backtester(Trader):
         else:
             raise ValueError("Step value cannot be 0.")
 
-    def get_all_permutations(self, combos: dict):
+    def convert_start_end_step(self, combos: dict) -> dict:
+        """
+        Convert start, end, and step values to appropriate list.
+            For example, a start, end, step of [1, 10, 3] would yield -> [1, 4, 7, 10]
+        :param combos: Dictionary to convert start, end, and steps of.
+        :return: Modified combos dictionary.
+        """
+        for k, v in combos.items():
+            if isinstance(v, dict):
+                combos[k] = self.convert_start_end_step(v)
+            elif isinstance(v, list) and len(v) == 3 and all(is_number(str(char)) for char in v):
+                self.extend_helper(v, combos, k)
+
+        return combos
+
+    def get_all_permutations(self, combos: dict) -> List[dict]:
         """
         Returns a list of setting permutations from combos provided.
         :param combos: Combos with ranges for the permutations.
-        :return: List of all permutations.
+        :return: List of all dictionary permutations.
         """
-        for key, value_range in combos.items():  # This will handle steps -> (5, 10, 1) start = 5, end = 10, step = 1
-            if isinstance(value_range, tuple) and len(value_range) == 3:
-                self.extend_helper(value_range, combos, key)
-            elif key == "strategies":
-                for strategy_key, strategy_dict in value_range.items():
-                    for input_key, step_tuple in strategy_dict.items():
-                        if isinstance(step_tuple, tuple) and len(step_tuple) == 3:
-                            self.extend_helper(step_tuple, strategy_dict, input_key)
-            elif isinstance(value_range, list):
-                continue
-            else:
-                raise ValueError("Invalid type of value provided to combos. Make sure to use a list or a tuple.")
-
-        for strategy_key, strategy_items in combos['strategies'].items():  # Create cartesian product of strategies
-            combos['strategies'][strategy_key] = [
-                dict(zip(strategy_items, v)) for v in product(*strategy_items.values())]
-
-        permutations = []
+        # pylint: disable=too-many-nested-blocks
+        # TODO: Clean up the function to make it less convoluted.
+        self.convert_start_end_step(combos)
         strategies = combos.pop('strategies')
-        for combo in product(*combos.values()):
-            permutations_dict = dict(zip(combos, combo))
-            for strategy_combo in product(*strategies.values()):
-                permutations_dict['strategies'] = dict(zip(strategies, strategy_combo))
-                permutations.append(copy.deepcopy(permutations_dict))
-        return permutations
+
+        for strategy_name, strategy_items in strategies.items():
+            for trend, trend_items in strategy_items.items():
+                if trend == 'name':  # Must cast to list here, or product will be of string characters.
+                    strategy_items[trend] = [trend_items]
+                    continue  # This is not needed.
+
+                for uuid, uuid_items in trend_items.items():
+                    for indicator, indicator_value in uuid_items.items():
+
+                        # This means it's an against indicator.
+                        if isinstance(indicator_value, dict):
+                            for against_item_key, against_item in indicator_value.items():
+                                if not isinstance(against_item, list):
+                                    indicator_value[against_item_key] = [against_item]
+
+                            uuid_items[indicator] = [
+                                dict(zip(indicator_value, v)) for v in product(*indicator_value.values())
+                            ]
+                            continue
+
+                        if not isinstance(indicator_value, list):  # Cast everything to a list to use product.
+                            uuid_items[indicator] = [indicator_value]
+
+                    trend_items[uuid] = [
+                        dict(zip(uuid_items, v)) for v in product(*uuid_items.values())
+                    ]
+
+                strategy_items[trend] = [
+                    dict(zip(trend_items, v)) for v in product(*trend_items.values())
+                ]
+
+            strategies[strategy_name] = [
+                dict(zip(strategy_items, v)) for v in product(*strategy_items.values())
+            ]
+
+        strategy_keys = strategies.keys()
+        strategy_possibilities = [dict(zip(strategy_keys, v)) for v in product(*strategies.values())]
+        combos['strategies'] = strategy_possibilities
+
+        return [dict(zip(combos.keys(), v)) for v in product(*combos.values())]
 
     def optimize(self, combos: Dict, thread=None):
         """
@@ -441,27 +467,12 @@ class Backtester(Trader):
                 break  # Bug fix for optimizer keeping on running even after it was stopped.
 
             self.apply_general_settings(settings)
-            if not self.has_moving_average_redundancy():
-                result = self.start_backtest(thread)
-            else:
-                self.current_price = 0  # Or else it'll crash.
-                result = 'SKIPPED'
+            result = self.start_backtest(thread)
 
             if thread:
                 thread.signals.activity.emit(self.get_basic_optimize_info(index, len(settings_list), result=result))
 
             self.restore()
-
-    def has_moving_average_redundancy(self):
-        """
-        Simple check to see if a moving average strategy needs to be run or not. If the initial bound is greater than
-        or equal to the final bound, then it should be skipped.
-        """
-        if 'movingAverage' in self.strategies:
-            for option in self.strategies['movingAverage'].get_params():
-                if option.initialBound >= option.finalBound:
-                    return True
-        return False
 
     def get_basic_optimize_info(self, run: int, total_runs: int, result: str = 'PASSED') -> tuple:
         """
@@ -502,7 +513,7 @@ class Backtester(Trader):
         else:
             raise TypeError("Invalid type of file type provided.")
 
-    def apply_general_settings(self, settings: Dict[str, Union[float, str, dict]]):
+    def apply_general_settings(self, settings: dict):
         """
         Apples settings provided from the settings argument to the backtester object.
         :param settings: Dictionary with keys and values to set.
@@ -519,29 +530,7 @@ class Backtester(Trader):
                 self.smart_stop_loss_counter = settings['stopLossCounter']
 
         self.change_strategy_interval(settings['strategyIntervals'])
-        for strategy_name, strategy_values in settings['strategies'].items():
-            pretty_strategy_name = strategy_name
-            strategy_name = parse_strategy_name(strategy_name)
-
-            if strategy_name not in self.strategies:
-                if isinstance(strategy_values, dict):
-                    strategy_values = list(strategy_values.values())
-
-                temp_strategy_tuple = (
-                    self.all_strategies[pretty_strategy_name],
-                    strategy_values,
-                    pretty_strategy_name
-                )
-                self.setup_strategies([temp_strategy_tuple], short_circuit=True)
-                continue
-
-            # TODO: Leverage kwargs instead of using indexed lists.
-
-            loop_strategy = self.strategies[strategy_name]
-            loop_strategy.reset_strategy_dictionary()  # Mandatory for bugs in optimizer.
-            loop_strategy.trend = None  # Annoying bug fix for optimizer.
-            loop_strategy.set_inputs(list(strategy_values.values()))
-            self.min_period = max(loop_strategy.get_min_option_period(), self.min_period)
+        self.setup_strategies(list(settings['strategies'].values()), short_circuit=True)
 
     def restore(self):
         """

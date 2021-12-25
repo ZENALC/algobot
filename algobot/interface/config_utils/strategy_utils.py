@@ -3,13 +3,12 @@ Strategy helper functions for configuration.py can be found here.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
-from PyQt5.QtWidgets import QComboBox, QDoubleSpinBox, QLabel, QLayout, QLineEdit, QPushButton, QSpinBox, QTabWidget
+from PyQt5.QtWidgets import QComboBox, QDoubleSpinBox, QLabel, QLayout, QLineEdit, QSpinBox, QTabWidget
 
 from algobot.helpers import get_interval_minutes, get_interval_strings
 from algobot.interface.configuration_helpers import get_h_line, get_input_widget_value, set_value
-from algobot.strategies.strategy import Strategy
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
@@ -31,7 +30,7 @@ def strategy_enabled(config_obj: Configuration, strategy_name: str, caller: int)
     return config_obj.strategy_dict[tab, strategy_name, 'groupBox'].isChecked()
 
 
-def get_strategies(config_obj: Configuration, caller: int) -> List[tuple]:
+def get_strategies(config_obj: Configuration, caller: int) -> List[Dict[str, Any]]:
     """
     Returns strategy information from GUI.
     :param config_obj: Configuration QDialog object (from configuration.py)
@@ -39,12 +38,6 @@ def get_strategies(config_obj: Configuration, caller: int) -> List[tuple]:
     :return: List of strategy information.
     """
     strategies = []
-    for strategy_name, strategy in config_obj.strategies.items():
-        if strategy_enabled(config_obj, strategy_name, caller):
-            values = get_strategy_values(config_obj, strategy_name, caller, verbose=True)
-            strategy_tuple = (strategy, values, strategy_name)
-            strategies.append(strategy_tuple)
-
     for custom_strategy in config_obj.json_strategies:
         strategy_name = custom_strategy['name']
         if strategy_enabled(config_obj, strategy_name, caller):
@@ -179,36 +172,6 @@ def create_strategy_inputs(parameters: List[Union[int, tuple]], strategy_name: s
     group_box_layout.addWidget(line)
 
     return values, labels
-
-
-def add_strategy_buttons(strategy_dict: dict, parameters: list, strategy_name: str, group_box_layout: QLayout,
-                         tab: QTabWidget) -> Tuple[QPushButton, QPushButton]:
-    """
-    Creates add and delete buttons to strategy GUI.
-    :param strategy_dict: Strategy dictionary to modify.
-    :param parameters: Parameters to pass to strategy inputs function.
-    :param strategy_name: Name of strategy.
-    :param group_box_layout: Layout to add strategy buttons to.
-    :param tab: Tab to modify GUI.
-    :return: Tuple of add and delete buttons.
-    """
-    add_button = QPushButton("Add Extra")
-    add_button.clicked.connect(lambda: add_strategy_inputs(
-        strategy_dict, parameters, strategy_name, group_box_layout, tab))
-
-    delete_button = (QPushButton("Delete Extra"))
-    delete_button.clicked.connect(lambda: delete_strategy_inputs(strategy_dict, parameters, strategy_name, tab))
-
-    return add_button, delete_button
-
-
-def get_strategies_dictionary(strategies: List[Type[Strategy]]) -> Dict[str, Type[Strategy]]:
-    """
-    Helper function to return a strategies dictionary with strategy name as the key and strategy itself as the value.
-    :param strategies: List of strategies to process for dictionary.
-    :return: Dictionary of strategies with strategy name as the key and strategy itself as the value.
-    """
-    return {strategy().name: strategy for strategy in strategies}
 
 
 def reset_strategy_interval_combo_box(strategy_combobox: QComboBox, interval_combobox: QComboBox,

@@ -61,17 +61,10 @@ class BacktestThread(QRunnable):
             'margin_enabled': f'{backtester.margin_enabled}',
             'stop_loss_percentage': stop_loss_percentage_string,
             'stop_loss_strategy': backtester.get_stop_loss_strategy_string(),
-            'start_period':
-                f'{backtester.data[backtester.start_date_index]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
-            'end_period': f'{backtester.data[backtester.end_date_index]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S")}',
-            'symbol': f'{backtester.symbol}'
-        }
-
-        if 'movingAverage' in backtester.strategies:
-            temp_dict['options'] = [
-                opt.get_pretty_option() for opt in backtester.strategies['movingAverage'].get_params()]
-        else:
-            temp_dict['options'] = [('Configuration Required', 'Configuration Required') for _ in range(2)]
+            'start_period': backtester.data[backtester.start_date_index]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S"),
+            'end_period': backtester.data[backtester.end_date_index]["date_utc"].strftime("%m/%d/%Y, %H:%M:%S"),
+            'symbol': backtester.symbol,
+            'options': [('Configuration Required', 'Configuration Required') for _ in range(2)]}
 
         return temp_dict
 

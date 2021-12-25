@@ -35,9 +35,6 @@ class Strategy:
         # This should hold the trend the strategy currently holds (e.g. BULLISH, BEARISH, ENTER LONG, etc)
         self.trend: Optional[int] = None
 
-        # Set this to true if you want to have additional slots. As an example, check out the moving average strategy.
-        self.dynamic: bool = False
-
         # Dictionary for plotting values in graphs. This should hold string keys and float values. If a value is
         # non-numeric, the program will crash. This should hold the key of the value and then the list containing
         # the value then the color.

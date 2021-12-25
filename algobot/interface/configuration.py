@@ -10,22 +10,22 @@ from typing import TYPE_CHECKING
 
 from PyQt5 import uic
 from PyQt5.QtCore import QThreadPool
-from PyQt5.QtWidgets import QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QLabel, QLayout, QSpinBox, QTabWidget
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QLabel, QLayout, QSpinBox, QTabWidget,
+                             QWidget)
 
-from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
+from algobot.enums import ALL_TRENDS, BACKTEST, LIVE, OPTIMIZER, SIMULATION, STOP, TRAILING
 from algobot.graph_helpers import create_infinite_line
 from algobot.helpers import ROOT_DIR
 from algobot.interface.config_utils.credential_utils import load_credentials
 from algobot.interface.config_utils.slot_utils import load_hide_show_strategies, load_slots
 from algobot.interface.config_utils.strategy_utils import (add_strategy_inputs, delete_strategy_inputs,
-                                                           get_strategies_dictionary, get_strategy_values,
-                                                           strategy_enabled)
-from algobot.interface.configuration_helpers import add_start_end_step_to_layout, get_default_widget, set_value
+                                                           get_strategy_values, strategy_enabled)
+from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, get_default_widget,
+                                                     get_input_widget_value, set_value)
 # noinspection PyUnresolvedReferences
 from algobot.interface.utils import clear_layout, get_elements_from_combobox
 from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import,unused-wildcard-import
 from algobot.strategies.loader import get_json_strategies
-from algobot.strategies.strategy import Strategy
 
 if TYPE_CHECKING:
     from algobot.__main__ import Interface
@@ -107,11 +107,10 @@ class Configuration(QDialog):
         self.json_strategies_with_path = get_json_strategies()
         self.json_strategies = [strategy_item[1] for strategy_item in self.json_strategies_with_path]
         self.custom_strategies = [strategy['name'] for strategy in self.json_strategies]
-        self.strategies = get_strategies_dictionary(Strategy.__subclasses__())
+        self.strategies = {}
 
         # Hidden strategies dynamically populated.
-        self.hidden_strategies = set(self.strategies)
-        self.hidden_strategies.update(self.custom_strategies)
+        self.hidden_strategies = set(self.custom_strategies)
 
         self.strategy_dict = {}  # We will store all the strategy slot information in this dictionary.
         self.loss_dict = {}  # We will store stop loss settings here.
@@ -128,8 +127,7 @@ class Configuration(QDialog):
         self.json_strategies = [strategy_item[1] for strategy_item in self.json_strategies_with_path]
         self.custom_strategies = [strategy['name'] for strategy in self.json_strategies]
 
-        self.hidden_strategies = set(self.strategies)
-        self.hidden_strategies.update(self.custom_strategies)
+        self.hidden_strategies = set(self.custom_strategies)
 
         clear_layout(self.hideStrategiesFormLayout)
         load_hide_show_strategies(self)
@@ -229,6 +227,34 @@ class Configuration(QDialog):
 
         settings['strategyIntervals'] = intervals[:end_index + 1]
 
+    def parse_optimizer_dict(self, settings: dict) -> dict:
+        """
+        Convert QT objects to their respective tests for optimizer.
+        :param settings: Dictionary containing QT objects.
+        :return: Converted dictionary with the values.
+        """
+        new_settings = {}
+        for key, val in settings.items():
+            if isinstance(val, dict):
+                new_settings[key] = self.parse_optimizer_dict(val)
+            elif isinstance(val, QWidget):
+                if isinstance(val, QCheckBox) and not val.isChecked():
+                    continue
+
+                new_settings[key] = get_input_widget_value(val, verbose=True)
+            elif isinstance(val, list):
+                values = [get_input_widget_value(value, verbose=True) for value in val
+                          if not isinstance(value, QCheckBox) or isinstance(value, QCheckBox) and value.isChecked()]
+                new_settings[key] = values
+            else:
+                new_settings[key] = val
+
+        for trend in ALL_TRENDS:  # We must remove unused trend indicator values if non-existent.
+            if trend in new_settings and len(new_settings[trend]) == 0:
+                del new_settings[trend]
+
+        return new_settings
+
     def get_optimizer_settings(self) -> dict:
         """
         Returns optimizer configuration in a dictionary.
@@ -242,31 +268,12 @@ class Configuration(QDialog):
         self.get_strategy_intervals_for_optimizer(settings)
 
         settings['strategies'] = {}
-        for strategy_name, strategy in self.strategies.items():
-            parameters = strategy().get_param_types()
-            if strategy_name in self.hidden_strategies or not self.strategy_dict[tab, strategy_name].isChecked():
+        for strategy_name in self.custom_strategies:
+            if strategy_name in self.hidden_strategies or \
+                    not self.strategy_dict[tab, strategy_name, 'groupBox'].isChecked():
                 continue
 
-            current = {}
-            for index, param in enumerate(parameters, start=1):
-                if isinstance(param, tuple) and param[1] in (int, float) or not isinstance(param, tuple):
-                    # Logic for step values for integers and floats.
-                    if not isinstance(param, tuple):
-                        key = strategy_name.lower() + str(index)
-                    else:
-                        key = param[0]
-
-                    current[key] = (
-                        self.strategy_dict[strategy_name, index, 'start'].value(),
-                        self.strategy_dict[strategy_name, index, 'end'].value(),
-                        self.strategy_dict[strategy_name, index, 'step'].value(),
-                    )
-                else:
-                    current[param[0]] = []
-                    for option in param[2]:
-                        if self.strategy_dict[strategy_name, option].isChecked():
-                            current[param[0]].append(option)
-            settings['strategies'][strategy_name] = current
+            settings['strategies'][strategy_name] = self.parse_optimizer_dict(self.strategy_dict[tab, strategy_name])
 
         return settings
 

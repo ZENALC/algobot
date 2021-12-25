@@ -5,16 +5,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List
 
-from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QHBoxLayout, QLabel, QPushButton,
-                             QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QLabel, QPushButton, QScrollArea,
+                             QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION, TRENDS
 from algobot.graph_helpers import get_and_set_line_color
 from algobot.interface.config_utils.credential_utils import load_credentials, save_credentials, test_binance_credentials
 from algobot.interface.config_utils.data_utils import download_data, import_data, stop_download
-from algobot.interface.config_utils.strategy_utils import (add_strategy_buttons, create_strategy_inputs,
-                                                           reset_strategy_interval_combo_box)
+from algobot.interface.config_utils.strategy_utils import reset_strategy_interval_combo_box
 from algobot.interface.config_utils.telegram_utils import reset_telegram_state, test_telegram
 from algobot.interface.config_utils.user_config_utils import (copy_config_helper, copy_settings_to_backtest,
                                                               copy_settings_to_simulation, load_backtest_settings,
@@ -25,7 +24,8 @@ from algobot.interface.config_utils.user_config_utils import (copy_config_helper
                                                               save_simulation_settings)
 from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, create_inner_tab, get_default_widget,
                                                      get_regular_groupbox_and_layout)
-from algobot.interface.utils import OPERATORS, PARAMETER_MAP, PRICE_TYPES, clear_layout, get_bold_font, get_param_obj
+from algobot.interface.utils import (OPERATORS, PARAMETER_MAP, PRICE_TYPES, clear_layout, get_bold_font,
+                                     get_combobox_items, get_param_obj)
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
@@ -70,7 +70,6 @@ def load_hide_show_strategies(config_obj: Configuration):
     """
     def reset_slots():
         delete_strategy_slots(config_obj)
-        load_strategy_slots(config_obj)
         load_custom_strategy_slots(config_obj)
 
     def hide_strategies(box: QCheckBox, name: str):
@@ -83,8 +82,7 @@ def load_hide_show_strategies(config_obj: Configuration):
 
     def clear_strategy_checkboxes():
         clear_layout(config_obj.hideStrategiesFormLayout)
-        config_obj.hidden_strategies = set(config_obj.strategies)
-        config_obj.hidden_strategies.update(config_obj.custom_strategies)
+        config_obj.hidden_strategies = set(config_obj.custom_strategies)
         load_hide_show_strategies(config_obj)
         reset_slots()
 
@@ -123,36 +121,65 @@ def delete_strategy_slots(config_obj: Configuration):
             tab.removeTab(nuke_index)
 
 
-def populate_parameters(values: dict, indicator: dict, inner_tab_layout: QFormLayout):
+def populate_parameters(values: dict, indicator: dict, inner_tab_layout: QFormLayout, is_optimizer: bool):
     """
     Populate parameters.
     :param values: Values dictionary to populate.
     :param indicator: Indicator to populate parameters from.
     :param inner_tab_layout: Layout to add parameters to.
+    :param is_optimizer: Boolean whether is optimizer or not and to populate parameters as appropriate.
     """
-    # We are just calling this to get a combo box for price types (high, low, etc), so default can just be ''.
-    values['price'] = price_widget = get_param_obj(default_value='', param_name='price')
-    inner_tab_layout.addRow(QLabel('Price Type'), price_widget)
+    if is_optimizer:
+        values['price'] = checkboxes = [QCheckBox(price_type) for price_type in PRICE_TYPES]
+        inner_tab_layout.addRow(QLabel("Price Type"), checkboxes[0])
+        for check_box in checkboxes[1:]:
+            inner_tab_layout.addWidget(check_box)
+    else:
+        # We are just calling this to get a combo box for price types (high, low, etc), so default can just be ''.
+        values['price'] = price_widget = get_param_obj(default_value='', param_name='price')
+        inner_tab_layout.addRow(QLabel('Price Type'), price_widget)
 
     for parameter, default_value in indicator['parameters'].items():
-        label = QLabel(PARAMETER_MAP.get(parameter, parameter))
-        values[parameter] = widget = get_param_obj(default_value=default_value, param_name=parameter)
-        inner_tab_layout.addRow(label, widget)
+        label_str = PARAMETER_MAP.get(parameter, parameter)
+        widget = get_param_obj(default_value=default_value, param_name=parameter)
+
+        if is_optimizer:
+            if isinstance(widget, QComboBox):
+                values[parameter] = checkboxes = [QCheckBox(val) for val in get_combobox_items(widget)]
+                inner_tab_layout.addRow(QLabel(label_str), checkboxes[0])
+                for checkbox in checkboxes[1:]:
+                    inner_tab_layout.addWidget(checkbox)
+
+            elif isinstance(widget, (QDoubleSpinBox, QSpinBox)):
+                gen_widget = QDoubleSpinBox if isinstance(widget, QDoubleSpinBox) else QSpinBox
+                start = get_default_widget(gen_widget, 1)
+                end = get_default_widget(gen_widget, 1)
+                step = get_default_widget(gen_widget, 1)
+                values[parameter] = [start, end, step]
+                add_start_end_step_to_layout(inner_tab_layout, label_str, start, end, step)
+            else:
+                raise Exception("Unexpected type of data encountered!")
+        else:
+            values[parameter] = widget
+            inner_tab_layout.addRow(QLabel(label_str), widget)
 
     values['output'] = output_combobox = QComboBox()
     output_combobox.addItems(indicator['output_names'])
     inner_tab_layout.addRow("Output Type", output_combobox)
 
 
-def populate_custom_indicator(indicator: dict, inner_tab_layout: QFormLayout, values: dict):
+def populate_custom_indicator(
+        indicator: dict, inner_tab_layout: QFormLayout, values: dict, is_optimizer: bool
+):
     """
     Populate custom indicator fields.
     :param indicator: Indicator to populate values from.
     :param inner_tab_layout: Layout to add widgets to.
     :param values: Values to reference when executing bot. We'll populate this dictionary.
+    :param is_optimizer: Boolean whether custom indicators are being populated for optimizer or not.
     """
     values['indicator'] = indicator['name']
-    populate_parameters(values, indicator, inner_tab_layout)
+    populate_parameters(values, indicator, inner_tab_layout, is_optimizer)
 
     values['operator'] = operators_combobox = QComboBox()
     operators_combobox.addItems(OPERATORS)
@@ -161,21 +188,36 @@ def populate_custom_indicator(indicator: dict, inner_tab_layout: QFormLayout, va
 
     against = indicator['against']
     if isinstance(against, (float, int)):
-        inner_tab_layout.addWidget(QLabel('Against static value defined below:'))
-        values['against'] = against_widget = get_default_widget(QDoubleSpinBox, against, -99999, 99999)
-        inner_tab_layout.addWidget(against_widget)
+        inner_tab_layout.addWidget(QLabel('Bot will execute against static values defined below:'))
+        if is_optimizer:
+            start = get_default_widget(QDoubleSpinBox, 1)
+            end = get_default_widget(QDoubleSpinBox, 1)
+            step = get_default_widget(QDoubleSpinBox, 1)
+            values['against'] = [start, end, step]
+            add_start_end_step_to_layout(inner_tab_layout, 'Static Price', start, end, step)
+        else:
+            against_widget = get_default_widget(QDoubleSpinBox, against, -99999, 99999)
+            values['against'] = against_widget
+            inner_tab_layout.addWidget(against_widget)
 
     elif against == 'current_price':
         inner_tab_layout.addWidget(QLabel("Bot will execute against current price type selected below:"))
-        values['against'] = against_widget = QComboBox()
-        against_widget.addItems(PRICE_TYPES)
-        inner_tab_layout.addWidget(against_widget)
+        if is_optimizer:
+            values['against'] = checkboxes = [QCheckBox(price) for price in PRICE_TYPES]
+            inner_tab_layout.addRow(QLabel("Price Type"), checkboxes[0])
+            for checkbox in checkboxes[1:]:
+                inner_tab_layout.addWidget(checkbox)
+        else:
+            against_widget = get_param_obj(default_value='', param_name='price')
+            values['against'] = against_widget
+            inner_tab_layout.addWidget(against_widget)
 
     else:
         # It must be against another indicator then.
         inner_tab_layout.addWidget(QLabel(f"Bot will execute against: {against['name']}."))
         values['against'] = {'indicator': against['name']}
-        populate_parameters(values['against'], indicator=against, inner_tab_layout=inner_tab_layout)
+        populate_parameters(values['against'], indicator=against, inner_tab_layout=inner_tab_layout,
+                            is_optimizer=is_optimizer)
 
 
 def load_custom_strategy_slots(config_obj: Configuration):
@@ -246,100 +288,12 @@ def load_custom_strategy_slots(config_obj: Configuration):
                     populate_custom_indicator(
                         indicator=indicator,
                         inner_tab_layout=indicator_tab_layout,
-                        values=values
+                        values=values,
+                        is_optimizer=config_obj.get_caller_based_on_tab(tab) == OPTIMIZER
                     )
 
                     config_obj.strategy_dict[tab, strategy_name][trend][uuid] = values
 
-            tab_widget.setLayout(layout)
-            tab.addTab(tab_widget, strategy_name)
-
-            # For now, disable optimizers. TODO: add support.
-            if tab is config_obj.category_tabs[-1]:
-                group_box.setEnabled(False)
-                layout.addWidget(QLabel("Warning: Optimizers are currently not supported for custom strategies."))
-
-
-def load_strategy_slots(config_obj: Configuration):
-    """
-    This will initialize all the necessary strategy slots and add them to the configuration GUI. All the strategies
-    are loaded from the config_obj.strategies dictionary.
-    :param config_obj: Configuration QDialog object (from configuration.py)
-    :return: None
-    """
-    # TODO: Refactor to remove pylint disable below.
-    # pylint: disable=too-many-locals, too-many-statements, too-many-nested-blocks
-    for strategy_key_name, strategy in config_obj.strategies.items():
-        if strategy_key_name in config_obj.hidden_strategies:  # Don't re-render hidden strategies.
-            continue
-
-        temp = strategy()
-        strategy_name = temp.name
-        parameters = temp.get_param_types()
-        for tab in config_obj.category_tabs:
-            config_obj.strategy_dict[tab, strategy_name] = tab_widget = QTabWidget()
-            description_label = QLabel(f'Strategy description: {temp.description}')
-            description_label.setWordWrap(True)
-
-            layout = QVBoxLayout()
-            layout.addWidget(description_label)
-
-            scroll = QScrollArea()  # Added a scroll area so user can scroll when additional slots are added.
-            scroll.setWidgetResizable(True)
-
-            if config_obj.get_caller_based_on_tab(tab) == OPTIMIZER:
-                group_box, group_box_layout = get_regular_groupbox_and_layout(f'Enable {strategy_name} optimization?')
-                config_obj.strategy_dict[tab, strategy_name] = group_box
-                for index, parameter in enumerate(parameters, start=1):
-                    # TODO: Refactor this logic.
-                    if not isinstance(parameter, tuple) or \
-                            isinstance(parameter, tuple) and parameter[1] in [int, float]:
-                        if isinstance(parameter, tuple):
-                            widget = QSpinBox if parameter[1] == int else QDoubleSpinBox
-                            step_val = 1 if widget == QSpinBox else 0.1
-                        else:
-                            widget = QSpinBox if parameter == int else QDoubleSpinBox
-                            step_val = 1 if widget == QSpinBox else 0.1
-                        config_obj.strategy_dict[strategy_name, index, 'start'] = start = get_default_widget(widget, 1)
-                        config_obj.strategy_dict[strategy_name, index, 'end'] = end = get_default_widget(widget, 1)
-                        config_obj.strategy_dict[strategy_name, index, 'step'] = step = get_default_widget(widget,
-                                                                                                           step_val)
-                        if isinstance(parameter, tuple):
-                            message = parameter[0]
-                        else:
-                            message = f"{strategy_name} {index}"
-                        add_start_end_step_to_layout(group_box_layout, message, start, end, step)
-                    elif isinstance(parameter, tuple) and parameter[1] == tuple:
-                        group_box_layout.addRow(QLabel(parameter[0]))
-                        for option in parameter[2]:
-                            config_obj.strategy_dict[strategy_name, option] = check_box = QCheckBox(option)
-                            group_box_layout.addRow(check_box)
-                    else:
-                        raise ValueError("Invalid type of parameter type provided.")
-            else:
-                group_box, group_box_layout = get_regular_groupbox_and_layout(f"Enable {strategy_name}?")
-                config_obj.strategy_dict[tab, strategy_name, 'groupBox'] = group_box
-
-                status = QLabel()
-                if temp.dynamic:
-                    add_button, delete_button = add_strategy_buttons(config_obj.strategy_dict, parameters,
-                                                                     strategy_name, group_box_layout, tab)
-                    horizontal_layout = QHBoxLayout()
-                    horizontal_layout.addWidget(add_button)
-                    horizontal_layout.addWidget(delete_button)
-                    horizontal_layout.addWidget(status)
-                    horizontal_layout.addStretch()
-                    layout.addLayout(horizontal_layout)
-
-                values, labels = create_strategy_inputs(parameters, strategy_name, group_box_layout)
-                config_obj.strategy_dict[tab, strategy_name, 'values'] = values
-                config_obj.strategy_dict[tab, strategy_name, 'labels'] = labels
-                config_obj.strategy_dict[tab, strategy_name, 'parameters'] = parameters
-                config_obj.strategy_dict[tab, strategy_name, 'layout'] = group_box_layout
-                config_obj.strategy_dict[tab, strategy_name, 'status'] = status
-
-            layout.addWidget(scroll)
-            scroll.setWidget(group_box)
             tab_widget.setLayout(layout)
             tab.addTab(tab_widget, strategy_name)
 
@@ -446,5 +400,4 @@ def load_slots(config_obj: Configuration):
     load_interval_combo_boxes(c)  # Primarily used for backtester/optimizer interval changer logic.
     load_loss_slots(c)  # These slots are based on the ordering.
     load_take_profit_slots(c)
-    load_strategy_slots(c)
     load_custom_strategy_slots(c)

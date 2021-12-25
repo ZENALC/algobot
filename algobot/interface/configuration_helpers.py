@@ -4,8 +4,8 @@ Helpers for the configuration object.
 
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QFrame, QGroupBox, QLabel, QLayout,
-                             QLineEdit, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QFrame, QGroupBox, QLabel,
+                             QLayout, QLineEdit, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from algobot import helpers
 from algobot.enums import OPTIMIZER
@@ -112,6 +112,8 @@ def get_input_widget_value(input_widget: QWidget, verbose: bool = False):
         return input_widget.value()
     elif isinstance(input_widget, QLineEdit):
         return input_widget.text()
+    elif isinstance(input_widget, QCheckBox):
+        return input_widget.text()
     elif isinstance(input_widget, QComboBox):
         if verbose:
             return input_widget.currentText()
@@ -132,8 +134,8 @@ def get_h_line() -> QFrame:
     return line
 
 
-def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, float], minimum: Optional[int] = 1,
-                       maximum: Optional[int] = 99) -> Union[QSpinBox, QDoubleSpinBox]:
+def get_default_widget(widget: [QSpinBox, QDoubleSpinBox], default: Union[int, float], minimum: Optional[int] = 0,
+                       maximum: Optional[int] = 999) -> Union[QSpinBox, QDoubleSpinBox]:
     """
     Returns a default QSpinbox or QDoubleSpinbox widget with default, minimum, and maximum values provided.
     """
