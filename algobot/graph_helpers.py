@@ -368,7 +368,7 @@ def smart_update(graph_dict: Dict[str, Any]):
             legend_helper(graph_dict, -1)
 
 
-def update_main_graphs(gui: Interface, caller: int, value_dict: dict):
+def update_main_graphs(gui: Interface, caller: str, value_dict: dict):
     """
     Updates graphs and moving averages from statistics based on caller.
     :param gui: GUI in which to update main graphs.

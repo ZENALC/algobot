@@ -6,7 +6,7 @@ from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 
 
 # noinspection DuplicatedCode
-def get_interface_dictionary(parent, caller: int = None):
+def get_interface_dictionary(parent, caller: str = None):
     """
     Returns dictionary of objects from QT. Used for DRY principles.
     :param parent: Parent object from which to retrieve objects.
