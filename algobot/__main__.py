@@ -122,7 +122,7 @@ class Interface(QMainWindow):
     def inform_telegram(self, message: str, stop_bot: bool = False):
         """
         Sends a notification to Telegram if some action is taken by the bot.
-        :param message: Message to send.
+        :param message: Message to send through Telegram.
         :param stop_bot: Boolean for whether bot should be stopped or not.
         """
         try:
