@@ -42,7 +42,7 @@ class TelegramBot:
         # Get the dispatcher to register handlers.
         dispatcher = self.updater.dispatcher
 
-        # Nn different commands - answer in Telegram.
+        # On different commands - answer in Telegram.
         dispatcher.add_handler(CommandHandler("help", self.help_telegram))
         dispatcher.add_handler(CommandHandler("settrader", self.set_trader))
         dispatcher.add_handler(CommandHandler("override", self.override_telegram))
