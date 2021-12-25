@@ -2,7 +2,7 @@
 Strategy manager.
 """
 import os
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 from PyQt5.QtWidgets import QComboBox, QDialog, QLabel, QPushButton, QSizePolicy, QSpacerItem, QVBoxLayout
 
@@ -24,7 +24,7 @@ class StrategyManager(QDialog):
         self.configuration = self.parent.configuration
         self.layout = QVBoxLayout()
 
-        self.json_strategies = self.parse_strategies()
+        self.json_strategies = self.configuration.json_strategies
         self.strategies_found_label = QLabel(f"{len(self.json_strategies)} strategies available for management.")
         self.strategies_found_label.setFont(get_bold_font())
         self.layout.addWidget(self.strategies_found_label)
@@ -55,25 +55,12 @@ class StrategyManager(QDialog):
         self.strategies_combobox.setEnabled(enable)
         self.delete_button.setEnabled(enable)
 
-    def parse_strategies(self) -> Dict[str, dict]:
-        """
-        Parse strategies in a way that the strategy name is the key and the strategy along with the path is the value.
-        :return: New parsed dictionary.
-        """
-        new_dict = {}
-        for path, strategy in self.configuration.json_strategies_with_path:
-            strategy_name = strategy['name']
-            new_dict[strategy_name] = strategy
-            new_dict[strategy_name]['path'] = path
-
-        return new_dict
-
     def reset_gui(self):
         """
         Reset GUI by refreshing dictionary information.
         """
         self.configuration.reload_custom_strategies()
-        self.json_strategies = self.parse_strategies()
+        self.json_strategies = self.configuration.json_strategies
         self.strategies_found_label.setText(f"{len(self.json_strategies)} strategies available for management.")
         self.strategies_combobox.clear()
         self.strategies_combobox.addItems(self.json_strategies.keys())

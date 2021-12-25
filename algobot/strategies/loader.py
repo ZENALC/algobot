@@ -3,7 +3,7 @@ Strategies loader.
 """
 import json
 import os
-from typing import List, Tuple
+from typing import Callable, Dict, Optional
 
 from talib import abstract
 
@@ -61,10 +61,10 @@ def parse_custom_strategy_json(json_file: str) -> dict:
     return loaded_dict
 
 
-def get_json_strategies() -> List[Tuple[str, dict]]:
+def get_json_strategies(callback: Optional[Callable] = None) -> Dict[str, dict]:
     """
     Get JSON strategies.
-    :return: List of tuple containing JSON path and then JSON strategies.
+    :return: Dictionary of strategies.
     """
     # Just in case if the directory doesn't already exist.
     os.makedirs(STRATEGIES_DIR, exist_ok=True)
@@ -73,9 +73,36 @@ def get_json_strategies() -> List[Tuple[str, dict]]:
     strategy_files = [os.path.join(STRATEGIES_DIR, file_name) for file_name in os.listdir(STRATEGIES_DIR)
                       if file_name.lower().endswith('.json')]
 
-    return [(json_file, parse_custom_strategy_json(json_file)) for json_file in strategy_files]
+    # We must ensure that there aren't any strategies with the same name.
+    strategies = {}
+    duplicates = set()
+
+    for json_file in strategy_files:
+        parsed_json = parse_custom_strategy_json(json_file)
+        parsed_json['path'] = json_file
+
+        strategy_name = parsed_json['name']
+
+        if strategy_name in duplicates:
+            continue
+
+        if strategy_name in strategies:
+            duplicates.add(strategy_name)
+            strategies.pop(strategy_name)
+            continue
+
+        strategies[strategy_name] = parsed_json
+
+    if len(duplicates) > 0:
+        if callback is not None:
+            callback(f"Found duplicate strategies: {duplicates}. Algobot will ignore them. If you want to use them "
+                     f"anyway, rename them.")
+        else:
+            print(f"Found duplicate strategies: {duplicates}. Ignoring them.")
+
+    return strategies
 
 
 if __name__ == '__main__':
     import pprint
-    pprint.pprint(get_json_strategies()[0][1])
+    pprint.pprint(get_json_strategies())

@@ -227,7 +227,7 @@ def load_custom_strategy_slots(config_obj: Configuration):
     :return: None
     """
     # pylint: disable=too-many-locals
-    for strategy in config_obj.json_strategies:
+    for strategy in config_obj.json_strategies.values():
 
         strategy_description = strategy.get('description', "Custom Strategy")
         strategy_name = strategy['name']
