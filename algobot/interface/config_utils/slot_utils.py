@@ -82,7 +82,7 @@ def load_hide_show_strategies(config_obj: Configuration):
 
     def clear_strategy_checkboxes():
         clear_layout(config_obj.hideStrategiesFormLayout)
-        config_obj.hidden_strategies = set(config_obj.custom_strategies)
+        config_obj.hidden_strategies = set(config_obj.json_strategies)
         load_hide_show_strategies(config_obj)
         reset_slots()
 
@@ -95,7 +95,7 @@ def load_hide_show_strategies(config_obj: Configuration):
     config_obj.hideStrategiesFormLayout.addRow(strategies_label, clear_button)
 
     c_boxes: List[QCheckBox] = []
-    for strategy_name in [*config_obj.strategies.keys(), *config_obj.custom_strategies]:
+    for strategy_name in config_obj.json_strategies:
         c_boxes.append(QCheckBox())
 
         # When restoring slots, if the strategy is not hidden, tick it.

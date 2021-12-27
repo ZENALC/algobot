@@ -12,7 +12,6 @@ from PyQt5.QtWidgets import QFileDialog, QLabel, QMessageBox
 from algobot import helpers
 from algobot.enums import BACKTEST, LIVE, OPTIMIZER, SIMULATION
 from algobot.helpers import get_caller_string
-from algobot.interface.config_utils.strategy_utils import get_strategy_values, set_strategy_values
 
 if TYPE_CHECKING:
     from algobot.interface.configuration import Configuration
@@ -46,8 +45,6 @@ def helper_load(config_obj: Configuration, caller: str, config: dict):
     """
     config_obj.set_loss_settings(caller, config)
     config_obj.set_take_profit_settings(caller, config)
-    for strategy_name in config_obj.strategies.keys():
-        config_obj.load_strategy_from_config(caller, strategy_name, config)
 
 
 def helper_save(config_obj: Configuration, caller: str, config: dict):
@@ -60,8 +57,6 @@ def helper_save(config_obj: Configuration, caller: str, config: dict):
     """
     config.update(config_obj.get_loss_settings(caller))
     config.update(config_obj.get_take_profit_settings(caller))
-    for strategy_name in config_obj.strategies.keys():
-        config_obj.add_strategy_to_config(caller, strategy_name, config)
 
 
 def helper_get_save_file_path(config_obj: Configuration, name: str) -> Union[str]:
@@ -267,10 +262,6 @@ def copy_config_helper(config_obj: Configuration, caller, result_label, func: Ca
     # TODO: Create copy function for optimizer.
     func(config_obj)
     copy_loss_settings(config_obj, LIVE, caller)
-
-    for strategy_name in config_obj.strategies.keys():
-        copy_strategy_settings(config_obj, LIVE, caller, strategy_name)
-
     result_label.setText(f"Copied all viable settings from main to {get_caller_string(caller)} settings successfully.")
 
 
@@ -307,8 +298,6 @@ def copy_strategy_settings(config_obj: Configuration, from_caller: str, to_calle
 
     from_caller_group_box = config_obj.strategy_dict[from_caller_tab, strategy_name, 'groupBox']
     config_obj.strategy_dict[to_caller_tab, strategy_name, 'groupBox'].setChecked(from_caller_group_box.isChecked())
-    set_strategy_values(config_obj, strategy_name, to_caller, get_strategy_values(config_obj,
-                                                                                  strategy_name, from_caller))
 
 
 def copy_loss_settings(config_obj: Configuration, from_caller: str, to_caller: str):
