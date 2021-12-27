@@ -18,10 +18,8 @@ from algobot.graph_helpers import create_infinite_line
 from algobot.helpers import ROOT_DIR
 from algobot.interface.config_utils.credential_utils import load_credentials
 from algobot.interface.config_utils.slot_utils import load_hide_show_strategies, load_slots
-from algobot.interface.config_utils.strategy_utils import (add_strategy_inputs, delete_strategy_inputs,
-                                                           get_strategy_values, strategy_enabled)
 from algobot.interface.configuration_helpers import (add_start_end_step_to_layout, get_default_widget,
-                                                     get_input_widget_value, set_value)
+                                                     get_input_widget_value)
 # noinspection PyUnresolvedReferences
 from algobot.interface.utils import clear_layout, get_elements_from_combobox
 from algobot.strategies import *  # noqa: F403, F401 pylint: disable=wildcard-import,unused-wildcard-import
@@ -105,11 +103,9 @@ class Configuration(QDialog):
         ]
 
         self.json_strategies = get_json_strategies(self.parent.add_to_live_activity_monitor)
-        self.custom_strategies = list(self.json_strategies.keys())
-        self.strategies = {}
 
         # Hidden strategies dynamically populated.
-        self.hidden_strategies = set(self.custom_strategies)
+        self.hidden_strategies = set(self.json_strategies)
 
         self.strategy_dict = {}  # We will store all the strategy slot information in this dictionary.
         self.loss_dict = {}  # We will store stop loss settings here.
@@ -123,8 +119,7 @@ class Configuration(QDialog):
         Reload custom strategies after creating a strategy.
         """
         self.json_strategies = get_json_strategies(self.parent.add_to_live_activity_monitor)
-        self.custom_strategies = list(self.json_strategies.keys())
-        self.hidden_strategies = set(self.custom_strategies)
+        self.hidden_strategies = set(self.json_strategies)
 
         clear_layout(self.hideStrategiesFormLayout)
         load_hide_show_strategies(self)
@@ -265,7 +260,7 @@ class Configuration(QDialog):
         self.get_strategy_intervals_for_optimizer(settings)
 
         settings['strategies'] = {}
-        for strategy_name in self.custom_strategies:
+        for strategy_name in self.json_strategies:
             if strategy_name in self.hidden_strategies or \
                     not self.strategy_dict[tab, strategy_name, 'groupBox'].isChecked():
                 continue
@@ -447,46 +442,3 @@ class Configuration(QDialog):
             loss_settings['safetyTimer'] = dictionary[tab, 'safetyTimer'].value()
 
         return loss_settings
-
-    def add_strategy_to_config(self, caller: str, strategy_name: str, config: dict):
-        """
-        Adds strategy configuration to config dictionary provided.
-        :param caller: Caller that'll determine which trader's strategy settings get added to the config dictionary.
-        :param strategy_name: Name of strategy to add.
-        :param config: Dictionary to add strategy information to.
-        :return: None
-        """
-        values = get_strategy_values(self, strategy_name, caller)
-        config[strategy_name.lower()] = strategy_enabled(self, strategy_name, caller)
-        config[f'{strategy_name.lower()}Length'] = len(values)
-        for index, value in enumerate(values, start=1):
-            config[f'{strategy_name.lower()}{index}'] = value
-
-    def load_strategy_from_config(self, caller: str, strategy_name: str, config: dict):
-        """
-        This function will load the strategy from the config dictionary provided.
-        :param caller: Caller to manipulate.
-        :param strategy_name: Name of strategy to load.
-        :param config: Configuration dictionary to load.
-        :return: None
-        """
-        key = f'{strategy_name.lower()}Length'
-        if key not in config:
-            return
-
-        value_count = config[key]
-        tab = self.get_category_tab(caller)
-        value_widgets = self.strategy_dict[tab, strategy_name, 'values']
-        parameters = self.strategy_dict[tab, strategy_name, 'parameters']
-        group_box_layout = self.strategy_dict[tab, strategy_name, 'layout']
-
-        self.strategy_dict[tab, strategy_name, 'groupBox'].setChecked(config[f'{strategy_name.lower()}'])
-
-        while value_count > len(value_widgets):
-            add_strategy_inputs(self.strategy_dict, parameters, strategy_name, group_box_layout, tab)
-        while value_count < len(value_widgets):
-            delete_strategy_inputs(self.strategy_dict, parameters, strategy_name, tab)
-
-        for index, widget in enumerate(value_widgets, start=1):
-            value = config[f'{strategy_name.lower()}{index}']
-            set_value(widget, value)
