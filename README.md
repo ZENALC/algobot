@@ -12,25 +12,34 @@ Algobot requires at least Python 3.7.
 
 <hr>
 
-Please note that Algobot requires TA-LIB. You can view instructions on how to download TA-LIB from [here](https://github.com/mrjbq7/ta-lib). For Windows users, it's best to download the .whl package for your Python install and `pip install` it. For Linux and MacOS users, there's excellent documentation available in the link provided above.
-
-<hr>
+# Installation
 
 Once you have cloned or unpacked the source code locally, run the following commands from your terminal in that directory.
 
 ```bash
 pip install pipenv
-pipenv install --dev
+pipenv install
 ```
 
 If your install fails, please make sure to have [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019) installed.
+
+Please note that Algobot requires TA-LIB. You can view instructions on how to download TA-LIB from [here](https://github.com/mrjbq7/ta-lib). For Windows users, it's best to download the .whl package for your Python install and `pip install` it. For Linux and MacOS users, there's excellent documentation available in the link provided above.
+
+For Windows, it's easiest to perform the following:
+
+1) `pipenv shell`
+2) `pip install <your .whl file>`
+
+You can find the .whl files [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#ta-lib).
+
+<hr>
 
 # Execution
 
 To start Algobot, run:
 
 ```bash
-pipenv run python -m algobot
+pipenv run bot
 ```
 
 Set `DEBUG=1` to enable debug level logging.
