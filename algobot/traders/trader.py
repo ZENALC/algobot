@@ -3,7 +3,7 @@ This will be the main Trader class that all other Traders will inherit from.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from algobot.enums import BEARISH, BULLISH, ENTER_LONG, ENTER_SHORT, EXIT_LONG, EXIT_SHORT, LONG, SHORT, STOP, TRAILING
 from algobot.helpers import get_label_string
@@ -31,7 +31,7 @@ class Trader:
         self.starting_time = datetime.utcnow()  # Starting time in UTC.
         self.ending_time = None  # Ending time for previous bot run.
         self.current_period = None  # Current time period the bot is in used for backtesting.
-        self.current_position = None  # Current position value.
+        self.current_position: Optional[str] = None  # Current position value.
         self.min_period = 0  # Minimum amount of periods required for trend retrieval.
         self.previous_position = None  # Previous position to validate for a new trend.
         self.trend = None  # Current trend information.
@@ -39,15 +39,15 @@ class Trader:
 
         self.take_profit_point = None  # Price at which bot will exit trade to secure profits.
         self.trailing_take_profit_activated = False  # Boolean that'll turn true if a stop order is activated.
-        self.take_profit_type = None  # Type of take profit: trailing or stop.
-        self.take_profit_percentage_decimal = None  # Percentage of profit to exit trade at.
+        self.take_profit_type: Optional[int] = None  # Type of take profit: trailing or stop.
+        self.take_profit_percentage_decimal: Optional[float] = None  # Percentage of profit to exit trade at.
 
         # Prices information.
-        self.current_price = None  # Current price of coin.
-        self.buy_long_price = None  # Price we last bought our target coin at in long position.
-        self.sell_short_price = None  # Price we last sold target coin at in short position.
-        self.long_trailing_price = None  # Price coin has to be above for long position.
-        self.short_trailing_price = None  # Price coin has to be below for short position.
+        self.current_price: Optional[float] = None  # Current price of coin.
+        self.buy_long_price: Optional[float] = None  # Price we last bought our target coin at in long position.
+        self.sell_short_price: Optional[float] = None  # Price we last sold target coin at in short position.
+        self.long_trailing_price: Optional[float] = None  # Price coin has to be above for long position.
+        self.short_trailing_price: Optional[float] = None  # Price coin has to be below for short position.
 
         # Stop loss information.
         self.smart_stop_loss_initial_counter = 0  # Smart stop loss initial counter.
@@ -58,7 +58,8 @@ class Trader:
         self.stop_loss = None  # Price at which bot will exit trade due to stop loss limits.
         self.stop_loss_exit = False  # Boolean that'll determine whether last position was exited from a stop loss.
         self.loss_percentage_decimal = None  # Loss percentage in decimal for stop loss.
-        self.loss_strategy = None  # Type of loss type we are using: whether it's trailing loss or stop loss.
+        # Type of loss type we are using: whether it's trailing loss or stop loss.
+        self.loss_strategy: Optional[str] = None
         self.safety_timer = None  # Timer to check if there's a true trend towards stop loss.
         self.scheduled_safety_timer = None  # Next time to check if it's a true stop loss.
 
@@ -370,7 +371,7 @@ class Trader:
         """
         return self.get_safe_rounded_string(decimal_value, direction='right', multiplier=100, symbol='%')
 
-    def get_safe_rounded_string(self, value: float,
+    def get_safe_rounded_string(self, value: Optional[float],
                                 round_digits: int = None,
                                 symbol: str = '$',
                                 direction: str = 'left',
