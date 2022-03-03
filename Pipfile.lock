@@ -465,11 +465,11 @@
         },
         "ta-lib": {
             "hashes": [
-                "sha256:74d2f24ca68aa299275f3179a9adde05cff959f91497e088487d0b5c85104e9f"
+                "sha256:9df262312daa0f1a63f281c6a943fe98c8007a2147776c1b43712e04ccede209"
             ],
             "index": "pypi",
             "markers": "sys_platform == 'linux' or sys_platform == 'darwin'",
-            "version": "==0.4.21"
+            "version": "==0.4.24"
         },
         "tornado": {
             "hashes": [
