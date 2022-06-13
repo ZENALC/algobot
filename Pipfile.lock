@@ -459,11 +459,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:d1746e7fd520e83bbe210d02fff1aa1a425ad671c7a9da7d246ec2401a087198",
-                "sha256:e7d11f3db616cda0751372244c2ba798e8e56a28e096ec4529010b803485f3fe"
+                "sha256:1f5d3a1502812025cdb2e5609b6af2d207332e3f50febe6db10ed3a59b2f155f",
+                "sha256:30b6b0fbacc459c90d27a63e6173facfc8b8c99a48fb24b5044f459ba63cd6cf"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==62.3.3"
+            "version": "==62.3.4"
         },
         "six": {
             "hashes": [
@@ -1148,11 +1148,11 @@
         },
         "jupyter-client": {
             "hashes": [
-                "sha256:5b4f5bb9f9c3b5466ba84761312ed75f487bf3b8b0e1eeeec4bb2d0f9d855c70",
-                "sha256:9e80defc0058712bf2b30327bad582f9734668aa85e90256dcba116325ce3060"
+                "sha256:17d74b0d0a7b24f1c8c527b24fcf4607c56bee542ffe8e3418e50b21e514b621",
+                "sha256:aa9a6c32054b290374f95f73bb0cae91455c58dfb84f65c8591912b8f65e6d56"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==7.3.3"
+            "version": "==7.3.4"
         },
         "jupyter-core": {
             "hashes": [
@@ -1172,11 +1172,11 @@
         },
         "jupyterlab": {
             "hashes": [
-                "sha256:3bedbc732ae86b616bd5c7855a6d071fe76ad47186378d36df77f4fc58ae322a",
-                "sha256:a43733acc3729557fc4758cff55652e52896e42c64c1f12540656ae7f298b806"
+                "sha256:e2dcc40e94366dde5de4b19e8c43ee133cf041b852d01a3625a7cf29532da49d",
+                "sha256:f028f4c6a4171785c4a1d592ca9bf36812047703e4aa981482cd3872eb0fc169"
             ],
             "index": "pypi",
-            "version": "==3.1.18"
+            "version": "==3.4.3"
         },
         "jupyterlab-pygments": {
             "hashes": [
@@ -1742,11 +1742,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:d1746e7fd520e83bbe210d02fff1aa1a425ad671c7a9da7d246ec2401a087198",
-                "sha256:e7d11f3db616cda0751372244c2ba798e8e56a28e096ec4529010b803485f3fe"
+                "sha256:1f5d3a1502812025cdb2e5609b6af2d207332e3f50febe6db10ed3a59b2f155f",
+                "sha256:30b6b0fbacc459c90d27a63e6173facfc8b8c99a48fb24b5044f459ba63cd6cf"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==62.3.3"
+            "version": "==62.3.4"
         },
         "six": {
             "hashes": [
