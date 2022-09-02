@@ -176,7 +176,7 @@ def open_file_or_folder(target_path: str):
     """
     # pylint: disable=consider-using-with, no-member
     if platform.system() == "Windows":
-        os.startfile(target_path)
+        os.startfile(target_path)  # type: ignore
     elif platform.system() == "Darwin":
         subprocess.Popen(["open", target_path])
     else:
@@ -249,8 +249,8 @@ def get_ups_and_downs(data: List[Dict[str, float]], parameter: str) -> Tuple[lis
     :param parameter: Parameter from which data is retrieved.
     :return: Tuple of list of ups and downs.
     """
-    ups = [0]
-    downs = [0]
+    ups: List[float] = [0]
+    downs: List[float] = [0]
     previous = data[0]
 
     for period in data[1:]:

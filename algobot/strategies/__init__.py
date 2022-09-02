@@ -1,11 +1,10 @@
 """
 Initialization of all strategies.
 """
-from collections import namedtuple
 from dataclasses import dataclass
 from os import listdir
 from os.path import basename, dirname
-from typing import Any, Callable, List, Type
+from typing import Any, Callable, List, NamedTuple, Type
 
 import talib
 
@@ -33,7 +32,7 @@ class TALIBEntry:
     """
     Entry class for TALIB Map defined below.
     """
-    def __init__(self, name: str, stream: Callable, talib_func: Callable, args: List[namedtuple]):
+    def __init__(self, name: str, stream: Callable, talib_func: Callable, args: List[NamedTuple]):
         self.name = name
         self.stream = stream
         self.talib = talib_func
